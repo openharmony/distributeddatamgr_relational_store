@@ -12,17 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define LOG_TAG "ValueObject"
 #include "value_object.h"
 
 #include <iostream>
 #include <limits>
 #include <sstream>
 
+#include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite_utils.h"
+
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
 ValueObject::ValueObject()
 {
 }
@@ -71,8 +74,11 @@ ValueObject::ValueObject(std::string val) : value(std::move(val))
 {
 }
 
-ValueObject::ValueObject(const char *val) : ValueObject(std::string(val))
+ValueObject::ValueObject(const char *val) : ValueObject(val ? std::string(val) : std::string())
 {
+    if (val == nullptr) {
+        LOG_WARN("val is nullptr");
+    }
 }
 
 ValueObject::ValueObject(const std::vector<uint8_t> &val) : value(val)
