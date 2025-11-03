@@ -45,11 +45,14 @@ std::pair<size_t, int32_t> RdbFileSystem::RemoveAll(const std::string &path, boo
         count = std::filesystem::remove_all(path, ec);
         return std::make_pair(count, ec.value());
     }
-    for (const auto &subPath : RdbFileSystem::GetEntries(path)) {
-        auto res = std::filesystem::remove_all(subPath, ec);
+    for (std::filesystem::directory_iterator it(path, ec); it != std::filesystem::directory_iterator();
+        it.increment(ec)) {
         if (ec) {
-            ec.clear();
-            continue;
+            return std::make_pair(static_cast<std::uintmax_t>(-1), ec.value());
+        }
+        auto res = std::filesystem::remove_all(it->path(), ec);
+        if (ec) {
+            return std::make_pair(static_cast<std::uintmax_t>(-1), ec.value());
         }
         count += res;
     }

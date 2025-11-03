@@ -504,11 +504,11 @@ SqliteConnection::~SqliteConnection()
             LOG_ERROR("could not close database err = %{public}d, errno = %{public}d", errCode, errno);
         }
     }
-    if (isWriter_ && slaveConnection_ != nullptr && IsSupportBinlog(config_)) {
-        reusableReplicas_.ComputeIfPresent(slaveConnection_->config_.GetPath(),
-            [slaveConn = slaveConnection_](auto &key, auto &weakPtr) {
+    if (isWriter_ && replayConnection_ != nullptr && IsSupportBinlog(config_)) {
+        reusableReplicas_.ComputeIfPresent(replayConnection_->config_.GetPath(),
+            [replayConn = replayConnection_](auto &key, auto &weakPtr) {
             auto sharedPtr = weakPtr.lock();
-            if (sharedPtr != nullptr && slaveConn == sharedPtr) {
+            if (sharedPtr != nullptr && replayConn == sharedPtr) {
                 LOG_INFO("replica connection removed when close");
                 return false;
             }
@@ -1356,7 +1356,6 @@ int SqliteConnection::TryCheckPoint(bool timeout)
             int rc = conn->TryCheckPoint(timeout);
             if (rc == E_SQLITE_CORRUPT) {
                 RdbStoreConfig slaveConfig(slaveConnection_->config_.GetPath());
-                slaveConnection_ = nullptr;
                 DeleteCorruptSlave(slaveConfig.GetPath());
                 Reportor::ReportCorrupted(Reportor::Create(slaveConfig,
                     SQLiteError::ErrNo(rc), "ErrorType: slaveCheckPoint"));
@@ -1455,7 +1454,7 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
                 return errCode;
             }
             slaveConnection_ = conn;
-            InsertReusableReplica(rdbSlaveStoreConfig.GetPath(), conn);
+            InsertReusableReplica(rdbSlaveStoreConfig, SlaveOpenPolicy::FORCE_OPEN);
         }
         return ExchangeSlaverToMaster(false, verifyDb, slaveStatus);
     }
@@ -1656,8 +1655,7 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveSt
         if (!isRestore) {
             RdbStoreConfig slaveConfig(slaveConnection_->config_.GetPath());
             if (rc != SQLITE_BUSY && rc != SQLITE_LOCKED) {
-                slaveConnection_ = nullptr;
-                (void)SqliteConnection::Delete(slaveConfig.GetPath());
+                DeleteCorruptSlave(slaveConfig.GetPath());
             }
             *curStatus = SlaveStatus::BACKUP_INTERRUPT;
             Reportor::ReportCorrupted(Reportor::Create(slaveConfig, SQLiteError::ErrNo(rc), "ErrorType: slaveBackup"));
@@ -1839,7 +1837,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
         conn->slaveConnection_ = slaveConn;
         conn->SetBinlog();
         if (isReusableReplica) {
-            InsertReusableReplica(slaveCfg.GetPath(), slaveConn);
+            conn->InsertReusableReplica(slaveCfg, SlaveOpenPolicy::OPEN_IF_DB_VALID);
         }
         if (!IsSupportBinlog(config)) {
             auto binlogFolder = GetBinlogFolderPath(config.GetPath());
@@ -1997,12 +1995,18 @@ void SqliteConnection::BinlogSetConfig(sqlite3 *dbHandle)
     }
 }
 
-void SqliteConnection::InsertReusableReplica(const std::string &dbPath, std::weak_ptr<SqliteConnection> slaveConn)
+void SqliteConnection::InsertReusableReplica(const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy)
 {
-    reusableReplicas_.Compute(dbPath, [slaveConn](auto &key, auto &weakPtr) {
+    reusableReplicas_.Compute(config.GetPath(), [this, &config, slaveOpenPolicy](auto &key, auto &weakPtr) {
         auto sharedPtr = weakPtr.lock();
         if (sharedPtr == nullptr) {
-            weakPtr = slaveConn;
+            auto [ret, replayConn] = CreateSlaveConnection(config, slaveOpenPolicy);
+            if (ret != E_OK || replayConn == nullptr) {
+                LOG_WARN("replay conn create err:%{public}d", ret);
+                return false;
+            }
+            replayConnection_ = replayConn;
+            weakPtr = replayConn;
         }
         return true;
     });
@@ -2194,7 +2198,6 @@ int SqliteConnection::SqliteBackupCheckpoint(bool isRestore, std::shared_ptr<Sla
     int rc = isRestore ? TryCheckPoint(true) : slaveConnection_->TryCheckPoint(true);
     if (!isRestore && rc == E_SQLITE_CORRUPT) {
         RdbStoreConfig slaveConfig(slaveConnection_->config_.GetPath());
-        slaveConnection_ = nullptr;
         DeleteCorruptSlave(slaveConfig.GetPath());
         *curStatus = SlaveStatus::BACKUP_INTERRUPT;
         Reportor::ReportCorrupted(Reportor::Create(slaveConfig, SQLiteError::ErrNo(rc), "ErrorType: slaveCheckPoint"));
@@ -2246,6 +2249,8 @@ void SqliteConnection::DeleteCorruptSlave(const std::string &path)
     if (dbHandle_ != nullptr) {
         sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
     }
+    slaveConnection_ = nullptr;
+    replayConnection_ = nullptr;
     (void)Delete(path);
     size_t num = SqliteUtils::DeleteFolder(GetBinlogFolderPath(config_.GetPath()), false);
     LOG_INFO("deleted %{public}zu binlog related items", num);

@@ -212,6 +212,11 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0026, TestSize.Level1)
     std::remove(filePath.c_str());
 }
 
+/**
+ * @tc.name: SqliteUtils_Test_0027
+ * @tc.desc: test the DeleteFolder interface with the removeSelf parameter set to false
+ * @tc.type: FUNC
+ */
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0027, TestSize.Level1)
 {
     std::string filePath = "/data/test/SqliteUtils_Test_0027";
@@ -226,6 +231,28 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0027, TestSize.Level1)
     EXPECT_EQ(0, SqliteUtils::GetFileCount(filePath));
     EXPECT_EQ(1, SqliteUtils::DeleteFolder(filePath)); // 1 is removed counbt
     EXPECT_EQ(0, SqliteUtils::GetFileCount(filePath));
+}
+
+/**
+ * @tc.name: SqliteUtils_Test_0028
+ * @tc.desc: test the DeleteFolder interface with subdirectories
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0028, TestSize.Level1)
+{
+    std::string filePath = "/data/test/SqliteUtils_Test_0028";
+    std::string subPath1 = filePath + "/bin001";
+    std::string subPath2 = filePath + "/bin001/bin002";
+    std::error_code ec;
+    std::filesystem::create_directories(filePath, ec);
+    std::filesystem::create_directories(subPath1, ec);
+    std::ofstream src(subPath2.c_str(), std::ios::binary);
+    ASSERT_TRUE(src.is_open());
+    src.close();
+    EXPECT_EQ(2, SqliteUtils::GetFileCount(filePath)); // 2 is file count
+    EXPECT_EQ(2, SqliteUtils::DeleteFolder(filePath, false)); // 2 is removed counbt
+    EXPECT_EQ(1, SqliteUtils::DeleteFolder(filePath)); // 1 is removed counbt
+    EXPECT_EQ(0, SqliteUtils::DeleteFolder("non_exist_folder/random123", false));
 }
 
 HWTEST_F(SqliteUtilsTest, HandleNormalPath, TestSize.Level1)
