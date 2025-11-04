@@ -18,12 +18,11 @@
 #include <functional>
 #include <memory>
 
-#include "taihe/runtime.hpp"
-#include "ohos.data.relationalStore.proj.hpp"
-#include "ohos.data.relationalStore.impl.hpp"
-
-#include "value_object.h"
 #include "napi_rdb_js_utils.h"
+#include "ohos.data.relationalStore.impl.hpp"
+#include "ohos.data.relationalStore.proj.hpp"
+#include "taihe/runtime.hpp"
+#include "value_object.h"
 
 namespace ani_rdbutils {
 
@@ -42,8 +41,8 @@ OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
     ::ohos::data::relationalStore::CryptoParam const &param);
 OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(
     ::ohos::data::relationalStore::StoreConfig const &storeConfig);
-std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(ani_env *env, ani_object aniValue,
-    OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig);
+std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
+    ani_env *env, ani_object aniValue, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig);
 
 bool HasDuplicateAssets(const OHOS::NativeRdb::ValueObject &value);
 bool HasDuplicateAssets(const std::vector<OHOS::NativeRdb::ValueObject> &values);
@@ -51,6 +50,6 @@ bool HasDuplicateAssets(const OHOS::NativeRdb::ValuesBucket &value);
 bool HasDuplicateAssets(const std::vector<OHOS::NativeRdb::ValuesBucket> &values);
 bool HasDuplicateAssets(const OHOS::NativeRdb::ValuesBuckets &values);
 
-}
+} // namespace ani_rdbutils
 
 #endif
