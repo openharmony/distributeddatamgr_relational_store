@@ -2285,27 +2285,25 @@ int RdbStoreImpl::BeginTransaction()
     }
     // size + 1 means the number of transactions in process
     RdbStatReporter reportStat(RDB_PERF, BEGINTRANSACTION, config_, reportFunc_);
-    size_t transactionId = pool->GetTransactionStack().size() + 1;
+    size_t id = pool->GetTransactionStack().size() + 1;
     BaseTransaction transaction(pool->GetTransactionStack().size());
-    auto [errCode, statement] = GetStatement(transaction.GetTransactionStr());
+    auto [err, statement] = GetStatement(transaction.GetTransactionStr());
     if (statement == nullptr) {
-        return errCode;
+        return err;
     }
-    errCode = statement->Execute();
-    if (errCode != E_OK) {
-        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+    err = statement->Execute();
+    if (err != E_OK) {
+        if (err == E_SQLITE_LOCKED || err == E_SQLITE_BUSY) {
             pool->Dump(true, "BEGIN");
         }
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId,
-            SqliteUtils::Anonymous(name_).c_str(), errCode);
-        return errCode;
+        LOG_ERROR("[%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
+        return err;
     }
     pool->SetInTransaction(true);
     pool->GetTransactionStack().push(transaction);
     // 1 means the number of transactions in process
-    if (transactionId > 1) {
-        LOG_WARN("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId,
-            SqliteUtils::Anonymous(name_).c_str(), errCode);
+    if (id > 1) {
+        LOG_WARN("[%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
     }
 
     return E_OK;
@@ -2353,11 +2351,10 @@ int RdbStoreImpl::RollBack()
         return E_NOT_SUPPORT;
     }
     RdbStatReporter reportStat(RDB_PERF, ROLLBACK, config_, reportFunc_);
-    size_t transactionId = pool->GetTransactionStack().size();
+    size_t id = pool->GetTransactionStack().size();
 
     if (pool->GetTransactionStack().empty()) {
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId,
-            SqliteUtils::Anonymous(name_).c_str());
+        LOG_ERROR("[%{public}zu, %{public}s]", id, SqliteUtils::Anonymous(name_).c_str());
         return E_NO_TRANSACTION_IN_SESSION;
     }
     BaseTransaction transaction = pool->GetTransactionStack().top();
@@ -2365,32 +2362,29 @@ int RdbStoreImpl::RollBack()
     if (transaction.GetType() != TransType::ROLLBACK_SELF && !pool->GetTransactionStack().empty()) {
         pool->GetTransactionStack().top().SetChildFailure(true);
     }
-    auto [errCode, statement] = GetStatement(transaction.GetRollbackStr());
+    auto [err, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
-        if (errCode == E_DATABASE_BUSY) {
-            Reportor::ReportCorrupted(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
+        if (err == E_DATABASE_BUSY) {
+            Reportor::ReportCorrupted(Reportor::Create(config_, err, "ErrorType: RollBusy"));
         }
         // size + 1 means the number of transactions in process
-        LOG_ERROR("transaction id: %{public}zu, storeName: %{public}s", transactionId + 1,
-            SqliteUtils::Anonymous(name_).c_str());
+        LOG_ERROR("statement err. [%{public}zu, %{public}s]", id + 1, SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
     }
-    errCode = statement->Execute();
-    if (errCode != E_OK) {
-        if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
-            Reportor::ReportCorrupted(Reportor::Create(config_, errCode, "ErrorType: RollBusy"));
+    err = statement->Execute();
+    if (err != E_OK) {
+        if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
+            Reportor::ReportCorrupted(Reportor::Create(config_, err, "ErrorType: RollBusy"));
         }
-        LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId,
-            SqliteUtils::Anonymous(name_).c_str(), errCode);
-        return errCode;
+        LOG_ERROR("failed. [%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
+        return err;
     }
     if (pool->GetTransactionStack().empty()) {
         pool->SetInTransaction(false);
     }
     // 1 means the number of transactions in process
-    if (transactionId > 1) {
-        LOG_WARN("transaction id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId,
-            SqliteUtils::Anonymous(name_).c_str(), errCode);
+    if (id > 1) {
+        LOG_WARN("[%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
     }
     return E_OK;
 }
@@ -2454,7 +2448,7 @@ int RdbStoreImpl::Commit()
         return E_NOT_SUPPORT;
     }
     RdbStatReporter reportStat(RDB_PERF, COMMIT, config_, reportFunc_);
-    size_t transactionId = pool->GetTransactionStack().size();
+    size_t id = pool->GetTransactionStack().size();
 
     if (pool->GetTransactionStack().empty()) {
         return E_OK;
@@ -2462,37 +2456,34 @@ int RdbStoreImpl::Commit()
     BaseTransaction transaction = pool->GetTransactionStack().top();
     std::string sqlStr = transaction.GetCommitStr();
     if (sqlStr.size() <= 1) {
-        LOG_WARN("id: %{public}zu, storeName: %{public}s, sql: %{public}s", transactionId,
-            SqliteUtils::Anonymous(name_).c_str(),
-            SqliteUtils::SqlAnonymous(sqlStr).c_str());
+        LOG_WARN("[%{public}zu, %{public}s, %{public}s]", id,
+            SqliteUtils::Anonymous(name_).c_str(), SqliteUtils::SqlAnonymous(sqlStr).c_str());
         pool->GetTransactionStack().pop();
         return E_OK;
     }
-    auto [errCode, statement] = GetStatement(sqlStr);
+    auto [err, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
-        if (errCode == E_DATABASE_BUSY) {
-            Reportor::ReportCorrupted(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
+        if (err == E_DATABASE_BUSY) {
+            Reportor::ReportCorrupted(Reportor::Create(config_, err, "ErrorType: CommitBusy"));
         }
-        LOG_ERROR("id: %{public}zu, storeName: %{public}s, statement error", transactionId,
-            SqliteUtils::Anonymous(name_).c_str());
+        LOG_ERROR("statement error. [%{public}zu, %{public}s]", id, SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
     }
-    errCode = statement->Execute();
-    if (errCode != E_OK) {
-        if (errCode == E_SQLITE_BUSY || errCode == E_SQLITE_LOCKED) {
-            Reportor::ReportCorrupted(Reportor::Create(config_, errCode, "ErrorType: CommitBusy"));
+    err = statement->Execute();
+    if (err != E_OK) {
+        if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
+            Reportor::ReportCorrupted(Reportor::Create(config_, err, "ErrorType: CommitBusy"));
         }
-        LOG_ERROR("failed, id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId,
-            SqliteUtils::Anonymous(name_).c_str(), errCode);
-        return errCode;
-    }
-    pool->SetInTransaction(false);
-    // 1 means the number of transactions in process
-    if (transactionId > 1) {
-        LOG_WARN("id: %{public}zu, storeName: %{public}s, errCode: %{public}d", transactionId,
-            SqliteUtils::Anonymous(name_).c_str(), errCode);
+        LOG_ERROR("failed. [%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
+        return err;
     }
     pool->GetTransactionStack().pop();
+    if (pool->GetTransactionStack().empty()) {
+        pool->SetInTransaction(false);
+    } else {
+        // 1 means the number of transactions in process
+        LOG_WARN("[%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
+    }
     return E_OK;
 }
 

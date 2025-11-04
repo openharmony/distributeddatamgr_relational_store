@@ -69,12 +69,12 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &config, int &er
     (void)SqliteGlobalConfig::GetDbPath(config, dbPath);
     LOG_INFO("code:%{public}d app[%{public}s:%{public}s] area[%{public}s] "
              "cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]"
-             "%{public}s",
+             "%{public}s, pathSize:%{public}zu",
         errCode, config.GetBundleName().c_str(), config.GetModuleName().c_str(),
         SqliteUtils::GetArea(dbPath).c_str(), config.GetDBType(), config.GetHaMode(), config.IsEncrypt(),
         config.GetArea(), config.GetSecurityLevel(), config.GetRoleType(), config.IsReadOnly(),
         SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config),
-        SqliteUtils::Anonymous(config.GetName())).c_str());
+        SqliteUtils::Anonymous(config.GetName())).c_str(), dbPath.size());
     return errCode == E_OK ? pool : nullptr;
 }
 
@@ -630,6 +630,9 @@ int32_t ConnectionPool::Dump(bool isWriter, const char *header)
 {
     Container *container = (isWriter || maxReader_ == 0) ? &writers_ : &readers_;
     container->Dump(header, transCount_ + isInTransaction_);
+    if (!trans_.Empty()) {
+        trans_.Dump(header, transCount_ + isInTransaction_);
+    }
     return E_OK;
 }
 
