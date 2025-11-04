@@ -399,6 +399,7 @@ bool RdbStoreManager::IsPermitted(const DistributedRdb::RdbSyncerParam &param, c
 
 void RdbStoreManager::Clear()
 {
+    LOG_INFO("storeCache clear");
     configCache_.ResetCapacity(0);
     configCache_.ResetCapacity(BUCKET_MAX_SIZE);
     isSilentCache_.ResetCapacity(0);
