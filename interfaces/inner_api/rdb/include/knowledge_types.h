@@ -40,6 +40,11 @@ struct RdbProcessSequence {
     std::string sortType;
 };
 
+struct RdbProcessRatio {
+    int32_t invertedCount = 0;
+    int32_t vectorCount = 0;
+};
+
 struct RdbKnowledgeField {
     std::string columnName;
     std::vector<std::string> type;
@@ -56,6 +61,7 @@ struct RdbKnowledgeTable {
     std::vector<RdbKnowledgeField> knowledgeFields;
     std::unordered_map<std::string, std::vector<std::string>> pipelineHandlers;
     RdbProcessSequence processSequence;
+    RdbProcessRatio processRatio;
 };
 
 struct RdbKnowledgeProcess {
