@@ -21,14 +21,14 @@
 #include "cloud_service.h"
 
 namespace OHOS::CloudData {
-class CloudManager {
+class API_EXPORT CloudManager {
 public:
-    static CloudManager &GetInstance();
-    std::pair<int32_t, std::shared_ptr<CloudService>> GetCloudService();
+    static API_EXPORT CloudManager &GetInstance();
+    API_EXPORT std::pair<int32_t, std::shared_ptr<CloudService>> GetCloudService();
 
 private:
-    CloudManager() = default;
-    ~CloudManager() = default;
+    API_EXPORT CloudManager() = default;
+    API_EXPORT ~CloudManager() = default;
     std::mutex mutex_;
     std::shared_ptr<CloudService> cloudService_;
 };
