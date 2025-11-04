@@ -127,6 +127,7 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
    
     const char* empryStr = "";
     ValueObject emptyStrObj(empryStr);
+
     EXPECT_TRUE(emptyObj == emptyStrObj);
 }
 } // namespace Test
