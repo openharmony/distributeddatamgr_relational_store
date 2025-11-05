@@ -2279,10 +2279,10 @@ int RdbStoreImpl::BeginTransaction()
     if (pool == nullptr) {
         return E_ALREADY_CLOSED;
     }
-    std::lock_guard<std::mutex> lockGuard(pool->GetTransactionStackMutex());
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
+    std::lock_guard<std::mutex> lockGuard(pool->GetTransactionStackMutex());
     // size + 1 means the number of transactions in process
     RdbStatReporter reportStat(RDB_PERF, BEGINTRANSACTION, config_, reportFunc_);
     size_t id = pool->GetTransactionStack().size() + 1;
@@ -2346,10 +2346,10 @@ int RdbStoreImpl::RollBack()
     if (pool == nullptr) {
         return E_ALREADY_CLOSED;
     }
-    std::lock_guard<std::mutex> lockGuard(pool->GetTransactionStackMutex());
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
+    std::lock_guard<std::mutex> lockGuard(pool->GetTransactionStackMutex());
     RdbStatReporter reportStat(RDB_PERF, ROLLBACK, config_, reportFunc_);
     size_t id = pool->GetTransactionStack().size();
 
@@ -2443,10 +2443,10 @@ int RdbStoreImpl::Commit()
     if (pool == nullptr) {
         return E_ALREADY_CLOSED;
     }
-    std::lock_guard<std::mutex> lockGuard(pool->GetTransactionStackMutex());
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
+    std::lock_guard<std::mutex> lockGuard(pool->GetTransactionStackMutex());
     RdbStatReporter reportStat(RDB_PERF, COMMIT, config_, reportFunc_);
     size_t id = pool->GetTransactionStack().size();
 
@@ -2481,7 +2481,6 @@ int RdbStoreImpl::Commit()
     if (pool->GetTransactionStack().empty()) {
         pool->SetInTransaction(false);
     } else {
-        // 1 means the number of transactions in process
         LOG_WARN("[%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
     }
     return E_OK;
