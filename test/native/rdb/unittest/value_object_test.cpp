@@ -112,22 +112,16 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_003, TestSize.Level1)
 /**
  * @tc.name: ValueObject_Test_004
  * @tc.desc: test func Constructor pass nullptr
-ValueObject::ValueObject(const char *val) : ValueObject(val ? std::string(val) : std::string())
-{
-    if (val == nullptr) {
-        LOG_WARN("val is nullptr");
-    }
-}
  * @tc.type: FUNC
  */
 HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
 {
-    const char* emptyPtr = nullptr;
-    ValueObject emptyObj(emptyPtr);
+    const char* nullPtr = nullptr;
+    ValueObject nullObj(nullPtr);
    
-    const char* empryStr = "";
-    ValueObject emptyStrObj(empryStr);
+    const char* emptyStr = "";
+    ValueObject emptyObj(emptyStr);
 
-    EXPECT_TRUE(emptyObj == emptyStrObj);
+    EXPECT_TRUE(nullObj == emptyObj);
 }
 } // namespace Test
