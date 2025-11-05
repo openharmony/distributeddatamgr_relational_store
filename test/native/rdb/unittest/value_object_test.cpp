@@ -108,4 +108,20 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_003, TestSize.Level1)
     BigInteger bigInt = obj;
     EXPECT_TRUE(bigInt == bigInt1);
 }
+
+/**
+ * @tc.name: ValueObject_Test_004
+ * @tc.desc: test func constructor pass nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
+{
+    const char* nullPtr = nullptr;
+    ValueObject nullObj(nullPtr);
+   
+    const char* emptyStr = "";
+    ValueObject emptyObj(emptyStr);
+
+    EXPECT_TRUE(nullObj == emptyObj);
+}
 } // namespace Test
