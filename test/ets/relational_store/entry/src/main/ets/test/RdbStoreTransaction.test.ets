@@ -2251,15 +2251,15 @@ export default function () {
     it('testSqliteLocked0001', 0, async function (done) {
       console.log(TAG + "************* testSqliteLocked0001 start *************");
       let u8 = new Uint8Array([1, 2, 3])
-      const valueBucket: relationalStore.ValueBucket = {
+      const valueBucket: data_relationalStore.ValuesBucket = {
           "name": "aaa",
           "age": 18,
           "salary": 100.5,
           "blobType": u8,
       }
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         let rowId = await rdbStore.insert('test', valueBucket);
         expect(1).assertEqual(rowId);
@@ -2296,15 +2296,15 @@ export default function () {
     it('testSqliteLocked0002', 0, async function (done) {
       console.log(TAG + "************* testSqliteLocked0002 start *************");
       let u8 = new Uint8Array([1, 2, 3])
-      const valueBucket: relationalStore.ValueBucket = {
+      const valueBucket: data_relationalStore.ValuesBucket = {
           "name": "aaa",
           "age": 18,
           "salary": 100.5,
           "blobType": u8,
       }
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         let rowId = await rdbStore.insert('test', valueBucket);
         expect(1).assertEqual(rowId);
@@ -2341,15 +2341,15 @@ export default function () {
     it('testSqliteLocked0003', 0, async function (done) {
       console.log(TAG + "************* testSqliteLocked0003 start *************");
       let u8 = new Uint8Array([1, 2, 3])
-      const valueBucket: relationalStore.ValueBucket = {
+      const valueBucket: data_relationalStore.ValuesBucket = {
           "name": "aaa",
           "age": 18,
           "salary": 100.5,
           "blobType": u8,
       }
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         let rowId = await rdbStore.insert('test', valueBucket);
         expect(1).assertEqual(rowId);
@@ -2387,15 +2387,15 @@ export default function () {
       console.log(TAG + "************* testSqliteLocked0004 start *************");
 
       let u8 = new Uint8Array([1, 2, 3])
-      const valueBucket: relationalStore.ValueBucket = {
+      const valueBucket: data_relationalStore.ValuesBucket = {
           "name": "aaa",
           "age": 18,
           "salary": 100.5,
           "blobType": u8,
       }
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         await rdbStore.execute('CREATE INDEX test_index ON test(age)');
 
@@ -2436,15 +2436,15 @@ export default function () {
       console.log(TAG + "************* testSqliteLocked0005 start *************");
 
       let u8 = new Uint8Array([1, 2, 3])
-      const valueBucket: relationalStore.ValueBucket = {
+      const valueBucket: data_relationalStore.ValuesBucket = {
           "name": "aaa",
           "age": 18,
           "salary": 100.5,
           "blobType": u8,
       }
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         await rdbStore.execute('CREATE INDEX test_index ON test(age)');
 
@@ -2485,15 +2485,15 @@ export default function () {
       console.log(TAG + "************* testSqliteLocked0006 start *************");
 
       let u8 = new Uint8Array([1, 2, 3])
-      const valueBucket: relationalStore.ValueBucket = {
+      const valueBucket: data_relationalStore.ValuesBucket = {
           "name": "aaa",
           "age": 18,
           "salary": 100.5,
           "blobType": u8,
       }
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         await rdbStore.execute('CREATE INDEX test_index ON test(age)');
 
@@ -2532,8 +2532,8 @@ export default function () {
     it('testSqliteLocked0007', 0, async function (done) {
       console.log(TAG + "************* testSqliteLocked0007 start *************");
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         transaction = await rdbStore.createTransaction();
         resultSet = await transaction.querySql('SELECT * FROM test');
@@ -2565,8 +2565,8 @@ export default function () {
     it('testSqliteLocked0008', 0, async function (done) {
       console.log(TAG + "************* testSqliteLocked0008 start *************");
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         await rdbStore.execute('CREATE INDEX test_index ON test(age)');
         transaction = await rdbStore.createTransaction();
@@ -2599,15 +2599,15 @@ export default function () {
     it('testSqliteLocked0009', 0, async function (done) {
       console.log(TAG + "************* testSqliteLocked0009 start *************");
       let u8 = new Uint8Array([1, 2, 3])
-      const valueBucket: relationalStore.ValueBucket = {
+      const valueBucket: data_relationalStore.ValuesBucket = {
           "name": "aaa",
           "age": 18,
           "salary": 100.5,
           "blobType": u8,
       }
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         await rdbStore.execute(CREATE_TABLE_TEST1);
         let rowId = await rdbStore.insert('test', valueBucket);
@@ -2645,15 +2645,15 @@ export default function () {
     it('testSqliteLocked0010', 0, async function (done) {
       console.log(TAG + "************* testSqliteLocked0010 start *************");
       let u8 = new Uint8Array([1, 2, 3])
-      const valueBucket: relationalStore.ValueBucket = {
+      const valueBucket: data_relationalStore.ValuesBucket = {
           "name": "aaa",
           "age": 18,
           "salary": 100.5,
           "blobType": u8,
       }
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         await rdbStore.execute(CREATE_TABLE_TEST1);
         let rowId = await rdbStore.insert('test', valueBucket);
@@ -2686,15 +2686,15 @@ export default function () {
     it('testSqliteLocked0011', 0, async function (done) {
       console.log(TAG + "************* testSqliteLocked0011 start *************");
       let u8 = new Uint8Array([1, 2, 3])
-      const valueBucket: relationalStore.ValueBucket = {
+      const valueBucket: data_relationalStore.ValuesBucket = {
           "name": "aaa",
           "age": 18,
           "salary": 100.5,
           "blobType": u8,
       }
 
-      let transaction: relationalStore.Transaction;
-      let resultSet: relationalStore.ResultSet;
+      let transaction: data_relationalStore.Transaction;
+      let resultSet: data_relationalStore.ResultSet;
       try {
         let rowId = await rdbStore.insert('test', valueBucket);
         expect(1).assertEqual(rowId);
@@ -2757,6 +2757,53 @@ export default function () {
       await data_relationalStore.deleteRdbStore(context, CONFIG);
       done()
       console.log(TAG + "************* testConcurrentTransction0001 end *************");
+    })
+
+    /**
+     * @tc.number testOldAndNewTransction0001
+     * @tc.name testOldAndNewTransction
+     * @tc.desc 1.no create old transaction
+     *          2.commit old transaction
+     */
+    it('testOldAndNewTransction0001', 0, async function (done) {
+      console.log(TAG + "************* testOldAndNewTransction0001 start *************");
+      let transaction: data_relationalStore.Transaction;
+      try {
+        transaction = await rdbStore.createTransaction();
+        rdbStore.commit()
+        console.info(TAG + 'testOldAndNewTransction0001 success');
+      } catch (err) {
+        console.error(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        console.error(TAG + "testOldAndNewTransction0001 failed");
+        expect(null).assertFail()
+      }
+      await transaction.commit();
+      done()
+      console.log(TAG + "************* testOldAndNewTransction0001 end *************");
+    })
+
+    /**
+     * @tc.number testOldAndNewTransction0002
+     * @tc.name testOldAndNewTransction
+     * @tc.desc 1.no create old transaction
+     *          2.rollBack old transaction
+     */
+    it('testOldAndNewTransction0002', 0, async function (done) {
+      console.log(TAG + "************* testOldAndNewTransction0002 start *************");
+      let transaction: data_relationalStore.Transaction;
+      try {
+        transaction = await rdbStore.createTransaction();
+        rdbStore.rollBack()
+        console.info(TAG + 'testOldAndNewTransction0002 failed');
+        expect(null).assertFail()
+      } catch (err) {
+        console.error(TAG + 'err code: ' + err.code + 'err message: ' + err.message);
+        console.error(TAG + "testOldAndNewTransction0002 success");
+        expect(String(err.code)).assertEqual(String(14800000))
+      }
+      await transaction.commit();
+      done()
+      console.log(TAG + "************* testOldAndNewTransction0002 end *************");
     })
     console.log(TAG + "*************Unit Test End*************");
   })

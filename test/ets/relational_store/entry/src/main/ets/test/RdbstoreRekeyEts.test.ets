@@ -879,7 +879,7 @@ export default function RdbstoreRekeysEtsTest() {
         encrypt: true,
         cryptoParam:cryptoParam
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
       await rdbStore.executeSql(CREATE_TABLE_TEST);
       try {
         let cryptoParam1: data_relationalStore.CryptoParam = {
@@ -941,7 +941,7 @@ export default function RdbstoreRekeysEtsTest() {
         encrypt: true,
         cryptoParam:cryptoParam
       }
-      let rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+      let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
       await rdbStore.executeSql(CREATE_TABLE_TEST);
       try {
         let cryptoParam1: data_relationalStore.CryptoParam = {
@@ -963,7 +963,7 @@ export default function RdbstoreRekeysEtsTest() {
         await rdbStore.rekey(cryptoParam1);
         await rdbStore.close();
         storeConfig.cryptoParam = cryptoParam1;
-        rdbStore = await data_relationalStore.getRdbStore(context, storeConfig);
+        rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
         const valueBucket1: data_relationalStore.ValuesBucket = {
           "name": "zhangsan",
