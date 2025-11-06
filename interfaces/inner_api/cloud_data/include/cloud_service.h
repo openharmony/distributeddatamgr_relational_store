@@ -26,8 +26,9 @@
 #include "common_types.h"
 #include "iremote_broker.h"
 #include "rdb_types.h"
-#include "values_bucket.h"
 #include "rdb_visibility.h"
+#include "values_bucket.h"
+
 namespace OHOS {
 namespace CloudData {
 class API_EXPORT CloudService {
@@ -108,19 +109,24 @@ public:
     virtual API_EXPORT ~CloudService() = default;
     virtual API_EXPORT int32_t EnableCloud(const std::string &id, const std::map<std::string, int32_t> &switches) = 0;
     virtual API_EXPORT int32_t DisableCloud(const std::string &id) = 0;
-    virtual API_EXPORT int32_t ChangeAppSwitch(const std::string &id, const std::string &bundleName, int32_t appSwitch) = 0;
+    virtual API_EXPORT int32_t ChangeAppSwitch(
+        const std::string &id, const std::string &bundleName, int32_t appSwitch) = 0;
     virtual API_EXPORT int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions) = 0;
     virtual API_EXPORT int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) = 0;
-    virtual API_EXPORT int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) = 0;
+    virtual API_EXPORT int32_t NotifyDataChange(
+        const std::string &eventId, const std::string &extraData, int32_t userId) = 0;
     virtual API_EXPORT std::pair<int32_t, std::map<std::string, StatisticInfos>> QueryStatistics(
         const std::string &id, const std::string &bundleName, const std::string &storeId) = 0;
-    virtual API_EXPORT int32_t SetGlobalCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values) = 0;
+    virtual API_EXPORT int32_t SetGlobalCloudStrategy(
+        Strategy strategy, const std::vector<CommonType::Value> &values) = 0;
 
-    virtual API_EXPORT std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(const std::string &storeId,
-        const DistributedRdb::PredicatesMemo &predicates, const std::vector<std::string> &columns,
-        const Participants &participants) = 0;
-    virtual API_EXPORT int32_t Share(const std::string &sharingRes, const Participants &participants, Results &results) = 0;
-    virtual API_EXPORT int32_t Unshare(const std::string &sharingRes, const Participants &participants, Results &results) = 0;
+    virtual API_EXPORT std::pair<int32_t, std::vector<NativeRdb::ValuesBucket>> AllocResourceAndShare(
+        const std::string &storeId, const DistributedRdb::PredicatesMemo &predicates,
+        const std::vector<std::string> &columns, const Participants &participants) = 0;
+    virtual API_EXPORT int32_t Share(
+        const std::string &sharingRes, const Participants &participants, Results &results) = 0;
+    virtual API_EXPORT int32_t Unshare(
+        const std::string &sharingRes, const Participants &participants, Results &results) = 0;
     virtual API_EXPORT int32_t Exit(const std::string &sharingRes, std::pair<int32_t, std::string> &result) = 0;
     virtual API_EXPORT int32_t ChangePrivilege(
         const std::string &sharingRes, const Participants &participants, Results &results) = 0;
@@ -134,8 +140,8 @@ public:
     virtual API_EXPORT int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values) = 0;
     virtual API_EXPORT std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
         const std::string &id, const std::string &bundleName, const std::string &storeId) = 0;
-    virtual API_EXPORT int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
-        const DistributedRdb::AsyncDetail &async) = 0;
+    virtual API_EXPORT int32_t CloudSync(const std::string &bundleName, const std::string &storeId,
+        const Option &option, const DistributedRdb::AsyncDetail &async) = 0;
     virtual API_EXPORT int32_t InitNotifier(sptr<IRemoteObject> notifier) = 0;
 
     inline static constexpr const char *SERVICE_NAME = "cloud";
