@@ -63,6 +63,7 @@ private:
     int PreGetColCount();
 
     bool readOnly_ = false;
+    bool bound_ = false;
     bool isStepInPrepare_ = false;
     int stepCnt_ = 0;
     std::string sql_ = "";

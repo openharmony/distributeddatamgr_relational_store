@@ -266,6 +266,10 @@ int32_t RdStatement::Bind(const std::vector<std::reference_wrapper<ValueObject>>
 {
     uint32_t index = 1;
     int ret = E_OK;
+    if (bound_) {
+        RdUtils::RdSqlReset(stmtHandle_);
+    }
+    bound_ = true;
     for (auto &arg : args) {
         switch (arg.get().GetType()) {
             case ValueObjectType::TYPE_NULL: {
