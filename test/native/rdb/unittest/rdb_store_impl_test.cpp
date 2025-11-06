@@ -307,8 +307,8 @@ HWTEST_F(RdbStoreImplTest, Rd_BatchInsertTest_001, TestSize.Level0)
     if (!IsUsingArkData()) {
         GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     }
-    const std::string DATABASE_NAME = RDB_TEST_PATH + "rd_batchinsert_test.db";
-    RdbStoreConfig config(DATABASE_NAME);
+    const std::string databaseName = RDB_TEST_PATH + "rd_batchinsert_test.db";
+    RdbStoreConfig config(databaseName);
     config.SetIsVector(true);
     RdbStoreImplTestOpenCallback helper;
     int errCode;
