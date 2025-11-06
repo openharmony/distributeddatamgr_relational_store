@@ -298,6 +298,43 @@ HWTEST_F(RdbStoreImplTest, Rdb_BatchInsertTest_002, TestSize.Level2)
 }
 
 /* *
+ * @tc.name: Rd_BatchInsertTest_001
+ * @tc.desc: Abnormal testCase for BatchInsert, the statement is reset..
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rd_BatchInsertTest_001, TestSize.Level0)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    const std::string DATABASE_NAME = RDB_TEST_PATH + "rd_batchinsert_test.db";
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetIsVector(true);
+    RdbStoreImplTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::string sqlCreateTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY);";
+
+    std::pair<int32_t, ValueObject> res = {};
+    res = store->Execute(sqlCreateTable.c_str(), {});
+    EXPECT_EQ(res.first, E_OK);
+
+    ValuesBuckets rows;
+    for (int i = 0; i < 65532; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        rows.Put(row);
+    }
+    auto result = store->BatchInsert("test", rows);
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(result.second, 65532);// rowId
+    store = nullptr;
+    errCode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    EXPECT_EQ(E_OK, errCode);
+}
+
+/* *
  * @tc.name: Rdb_QueryTest_001
  * @tc.desc: Abnormal testCase for Query, if table name is empty
  * @tc.type: FUNC
