@@ -328,7 +328,7 @@ HWTEST_F(RdbStoreImplTest, Rd_BatchInsertTest_001, TestSize.Level0)
     }
     auto result = store->BatchInsert("test", rows);
     ASSERT_EQ(result.first, E_OK);
-    ASSERT_EQ(result.second, 65532);// rowId
+    ASSERT_EQ(result.second, 65532); // rowId is 65532
     store = nullptr;
     errCode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
     EXPECT_EQ(E_OK, errCode);
