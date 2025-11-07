@@ -1896,7 +1896,7 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     ret = InnerBackup(backupFilePath, encryptKey);
     if (ret != E_OK || access(walFile.c_str(), F_OK) == E_OK) {
         if (ret == E_DB_NOT_EXIST) {
-            Reportor::ReportCorrupted(Reportor::Create(config_, ret, "ErrorType: BackupFailed"));
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, ret, config_.GetBundleName(), "BackupFailed"));
         }
         if (SqliteUtils::DeleteDirtyFiles(backupFilePath)) {
             SqliteUtils::RenameFile(tempPath, backupFilePath);
@@ -2365,7 +2365,7 @@ int RdbStoreImpl::RollBack()
     auto [err, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
         if (err == E_DATABASE_BUSY) {
-            Reportor::ReportCorrupted(Reportor::Create(config_, err, "ErrorType: RollBusy"));
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, err, config_.GetBundleName(), "RollBusy"));
         }
         // size + 1 means the number of transactions in process
         LOG_ERROR("statement err. [%{public}zu, %{public}s]", id + 1, SqliteUtils::Anonymous(name_).c_str());
@@ -2374,7 +2374,7 @@ int RdbStoreImpl::RollBack()
     err = statement->Execute();
     if (err != E_OK) {
         if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
-            Reportor::ReportCorrupted(Reportor::Create(config_, err, "ErrorType: RollBusy"));
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, err, config_.GetBundleName(), "RollBusy"));
         }
         LOG_ERROR("failed. [%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
         return err;
@@ -2464,7 +2464,7 @@ int RdbStoreImpl::Commit()
     auto [err, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
         if (err == E_DATABASE_BUSY) {
-            Reportor::ReportCorrupted(Reportor::Create(config_, err, "ErrorType: CommitBusy"));
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, err, config_.GetBundleName(), "ComBusy"));
         }
         LOG_ERROR("statement error. [%{public}zu, %{public}s]", id, SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
@@ -2472,7 +2472,7 @@ int RdbStoreImpl::Commit()
     err = statement->Execute();
     if (err != E_OK) {
         if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
-            Reportor::ReportCorrupted(Reportor::Create(config_, err, "ErrorType: CommitBusy"));
+            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, err, config_.GetBundleName(), "ComBusy"));
         }
         LOG_ERROR("failed. [%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
         return err;

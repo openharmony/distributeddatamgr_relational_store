@@ -30,6 +30,7 @@
 #include "hisysevent_c.h"
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_helper.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "rdb_time_utils.h"
@@ -47,8 +48,10 @@ RdbFaultHiViewReporter::Collector RdbFaultHiViewReporter::collector_ = nullptr;
 RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
     { E_DATABASE_BUSY, 0 },
     { E_CREATE_FOLDER_FAIL, 0 },
+    { E_DB_NOT_EXIST, 0 },
     { E_WAL_SIZE_OVER_LIMIT, 0 },
     { E_SQLITE_FULL, 0 },
+    { E_SQLITE_ERROR, 0 },
     { E_SQLITE_CORRUPT, 0 },
     { E_SQLITE_PERM, 0 },
     { E_SQLITE_BUSY, 0 },
@@ -111,11 +114,15 @@ void RdbFaultHiViewReporter::ReportRestore(const RdbCorruptedEvent &eventInfo, b
         SqliteUtils::Anonymous(eventInfo.storeName).c_str(), eventInfo.errorCode, eventInfoAppend.appendix.c_str());
     ReportCorrupted(eventInfoAppend);
     DeleteCorruptedFlag(eventInfo.path);
+    memCorruptReportedFlg_ = false;
 }
 
 void RdbFaultHiViewReporter::ReportCorrupted(const RdbCorruptedEvent &eventInfo)
 {
-    std::string bundleName = GetBundleName(eventInfo.bundleName, eventInfo.storeName);
+    std::string bundleName = GetBundleName(eventInfo.bundleName);
+    if (bundleName.empty()) {
+        return;
+    }
     std::string moduleName = eventInfo.moduleName;
     std::string storeType = eventInfo.storeType;
     std::string storeName = eventInfo.storeName;
@@ -264,12 +271,12 @@ void RdbFaultHiViewReporter::Update(std::map<std::string, DebugInfo> &localInfos
     }
 }
 
-std::string RdbFaultHiViewReporter::GetBundleName(const std::string &bundleName, const std::string &storeName)
+std::string RdbFaultHiViewReporter::GetBundleName(const std::string &bundleName)
 {
     if (!bundleName.empty()) {
         return bundleName;
     }
-    return SqliteUtils::Anonymous(storeName);
+    return RdbHelper::GetSelfBundleName();
 }
 
 uint8_t *RdbFaultHiViewReporter::GetFaultCounter(int32_t errCode)
