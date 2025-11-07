@@ -310,10 +310,13 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
     // The lastParam is possible that the same named db parameters of different paths when GetParamFromService
     if (lastParam.customDir_ != config.GetCustomDir() || lastParam.hapName_ != config.GetModuleName() ||
         lastParam.area_ != config.GetArea()) {
-        LOG_WARN("Diff db with the same name! customDir:%{public}s -> %{public}s, hapName:%{public}s -> %{public}s,"
-                 "area:%{public}d -> %{public}d.",
-            SqliteUtils::Anonymous(lastParam.customDir_).c_str(), SqliteUtils::Anonymous(config.GetCustomDir()).c_str(),
-            lastParam.hapName_.c_str(), config.GetModuleName().c_str(), lastParam.area_, config.GetArea());
+        std::stringstream ss;
+        ss << "Diff db with the same name! customDir:" << SqliteUtils::Anonymous(lastParam.customDir_).c_str() << "->"
+            << SqliteUtils::Anonymous(config.GetCustomDir()).c_str() << ", hapName:"
+            << lastParam.hapName_.c_str() << "->" << config.GetModuleName().c_str() << ", area:"
+            << lastParam.area_ << "->" << config.GetArea();
+        LOG_WARN("%{public}s", ss.str().c_str());
+        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, ss.str()));
         return false;
     }
     if (config.GetSecurityLevel() != SecurityLevel::LAST &&
