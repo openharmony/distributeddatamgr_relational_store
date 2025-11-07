@@ -77,6 +77,7 @@ std::pair<int, int64_t> TransDB::Insert(const std::string &table, const Row &row
 
 std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const RefRows &rows)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (rows.RowSize() == 0) {
         return { E_OK, 0 };
     }
@@ -109,6 +110,7 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
 std::pair<int32_t, Results> TransDB::BatchInsert(const std::string &table, const ValuesBuckets &rows,
     const std::vector<std::string> &returningFields, Resolution resolution)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (rows.RowSize() == 0) {
         return { E_OK, 0 };
     }
@@ -215,6 +217,7 @@ std::pair<int32_t, Results> TransDB::Delete(
 std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, const Values &args)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto start = std::chrono::steady_clock::now();
     return std::make_shared<SqliteSharedResultSet>(start, conn_.lock(), sql, args, path_);
 #else
@@ -226,17 +229,20 @@ std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, co
 
 std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto start = std::chrono::steady_clock::now();
     return std::make_shared<StepResultSet>(start, conn_.lock(), sql, args, true, true);
 }
 
 std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     (void)trxId;
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType) && !SqliteUtils::IsSpecial(sqlType)) {
-        LOG_ERROR("Not support the sql:app self can check the SQL, sqlType:%{public}d", sqlType);
+        LOG_ERROR("Not support the sql:app self can check the SQL, sqlType:%{public}d, sql:%{public}s",
+            sqlType, SqliteUtils::SqlAnonymous(sql).c_str());
         return { E_INVALID_ARGS, object };
     }
 
@@ -247,7 +253,8 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
 
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
-        LOG_ERROR("failed,app self can check the SQL, error:0x%{public}x.", errCode);
+        LOG_ERROR("failed,app self can check the SQL, error:0x%{public}x., sql:%{public}s",
+            errCode, SqliteUtils::SqlAnonymous(sql).c_str());
         return { errCode, object };
     }
 
@@ -275,6 +282,7 @@ std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const V
 
 std::pair<int32_t, Results> TransDB::ExecuteExt(const std::string &sql, const Values &args)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType) && !SqliteUtils::IsSpecial(sqlType)) {
