@@ -1800,3 +1800,154 @@ HWTEST_F(RdbStoreImplConditionTest, CloudTables_Change_Test_001, TestSize.Level2
     res = cloudTables->Change(table);
     EXPECT_EQ(false, res);
 }
+
+/**
+ * @tc.name: RdbStore_Transaction_001
+ * @tc.desc: Abnormal testCase of Transaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Transaction_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    auto conn = storeImpl->connectionPool_->AcquireConnection(false);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_DATABASE_BUSY, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_002
+ * @tc.desc: Abnormal testCase of Transaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Transaction_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl1 = std::make_shared<RdbStoreImpl>(config);
+    storeImpl1->Init(0, helper);
+    auto storeImpl2 = std::make_shared<RdbStoreImpl>(config);
+    storeImpl2->Init(0, helper);
+    int ret = storeImpl1->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl2->BeginTransaction();
+    EXPECT_EQ(E_SQLITE_BUSY, ret);
+    ret = storeImpl1->Commit();
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: RdbStore_RollBack_001
+ * @tc.desc: Abnormal testCase of RollBack
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    auto conn = storeImpl->connectionPool_->AcquireConnection(false);
+    ret = storeImpl->RollBack();
+    EXPECT_EQ(E_DATABASE_BUSY, ret);
+}
+
+/**
+ * @tc.name: RdbStore_RollBack_002
+ * @tc.desc: Abnormal testCase of RollBack
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    BaseTransaction transaction(0);
+    storeImpl->GetPool()->GetTransactionStack().push(transaction);
+    auto ret = storeImpl->RollBack();
+    EXPECT_EQ(E_SQLITE_ERROR, ret);
+}
+
+/**
+ * @tc.name: RdbStore_RollBack_003
+ * @tc.desc: Abnormal testCase of RollBack
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl->RollBack();
+}
+
+/**
+ * @tc.name: RdbStore_Commit_001
+ * @tc.desc: Abnormal testCase of RollBack
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    auto conn = storeImpl->connectionPool_->AcquireConnection(false);
+    ret = storeImpl->Commit();
+    EXPECT_EQ(E_DATABASE_BUSY, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Commit_002
+ * @tc.desc: Abnormal testCase of RollBack
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    BaseTransaction transaction(0);
+    storeImpl->GetPool()->GetTransactionStack().push(transaction);
+    auto ret = storeImpl->Commit();
+    EXPECT_EQ(E_SQLITE_ERROR, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Commit_003
+ * @tc.desc: Abnormal testCase of RollBack
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl->Commit();
+}
