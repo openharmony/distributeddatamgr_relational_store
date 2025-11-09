@@ -60,6 +60,7 @@ static constexpr const char *FT_EX_FILE = "EX_FILE";
 static constexpr const char *FT_EX_HUKS = "EX_HUKS";
 static constexpr const char *FT_CP = "CHECK_POINT";
 static constexpr const char *FT_SQLITE = "SQLITE";
+static constexpr const char *FT_WAL_OVER_LIMIT = "WAL_OVER_LIMIT";
 
 static constexpr const char *BUNDLE_NAME_COMMON = "common";
 
