@@ -1110,8 +1110,8 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
 }
 #endif
 
-RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
-    : isMemoryRdb_(config.IsMemoryRdb()), config_(config), name_(config.GetName()),
+RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, std::shared_ptr<RdbStoreConfig> configHolder)
+    : isMemoryRdb_(config.IsMemoryRdb()), config_(config), configHolder_(configHolder), name_(config.GetName()),
       fileType_(config.GetDatabaseFileType())
 {
     SqliteGlobalConfig::GetDbPath(config_, path_);
@@ -1170,7 +1170,7 @@ bool RdbStoreImpl::TryAsyncRepair()
     }
 
     SqliteUtils::DeleteDirtyFiles(path_);
-    auto pool = ConnectionPool::Create(config_, errCode);
+    auto pool = ConnectionPool::Create(config_, configHolder_, errCode);
     if (errCode != E_OK) {
         LOG_WARN("create new connection failed");
         return false;
@@ -1188,7 +1188,7 @@ bool RdbStoreImpl::TryAsyncRepair()
 int32_t RdbStoreImpl::CreatePool(bool &created)
 {
     int32_t errCode = E_OK;
-    connectionPool_ = ConnectionPool::Create(config_, errCode);
+    connectionPool_ = ConnectionPool::Create(config_, configHolder_, errCode);
     if (connectionPool_ == nullptr && (errCode == E_SQLITE_CORRUPT || errCode == E_INVALID_SECRET_KEY) &&
         !isReadOnly_) {
         LOG_ERROR("database corrupt, errCode:0x%{public}x, %{public}s, %{public}s", errCode,
@@ -1211,7 +1211,7 @@ int32_t RdbStoreImpl::CreatePool(bool &created)
         if (TryAsyncRepair()) {
             errCode = E_OK;
         } else {
-            std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, errCode);
+            std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(config_, configHolder_, errCode);
         }
         created = true;
 #if !defined(CROSS_PLATFORM)
