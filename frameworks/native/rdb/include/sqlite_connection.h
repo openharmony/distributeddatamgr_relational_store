@@ -143,7 +143,6 @@ private:
     void ReplayBinlog(const RdbStoreConfig &config);
     ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount);
     void DeleteCorruptSlave(const std::string &path);
-    void InsertReusableReplica(const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite, bool isReusableReplica = false);
     static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath);
@@ -156,6 +155,7 @@ private:
     static void ReplayBinlog(const std::string &dbPath,
         std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean);
     static std::string GetBinlogFolderPath(const std::string &dbPath);
+    static void InsertReusableReplica(const std::string &dbPath, std::weak_ptr<SqliteConnection> slaveConn);
     static std::shared_ptr<SqliteConnection> GetReusableReplica(const std::string &dbPath);
     /**
      * @brief The lifecycle of config must be shorter than that of param..
@@ -216,7 +216,6 @@ private:
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;
-    std::shared_ptr<SqliteConnection> replayConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     const RdbStoreConfig config_;
 };
