@@ -2960,6 +2960,7 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     if (isReadOnly_ || isMemoryRdb_ || rebuild_ != RebuiltType::NONE) {
         return E_OK;
     }
+    Connection::RegisterReplayCallback(config_.GetPath(), std::bind(&RdbStoreImpl::ReplayCallbackImpl, config_));
     auto [errCode, conn] = GetConn(false);
     if (errCode != E_OK) {
         return errCode;
@@ -3212,5 +3213,22 @@ int RdbStoreImpl::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc 
         return ret;
     }
     return conn->RegisterAlgo(clstAlgoName, func);
+}
+
+void RdbStoreImpl::ReplayCallbackImpl(const RdbStoreConfig &config)
+{
+    auto taskPool = TaskExecutor::GetInstance().GetExecutor();
+    if (taskPool == nullptr) {
+        LOG_ERROR("[ReplayCallbackImpl] Get pool failed");
+        return;
+    }
+    taskPool->Execute([cfg = config]() mutable {
+        cfg.SetCreateNecessary(false);
+        auto [result, conn] = CreateWritableConn(cfg);
+        if (result != E_OK || conn == nullptr) {
+            return;
+        }
+        conn->ReplayBinlog(cfg);
+    });
 }
 } // namespace OHOS::NativeRdb

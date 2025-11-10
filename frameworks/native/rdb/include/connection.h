@@ -47,6 +47,7 @@ public:
     using GetDbFileser = std::vector<std::string> (*)(const RdbStoreConfig &config);
     using ReplicaChecker = int32_t (*)(const RdbStoreConfig &config);
     using RekeyExcuter = int32_t (*)(const RdbStoreConfig &config, const RdbStoreConfig::CryptoParam &cryptoParam);
+    using ReplayCallBack = std::function<void(void)>;
     static std::pair<int32_t, SConn> Create(const RdbStoreConfig &config, bool isWriter);
     static int32_t Repair(const RdbStoreConfig &config);
     static int32_t Delete(const RdbStoreConfig &config);
@@ -61,6 +62,7 @@ public:
     static int32_t RegisterGetDbFileser(int32_t dbType, GetDbFileser getDbFileser);
     static int32_t RegisterReplicaChecker(int32_t dbType, ReplicaChecker replicaChecker);
     static int32_t RegisterRekeyExcuter(int32_t dbType, RekeyExcuter rekeyExcuter);
+    static int32_t RegisterReplayCallback(const std::string &dbPath, const ReplayCallBack &replayCallback);
 
     int32_t SetId(int32_t id);
     int32_t GetId() const;
@@ -95,6 +97,7 @@ public:
     virtual int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) = 0;
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor) = 0;
     virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) = 0;
+    virtual void ReplayBinlog(const RdbStoreConfig &config) = 0;
 
 private:
     int32_t id_ = 0;

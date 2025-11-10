@@ -65,6 +65,7 @@ public:
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
+    void ReplayBinlog(const RdbStoreConfig &config) override;
 
 private:
     static constexpr int MAX_VARIABLE_NUM = 32766;
