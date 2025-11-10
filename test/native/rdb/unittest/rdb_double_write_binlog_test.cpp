@@ -1721,9 +1721,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_001, TestSize.Lev
     }
     InitDb(HAMode::SINGLE);
     EXPECT_NE(store, nullptr);
-    if (!CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
-        return;
-    }
+    ASSERT_TRUE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
  
     int totalCount = 20000;
     int dataSize = 1024;
@@ -1785,9 +1783,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_002, TestSize.Lev
     EXPECT_NE(store, nullptr);
     int errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
-    if (!CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
-        return;
-    }
+    ASSERT_TRUE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 
     auto T1 = GetInsertTime(store, totalCount, dataSize);
     auto T2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
@@ -1831,9 +1827,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_003, TestSize.Lev
 
     InitDb(HAMode::MAIN_REPLICA);
     EXPECT_NE(store, nullptr);
-    if (!CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
-        return;
-    }
+    ASSERT_TRUE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 
     auto T1 = GetInsertTime(store, totalCount, dataSize);
     auto T2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
@@ -1879,9 +1873,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_004, TestSize.Lev
     ASSERT_NE(store, nullptr);
     int errCode = store->Backup(std::string(""), {});
     EXPECT_EQ(errCode, E_OK);
-    if (!CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
-        return;
-    }
+    ASSERT_TRUE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
 
     auto T1 = GetInsertTime(store, totalCount, dataSize);
     auto T2 = GetUpdateTime(store, batchSize, totalCount / batchSize, dataSize);
