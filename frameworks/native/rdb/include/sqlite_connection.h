@@ -78,6 +78,7 @@ public:
     ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
+    void ReplayBinlog(const RdbStoreConfig &config) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
@@ -140,7 +141,6 @@ private:
     int RegisterHookIfNecessary();
     std::pair<int32_t, Stmt> CreateStatementInner(const std::string &sql, SConn conn,
         sqlite3 *db, bool isFromReplica);
-    void ReplayBinlog(const RdbStoreConfig &config);
     ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount);
     void DeleteCorruptSlave(const std::string &path);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
@@ -155,8 +155,7 @@ private:
     static void ReplayBinlog(const std::string &dbPath,
         std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean);
     static std::string GetBinlogFolderPath(const std::string &dbPath);
-    static void InsertReusableReplica(const std::string &dbPath, std::weak_ptr<SqliteConnection> slaveConn);
-    static std::shared_ptr<SqliteConnection> GetReusableReplica(const std::string &dbPath);
+    static Connection::ReplayCallBack GetReplayCallback(const std::string &dbPath);
     /**
      * @brief The lifecycle of config must be shorter than that of param..
      */
@@ -190,7 +189,7 @@ private:
     static const int32_t regDbClientCleaner_;
     static const int32_t regOpenSSLCleaner_;
     static const int32_t regRekeyExcuter_;
-    static ConcurrentMap<std::string, std::weak_ptr<SqliteConnection>> reusableReplicas_;
+    static ConcurrentMap<std::string, ReplayCallBack> replayCallback_;
     using EventHandle = int (SqliteConnection::*)();
     struct HandleInfo {
         RegisterType Type;
