@@ -70,7 +70,8 @@ void RdbTransDBTest::SetUpTestCase(void)
     config_.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel::S1);
     Connection::Delete(config_);
     int32_t errCode = E_OK;
-    connPool_ = ConnectionPool::Create(config_, errCode);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config_);
+    connPool_ = ConnectionPool::Create(*configHolder, configHolder, errCode);
     EXPECT_TRUE(connPool_ != nullptr);
 }
 

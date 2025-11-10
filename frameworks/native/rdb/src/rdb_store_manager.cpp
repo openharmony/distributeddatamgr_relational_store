@@ -69,16 +69,21 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    if (configHolder == nullptr) {
+        LOG_ERROR("configHolder smart pointer create failed");
+        return nullptr;
+    }
     auto it = storeCache_.find(path);
     if (it == storeCache_.end()) {
-        rdbStore = std::make_shared<RdbStoreImpl>(config);
+        rdbStore = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
         storeCache_[path] = rdbStore;
         return rdbStore;
     }
 
     rdbStore = it->second.lock();
     if (rdbStore == nullptr) {
-        rdbStore = std::make_shared<RdbStoreImpl>(config);
+        rdbStore = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
         storeCache_[path] = rdbStore;
         return rdbStore;
     }
@@ -94,7 +99,7 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
             rdbStore = nullptr;
             return rdbStore;
         }
-        rdbStore = std::make_shared<RdbStoreImpl>(config);
+        rdbStore = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
         storeCache_[path] = rdbStore;
     }
     return rdbStore;

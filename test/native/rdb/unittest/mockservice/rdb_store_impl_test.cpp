@@ -216,7 +216,9 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_005, TestSize.Level2)
     config.SetReadOnly(false);
     config.SetDBType(DB_SQLITE);
     config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     storeImpl->NotifyDataChange();
     EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
 }
@@ -232,7 +234,9 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_006, TestSize.Level2)
     config.SetReadOnly(true);
     config.SetDBType(DB_SQLITE);
     config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     storeImpl->NotifyDataChange();
     EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
 }
@@ -251,7 +255,9 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_007, TestSize.Level2)
     config.SetReadOnly(true);
     config.SetDBType(DB_VECTOR);
     config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     storeImpl->NotifyDataChange();
     EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
 }
@@ -267,7 +273,9 @@ HWTEST_F(RdbStoreImplConditionTest, NotifyDataChangeTest_009, TestSize.Level2)
     config.SetReadOnly(true);
     config.SetDBType(DB_SQLITE);
     config.SetRegisterInfo(RegisterType::OBSERVER_END, true);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     storeImpl->NotifyDataChange();
     EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
 }
@@ -300,8 +308,10 @@ HWTEST_F(RdbStoreImplConditionTest, GetUriTest_001, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetDataGroupId("123");
-    auto storeImlp = std::make_shared<RdbStoreImpl>(config);
-    auto uri = storeImlp->GetUri("test");
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
+    auto uri = storeImpl->GetUri("test");
     EXPECT_EQ(uri, "rdb://123//data/test/rdb_store_impl_condition_test.db/test");
 }
 
@@ -976,7 +986,9 @@ HWTEST_F(RdbStoreImplConditionTest, RegisterDataChangeCallback_Test_001, TestSiz
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_VECTOR);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     storeImpl->connectionPool_ = nullptr;
     auto res = storeImpl->RegisterDataChangeCallback();
     EXPECT_EQ(E_ALREADY_CLOSED, res);
@@ -1358,7 +1370,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptSql_Test_001, TestSize.Leve
 {
     EXPECT_CALL(*mockStatement, Prepare(_)).WillOnce(Return(E_ERROR));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     const std::string sql = "SELECT * FROM employee";
     auto res = storeImpl->SetDefaultEncryptSql(mockStatement, sql, config);
     EXPECT_EQ(E_ERROR, res);
@@ -1375,7 +1389,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptSql_Test_002, TestSize.Leve
     EXPECT_CALL(*mockStatement, Prepare(_)).WillOnce(Return(E_OK));
     EXPECT_CALL(*mockStatement, Execute(args)).WillOnce(Return(E_SQLITE_BUSY));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     const std::string sql = "SELECT * FROM employee";
     auto res = storeImpl->SetDefaultEncryptSql(mockStatement, sql, config);
     EXPECT_EQ(E_SQLITE_BUSY, res);
@@ -1389,7 +1405,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptSql_Test_002, TestSize.Leve
 HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_001, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->SetDefaultEncryptAlgo(nullptr, config);
     EXPECT_EQ(E_DATABASE_BUSY, res);
 }
@@ -1405,7 +1423,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_002, TestSize.Lev
     RdbStoreConfig::CryptoParam cryptoParam;
     config.SetCryptoParam(cryptoParam);
     config.SetIter(-1);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->SetDefaultEncryptAlgo(mockConnection, config);
     EXPECT_EQ(E_INVALID_ARGS, res);
 }
@@ -1423,7 +1443,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_003, TestSize.Lev
     RdbStoreConfig::CryptoParam cryptoParam;
     config.SetCryptoParam(cryptoParam);
     config.SetIter(1);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->SetDefaultEncryptAlgo(mockConnection, config);
     EXPECT_EQ(E_ERROR, res);
 }
@@ -1443,7 +1465,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_004, TestSize.Lev
     RdbStoreConfig::CryptoParam cryptoParam;
     config.SetCryptoParam(cryptoParam);
     config.SetIter(1);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->SetDefaultEncryptAlgo(mockConnection, config);
     EXPECT_EQ(E_ERROR, res);
 }
@@ -1463,7 +1487,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_005, TestSize.Lev
     RdbStoreConfig::CryptoParam cryptoParam;
     config.SetCryptoParam(cryptoParam);
     config.SetIter(1);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->SetDefaultEncryptAlgo(mockConnection, config);
     EXPECT_EQ(E_ERROR, res);
 }
@@ -1487,7 +1513,9 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_006, TestSize.Lev
     RdbStoreConfig::CryptoParam cryptoParam;
     config.SetCryptoParam(cryptoParam);
     config.SetIter(1);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->SetDefaultEncryptAlgo(mockConnection, config);
     EXPECT_EQ(E_ERROR, res);
 }
@@ -1570,7 +1598,9 @@ HWTEST_F(RdbStoreImplConditionTest, ExecuteByTrxId_Test_001, TestSize.Level2)
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetIsVector(true);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     std::vector<ValueObject> bindArgs;
     auto res = storeImpl->ExecuteByTrxId("sql", 0, false);
     EXPECT_EQ(E_INVALID_ARGS, res);
@@ -1586,7 +1616,9 @@ HWTEST_F(RdbStoreImplConditionTest, ExecuteByTrxId_Test_002, TestSize.Level2)
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetIsVector(true);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     std::vector<ValueObject> bindArgs;
     auto res = storeImpl->ExecuteByTrxId("sql", 1, false);
     EXPECT_EQ(E_INVALID_ARGS, res);
@@ -1603,7 +1635,9 @@ HWTEST_F(RdbStoreImplConditionTest, Restore_Test_001, TestSize.Level2)
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(true);
     config.SetStorageMode(StorageMode::MODE_MEMORY);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->Restore("test.db", newKey);
     EXPECT_EQ(E_NOT_SUPPORT, res);
 }
@@ -1619,7 +1653,9 @@ HWTEST_F(RdbStoreImplConditionTest, Restore_Test_002, TestSize.Level2)
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_MEMORY);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->Restore("test.db", newKey);
     EXPECT_EQ(E_NOT_SUPPORT, res);
 }
@@ -1635,7 +1671,9 @@ HWTEST_F(RdbStoreImplConditionTest, Restore_Test_003, TestSize.Level2)
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(true);
     config.SetStorageMode(StorageMode::MODE_DISK);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->Restore("test.db", newKey);
     EXPECT_EQ(E_NOT_SUPPORT, res);
 }
@@ -1648,7 +1686,9 @@ HWTEST_F(RdbStoreImplConditionTest, Restore_Test_003, TestSize.Level2)
 HWTEST_F(RdbStoreImplConditionTest, GetStatement_Test_001, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     const std::string sql = "ATTACH DATABASE 'database.db';";
     auto res = storeImpl->GetStatement(sql, nullptr);
     EXPECT_EQ(E_DATABASE_BUSY, res.first);
@@ -1663,7 +1703,9 @@ HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_001, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetHaMode(HAMode::SINGLE);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->InterruptBackup();
     EXPECT_EQ(E_NOT_SUPPORT, res);
 }
@@ -1677,7 +1719,9 @@ HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_003, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     *(storeImpl->slaveStatus_) = BACKING_UP;
     auto res = storeImpl->InterruptBackup();
     EXPECT_EQ(E_OK, res);
@@ -1692,7 +1736,9 @@ HWTEST_F(RdbStoreImplConditionTest, GetBackupStatus_Test_001, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetHaMode(HAMode::SINGLE);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     auto res = storeImpl->GetBackupStatus();
     EXPECT_EQ(UNDEFINED, res);
 }
@@ -1706,7 +1752,9 @@ HWTEST_F(RdbStoreImplConditionTest, GetBackupStatus_Test_002, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
+    ASSERT_NE(configHolder, nullptr);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(*configHolder, configHolder);
     *(storeImpl->slaveStatus_) = BACKING_UP;
     auto res = storeImpl->GetBackupStatus();
     EXPECT_EQ(BACKING_UP, res);

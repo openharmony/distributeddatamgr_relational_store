@@ -43,10 +43,11 @@ public:
     using SharedConns = std::vector<SharedConn>;
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
     static constexpr int32_t START_NODE_ID = -1;
-    static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &config, int &errCode);
+    static std::shared_ptr<ConnectionPool> Create(const RdbStoreConfig &config,
+        std::shared_ptr<RdbStoreConfig> configHolder, int &errCode);
     ~ConnectionPool();
     static std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> HandleDataCorruption(
-        const RdbStoreConfig &storeConfig, int &errCode);
+        const RdbStoreConfig &storeConfig, std::shared_ptr<RdbStoreConfig> configHolder, int &errCode);
     std::pair<int32_t, std::shared_ptr<Connection>> CreateTransConn(bool limited = true);
     SharedConn AcquireConnection(bool isReadOnly);
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
@@ -130,7 +131,7 @@ private:
         int32_t RelDetails(std::shared_ptr<ConnNode> node);
     };
 
-    explicit ConnectionPool(const RdbStoreConfig &storeConfig);
+    explicit ConnectionPool(const RdbStoreConfig &storeConfig, std::shared_ptr<RdbStoreConfig> configHolder);
     std::pair<int32_t, std::shared_ptr<Connection>> Init(bool isAttach = false, bool needWriter = false);
     int32_t GetMaxReaders(const RdbStoreConfig &config);
     std::shared_ptr<Connection> Convert2AutoConn(std::shared_ptr<ConnNode> node, bool isTrans = false);
@@ -153,6 +154,7 @@ private:
     static constexpr uint32_t MAX_EXECUTE_INTERVAL = 30000; // 30000ms
     std::shared_ptr<DelayActuator> clearActuator_;
     const RdbStoreConfig &config_;
+    std::shared_ptr<RdbStoreConfig> configHolder_;
     RdbStoreConfig attachConfig_;
     Container writers_;
     Container readers_;
