@@ -690,7 +690,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_004, TestSize.Level2)
     ASSERT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
-    config.SetReadConSize(65);
+    configHolder->SetReadConSize(65);
     EXPECT_NE(E_OK, connectionPool->ReopenConns());
 }
 
