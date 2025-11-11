@@ -1803,7 +1803,7 @@ HWTEST_F(RdbStoreImplConditionTest, CloudTables_Change_Test_001, TestSize.Level2
 
 /**
  * @tc.name: RdbStore_Transaction_001
- * @tc.desc: Abnormal testCase of Transaction
+ * @tc.desc: Transaction writer is occupied, go open transaction again, errCode is E_DATABASE_BUSY.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_Transaction_001, TestSize.Level2)
@@ -1820,7 +1820,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_Transaction_001, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_Transaction_002
- * @tc.desc: Abnormal testCase of Transaction
+ * @tc.desc: After initiating a transaction, initiate another one.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_Transaction_002, TestSize.Level2)
@@ -1842,7 +1842,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_Transaction_002, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_RollBack_001
- * @tc.desc: Abnormal testCase of RollBack
+ * @tc.desc: Writer occupied, transaction rollback.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_001, TestSize.Level2)
@@ -1861,7 +1861,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_001, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_RollBack_002
- * @tc.desc: Abnormal testCase of RollBack
+ * @tc.desc: When a transaction is RollBack, there are no transactions.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_002, TestSize.Level2)
@@ -1879,7 +1879,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_002, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_RollBack_003
- * @tc.desc: Abnormal testCase of RollBack
+ * @tc.desc: Nested transactions RollBack.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_003, TestSize.Level2)
@@ -1898,7 +1898,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_003, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_Commit_001
- * @tc.desc: Abnormal testCase of RollBack
+ * @tc.desc: Writer occupied, transaction Commit.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_001, TestSize.Level2)
@@ -1917,7 +1917,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_001, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_Commit_002
- * @tc.desc: Abnormal testCase of RollBack
+ * @tc.desc: When a transaction is Commit, there are no transactions.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_002, TestSize.Level2)
@@ -1935,7 +1935,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_002, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_Commit_003
- * @tc.desc: Abnormal testCase of RollBack
+ * @tc.desc: Nested transactions Commit.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_003, TestSize.Level2)
