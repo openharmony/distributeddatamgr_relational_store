@@ -2365,7 +2365,7 @@ int RdbStoreImpl::RollBack()
     auto [err, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
         if (err == E_DATABASE_BUSY) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, err, config_.GetBundleName(), "RollBusy"));
+            Reportor::ReportFault(RdbFaultEvent(FT_CURD, err, config_.GetBundleName(), "RollBusy"));
         }
         // size + 1 means the number of transactions in process
         LOG_ERROR("statement err. [%{public}zu, %{public}s]", id + 1, SqliteUtils::Anonymous(name_).c_str());
@@ -2374,7 +2374,7 @@ int RdbStoreImpl::RollBack()
     err = statement->Execute();
     if (err != E_OK) {
         if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, err, config_.GetBundleName(), "RollBusy"));
+            Reportor::ReportFault(RdbFaultEvent(FT_CURD, err, config_.GetBundleName(), "RollBusy"));
         }
         LOG_ERROR("failed. [%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
         return err;
@@ -2464,7 +2464,7 @@ int RdbStoreImpl::Commit()
     auto [err, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
         if (err == E_DATABASE_BUSY) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, err, config_.GetBundleName(), "ComBusy"));
+            Reportor::ReportFault(RdbFaultEvent(FT_CURD, err, config_.GetBundleName(), "ComBusy"));
         }
         LOG_ERROR("statement error. [%{public}zu, %{public}s]", id, SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
@@ -2472,7 +2472,7 @@ int RdbStoreImpl::Commit()
     err = statement->Execute();
     if (err != E_OK) {
         if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, err, config_.GetBundleName(), "ComBusy"));
+            Reportor::ReportFault(RdbFaultEvent(FT_CURD, err, config_.GetBundleName(), "ComBusy"));
         }
         LOG_ERROR("failed. [%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
         return err;
