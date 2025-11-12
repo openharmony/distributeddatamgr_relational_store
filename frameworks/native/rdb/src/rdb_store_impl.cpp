@@ -1110,9 +1110,9 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
 }
 #endif
 
-RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config, std::shared_ptr<RdbStoreConfig> configHolder)
-    : isMemoryRdb_(config.IsMemoryRdb()), config_(config), configHolder_(configHolder), name_(config.GetName()),
-      fileType_(config.GetDatabaseFileType())
+RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
+    : isMemoryRdb_(config.IsMemoryRdb()), configHolder_(std::make_shared<RdbStoreConfig>(config)),
+      config_(*configHolder_), name_(config.GetName()), fileType_(config.GetDatabaseFileType())
 {
     SqliteGlobalConfig::GetDbPath(config_, path_);
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
