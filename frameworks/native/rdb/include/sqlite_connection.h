@@ -78,7 +78,8 @@ public:
     ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
-    void ReplayBinlog(const RdbStoreConfig &config) override;
+    int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
+    void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount = false) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
@@ -161,7 +162,6 @@ private:
      */
     static CodecConfig ConvertCryptoParamToCodecConfig(const RdbStoreConfig::CryptoParam &param);
     static CodecConfig CreateCodecConfig();
-    static constexpr const char *BINLOG_LOCK_FILE_SUFFIX = "_binlog/binlog_default.readIndex";
     static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
@@ -189,7 +189,7 @@ private:
     static const int32_t regDbClientCleaner_;
     static const int32_t regOpenSSLCleaner_;
     static const int32_t regRekeyExcuter_;
-    static ConcurrentMap<std::string, ReplayCallBack> replayCallback_;
+    static ConcurrentMap<uint64_t, ReplayCallBack> replayCallback_;
     using EventHandle = int (SqliteConnection::*)();
     struct HandleInfo {
         RegisterType Type;

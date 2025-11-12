@@ -57,6 +57,7 @@ public:
     static constexpr const char *SLAVE_FAILURE = "-slaveFailure";
     static constexpr const char *SLAVE_INTERRUPT = "-syncInterrupt";
     static constexpr const char *SLAVE_RESTORE = "-restoring";
+    static constexpr const char *BINLOG_LOCK_FILE_SUFFIX = "_binlog/binlog_default.readIndex";
     static constexpr ssize_t SLAVE_ASYNC_REPAIR_CHECK_LIMIT = 367001600; // 367001600 = 350 * 1024 * 1024
 
     static int GetSqlStatementType(const std::string &sql);

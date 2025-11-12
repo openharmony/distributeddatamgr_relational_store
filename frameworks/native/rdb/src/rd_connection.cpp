@@ -375,7 +375,13 @@ int RdConnection::SetKnowledgeSchema([[gnu::unused]] const DistributedRdb::RdbKn
     return E_NOT_SUPPORT;
 }
 
-void RdConnection::ReplayBinlog([[gnu::unused]] const RdbStoreConfig &config)
+int32_t RdConnection::RegisterReplayCallback(const RdbStoreConfig &config,
+    const ReplayCallBack &replayCallback)
+{
+    return E_NOT_SUPPORT;
+}
+
+void RdConnection::ReplayBinlog([[gnu::unused]] const RdbStoreConfig &config, [[gnu::unused]] bool chkBinlogCount)
 {
 }
 

@@ -77,7 +77,7 @@ constexpr int32_t SERVICE_GID = 3012;
 constexpr int32_t BINLOG_FILE_REPLAY_LIMIT = 50;
 constexpr int64_t BINLOG_REPLAY_REPORT_TIME = 15 * 60 * 1000; // ms
 constexpr char const *SUFFIX_BINLOG = "_binlog/";
-ConcurrentMap<std::string, Connection::ReplayCallBack> SqliteConnection::replayCallback_ = {};
+ConcurrentMap<uint64_t, Connection::ReplayCallBack> SqliteConnection::replayCallback_ = {};
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
 __attribute__((used))
@@ -1980,19 +1980,33 @@ void SqliteConnection::BinlogSetConfig(sqlite3 *dbHandle)
     }
 }
 
-int SqliteConnection::RegisterReplayCallback(const std::string &dbPath, const ReplayCallBack &replayCallback)
+int SqliteConnection::RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback)
 {
-    replayCallback_.Compute(dbPath, [&replayCallback](auto &dbPath, auto &callback) {
+    struct stat fileStat;
+    if (stat(config.GetPath().c_str(), &fileStat) != 0) {
+        LOG_WARN("register repleay path invalid, %{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
+        return E_ERROR;
+    }
+    uint64_t inode = fileStat.st_ino;
+    replayCallback_.Compute(inode, [&replayCallback](auto &ino, auto &callback) {
         if (replayCallback == nullptr) {
             return false;
         }
+        callback = replayCallback;
         return true;
     });
+    return E_OK;
 }
 
 Connection::ReplayCallBack SqliteConnection::GetReplayCallback(const std::string &dbPath)
 {
-    auto [found, callback] = replayCallback_.Find(dbPath);
+    struct stat fileStat;
+    if (stat(dbPath.c_str(), &fileStat) != 0) {
+        LOG_WARN("get repleay path invalid, %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
+        return nullptr;
+    }
+    uint64_t inode = fileStat.st_ino;
+    auto [found, callback] = replayCallback_.Find(inode);
     if (!found) {
         LOG_WARN("no replay callback for %{public}s", SqliteUtils::Anonymous(dbPath).c_str());
         return nullptr;
@@ -2013,28 +2027,10 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
         LOG_WARN("replica invalid, skip binlog replay. count:%{public}" PRIu16, currentCount);
         return;
     }
-    std::string dbPathStr(dbPath);
-    auto lockFile = dbPathStr + BINLOG_LOCK_FILE_SUFFIX;
-    if (access(lockFile.c_str(), F_OK) != 0) {
-        LOG_WARN("binlog lock path does not exist for %{public}s", SqliteUtils::Anonymous(dbPathStr).c_str());
-        return;
-    }
-    auto readLock = std::make_shared<RdbSecurityManager::KeyFiles>(lockFile);
-    if (readLock == nullptr) {
-        LOG_WARN("create read lock failed");
-        return;
-    }
-    auto err = readLock->Lock(false);
-    if (err != E_OK) {
-        LOG_WARN("get lock failed, skip binlog replay for %{public}s", SqliteUtils::Anonymous(dbPathStr).c_str());
-        return;
-    }
     auto replayCallback = GetReplayCallback(dbPath);
     if (replayCallback != nullptr) {
-        LOG_INFO("task start: binlog replay for %{public}s", SqliteUtils::Anonymous(dbPathStr).c_str());
         replayCallback();
     }
-    readLock->Unlock();
 }
 
 int SqliteConnection::SetBinlog()
@@ -2110,7 +2106,7 @@ void SqliteConnection::ReplayBinlog(const std::string &dbPath,
     return;
 }
 
-void SqliteConnection::ReplayBinlog(const RdbStoreConfig &config)
+void SqliteConnection::ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount)
 {
     if (!IsSupportBinlog(config)) {
         return;
@@ -2123,9 +2119,18 @@ void SqliteConnection::ReplayBinlog(const RdbStoreConfig &config)
         LOG_WARN("main db does not exist");
         return;
     }
+    if (chkBinlogCount && slaveConnection_->config_.GetHaMode() == HAMode::MANUAL_TRIGGER &&
+        (SqliteUtils::GetFileCount(GetBinlogFolderPath(config.GetPath())) > BINLOG_FILE_REPLAY_LIMIT)) {
+        LOG_WARN("binlog file count over limit: %{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
+        SqliteUtils::SetSlaveInvalid(config.GetPath());
+        return;
+    }
     int err = SqliteConnection::ReplayBinlogSqlite(dbHandle_, slaveConnection_->dbHandle_, config);
     if (err != E_OK) {
         LOG_WARN("replay err:%{public}d", err);
+    } else {
+        err = SQLiteError::ErrNo(sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_READ_MODE));
+        LOG_INFO("clean finished, %{public}d, %{public}s", err, SqliteUtils::Anonymous(config.GetPath()).c_str());
     }
     return;
 }

@@ -71,7 +71,9 @@ public:
     MOCK_METHOD(int, SetKnowledgeSchema, (const DistributedRdb::RdbKnowledgeSchema &schema), (override));
     MOCK_METHOD(int, CleanDirtyLog, (const std::string &table, uint64_t cursor), (override));
     MOCK_METHOD(int, RegisterAlgo, (const std::string &clstAlgoName, ClusterAlgoFunc func), (override));
-    MOCK_METHOD(void, ReplayBinlog, (const RdbStoreConfig &config), (override));
+    MOCK_METHOD(int32_t, RegisterReplayCallback, (const RdbStoreConfig &config,
+        const ReplayCallBack &replayCallback), (override));
+    MOCK_METHOD(void, ReplayBinlog, (const RdbStoreConfig &config, bool chkBinlogCount), (override));
 };
 } // namespace OHOS::NativeRdb
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_CONNECTION_H
