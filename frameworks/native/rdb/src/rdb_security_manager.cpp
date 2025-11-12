@@ -204,7 +204,7 @@ std::vector<char> RdbSecurityManager::GenerateHMAC(std::vector<char> &data)
     if (hmacLen == 0) {
         LOG_ERROR("hmac generate failed");
         Reportor::ReportFault(RdbFaultEvent(
-            FT_EX_FILE, E_DFX_HMAC_KEY_FAIL, GetBundleName(), "hmac generate failed" + std::to_string(hmacLen)));
+            FT_HMAC_FILE, E_DFX_HMAC_KEY_FAIL, GetBundleName(), "hmac generate failed" + std::to_string(hmacLen)));
         return result;
     }
     for (unsigned int i = 0; i < HMAC_SIZE && i < hmacLen; ++i) {

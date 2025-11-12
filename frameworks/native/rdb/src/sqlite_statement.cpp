@@ -231,8 +231,8 @@ void SqliteStatement::ReadFile2Buffer()
     }
     constexpr int bufferSize = 4;
     for (uint32_t i = 0; i < BUFFER_LEN; i += bufferSize) {
-        LOG_WARN("line%{public}d: %{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64 "%{public}" PRIx64, i >> 2,
-            buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
+        LOG_WARN("line%{public}d: %{public}016" PRIx64 "%{public}016" PRIx64 "%{public}016" PRIx64
+                 "%{public}016" PRIx64, i >> 2, buffer[i], buffer[i + 1], buffer[i + 2], buffer[i + 3]);
     }
     (void)fclose(file);
 }
