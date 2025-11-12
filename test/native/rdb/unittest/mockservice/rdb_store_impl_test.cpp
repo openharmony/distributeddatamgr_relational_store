@@ -1813,7 +1813,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_Transaction_001, TestSize.Level2)
     RdbStoreImplConditionTestOpenCallback helper;
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
     storeImpl->Init(0, helper);
-    auto conn = storeImpl->connectionPool_->AcquireConnection(false);
+    auto conn = storeImpl->GetPool()->AcquireConnection(false);
     int ret = storeImpl->BeginTransaction();
     EXPECT_EQ(E_DATABASE_BUSY, ret);
 }
@@ -1854,7 +1854,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_001, TestSize.Level2)
     storeImpl->Init(0, helper);
     int ret = storeImpl->BeginTransaction();
     EXPECT_EQ(E_OK, ret);
-    auto conn = storeImpl->connectionPool_->AcquireConnection(false);
+    auto conn = storeImpl->GetPool()->AcquireConnection(false);
     ret = storeImpl->RollBack();
     EXPECT_EQ(E_DATABASE_BUSY, ret);
 }
@@ -1894,6 +1894,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_003, TestSize.Level2)
     ret = storeImpl->BeginTransaction();
     EXPECT_EQ(E_OK, ret);
     ret = storeImpl->RollBack();
+    EXPECT_EQ(E_OK, ret);
 }
 
 /**
@@ -1910,7 +1911,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_001, TestSize.Level2)
     storeImpl->Init(0, helper);
     int ret = storeImpl->BeginTransaction();
     EXPECT_EQ(E_OK, ret);
-    auto conn = storeImpl->connectionPool_->AcquireConnection(false);
+    auto conn = storeImpl->GetPool()->AcquireConnection(false);
     ret = storeImpl->Commit();
     EXPECT_EQ(E_DATABASE_BUSY, ret);
 }
@@ -1950,4 +1951,55 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_003, TestSize.Level2)
     ret = storeImpl->BeginTransaction();
     EXPECT_EQ(E_OK, ret);
     ret = storeImpl->Commit();
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: Dump_001
+ * @tc.desc: trans is empty and is a reader.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, Dump_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    storeImpl->GetPool()->CloseAllConnections();
+    auto errCode = storeImpl->GetPool()->Dump(false, "INSERT");
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: Dump_002
+ * @tc.desc: trans is empty and is a writer.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, Dump_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    storeImpl->GetPool()->CloseAllConnections();
+    auto errCode = storeImpl->GetPool()->Dump(true, "INSERT");
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: Dump_003
+ * @tc.desc: trans is not empty and is a reader.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, Dump_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    auto ret = storeImpl->CreateTransaction(0);
+    EXPECT_EQ(ret.first, E_OK);
+    auto errCode = storeImpl->GetPool()->Dump(false, "INSERT");
+    EXPECT_EQ(errCode, E_OK);
 }
