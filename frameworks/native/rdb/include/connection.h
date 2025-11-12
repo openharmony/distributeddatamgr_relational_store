@@ -62,7 +62,6 @@ public:
     static int32_t RegisterGetDbFileser(int32_t dbType, GetDbFileser getDbFileser);
     static int32_t RegisterReplicaChecker(int32_t dbType, ReplicaChecker replicaChecker);
     static int32_t RegisterRekeyExcuter(int32_t dbType, RekeyExcuter rekeyExcuter);
-    static int32_t RegisterReplayCallback(const std::string &dbPath, const ReplayCallBack &replayCallback);
 
     int32_t SetId(int32_t id);
     int32_t GetId() const;
@@ -97,7 +96,8 @@ public:
     virtual int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) = 0;
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor) = 0;
     virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) = 0;
-    virtual void ReplayBinlog(const RdbStoreConfig &config) = 0;
+    virtual int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) = 0;
+    virtual void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount) = 0;
 
 private:
     int32_t id_ = 0;

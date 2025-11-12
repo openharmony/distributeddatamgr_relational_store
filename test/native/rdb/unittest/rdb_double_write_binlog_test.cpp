@@ -1572,6 +1572,37 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_031, TestSize.Level0)
     CheckNumber(slaveStore, -1, E_SQLITE_ERROR, "test2");
 }
 
+/**
+ * @tc.name: RdbStore_Binlog_032
+ * @tc.desc: test replay when path as relative path
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_032, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config("/data/../data/test/dual_write_binlog_test.db");
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+
+    int64_t id = 1;
+    int count = 100;
+    Insert(id, count, false, 1024 * 100);
+    WaitForBinlogReplayFinish();
+
+    sqlite3 *db = nullptr;
+    int rc = sqlite3_open_v2(RdbDoubleWriteBinlogTest::slaveDatabaseName.c_str(),
+        &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, "compressvfs");
+    EXPECT_NE(db, nullptr);
+    int resCnt = 0;
+    rc = sqlite3_exec(db, "SELECT COUNT(1) FROM test;", Callback, &resCnt, nullptr);
+    EXPECT_EQ(rc, SQLITE_OK);
+    EXPECT_NE(resCnt, 0);
+    sqlite3_close_v2(db);
+}
+
 static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, size_t dataSize)
 {
     size_t bigSize = dataSize;
