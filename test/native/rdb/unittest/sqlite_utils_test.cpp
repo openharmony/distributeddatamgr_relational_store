@@ -797,3 +797,27 @@ HWTEST_F(SqliteUtilsTest, SetDbFileGid004, TestSize.Level1)
     res = SqliteUtils::HasAccessAcl(filename, 3012);
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.name: CopyFile001
+ * @tc.desc: copy to read-only file
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, CopyFile001, TestSize.Level1)
+{
+    std::string srcFilename = "/data/test/srcTest.db";
+    int srcFd = open(srcFilename.c_str(), O_RDONLY | O_CREAT, S_IRUSR);
+    EXPECT_NE(srcFd, -1) << "open src file failed." << std::strerror(errno);
+    close(srcFd);
+
+    std::string desFilename = "/data/test/desTest.db";
+    int desFd = open(desFilename.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+    EXPECT_NE(desFd, -1) << "open des file failed." << std::strerror(errno);
+    close(desFd);
+
+    bool res = SqliteUtils::CopyFile(srcFilename, desFilename);
+    EXPECT_EQ(res, true);
+
+    std::remove(srcFilename.c_str());
+    std::remove(desFilename.c_str());
+}

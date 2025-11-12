@@ -349,16 +349,13 @@ const char *SqliteUtils::GetConflictClause(int conflictResolution)
 
 bool SqliteUtils::DeleteFile(const std::string &filePath)
 {
-    if (access(filePath.c_str(), F_OK) != 0) {
+    auto ret = remove(filePath.c_str());
+    if (ret == 0 || errno == ENOENT) {
         return true;
     }
-    auto ret = remove(filePath.c_str());
-    if (ret != 0) {
-        LOG_WARN(
-            "remove file failed errno %{public}d ret %{public}d %{public}s", errno, ret, Anonymous(filePath).c_str());
-        return false;
-    }
-    return true;
+    LOG_WARN("remove file failed errno %{public}d ret %{public}d %{public}s",
+        errno, ret, Anonymous(filePath).c_str());
+    return false;
 }
 
 bool SqliteUtils::RenameFile(const std::string &srcFile, const std::string &destFile)
@@ -396,6 +393,10 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
         return false;
     }
     dst << src.rdbuf();
+    if (!dst) {
+        LOG_WARN("write to destFile failed errno %{public}d %{public}s",
+            errno, SqliteUtils::Anonymous(destFile).c_str());
+    }
     src.close();
     dst.close();
     return true;
