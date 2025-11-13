@@ -375,6 +375,16 @@ int RdConnection::SetKnowledgeSchema([[gnu::unused]] const DistributedRdb::RdbKn
     return E_NOT_SUPPORT;
 }
 
+int32_t RdConnection::RegisterReplayCallback(const RdbStoreConfig &config,
+    const ReplayCallBack &replayCallback)
+{
+    return E_NOT_SUPPORT;
+}
+
+void RdConnection::ReplayBinlog([[gnu::unused]] const RdbStoreConfig &config, [[gnu::unused]] bool chkBinlogCount)
+{
+}
+
 int RdConnection::CleanDirtyLog([[gnu::unused]] const std::string &table, [[gnu::unused]] uint64_t cursor)
 {
     return E_NOT_SUPPORT;
