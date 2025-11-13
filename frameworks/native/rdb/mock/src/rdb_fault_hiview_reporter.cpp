@@ -78,10 +78,9 @@ void RdbFaultHiViewReporter::Update(std::map<std::string, DebugInfo> &localInfos
     (void)infos;
 }
 
-std::string RdbFaultHiViewReporter::GetBundleName(const std::string &bundleName, const std::string &storeName)
+std::string RdbFaultHiViewReporter::GetBundleName(const std::string &bundleName)
 {
     (void)bundleName;
-    (void)storeName;
     return "";
 }
 

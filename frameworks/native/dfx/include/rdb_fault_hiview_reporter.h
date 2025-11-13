@@ -60,6 +60,8 @@ static constexpr const char *FT_EX_FILE = "EX_FILE";
 static constexpr const char *FT_EX_HUKS = "EX_HUKS";
 static constexpr const char *FT_CP = "CHECK_POINT";
 static constexpr const char *FT_SQLITE = "SQLITE";
+static constexpr const char *FT_WAL_OVER_LIMIT = "WAL_OVER_LIMIT";
+static constexpr const char *FT_HMAC_FILE = "HMAC_FILE";
 
 static constexpr const char *BUNDLE_NAME_COMMON = "common";
 
@@ -112,7 +114,7 @@ public:
     static void ReportFault(const RdbFaultEvent &faultEvent);
     static void ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair = true);
     static bool IsReportCorruptedFault(const std::string &dbPath);
-    static std::string GetBundleName(const std::string &bundleName, const std::string &storeName);
+    static std::string GetBundleName(const std::string &bundleName);
     static void ReportRAGFault(const std::string &errMsg, const std::string &functionName,
         const std::string &bundleName, const int faultType, const int errCode);
 
