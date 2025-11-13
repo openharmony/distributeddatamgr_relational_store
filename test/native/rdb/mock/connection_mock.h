@@ -36,6 +36,7 @@ public:
     using Collector = std::map<std::string, Info> (*)(const RdbStoreConfig &config);
     using Restorer = int32_t (*)(const RdbStoreConfig &config, const std::string &srcPath, const std::string &destPath);
     using ReplicaChecker = int32_t (*)(const RdbStoreConfig &config);
+    using ReplayCallBack = std::function<void(void)>;
 
     MOCK_METHOD(int32_t, VerifyAndRegisterHook, (const RdbStoreConfig &config), (override));
     MOCK_METHOD((std::pair<int32_t, Stmt>), CreateStatement, (const std::string &sql, SConn conn), (override));
@@ -70,6 +71,9 @@ public:
     MOCK_METHOD(int, SetKnowledgeSchema, (const DistributedRdb::RdbKnowledgeSchema &schema), (override));
     MOCK_METHOD(int, CleanDirtyLog, (const std::string &table, uint64_t cursor), (override));
     MOCK_METHOD(int, RegisterAlgo, (const std::string &clstAlgoName, ClusterAlgoFunc func), (override));
+    MOCK_METHOD(int32_t, RegisterReplayCallback, (const RdbStoreConfig &config,
+        const ReplayCallBack &replayCallback), (override));
+    MOCK_METHOD(void, ReplayBinlog, (const RdbStoreConfig &config, bool chkBinlogCount), (override));
 };
 } // namespace OHOS::NativeRdb
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_CONNECTION_H

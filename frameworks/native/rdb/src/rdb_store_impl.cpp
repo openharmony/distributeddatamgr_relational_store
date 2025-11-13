@@ -1282,6 +1282,12 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
 
 RdbStoreImpl::~RdbStoreImpl()
 {
+    // ToD: Scenario for handling binlog replay interrupt
+    auto [errCode, conn] = GetConn(false);
+    if (errCode == E_OK && conn != nullptr) {
+        conn->RegisterReplayCallback(config_, nullptr);
+        conn = nullptr;
+    }
     connectionPool_ = nullptr;
     trxConnMap_ = {};
     for (auto &trans : transactions_) {
@@ -2964,6 +2970,7 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     if (errCode != E_OK) {
         return errCode;
     }
+    conn->RegisterReplayCallback(config_, std::bind(&RdbStoreImpl::ReplayCallbackImpl, config_));
     auto strategy = conn->GenerateExchangeStrategy(slaveStatus_, false);
     if (strategy != ExchangeStrategy::NOT_HANDLE) {
         LOG_WARN("exchange st:%{public}d, %{public}s,", strategy, SqliteUtils::Anonymous(config_.GetName()).c_str());
@@ -3212,5 +3219,48 @@ int RdbStoreImpl::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc 
         return ret;
     }
     return conn->RegisterAlgo(clstAlgoName, func);
+}
+
+void RdbStoreImpl::ReplayCallbackImpl(const RdbStoreConfig &config)
+{
+    auto lockFile = config.GetPath() + SqliteUtils::BINLOG_LOCK_FILE_SUFFIX;
+    if (access(lockFile.c_str(), F_OK) != 0) {
+        LOG_WARN("binlog lock path does not exist for %{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
+        return;
+    }
+    auto readLock = std::make_shared<RdbSecurityManager::KeyFiles>(lockFile);
+    if (readLock == nullptr) {
+        LOG_WARN("create read lock failed");
+        return;
+    }
+    auto err = readLock->Lock(false);
+    if (err != E_OK) {
+        LOG_WARN("get lock failed, skip binlog replay for %{public}s",
+            SqliteUtils::Anonymous(config.GetPath()).c_str());
+        return;
+    }
+    auto taskPool = TaskExecutor::GetInstance().GetExecutor();
+    if (taskPool == nullptr) {
+        LOG_ERROR("[ReplayCallbackImpl] Get pool failed");
+        readLock->Unlock();
+        return;
+    }
+    auto taskId = taskPool->Execute([cfg = config, readLock]() mutable {
+        LOG_INFO("task start: binlog replay for %{public}s", SqliteUtils::Anonymous(cfg.GetPath()).c_str());
+        cfg.SetCreateNecessary(false);
+        auto [result, conn] = CreateWritableConn(cfg);
+        if (result != E_OK || conn == nullptr) {
+            LOG_ERROR("task failed: binlog replay");
+            readLock->Unlock();
+            return;
+        }
+        conn->ReplayBinlog(cfg, true);
+        readLock->Unlock();
+        LOG_INFO("task finish: binlog replay");
+    });
+    if (taskId == TaskExecutor::INVALID_TASK_ID) {
+        LOG_WARN("start task failed, remove lock for %{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
+        readLock->Unlock();
+    }
 }
 } // namespace OHOS::NativeRdb

@@ -78,6 +78,8 @@ public:
     ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
+    int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
+    void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount = false) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
@@ -140,10 +142,8 @@ private:
     int RegisterHookIfNecessary();
     std::pair<int32_t, Stmt> CreateStatementInner(const std::string &sql, SConn conn,
         sqlite3 *db, bool isFromReplica);
-    void ReplayBinlog(const RdbStoreConfig &config);
     ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount);
     void DeleteCorruptSlave(const std::string &path);
-    void InsertReusableReplica(const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite, bool isReusableReplica = false);
     static void BinlogOnErrFunc(void *pCtx, int errNo, char *errMsg, const char *dbPath);
@@ -156,13 +156,12 @@ private:
     static void ReplayBinlog(const std::string &dbPath,
         std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean);
     static std::string GetBinlogFolderPath(const std::string &dbPath);
-    static std::shared_ptr<SqliteConnection> GetReusableReplica(const std::string &dbPath);
+    static Connection::ReplayCallBack GetReplayCallback(const std::string &dbPath);
     /**
      * @brief The lifecycle of config must be shorter than that of param..
      */
     static CodecConfig ConvertCryptoParamToCodecConfig(const RdbStoreConfig::CryptoParam &param);
     static CodecConfig CreateCodecConfig();
-    static constexpr const char *BINLOG_LOCK_FILE_SUFFIX = "_binlog/binlog_default.readIndex";
     static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
@@ -190,7 +189,7 @@ private:
     static const int32_t regDbClientCleaner_;
     static const int32_t regOpenSSLCleaner_;
     static const int32_t regRekeyExcuter_;
-    static ConcurrentMap<std::string, std::weak_ptr<SqliteConnection>> reusableReplicas_;
+    static ConcurrentMap<uint64_t, ReplayCallBack> replayCallback_;
     using EventHandle = int (SqliteConnection::*)();
     struct HandleInfo {
         RegisterType Type;
@@ -216,7 +215,6 @@ private:
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;
-    std::shared_ptr<SqliteConnection> replayConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     const RdbStoreConfig config_;
 };
