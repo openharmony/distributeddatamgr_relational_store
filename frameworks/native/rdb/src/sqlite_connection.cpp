@@ -217,7 +217,8 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSl
         (!isSlaveExist || isSlaveLockExist || hasFailure || walOverLimit))) {
         if (walOverLimit) {
             SqliteUtils::SetSlaveInvalid(config_.GetPath());
-            Reportor::ReportCorrupted(Reportor::Create(config, E_SQLITE_ERROR, "ErrorType: slaveWalOverLimit"));
+            Reportor::ReportFault(RdbFaultEvent(FT_WAL_OVER_LIMIT, E_SQLITE_ERROR,
+                config.GetBundleName(), "ErrorType: slaveWalOverLimit"));
         }
         return result;
     }

@@ -195,6 +195,7 @@ std::string RdbManagerImpl::GetSelfBundleName()
     }
     auto [code, bundle] = distributedDataMgr->GetSelfBundleName();
     if (code != E_OK || bundle.empty()) {
+        LOG_ERROR("Get self bundleName failed code:%{public}d", code);
         return "";
     }
     std::lock_guard<std::mutex> lock(mutex_);
