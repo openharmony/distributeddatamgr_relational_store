@@ -49,10 +49,10 @@ using Reportor = RdbFaultHiViewReporter;
 constexpr int32_t TRANSACTION_TIMEOUT(2);
 constexpr int64_t WAIT_TIME = 2;
 
-std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &config, std::shared_ptr<RdbStoreConfig> configHolder,
-    int &errCode)
+std::shared_ptr<ConnPool> ConnPool::Create(
+    std::shared_ptr<RdbStoreConfig> configHolder, const RdbStoreConfig &config, int &errCode)
 {
-    std::shared_ptr<ConnPool> pool(new (std::nothrow) ConnPool(config, configHolder));
+    std::shared_ptr<ConnPool> pool(new (std::nothrow) ConnPool(configHolder, config));
     if (pool == nullptr) {
         LOG_ERROR("ConnPool::Create new failed, pool is nullptr.");
         errCode = E_ERROR;
@@ -80,7 +80,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(const RdbStoreConfig &config, std::sh
 }
 
 std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorruption(
-    const RdbStoreConfig &storeConfig, std::shared_ptr<RdbStoreConfig> configHolder, int &errCode)
+    std::shared_ptr<RdbStoreConfig> configHolder, const RdbStoreConfig &storeConfig, int &errCode)
 {
     std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> result;
     auto &[rebuiltType, pool] = result;
@@ -97,7 +97,7 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
         errCode = E_SQLITE_CORRUPT;
         return result;
     }
-    pool = Create(storeConfig, configHolder, errCode);
+    pool = Create(configHolder, storeConfig, errCode);
     if (errCode != E_OK) {
         LOG_WARN("failed, type %{public}d db %{public}s encrypt %{public}d error %{public}d errno %{public}d",
             static_cast<uint32_t>(rebuiltType), SqliteUtils::Anonymous(storeConfig.GetName()).c_str(),
@@ -109,9 +109,9 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
     return result;
 }
 
-ConnPool::ConnectionPool(const RdbStoreConfig &storeConfig, std::shared_ptr<RdbStoreConfig> configHolder)
-    : config_(storeConfig),
-      configHolder_(configHolder),
+ConnPool::ConnectionPool(std::shared_ptr<RdbStoreConfig> configHolder, const RdbStoreConfig &storeConfig)
+    : configHolder_(configHolder),
+      config_(storeConfig),
       attachConfig_(storeConfig),
       writers_(),
       readers_(),

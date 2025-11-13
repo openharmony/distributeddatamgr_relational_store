@@ -582,7 +582,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, errCode);
 
     std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
-    auto connectionPool = ConnectionPool::Create(*configHolder, configHolder, errCode);
+    auto connectionPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
@@ -609,7 +609,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_002, TestSize.Level2)
     config.SetReadConSize(1);
     config.SetStorageMode(StorageMode::MODE_DISK);
     std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
-    auto connectionPool = ConnectionPool::Create(*configHolder, configHolder, errCode);
+    auto connectionPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
@@ -650,7 +650,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_0023, TestSize.Level2)
     config.SetReadConSize(1);
     config.SetStorageMode(StorageMode::MODE_DISK);
     std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
-    auto connectionPool = ConnectionPool::Create(*configHolder, configHolder, errCode);
+    auto connectionPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
@@ -686,7 +686,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_004, TestSize.Level2)
     config.SetReadConSize(1);
     config.SetStorageMode(StorageMode::MODE_DISK);
     std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
-    auto connectionPool = ConnectionPool::Create(*configHolder, configHolder, errCode);
+    auto connectionPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     ASSERT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
 
@@ -716,7 +716,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_005, TestSize.Level2)
     store = nullptr;
 
     std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
-    auto connectionPool = ConnectionPool::Create(*configHolder, configHolder, errCode);
+    auto connectionPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     ASSERT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
     auto connection = connectionPool->AcquireConnection(false);
@@ -745,7 +745,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_006, TestSize.Level2)
     EXPECT_EQ(E_OK, errCode);
 
     std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
-    auto connectionPool = ConnectionPool::Create(*configHolder, configHolder, errCode);
+    auto connectionPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
     connectionPool->clearActuator_ =
@@ -787,7 +787,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_007, TestSize.Level2)
     EXPECT_EQ(E_OK, errCode);
 
     std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
-    auto connectionPool = ConnectionPool::Create(*configHolder, configHolder, errCode);
+    auto connectionPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
     connectionPool->clearActuator_ =
