@@ -109,7 +109,7 @@ void TransDbFuzzTest(FuzzedDataProvider &provider)
     config.SetHaMode(provider.ConsumeIntegral<int32_t>());
     int errCode = 0;
     std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config);
-    std::shared_ptr<ConnectionPool> connPool = ConnectionPool::Create(*configHolder, configHolder, errCode);
+    std::shared_ptr<ConnectionPool> connPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     if (connPool == nullptr) {
         return;
     }

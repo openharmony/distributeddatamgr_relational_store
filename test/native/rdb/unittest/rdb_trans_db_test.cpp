@@ -71,7 +71,7 @@ void RdbTransDBTest::SetUpTestCase(void)
     Connection::Delete(config_);
     int32_t errCode = E_OK;
     std::shared_ptr<RdbStoreConfig> configHolder = std::make_shared<RdbStoreConfig>(config_);
-    connPool_ = ConnectionPool::Create(*configHolder, configHolder, errCode);
+    connPool_ = ConnectionPool::Create(configHolder, *configHolder, errCode);
     EXPECT_TRUE(connPool_ != nullptr);
 }
 
