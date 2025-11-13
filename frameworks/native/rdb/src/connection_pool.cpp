@@ -630,7 +630,7 @@ int32_t ConnectionPool::Dump(bool isWriter, const char *header)
 {
     Container *container = (isWriter || maxReader_ == 0) ? &writers_ : &readers_;
     container->Dump(header, transCount_ + isInTransaction_);
-    if (!trans_.Empty()) {
+    if (!trans_.Empty() && isWriter) {
         trans_.Dump(header, transCount_ + isInTransaction_);
     }
     return E_OK;
