@@ -1800,3 +1800,206 @@ HWTEST_F(RdbStoreImplConditionTest, CloudTables_Change_Test_001, TestSize.Level2
     res = cloudTables->Change(table);
     EXPECT_EQ(false, res);
 }
+
+/**
+ * @tc.name: RdbStore_Transaction_001
+ * @tc.desc: Transaction writer is occupied, go open transaction again, errCode is E_DATABASE_BUSY.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Transaction_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    auto conn = storeImpl->GetPool()->AcquireConnection(false);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_DATABASE_BUSY, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Transaction_002
+ * @tc.desc: After initiating a transaction, initiate another one.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Transaction_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl1 = std::make_shared<RdbStoreImpl>(config);
+    storeImpl1->Init(0, helper);
+    auto storeImpl2 = std::make_shared<RdbStoreImpl>(config);
+    storeImpl2->Init(0, helper);
+    int ret = storeImpl1->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl2->BeginTransaction();
+    EXPECT_EQ(E_SQLITE_BUSY, ret);
+    ret = storeImpl1->Commit();
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: RdbStore_RollBack_001
+ * @tc.desc: Writer occupied, transaction rollback.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    auto conn = storeImpl->GetPool()->AcquireConnection(false);
+    ret = storeImpl->RollBack();
+    EXPECT_EQ(E_DATABASE_BUSY, ret);
+}
+
+/**
+ * @tc.name: RdbStore_RollBack_002
+ * @tc.desc: When a transaction is RollBack, there are no transactions.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    BaseTransaction transaction(0);
+    storeImpl->GetPool()->GetTransactionStack().push(transaction);
+    auto ret = storeImpl->RollBack();
+    EXPECT_EQ(E_SQLITE_ERROR, ret);
+}
+
+/**
+ * @tc.name: RdbStore_RollBack_003
+ * @tc.desc: Nested transactions RollBack.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_RollBack_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl->RollBack();
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Commit_001
+ * @tc.desc: Writer occupied, transaction Commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    auto conn = storeImpl->GetPool()->AcquireConnection(false);
+    ret = storeImpl->Commit();
+    EXPECT_EQ(E_DATABASE_BUSY, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Commit_002
+ * @tc.desc: When a transaction is Commit, there are no transactions.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    BaseTransaction transaction(0);
+    storeImpl->GetPool()->GetTransactionStack().push(transaction);
+    auto ret = storeImpl->Commit();
+    EXPECT_EQ(E_SQLITE_ERROR, ret);
+}
+
+/**
+ * @tc.name: RdbStore_Commit_003
+ * @tc.desc: Nested transactions Commit.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_Commit_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    int ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl->BeginTransaction();
+    EXPECT_EQ(E_OK, ret);
+    ret = storeImpl->Commit();
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: Dump_001
+ * @tc.desc: trans is empty and is a reader.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, Dump_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    storeImpl->GetPool()->CloseAllConnections();
+    auto errCode = storeImpl->GetPool()->Dump(false, "INSERT");
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: Dump_002
+ * @tc.desc: trans is empty and is a writer.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, Dump_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    storeImpl->GetPool()->CloseAllConnections();
+    auto errCode = storeImpl->GetPool()->Dump(true, "INSERT");
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: Dump_003
+ * @tc.desc: trans is not empty and is a reader.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, Dump_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetTransactionTime(1);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    auto ret = storeImpl->CreateTransaction(0);
+    EXPECT_EQ(ret.first, E_OK);
+    auto errCode = storeImpl->GetPool()->Dump(false, "INSERT");
+    EXPECT_EQ(errCode, E_OK);
+}
