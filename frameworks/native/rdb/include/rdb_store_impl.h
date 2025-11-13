@@ -268,7 +268,8 @@ private:
     const std::shared_ptr<SlaveStatus> slaveStatus_ = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;
-    const RdbStoreConfig config_;
+    std::shared_ptr<RdbStoreConfig> configHolder_;
+    const RdbStoreConfig &config_;
     // Can only be modified within the constructor
     DistributedRdb::RdbSyncerParam syncerParam_;
     DistributedRdb::RdbStatEvent statEvent_;
