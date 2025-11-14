@@ -108,6 +108,7 @@ public:
     bool IsHoldingConnection() override;
     bool IsSlaveDiffFromMaster() const override;
     int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey, bool verifyDb) override;
+    int Backup() override;
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
@@ -144,12 +145,11 @@ public:
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
     int InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
+    int ConfigLocale(const std::string &localeStr) override;
 
     // not virtual functions /
     const RdbStoreConfig &GetConfig();
-    int ConfigLocale(const std::string &localeStr) override;
     std::string GetName();
-    std::string GetFileType();
     int32_t ExchangeSlaverToMaster();
     void Close();
 
@@ -223,7 +223,7 @@ private:
         const std::shared_ptr<Statement> &statement, std::string sql, const RdbStoreConfig &config);
     int SetDefaultEncryptAlgo(const ConnectionPool::SharedConn &conn, const RdbStoreConfig &config);
     int GetHashKeyForLockRow(const AbsRdbPredicates &predicates, std::vector<std::vector<uint8_t>> &hashKeys);
-    int GetSlaveName(const std::string &dbName, std::string &backupFilePath);
+    std::string GetSlaveName(const std::string &dbName);
     void NotifyDataChange();
     bool TryGetMasterSlaveBackupPath(const std::string &srcPath, std::string &destPath, bool isRestore = false);
     int GetDestPath(const std::string &backupPath, std::string &destPath);
@@ -276,7 +276,6 @@ private:
     std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
     std::string path_;
     std::string name_;
-    std::string fileType_;
     mutable std::shared_mutex rwMutex_;
     mutable std::shared_mutex poolMutex_;
     std::mutex mutex_;
@@ -290,6 +289,7 @@ private:
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
     std::list<std::weak_ptr<Transaction>> transactions_;
+    std::list<std::weak_ptr<Connection>> conns_;
     std::mutex helperMutex_;
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> knowledgeSchemaHelper_;
     std::atomic<bool> isKnowledgeSchemaReady_{false};

@@ -163,7 +163,7 @@ export default function SetLocaleEtsTest() {
         await rdbStore?.setLocale("zh");
         const rdbTrans = await rdbStore?.createTransaction();
         let resultSet = await rdbTrans?.querySql("select * from test order by name collate LOCALES")
-        console.log(`mmy rowCount ${resultSet?.rowCount}`)
+        console.log(`rowCount ${resultSet?.rowCount}`)
         resultSet?.goToNextRow()
         expect('李四').assertEqual(resultSet?.getString(resultSet.getColumnIndex("name")));
         resultSet?.goToNextRow()

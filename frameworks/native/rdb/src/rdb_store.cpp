@@ -389,6 +389,11 @@ int RdbStore::Backup(const std::string &databasePath, const std::vector<uint8_t>
     return E_NOT_SUPPORT;
 }
 
+int RdbStore::Backup()
+{
+    return E_NOT_SUPPORT;
+}
+
 int RdbStore::Attach(const std::string &alias, const std::string &pathName, const std::vector<uint8_t> encryptKey)
 {
     (void)alias;
