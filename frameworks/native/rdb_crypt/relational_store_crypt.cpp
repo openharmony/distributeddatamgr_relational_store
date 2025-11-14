@@ -150,12 +150,17 @@ int32_t HksEncryptThreeStage(const struct HksBlob *keyAlias, const struct HksPar
 
 std::vector<HksParam> CreateHksParams(const HksBlob &blobNonce, const HksBlob &blobAad, const HksBlob &blobAead)
 {
-    return { { .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES },
-        { .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_DECRYPT },
-        { .tag = HKS_TAG_DIGEST, .uint32Param = 0 }, { .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM },
-        { .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE }, { .tag = HKS_TAG_NONCE, .blob = blobNonce },
-        { .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad }, { .tag = HKS_TAG_AE_TAG, .blob = blobAead },
-        { .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE } };
+    std::vector<HksParam> params;
+    params.push_back(HksParam{ .tag = HKS_TAG_ALGORITHM, .uint32Param = HKS_ALG_AES });
+    params.push_back(HksParam{ .tag = HKS_TAG_PURPOSE, .uint32Param = HKS_KEY_PURPOSE_DECRYPT });
+    params.push_back(HksParam{ .tag = HKS_TAG_DIGEST, .uint32Param = 0 });
+    params.push_back(HksParam{ .tag = HKS_TAG_BLOCK_MODE, .uint32Param = HKS_MODE_GCM });
+    params.push_back(HksParam{ .tag = HKS_TAG_PADDING, .uint32Param = HKS_PADDING_NONE });
+    params.push_back(HksParam{ .tag = HKS_TAG_NONCE, .blob = blobNonce });
+    params.push_back(HksParam{ .tag = HKS_TAG_ASSOCIATED_DATA, .blob = blobAad });
+    params.push_back(HksParam{ .tag = HKS_TAG_AE_TAG, .blob = blobAead });
+    params.push_back(HksParam{ .tag = HKS_TAG_AUTH_STORAGE_LEVEL, .uint32Param = HKS_AUTH_STORAGE_LEVEL_DE });
+    return params;
 }
 
 int32_t RDBCryptoImpl::GenerateRootKey(const std::vector<uint8_t> &rootKeyAlias, RDBCryptoFault &rdbFault)

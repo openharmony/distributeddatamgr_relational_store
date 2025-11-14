@@ -62,6 +62,7 @@ public:
         (const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
             std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb),
         (override));
+    MOCK_METHOD(void, Interrupt, (), (override));
     MOCK_METHOD(int32_t, Restore,
         (const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
             std::shared_ptr<SlaveStatus> slaveStatus),

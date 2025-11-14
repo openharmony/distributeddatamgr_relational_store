@@ -484,6 +484,11 @@ static constexpr int E_INVALID_ARGS_NEW = (E_BASE + 0x58);
 * @brief The error code for the number of subscriptions exceeds the limit.
 */
 static constexpr int E_SUB_LIMIT_REACHED = (E_BASE + 0x59);
+
+/**
+* @brief The error code for operation terminated by sqlite3_interrupt().
+*/
+static constexpr int E_SQLITE_INTERRUPT = (E_BASE + 0x5a);
 } // namespace NativeRdb
 } // namespace OHOS
 

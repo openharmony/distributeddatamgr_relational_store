@@ -1112,7 +1112,7 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : isMemoryRdb_(config.IsMemoryRdb()), configHolder_(std::make_shared<RdbStoreConfig>(config)),
-      config_(*configHolder_), name_(config.GetName()), fileType_(config.GetDatabaseFileType())
+      config_(*configHolder_), name_(config.GetName())
 {
     SqliteGlobalConfig::GetDbPath(config_, path_);
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
@@ -1845,17 +1845,64 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
     return E_OK;
 }
 
-int RdbStoreImpl::GetSlaveName(const std::string &path, std::string &backupFilePath)
+std::string RdbStoreImpl::GetSlaveName(const std::string &path)
 {
     std::string suffix(".db");
     std::string slaveSuffix("_slave.db");
     auto pos = path.find(suffix);
     if (pos == std::string::npos) {
-        backupFilePath = path + slaveSuffix;
-    } else {
-        backupFilePath = std::string(path, 0, pos) + slaveSuffix;
+        return path + slaveSuffix;
     }
-    return E_OK;
+    return std::string(path, 0, pos) + slaveSuffix;
+}
+
+int RdbStoreImpl::Backup()
+{
+    if (isReadOnly_ || isMemoryRdb_ || config_.GetDBType() != DB_SQLITE || config_.GetHaMode() == HAMode::SINGLE) {
+        return E_NOT_SUPPORT;
+    }
+    Suspender suspender(Suspender::SQL_LOG);
+    std::string destPath = GetSlaveName(config_.GetPath());
+    if (access(destPath.c_str(), F_OK) != 0) {
+        LOG_ERROR("The backup path can not access: %{public}s", SqliteUtils::Anonymous(destPath).c_str());
+        return E_NOT_SUPPORT;
+    }
+    // using read conn for integrity verification
+    auto [errCode, conn] = GetConn(true);
+    if (errCode != E_OK || conn == nullptr) {
+        return errCode;
+    }
+    std::shared_ptr<Statement> statement;
+    std::tie(errCode, statement) = conn->CreateStatement("PRAGMA quick_check", conn);
+    if (errCode != E_OK || statement == nullptr) {
+        return errCode;
+    }
+    {
+        std::lock_guard<decltype(mutex_)> guard(mutex_);
+        for (auto it = conns_.begin(); it != conns_.end();) {
+            if (it->expired()) {
+                it = conns_.erase(it);
+            } else {
+                it++;
+            }
+        }
+        conns_.push_back(conn);
+    }
+    ValueObject value;
+    std::tie(errCode, value) = statement->ExecuteForValue();
+    if (errCode != E_OK || (static_cast<std::string>(value) != "ok")) {
+        LOG_ERROR(
+            "Main db verification failed. [%{public}d, %{public}s]", errCode, static_cast<std::string>(value).c_str());
+        return errCode == E_OK ? E_SQLITE_CORRUPT : errCode;
+    }
+    // release read conn
+    statement = nullptr;
+    // Obtain write conn for backup
+    std::tie(errCode, conn) = GetConn(false);
+    if (errCode != E_OK || conn == nullptr) {
+        return errCode;
+    }
+    return conn->Backup(destPath, {}, false, slaveStatus_, false);
 }
 
 /**
@@ -2601,10 +2648,6 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
     });
 #endif
 }
-std::string RdbStoreImpl::GetFileType()
-{
-    return fileType_;
-}
 
 /**
  * Sets the database locale.
@@ -2903,11 +2946,22 @@ int RdbStoreImpl::InterruptBackup()
     if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER) {
         return E_NOT_SUPPORT;
     }
+    std::list<std::weak_ptr<Connection>> conns;
+    {
+        std::lock_guard<decltype(mutex_)> guard(mutex_);
+        conns = std::move(conns_);
+    }
+    for (auto it = conns.begin(); it != conns.end(); ++it) {
+        auto conn = it->lock();
+        if (conn != nullptr) {
+            conn->Interrupt();
+        }
+    }
     if (*slaveStatus_ == SlaveStatus::BACKING_UP) {
         *slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
         return E_OK;
     }
-    return E_CANCEL;
+    return conns.empty() ? E_CANCEL : E_OK;
 }
 
 int32_t RdbStoreImpl::GetBackupStatus() const
@@ -2928,11 +2982,7 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
     if (!srcPath.empty() || config_.GetHaMode() == HAMode::SINGLE || config_.GetDBType() != DB_SQLITE) {
         return false;
     }
-    int ret = GetSlaveName(config_.GetPath(), destPath);
-    if (ret != E_OK) {
-        destPath = {};
-        return false;
-    }
+    destPath = GetSlaveName(config_.GetPath());
     if (isRestore && access(destPath.c_str(), F_OK) != 0) {
         LOG_WARN("The backup path can not access: %{public}s", SqliteUtils::Anonymous(destPath).c_str());
         return false;
