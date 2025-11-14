@@ -185,6 +185,11 @@ int32_t RdConnection::VerifyAndRegisterHook(const RdbStoreConfig &config)
     return E_NOT_SUPPORT;
 }
 
+void RdConnection::Interrupt()
+{
+    return;
+}
+
 std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::string &sql, Connection::SConn conn)
 {
     auto stmt = std::make_shared<RdStatement>();
