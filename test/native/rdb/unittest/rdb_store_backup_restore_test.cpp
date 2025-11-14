@@ -18,8 +18,10 @@
 #include <map>
 #include <string>
 #include "acl.h"
+#include "block_data.h"
 #include "common.h"
 #include "file_ex.h"
+#include "grd_api_manager.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -43,11 +45,10 @@ public:
     void SetUp();
     void TearDown();
     void CorruptDoubleWriteStore();
-    void CheckResultSet(std::shared_ptr<RdbStore> &store);
-    void CheckAge(std::shared_ptr<ResultSet> &resultSet);
-    void CheckSalary(std::shared_ptr<ResultSet> &resultSet);
-    void CheckBlob(std::shared_ptr<ResultSet> &resultSet);
     void CheckAccess(const std::string &dbPath);
+    std::shared_ptr<RdbStore> InitStore(HAMode mode = HAMode::SINGLE, bool preData = true, bool encrypt = false);
+    std::shared_ptr<RdbStore> InitStoreV2(bool isReadOnly = false, StorageMode storageMode = StorageMode::MODE_DISK,
+        HAMode mode = HAMode::SINGLE, int32_t dbType = DB_SQLITE);
 
     static constexpr char DATABASE_NAME[] = "/data/test/backup_restore_test.db";
     static constexpr char slaveDataBaseName[] = "/data/test/backup_restore_test_slave.db";
@@ -115,6 +116,56 @@ void RdbStoreBackupRestoreTest::CheckAccess(const std::string &dbPath)
     EXPECT_EQ(ret, true);
     ret = SqliteUtils::HasAccessAcl(dbPath + "-wal", SERVICE_GID);
     EXPECT_EQ(ret, true);
+}
+
+std::shared_ptr<RdbStore> RdbStoreBackupRestoreTest::InitStore(HAMode mode, bool preData, bool encrypt)
+{
+    char databaseName[] = "/data/test/new_backup_test.db";
+    RdbStoreConfig config(databaseName);
+    config.SetHaMode(mode);
+    config.SetEncryptStatus(encrypt);
+    RdbStoreBackupRestoreTestOpenCallback callback;
+    int code = E_ERROR;
+    auto store = RdbHelper::GetRdbStore(config, 1, callback, code);
+    EXPECT_EQ(code, E_OK) << "GetRdbStore failed, code:" << code;
+    if (store == nullptr || code != E_OK) {
+        return nullptr;
+    }
+    if (!preData) {
+        return store;
+    }
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18); // age is 18
+    values.PutDouble("salary", 100.5); // salary is 100.5
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    auto [errCode, id] = store->Insert("test", values);
+    EXPECT_EQ(errCode, E_OK) << "Insert failed, code:" << errCode;
+    EXPECT_GT(id, -1) << "Insert failed, id:" << id;
+    if (errCode != E_OK || id < 0) {
+        return nullptr;
+    }
+    return store;
+}
+
+std::shared_ptr<RdbStore> RdbStoreBackupRestoreTest::InitStoreV2(
+    bool isReadOnly, StorageMode storageMode, HAMode mode, int32_t dbType)
+{
+    char databaseName[] = "/data/test/new_backup_test.db";
+    RdbStoreConfig config(databaseName);
+    config.SetReadOnly(isReadOnly);
+    config.SetStorageMode(storageMode);
+    config.SetHaMode(mode);
+    config.SetDBType(dbType);
+    RdbStoreBackupRestoreTestOpenCallback callback;
+    int code = E_ERROR;
+    auto store = RdbHelper::GetRdbStore(config, 0, callback, code);
+    EXPECT_EQ(code, E_OK) << "GetRdbStore failed, code:" << code;
+    if (store == nullptr || code != E_OK) {
+        return nullptr;
+    }
+    return store;
 }
 
 /* *
@@ -857,4 +908,335 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_017, TestSize.Level2)
     store = nullptr;
     RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
     RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_018
+ * @tc.desc: 1. create MAIN_REPLICA db
+ *           2. create MANUAL_TRIGGER db and write some data
+ *           3. backup to replica db
+ *           4. query data from main db
+ *           5. create MAIN_REPLICA db
+ *           6. delete data from main db
+ *           7. create MANUAL_TRIGGER db
+ *           8. restore from replica db
+ *           9. query data from main db
+ *           10. compare data
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_018, TestSize.Level2)
+{
+    auto store = InitStore(HAMode::MAIN_REPLICA, false);
+    ASSERT_NE(store, nullptr);
+    store = nullptr;
+    store = InitStore(HAMode::MANUAL_TRIGGER);
+    ASSERT_NE(store, nullptr);
+
+    int code = store->Backup();
+    EXPECT_EQ(code, E_OK);
+
+    auto resultSet = store->QuerySql("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    code = resultSet->GoToFirstRow();
+    EXPECT_EQ(code, E_OK);
+    RowEntity rowEntityBeforeRestore;
+    code = resultSet->GetRow(rowEntityBeforeRestore);
+    EXPECT_EQ(code, E_OK);
+
+    store = nullptr;
+    store = InitStore(HAMode::SINGLE, false);
+    ASSERT_NE(store, nullptr);
+
+    AbsRdbPredicates predicates("test");
+    auto [ret, results] = store->Delete(predicates);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(results.changed, 1);
+
+    store = nullptr;
+    store = InitStore(HAMode::MANUAL_TRIGGER, false);
+    ASSERT_NE(store, nullptr);
+
+    resultSet = store->QuerySql("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int count = -1;
+    code = resultSet->GetRowCount(count);
+    EXPECT_EQ(count, 0);
+
+    code = store->Restore("");
+    EXPECT_EQ(code, E_OK);
+    resultSet = store->QuerySql("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    code = resultSet->GoToFirstRow();
+    EXPECT_EQ(code, E_OK);
+    RowEntity rowEntityAfterRestore;
+    code = resultSet->GetRow(rowEntityAfterRestore);
+    EXPECT_EQ(code, E_OK);
+
+    EXPECT_EQ(rowEntityBeforeRestore.Get(), rowEntityAfterRestore.Get());
+
+    store = nullptr;
+    char databaseName[] = "/data/test/new_backup_test.db";
+    RdbHelper::DeleteRdbStore(databaseName);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_019
+ * @tc.desc: 1. create MAIN_REPLICA db
+ *           2. create MANUAL_TRIGGER db and write some data
+ *           3. insert 1g data
+ *           4. async thread performs backup
+ *           5. wait for integrity verification to begin
+ *           6. main thread preforms InterruptBackup
+ *           7. confirm that asynchronous backup has been interrupted
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_019, TestSize.Level2)
+{
+    auto store = InitStore(HAMode::MAIN_REPLICA, false);
+    ASSERT_NE(store, nullptr);
+    store = nullptr;
+    store = InitStore(HAMode::MANUAL_TRIGGER);
+    ASSERT_NE(store, nullptr);
+
+    const uint32_t count = 1024;
+    ValuesBucket values;
+    values.PutString("name", std::string(1024 * 1024, 'a')); // 1MB
+    values.PutInt("age", 18); // age is 18
+    values.PutDouble("salary", 100.5); // salary is 100.5
+    values.PutBlob("blobType", std::vector<uint8_t>(1024, 1));
+    ValuesBuckets valuesBuckets;
+    for (auto i = 0; i < count; i++) {
+        valuesBuckets.Put(values);
+    }
+    auto [code, changedRows] = store->BatchInsert("test", valuesBuckets);  // 1G data
+    EXPECT_EQ(code, E_OK) << "BatchInsert failed, code:" << code;
+    EXPECT_EQ(changedRows, 1024) << "BatchInsert failed, changedRows:" << changedRows;
+
+    std::shared_ptr<OHOS::BlockData<bool, std::chrono::milliseconds>> blockData =
+        std::make_shared<OHOS::BlockData<bool, std::chrono::milliseconds>>(50, false);
+    int backupCode = E_INVALID_ARGS;
+    std::thread thread([store, blockData, &backupCode]() {
+        blockData->SetValue(true);
+        backupCode = store->Backup();
+        blockData->SetValue(true);
+    });
+    ASSERT_TRUE(blockData->GetValue());
+    blockData->Clear(false);
+    ASSERT_FALSE(blockData->GetValue()); // Wait for 50ms for integrity verification to begin
+    code = store->InterruptBackup();
+    EXPECT_EQ(code, E_OK); // Without interrupting the backup process, return to E-CANCEL
+    ASSERT_TRUE(blockData->GetValue());  // return promptly after interruption
+    thread.join();
+    EXPECT_EQ(backupCode, E_SQLITE_INTERRUPT);
+    store = nullptr;
+    char databaseName[] = "/data/test/new_backup_test.db";
+    RdbHelper::DeleteRdbStore(databaseName);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_020
+ * @tc.desc: Abnormal backup test cases, SINGLE and readOnly is not support
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_020, TestSize.Level0)
+{
+    auto store = InitStoreV2();
+    ASSERT_NE(store, nullptr);
+    int code = store->Backup();
+    EXPECT_EQ(code, E_NOT_SUPPORT); // SINGLE is not support
+
+    store = nullptr;
+    store = InitStoreV2(true);
+    code = store->Backup();
+    EXPECT_EQ(code, E_NOT_SUPPORT); // readOnly is not support
+    store = nullptr;
+    char databaseName[] = "/data/test/new_backup_test.db";
+    RdbHelper::DeleteRdbStore(databaseName);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_021
+ * @tc.desc: Abnormal backup test cases, MODE_MEMORY is not support
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_021, TestSize.Level0)
+{
+    auto store = InitStoreV2(false, StorageMode::MODE_MEMORY);
+    ASSERT_NE(store, nullptr);
+    int code = store->Backup();
+    EXPECT_EQ(code, E_NOT_SUPPORT); // MODE_MEMORY is not support
+    store = nullptr;
+    char databaseName[] = "/data/test/new_backup_test.db";
+    RdbHelper::DeleteRdbStore(databaseName);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_022
+ * @tc.desc: Abnormal backup test cases, DB_VECTOR is not support
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_022, TestSize.Level0)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    auto store = InitStoreV2(false, StorageMode::MODE_DISK, HAMode::SINGLE, DB_VECTOR);
+    ASSERT_NE(store, nullptr);
+    int code = store->Backup();
+    EXPECT_EQ(code, E_NOT_SUPPORT);
+    char databaseName[] = "/data/test/new_backup_test.db";
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(databaseName);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_023
+ * @tc.desc: Abnormal backup test cases, Backup is not supported when the standby database does not exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_023, TestSize.Level0)
+{
+    auto store = InitStore(HAMode::MANUAL_TRIGGER);
+    ASSERT_NE(store, nullptr);
+
+    int code = store->Backup();
+    EXPECT_EQ(code, E_NOT_SUPPORT);
+
+    store = nullptr;
+    char databaseName[] = "/data/test/new_backup_test.db";
+    RdbHelper::DeleteRdbStore(databaseName);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_024
+ * @tc.desc: 1. create MAIN_REPLICA db
+ *           2. create MANUAL_TRIGGER db and write some data
+ *           3. delete db
+ *           4. create slave db
+ *           5. main db backup
+ *           6. delete slave db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_024, TestSize.Level0)
+{
+    auto store = InitStore(HAMode::MAIN_REPLICA, false);
+    ASSERT_NE(store, nullptr);
+    store = nullptr;
+    store = InitStore(HAMode::MANUAL_TRIGGER);
+    ASSERT_NE(store, nullptr);
+    char databaseName[] = "/data/test/new_backup_test.db";
+    RdbHelper::DeleteRdbStore(databaseName);
+
+    char databaseSalveName[] = "/data/test/new_backup_test_slave.db";
+    RdbStoreConfig config(databaseSalveName);
+    config.SetHaMode(HAMode::SINGLE);
+    RdbStoreBackupRestoreTestOpenCallback callback;
+    int code = E_ERROR;
+    auto salveStore = RdbHelper::GetRdbStore(config, 1, callback, code);
+    ASSERT_NE(salveStore, nullptr);
+    EXPECT_EQ(code, E_OK) << "GetRdbStore failed, code:" << code;
+
+    code = store->Backup();
+    EXPECT_EQ(code, E_ALREADY_CLOSED);
+    salveStore = nullptr;
+    RdbHelper::DeleteRdbStore(databaseSalveName);
+}
+
+/* *
+ * @tc.name: Rdb_BackupRestoreTest_025
+ * @tc.desc: 1. create MAIN_REPLICA db
+ *           2. create MANUAL_TRIGGER db and write some data
+ *           3. start thread to batchinsert 1000 rows
+ *           4. backup to replica db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_025, TestSize.Level0)
+{
+    auto store = InitStore(HAMode::MAIN_REPLICA, false);
+    ASSERT_NE(store, nullptr);
+    store = nullptr;
+    store = InitStore(HAMode::MANUAL_TRIGGER);
+    ASSERT_NE(store, nullptr);
+    const uint32_t count = 1000;
+    ValuesBucket values;
+    values.PutString("name", std::string(1024 * 1024, 'a')); // 1MB
+    values.PutInt("age", 18); // age is 18
+    values.PutDouble("salary", 100.5); // salary is 100.5
+    values.PutBlob("blobType", std::vector<uint8_t>(1024, 1));
+    ValuesBuckets valuesBuckets;
+    for (auto i = 0; i < count; i++) {
+        valuesBuckets.Put(values);
+    }
+
+    std::shared_ptr<OHOS::BlockData<bool, std::chrono::milliseconds>> blockData =
+        std::make_shared<OHOS::BlockData<bool, std::chrono::milliseconds>>(0, false);
+
+    std::thread thread([store, valuesBuckets, blockData]() {
+        blockData->SetValue(true);
+        auto [code, changedRows] = store->BatchInsert("test", valuesBuckets);
+        EXPECT_EQ(code, E_OK) << "BatchInsert failed, code:" << code;
+        EXPECT_EQ(changedRows, 1000) << "BatchInsert failed, changedRows:" << changedRows;
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(5)); // Sleep 5 milliseconds
+    ASSERT_TRUE(blockData->GetValue());
+    int code = store->Backup();
+    EXPECT_EQ(code, E_DATABASE_BUSY);
+    thread.join();
+    store = nullptr;
+    char databaseName[] = "/data/test/new_backup_test.db";
+    RdbHelper::DeleteRdbStore(databaseName);
+}
+
+/**
+ * @tc.name: Rdb_BackupRestoreTest_026
+ * @tc.desc: 1.create MAIN_REPLICA db
+ *           2.create MANUAL_TRIGGER db
+ *           3.batchinsert 100 rows
+ *           4.corrupt db
+ *           5.backup to replica db
+ *           6.delete db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_026, TestSize.Level0)
+{
+    auto store = InitStore(HAMode::MAIN_REPLICA, false);
+    ASSERT_NE(store, nullptr);
+    store = nullptr;
+    store = InitStore(HAMode::MANUAL_TRIGGER, false);
+    ASSERT_NE(store, nullptr);
+
+    const uint32_t count = 100;
+    ValuesBucket values;
+    values.PutString("name", std::string(10, 'a'));
+    values.PutInt("age", 18); // age is 18
+    values.PutDouble("salary", 100.5); // salary is 100.5
+    values.PutBlob("blobType", std::vector<uint8_t>(1024, 1));
+    ValuesBuckets valuesBuckets;
+    for (auto i = 0; i < count; i++) {
+        valuesBuckets.Put(values);
+    }
+    auto [code, changedRows] = store->BatchInsert("test", valuesBuckets);  // 1G data
+    EXPECT_EQ(code, E_OK) << "BatchInsert failed, code:" << code;
+    EXPECT_EQ(changedRows, 100) << "BatchInsert failed, changedRows:" << changedRows;
+
+    store = nullptr;
+    char databaseName[] = "/data/test/new_backup_test.db";
+    std::fstream file(databaseName, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open());
+
+    file.seekp(0x2000, std::ios::beg);
+    ASSERT_TRUE(file.good());
+
+    char bytes[128];
+    std::fill_n(bytes, 128, 0xff); // fill 128 bytes with 0xff
+    file.write(bytes, 128);
+    file.flush();
+    file.close();
+
+    store = InitStore(HAMode::MANUAL_TRIGGER, false);
+    ASSERT_NE(store, nullptr);
+
+    int errCode = store->Backup();
+    EXPECT_EQ(errCode, E_SQLITE_CORRUPT);
+
+    RdbHelper::DeleteRdbStore(databaseName);
 }

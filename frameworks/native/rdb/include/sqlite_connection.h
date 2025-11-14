@@ -53,6 +53,7 @@ public:
     SqliteConnection(const RdbStoreConfig &config, bool isWriteConnection, bool isSlave = false);
     ~SqliteConnection();
     int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) override;
+    void Interrupt() override;
     int TryCheckPoint(bool timeout) override;
     int LimitWalSize() override;
     int ConfigLocale(const std::string &localeStr) override;

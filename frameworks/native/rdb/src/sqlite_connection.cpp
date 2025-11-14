@@ -872,7 +872,7 @@ CodecConfig SqliteConnection::ConvertCryptoParamToCodecConfig(const RdbStoreConf
 int RekeyToPlainText(
     const RdbStoreConfig &config, CodecRekeyConfig &rekeyConfig, const RdbStoreConfig::CryptoParam &cryptoParam)
 {
-    CodecConfig plainTextCfg = { NULL, NULL, NULL, NULL, 0, 0, cryptoParam.cryptoPageSize };
+    CodecConfig plainTextCfg = { NULL, NULL, NULL, NULL, 0, 0, static_cast<int>(cryptoParam.cryptoPageSize) };
     auto err = memcpy_s(&rekeyConfig.rekeyCfg, sizeof(rekeyConfig.rekeyCfg), &plainTextCfg, sizeof(plainTextCfg));
     if (err != 0) {
         LOG_ERROR("memcpy_s rekeyConfig.rekeyCfg failed, err = %{public}d", err);
@@ -2031,6 +2031,14 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
     auto replayCallback = GetReplayCallback(dbPath);
     if (replayCallback != nullptr) {
         replayCallback();
+    }
+}
+
+void SqliteConnection::Interrupt()
+{
+    sqlite3_interrupt(dbHandle_);
+    if (slaveConnection_ != nullptr) {
+        sqlite3_interrupt(slaveConnection_->dbHandle_);
     }
 }
 

@@ -42,6 +42,7 @@ public:
     std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
     std::pair<int32_t, Stmt> CreateReplicaStatement(const std::string &sql, SConn conn) override;
     int CheckReplicaForRestore() override;
+    void Interrupt() override;
     int32_t GetDBType() const override;
     bool IsWriter() const override;
     int32_t ResetKey(const RdbStoreConfig &config) override;
