@@ -15,17 +15,14 @@
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
 #include <string>
 
 #include "common.h"
-#include "rdb_ndk_utils.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-using namespace OHOS::RdbNdk;
 
 class RdbQueryWithoutRowCountTest : public testing::Test {
 public:
@@ -325,8 +322,8 @@ void RdbQueryWithoutRowCountTest::CheckResultSetForAbnormalGet1(OH_Cursor *curso
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_COLUMN_INDEX);
 
     cursor->destroy(cursor);
-
 }
+
 void RdbQueryWithoutRowCountTest::CheckResultSetForAbnormalGet2(OH_Cursor *cursor)
 {
     cursor->goToNextRow(cursor);
