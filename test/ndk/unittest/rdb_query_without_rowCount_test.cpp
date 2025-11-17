@@ -17,13 +17,11 @@
 #include <sys/types.h>
 #include <string>
 #include "common.h"
-#include "rdb_ndk_utils.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-using namespace OHOS::RdbNdk;
 
 class RdbTransactionQueryWithoutRowCountTest : public testing::Test {
 public:
