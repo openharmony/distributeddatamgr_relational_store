@@ -62,6 +62,7 @@ struct RdbKnowledgeTable {
     std::unordered_map<std::string, std::vector<std::string>> pipelineHandlers;
     RdbProcessSequence processSequence;
     RdbProcessRatio processRatio;
+    bool isSaveChunkRowId;
 };
 
 struct RdbKnowledgeProcess {
