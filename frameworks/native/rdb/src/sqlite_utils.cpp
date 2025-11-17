@@ -366,7 +366,7 @@ bool SqliteUtils::RenameFile(const std::string &srcFile, const std::string &dest
     auto ret = rename(srcFile.c_str(), destFile.c_str());
     if (ret != 0) {
         LOG_WARN("rename failed errno %{public}d ret %{public}d %{public}s -> %{public}s", errno, ret,
-            SqliteUtils::Anonymous(destFile).c_str(), SqliteUtils::Anonymous(srcFile).c_str());
+            SqliteUtils::Anonymous(srcFile).c_str(), SqliteUtils::Anonymous(destFile).c_str());
         return false;
     }
     return true;
