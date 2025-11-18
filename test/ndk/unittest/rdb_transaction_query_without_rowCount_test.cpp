@@ -92,7 +92,7 @@ void RdbTransactionQueryWithoutRowCountTest::SetUpTestCase(void)
     CreateAssetTable();
 
     options_ = OH_RdbTrans_CreateOptions();
-    EXPECT_NE(options_, nullptr);
+    ASSERT_NE(options_, nullptr);
     int ret = OH_RdbTransOption_SetType(options_, RDB_TRANS_DEFERRED);
     EXPECT_EQ(ret, RDB_OK);
 }
