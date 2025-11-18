@@ -220,7 +220,7 @@ OH_Cursor *OH_RdbTrans_QuerySql(OH_Rdb_Transaction *trans, const char *sql, cons
 }
 
 OH_Cursor *OH_RdbTrans_QueryWithoutRowCount(
-    OH_Rdb_Transaction *trans, const OH_Predicates *predicates, const char *columns[], int len)
+    OH_Rdb_Transaction *trans, const OH_Predicates *predicates, const char * const columns[], int len)
 {
     auto rdbPredicate = RelationalPredicate::GetSelf(const_cast<OH_Predicates *>(predicates));
     if (!IsValidRdbTrans(trans) || rdbPredicate == nullptr) {
