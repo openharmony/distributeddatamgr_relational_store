@@ -16,7 +16,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <string>
-
 #include "common.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
@@ -24,7 +23,7 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
-class RdbQueryWithoutRowCountTest : public testing::Test {
+class RdbTransactionQueryWithoutRowCountTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -42,8 +41,9 @@ public:
 };
 
 static OH_Rdb_Store *rdbStore_;
+static OH_RDB_TransOptions *options_;
 
-OH_Rdb_ConfigV2 *RdbQueryWithoutRowCountTest::InitRdbConfig()
+OH_Rdb_ConfigV2 *RdbTransactionQueryWithoutRowCountTest::InitRdbConfig()
 {
     OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
     OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH);
@@ -56,7 +56,7 @@ OH_Rdb_ConfigV2 *RdbQueryWithoutRowCountTest::InitRdbConfig()
     return config;
 }
 
-void RdbQueryWithoutRowCountTest::SetUpTestCase(void)
+void RdbTransactionQueryWithoutRowCountTest::SetUpTestCase(void)
 {
     mkdir(RDB_TEST_PATH, 0770); // The permission on the path is 0770.
     int errCode = 0;
@@ -90,23 +90,32 @@ void RdbQueryWithoutRowCountTest::SetUpTestCase(void)
     EXPECT_EQ(errCode, 2); // rowId is 2.
     valueBucket->destroy(valueBucket);
     CreateAssetTable();
+
+    options_ = OH_RdbTrans_CreateOptions();
+    EXPECT_NE(options_, nullptr);
+    int ret = OH_RdbTransOption_SetType(options_, RDB_TRANS_DEFERRED);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
-void RdbQueryWithoutRowCountTest::TearDownTestCase(void)
+void RdbTransactionQueryWithoutRowCountTest::TearDownTestCase(void)
 {
     rdbStore_ = nullptr;
     auto config = InitRdbConfig();
     OH_Rdb_DeleteStoreV2(config);
+
+    OH_RdbTrans_DestroyOptions(options_);
+    options_ = nullptr;
 }
 
-void RdbQueryWithoutRowCountTest::SetUp(void)
-{
-}
-void RdbQueryWithoutRowCountTest::TearDown(void)
+void RdbTransactionQueryWithoutRowCountTest::SetUp(void)
 {
 }
 
-void RdbQueryWithoutRowCountTest::CreateAssetTable()
+void RdbTransactionQueryWithoutRowCountTest::TearDown(void)
+{
+}
+
+void RdbTransactionQueryWithoutRowCountTest::CreateAssetTable()
 {
     char createTableSql[] = "CREATE TABLE IF NOT EXISTS asset_table (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 "
                             "asset, data2 assets );";
@@ -148,7 +157,7 @@ void RdbQueryWithoutRowCountTest::CreateAssetTable()
     valueBucket->destroy(valueBucket);
 }
 
-void RdbQueryWithoutRowCountTest::SetAsset(Data_Asset *asset, int index)
+void RdbTransactionQueryWithoutRowCountTest::SetAsset(Data_Asset *asset, int index)
 {
     std::string indexString = std::to_string(index);
     std::string name;
@@ -173,7 +182,7 @@ void RdbQueryWithoutRowCountTest::SetAsset(Data_Asset *asset, int index)
     EXPECT_EQ(errcode, RDB_OK);
 }
 
-void RdbQueryWithoutRowCountTest::CheckResultSetForNormalGet(OH_Cursor *cursor)
+void RdbTransactionQueryWithoutRowCountTest::CheckResultSetForNormalGet(OH_Cursor *cursor)
 {
     cursor->goToNextRow(cursor);
 
@@ -219,7 +228,7 @@ void RdbQueryWithoutRowCountTest::CheckResultSetForNormalGet(OH_Cursor *cursor)
     cursor->destroy(cursor);
 }
 
-void RdbQueryWithoutRowCountTest::CheckResultSetForAllColumn(OH_Cursor *cursor)
+void RdbTransactionQueryWithoutRowCountTest::CheckResultSetForAllColumn(OH_Cursor *cursor)
 {
     cursor->goToNextRow(cursor);
 
@@ -272,7 +281,7 @@ void RdbQueryWithoutRowCountTest::CheckResultSetForAllColumn(OH_Cursor *cursor)
     cursor->destroy(cursor);
 }
 
-void RdbQueryWithoutRowCountTest::CheckResultSetForAbnormalGet1(OH_Cursor *cursor)
+void RdbTransactionQueryWithoutRowCountTest::CheckResultSetForAbnormalGet1(OH_Cursor *cursor)
 {
     cursor->goToNextRow(cursor);
 
@@ -323,8 +332,7 @@ void RdbQueryWithoutRowCountTest::CheckResultSetForAbnormalGet1(OH_Cursor *curso
 
     cursor->destroy(cursor);
 }
-
-void RdbQueryWithoutRowCountTest::CheckResultSetForAbnormalGet2(OH_Cursor *cursor)
+void RdbTransactionQueryWithoutRowCountTest::CheckResultSetForAbnormalGet2(OH_Cursor *cursor)
 {
     cursor->goToNextRow(cursor);
 
@@ -372,7 +380,7 @@ void RdbQueryWithoutRowCountTest::CheckResultSetForAbnormalGet2(OH_Cursor *curso
     cursor->destroy(cursor);
 }
 
-void RdbQueryWithoutRowCountTest::CheckResultSetForGetAssert(OH_Cursor *cursor)
+void RdbTransactionQueryWithoutRowCountTest::CheckResultSetForGetAssert(OH_Cursor *cursor)
 {
     cursor->goToNextRow(cursor);
 
@@ -416,8 +424,7 @@ void RdbQueryWithoutRowCountTest::CheckResultSetForGetAssert(OH_Cursor *cursor)
     OH_Data_Asset_DestroyOne(asset);
     cursor->destroy(cursor);
 }
-
-void RdbQueryWithoutRowCountTest::CheckResultSetForGetAsserts(OH_Cursor *cursor)
+void RdbTransactionQueryWithoutRowCountTest::CheckResultSetForGetAsserts(OH_Cursor *cursor)
 {
     cursor->goToNextRow(cursor);
 
@@ -469,66 +476,101 @@ void RdbQueryWithoutRowCountTest::CheckResultSetForGetAsserts(OH_Cursor *cursor)
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_001_Normal_Get
- * @tc.desc: Normal testCase of store for OH_Rdb_QueryWithoutRowCount, getColumnCount, getXXX.
+ * @tc.name: RdbTrans_QueryWithoutRowCount_001_Normal_Get
+ * @tc.desc: Normal testCase of store for OH_RdbTrans_QueryWithoutRowCount, getColumnCount, getXXX.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_001_Normal_Get, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_001_Normal_Get, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, columnNames, len);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, len);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
+
     CheckResultSetForNormalGet(cursor);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_002_Normal_Get
- * @tc.desc: Normal testCase of store for OH_Rdb_QueryWithoutRowCount, getColumnCount, getXXX.
+ * @tc.name: RdbTrans_QueryWithoutRowCount_002_Normal_Get
+ * @tc.desc: Normal testCase of store for OH_RdbTrans_QueryWithoutRowCount, getColumnCount, getXXX.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_002_Normal_Get, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_002_Normal_Get, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    // columnNames is nullptr
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
+
     CheckResultSetForAllColumn(cursor);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_003_Abnormal_InvalidArgs
+ * @tc.name: RdbTrans_QueryWithoutRowCount_003_Abnormal_InvalidArgs
  * @tc.desc: Abnormal testCase of store for InvalidArgs.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_003_Abnormal_InvalidArgs, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_003_Abnormal_InvalidArgs, TestSize.Level0)
 {
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
-    // store is nullptr
+    // trans is nullptr
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(nullptr, predicates, columnNames, len);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(nullptr, predicates, columnNames, len);
     predicates->destroy(predicates);
     ASSERT_EQ(cursor, NULL);
+
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     // predicates is nullptr
-    cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, nullptr, columnNames, len);
+    cursor = OH_RdbTrans_QueryWithoutRowCount(trans, nullptr, columnNames, len);
     ASSERT_EQ(cursor, NULL);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_004_Abnormal_InvalidArgs
+ * @tc.name: RdbTrans_QueryWithoutRowCount_004_Abnormal_InvalidArgs
  * @tc.desc: Abnormal testCase of store for InvalidArgs
  *           the size of columnNames is different from that of len columnNames
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_004_Abnormal_InvalidArgs, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_004_Abnormal_InvalidArgs, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     // the size of columnNames is greater than len, the size of columnNames is 2
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, columnNames, 2);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, 2);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
@@ -552,6 +594,7 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_004_Abnormal_Inva
     double data3Value;
     int errCode = cursor->getReal(cursor, 2, &data3Value);
     EXPECT_EQ(errCode, RDB_E_INVALID_COLUMN_INDEX);
+
     errCode = cursor->getSize(cursor, 3, &size);
     EXPECT_EQ(errCode, RDB_E_INVALID_COLUMN_INDEX);
     size = 5;
@@ -574,20 +617,28 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_004_Abnormal_Inva
     EXPECT_EQ(errCode, RDB_E_INVALID_COLUMN_INDEX);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_005_Abnormal_InvalidArgs
+ * @tc.name: RdbTrans_QueryWithoutRowCount_005_Abnormal_InvalidArgs
  * @tc.desc: Abnormal testCase of store for InvalidArgs
  *           the size of columnNames is different from that of len columnNames
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_005_Abnormal_InvalidArgs, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_005_Abnormal_InvalidArgs, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     // the size of columnNames is greater than len, the size of columnNames is 5
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, columnNames, 5);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, 5);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
@@ -596,49 +647,118 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_005_Abnormal_Inva
     EXPECT_EQ(errCode, RDB_E_STEP_RESULT_CLOSED);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_006_Abnormal_InvalidArgs
+ * @tc.name: RdbTrans_QueryWithoutRowCount_006_Abnormal_InvalidArgs
  * @tc.desc: Abnormal testCase of store for InvalidArgs, the field in columnNames has nullptr
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_006_Abnormal_InvalidArgs, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_006_Abnormal_InvalidArgs, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
     const char *columnNames[] = { nullptr, "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, columnNames, len);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, len);
     predicates->destroy(predicates);
     ASSERT_EQ(cursor, NULL);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_007_Abnormal_InvalidArgs
+ * @tc.name: RdbTrans_QueryWithoutRowCount_007_Abnormal_InvalidArgs
  * @tc.desc: Abnormal testCase of store for InvalidArgs, the columnNames contains an empty string
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_007_Abnormal_InvalidArgs, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_007_Abnormal_InvalidArgs, TestSize.Level0)
 {
     const char *columnNames[] = { "", "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, columnNames, len);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, len);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
-    CheckResultSetForNormalGet(cursor);
+
+    cursor->goToNextRow(cursor);
+
+    int columnCount = 0;
+    cursor->getColumnCount(cursor, &columnCount);
+    EXPECT_EQ(columnCount, 4);
+
+    size_t size = 0;
+    cursor->getSize(cursor, 0, &size);
+    EXPECT_EQ(size, 9);
+    char data1Value[size];
+    cursor->getText(cursor, 0, data1Value, size);
+    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+
+    int64_t data2Value;
+    cursor->getInt64(cursor, 1, &data2Value);
+    EXPECT_EQ(data2Value, 12800);
+
+    double data3Value;
+    cursor->getReal(cursor, 2, &data3Value);
+    EXPECT_EQ(data3Value, 100.1);
+
+    cursor->getSize(cursor, 3, &size);
+    EXPECT_EQ(size, 5);
+    unsigned char data4Value[size];
+    cursor->getBlob(cursor, 3, data4Value, size);
+    EXPECT_EQ(data4Value[0], 1);
+    EXPECT_EQ(data4Value[1], 2);
+
+    cursor->goToNextRow(cursor);
+
+    cursor->getSize(cursor, 0, &size);
+    EXPECT_EQ(size, 5);
+    char data1Value1[size];
+    cursor->getText(cursor, 0, data1Value1, size);
+    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
+
+    cursor->getInt64(cursor, 1, &data2Value);
+    EXPECT_EQ(data2Value, 13800);
+
+    cursor->getReal(cursor, 2, &data3Value);
+    EXPECT_EQ(data3Value, 200.1);
+
+    cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_008_Normal_GetColumnType
+ * @tc.name: RdbTrans_QueryWithoutRowCount_008_Normal_GetColumnType
  * @tc.desc: Normal testCase of cursor for GetColumnType.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_008_Normal_GetColumnType, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_008_Normal_GetColumnType, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
     cursor->goToNextRow(cursor);
@@ -656,19 +776,27 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_008_Normal_GetCol
     EXPECT_EQ(type, OH_ColumnType::TYPE_BLOB);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_009_Abnormal_GetColumnType
+ * @tc.name: RdbTrans_QueryWithoutRowCount_009_Abnormal_GetColumnType
  * @tc.desc: Abnormal testCase of cursor for GetColumnType.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_009_Abnormal_GetColumnType, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_009_Abnormal_GetColumnType, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
@@ -690,20 +818,29 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_009_Abnormal_GetC
     // columnType is nullptr
     errCode = cursor->getColumnType(cursor, 4, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_010_Normal_GetColumnIndex
+ * @tc.name: RdbTrans_QueryWithoutRowCount_010_Normal_GetColumnIndex
  * @tc.desc: Normal testCase of cursor for GetColumnIndex.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_010_Normal_GetColumnIndex, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_010_Normal_GetColumnIndex, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
@@ -720,19 +857,27 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_010_Normal_GetCol
     EXPECT_EQ(columnIndex, 4);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_011_Abnormal_GetColumnIndex
+ * @tc.name: RdbTrans_QueryWithoutRowCount_011_Abnormal_GetColumnIndex
  * @tc.desc: Abnormal testCase of cursor for GetColumnIndex.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_011_Abnormal_GetColumnIndex, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_011_Abnormal_GetColumnIndex, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
@@ -751,18 +896,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_011_Abnormal_GetC
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_012_Normal_GetColumnName
+ * @tc.name: RdbTrans_QueryWithoutRowCount_012_Normal_GetColumnName
  * @tc.desc: Normal testCase of cursor for GetColumnName.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_012_Normal_GetColumnName, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_012_Normal_GetColumnName, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
@@ -779,18 +932,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_012_Normal_GetCol
     EXPECT_EQ(strcmp(name, "data4"), 0);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_013_Abnormal_GetColumnName
+ * @tc.name: RdbTrans_QueryWithoutRowCount_013_Abnormal_GetColumnName
  * @tc.desc: Abnormal testCase of cursor for GetColumnName.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_013_Abnormal_GetColumnName, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_013_Abnormal_GetColumnName, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
@@ -811,18 +972,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_013_Abnormal_GetC
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_014_Abnormal_GetColumnCount
+ * @tc.name: RdbTrans_QueryWithoutRowCount_014_Abnormal_GetColumnCount
  * @tc.desc: Abnormal testCase of cursor for GetColumnCount.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_014_Abnormal_GetColumnCount, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_014_Abnormal_GetColumnCount, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
@@ -835,18 +1004,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_014_Abnormal_GetC
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_015_Abnormal_GetRowCount
+ * @tc.name: RdbTrans_QueryWithoutRowCount_015_Abnormal_GetRowCount
  * @tc.desc: Abnormal testCase of cursor for GetRowCount.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_015_Abnormal_GetRowCount, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_015_Abnormal_GetRowCount, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
@@ -854,96 +1031,148 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_015_Abnormal_GetR
     // getrowCount is not support
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED);
+
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_016_Abnormal_Get
+ * @tc.name: RdbTrans_QueryWithoutRowCount_016_Abnormal_GetRowCount
  * @tc.desc: Abnormal testCase of cursor for GetXXX.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_016_Abnormal_Get, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_016_Abnormal_Get, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
     // cursor is nullptr
     errCode = cursor->goToNextRow(nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
     CheckResultSetForAbnormalGet1(cursor);
+    
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_017_Abnormal_Get
+ * @tc.name: RdbTrans_QueryWithoutRowCount_017_Abnormal_Get
  * @tc.desc: Abnormal testCase of cursor for GetXXX.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_017_Abnormal_Get, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_017_Abnormal_Get, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
+
     CheckResultSetForAbnormalGet2(cursor);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
+
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_018_Normal_GetAssert
+ * @tc.name: RdbTrans_QueryWithoutRowCount_018_Normal_GetAssert
  * @tc.desc: Normal testCase of cursor for GetAssert.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_018_Normal_GetAssert, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_018_Normal_GetAssert, TestSize.Level0)
 {
-    OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
 
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
+
     CheckResultSetForGetAssert(cursor);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QueryWithoutRowCount_019_Normal_GetAsserts
+ * @tc.name: RdbTrans_QueryWithoutRowCount_019_Normal_GetAsserts
  * @tc.desc: Normal testCase of cursor for getAssets.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_019_Normal_GetAsserts, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_019_Normal_GetAsserts, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
-    OH_Cursor *cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
+    OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
+
     CheckResultSetForGetAsserts(cursor);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_001_Normal_Get
- * @tc.desc: Normal testCase of store for OH_Rdb_QueryWithoutRowCount, getColumnCount, getXXX.
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_001_Normal_Get
+ * @tc.desc: Normal testCase of store for OH_RdbTrans_QueryWithNoCount, getColumnCount, getXXX.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_001_Normal_Get, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_001_Normal_Get, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     char querySql[] = "select data1, data2, data3, data4 from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, nullptr);
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, nullptr);
     ASSERT_NE(cursor, NULL);
 
     CheckResultSetForNormalGet(cursor);
+
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_002_Normal_Get
- * @tc.desc: Normal testCase of store for OH_Rdb_QueryWithoutRowCount, getColumnCount, getXXX.
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_002_Normal_Get
+ * @tc.desc: Normal testCase of store for OH_RdbTrans_QueryWithNoCount, getColumnCount, getXXX.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_002_Normal_Get, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_002_Normal_Get, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     char querySql[] = "select * from test where id = ?;";
     OH_Data_Values *values = OH_Values_Create();
-    int ret = OH_Values_PutInt(values, 1); // Add int value 1 to values
+    ret = OH_Values_PutInt(values, 1); // Add int value 1 to values
     EXPECT_EQ(ret, RDB_OK);
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, values);
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, values);
     ret = OH_Values_Destroy(values);
     EXPECT_EQ(ret, RDB_OK);
     ASSERT_NE(cursor, NULL);
@@ -981,51 +1210,69 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_002_Normal_Get
     EXPECT_EQ(data4Value[1], 2);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_003_Abnormal_InvalidArgs
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_003_Abnormal_InvalidArgs
  * @tc.desc: Abnormal testCase of store for InvalidArgs.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_003_Abnormal_InvalidArgs, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_003_Abnormal_InvalidArgs, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     char querySql[] = "select * from test;";
     // store is nullptr
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(nullptr, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(nullptr, querySql, {});
     ASSERT_EQ(cursor, NULL);
 
     // sql is nullptr
-    cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, nullptr, {});
+    cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, nullptr, {});
     ASSERT_EQ(cursor, NULL);
-    
+
     char querySql1[] = "select * from test where id = ?;";
     // the args of value is nullptr
     OH_Data_Values *values = OH_Values_Create();
-    cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql1, values);
+    cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql1, values);
     ASSERT_NE(cursor, NULL);
 
     // the SQL statement needs to bind parameters, but the parameters are not transferred
-    cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql1, {});
+    cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql1, {});
     // the SQL statement does not need to be bound to parameters, but the parameter is transferred
-    int ret = OH_Values_PutInt(values, 1); // Add int value 1 to values
+    ret = OH_Values_PutInt(values, 1); // Add int value 1 to values
     EXPECT_EQ(ret, RDB_OK);
-    cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, values);
+    cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, values);
     ASSERT_NE(cursor, NULL);
+
+    cursor->destroy(cursor);
     ret = OH_Values_Destroy(values);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = OH_RdbTrans_Destroy(trans);
     EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_004_Normal_GetColumnType
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_004_Normal_GetColumnType
  * @tc.desc: Normal testCase of cursor for GetColumnType.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_004_Normal_GetColumnType, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_004_Normal_GetColumnType, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
     cursor->goToNextRow(cursor);
 
@@ -1042,18 +1289,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_004_Normal_Get
     EXPECT_EQ(type, OH_ColumnType::TYPE_BLOB);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_005_Abnormal_GetColumnType
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_005_Abnormal_GetColumnType
  * @tc.desc: Abnormal testCase of cursor for GetColumnType.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_005_Abnormal_GetColumnType, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_005_Abnormal_GetColumnType,
+    TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
 
     OH_ColumnType type;
@@ -1074,19 +1329,28 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_005_Abnormal_G
     // columnType is nullptr
     errCode = cursor->getColumnType(cursor, 4, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_006_Normal_GetColumnIndex
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_006_Normal_GetColumnIndex
  * @tc.desc: Normal testCase of cursor for GetColumnIndex.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_006_Normal_GetColumnIndex, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_006_Normal_GetColumnIndex, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
 
     int columnIndex;
@@ -1102,18 +1366,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_006_Normal_Get
     EXPECT_EQ(columnIndex, 4);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_007_Abnormal_GetColumnIndex
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_007_Abnormal_GetColumnIndex
  * @tc.desc: Abnormal testCase of cursor for GetColumnIndex.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_007_Abnormal_GetColumnIndex, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_007_Abnormal_GetColumnIndex,
+    TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
 
     int columnIndex;
@@ -1131,18 +1403,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_007_Abnormal_G
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_008_Normal_GetColumnName
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_008_Normal_GetColumnName
  * @tc.desc: Normal testCase of cursor for GetColumnName.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_008_Normal_GetColumnName, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_008_Normal_GetColumnName, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
 
     char name[6];
@@ -1158,18 +1438,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_008_Normal_Get
     EXPECT_EQ(strcmp(name, "data4"), 0);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_009_Abnormal_GetColumnName
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_009_Abnormal_GetColumnName
  * @tc.desc: Abnormal testCase of cursor for GetColumnName.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_009_Abnormal_GetColumnName, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_009_Abnormal_GetColumnName,
+    TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
 
     char name[6];
@@ -1189,18 +1477,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_009_Abnormal_G
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_010_Abnormal_GetColumnCount
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_010_Abnormal_GetColumnCount
  * @tc.desc: Abnormal testCase of cursor for GetColumnCount.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_010_Abnormal_GetColumnCount, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_010_Abnormal_GetColumnCount,
+    TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
 
     int columnCount = 0;
@@ -1212,18 +1508,26 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_010_Abnormal_G
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_011_Abnormal_GetRowCount
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_011_Abnormal_GetRowCount
  * @tc.desc: Abnormal testCase of cursor for GetRowCount.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_011_Abnormal_GetRowCount, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_011_Abnormal_GetRowCount, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
 
     int rowCount = 0;
@@ -1232,60 +1536,91 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_011_Abnormal_G
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED);
 
     cursor->destroy(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_012_Abnormal_Get
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_012_Abnormal_Get
  * @tc.desc: Abnormal testCase of cursor for GetXXX.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_012_Abnormal_Get, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_012_Abnormal_Get, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     int errCode = 0;
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
     // cursor is nullptr
     errCode = cursor->goToNextRow(nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     CheckResultSetForAbnormalGet1(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_013_Abnormal_Get
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_013_Abnormal_Get
  * @tc.desc: Abnormal testCase of cursor for GetXXX.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_013_Abnormal_Get, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_013_Abnormal_Get, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     char querySql[] = "select * from test;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
     CheckResultSetForAbnormalGet2(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_014_Normal_GetAssert
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_014_Normal_GetAssert
  * @tc.desc: Normal testCase of cursor for GetAssert.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_014_Normal_GetAssert, TestSize.Level0)
+HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_014_Normal_GetAssert, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     char querySql[] = "select * from asset_table;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
     CheckResultSetForGetAssert(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
 
 /**
- * @tc.name: Rdb_QuerySqlWithoutRowCount_015_Normal_GetAsserts
+ * @tc.name: RdbTrans_QuerySqlWithoutRowCount_015_Normal_GetAsserts
  * @tc.desc: Normal testCase of cursor for getAssets.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QuerySqlWithoutRowCount_015_Normal_GetAsserts, TestSize.Level0)
+HWTEST_F(
+    RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCount_015_Normal_GetAsserts, TestSize.Level0)
 {
+    OH_Rdb_Transaction *trans = nullptr;
+    int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
+    EXPECT_EQ(ret, RDB_OK);
+    ASSERT_NE(trans, nullptr);
+
     char querySql[] = "select * from asset_table;";
-    OH_Cursor *cursor = OH_Rdb_QuerySqlWithoutRowCount(rdbStore_, querySql, {});
+    OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, {});
     ASSERT_NE(cursor, NULL);
     CheckResultSetForGetAsserts(cursor);
+    ret = OH_RdbTrans_Destroy(trans);
+    EXPECT_EQ(ret, RDB_OK);
 }
