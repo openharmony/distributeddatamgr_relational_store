@@ -622,6 +622,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_003, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = true;
     distributedConfig.autoSync = true;
+    distributedConfig.autoSyncSwitch = true;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
@@ -650,6 +651,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_004, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = true;
     distributedConfig.autoSync = true;
+    distributedConfig.autoSyncSwitch = false;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
@@ -678,6 +680,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_005, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = true;
     distributedConfig.autoSync = false;
+    distributedConfig.autoSyncSwitch = true;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
@@ -706,6 +709,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_006, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = false;
     distributedConfig.autoSync = false;
+    distributedConfig.autoSyncSwitch = true;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
@@ -734,6 +738,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_007, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = false;
     distributedConfig.autoSync = true;
+    distributedConfig.autoSyncSwitch = true;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);

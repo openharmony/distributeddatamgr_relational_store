@@ -82,6 +82,7 @@ struct RdbSyncerParam {
     std::vector<std::string> permissionNames_ = {};
     bool asyncDownloadAsset_ = false;
     bool enableCloud_ = true;
+    bool autoSyncSwitch_ = true;
     int32_t subUser_ = 0;
     RdbDfxInfo dfxInfo_;
     ~RdbSyncerParam()
@@ -102,6 +103,9 @@ enum SyncMode {
     TIME_FIRST = 4,
     NATIVE_FIRST,
     CLOUD_FIRST,
+    CUSTOM_TIME_FIRST,
+    CUSTOM_NATIVE_FIRST,
+    CUSTOM_CLOUD_FIRST,
 };
 
 struct SyncOption {
@@ -158,6 +162,7 @@ struct DistributedConfig {
     bool isRebuild = false;
     bool asyncDownloadAsset = false;
     bool enableCloud = true;
+    bool autoSyncSwitch = true;
 };
 
 enum Progress {
@@ -281,6 +286,7 @@ enum SubscribeMode {
     REMOTE,
     CLOUD,
     CLOUD_DETAIL,
+    CLOUD_SYNC_TRIGGER,
     LOCAL,
     LOCAL_SHARED,
     LOCAL_DETAIL,
@@ -358,6 +364,8 @@ public:
         OnChange(origin.id);
     };
     virtual void OnChange() {};
+
+    virtual void OnChange(const int32_t triggerMode) {};
 };
 
 struct DropOption {};

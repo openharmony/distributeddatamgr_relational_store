@@ -24,9 +24,10 @@ namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
 
 RdbNotifierStub::RdbNotifierStub(const SyncCompleteHandler &completeNotifier,
-    const AutoSyncCompleteHandler &autoSyncCompleteHandler, const DataChangeHandler &changeNotifier)
+    const AutoSyncCompleteHandler &autoSyncCompleteHandler, const DataChangeHandler &changeNotifier,
+    const AutoSyncTriggerHandler &triggerNotifier)
     : IRemoteStub<RdbNotifierStubBroker>(), completeNotifier_(completeNotifier),
-      autoSyncCompleteHandler_(autoSyncCompleteHandler), changeNotifier_(changeNotifier)
+      autoSyncCompleteHandler_(autoSyncCompleteHandler), changeNotifier_(changeNotifier), triggerNotifier_(triggerNotifier)
 {
 }
 
@@ -115,5 +116,23 @@ int32_t RdbNotifierStub::OnAutoSyncCompleteInner(MessageParcel &data, MessagePar
         return RDB_ERROR;
     }
     return OnComplete(storeName, std::move(result));
+}
+
+int32_t RdbNotifierStub::OnAutoSyncTriggerInner(MessageParcel &data, MessageParcel &reply)
+{
+    std::string storeId;
+    if (!ITypesUtil::Unmarshal(data, storeId, triggerMode)) {
+        LOG_ERROR("read sync result failed.");
+        return RDB_ERROR;
+    }
+    return OnChange(storeId, triggerMode);
+}
+
+int32_t RdbNotifierStub::OnChange(const std::string &storeId, const int32_t triggerMode)
+{
+    if (triggerNotifier_) {
+        triggerNotifier_(storeId, triggerMode);
+    }
+    return RDB_OK;
 }
 } // namespace OHOS::DistributedRdb

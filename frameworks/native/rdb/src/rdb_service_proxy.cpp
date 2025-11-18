@@ -82,6 +82,9 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
         },
         [this](const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo) {
             OnDataChange(origin, primaries, std::move(changeInfo));
+        },
+        [this](const std::string &storeId, int32_t triggerMode) {
+            OnSyncTrigger(storeId, triggerMode);
         });
     if (notifier_ == nullptr) {
         LOG_ERROR("create notifier failed.");
@@ -526,6 +529,23 @@ void RdbServiceProxy::OnDataChange(
             size--;
             if (obs != nullptr) {
                 obs->OnChange(origin, primaries, size > 0 ? ChangeInfo(info) : std::move(info));
+            }
+        }
+        return !value.empty();
+    });
+}
+
+void RdbServiceProxy::OnSyncTrigger(const std::string &storeId, int32_t triggerMode)
+{
+    LOG_DEBUG("OnSyncTrigger, storeId:%{public}s, triggerMode:%{public}d", SqliteUtils::Anonymous(storeId).c_str(), triggerMode);
+    auto name = SqliteUtils::RemoveSuffix(storeId);
+    observers_.ComputeIfPresent(name, [triggerMode](const auto &key, const std::list<ObserverParam> &value) mutable {
+        auto size = value.size();
+        for (const auto &params : value) {
+            auto obs = params.observer.lock();
+            size--;
+            if (obs != nullptr) {
+                obs->OnChange(triggerMode);
             }
         }
         return !value.empty();
