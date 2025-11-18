@@ -231,7 +231,7 @@ OH_Cursor *OH_RdbTrans_QueryWithoutRowCount(
         for (int i = 0; i < len; i++) {
             // Values in columns are verified to prevent crash.
             if (columns[i] == nullptr) {
-                LOG_ERROR("columns is invalids.");
+                LOG_ERROR("columns is invalid.");
                 return nullptr;
             }
             fields.emplace_back(columns[i]);

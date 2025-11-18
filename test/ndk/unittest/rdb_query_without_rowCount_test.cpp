@@ -591,7 +591,7 @@ HWTEST_F(RdbQueryWithoutRowCountTest, Rdb_QueryWithoutRowCount_005_Abnormal_Inva
     predicates->destroy(predicates);
     ASSERT_NE(cursor, NULL);
 
-    int errCode = cursor->goToNextRow(cursor);;
+    int errCode = cursor->goToNextRow(cursor);
     // An error is reported when a field in a location is added.
     EXPECT_EQ(errCode, RDB_E_STEP_RESULT_CLOSED);
 
