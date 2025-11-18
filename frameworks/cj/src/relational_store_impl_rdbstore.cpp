@@ -925,8 +925,16 @@ namespace Relational {
         if (*errCode != NativeRdb::E_OK) {
             return;
         }
-        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(rdbConfig.path, false);
-        return;
+        if (!rdbConfig.rootDir.empty()) {
+            rdbConfig.isReadOnly = true;
+        }
+        NativeRdb::RdbStoreConfig storeConfig = getRdbStoreConfig(rdbConfig, param);
+        storeConfig.SetDBType(NativeRdb::DB_SQLITE);
+        int errCodeSqlite = NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
+        storeConfig.SetDBType(NativeRdb::DB_VECTOR);
+        int errCodeVector = NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
+        *errCode = (errCodeSqlite == NativeRdb::E_OK && errCodeVector == NativeRdb::E_OK) ?
+            NativeRdb::E_OK : NativeRdb::E_REMOVE_FILE;
     }
 
     void DeleteRdbStoreConfig(OHOS::AbilityRuntime::Context* context, StoreConfig config,
@@ -946,8 +954,11 @@ namespace Relational {
         if (*errCode != NativeRdb::E_OK) {
             return;
         }
-        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(rdbConfig.path, false);
-        return;
+        if (!rdbConfig.rootDir.empty()) {
+            rdbConfig.isReadOnly = true;
+        }
+        NativeRdb::RdbStoreConfig storeConfig = getRdbStoreConfig(rdbConfig, param);
+        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     }
 
     void DeleteRdbStoreConfigEx(OHOS::AbilityRuntime::Context* context, const StoreConfigEx *config,
@@ -967,8 +978,11 @@ namespace Relational {
         if (*errCode != NativeRdb::E_OK) {
             return;
         }
-        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(rdbConfig.path, false);
-        return;
+        if (!rdbConfig.rootDir.empty()) {
+            rdbConfig.isReadOnly = true;
+        }
+        NativeRdb::RdbStoreConfig storeConfig = getRdbStoreConfigEx(rdbConfig, param);
+        *errCode = NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     }
 }
 }

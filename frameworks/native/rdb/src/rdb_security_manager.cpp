@@ -254,6 +254,9 @@ std::shared_ptr<RDBCrypto> RdbSecurityManager::GetDelegate()
         return rdbCrypto_;
     }
     rdbCrypto_ = CreateDelegate(rootAlias_);
+    if (rdbCrypto_ == nullptr) {
+        return nullptr;
+    }
     RDBCryptoFault fault;
     auto ret = rdbCrypto_->Init(fault);
     if (ret != E_OK) {
