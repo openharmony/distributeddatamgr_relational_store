@@ -120,6 +120,7 @@ int32_t RdbNotifierStub::OnAutoSyncCompleteInner(MessageParcel &data, MessagePar
 
 int32_t RdbNotifierStub::OnAutoSyncTriggerInner(MessageParcel &data, MessageParcel &reply)
 {
+    int32_t triggerMode;
     std::string storeId;
     if (!ITypesUtil::Unmarshal(data, storeId, triggerMode)) {
         LOG_ERROR("read sync result failed.");
