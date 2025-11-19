@@ -535,7 +535,7 @@ void RdbServiceProxy::OnDataChange(
     });
 }
 
-void RdbServiceProxy::OnSyncTrigger(const std::string &storeId, constint32_t triggerMode)
+void RdbServiceProxy::OnSyncTrigger(const std::string &storeId, const int32_t triggerMode)
 {
     LOG_DEBUG("storeId:%{public}s, triggerMode:%{public}d", SqliteUtils::Anonymous(storeId).c_str(), triggerMode);
     auto name = SqliteUtils::RemoveSuffix(storeId);
