@@ -26,7 +26,7 @@ public:
     virtual int32_t OnComplete(const std::string &storeName, Details &&result) = 0;
 
     virtual int32_t OnChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo) = 0;
-    virtual int32_t OnChange(const std::string &storeId, int32_t triggerMode) = 0;
+    virtual int32_t OnChange(const std::string &storeId, const int32_t triggerMode) = 0;
         
 };
 } // namespace OHOS::DistributedRdb

@@ -32,8 +32,7 @@ public:
     using AutoSyncCompleteHandler = std::function<void(std::string, Details &&)>;
     using DataChangeHandler = std::function<void(const Origin &origin, const PrimaryFields &primaries,
         ChangeInfo &&changeInfo)>;
-    using AutoSyncTriggerHandler = std::function<void(const std::string &storeId, const int32_t triggerMode,
-        ChangeInfo &&changeInfo)>;
+    using AutoSyncTriggerHandler = std::function<void(const std::string &storeId, const int32_t triggerMode)>;
     RdbNotifierStub(const SyncCompleteHandler&, const AutoSyncCompleteHandler&, const DataChangeHandler&,
         const AutoSyncTriggerHandler&);
     virtual ~RdbNotifierStub() noexcept;
@@ -48,7 +47,7 @@ private:
     int32_t OnCompleteInner(MessageParcel& data, MessageParcel& reply);
     int32_t OnAutoSyncCompleteInner(MessageParcel& data, MessageParcel& reply);
     int32_t OnChangeInner(MessageParcel& data, MessageParcel& reply);
-    int32_t OnAutoSyncTriggerInner(MessageParcel& data, MessageParcel& reply);
+    int32_t OnAutoSyncTriggerInner(MessageParcel &data, MessageParcel &reply);
     bool CheckInterfaceToken(MessageParcel& data);
 
     using RequestHandle = int32_t (RdbNotifierStub::*)(MessageParcel&, MessageParcel&);
