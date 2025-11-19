@@ -176,7 +176,7 @@ bool UnionAccessor::TryConvertArray<bool>(std::vector<bool> &value)
             return false;
         }
         ani_boolean val = false;
-        if (ANI_OK != env_->Object_CallMethodByName_Boolean(static_cast<ani_object>(ref), "unboxed", nullptr, &val)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Boolean(static_cast<ani_object>(ref), "toBoolean", nullptr, &val)) {
             LOG_ERROR("Object_CallMethodByName_Boolean unbox failed");
             return false;
         }
@@ -201,7 +201,7 @@ bool UnionAccessor::TryConvertArray<int>(std::vector<int> &value)
             return false;
         }
         ani_int intValue = 0;
-        if (ANI_OK != env_->Object_CallMethodByName_Int(static_cast<ani_object>(ref), "unboxed", nullptr, &intValue)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Int(static_cast<ani_object>(ref), "toInt", nullptr, &intValue)) {
             LOG_ERROR("Object_CallMethodByName_Int unbox failed");
             return false;
         }
@@ -226,7 +226,7 @@ bool UnionAccessor::TryConvertArray<double>(std::vector<double> &value)
             return false;
         }
         ani_double val = 0;
-        if (ANI_OK != env_->Object_CallMethodByName_Double(static_cast<ani_object>(ref), "unboxed", nullptr, &val)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Double(static_cast<ani_object>(ref), "toDouble", nullptr, &val)) {
             LOG_ERROR("Object_CallMethodByName_Double unbox failed");
             return false;
         }
@@ -318,7 +318,7 @@ bool UnionAccessor::TryConvert<int>(int &value)
         return false;
     }
     ani_int aniValue = 0;
-    auto ret = env_->Object_CallMethodByName_Int(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Int(obj_, "toInt", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -353,7 +353,7 @@ bool UnionAccessor::TryConvert<double>(double &value)
         return false;
     }
     ani_double aniValue = 0;
-    auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Double(obj_, "toDouble", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -378,7 +378,7 @@ bool UnionAccessor::TryConvert<bool>(bool &value)
         return false;
     }
     ani_boolean aniValue = false;
-    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "toBoolean", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -637,7 +637,7 @@ std::optional<double> OptionalAccessor::Convert<double>()
         return std::nullopt;
     }
     ani_double aniValue = 0;
-    auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Double(obj_, "toDouble", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return std::nullopt;
     }
