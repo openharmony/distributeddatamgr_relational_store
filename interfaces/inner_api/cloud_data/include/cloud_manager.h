@@ -27,8 +27,8 @@ public:
     API_EXPORT std::pair<int32_t, std::shared_ptr<CloudService>> GetCloudService();
 
 private:
-    API_EXPORT CloudManager() = default;
-    API_EXPORT ~CloudManager() = default;
+    CloudManager() = default;
+    ~CloudManager() = default;
     std::mutex mutex_;
     std::shared_ptr<CloudService> cloudService_;
 };
