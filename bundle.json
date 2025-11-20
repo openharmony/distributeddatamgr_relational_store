@@ -81,6 +81,7 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/dataability:native_dataability",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter:rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
+                "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/cloud_data:cloud_data_native",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_data:clouddata",
                 "//foundation/distributeddatamgr/relational_store/interfaces/rdb_ndk_utils:native_rdb_ndk_utils",
                 "//foundation/distributeddatamgr/relational_store/interfaces/ndk:native_rdb_ndk",
@@ -200,6 +201,13 @@
                         "header_files": [],
                         "header_base": "//foundation/distributeddatamgr/relational_store/frameworks/cj/include"
                   }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/cloud_data:cloud_data_native",
+                    "header": {
+                        "header_files": [],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/cloud_data/include"
+                    }
                 }
             ],
             "test": [
