@@ -103,9 +103,8 @@ enum SyncMode {
     TIME_FIRST = 4,
     NATIVE_FIRST,
     CLOUD_FIRST,
-    CUSTOM_TIME_FIRST,
-    CUSTOM_NATIVE_FIRST,
-    CUSTOM_CLOUD_FIRST,
+    CLOUD_CUSTOM_PUSH,
+    CLOUD_CUSTOM_PULL,
 };
 
 struct SyncOption {
