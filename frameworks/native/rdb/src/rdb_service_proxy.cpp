@@ -539,11 +539,9 @@ void RdbServiceProxy::OnSyncTrigger(const std::string &storeId, const int32_t tr
 {
     LOG_DEBUG("storeId:%{public}s, triggerMode:%{public}d", SqliteUtils::Anonymous(storeId).c_str(), triggerMode);
     auto name = SqliteUtils::RemoveSuffix(storeId);
-    observers_.ComputeIfPresent(name, [triggerMode](const auto &key, const std::list<ObserverParam> &value) mutable {
-        auto size = value.size();
+    observers_.ComputeIfPresent(name, [triggerMode](const auto &key, const std::list<ObserverParam> &value) {
         for (const auto &params : value) {
             auto obs = params.observer.lock();
-            size--;
             if (obs != nullptr) {
                 obs->OnChange(triggerMode);
             }
