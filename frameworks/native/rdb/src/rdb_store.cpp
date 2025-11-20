@@ -695,4 +695,9 @@ int RdbStore::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func
     (void)clstAlgoName;
     return E_NOT_SUPPORT;
 }
+
+int RdbStore::StopCloudSync()
+{
+    return E_OK;
+}
 } // namespace OHOS::NativeRdb

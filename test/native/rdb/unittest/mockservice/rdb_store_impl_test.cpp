@@ -2008,3 +2008,76 @@ HWTEST_F(RdbStoreImplConditionTest, Dump_003, TestSize.Level2)
     auto errCode = storeImpl->GetPool()->Dump(false, "INSERT");
     EXPECT_EQ(errCode, E_OK);
 }
+
+/**
+ * @tc.name: StopCloudSync_001
+ * @tc.desc: StopCloudSync config_.GetDBType() is false and isMemoryRdb_ is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_SQLITE);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: StopCloudSync_002
+ * @tc.desc: StopCloudSync config_.GetDBType() is true and isMemoryRdb_ is false
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_VECTOR);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: StopCloudSync_003
+ * @tc.desc: StopCloudSync config_.GetDBType() is true and isMemoryRdb_ is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_VECTOR);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: StopCloudSync_004
+ * @tc.desc: StopCloudSync config_.GetDBType() is false and isMemoryRdb_ is false
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_004, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillOnce(Return(std::make_pair(E_NOT_SUPPORT, nullptr)))
+        .WillOnce(Return(std::make_pair(E_ERROR, nullptr)))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, StopCloudSync(_))
+        .WillOnce(Return(E_ERROR)).WillRepeatedly(Return(E_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_SQLITE);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+    errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_ERROR);
+    errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_ERROR);
+    errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_OK);
+}

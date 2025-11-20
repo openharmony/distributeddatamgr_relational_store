@@ -728,6 +728,17 @@ int32_t RdbServiceProxy::VerifyPromiseInfo(const RdbSyncerParam &param)
     return status;
 }
 
+int32_t RdbServiceProxy::StopCloudSync(const RdbSyncerParam &param)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_STOP_CLOUD_SYNC), reply, param);
+    if (status != RDB_OK) {
+        LOG_ERROR("fail, status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status,
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
+}
+
 RdbServiceProxy::~RdbServiceProxy()
 {
     int32_t retry = 0;
