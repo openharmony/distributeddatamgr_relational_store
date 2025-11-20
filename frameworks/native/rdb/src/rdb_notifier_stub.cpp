@@ -27,7 +27,8 @@ RdbNotifierStub::RdbNotifierStub(const SyncCompleteHandler &completeNotifier,
     const AutoSyncCompleteHandler &autoSyncCompleteHandler, const DataChangeHandler &changeNotifier,
     const AutoSyncTriggerHandler &triggerNotifier)
     : IRemoteStub<RdbNotifierStubBroker>(), completeNotifier_(completeNotifier),
-      autoSyncCompleteHandler_(autoSyncCompleteHandler), changeNotifier_(changeNotifier), triggerNotifier_(triggerNotifier)
+      autoSyncCompleteHandler_(autoSyncCompleteHandler), changeNotifier_(changeNotifier),
+      triggerNotifier_(triggerNotifier)
 {
 }
 
