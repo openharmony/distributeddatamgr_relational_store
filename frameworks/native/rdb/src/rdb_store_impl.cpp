@@ -1109,6 +1109,30 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
     }
     return errCode;
 }
+
+int32_t RdbStoreImpl::StopCloudSync()
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (config_.GetDBType() == DB_VECTOR || isMemoryRdb_) {
+        return E_NOT_SUPPORT;
+    }
+    RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (errCode == E_NOT_SUPPORT) {
+        LOG_ERROR("not support");
+        return errCode;
+    }
+    if (errCode != E_OK) {
+        LOG_ERROR("GetRdbService is failed, err is %{public}d, bundleName is %{public}s.", errCode,
+            syncerParam_.bundleName_.c_str());
+        return errCode;
+    }
+    errCode = service->StopCloudSync(syncerParam_);
+    if (errCode != E_OK) {
+        LOG_ERROR("StopCloudSync failed, err is %{public}d.", errCode);
+    }
+    return errCode;
+}
 #endif
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)

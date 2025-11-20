@@ -108,6 +108,7 @@ public:
     SyncObservers ExportSyncObservers();
     void ImportSyncObservers(SyncObservers &SyncObservers);
     void OnRemoteDeadSyncComplete();
+    int32_t StopCloudSync(const RdbSyncerParam &param) override;
 
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
