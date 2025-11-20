@@ -252,9 +252,10 @@ OH_Cursor *OH_RdbTrans_QuerySqlWithoutRowCount(OH_Rdb_Transaction *trans, const 
     }
     std::vector<ValueObject> datas;
     if (args != nullptr) {
-        for (auto arg : args->values_) {
+        for (const auto& arg : args->values_) {
             if (!arg.IsValid()) {
-                continue;
+                LOG_ERROR("args is invalid");
+                return nullptr;
             }
             datas.push_back(arg.value_);
         }
