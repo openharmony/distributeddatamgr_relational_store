@@ -26,10 +26,12 @@
 #include "common_types.h"
 #include "iremote_broker.h"
 #include "rdb_types.h"
+#include "rdb_visibility.h"
 #include "values_bucket.h"
+
 namespace OHOS {
 namespace CloudData {
-class CloudService {
+class API_EXPORT CloudService {
 public:
     enum TransId : int32_t {
         TRANS_HEAD,
