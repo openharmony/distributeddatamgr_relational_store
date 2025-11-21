@@ -698,6 +698,35 @@ int OH_Rdb_Delete(OH_Rdb_Store *store, OH_Predicates *predicates);
 OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length);
 
 /**
+ * @brief Queries data in the database based on specified conditions without row count.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
+ * Indicates the specified query condition.
+ * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
+ * @param length Indicates the length of columns.
+ * @return If the query is successful, a pointer to the instance of the {@link OH_Cursor} structure is returned.
+ *         If Get store failed or resultSet is nullptr, nullptr is returned.
+ * @see OH_Rdb_Store, OH_Predicates, OH_Cursor.
+ * @since 23
+ */
+OH_Cursor *OH_Rdb_QueryWithoutRowCount(OH_Rdb_Store *store, OH_Predicates *predicates,
+    const char * const columns[], int length);
+
+/**
+ * @brief Queries data in the database based on an SQL statement without row count.
+ *
+ * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
+ * @param sql Indicates the SQL statement to execute.
+ * @param args Represents a pointer to an instance of OH_Data_Values and  it is the selection arguments.
+ * @return If the query is successful, a pointer to the instance of the {@link OH_Cursor} structure is returned.
+ *         If sql statement is invalid or the memory allocate failed, nullptr is returned.
+ * @see OH_Rdb_Store.
+ * @since 23
+ */
+OH_Cursor *OH_Rdb_QuerySqlWithoutRowCount(OH_Rdb_Store *store, const char *sql, const OH_Data_Values *args);
+
+/**
  * @brief Executes an SQL statement.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.

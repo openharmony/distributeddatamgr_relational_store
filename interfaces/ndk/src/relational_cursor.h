@@ -26,7 +26,8 @@ namespace RdbNdk {
 constexpr int RDB_CURSOR_CID = 1234563; // The class id used to uniquely identify the OH_Cursor class.
 class RelationalCursor : public OH_Cursor {
 public:
-    explicit RelationalCursor(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, bool isNeedTerminator = true);
+    explicit RelationalCursor(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, bool isNeedTerminator = true,
+        bool isSupportRowCount = true);
     virtual ~RelationalCursor() = default;
 
     virtual int GetFloatVectorCount(int32_t columnIndex, size_t *length);
@@ -71,6 +72,7 @@ private:
     static int Destroy(OH_Cursor *cursor);
     std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet_;
     bool isNeedTerminator_;
+    bool isSupportRowCount_ = true;
 };
 } // namespace RdbNdk
 } // namespace OHOS

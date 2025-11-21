@@ -601,6 +601,63 @@ OH_Cursor *OH_Rdb_Query(OH_Rdb_Store *store, OH_Predicates *predicates, const ch
     return new (std::nothrow) RelationalCursor(std::move(resultSet), false);
 }
 
+OH_Cursor *OH_Rdb_QueryWithoutRowCount(
+    OH_Rdb_Store *store, OH_Predicates *predicates, const char *const *columnNames, int length)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || predicate == nullptr) {
+        return nullptr;
+    }
+    std::vector<std::string> columns;
+    if (columnNames != nullptr && length > 0) {
+        columns.reserve(length);
+        for (int i = 0; i < length; i++) {
+            // Values in columnNames are verified to prevent crash.
+            if (columnNames[i] == nullptr) {
+                LOG_ERROR("columns is invalids.");
+                return nullptr;
+            }
+            columns.push_back(columnNames[i]);
+        }
+    }
+
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet =
+        rdbStore->GetStore()->QueryByStep(predicate->Get(), columns, false);
+    if (resultSet == nullptr) {
+        return nullptr;
+    }
+    return new (std::nothrow) RelationalCursor(std::move(resultSet), true, false);
+}
+
+OH_Cursor *OH_Rdb_QuerySqlWithoutRowCount(OH_Rdb_Store *store, const char *sql, const OH_Data_Values *args)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || sql == nullptr || (args != nullptr && !args->IsValid())) {
+        return nullptr;
+    }
+    std::vector<ValueObject> datas;
+    if (args != nullptr) {
+        for (const auto& arg : args->values_) {
+            if (!arg.IsValid()) {
+                LOG_ERROR("args is invalid");
+                return nullptr;
+            }
+            datas.push_back(arg.value_);
+        }
+    }
+    auto innerStore = rdbStore->GetStore();
+    if (innerStore == nullptr) {
+        LOG_ERROR("store is nullptr");
+        return nullptr;
+    }
+    auto resultSet = innerStore->QueryByStep(sql, datas, false);
+    if (resultSet == nullptr) {
+        return nullptr;
+    }
+    return new (std::nothrow) RelationalCursor(std::move(resultSet), true, false);
+}
+
 OH_Cursor *OH_Rdb_ExecuteQuery(OH_Rdb_Store *store, const char *sql)
 {
     auto rdbStore = GetRelationalStore(store);

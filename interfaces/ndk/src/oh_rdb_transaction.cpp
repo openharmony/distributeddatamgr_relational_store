@@ -219,6 +219,55 @@ OH_Cursor *OH_RdbTrans_QuerySql(OH_Rdb_Transaction *trans, const char *sql, cons
     return new (std::nothrow) RelationalCursor(std::move(resultSet));
 }
 
+OH_Cursor *OH_RdbTrans_QueryWithoutRowCount(
+    OH_Rdb_Transaction *trans, const OH_Predicates *predicates, const char * const columns[], int len)
+{
+    auto rdbPredicate = RelationalPredicate::GetSelf(const_cast<OH_Predicates *>(predicates));
+    if (!IsValidRdbTrans(trans) || rdbPredicate == nullptr) {
+        return nullptr;
+    }
+    std::vector<std::string> fields;
+    if (columns != nullptr && len > 0) {
+        for (int i = 0; i < len; i++) {
+            // Values in columns are verified to prevent crash.
+            if (columns[i] == nullptr) {
+                LOG_ERROR("columns is invalid.");
+                return nullptr;
+            }
+            fields.emplace_back(columns[i]);
+        }
+    }
+    auto resultSet = trans->trans_->QueryByStep(rdbPredicate->Get(), fields);
+    if (resultSet == nullptr) {
+        LOG_ERROR("resultSet is null.");
+        return nullptr;
+    }
+    return new (std::nothrow) RelationalCursor(std::move(resultSet), true, false);
+}
+
+OH_Cursor *OH_RdbTrans_QuerySqlWithoutRowCount(OH_Rdb_Transaction *trans, const char *sql, const OH_Data_Values *args)
+{
+    if (!IsValidRdbTrans(trans) || sql == nullptr || (args != nullptr && !args->IsValid())) {
+        return nullptr;
+    }
+    std::vector<ValueObject> datas;
+    if (args != nullptr) {
+        for (const auto& arg : args->values_) {
+            if (!arg.IsValid()) {
+                LOG_ERROR("args is invalid");
+                return nullptr;
+            }
+            datas.push_back(arg.value_);
+        }
+    }
+    auto resultSet = trans->trans_->QueryByStep(sql, datas);
+    if (resultSet == nullptr) {
+        LOG_ERROR("resultSet is null.");
+        return nullptr;
+    }
+    return new (std::nothrow) RelationalCursor(std::move(resultSet), true, false);
+}
+
 int OH_RdbTrans_Execute(OH_Rdb_Transaction *trans, const char *sql, const OH_Data_Values *args, OH_Data_Value **result)
 {
     if (!IsValidRdbTrans(trans) || sql == nullptr || (args != nullptr && !args->IsValid())) {
