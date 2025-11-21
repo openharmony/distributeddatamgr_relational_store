@@ -335,6 +335,20 @@ int OH_RdbTrans_UpdateWithConflictResolution(OH_Rdb_Transaction *trans, const OH
 int OH_RdbTrans_Delete(OH_Rdb_Transaction *trans, const OH_Predicates *predicates, int64_t *changes);
 
 /**
+ * @brief Queries data in the database based on specified conditions without row count.
+ *
+ * @param trans Represents a pointer to an instance of OH_Rdb_Transaction.
+ * @param predicates Represents the specified update condition by the instance object of OH_Predicates.
+ * @param columns Represents the columns to query. If the value is empty array, the query applies to all columns.
+ * @param len Represents the number of columns elements.
+ * @return If the operation is successful, a pointer to the instance of the OH_Cursor structure is returned.
+ * If database has closed or the database does not respond, nullptr is returned.
+ * @since 23
+ */
+OH_Cursor *OH_RdbTrans_QueryWithoutRowCount(OH_Rdb_Transaction *trans, const OH_Predicates *predicates,
+    const char * const columns[], int len);
+
+/**
  * @brief Queries data in the database based on specified conditions.
  *
  * @param trans Represents a pointer to an instance of OH_Rdb_Transaction.
@@ -359,6 +373,18 @@ OH_Cursor *OH_RdbTrans_Query(OH_Rdb_Transaction *trans, const OH_Predicates *pre
  * @since 16
  */
 OH_Cursor *OH_RdbTrans_QuerySql(OH_Rdb_Transaction *trans, const char *sql, const OH_Data_Values *args);
+
+/**
+ * @brief Queries data in the database based on SQL statement without row count.
+ *
+ * @param trans Represents a pointer to an instance of OH_Rdb_Transaction.
+ * @param sql Represents the SQL statement to execute.
+ * @param args Represents a pointer to an instance of OH_Data_Values and  it is the selection arguments.
+ * @return If the operation is successful, a pointer to the instance of the OH_Cursor structure is returned.
+ * If database has closed or the database does not respond, nullptr is returned.
+ * @since 23
+ */
+OH_Cursor *OH_RdbTrans_QuerySqlWithoutRowCount(OH_Rdb_Transaction *trans, const char *sql, const OH_Data_Values *args);
 
 /**
  * @brief Executes an SQL statement that contains specified parameters.

@@ -191,8 +191,9 @@ bool RelationalCursor::IsNeedTerminator()
     return isNeedTerminator_;
 }
 
-RelationalCursor::RelationalCursor(std::shared_ptr<NativeRdb::ResultSet> resultSet, bool isNeedTerminator)
-    : resultSet_(std::move(resultSet)), isNeedTerminator_(isNeedTerminator)
+RelationalCursor::RelationalCursor(std::shared_ptr<NativeRdb::ResultSet> resultSet,
+    bool isNeedTerminator, bool isSupportRowCount)
+    : resultSet_(std::move(resultSet)), isNeedTerminator_(isNeedTerminator), isSupportRowCount_(isSupportRowCount)
 {
     id = RDB_CURSOR_CID;
 
@@ -270,6 +271,9 @@ int RelationalCursor::GetColumnName(int32_t columnIndex, char *name, int length)
 
 int RelationalCursor::GetRowCount(int *count)
 {
+    if (!isSupportRowCount_) {
+        return OH_Rdb_ErrCode::RDB_E_NOT_SUPPORTED;
+    }
     if (count == nullptr || resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
