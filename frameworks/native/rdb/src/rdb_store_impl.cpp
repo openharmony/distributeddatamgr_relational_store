@@ -1524,7 +1524,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, con
     return QueryByStep(sql, args, options);
 }
 
-std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,const Values &args,
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args,
     QueryOptions &options)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
