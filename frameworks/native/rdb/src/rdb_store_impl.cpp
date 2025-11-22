@@ -459,6 +459,7 @@ int RdbStoreImpl::SetDistributedTables(
 
 int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
@@ -508,6 +509,7 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 
 int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_ || config_.GetHaMode() != HAMode::SINGLE) {
         return E_NOT_SUPPORT;
     }
@@ -545,16 +547,15 @@ int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
         SetFileGid(config_, SERVICE_GID);
     }
 #if !defined(CROSS_PLATFORM)
-    if (service == nullptr) {
-        return errCode;
-    }
-    service->Enable(syncerParam_);
-    if (errCode == E_OK) {
-        auto syncerParam = syncerParam_;
-        syncerParam.isEncrypt_ = cryptoParam.encryptAlgo != EncryptAlgo::PLAIN_TEXT;
-        syncerParam.password_ = (config_.IsEncrypt() && !config_.IsCustomEncryptParam()) ? config_.GetEncryptKey()
-                                                                                         : std::vector<uint8_t>{};
-        service->AfterOpen(syncerParam);
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
+        if (errCode == E_OK) {
+            auto syncerParam = syncerParam_;
+            syncerParam.isEncrypt_ = cryptoParam.encryptAlgo != EncryptAlgo::PLAIN_TEXT;
+            syncerParam.password_ = (config_.IsEncrypt() && !config_.IsCustomEncryptParam()) ? config_.GetEncryptKey()
+                                                                                            : std::vector<uint8_t>{};
+            service->AfterOpen(syncerParam);
+        }
     }
 #endif
     return errCode;
@@ -609,6 +610,7 @@ std::string RdbStoreImpl::ObtainDistributedTableName(const std::string &device, 
 
 int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &callback)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (config_.GetDBType() == DB_VECTOR) {
         return E_NOT_SUPPORT;
     }
@@ -1333,6 +1335,7 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
 
 std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, const ValuesBuckets &rows)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1356,8 +1359,6 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     auto executeSqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable());
     BatchInsertArgsDfx(static_cast<int>(executeSqlArgs.size()));
     if (executeSqlArgs.empty()) {
-        LOG_ERROR("empty, table=%{public}s, values:%{public}zu, max number:%{public}d.",
-            SqliteUtils::Anonymous(table).c_str(), rows.RowSize(), conn->GetMaxVariable());
         return { E_INVALID_ARGS, -1 };
     }
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
@@ -1397,6 +1398,7 @@ void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
 std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, const RefRows &rows,
     const std::vector<std::string> &returningFields, Resolution resolution)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1518,6 +1520,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     auto start = std::chrono::steady_clock::now();
@@ -1605,7 +1608,8 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
-        LOG_ERROR("failed,error:0x%{public}x app self can check the SQL.", errCode);
+        LOG_ERROR("failed, error:0x%{public}x app self can check the SQL:%{public}s",
+            errCode, SqliteUtils::SqlAnonymous(sql).c_str());
         TryDump(errCode, "EXECUTE");
         return errCode;
     }
@@ -1632,7 +1636,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType)) {
-        LOG_ERROR("Not support the sqlType: %{public}d, app self can check the SQL", sqlType);
+        LOG_ERROR("Not support the sqlType: %{public}d, app self can check the SQL:%{public}s",
+            sqlType, SqliteUtils::SqlAnonymous(sql).c_str());
         return { E_NOT_SUPPORT_THE_SQL, object };
     }
 
@@ -1658,6 +1663,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     std::shared_ptr<Statement> &&statement, const std::string &sql, int32_t code, int sqlType)
 {
     if (code != E_OK) {
+        LOG_ERROR("failed, error:0x%{public}x app self can check the SQL:%{public}s",
+            code, SqliteUtils::SqlAnonymous(sql).c_str());
         return { code, ValueObject() };
     }
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
@@ -3046,6 +3053,7 @@ int32_t RdbStoreImpl::GetDbType() const
 
 std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction(int32_t type)
 {
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, nullptr };
     }
