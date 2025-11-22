@@ -233,7 +233,7 @@ std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Va
     return QueryByStep(sql, args, options);
 }
  
-+std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Values &args, QueryOptions &options)
+std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Values &args, QueryOptions &options)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto start = std::chrono::steady_clock::now();
