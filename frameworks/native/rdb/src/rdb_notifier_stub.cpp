@@ -121,10 +121,15 @@ int32_t RdbNotifierStub::OnAutoSyncCompleteInner(MessageParcel &data, MessagePar
 
 int32_t RdbNotifierStub::OnAutoSyncTriggerInner(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t triggerMode;
+    int32_t triggerMode = 0;
     std::string storeId;
     if (!ITypesUtil::Unmarshal(data, storeId, triggerMode)) {
         LOG_ERROR("read sync result failed.");
+        return RDB_ERROR;
+    }
+    
+    if (triggerMode <= 0 || triggerMode >= 5) {
+        LOG_ERROR("invalid trigger mode %{public}d", triggerMode);
         return RDB_ERROR;
     }
     return OnChange(storeId, triggerMode);

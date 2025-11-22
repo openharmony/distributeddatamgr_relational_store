@@ -103,8 +103,6 @@ int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Distribute
     NAPI_CALL_RETURN_ERR(
         GetNamedProperty(env, input, "asyncDownloadAsset", output.asyncDownloadAsset, true), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "enableCloud", output.enableCloud, true), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(
-        GetNamedProperty(env, input, "autoSyncSwitch", output.autoSyncSwitch, true), napi_invalid_arg);
     return napi_ok;
 }
 
