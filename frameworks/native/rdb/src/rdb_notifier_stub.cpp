@@ -22,6 +22,7 @@
 
 namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
+constexpr const int32_t TRIGGER_MODE_MAX = 5;
 
 RdbNotifierStub::RdbNotifierStub(const SyncCompleteHandler &completeNotifier,
     const AutoSyncCompleteHandler &autoSyncCompleteHandler, const DataChangeHandler &changeNotifier,
@@ -128,7 +129,7 @@ int32_t RdbNotifierStub::OnAutoSyncTriggerInner(MessageParcel &data, MessageParc
         return RDB_ERROR;
     }
     
-    if (triggerMode <= 0 || triggerMode >= 5) {
+    if (triggerMode <= 0 || triggerMode >= TRIGGER_MODE_MAX) {
         LOG_ERROR("invalid trigger mode %{public}d", triggerMode);
         return RDB_ERROR;
     }
