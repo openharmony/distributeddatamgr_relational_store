@@ -62,7 +62,7 @@ HWTEST_F(RdbServiceProxyTest, OnRemoteDeadSyncComplete, TestSize.Level1)
 
 /**
  * @tc.name: StopCloudSync
- * @tc.desc: StopCloudSync is executed
+ * @tc.desc: StopCloudSync is executed, service check fail
  * @tc.type: FUNC
  */
 HWTEST_F(RdbServiceProxyTest, StopCloudSync, TestSize.Level1)
