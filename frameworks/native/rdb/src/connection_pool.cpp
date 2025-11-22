@@ -1068,7 +1068,10 @@ int32_t ConnectionPool::Container::ClearUnusedTrans(std::shared_ptr<ConnectionPo
 
 bool ConnPool::ConnNode::IsRecyclable()
 {
-    return connect_->IsRecyclable();
+    if (connect_ != nullptr) {
+        return connect_->IsRecyclable();
+    }
+    return false;
 }
 
 std::shared_ptr<Conn> ConnPool::AcquireById(bool isReadOnly, int32_t id)
