@@ -105,10 +105,11 @@ public:
     int32_t GetDfxInfo(const RdbSyncerParam &param, DistributedRdb::RdbDfxInfo &dfxInfo) override;
 
     int32_t VerifyPromiseInfo(const RdbSyncerParam &param) override;
+
+    int32_t StopCloudSync(const RdbSyncerParam &param) override;
     SyncObservers ExportSyncObservers();
     void ImportSyncObservers(SyncObservers &SyncObservers);
     void OnRemoteDeadSyncComplete();
-    int32_t StopCloudSync(const RdbSyncerParam &param) override;
 
 private:
     using ChangeInfo = RdbStoreObserver::ChangeInfo;
