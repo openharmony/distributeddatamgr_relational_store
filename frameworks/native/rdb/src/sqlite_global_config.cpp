@@ -18,10 +18,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <cinttypes>
 #include <cstring>
+#include <iterator>
 #include <mutex>
 #include <regex>
 
@@ -38,6 +40,25 @@ using namespace std::chrono;
 
 static std::string g_lastCorruptionMsg;
 static std::mutex g_corruptionMutex;
+
+static constexpr uint32_t CRITICAL_ERRORS[] = {
+    SQLITE_ERROR, SQLITE_BUSY, SQLITE_LOCKED, SQLITE_NOMEM, SQLITE_READONLY, SQLITE_INTERRUPT, SQLITE_IOERR,
+    SQLITE_CORRUPT, SQLITE_FULL, SQLITE_CANTOPEN, SQLITE_PROTOCOL, SQLITE_SCHEMA, SQLITE_CONSTRAINT, SQLITE_NOLFS,
+    SQLITE_AUTH, SQLITE_NOTADB, SQLITE_IOERR_READ, SQLITE_IOERR_SHORT_READ, SQLITE_CONSTRAINT_NOTNULL,
+    SQLITE_CONSTRAINT_PRIMARYKEY, SQLITE_CONSTRAINT_UNIQUE, SQLITE_IOERR_DATA
+};
+
+static constexpr bool IsIncreasing()
+{
+    for (size_t i = 1; i < sizeof(CRITICAL_ERRORS) / sizeof(CRITICAL_ERRORS[0]); i++) {
+        if (CRITICAL_ERRORS[i] <= CRITICAL_ERRORS[i - 1]) {
+            return false;
+        }
+    }
+    return true;
+}
+// CRITICAL_ERRORS must ensure increment
+static_assert(IsIncreasing());
 
 void SqliteGlobalConfig::InitSqliteGlobalConfig()
 {
@@ -100,11 +121,12 @@ void SqliteGlobalConfig::Log(const void *data, int err, const char *msg)
 void SqliteGlobalConfig::SqliteErrReport(int err, const char *msg)
 {
     auto lowErr = static_cast<uint32_t>(err) & 0xFF;
-    if (lowErr == SQLITE_NOMEM || lowErr == SQLITE_INTERRUPT || lowErr == SQLITE_FULL || lowErr == SQLITE_SCHEMA ||
-        lowErr == SQLITE_NOLFS || lowErr == SQLITE_AUTH || lowErr == SQLITE_BUSY || lowErr == SQLITE_LOCKED ||
-        lowErr == SQLITE_IOERR || lowErr == SQLITE_CANTOPEN) {
+    const auto begin = std::begin(CRITICAL_ERRORS);
+    const auto end = std::end(CRITICAL_ERRORS);
+    auto it = std::lower_bound(begin, end, lowErr);
+    if (it != end && *it == lowErr) {
         std::string log(msg == nullptr ? "" : SqliteUtils::Anonymous(msg).c_str());
-        log.append(",errcode=").append(std::to_string(err)).append(",errno=").append(std::to_string(errno));
+        log.append(", errcode=").append(std::to_string(err)).append(", errno=").append(std::to_string(errno));
         RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_SQLITE, E_DFX_SQLITE_LOG, BUNDLE_NAME_COMMON, log));
     }
 }

@@ -51,11 +51,12 @@ int SecurityPolicy::SetSecurityLabel(const RdbStoreConfig &config)
         auto toSetLevel = GetSecurityLevelValue(config.GetSecurityLevel());
         auto errCode = SecurityLabel::SetSecurityLabel(config.GetPath(), toSetLevel) ? E_OK : E_CONFIG_INVALID_CHANGE;
         if (errCode != E_OK) {
+            auto setLabelErrno = errno;
             auto currentLevel = GetFileSecurityLevel(config.GetPath());
             LOG_ERROR("storeName:%{public}s SetSecurityLabel failed. Set security level from %{public}s to %{public}s,"
-                      "result:%{public}d, errno:%{public}d.",
+                      "result:%{public}d, setLabelErrno:%{public}d, errno:%{public}d.",
                 SqliteUtils::Anonymous(config.GetName()).c_str(), currentLevel.c_str(), toSetLevel.c_str(), errCode,
-                errno);
+                setLabelErrno, errno);
         }
         return errCode;
     }
