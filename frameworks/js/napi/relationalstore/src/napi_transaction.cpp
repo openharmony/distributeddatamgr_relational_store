@@ -22,6 +22,7 @@
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_predicates.h"
+#include "napi_lite_result_set.h"
 #include "napi_result_set.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
@@ -235,6 +236,8 @@ void TransactionProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION_WITH_DATA(
                 "batchInsertWithConflictResolution", BatchInsertWithConflictResolution, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("query", Query, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("queryWithoutRowCount", QueryWithoutRowCount, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlWithoutRowCount", QuerySqlWithoutRowCount, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("querySql", QuerySql, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("execute", Execute, ASYNC),
         };
@@ -256,6 +259,8 @@ void TransactionProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &p
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertWithConflictResolutionSync",
         BatchInsertWithConflictResolution, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", Query, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("queryWithoutRowCountSync", QueryWithoutRowCount, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlWithoutRowCountSync", QuerySqlWithoutRowCount, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySql, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC));
 }
@@ -661,6 +666,34 @@ napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      queryWithoutRowCount(predicates: RdbPredicates, columns?: Array<string>): Promise<LiteResultSet>;
+ */
+napi_value TransactionProxy::QueryWithoutRowCount(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<QueryContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
+        DistributedRdb::QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = true};
+        context->resultSet =
+            context->StealTransaction()->QueryByStep(*(context->rdbPredicates), context->columns, options);
+        return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
 struct QuerySqlContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
@@ -699,6 +732,36 @@ napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      querySqlWithoutRowCount(sql: string, bindArgs?: Array<ValueType>): Promise<LiteResultSet>;
+ */
+napi_value TransactionProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<QuerySqlContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(context->Parse(env, argc, argv, self) == OK);
+        // ParamError is reported only when the parameter type is incorrect.
+        CHECK_RETURN_SET_E(!context->sql.empty(),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "sql cannot be empty"));
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->transaction_ != nullptr);
+        DistributedRdb::QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = true};
+        context->resultSet = context->StealTransaction()->QueryByStep(context->sql, context->bindArgs, options);
+        return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);

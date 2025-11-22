@@ -64,6 +64,11 @@ public:
      */
     using Resolution = ConflictResolution;
 
+    /**
+     * @brief Use QueryOptions replace DistributedRdb::QueryOptions namespace.
+     */
+    using QueryOptions = DistributedRdb::QueryOptions;
+
     static constexpr Resolution NO_ACTION = ConflictResolution::ON_CONFLICT_NONE;
 
     enum TransactionType : int32_t {
@@ -225,6 +230,12 @@ public:
     virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns = {},
         bool preCount = true) = 0;
 
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
+        QueryOptions &options) = 0;
+
+    virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
+        QueryOptions &options) = 0;
+    
     /**
      * @brief Executes an SQL statement that contains specified parameters and
      *        get two values of type int and ValueObject.

@@ -32,13 +32,14 @@ using namespace OHOS::Rdb;
 
 constexpr int64_t TIME_OUT = 1500;
 StepResultSet::StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args,
-    bool preCount, bool safe) : AbsResultSet(safe), conn_(std::move(conn)), sql_(sql), args_(args)
+    QueryOptions options, bool safe) : AbsResultSet(safe), conn_(std::move(conn)), sql_(sql), args_(args)
 {
     if (conn_ == nullptr) {
         isClosed_ = true;
         return;
     }
 
+    isGotoNextRowReturnLastError_ = options.isGotoNextRowReturnLastError;
     auto prepareStart = std::chrono::steady_clock::now();
     auto errCode = PrepareStep();
     if (errCode != E_OK) {
@@ -50,7 +51,7 @@ StepResultSet::StepResultSet(Time start, Conn conn, const std::string &sql, cons
     if (statement == nullptr) {
         return;
     }
-    if (preCount) {
+    if (options.preCount) {
         std::tie(lastErr_, rowCount_) = statement->Count();
     } else {
         isSupportCountRow_ = false;
@@ -214,6 +215,9 @@ int StepResultSet::GoToRow(int position)
  */
 int StepResultSet::GoToNextRow()
 {
+    if (isGotoNextRowReturnLastError_) {
+        return lastErr_;
+    }
     if (isClosed_) {
         LOG_ERROR("resultSet closed.");
         return E_ALREADY_CLOSED;

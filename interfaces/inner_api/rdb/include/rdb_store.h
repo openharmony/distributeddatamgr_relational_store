@@ -92,6 +92,12 @@ public:
     using Date = DistributedRdb::Date;
 
     /**
+     * @brief Use QueryOptions replace DistributedRdb::QueryOptions namespace.
+     */
+    using QueryOptions = DistributedRdb::QueryOptions;
+
+
+    /**
      * @brief Use Fields replace std::vector<std::string> columns.
      */
     using Fields = std::vector<std::string>;
@@ -429,6 +435,12 @@ public:
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns = {},
         bool preCount = true);
+
+    virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
+        QueryOptions &options);
+
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
+        QueryOptions &options) = 0;
 
     /**
      * @brief Queries remote data in the database based on specified conditions before Synchronizing Data.

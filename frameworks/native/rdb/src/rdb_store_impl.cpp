@@ -1520,6 +1520,13 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
+    QueryOptions options{.preCount = preCount, .isGotoNextRowReturnLastError = false};
+    return QueryByStep(sql, args, options);
+}
+
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql,const Values &args,
+    QueryOptions &options)
+{
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
@@ -1529,11 +1536,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, con
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
-#if !defined(CROSS_PLATFORM)
-    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, preCount);
-#else
-    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, false);
-#endif
+    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, options);
 }
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
