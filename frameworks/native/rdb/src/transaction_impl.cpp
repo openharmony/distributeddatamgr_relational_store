@@ -261,21 +261,19 @@ void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
 
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
-    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
-    auto store = GetStore();
-    if (store == nullptr) {
-        LOG_ERROR("transaction already close");
-        return nullptr;
-    }
-    auto resultSet = store->QueryByStep(sql, args);
-    if (resultSet != nullptr) {
-        AddResultSet(resultSet);
-    }
-    return resultSet;
+    QueryOptions options{.preCount = preCount, .isGotoNextRowReturnLastError = false};
+    return QueryByStep(sql, args, options);
 }
 
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const Fields &columns, bool preCount)
+{
+    QueryOptions options{.preCount = preCount, .isGotoNextRowReturnLastError = false};
+    return QueryByStep(predicates, columns, options);
+}
+
+std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
+    const std::string &sql, const Values &args, QueryOptions &options)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -283,7 +281,23 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
         LOG_ERROR("transaction already close");
         return nullptr;
     }
-    auto resultSet = store->QueryByStep(predicates, columns);
+    auto resultSet = store->QueryByStep(sql, args, options);
+    if (resultSet != nullptr) {
+        AddResultSet(resultSet);
+    }
+    return resultSet;
+}
+
+std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
+    const AbsRdbPredicates &predicates, const Fields &columns, QueryOptions &options)
+{
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return nullptr;
+    }
+    auto resultSet = store->QueryByStep(predicates, columns, options);
     if (resultSet != nullptr) {
         AddResultSet(resultSet);
     }

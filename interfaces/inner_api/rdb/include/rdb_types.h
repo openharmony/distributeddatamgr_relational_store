@@ -61,6 +61,11 @@ struct RdbDfxInfo {
     int curUserId_;
 };
 
+struct QueryOptions {
+    bool preCount = true;
+    bool isGotoNextRowReturnLastError = false;
+};
+
 struct RdbSyncerParam {
     std::string bundleName_;
     std::string hapName_;

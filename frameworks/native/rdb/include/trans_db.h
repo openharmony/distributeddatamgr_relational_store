@@ -34,6 +34,8 @@ public:
         const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
+        QueryOptions &options) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
     std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;
     int GetVersion(int &version) override;

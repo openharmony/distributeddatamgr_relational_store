@@ -229,6 +229,12 @@ std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, co
 
 std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Values &args, bool preCount)
 {
+    QueryOptions options{.preCount = preCount, .isGotoNextRowReturnLastError = false};
+    return QueryByStep(sql, args, options);
+}
+ 
++std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Values &args, QueryOptions &options)
+{
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto start = std::chrono::steady_clock::now();
     return std::make_shared<StepResultSet>(start, conn_.lock(), sql, args, true, true);
