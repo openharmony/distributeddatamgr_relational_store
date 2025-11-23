@@ -1122,11 +1122,7 @@ int32_t RdbStoreImpl::StopCloudSync()
             syncerParam_.bundleName_.c_str());
         return errCode;
     }
-    errCode = service->StopCloudSync(syncerParam_);
-    if (errCode != E_OK) {
-        LOG_ERROR("StopCloudSync failed, err is %{public}d.", errCode);
-    }
-    return errCode;
+    return service->StopCloudSync(syncerParam_);
 }
 #endif
 
