@@ -96,7 +96,6 @@ public:
      */
     using QueryOptions = DistributedRdb::QueryOptions;
 
-
     /**
      * @brief Use Fields replace std::vector<std::string> columns.
      */
