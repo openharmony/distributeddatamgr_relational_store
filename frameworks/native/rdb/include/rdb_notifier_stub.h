@@ -32,7 +32,7 @@ public:
     using AutoSyncCompleteHandler = std::function<void(std::string, Details &&)>;
     using DataChangeHandler = std::function<void(const Origin &origin, const PrimaryFields &primaries,
         ChangeInfo &&changeInfo)>;
-    using AutoSyncTriggerHandler = std::function<void(const std::string &storeId, const int32_t triggerMode)>;
+    using AutoSyncTriggerHandler = std::function<void(const std::string &storeId, int32_t triggerMode)>;
     RdbNotifierStub(const SyncCompleteHandler&, const AutoSyncCompleteHandler&, const DataChangeHandler&,
         const AutoSyncTriggerHandler&);
     virtual ~RdbNotifierStub() noexcept;
@@ -41,7 +41,7 @@ public:
     int32_t OnComplete(uint32_t seqNum, Details &&result) override;
     int32_t OnComplete(const std::string& storeName, Details &&result) override;
     int32_t OnChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo) override;
-    int32_t OnChange(const std::string &storeId, const int32_t triggerMode) override;
+    int32_t OnChange(const std::string &storeId, int32_t triggerMode) override;
 
 private:
     int32_t OnCompleteInner(MessageParcel& data, MessageParcel& reply);

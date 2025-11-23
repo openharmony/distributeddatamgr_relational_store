@@ -142,7 +142,7 @@ private:
 
     void OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo);
 
-    void OnSyncTrigger(const std::string &storeId, const int32_t triggerMode);
+    void OnSyncTrigger(const std::string &storeId, int32_t triggerMode);
 
     std::atomic<uint32_t> seqNum_{};
     Observers observers_;
