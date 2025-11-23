@@ -1525,7 +1525,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, con
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args,
-    QueryOptions &options)
+    const QueryOptions &options)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);

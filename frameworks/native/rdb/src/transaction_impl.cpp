@@ -273,7 +273,7 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
 }
 
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
-    const std::string &sql, const Values &args, QueryOptions &options)
+    const std::string &sql, const Values &args, const QueryOptions &options)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -289,7 +289,7 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
 }
 
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
-    const AbsRdbPredicates &predicates, const Fields &columns, QueryOptions &options)
+    const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();

@@ -436,11 +436,25 @@ public:
     virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns = {},
         bool preCount = true);
 
+    /**
+     * @brief Queries data in the database based on specified conditions.
+     *
+     * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
+     * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
+     * @param QueryOptions Options for specifying conditions when query.
+     */
     virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
-        QueryOptions &options);
+        const QueryOptions &options);
 
+    /**
+     * @brief Queries data in the database based on SQL statement.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param args Indicates the selection arguments.
+     * @param QueryOptions Options for specifying conditions when query.
+     */
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        QueryOptions &options);
+        const QueryOptions &options);
 
     /**
      * @brief Queries remote data in the database based on specified conditions before Synchronizing Data.
