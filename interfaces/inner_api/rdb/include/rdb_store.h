@@ -424,7 +424,7 @@ public:
      * @param preCount Indicates whether to calculate the count during query.
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args = {},
-        bool preCount = true) = 0;
+        bool preCount = true);
 
     /**
      * @brief Queries data in the database based on specified conditions.

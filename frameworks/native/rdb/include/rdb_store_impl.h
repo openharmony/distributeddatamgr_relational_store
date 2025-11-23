@@ -79,7 +79,6 @@ public:
     std::pair<int32_t, Results> Delete(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
-    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
         const QueryOptions &options) override;
     std::shared_ptr<ResultSet> RemoteQuery(

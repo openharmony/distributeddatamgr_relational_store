@@ -520,7 +520,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+#if defined(CROSS_PLATFORM)
         context->resultSet = context->rdbStore->QueryByStep(*(context->rdbPredicates), context->columns, false);
 #else
         context->resultSet = context->rdbStore->Query(*(context->rdbPredicates), context->columns);
@@ -590,8 +590,8 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
             context->resultSet = context->rdbStore->QueryByStep(context->sql, context->bindArgs);
             return (context->resultSet != nullptr) ? E_OK : E_ERROR;
         }
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM) || defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
-        context->resultSet = context->rdbStore->QueryByStep(context->sql, context->bindArgs);
+#if defined(CROSS_PLATFORM)
+        context->resultSet = context->rdbStore->QueryByStep(context->sql, context->bindArgs, false);
 #else
         context->resultSet = context->rdbStore->QuerySql(context->sql, context->bindArgs);
 #endif

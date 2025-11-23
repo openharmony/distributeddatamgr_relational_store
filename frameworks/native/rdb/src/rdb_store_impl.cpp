@@ -310,7 +310,8 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(
     sql.append(" where hash_key in (");
     sql.append(SqliteSqlBuilder::GetSqlArgs(hashKeys.size()));
     sql.append(")");
-    auto resultSet = QueryByStep(sql, hashKeys, true);
+    QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = false};
+    auto resultSet = QueryByStep(sql, hashKeys, options);
     int count = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
         LOG_ERROR("Get resultSet err.");
@@ -334,7 +335,8 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
         RawDataParser::Convert(key, value);
         args.emplace_back(ValueObject(value));
     }
-    auto resultSet = QueryByStep(sql, args, true);
+    QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = false};
+    auto resultSet = QueryByStep(sql, args, options);
     int count = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
         LOG_ERROR("Get resultSet err.");
@@ -1516,12 +1518,6 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     (void)bindArgs;
     return nullptr;
 #endif
-}
-
-std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
-{
-    QueryOptions options{.preCount = preCount, .isGotoNextRowReturnLastError = false};
-    return QueryByStep(sql, args, options);
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args,
