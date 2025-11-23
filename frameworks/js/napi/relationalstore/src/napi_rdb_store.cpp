@@ -1012,7 +1012,7 @@ napi_value RdbStoreProxy::QueryWithoutRowCount(napi_env env, napi_callback_info 
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        DistributedRdb::QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = true};
+        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet = rdbStore->QueryByStep(*(context->rdbPredicates), context->columns, options);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
@@ -1044,7 +1044,7 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        DistributedRdb::QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = true};
+        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet = rdbStore->QueryByStep(context->sql, context->bindArgs, options);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
