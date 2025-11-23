@@ -679,7 +679,7 @@ napi_value TransactionProxy::QueryWithoutRowCount(napi_env env, napi_callback_in
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
-        DistributedRdb::QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = true};
+        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet =
             context->StealTransaction()->QueryByStep(*(context->rdbPredicates), context->columns, options);
         return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
@@ -756,7 +756,7 @@ napi_value TransactionProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
-        DistributedRdb::QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = true};
+        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet = context->StealTransaction()->QueryByStep(context->sql, context->bindArgs, options);
         return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
