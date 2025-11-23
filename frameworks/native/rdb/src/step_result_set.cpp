@@ -215,7 +215,7 @@ int StepResultSet::GoToRow(int position)
  */
 int StepResultSet::GoToNextRow()
 {
-    if (isGotoNextRowReturnLastError_) {
+    if (isGotoNextRowReturnLastError_ && lastErr_ != E_OK) {
         return lastErr_;
     }
     if (isClosed_) {
