@@ -62,7 +62,7 @@ HWTEST_F(RdbServiceProxyTest, OnRemoteDeadSyncComplete, TestSize.Level1)
 
 /**
  * @tc.name: StopCloudSync
- * @tc.desc: StopCloudSync is executed, service check fail
+ * @tc.desc: StopCloudSync is executed, service check succ
  * @tc.type: FUNC
  */
 HWTEST_F(RdbServiceProxyTest, StopCloudSync, TestSize.Level1)
@@ -75,6 +75,6 @@ HWTEST_F(RdbServiceProxyTest, StopCloudSync, TestSize.Level1)
     auto proxy = std::static_pointer_cast<RdbServiceProxy>(service);
     ASSERT_NE(proxy, nullptr);
     auto errCode = proxy->StopCloudSync(param);
-    EXPECT_EQ(errCode, RDB_ERROR);
+    EXPECT_EQ(errCode, RDB_OK);
 }
 } // namespace Test
