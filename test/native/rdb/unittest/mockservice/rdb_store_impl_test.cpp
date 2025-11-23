@@ -2106,9 +2106,9 @@ HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_005, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
-        .WillOnce(Return(std::make_pair(E_ERROR, nullptr)))
         .WillOnce(Return(std::make_pair(E_ERROR, mockRdbService)))
-        .WillOnce(Return(std::make_pair(E_NOT_SUPPORT, nullptr)))
+        .WillOnce(Return(std::make_pair(E_OK, nullptr)))
+        .WillOnce(Return(std::make_pair(E_ERROR, nullptr)))
         .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
     EXPECT_CALL(*mockRdbService, StopCloudSync(_)).WillRepeatedly(Return(E_OK));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
@@ -2119,9 +2119,9 @@ HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_005, TestSize.Level2)
     auto errCode = storeImpl->StopCloudSync();
     EXPECT_EQ(errCode, E_ERROR);
     errCode = storeImpl->StopCloudSync();
-    EXPECT_EQ(errCode, E_ERROR);
+    EXPECT_EQ(errCode, E_OK);
     errCode = storeImpl->StopCloudSync();
-    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+    EXPECT_EQ(errCode, E_ERROR);
     errCode = storeImpl->StopCloudSync();
     EXPECT_EQ(errCode, E_OK);
 }
