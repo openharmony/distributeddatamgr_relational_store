@@ -298,6 +298,12 @@ std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predica
     return QueryByStep(predicates, columns, options);
 }
 
+std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const Values &args,
+    QueryOptions &options)
+{
+    return nullptr;
+}
+
 std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predicates, const RdbStore::Fields &columns,
     RdbStore::QueryOptions &options)
 {
