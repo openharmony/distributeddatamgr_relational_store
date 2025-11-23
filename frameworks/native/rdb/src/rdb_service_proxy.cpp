@@ -83,7 +83,7 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
         [this](const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo) {
             OnDataChange(origin, primaries, std::move(changeInfo));
         },
-        [this](const std::string &storeId, const int32_t triggerMode) {
+        [this](const std::string &storeId, int32_t triggerMode) {
             OnSyncTrigger(storeId, triggerMode);
         });
     if (notifier_ == nullptr) {
@@ -535,7 +535,7 @@ void RdbServiceProxy::OnDataChange(
     });
 }
 
-void RdbServiceProxy::OnSyncTrigger(const std::string &storeId, const int32_t triggerMode)
+void RdbServiceProxy::OnSyncTrigger(const std::string &storeId, int32_t triggerMode)
 {
     LOG_DEBUG("storeId:%{public}s, triggerMode:%{public}d", SqliteUtils::Anonymous(storeId).c_str(), triggerMode);
     auto name = SqliteUtils::RemoveSuffix(storeId);

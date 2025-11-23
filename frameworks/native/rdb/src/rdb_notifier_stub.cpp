@@ -136,7 +136,7 @@ int32_t RdbNotifierStub::OnAutoSyncTriggerInner(MessageParcel &data, MessageParc
     return OnChange(storeId, triggerMode);
 }
 
-int32_t RdbNotifierStub::OnChange(const std::string &storeId, const int32_t triggerMode)
+int32_t RdbNotifierStub::OnChange(const std::string &storeId, int32_t triggerMode)
 {
     if (triggerNotifier_) {
         triggerNotifier_(storeId, triggerMode);
