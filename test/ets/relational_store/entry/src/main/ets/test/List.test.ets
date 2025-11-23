@@ -29,6 +29,8 @@ import SetLocaleEtsTest from './RdbstoreSetLocaleEts.test.ets';
 import RelationalStoreEtsTest from './RelationalStoreEtsTest.test.ets'
 import RdbStoreDataChangeTestEts from './RdbstoreDataChangeEts.test.ets'
 import RelationalStoreCloseTest from './RelationalStoreCloseTest.test.ets'
+import RdbQueryWithoutRowCount from './RdbQueryWithoutRowCount.test';
+import TransQueryWithoutRowCount from './TransQueryWithoutRowCount.test';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -47,4 +49,6 @@ export default function testsuite() {
   RelationalStoreEtsTest();
   RdbStoreDataChangeTestEts();
   RelationalStoreCloseTest();
+  RdbQueryWithoutRowCount();
+  TransQueryWithoutRowCount();
 }

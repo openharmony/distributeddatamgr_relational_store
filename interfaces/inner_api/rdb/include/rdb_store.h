@@ -440,7 +440,7 @@ public:
         QueryOptions &options);
 
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        QueryOptions &options) = 0;
+        QueryOptions &options);
 
     /**
      * @brief Queries remote data in the database based on specified conditions before Synchronizing Data.
