@@ -81,7 +81,7 @@ public:
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args, bool preCount) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        QueryOptions &options) override;
+        const QueryOptions &options) override;
     std::shared_ptr<ResultSet> RemoteQuery(
         const std::string &device, const AbsRdbPredicates &predicates, const Fields &columns, int &errCode) override;
     std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(

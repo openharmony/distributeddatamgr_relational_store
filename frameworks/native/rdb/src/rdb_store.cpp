@@ -299,13 +299,13 @@ std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predica
 }
 
 std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const Values &args,
-    QueryOptions &options)
+    const QueryOptions &options)
 {
     return nullptr;
 }
 
 std::shared_ptr<ResultSet> RdbStore::QueryByStep(const AbsRdbPredicates &predicates, const RdbStore::Fields &columns,
-    RdbStore::QueryOptions &options)
+    const QueryOptions &options)
 {
     std::string sql;
     std::pair<bool, bool> queryStatus = { ColHasSpecificField(columns), predicates.HasSpecificField() };
