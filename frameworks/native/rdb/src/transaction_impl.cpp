@@ -259,19 +259,6 @@ void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
     resultSets_.push_back(std::move(resultSet));
 }
 
-std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
-{
-    QueryOptions options{.preCount = preCount, .isGotoNextRowReturnLastError = false};
-    return QueryByStep(sql, args, options);
-}
-
-std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
-    const AbsRdbPredicates &predicates, const Fields &columns, bool preCount)
-{
-    QueryOptions options{.preCount = preCount, .isGotoNextRowReturnLastError = false};
-    return QueryByStep(predicates, columns, options);
-}
-
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
     const std::string &sql, const Values &args, const QueryOptions &options)
 {
