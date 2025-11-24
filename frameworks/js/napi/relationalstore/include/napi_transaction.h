@@ -44,6 +44,8 @@ private:
     static napi_value BatchInsert(napi_env env, napi_callback_info info);
     static napi_value BatchInsertWithConflictResolution(napi_env env, napi_callback_info info);
     static napi_value Query(napi_env env, napi_callback_info info);
+    static napi_value QueryWithoutRowCount(napi_env env, napi_callback_info info);
+    static napi_value QuerySqlWithoutRowCount(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
     static napi_value Execute(napi_env env, napi_callback_info info);
     static void AddSyncFunctions(std::vector<napi_property_descriptor> &properties);

@@ -92,6 +92,11 @@ public:
     using Date = DistributedRdb::Date;
 
     /**
+     * @brief Use QueryOptions replace DistributedRdb::QueryOptions namespace.
+     */
+    using QueryOptions = DistributedRdb::QueryOptions;
+
+    /**
      * @brief Use Fields replace std::vector<std::string> columns.
      */
     using Fields = std::vector<std::string>;
@@ -418,7 +423,7 @@ public:
      * @param preCount Indicates whether to calculate the count during query.
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args = {},
-        bool preCount = true) = 0;
+        bool preCount = true);
 
     /**
      * @brief Queries data in the database based on specified conditions.
@@ -429,6 +434,26 @@ public:
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns = {},
         bool preCount = true);
+
+    /**
+     * @brief Queries data in the database based on specified conditions.
+     *
+     * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
+     * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
+     * @param QueryOptions Options for specifying conditions when query.
+     */
+    virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
+        const QueryOptions &options);
+
+    /**
+     * @brief Queries data in the database based on SQL statement.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param args Indicates the selection arguments.
+     * @param QueryOptions Options for specifying conditions when query.
+     */
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
+        const QueryOptions &options);
 
     /**
      * @brief Queries remote data in the database based on specified conditions before Synchronizing Data.

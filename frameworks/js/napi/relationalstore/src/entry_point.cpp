@@ -18,6 +18,7 @@
 #include "napi_rdb_predicates.h"
 #include "napi_rdb_store.h"
 #include "napi_rdb_store_helper.h"
+#include "napi_lite_result_set.h"
 #include "napi_result_set.h"
 #include "napi_transaction.h"
 
@@ -33,6 +34,7 @@ static napi_value Init(napi_env env, napi_value exports)
     RdbStoreProxy::Init(env, exports);
     RdbPredicatesProxy::Init(env, exports);
     ResultSetProxy::Init(env, exports);
+    LiteResultSetProxy::Init(env, exports);
     TransactionProxy::Init(env, exports);
     InitConstProperties(env, exports);
     return exports;
