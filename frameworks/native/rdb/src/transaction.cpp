@@ -118,6 +118,6 @@ std::shared_ptr<ResultSet> Transaction::QueryByStep(
 std::shared_ptr<ResultSet> Transaction::QueryByStep(
     const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options)
 {
-    return nullptr;;
+    return nullptr;
 }
 } // namespace OHOS::NativeRdb
