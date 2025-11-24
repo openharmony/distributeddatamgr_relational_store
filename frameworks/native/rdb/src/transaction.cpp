@@ -95,4 +95,29 @@ std::pair<int32_t, Results> Transaction::ExecuteExt(const std::string &sql, cons
 {
     return { E_NOT_SUPPORT, -1 };
 }
+
+std::shared_ptr<ResultSet> Transaction::QueryByStep(const std::string &sql, const Values &args, bool preCount)
+{
+    QueryOptions options{.preCount = preCount, .isGotoNextRowReturnLastError = false};
+    return QueryByStep(sql, args, options);
+}
+
+std::shared_ptr<ResultSet> Transaction::QueryByStep(
+    const AbsRdbPredicates &predicates, const Fields &columns, bool preCount)
+{
+    QueryOptions options{.preCount = preCount, .isGotoNextRowReturnLastError = false};
+    return QueryByStep(predicates, columns, options);
+}
+
+std::shared_ptr<ResultSet> Transaction::QueryByStep(
+    const std::string &sql, const Values &args, const QueryOptions &options)
+{
+    return nullptr;
+}
+
+std::shared_ptr<ResultSet> Transaction::QueryByStep(
+    const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options)
+{
+    return nullptr;;
+}
 } // namespace OHOS::NativeRdb

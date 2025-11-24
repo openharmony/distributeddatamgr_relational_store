@@ -218,7 +218,7 @@ public:
      * @param preCount Indicates whether to calculate the count during query.
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args = {},
-        bool preCount = true) = 0;
+        bool preCount = true);
 
     /**
      * @brief Queries data in the database based on specified conditions.
@@ -228,7 +228,7 @@ public:
      * @param preCount Indicates whether to calculate the count during query.
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns = {},
-        bool preCount = true) = 0;
+        bool preCount = true);
 
     /**
      * @brief Queries data in the database based on SQL statement.
@@ -238,7 +238,7 @@ public:
      * @param QueryOptions Options for specifying conditions when query.
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        const QueryOptions &options) = 0;
+        const QueryOptions &options);
 
     /**
      * @brief Queries data in the database based on specified conditions.
@@ -248,7 +248,7 @@ public:
      * @param QueryOptions Options for specifying conditions when query.
      */
     virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
-        const QueryOptions &options) = 0;
+        const QueryOptions &options);
     
     /**
      * @brief Executes an SQL statement that contains specified parameters and
