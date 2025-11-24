@@ -259,7 +259,8 @@ void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
     resultSets_.push_back(std::move(resultSet));
 }
 
-std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
+std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
+    const std::string &sql, const Values &args, const QueryOptions &options)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -267,7 +268,7 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, 
         LOG_ERROR("transaction already close");
         return nullptr;
     }
-    auto resultSet = store->QueryByStep(sql, args);
+    auto resultSet = store->QueryByStep(sql, args, options);
     if (resultSet != nullptr) {
         AddResultSet(resultSet);
     }
@@ -275,7 +276,7 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(const std::string &sql, 
 }
 
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
-    const AbsRdbPredicates &predicates, const Fields &columns, bool preCount)
+    const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -283,7 +284,7 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
         LOG_ERROR("transaction already close");
         return nullptr;
     }
-    auto resultSet = store->QueryByStep(predicates, columns);
+    auto resultSet = store->QueryByStep(predicates, columns, options);
     if (resultSet != nullptr) {
         AddResultSet(resultSet);
     }

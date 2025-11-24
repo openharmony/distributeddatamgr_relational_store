@@ -310,7 +310,8 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(
     sql.append(" where hash_key in (");
     sql.append(SqliteSqlBuilder::GetSqlArgs(hashKeys.size()));
     sql.append(")");
-    auto resultSet = QueryByStep(sql, hashKeys, true);
+    QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = false};
+    auto resultSet = QueryByStep(sql, hashKeys, options);
     int count = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
         LOG_ERROR("Get resultSet err.");
@@ -334,7 +335,8 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
         RawDataParser::Convert(key, value);
         args.emplace_back(ValueObject(value));
     }
-    auto resultSet = QueryByStep(sql, args, true);
+    QueryOptions options{.preCount = true, .isGotoNextRowReturnLastError = false};
+    auto resultSet = QueryByStep(sql, args, options);
     int count = 0;
     if (resultSet == nullptr || resultSet->GetRowCount(count) != E_OK || count <= 0) {
         LOG_ERROR("Get resultSet err.");
@@ -1518,7 +1520,8 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 #endif
 }
 
-std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args, bool preCount)
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, const Values &args,
+    const QueryOptions &options)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
@@ -1529,11 +1532,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(const std::string &sql, con
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
-#if !defined(CROSS_PLATFORM)
-    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, preCount);
-#else
-    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, false);
-#endif
+    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, options);
 }
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
