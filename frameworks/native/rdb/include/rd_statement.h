@@ -41,6 +41,10 @@ public:
     int32_t Execute(const std::vector<ValueObject> &args) override;
     int32_t Execute(const std::vector<std::reference_wrapper<ValueObject>> &args) override;
     std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject> &args) override;
+    std::pair<int, std::vector<ValuesBucket>> ExecuteForRows(
+        const std::vector<ValueObject> &args, int32_t maxCount) override;
+    std::pair<int, std::vector<ValuesBucket>> ExecuteForRows(
+        const std::vector<std::reference_wrapper<ValueObject>> &args, int32_t maxCount) override;
     int32_t Changes() const override;
     int64_t LastInsertRowId() const override;
     int32_t GetColumnCount() const override;
@@ -51,7 +55,7 @@ public:
     bool ReadOnly() const override;
     bool SupportBlockInfo() const override;
     int32_t FillBlockInfo(SharedBlockInfo *info) const override;
-    std::pair<int32_t, std::vector<ValuesBucket>> GetRows(uint32_t maxCount) override;
+    std::pair<int32_t, std::vector<ValuesBucket>> GetRows(int32_t maxCount) override;
     void GetProperties();
 
 private:

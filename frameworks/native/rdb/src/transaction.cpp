@@ -38,7 +38,7 @@ std::pair<int32_t, int64_t> Transaction::BatchInsert(
 }
 
 std::pair<int32_t, Results> Transaction::BatchInsert(const std::string &table, const RefRows &rows,
-    const std::vector<std::string> &returningFields, Resolution resolution)
+    const ReturningConfig &config, Resolution resolution)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -60,7 +60,7 @@ std::pair<int32_t, int32_t> Transaction::Update(
 }
 
 std::pair<int32_t, Results> Transaction::Update(const Row &row, const AbsRdbPredicates &predicates,
-    const std::vector<std::string> &returningFields, Resolution resolution)
+    const ReturningConfig &config, Resolution resolution)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -81,7 +81,7 @@ std::pair<int32_t, int32_t> Transaction::Delete(const AbsRdbPredicates &predicat
 }
 
 std::pair<int32_t, Results> Transaction::Delete(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
+    const AbsRdbPredicates &predicates, const ReturningConfig &config)
 {
     return { E_NOT_SUPPORT, -1 };
 }

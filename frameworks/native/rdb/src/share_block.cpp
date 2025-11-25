@@ -19,6 +19,7 @@
 
 #include <algorithm>
 
+#include "abs_shared_block.h"
 #include "logger.h"
 #include "shared_block.h"
 #include "shared_block_serializer_info.h"
@@ -31,11 +32,10 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-const int ERROR_STATUS = -1;
 const unsigned int SLEEP_TIME = 1000;
 // move to the highest 32 bits of 64 bits number
-const int RETRY_TIME = 50;
-const int PRINT_RETRY_TIMES = 10;
+const int RETRY_TIME = 10;
+const int PRINT_RETRY_TIMES = 5;
 
 int SeriAddRow(void *pCtx, int addedRows)
 {
@@ -91,15 +91,6 @@ int SeriPutOther(void *pCtx, int addedRows, int column)
     return serializer->PutOther(addedRows, column);
 }
 
-int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
-{
-    int status = sharedBlock->SetColumnNum(columnNum);
-    if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
-        return ERROR_STATUS;
-    }
-    return status;
-}
-
 int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
     SharedBlockSerializerInfo serializer(info->sharedBlock, stmt, info->columnNum, info->startPos);
@@ -122,7 +113,8 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
     while (true) {
         errCode = sqlite3_step(stmt);
         if (errCode == SQLITE_LOCKED || errCode == SQLITE_BUSY) {
-            LOG_WARN("Database locked, retrying errCode=%{public}d, errno=%{public}d", errCode, errno);
+            LOG_WARN("Database locked, retrying errCode=%{public}d, errno=%{public}d retryCount=%{public}d", errCode,
+                errno, retryCount);
             if (retryCount <= RETRY_TIME) {
                 usleep(SLEEP_TIME);
                 retryCount++;
@@ -141,7 +133,7 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
     }
 
     cfgErr = sqlite3_db_config(db, SQLITE_DBCONFIG_SET_SHAREDBLOCK, stmt, nullptr);
-    if (cfgErr != SQLITE_OK || (errCode != SQLITE_OK) || retryCount > PRINT_RETRY_TIMES) {
+    if (cfgErr != SQLITE_OK || errCode != SQLITE_OK || retryCount > PRINT_RETRY_TIMES) {
         LOG_ERROR("failed, cfgErr=%{public}d errCode=%{public}d retry=%{public}d", cfgErr, errCode, retryCount);
     }
     return SQLiteError::ErrNo(errCode);
@@ -209,7 +201,7 @@ void FillRow(SharedBlockInfo *info, sqlite3_stmt *stmt)
 }
 
 FillOneRowResult FillOneRow(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns, int startPos, int addedRows)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns, int startPos, int addedRows)
 {
     int status = sharedBlock->AllocRow();
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
@@ -256,7 +248,7 @@ FillOneRowResult FillOneRow(
 }
 
 FillOneRowResult FillOneRowOfString(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     const char *text = reinterpret_cast<const char *>(sqlite3_column_text(statement, pos));
     if (text == nullptr) {
@@ -276,7 +268,7 @@ FillOneRowResult FillOneRowOfString(
 }
 
 FillOneRowResult FillOneRowOfLong(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     int64_t value = sqlite3_column_int64(statement, pos);
     int status = sharedBlock->PutLong(addedRows, pos, value);
@@ -289,7 +281,7 @@ FillOneRowResult FillOneRowOfLong(
 }
 
 FillOneRowResult FillOneRowOfFloat(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     double value = sqlite3_column_double(statement, pos);
     int status = sharedBlock->PutDouble(addedRows, pos, value);
@@ -302,17 +294,17 @@ FillOneRowResult FillOneRowOfFloat(
 }
 
 FillOneRowResult FillOneRowOfBlob(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
-    auto action = &AppDataFwk::SharedBlock::PutBlob;
+    auto action = &AppDataFwk::AbsSharedBlock::PutBlob;
     auto *declType = sqlite3_column_decltype(statement, pos);
     if (declType != nullptr) {
         auto type = StringUtils::TruncateAfterFirstParen(SqliteUtils::StrToUpper(declType));
-        action = (type == ValueObject::DeclType<ValueObject::Asset>())         ? &AppDataFwk::SharedBlock::PutAsset
-                 : (type == ValueObject::DeclType<ValueObject::Assets>())      ? &AppDataFwk::SharedBlock::PutAssets
-                 : (type == ValueObject::DeclType<ValueObject::FloatVector>()) ? &AppDataFwk::SharedBlock::PutFloats
-                 : (type == ValueObject::DeclType<ValueObject::BigInt>())      ? &AppDataFwk::SharedBlock::PutBigInt
-                                                                               : &AppDataFwk::SharedBlock::PutBlob;
+        action = (type == ValueObject::DeclType<ValueObject::Asset>())         ? &AppDataFwk::AbsSharedBlock::PutAsset
+                 : (type == ValueObject::DeclType<ValueObject::Assets>())      ? &AppDataFwk::AbsSharedBlock::PutAssets
+                 : (type == ValueObject::DeclType<ValueObject::FloatVector>()) ? &AppDataFwk::AbsSharedBlock::PutFloats
+                 : (type == ValueObject::DeclType<ValueObject::BigInt>())      ? &AppDataFwk::AbsSharedBlock::PutBigInt
+                                                                               : &AppDataFwk::AbsSharedBlock::PutBlob;
     }
 
     const void *blob = sqlite3_column_blob(statement, pos);
@@ -328,7 +320,7 @@ FillOneRowResult FillOneRowOfBlob(
 }
 
 FillOneRowResult FillOneRowOfNull(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     int status = sharedBlock->PutNull(addedRows, pos);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {

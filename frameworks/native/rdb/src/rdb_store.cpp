@@ -166,7 +166,7 @@ std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const Re
 }
 
 std::pair<int, Results> RdbStore::BatchInsert(const std::string &table, const RefRows &rows,
-    const std::vector<std::string> &returningFields, Resolution resolution)
+    const ReturningConfig &config, Resolution resolution)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -203,7 +203,7 @@ int RdbStore::Update(
 };
 
 std::pair<int32_t, Results> RdbStore::Update(const Row &row, const AbsRdbPredicates &predicates,
-    const std::vector<std::string> &returningFields, Resolution resolution)
+    const ReturningConfig &config, Resolution resolution)
 {
     return { E_NOT_SUPPORT, -1 };
 }
@@ -250,7 +250,7 @@ int RdbStore::Delete(
 }
 
 std::pair<int32_t, Results> RdbStore::Delete(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
+    const AbsRdbPredicates &predicates, const ReturningConfig &config)
 {
     return { E_NOT_SUPPORT, -1 };
 }

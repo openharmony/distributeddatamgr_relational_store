@@ -27,11 +27,11 @@ public:
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        const std::vector<std::string> &returningFields, Resolution resolution) override;
+        const ReturningConfig &config, Resolution resolution) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &returningFields, Resolution resolution) override;
+        const ReturningConfig &config, Resolution resolution) override;
     std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields) override;
+        const AbsRdbPredicates &predicates, const ReturningConfig &config) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
         const QueryOptions &options) override;
@@ -42,11 +42,11 @@ public:
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
 
 private:
-    std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(const std::string &sql) const;
+    std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(
+        const std::string &sql, const std::string &returningSql = "") const;
     void HandleSchemaDDL(std::shared_ptr<Statement> statement);
-    static inline constexpr uint32_t MAX_RETURNING_ROWS = 1024;
-    static Results GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML = true);
-    static std::shared_ptr<ResultSet> GetValues(std::shared_ptr<Statement> statement);
+    static std::pair<int32_t, Results> GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
+        std::vector<ValuesBucket> &&returningValues, bool isDML);
 
     int32_t maxArgs_ = 0;
     int64_t vSchema_ = 0;

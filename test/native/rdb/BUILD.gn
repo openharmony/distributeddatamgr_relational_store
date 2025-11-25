@@ -108,8 +108,8 @@ ohos_unittest("NativeRdbLogTest") {
   ]
   sources += [
     "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
-    "${relational_store_native_path}/rdb/src/suspender.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+    "${relational_store_native_path}/rdb/src/suspender.cpp",
   ]
   include_dirs = [
     "${relational_store_common_path}/include",
@@ -149,9 +149,11 @@ ohos_unittest("NativeRdbTest") {
 
   sources = [
     "unittest/big_integer_test.cpp",
+    "unittest/cache_block_test.cpp",
     "unittest/cache_result_set_test.cpp",
     "unittest/common.cpp",
     "unittest/connection_test.cpp",
+    "unittest/delay_notify_test.cpp",
     "unittest/raw_data_parser_test.cpp",
     "unittest/rd_utils_test.cpp",
     "unittest/rdb_attach_test.cpp",
@@ -198,30 +200,27 @@ ohos_unittest("NativeRdbTest") {
     "unittest/sqlite_utils_test.cpp",
     "unittest/transaction_test.cpp",
     "unittest/value_object_test.cpp",
-    "unittest/delay_notify_test.cpp",
   ]
 
   if (is_ohos) {
-    sources += [
-      "unittest/rdb_double_write_binlog_test.cpp",
-    ]
+    sources += [ "unittest/rdb_double_write_binlog_test.cpp" ]
   }
 
   sources += [
-    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
     "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
     "${relational_store_native_path}/appdatafwk/src/shared_block.cpp",
     "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
     "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
-    "${relational_store_native_path}/rdb/src/delay_notify.cpp",
-    "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
     "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
     "${relational_store_native_path}/rdb/src/base_transaction.cpp",
+    "${relational_store_native_path}/rdb/src/cache_block.cpp",
     "${relational_store_native_path}/rdb/src/connection.cpp",
     "${relational_store_native_path}/rdb/src/connection_pool.cpp",
-    "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
-    "${relational_store_native_path}/rdb/src/global_resource.cpp",
     "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
+    "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+    "${relational_store_native_path}/rdb/src/global_resource.cpp",
+    "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
     "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
     "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
     "${relational_store_native_path}/rdb/src/rd_connection.cpp",
@@ -238,6 +237,7 @@ ohos_unittest("NativeRdbTest") {
     "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
     "${relational_store_native_path}/rdb/src/rdb_sql_log.cpp",
     "${relational_store_native_path}/rdb/src/rdb_sql_statistic.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
     "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
     "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
     "${relational_store_native_path}/rdb/src/security_policy.cpp",
@@ -262,15 +262,15 @@ ohos_unittest("NativeRdbTest") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
-    "json:nlohmann_json_static",
     "c_utils:utils",
     "file_api:securitylabel",
     "googletest:gtest_main",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
-    "kv_store:datamgr_common",
+    "json:nlohmann_json_static",
     "kv_store:database_utils",
+    "kv_store:datamgr_common",
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",
@@ -293,39 +293,38 @@ ohos_unittest("NativeRdbSecurityManagerTest") {
     "${relational_store_native_path}/icu/include",
   ]
 
-  sources = [
-    "unittest/rdb_encrypt_upgrade_test.cpp",
-  ]
+  sources = [ "unittest/rdb_encrypt_upgrade_test.cpp" ]
 
   sources += [
-    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
     "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
     "${relational_store_native_path}/appdatafwk/src/shared_block.cpp",
     "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
-    "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
     "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
     "${relational_store_native_path}/obs_mgr_adapter/obs_mgr_adapter.cpp",
+    "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
     "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
     "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
     "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
     "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
     "${relational_store_native_path}/rdb/src/base_transaction.cpp",
     "${relational_store_native_path}/rdb/src/big_integer.cpp",
+    "${relational_store_native_path}/rdb/src/cache_block.cpp",
     "${relational_store_native_path}/rdb/src/cache_result_set.cpp",
     "${relational_store_native_path}/rdb/src/connection.cpp",
     "${relational_store_native_path}/rdb/src/connection_pool.cpp",
-    "${relational_store_native_path}/rdb/src/delay_notify.cpp",
-    "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
-    "${relational_store_native_path}/rdb/src/global_resource.cpp",
     "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
+    "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+    "${relational_store_native_path}/rdb/src/global_resource.cpp",
+    "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
     "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
     "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
     "${relational_store_native_path}/rdb/src/rd_connection.cpp",
     "${relational_store_native_path}/rdb/src/rd_statement.cpp",
     "${relational_store_native_path}/rdb/src/rd_utils.cpp",
     "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
-    "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
     "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
     "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
@@ -371,7 +370,6 @@ ohos_unittest("NativeRdbSecurityManagerTest") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
-    "json:nlohmann_json_static",
     "c_utils:utils",
     "file_api:securitylabel",
     "googletest:gtest_main",
@@ -379,6 +377,7 @@ ohos_unittest("NativeRdbSecurityManagerTest") {
     "hisysevent:libhisysevent",
     "huks:libhukssdk",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "kv_store:database_utils",
     "kv_store:datamgr_common",
     "kv_store:distributeddata_inner",
@@ -391,9 +390,7 @@ ohos_unittest("NativeRdbSecurityManagerTest") {
 ohos_unittest("DelayActuatorTest") {
   module_out_path = module_output_path
 
-  sources = [
-    "unittest/delay_actuator_test.cpp",
-  ]
+  sources = [ "unittest/delay_actuator_test.cpp" ]
   include_dirs = [
     "${relational_store_common_path}/include",
     "${relational_store_native_path}/rdb/include",
@@ -430,8 +427,8 @@ group("unittest") {
     ":NativeRdbLogTest",
     ":NativeRdbMultiProcessTest",
     ":NativeRdbMultiThreadTest",
-    ":NativeRdbTest",
     ":NativeRdbSecurityManagerTest",
+    ":NativeRdbTest",
   ]
 }
 
@@ -441,15 +438,10 @@ group("fuzztest") {
   testonly = true
   deps = []
   deps += [
-    "fuzztest/rdbhelper_fuzzer:fuzztest",
-    "fuzztest/rdbimpl_fuzzer:fuzztest",
-    "fuzztest/rdbrdutils_fuzzer:fuzztest",
-    "fuzztest/rdbstore_fuzzer:fuzztest",
-    "fuzztest/rdstatement_fuzzer:fuzztest",
-    "fuzztest/returning_fuzzer:fuzztest",
-    "fuzztest/sharedblock_fuzzer:fuzztest",
-    "fuzztest/transdb_fuzzer:fuzztest",
-    "fuzztest/transaction_fuzzer:fuzztest",
+    "fuzztest/abspredicates_fuzzer:fuzztest",
+    "fuzztest/absrdbpredicates_fuzzer:fuzztest",
+    "fuzztest/absresultset_fuzzer:fuzztest",
+    "fuzztest/abssharedresultset_fuzzer:fuzztest",
     "fuzztest/big_integer_test_ut2fuzz:fuzztest",
     "fuzztest/cache_result_set_test_ut2fuzz:fuzztest",
     "fuzztest/cloud_data_test_ut2fuzz:fuzztest",
@@ -461,13 +453,18 @@ group("fuzztest") {
     "fuzztest/rdb_delete_test_ut2fuzz:fuzztest",
     "fuzztest/rdb_distributed_test_ut2fuzz:fuzztest",
     "fuzztest/rdb_double_write_test_ut2fuzz:fuzztest",
-    "fuzztest/rdbsqlutils_fuzzer:fuzztest",
-    "fuzztest/storeconfig_fuzzer:fuzztest",
-    "fuzztest/absrdbpredicates_fuzzer:fuzztest",
-    "fuzztest/abssharedresultset_fuzzer:fuzztest",
-    "fuzztest/abspredicates_fuzzer:fuzztest",
-    "fuzztest/absresultset_fuzzer:fuzztest",
+    "fuzztest/rdbhelper_fuzzer:fuzztest",
+    "fuzztest/rdbimpl_fuzzer:fuzztest",
     "fuzztest/rdbpredicates_fuzzer:fuzztest",
+    "fuzztest/rdbrdutils_fuzzer:fuzztest",
+    "fuzztest/rdbsqlutils_fuzzer:fuzztest",
+    "fuzztest/rdbstore_fuzzer:fuzztest",
+    "fuzztest/rdstatement_fuzzer:fuzztest",
+    "fuzztest/returning_fuzzer:fuzztest",
+    "fuzztest/sharedblock_fuzzer:fuzztest",
+    "fuzztest/storeconfig_fuzzer:fuzztest",
+    "fuzztest/transaction_fuzzer:fuzztest",
+    "fuzztest/transdb_fuzzer:fuzztest",
     "fuzztest/valueobject_fuzzer:fuzztest",
     "fuzztest/valuesbucket_fuzzer:fuzztest",
     "fuzztest/valuesbuckets_fuzzer:fuzztest",

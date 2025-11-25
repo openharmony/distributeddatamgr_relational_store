@@ -87,7 +87,6 @@ using SqlStatistic = DistributedRdb::SqlStatistic;
 using PerfStat = DistributedRdb::PerfStat;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Reportor = RdbFaultHiViewReporter;
-
 #if !defined(CROSS_PLATFORM)
 using RdbMgr = DistributedRdb::RdbManagerImpl;
 #endif
@@ -1398,7 +1397,7 @@ void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, const RefRows &rows,
-    const std::vector<std::string> &returningFields, Resolution resolution)
+    const ReturningConfig &config, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
@@ -1412,42 +1411,43 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
     RdbStatReporter reportStat(RDB_PERF, BATCHINSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL, 0, rows.RowSize());
-    auto pool = GetPool();
-    if (pool == nullptr) {
-        return { E_ALREADY_CLOSED, -1 };
-    }
-    auto conn = pool->AcquireConnection(false);
-    if (conn == nullptr) {
-        return { E_DATABASE_BUSY, -1 };
+
+    auto [code, conn] = GetConn(false);
+    if (code != E_OK || conn == nullptr) {
+        return { code, -1 };
     }
 
     auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable(), resolution);
     // To ensure atomicity, execute SQL only once
-    if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1) {
+    if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1 ||
+        !RdbSqlUtils::IsValidMaxCount(config.maxReturningCount)) {
         auto [fields, values] = rows.GetFieldsAndValues();
         LOG_ERROR("invalid! rows:%{public}zu, table:%{public}s, fields:%{public}zu, max:%{public}d.", rows.RowSize(),
             SqliteUtils::Anonymous(table).c_str(), fields != nullptr ? fields->size() : 0, conn->GetMaxVariable());
         return { E_INVALID_ARGS, -1 };
     }
     auto &[sql, bindArgs] = sqlArgs.front();
-    SqliteSqlBuilder::AppendReturning(sql, returningFields);
-    auto [errCode, statement] = GetStatement(sql, conn);
+
+    auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
+    auto [errCode, statement] = GetStatement(sql, conn, returningSql);
     if (statement == nullptr) {
         LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
                   "app self can check the SQL", errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
         return { errCode, -1 };
     }
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
-    errCode = statement->Execute(std::ref(bindArgs.front()));
+    std::vector<ValuesBucket> values;
+    std::tie(errCode, values) = statement->ExecuteForRows(std::ref(bindArgs.front()), config.maxReturningCount);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-        pool->Dump(true, "BATCH");
+        TryDump(errCode, "BATCH");
         return { errCode, -1 };
     }
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
             SqliteUtils::Anonymous(table).c_str(), bindArgs.front().size(), static_cast<int32_t>(resolution));
     }
-    auto result = GenerateResult(errCode, statement);
+    Results result;
+    std::tie(errCode, result) = GenerateResult(errCode, statement, std::move(values), true);
     if (result.changed > 0) {
         DoCloudSync(table);
     }
@@ -1455,7 +1455,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
-    const std::vector<std::string> &returningFields, Resolution resolution)
+    const ReturningConfig &config, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
@@ -1464,11 +1464,12 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPre
     RdbStatReporter reportStat(RDB_PERF, UPDATE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    auto [status, sqlInfo] = RdbSqlUtils::GetUpdateSqlInfo(predicates, row, resolution, returningFields);
+    auto [status, sqlInfo] = RdbSqlUtils::GetUpdateSqlInfo(predicates, row, resolution);
     if (status != E_OK) {
         return { status, -1 };
     }
-    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args);
+    auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
+    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, config.maxReturningCount, returningSql);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1476,7 +1477,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPre
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::Delete(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
+    const AbsRdbPredicates &predicates, const ReturningConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
@@ -1485,12 +1486,13 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(
     RdbStatReporter reportStat(RDB_PERF, DELETE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    auto [status, sqlInfo] = RdbSqlUtils::GetDeleteSqlInfo(predicates, returningFields);
+    auto [status, sqlInfo] = RdbSqlUtils::GetDeleteSqlInfo(predicates);
     if (status != E_OK) {
         return { status, -1 };
     }
-
-    auto [code, result] = ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs());
+    auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
+    auto [code, result] =
+        ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), config.maxReturningCount, returningSql);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1710,20 +1712,21 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteExt(const std::string &sql, con
     if (errCode != E_OK) {
         return { errCode, -1 };
     }
-    errCode = statement->Execute(args);
+    std::vector<ValuesBucket> rows;
+    std::tie(errCode, rows) = statement->ExecuteForRows(args, ReturningConfig::DEFAULT_RETURNING_COUNT);
     TryDump(errCode, "ExecuteExt");
-    return HandleResults(std::move(statement), sql, errCode, sqlType);
-}
-
-std::pair<int32_t, Results> RdbStoreImpl::HandleResults(
-    std::shared_ptr<Statement> &&statement, const std::string &sql, int32_t code, int sqlType)
-{
-    Results result = GenerateResult(
-        code, statement, sqlType == SqliteUtils::STATEMENT_INSERT || sqlType == SqliteUtils::STATEMENT_UPDATE);
+    Results result;
+    std::tie(errCode, result) = GenerateResult(errCode, statement, std::move(rows),
+        sqlType == SqliteUtils::STATEMENT_INSERT || sqlType == SqliteUtils::STATEMENT_UPDATE);
+    if (errCode != E_OK) {
+        LOG_ERROR("failed, error:0x%{public}x app self can check the SQL:%{public}s", errCode,
+            SqliteUtils::SqlAnonymous(sql).c_str());
+        return { errCode, result };
+    }
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
         HandleSchemaDDL(std::move(statement), sql);
     }
-    return { code, result };
+    return { errCode, result };
 }
 
 int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args)
@@ -1774,12 +1777,7 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     auto beginExec = std::chrono::steady_clock::now();
     errCode = statement->Execute(args);
     if (errCode != E_OK) {
-        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-            auto pool = GetPool();
-            if (pool != nullptr) {
-                pool->Dump(true, "INSERT");
-            }
-        }
+        TryDump(errCode, "INSERT");
         return errCode;
     }
     auto beginResult = std::chrono::steady_clock::now();
@@ -1798,28 +1796,28 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     return E_OK;
 }
 
-std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(const std::string &sql, const Values &args)
+std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
+    const std::string &sql, const Values &args, int32_t maxCount, const std::string &returningSql)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
-    auto [errCode, statement] = GetStatement(sql, false);
+    if (!RdbSqlUtils::IsValidMaxCount(maxCount)) {
+        return { E_INVALID_ARGS, -1 };
+    }
+    auto [errCode, statement] = GetStatement(sql, false, returningSql);
     if (statement == nullptr) {
         return { errCode, -1 };
     }
-    errCode = statement->Execute(args);
-    if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-        auto pool = GetPool();
-        if (pool != nullptr) {
-            pool->Dump(true, "UPG DEL");
-        }
-    }
-    return { errCode, GenerateResult(errCode, statement) };
+    std::vector<ValuesBucket> values;
+    std::tie(errCode, values) = statement->ExecuteForRows(args, maxCount);
+    TryDump(errCode, "UPG DEL");
+    return GenerateResult(errCode, statement, std::move(values), true);
 }
 
 int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql, const Values &args)
 {
-    auto [code, result] = ExecuteForRow(sql, args);
+    auto [code, result] = ExecuteForRow(sql, args, 0);
     outValue = result.changed;
     return code;
 }
@@ -2352,9 +2350,7 @@ int RdbStoreImpl::BeginTransaction()
     }
     err = statement->Execute();
     if (err != E_OK) {
-        if (err == E_SQLITE_LOCKED || err == E_SQLITE_BUSY) {
-            pool->Dump(true, "BEGIN");
-        }
+        TryDump(err, "BEGIN");
         LOG_ERROR("[%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
         return err;
     }
@@ -2894,7 +2890,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::CreateWritableConn
 }
 
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
-    const std::string &sql, std::shared_ptr<Connection> conn) const
+    const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql) const
 {
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, nullptr };
@@ -2906,7 +2902,7 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
         if (ret != E_OK) {
             if (isUseReplicaDb_) {
                 LOG_INFO("Use replica statement, %{public}s", SqliteUtils::Anonymous(config_.GetPath()).c_str());
-                return conn->CreateReplicaStatement(sql, conn);
+                return conn->CreateReplicaStatement(sql, conn, returningSql);
             }
             return { E_DATABASE_BUSY, nullptr };
         }
@@ -2916,19 +2912,20 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
         LOG_WARN("Got lock file but process is not in restore, mark removed, st:%{public}d, %{public}s",
             strategy, SqliteUtils::Anonymous(config_.GetPath()).c_str());
         if (strategy != ExchangeStrategy::RESTORE) {
-            return conn->CreateStatement(sql, conn);
+            return conn->CreateStatement(sql, conn, returningSql);
         }
         auto result = conn->CheckReplicaForRestore();
         if (result == E_OK) {
             result = StartAsyncRestore(GetPool());
-            return conn->CreateReplicaStatement(sql, conn);
+            return conn->CreateReplicaStatement(sql, conn, returningSql);
         }
     }
 
-    return conn->CreateStatement(sql, conn);
+    return conn->CreateStatement(sql, conn, returningSql);
 }
 
-std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(const std::string &sql, bool read) const
+std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
+    const std::string &sql, bool read, const std::string &returningSql) const
 {
     auto pool = GetPool();
     if (pool == nullptr) {
@@ -2938,7 +2935,7 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(const 
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, nullptr };
     }
-    return GetStatement(sql, conn);
+    return GetStatement(sql, conn, returningSql);
 }
 
 int RdbStoreImpl::GetRebuilt(RebuiltType &rebuilt)
@@ -3068,9 +3065,7 @@ std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction
     std::shared_ptr<Transaction> trans;
     std::tie(errCode, trans) = Transaction::Create(type, conn, config_.GetPath());
     if (trans == nullptr) {
-        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-            pool->Dump(true, "TRANS");
-        }
+        TryDump(errCode, "TRANS");
         return { errCode, nullptr };
     }
 
@@ -3101,31 +3096,17 @@ int RdbStoreImpl::CleanDirtyLog(const std::string &table, uint64_t cursor)
     return conn->CleanDirtyLog(table, cursor);
 }
 
-std::shared_ptr<ResultSet> RdbStoreImpl::GetValues(std::shared_ptr<Statement> statement)
-{
-    if (statement == nullptr) {
-        return nullptr;
-    }
-    auto [code, rows] = statement->GetRows(MAX_RETURNING_ROWS);
-    auto size = rows.size();
-    std::shared_ptr<ResultSet> result = std::make_shared<CacheResultSet>(std::move(rows));
-    // The correct number of changed rows can only be obtained after completing the step
-    while (code == E_OK && size == MAX_RETURNING_ROWS) {
-        std::tie(code, rows) = statement->GetRows(MAX_RETURNING_ROWS);
-        size = rows.size();
-    }
-    return result;
-}
-
-Results RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML)
+std::pair<int32_t, Results> RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
+    std::vector<ValuesBucket> &&returningValues, bool isDML)
 {
     Results result{ -1 };
     if (statement == nullptr) {
-        return result;
+        return { E_ALREADY_CLOSED, result };
     }
     // There are no data changes in other scenarios
     if (code == E_OK) {
-        result.results = GetValues(statement);
+        std::shared_ptr<ResultSet> resultSet = std::make_shared<CacheResultSet>(std::move(returningValues));
+        result.results = resultSet;
         result.changed = isDML ? statement->Changes() : 0;
     }
     if (code == E_SQLITE_CONSTRAINT) {
@@ -3134,7 +3115,7 @@ Results RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> st
     if (isDML && result.changed <= 0) {
         result.results = std::make_shared<CacheResultSet>();
     }
-    return result;
+    return { code, result };
 }
 
 void RdbStoreImpl::TryDump(int32_t code, const char *dumpHeader)

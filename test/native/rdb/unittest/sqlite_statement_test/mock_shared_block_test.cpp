@@ -99,13 +99,6 @@ int SeriPutOther(void *pCtx, int addedRows, int column)
     return E_ERROR;
 }
 
-int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum)
-{
-    (void)sharedBlock;
-    (void)columnNum;
-    return E_ERROR;
-}
-
 int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
     (void)info;
@@ -127,7 +120,7 @@ void FillRow(SharedBlockInfo *info, sqlite3_stmt *stmt)
 }
 
 FillOneRowResult FillOneRow(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns, int startPos, int addedRows)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns, int startPos, int addedRows)
 {
     (void)sharedBlock;
     (void)statement;
@@ -139,7 +132,7 @@ FillOneRowResult FillOneRow(
 }
 
 FillOneRowResult FillOneRowOfString(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     (void)sharedBlock;
     (void)statement;
@@ -151,7 +144,7 @@ FillOneRowResult FillOneRowOfString(
 }
 
 FillOneRowResult FillOneRowOfLong(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     (void)sharedBlock;
     (void)statement;
@@ -163,7 +156,7 @@ FillOneRowResult FillOneRowOfLong(
 }
 
 FillOneRowResult FillOneRowOfFloat(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     (void)sharedBlock;
     (void)statement;
@@ -175,7 +168,7 @@ FillOneRowResult FillOneRowOfFloat(
 }
 
 FillOneRowResult FillOneRowOfBlob(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     (void)sharedBlock;
     (void)statement;
@@ -187,7 +180,7 @@ FillOneRowResult FillOneRowOfBlob(
 }
 
 FillOneRowResult FillOneRowOfNull(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
     (void)sharedBlock;
     (void)statement;
