@@ -51,15 +51,38 @@ void RdbNotifierStubTest::TearDown(void)
 }
 
 /**
- * @tc.name: OnAutoSyncTriggerInner_Normal_Success
- * @tc.desc: Test OnAutoSyncTriggerInner Sync callback notification
+ * @tc.name: OnAutoSyncTriggerInner_Normal_Success_001
+ * @tc.desc: Test OnAutoSyncTriggerInner Sync callback is null
  * @tc.type: FUNC
  * @tc.require:
  * @tc.author:
  */
-HWTEST_F(RdbNotifierStubTest, OnAutoSyncTriggerInner_Normal_Success, TestSize.Level0)
+HWTEST_F(RdbNotifierStubTest, OnAutoSyncTriggerInner_Normal_Success_001, TestSize.Level0)
 {
     RdbNotifierStub rdbNotifierStub(nullptr, nullptr, nullptr, nullptr);
+    MessageParcel reply;
+    MessageParcel data;
+    MessageOption option(MessageOption::TF_ASYNC);
+    data.WriteInterfaceToken(RdbNotifierStub::GetDescriptor());
+    auto code = static_cast<uint32_t>(NotifierIFCode::RDB_NOTIFIER_CMD_AUTO_SYNC_TRIGGER);
+    std::string storeId = "testStoreId";
+    int32_t triggerMode = 1;
+    ITypesUtil::Marshal(data, storeId, triggerMode);
+    auto ret = rdbNotifierStub.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: OnAutoSyncTriggerInner_Normal_Success_002
+ * @tc.desc: Test OnAutoSyncTriggerInner Sync callback is not null
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbNotifierStubTest, OnAutoSyncTriggerInner_Normal_Success_002, TestSize.Level0)
+{
+    RdbNotifierStub rdbNotifierStub(nullptr, nullptr, nullptr,
+        [](const std::string &storeId, int32_t triggerMode) {});
     MessageParcel reply;
     MessageParcel data;
     MessageOption option(MessageOption::TF_ASYNC);
