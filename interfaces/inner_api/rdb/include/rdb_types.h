@@ -179,6 +179,7 @@ enum ProgressCode {
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
     BLOCKED_BY_NETWORK_STRATEGY,
+    CLOUD_TASK_INTERRUPTED,
 };
 
 struct Statistic {
