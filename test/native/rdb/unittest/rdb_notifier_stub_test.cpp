@@ -23,7 +23,7 @@ using namespace testing::ext;
 using namespace OHOS::DistributedRdb;
 using namespace OHOS;
 namespace OHOS::Test {
-namespace OHOS::DistributedRdb{
+namespace OHOS::DistributedRdb {
 using NotifierIFCode = RelationalStore::IRdbNotifierInterfaceCode;
 
 class RdbNotifierStubTest : public testing::Test {
@@ -65,13 +65,30 @@ HWTEST_F(RdbNotifierStubTest, OnAutoSyncTriggerInner_Normal_Success, TestSize.Le
     MessageOption option(MessageOption::TF_ASYNC);
     data.WriteInterfaceToken(RdbNotifierStub::GetDescriptor());
     auto code = static_cast<uint32_t>(NotifierIFCode::RDB_NOTIFIER_CMD_AUTO_SYNC_TRIGGER);
-    auto ret = rdbNotifierStub.OnRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(ret, RDB_ERROR);
     std::string storeId = "testStoreId";
     int32_t triggerMode = 1;
     ITypesUtil::Marshal(data, storeId, triggerMode);
-    ret = rdbNotifierStub.OnRemoteRequest(code, data, reply, option);
+    auto ret = rdbNotifierStub.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: OnAutoSyncTriggerInner_Unmarshal_Failed
+ * @tc.desc: Test OnAutoSyncTriggerInner Sync callback unmarshal failed
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbNotifierStubTest, OnAutoSyncTriggerInner_Unmarshal_Failed, TestSize.Level0)
+{
+    RdbNotifierStub rdbNotifierStub(nullptr, nullptr, nullptr, nullptr);
+    MessageParcel reply;
+    MessageParcel data;
+    MessageOption option(MessageOption::TF_ASYNC);
+    data.WriteInterfaceToken(RdbNotifierStub::GetDescriptor());
+    auto code = static_cast<uint32_t>(NotifierIFCode::RDB_NOTIFIER_CMD_AUTO_SYNC_TRIGGER);
+    auto ret = rdbNotifierStub.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, RDB_ERROR);
 }
 
 /**
