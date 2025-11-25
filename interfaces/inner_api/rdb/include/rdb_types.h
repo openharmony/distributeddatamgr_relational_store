@@ -17,6 +17,7 @@
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
 #include <cinttypes>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <set>
@@ -417,8 +418,30 @@ struct Results {
     Results(int32_t count) : changed(count)
     {
     }
+    Results()
+    {
+    }
     int32_t changed = -1;
     std::shared_ptr<ResultSet> results;
+};
+
+struct ReturningConfig {
+    static constexpr int32_t MAX_RETURNING_COUNT = 0X7FFE;
+    static constexpr int32_t DEFAULT_RETURNING_COUNT = 1024;
+    static constexpr int32_t ILLEGAL_RETURNING_COUNT = -1;
+    ReturningConfig(const std::initializer_list<std::string> &value, int32_t count = DEFAULT_RETURNING_COUNT)
+        : columns(value), maxReturningCount(count)
+    {
+    }
+    ReturningConfig(const std::vector<std::string> &value, int32_t count = DEFAULT_RETURNING_COUNT)
+        : columns(value), maxReturningCount(count)
+    {
+    }
+    ReturningConfig()
+    {
+    }
+    std::vector<std::string> columns;
+    int32_t maxReturningCount = DEFAULT_RETURNING_COUNT;
 };
 
 class RdbStoreConfig;

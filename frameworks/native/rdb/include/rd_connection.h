@@ -39,8 +39,10 @@ public:
     RdConnection(const RdbStoreConfig &config, bool isWriteConnection);
     ~RdConnection();
     int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) override;
-    std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
-    std::pair<int32_t, Stmt> CreateReplicaStatement(const std::string &sql, SConn conn) override;
+    std::pair<int32_t, Stmt> CreateStatement(
+        const std::string &sql, SConn conn, const std::string &returningSql = "") override;
+    std::pair<int32_t, Stmt> CreateReplicaStatement(
+        const std::string &sql, SConn conn, const std::string &returningSql = "") override;
     int CheckReplicaForRestore() override;
     void Interrupt() override;
     int32_t GetDBType() const override;

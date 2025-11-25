@@ -577,14 +577,14 @@ int SqliteConnection::CheckReplicaForRestore()
     return ExchangeVerify(true);
 }
 
-std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(const std::string &sql,
-    std::shared_ptr<Connection> conn)
+std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
+    const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql)
 {
-    return CreateStatementInner(sql, conn, dbHandle_, false);
+    return CreateStatementInner(sql, conn, dbHandle_, false, returningSql);
 }
 
-std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateReplicaStatement(const std::string &sql,
-    std::shared_ptr<Connection> conn)
+std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateReplicaStatement(
+    const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql)
 {
     sqlite3 *db = dbHandle_;
     RdbStoreConfig rdbSlaveStoreConfig = GetSlaveRdbStoreConfig(config_);
@@ -596,18 +596,18 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateReplicaStatem
         }
         LOG_INFO("create slave conn ret=%{public}d, %{public}d", errCode, IsWriter());
     }
-    return CreateStatementInner(sql, conn, db, true);
+    return CreateStatementInner(sql, conn, db, true, returningSql);
 }
 
 std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatementInner(const std::string &sql,
-    std::shared_ptr<Connection> conn, sqlite3 *db, bool isFromReplica)
+    std::shared_ptr<Connection> conn, sqlite3 *db, bool isFromReplica, const std::string &returningSql)
 {
     std::shared_ptr<SqliteStatement> statement = std::make_shared<SqliteStatement>(&config_);
     // When memory is not cleared, quick_check reads memory pages and detects damage but does not report it
     if (sql == INTEGRITIES[1] && db != nullptr && mode_ == JournalMode::MODE_WAL) {
         sqlite3_db_release_memory(db);
     }
-    int errCode = statement->Prepare(db, sql);
+    int errCode = statement->Prepare(db, sql + returningSql);
     if (errCode != E_OK) {
         return { errCode, nullptr };
     }

@@ -123,8 +123,7 @@ void FuzzGetUpdateSqlInfo(FuzzedDataProvider &provider)
     AbsRdbPredicates predicates(table);
     Row row;
     ConflictResolution resolution = GetConflictResolution(provider);
-    std::vector<std::string> returningFields;
-    RdbSqlUtils::GetUpdateSqlInfo(predicates, row, resolution, returningFields);
+    RdbSqlUtils::GetUpdateSqlInfo(predicates, row, resolution);
 }
 
 // Fuzz GetDeleteSqlInfo
@@ -132,8 +131,7 @@ void FuzzGetDeleteSqlInfo(FuzzedDataProvider &provider)
 {
     std::string table = provider.ConsumeRandomLengthString();
     AbsRdbPredicates predicates(table);
-    std::vector<std::string> returningFields;
-    RdbSqlUtils::GetDeleteSqlInfo(predicates, returningFields);
+    RdbSqlUtils::GetDeleteSqlInfo(predicates);
 }
 
 // Fuzz GetQuerySqlInfo

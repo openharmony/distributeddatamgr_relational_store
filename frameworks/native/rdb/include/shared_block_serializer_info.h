@@ -18,6 +18,7 @@
 
 #include <sqlite3sym.h>
 
+#include "abs_shared_block.h"
 #include "shared_block.h"
 
 namespace OHOS {
@@ -27,7 +28,8 @@ extern "C" {
 #endif
 class SharedBlockSerializerInfo {
 public:
-    SharedBlockSerializerInfo(AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *stat, int numColumns, int startPos);
+    SharedBlockSerializerInfo(
+        AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *stat, int numColumns, int startPos);
     ~SharedBlockSerializerInfo();
     int AddRow(int addedRows);
     int Reset(int startPos);
@@ -71,7 +73,7 @@ public:
     }
 
 private:
-    AppDataFwk::SharedBlock *sharedBlock_;
+    AppDataFwk::AbsSharedBlock *sharedBlock_;
     sqlite3_stmt *statement_ = nullptr;
     int anumColumns;
     int atotalRows;

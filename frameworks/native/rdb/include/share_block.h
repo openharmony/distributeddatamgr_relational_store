@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace AppDataFwk {
-class SharedBlock;
+class AbsSharedBlock;
 }
 namespace NativeRdb {
 #ifdef __cplusplus
@@ -35,7 +35,7 @@ enum FillOneRowResult {
 };
 
 struct SharedBlockInfo {
-    AppDataFwk::SharedBlock *sharedBlock = nullptr;
+    AppDataFwk::AbsSharedBlock *sharedBlock = nullptr;
 
     int startPos;
     int addedRows;
@@ -46,7 +46,7 @@ struct SharedBlockInfo {
     bool isFull;
     bool hasException;
 
-    SharedBlockInfo(AppDataFwk::SharedBlock *sharedBlock) : sharedBlock(sharedBlock)
+    SharedBlockInfo(AppDataFwk::AbsSharedBlock *sharedBlock) : sharedBlock(sharedBlock)
     {
         startPos = 0;
         addedRows = 0;
@@ -77,20 +77,19 @@ int SeriPutDouble(void *pCtx, int addedRows, int column, double value);
 int SeriPutBlob(void *pCtx, int addedRows, int column, const void *blob, int len);
 int SeriPutNull(void *pCtx, int addedRows, int column);
 int SeriPutOther(void *pCtx, int addedRows, int column);
-int SharedBlockSetColumnNum(AppDataFwk::SharedBlock *sharedBlock, int columnNum);
 int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt);
 FillOneRowResult FillOneRowOfString(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
 FillOneRowResult FillOneRowOfLong(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
 FillOneRowResult FillOneRowOfFloat(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
 FillOneRowResult FillOneRowOfBlob(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
 FillOneRowResult FillOneRowOfNull(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
 FillOneRowResult FillOneRow(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns, int startPos, int addedRows);
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns, int startPos, int addedRows);
 void FillRow(SharedBlockInfo *info, sqlite3_stmt *stmt);
 void DefFillRow(SharedBlockInfo *info, sqlite3_stmt *stmt);
 int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt);
