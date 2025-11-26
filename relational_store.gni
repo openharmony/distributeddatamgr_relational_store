@@ -20,6 +20,14 @@ declare_args() {
     arkdata_db_core_is_exists = false
   }
   relational_store_config = true
+
+  relational_store_distributed_capability = true
+
+  if (!defined(global_parts_info) || defined(global_parts_info.distributedhardware_device_manager)) {
+    dm_part_is_enabled = true
+  } else {
+    dm_part_is_enabled = false
+  }
 }
 
 common_tool_path = "//foundation/distributeddatamgr/kv_store/frameworks/common"
