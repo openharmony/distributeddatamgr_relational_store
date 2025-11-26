@@ -92,10 +92,13 @@ ohos_distributedtest("DistributedTestAgent") {
 group("distributedtest") {
   testonly = true
 
-  deps = [
-    ":DistributedTest",
-    ":DistributedTestAgent",
-  ]
+  deps = []
+  if (dm_part_is_enabled && relational_store_distributed_capability) {
+    deps += [
+      ":DistributedTest",
+      ":DistributedTestAgent",
+    ]
+  }
 }
 
 ###############################################################################
