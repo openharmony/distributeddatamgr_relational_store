@@ -17,8 +17,6 @@
 #include <functional>
 #include "ohos.data.cloudData.proj.hpp"
 #include "ohos.data.cloudData.impl.hpp"
-#include "ohos.data.cloudData.sharing.proj.hpp"
-#include "ohos.data.cloudData.sharing.impl.hpp"
 #include "taihe/runtime.hpp"
 #include "stdexcept"
 #include "cloud_service.h"
