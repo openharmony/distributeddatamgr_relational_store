@@ -85,6 +85,7 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_data:clouddata",
                 "//foundation/distributeddatamgr/relational_store/interfaces/rdb_ndk_utils:native_rdb_ndk_utils",
                 "//foundation/distributeddatamgr/relational_store/interfaces/ndk:native_rdb_ndk",
+                "//foundation/distributeddatamgr/relational_store/frameworks/ets/taihe/cloud_data:clouddata_ani_pack",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
