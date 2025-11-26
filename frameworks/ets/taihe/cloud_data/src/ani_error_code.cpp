@@ -61,6 +61,6 @@ void ThrowAniError(int32_t status)
         aniError.errorCode = -1;
         aniError.message = "";
     }
-    taihe::set_business_error(aniError.errorCode, aniError.message );
+    taihe::set_business_error(aniError.errorCode, aniError.message);
 }
 }  // namespace
