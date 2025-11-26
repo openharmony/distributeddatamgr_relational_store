@@ -41,7 +41,8 @@
         ],
         "features": [
             "relational_store_rdb_support_icu",
-            "relational_store_config"
+            "relational_store_config",
+            "relational_store_distributed_capability"
         ],
         "adapted_system_type": [
             "standard"
