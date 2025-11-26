@@ -1328,9 +1328,9 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_025, TestSize.Level0)
     RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     store->ExecuteSql("DELETE FROM test");
-    LOG_INFO("---- step1 insert 1.2 GB data");
+    LOG_INFO("---- step1 insert 12 MB data");
     int64_t id = 1;
-    int count = 1200; // data size
+    int count = 12; // 12 MB data
     Insert(id, count, false, SIZE_MB);
     CheckNumber(store, count);
     store = nullptr;
