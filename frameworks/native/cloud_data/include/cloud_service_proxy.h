@@ -21,6 +21,7 @@
 #include "iremote_object.h"
 #include "iremote_proxy.h"
 #include "cloud_notifier_stub.h"
+#include "cloud_types.h"
 
 namespace OHOS::CloudData {
 using namespace DistributedRdb;
@@ -30,8 +31,10 @@ public:
     virtual ~CloudServiceProxy() = default;
     int32_t EnableCloud(const std::string &id, const std::map<std::string, int32_t> &switches) override;
     int32_t DisableCloud(const std::string &id) override;
-    int32_t ChangeAppSwitch(const std::string &id, const std::string &bundleName, int32_t appSwitch) override;
-    int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions) override;
+    int32_t ChangeAppSwitch(
+        const std::string &id, const std::string &bundleName, int32_t appSwitch, const SwitchConfig &config) override;
+    int32_t Clean(const std::string &id, const std::map<std::string, int32_t> &actions,
+        std::map<std::string, ClearConfig> &configs) override;
     int32_t NotifyDataChange(const std::string &id, const std::string &bundleName) override;
     int32_t NotifyDataChange(const std::string &eventId, const std::string &extraData, int32_t userId) override;
     std::pair<int32_t, std::map<std::string, StatisticInfos>> QueryStatistics(

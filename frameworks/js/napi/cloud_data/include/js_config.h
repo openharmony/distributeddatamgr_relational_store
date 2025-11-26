@@ -34,6 +34,7 @@ public:
         /* exported js ClearAction  is (CloudData::ClearAction-1) */
         CLEAR_CLOUD_INFO = 0,
         CLEAR_CLOUD_DATA_AND_INFO = 1,
+        CLEAR_CLOUD_NONE = 2,
     };
 
     struct ExtraData {
@@ -60,6 +61,7 @@ public:
     static napi_value SetGlobalCloudStrategy(napi_env env, napi_callback_info info);
     static napi_value QueryLastSyncInfo(napi_env env, napi_callback_info info);
     static napi_value CloudSync(napi_env env, napi_callback_info info);
+
 private:
     struct CloudSyncContext : public ContextBase {
         std::string bundleName;
