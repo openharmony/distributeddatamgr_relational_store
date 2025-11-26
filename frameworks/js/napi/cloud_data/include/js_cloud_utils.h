@@ -32,6 +32,10 @@ using ExtraData = OHOS::CloudData::JsConfig::ExtraData;
 using StatisticInfo = OHOS::CloudData::StatisticInfo;
 using Asset = OHOS::CommonType::AssetValue;
 using CloudSyncInfo = OHOS::CloudData::CloudSyncInfo;
+using DBSwitchInfo = OHOS::CloudData::DBSwitchInfo;
+using SwitchConfig = OHOS::CloudData::SwitchConfig;
+using DBActionInfo = OHOS::CloudData::DBActionInfo;
+using ClearConfig = OHOS::CloudData::ClearConfig;
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output);
@@ -47,6 +51,18 @@ int32_t Convert2Value(napi_env env, napi_value input, std::shared_ptr<RdbPredica
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, Asset &output);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, DBSwitchInfo &output);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, SwitchConfig &output);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, DBActionInfo &output);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, ClearConfig &output);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const Participant &value);
