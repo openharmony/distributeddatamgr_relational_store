@@ -14,7 +14,6 @@
  */
 #define LOG_TAG "CloudDataConstructor"
 #include "ohos.data.cloudData.ani.hpp"
-#include "ohos.data.relationalStore.ani.hpp"
 #include "logger.h"
 using namespace OHOS::Rdb;
 
@@ -27,10 +26,6 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     ani_status status = ANI_OK;
     if (ANI_OK != ohos::data::cloudData::ANIRegister(env)) {
         LOG_INFO("Error from ohos::data::cloudData::ANIRegister");
-        status = ANI_ERROR;
-    }
-    if (ANI_OK != ohos::data::relationalStore::ANIRegister(env)) {
-        std::cerr << "Error from ohos::data::relationalStore::ANIRegister" << std::endl;
         status = ANI_ERROR;
     }
     *result = ANI_VERSION_1;
