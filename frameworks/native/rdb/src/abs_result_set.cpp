@@ -303,7 +303,7 @@ int AbsResultSet::GoToLastRow()
         return ret;
     }
     if (rowCnt == 0) {
-        return E_ERROR;
+        return E_ROW_OUT_RANGE;
     }
 
     return GoToRow(rowCnt - 1);
