@@ -143,7 +143,7 @@ int32_t Convert2Value(napi_env env, napi_value input, DBSwitchInfo &output)
 
     napi_value jsEnable = nullptr;
     status = napi_get_named_property(env, input, "enable", &jsEnable);
-    if (status != napi_ok && jsEnable == nullptr) {
+    if (status != napi_ok || jsEnable == nullptr) {
         LOG_ERROR("Required field 'enable' missing: status=%{public}d", status);
         return napi_invalid_arg;
     }
