@@ -34,9 +34,20 @@ void ConfigImpl::ChangeAppCloudSwitchImpl(string_view accountId, string_view bun
 
 void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> appActions)
 {
+    constexpr size_t MAX_ACTIONS = 1000;
+    if (appActions.size() > MAX_ACTIONS) {
+        LOG_ERROR("Too many app actions: %{public}zu", appActions.size());
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+        return;
+    }
     auto work = [&accountId, &appActions](std::shared_ptr<CloudService> proxy) {
         std::map<std::string, int32_t> actions;
-        for (auto &item : appActions) {
+        for (auto const &item : appActions) {
+            if (item.first.empty()) {
+                LOG_ERROR("Invalid bundle name length");
+                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                return;
+            }
             actions[std::string(item.first)] = item.second.get_value();
         }
 

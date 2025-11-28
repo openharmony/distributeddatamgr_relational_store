@@ -24,7 +24,8 @@
 namespace AniCloudData {
 using namespace OHOS::Rdb;
 using Status = OHOS::CloudData::CloudService::Status;
-static constexpr AniErrorCode ANI_ERROR_CODE_MSGS[] = {
+constexpr size_t ANI_ERROR_CODE_COUNT = 5;
+static constexpr AniErrorCode ANI_ERROR_CODE_MSGS[ANI_ERROR_CODE_COUNT] = {
     { Status::INVALID_ARGUMENT, 401, "Parameter error." },
     { Status::NOT_SUPPORT, 801, "Not support." },
     { Status::PERMISSION_DENIED, 202, "Permission denied, non-system app called system api." },
@@ -34,15 +35,10 @@ static constexpr AniErrorCode ANI_ERROR_CODE_MSGS[] = {
 
 const std::optional<AniErrorCode> GetAniErrorCode(int32_t status)
 {
-    auto aniErrorCode = AniErrorCode{ status, -1, "" };
-    auto iter = std::lower_bound(ANI_ERROR_CODE_MSGS,
-        ANI_ERROR_CODE_MSGS + sizeof(ANI_ERROR_CODE_MSGS) / sizeof(ANI_ERROR_CODE_MSGS[0]), aniErrorCode,
-        [](const AniErrorCode &aniErrorCode1, const AniErrorCode &aniErrorCode2) {
-            return aniErrorCode1.status < aniErrorCode2.status;
-        });
-    if (iter < ANI_ERROR_CODE_MSGS + sizeof(ANI_ERROR_CODE_MSGS) / sizeof(ANI_ERROR_CODE_MSGS[0]) &&
-        iter->status == status) {
-        return *iter;
+    for (size_t i = 0; i < ANI_ERROR_CODE_COUNT; ++i) {
+        if (ANI_ERROR_CODE_MSGS[i].status == status) {
+            return ANI_ERROR_CODE_MSGS[i];
+        }
     }
     return std::nullopt;
 }

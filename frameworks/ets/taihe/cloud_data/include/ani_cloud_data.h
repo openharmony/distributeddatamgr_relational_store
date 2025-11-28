@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OHOS_RELATION_STORE_ANI_CLOUD_DATA_H_
-#define OHOS_RELATION_STORE_ANI_CLOUD_DATA_H_
+#ifndef OHOS_RELATION_STORE_ANI_CLOUD_DATA_H
+#define OHOS_RELATION_STORE_ANI_CLOUD_DATA_H
 #include <functional>
 #include "ohos.data.cloudData.proj.hpp"
 #include "ohos.data.cloudData.impl.hpp"

@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OHOS_RELATION_STORE_ANI_ERROR_CODE_H_
-#define OHOS_RELATION_STORE_ANI_ERROR_CODE_H_
+#ifndef OHOS_RELATION_STORE_ANI_ERROR_CODE_H
+#define OHOS_RELATION_STORE_ANI_ERROR_CODE_H
 #include <optional>
 
 namespace AniCloudData {

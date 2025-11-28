@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H_
-#define OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H_
+#ifndef OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H
+#define OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H
 #include "ani_cloud_data.h"
 
 namespace AniCloudData {
