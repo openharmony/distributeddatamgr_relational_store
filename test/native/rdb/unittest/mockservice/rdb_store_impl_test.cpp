@@ -622,6 +622,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_003, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = true;
     distributedConfig.autoSync = true;
+    distributedConfig.autoSyncSwitch = true;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
@@ -650,6 +651,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_004, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = true;
     distributedConfig.autoSync = true;
+    distributedConfig.autoSyncSwitch = false;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
@@ -678,6 +680,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_005, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = true;
     distributedConfig.autoSync = false;
+    distributedConfig.autoSyncSwitch = true;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
@@ -706,6 +709,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_006, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = false;
     distributedConfig.autoSync = false;
+    distributedConfig.autoSyncSwitch = true;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
@@ -734,6 +738,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_007, TestSize.Leve
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
     distributedConfig.enableCloud = false;
     distributedConfig.autoSync = true;
+    distributedConfig.autoSyncSwitch = true;
     tables.push_back("employee");
     errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
@@ -2001,5 +2006,122 @@ HWTEST_F(RdbStoreImplConditionTest, Dump_003, TestSize.Level2)
     auto ret = storeImpl->CreateTransaction(0);
     EXPECT_EQ(ret.first, E_OK);
     auto errCode = storeImpl->GetPool()->Dump(false, "INSERT");
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: StopCloudSync_001
+ * @tc.desc: StopCloudSync config_.GetDBType() is DB_SQLITE, isMemoryRdb_ is true and isReadOnly_ is true or false
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_SQLITE);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetReadOnly(true);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+
+    RdbStoreConfig config1(RdbStoreImplConditionTest::DATABASE_NAME);
+    config1.SetDBType(DB_SQLITE);
+    config1.SetStorageMode(StorageMode::MODE_MEMORY);
+    config1.SetReadOnly(false);
+    auto storeImpl1 = std::make_shared<RdbStoreImpl>(config1);
+    errCode = storeImpl1->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: StopCloudSync_002
+ * @tc.desc: StopCloudSync config_.GetDBType() is DB_VECTOR,  isMemoryRdb_ is false and isReadOnly_ is true or false
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_VECTOR);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetReadOnly(true);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+
+    RdbStoreConfig config1(RdbStoreImplConditionTest::DATABASE_NAME);
+    config1.SetDBType(DB_VECTOR);
+    config1.SetStorageMode(StorageMode::MODE_DISK);
+    config1.SetReadOnly(false);
+    auto storeImpl1 = std::make_shared<RdbStoreImpl>(config1);
+    errCode = storeImpl1->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: StopCloudSync_003
+ * @tc.desc: StopCloudSync config_.GetDBType() is DB_VECTOR, isMemoryRdb_ is true and isReadOnly_ is true or false
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_VECTOR);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetReadOnly(true);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+
+    RdbStoreConfig config1(RdbStoreImplConditionTest::DATABASE_NAME);
+    config1.SetDBType(DB_VECTOR);
+    config1.SetStorageMode(StorageMode::MODE_MEMORY);
+    config1.SetReadOnly(false);
+    auto storeImpl1 = std::make_shared<RdbStoreImpl>(config1);
+    errCode = storeImpl1->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: StopCloudSync_004
+ * @tc.desc: StopCloudSync config_.GetDBType() is DB_SQLITE, isMemoryRdb_ is false and isReadOnly_ is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_004, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_SQLITE);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetReadOnly(true);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: StopCloudSync_005
+ * @tc.desc: StopCloudSync check succ, test errCode and service equal nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, StopCloudSync_005, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillOnce(Return(std::make_pair(E_ERROR, mockRdbService)))
+        .WillOnce(Return(std::make_pair(E_OK, nullptr)))
+        .WillOnce(Return(std::make_pair(E_ERROR, nullptr)))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, StopCloudSync(_)).WillRepeatedly(Return(E_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_SQLITE);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetReadOnly(false);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_ERROR);
+    errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_OK);
+    errCode = storeImpl->StopCloudSync();
+    EXPECT_EQ(errCode, E_ERROR);
+    errCode = storeImpl->StopCloudSync();
     EXPECT_EQ(errCode, E_OK);
 }

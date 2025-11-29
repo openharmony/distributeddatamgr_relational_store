@@ -1190,3 +1190,20 @@ HWTEST_F(RdbStoreSubTest, RdbStore_RegisterAutoSyncCallbackAndRdbStore_Unregiste
     status = store->UnregisterAutoSyncCallback(obs);
     EXPECT_EQ(status, E_OK);
 }
+
+/**
+ * @tc.name: RdbStoreSubscribeCloudSyncTrigger
+ * @tc.desc: RdbStoreSubscribe SubscribeMode is CLOUD_SYNC_TRIGGER
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreSubTest, RdbStoreSubscribeCloudSyncTrigger, TestSize.Level1)
+{
+    ASSERT_NE(store, nullptr) << "store is null";
+    EXPECT_NE(observer_, nullptr) << "observer is null";
+    auto status = store->Subscribe({ SubscribeMode::CLOUD_SYNC_TRIGGER, "autoSyncTrigger" }, observer_);
+    EXPECT_EQ(status, E_OK);
+    status = store->UnSubscribe({ SubscribeMode::CLOUD_SYNC_TRIGGER, "autoSyncTrigger" }, observer_);
+    EXPECT_EQ(status, E_OK);
+}

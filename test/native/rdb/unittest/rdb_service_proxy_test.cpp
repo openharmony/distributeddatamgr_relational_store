@@ -59,4 +59,22 @@ HWTEST_F(RdbServiceProxyTest, OnRemoteDeadSyncComplete, TestSize.Level1)
     proxy->syncCallbacks_.Insert(option.seqNum, callback);
     proxy->OnRemoteDeadSyncComplete();
 }
+
+/**
+ * @tc.name: StopCloudSync
+ * @tc.desc: StopCloudSync is executed, service check succ
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbServiceProxyTest, StopCloudSync, TestSize.Level1)
+{
+    RdbSyncerParam param;
+    param.bundleName_ = "com.example.test";
+    param.storeName_ = "test.db";
+    auto [status, service] = RdbManagerImpl::GetInstance().GetRdbService(param);
+    ASSERT_NE(service, nullptr);
+    auto proxy = std::static_pointer_cast<RdbServiceProxy>(service);
+    ASSERT_NE(proxy, nullptr);
+    auto errCode = proxy->StopCloudSync(param);
+    EXPECT_EQ(errCode, RDB_OK);
+}
 } // namespace Test
