@@ -34,8 +34,7 @@ using namespace OHOS::Rdb;
 
 const unsigned int SLEEP_TIME = 1000;
 // move to the highest 32 bits of 64 bits number
-const int RETRY_TIME = 10;
-const int PRINT_RETRY_TIMES = 5;
+const int PRINT_RETRY_TIMES = 10;
 
 int SeriAddRow(void *pCtx, int addedRows)
 {
@@ -91,7 +90,7 @@ int SeriPutOther(void *pCtx, int addedRows, int column)
     return serializer->PutOther(addedRows, column);
 }
 
-int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
+int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTimes)
 {
     SharedBlockSerializerInfo serializer(info->sharedBlock, stmt, info->columnNum, info->startPos);
     Sqlite3SharedBlockMethods sqliteBlock =
@@ -115,7 +114,7 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
         if (errCode == SQLITE_LOCKED || errCode == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying errCode=%{public}d, errno=%{public}d retryCount=%{public}d", errCode,
                 errno, retryCount);
-            if (retryCount <= RETRY_TIME) {
+            if (retryCount < retiyTimes) {
                 usleep(SLEEP_TIME);
                 retryCount++;
                 continue;
@@ -139,7 +138,7 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
     return SQLiteError::ErrNo(errCode);
 }
 
-int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
+int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTime)
 {
     int retryCount = 0;
     info->totalRows = info->addedRows = 0;
@@ -162,7 +161,7 @@ int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
             break;
         } else if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying");
-            if (retryCount > RETRY_TIME) {
+            if (retryCount >= retiyTime) {
                 LOG_ERROR("Bailing on database busy retry.");
                 hasException = true;
                 return E_DATABASE_BUSY;

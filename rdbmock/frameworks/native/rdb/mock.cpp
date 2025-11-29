@@ -41,12 +41,12 @@ __attribute__((visibility("default"))) int gettid()
 #ifdef __cplusplus
 extern "C" {
 #endif
-__attribute__((visibility("default"))) int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
+__attribute__((visibility("default"))) int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTime)
 {
-    return FillSharedBlock(info, stmt);
+    return FillSharedBlock(info, stmt, retiyTime);
 }
 
-__attribute__((visibility("default"))) int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
+__attribute__((visibility("default"))) int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTime)
 {
     int retryCount = 0;
     info->totalRows = info->addedRows = 0;

@@ -32,6 +32,7 @@ public:
     static constexpr int32_t COLUMN_TYPE_ASSETS = 1001;
     static constexpr int32_t COLUMN_TYPE_FLOATS = 1002;
     static constexpr int32_t COLUMN_TYPE_BIGINT = 1003;
+    static constexpr int RETRY_TIME = 50;
 
     virtual ~Statement() = default;
     virtual int32_t Prepare(const std::string &sql) = 0;
@@ -60,7 +61,7 @@ public:
         int32_t maxCount = ReturningConfig::DEFAULT_RETURNING_COUNT) = 0;
     virtual bool ReadOnly() const = 0;
     virtual bool SupportBlockInfo() const = 0;
-    virtual int32_t FillBlockInfo(SharedBlockInfo *info) const = 0;
+    virtual int32_t FillBlockInfo(SharedBlockInfo *info, int retiyTime = RETRY_TIME) const = 0;
     virtual int ModifyLockStatus(
         const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock)
     {

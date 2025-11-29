@@ -77,7 +77,7 @@ int SeriPutDouble(void *pCtx, int addedRows, int column, double value);
 int SeriPutBlob(void *pCtx, int addedRows, int column, const void *blob, int len);
 int SeriPutNull(void *pCtx, int addedRows, int column);
 int SeriPutOther(void *pCtx, int addedRows, int column);
-int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt);
+int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTime);
 FillOneRowResult FillOneRowOfString(
     AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos);
 FillOneRowResult FillOneRowOfLong(
@@ -92,7 +92,7 @@ FillOneRowResult FillOneRow(
     AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int numColumns, int startPos, int addedRows);
 void FillRow(SharedBlockInfo *info, sqlite3_stmt *stmt);
 void DefFillRow(SharedBlockInfo *info, sqlite3_stmt *stmt);
-int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt);
+int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTime);
 bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt);
 #ifdef __cplusplus
 }
