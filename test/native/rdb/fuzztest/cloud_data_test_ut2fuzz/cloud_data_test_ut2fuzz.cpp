@@ -142,8 +142,6 @@ void CloudDataTestCloudDataTest001(FuzzedDataProvider &fdp)
     proxy->EnableCloud(TEST_ACCOUNT_ID, switches);
 }
 
-
-
 CloudData::SwitchConfig CreateSwitchConfig(FuzzedDataProvider &fdp)
 {
     CloudData::SwitchConfig config;
