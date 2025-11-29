@@ -24,9 +24,9 @@ declare_args() {
   relational_store_distributed_capability = true
 
   if (!defined(global_parts_info) || defined(global_parts_info.distributedhardware_device_manager)) {
-    dm_part_is_enabled = true
+    relational_store_dm_part_is_enabled = true
   } else {
-    dm_part_is_enabled = false
+    relational_store_dm_part_is_enabled = false
   }
 }
 
