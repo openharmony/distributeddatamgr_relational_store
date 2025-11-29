@@ -15,8 +15,12 @@
 #ifndef OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H
 #define OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H
 #include "ani_cloud_data.h"
+#include "cloud_types.h"
 
 namespace AniCloudData {
 void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work);
+OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(::ohos::data::cloudData::DBSwitchInfo dbSwitchInfo);
+OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(::ohos::data::cloudData::ClearConfig clearConfig);
+OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(::ohos::data::cloudData::DBActionInfo actionInfo);
 } // namespace AniCloudData
 #endif
