@@ -690,7 +690,7 @@ std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(int32_t m
     SharedBlockInfo info(&block);
     info.isCountAllRows = true;
     info.totalRows = -1;
-    auto res = FillBlockInfo(&info);
+    auto res = FillBlockInfo(&info, 0);
     if (res != E_OK) {
         LOG_ERROR("FillBlockInfo ret %{public}d", res);
         return { res, {} };
@@ -747,7 +747,7 @@ bool SqliteStatement::SupportBlockInfo() const
     return (sqlite3_db_config(db, SQLITE_USE_SHAREDBLOCK) == SQLITE_OK);
 }
 
-int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
+int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info, int retiyTime) const
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_EXECUTE, seqId_);
@@ -756,9 +756,9 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
     }
     int32_t errCode = E_OK;
     if (SupportBlockInfo()) {
-        errCode = FillSharedBlockOpt(info, stmt_);
+        errCode = FillSharedBlockOpt(info, stmt_, retiyTime);
     } else {
-        errCode = FillSharedBlock(info, stmt_);
+        errCode = FillSharedBlock(info, stmt_, retiyTime);
     }
     if (errCode != E_OK) {
         if (config_ != nullptr) {

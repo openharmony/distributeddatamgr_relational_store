@@ -35,7 +35,6 @@ public:
     static constexpr int COLUMN_TYPE_ASSETS = 1001;
     static constexpr int COLUMN_TYPE_FLOATS = 1002;
     static constexpr int COLUMN_TYPE_BIGINT = 1003;
-
     SqliteStatement(const RdbStoreConfig *config = nullptr);
     ~SqliteStatement();
     int Prepare(const std::string &sql) override;
@@ -61,7 +60,7 @@ public:
     std::pair<int32_t, std::vector<ValuesBucket>> GetRows(int32_t maxCount) override;
     bool ReadOnly() const override;
     bool SupportBlockInfo() const override;
-    int32_t FillBlockInfo(SharedBlockInfo *info) const override;
+    int32_t FillBlockInfo(SharedBlockInfo *info, int retiyTime = RETRY_TIME) const override;
     int ModifyLockStatus(
         const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock) override;
 

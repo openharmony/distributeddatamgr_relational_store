@@ -99,17 +99,19 @@ int SeriPutOther(void *pCtx, int addedRows, int column)
     return E_ERROR;
 }
 
-int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt)
+int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTime)
 {
     (void)info;
     (void)stmt;
+    (void)retiyTime;
     return E_ERROR;
 }
 
-int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt)
+int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTime)
 {
     (void)info;
     (void)stmt;
+    (void)retiyTime;
     return E_ERROR;
 }
 
