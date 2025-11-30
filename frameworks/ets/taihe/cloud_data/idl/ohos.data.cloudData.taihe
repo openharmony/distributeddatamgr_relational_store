@@ -20,7 +20,26 @@ static { loadLibraryWithPermissionCheck("cloud_data_taihe.z", "@ohos.data.cloudD
 
 enum ClearAction: i32 {
     CLEAR_CLOUD_INFO = 0,
-    CLEAR_CLOUD_DATA_AND_INFO = 1
+    CLEAR_CLOUD_DATA_AND_INFO = 1,
+    CLEAR_CLOUD_NONE = 2
+}
+
+struct DBSwitchInfo {
+    enable: bool;
+    tableInfo: Optional<@record Map<String, bool>>;
+}
+
+struct SwitchConfig {
+    dbInfo: @record Map<String, DBSwitchInfo>;
+}
+
+struct DBActionInfo {
+    action: ClearAction;
+    tableInfo: Optional<@record Map<String, ClearAction>>;
+}
+
+struct ClearConfig {
+    dbInfo: @record Map<String, DBActionInfo>;
 }
 
 @class
@@ -36,3 +55,11 @@ function ChangeAppCloudSwitchImpl(accountId: String, bundleName: String, status:
 @gen_promise("clear")
 @gen_async("clear")
 function ClearImpl(accountId: String, appActions: @record Map<String, ClearAction>): void;
+
+@static("Config")
+@gen_promise("changeAppCloudSwitch")
+function ChangeAppCloudSwitchImplWithConfig(accountId: String, bundleName: String, status: bool, config: Optional<SwitchConfig>): void;
+
+@static("Config")
+@gen_promise("clear")
+function ClearImplWithConfig(accountId: String, appActions: @record Map<String, ClearAction>, config: Optional<@record Map<String, ClearConfig>>): void;

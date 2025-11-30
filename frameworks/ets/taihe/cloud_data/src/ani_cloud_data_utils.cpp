@@ -32,4 +32,46 @@ void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work)
     }
     work(proxy);
 }
+
+OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(::ohos::data::cloudData::DBSwitchInfo dbSwitchInfo)
+{
+    OHOS::CloudData::DBSwitchInfo dbInfo;
+    std::map<std::string, bool> info;
+    auto tableInfo = dbSwitchInfo.tableInfo;
+    if (tableInfo.has_value()) {
+        for (auto &item : tableInfo.value()) {
+            info.emplace(std::string(item.first), item.second);
+        }
+        dbInfo.tableInfo = info;
+    }
+    dbInfo.enable = dbSwitchInfo.enable;
+    return dbInfo;
+}
+
+OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(::ohos::data::cloudData::ClearConfig clearConfig)
+{
+    OHOS::CloudData::ClearConfig config;
+    std::map<std::string, OHOS::CloudData::DBActionInfo> dbInfo;
+    for (auto &item : clearConfig.dbInfo) {
+        auto actionInfo = ConvertTaiheDbActionInfo(item.second);
+        dbInfo.emplace(std::string(item.first), std::move(actionInfo));
+    }
+    config.dbInfo = dbInfo;
+    return config;
+}
+
+OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(::ohos::data::cloudData::DBActionInfo actionInfo)
+{
+    OHOS::CloudData::DBActionInfo dbActionInfo;
+    std::map<std::string, int32_t> info;
+    auto tableInfo = actionInfo.tableInfo;
+    if (tableInfo.has_value()) {
+        for (auto &item : tableInfo.value()) {
+            info.emplace(std::string(item.first), item.second.get_value());
+        }
+        dbActionInfo.tableInfo = info;
+    }
+    dbActionInfo.action = actionInfo.action.get_value();
+    return dbActionInfo;
+}
 }  // namespace

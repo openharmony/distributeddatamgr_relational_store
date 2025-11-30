@@ -30,6 +30,10 @@ class ConfigImpl {
 public:
     static void ChangeAppCloudSwitchImpl(string_view accountId, string_view bundleName, bool status);
     static void ClearImpl(string_view accountId, map_view<string, ClearAction> appActions);
+    static void ChangeAppCloudSwitchImplWithConfig(string_view accountId, string_view bundleName, bool status,
+        optional_view<::ohos::data::cloudData::SwitchConfig> config);
+    static void ClearImplWithConfig(string_view accountId, map_view<string, ClearAction> appActions,
+        optional_view<map<::taihe::string, ::ohos::data::cloudData::ClearConfig>> config);
 };
 } // namespace AniCloudData
 #endif
