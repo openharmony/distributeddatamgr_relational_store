@@ -21,10 +21,12 @@
 #include <cinttypes>
 #include <string>
 
+#include "abs_shared_block.h"
 #include "message_parcel.h"
 #include "parcel.h"
 #include "rdb_visibility.h"
 #include "securec.h"
+
 
 namespace OHOS {
 namespace AppDataFwk {
@@ -36,7 +38,7 @@ static const uint32_t INVALID_ROW_RECORD = 0xFFFFFFFF;
  * This class stores a set of rows from a database in a buffer,
  * which is used as the set of query result.
  */
-class SharedBlock {
+class SharedBlock : public AbsSharedBlock {
 public:
     /**
      * @brief Cell Unit types.
@@ -67,9 +69,9 @@ public:
      */
     enum {
         /** Indicates that the operation on SHARED BLOCK was successful.*/
-        SHARED_BLOCK_OK = 0,
+        SHARED_BLOCK_OK = AbsSharedBlock::BLOCK_OK,
         /** Indicates that the result returned by the shared block operation is a bad value.*/
-        SHARED_BLOCK_BAD_VALUE = 1,
+        SHARED_BLOCK_BAD_VALUE = AbsSharedBlock::BLOCK_BAD_VALUE,
         /** Indicates the current shared block space is not enough.*/
         SHARED_BLOCK_NO_MEMORY = 2,
         /** Indicates that the current operation on SHARED BLOCK is invalid.*/
@@ -98,7 +100,7 @@ public:
         API_EXPORT const uint8_t *GetRawData(SharedBlock *block) const;
     } __attribute((packed));
 
-    API_EXPORT ~SharedBlock();
+    API_EXPORT ~SharedBlock() override;
 
     /**
      * @brief Create a shared block.
@@ -108,67 +110,67 @@ public:
     /**
      * @brief Clear current shared block.
      */
-    API_EXPORT int Clear();
+    API_EXPORT int Clear() override;
 
     /**
      * @brief Set a shared block column.
      */
-    API_EXPORT int SetColumnNum(uint32_t numColumns);
+    API_EXPORT int SetColumnNum(uint32_t numColumns) override;
 
     /**
      * @brief Allocate a row unit and its directory.
      */
-    API_EXPORT int AllocRow();
+    API_EXPORT int AllocRow() override;
 
     /**
      * @brief Release the value of the last row.
      */
-    API_EXPORT int FreeLastRow();
+    API_EXPORT int FreeLastRow() override;
 
     /**
      * @brief Put blob data to the shared block.
      */
-    API_EXPORT int PutBlob(uint32_t row, uint32_t column, const void *value, size_t Size);
+    API_EXPORT int PutBlob(uint32_t row, uint32_t column, const void *value, size_t Size) override;
 
     /**
      * @brief Put string data to the shared block.
      */
-    API_EXPORT int PutString(uint32_t row, uint32_t column, const char *value, size_t sizeIncludingNull);
+    API_EXPORT int PutString(uint32_t row, uint32_t column, const char *value, size_t sizeIncludingNull) override;
 
     /**
      * @brief Put long data to the shared block.
      */
-    API_EXPORT int PutLong(uint32_t row, uint32_t column, int64_t value);
+    API_EXPORT int PutLong(uint32_t row, uint32_t column, int64_t value) override;
 
     /**
      * @brief Put Double data to the shared block.
      */
-    API_EXPORT int PutDouble(uint32_t row, uint32_t column, double value);
+    API_EXPORT int PutDouble(uint32_t row, uint32_t column, double value) override;
 
     /**
      * @brief Put Asset data to the shared block.
      */
-    API_EXPORT int PutAsset(uint32_t row, uint32_t column, const void *value, size_t size);
+    API_EXPORT int PutAsset(uint32_t row, uint32_t column, const void *value, size_t size) override;
 
     /**
      * @brief Put Assets data to the shared block.
      */
-    API_EXPORT int PutAssets(uint32_t row, uint32_t column, const void *value, size_t size);
+    API_EXPORT int PutAssets(uint32_t row, uint32_t column, const void *value, size_t size) override;
 
     /**
      * @brief Put vector<float> data to the shared block.
      */
-    API_EXPORT int PutFloats(uint32_t row, uint32_t column, const void *value, size_t size);
+    API_EXPORT int PutFloats(uint32_t row, uint32_t column, const void *value, size_t size) override;
 
     /**
      * @brief Put BigInt data to the shared block.
      */
-    API_EXPORT int PutBigInt(uint32_t row, uint32_t column, const void *value, size_t size);
+    API_EXPORT int PutBigInt(uint32_t row, uint32_t column, const void *value, size_t size) override;
 
     /**
      * @brief Put Null data to the shared block.
      */
-    API_EXPORT int PutNull(uint32_t row, uint32_t column);
+    API_EXPORT int PutNull(uint32_t row, uint32_t column) override;
 
     /**
      * @brief Obtains the cell unit at the specified row and column.

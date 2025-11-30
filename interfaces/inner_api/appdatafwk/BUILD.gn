@@ -103,8 +103,8 @@ if (is_android || is_ios) {
       ":appdatafwk_public_config",
     ]
     external_deps = [
-      "json:nlohmann_json_static",
       "hilog:libhilog",
+      "json:nlohmann_json_static",
     ]
 
     subsystem_name = "distributeddatamgr"
@@ -135,9 +135,9 @@ ohos_shared_library("native_appdatafwk") {
 
   external_deps = [
     "c_utils:utils",
-    "json:nlohmann_json_static",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
   ]
 
   public_configs = [ ":appdatafwk_public_config" ]

@@ -69,8 +69,10 @@ public:
     bool IsRecyclable() const;
     virtual ~Connection() = default;
     virtual int32_t VerifyAndRegisterHook(const RdbStoreConfig &config) = 0;
-    virtual std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) = 0;
-    virtual std::pair<int32_t, Stmt> CreateReplicaStatement(const std::string &sql, SConn conn) = 0;
+    virtual std::pair<int32_t, Stmt> CreateStatement(
+        const std::string &sql, SConn conn, const std::string &returningSql = "") = 0;
+    virtual std::pair<int32_t, Stmt> CreateReplicaStatement(
+        const std::string &sql, SConn conn, const std::string &returningSql = "") = 0;
     virtual void Interrupt() = 0;
     virtual int CheckReplicaForRestore() = 0;
     virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) = 0;

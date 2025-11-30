@@ -20,19 +20,23 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
+#include <regex>
+
 #include "acl.h"
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_fault_hiview_reporter.h"
 #include "rdb_platform.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
-#include "rdb_fault_hiview_reporter.h"
 
 namespace OHOS {
 using namespace Rdb;
 namespace NativeRdb {
 using namespace OHOS::DATABASE_UTILS;
+const int32_t FIELDS_LIMIT = 4;
 int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
 {
     std::string tempDirectory = databaseDir;
@@ -203,8 +207,8 @@ std::pair<int, SqlInfo> RdbSqlUtils::GetInsertSqlInfo(const std::string &table, 
     return std::make_pair(E_OK, sqlInfo);
 }
 
-std::pair<int, SqlInfo> RdbSqlUtils::GetUpdateSqlInfo(const AbsRdbPredicates &predicates, const Row &row,
-    Resolution resolution, const std::vector<std::string> &returningFields)
+std::pair<int, SqlInfo> RdbSqlUtils::GetUpdateSqlInfo(
+    const AbsRdbPredicates &predicates, const Row &row, Resolution resolution)
 {
     SqlInfo sqlInfo;
     auto table = predicates.GetTableName();
@@ -243,9 +247,6 @@ std::pair<int, SqlInfo> RdbSqlUtils::GetUpdateSqlInfo(const AbsRdbPredicates &pr
     if (!where.empty()) {
         sql.append(" WHERE ").append(where);
     }
-    if (!returningFields.empty()) {
-        SqliteSqlBuilder::AppendReturning(sql, returningFields);
-    }
     tmpBindArgs.insert(tmpBindArgs.end(), args.begin(), args.end());
 
     sqlInfo.sql = std::move(sql);
@@ -253,8 +254,7 @@ std::pair<int, SqlInfo> RdbSqlUtils::GetUpdateSqlInfo(const AbsRdbPredicates &pr
     return std::make_pair(E_OK, sqlInfo);
 }
 
-std::pair<int, SqlInfo> RdbSqlUtils::GetDeleteSqlInfo(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
+std::pair<int, SqlInfo> RdbSqlUtils::GetDeleteSqlInfo(const AbsRdbPredicates &predicates)
 {
     SqlInfo sqlInfo;
     auto table = predicates.GetTableName();
@@ -266,9 +266,6 @@ std::pair<int, SqlInfo> RdbSqlUtils::GetDeleteSqlInfo(
     sql.append("DELETE FROM ").append(table);
     if (!where.empty()) {
         sql.append(" WHERE ").append(where);
-    }
-    if (!returningFields.empty()) {
-        SqliteSqlBuilder::AppendReturning(sql, returningFields);
     }
     sqlInfo.sql = std::move(sql);
     sqlInfo.args = predicates.GetBindArgs();
@@ -282,6 +279,106 @@ std::pair<int, SqlInfo> RdbSqlUtils::GetQuerySqlInfo(const AbsRdbPredicates &pre
     sqlInfo.sql = std::move(sql);
     sqlInfo.args = predicates.GetBindArgs();
     return std::make_pair(E_OK, sqlInfo);
+}
+
+bool RdbSqlUtils::IsValidTableName(const std::string &tableName)
+{
+    if (tableName.empty()) {
+        return false;
+    }
+    std::regex validName("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)?$");
+    return std::regex_match(tableName, validName);
+}
+
+bool RdbSqlUtils::IsValidFields(const std::vector<std::string> &fields)
+{
+    if (fields.size() <= 0 || fields.size() > FIELDS_LIMIT) {
+        return false;
+    }
+    std::regex pattern("[\\*, ]");
+    for (const auto& field : fields) {
+        if (std::regex_search(field, pattern)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::string RdbSqlUtils::Trim(const std::string &str)
+{
+    auto start = str.find_first_not_of(" \t\n\r\f\v");
+    if (start == std::string::npos) {
+        return "";
+    }
+    auto end = str.find_last_not_of(" \t\n\r\f\v");
+    return str.substr(start, end - start + 1);
+}
+
+std::vector<std::string> RdbSqlUtils::BatchTrim(const std::vector<std::string> &value)
+{
+    std::vector<std::string> res;
+    for (auto str : value) {
+        res.push_back(Trim(str));
+    }
+    return res;
+}
+
+bool RdbSqlUtils::IsValidMaxCount(int32_t maxCount)
+{
+    if (maxCount <= 0 || maxCount > ReturningConfig::MAX_RETURNING_COUNT) {
+        LOG_ERROR("illegal maxCount %{public}d.", maxCount);
+        return false;
+    }
+    return true;
+}
+
+bool RdbSqlUtils::HasDuplicateAssets(const ValueObject &value)
+{
+    auto *assets = std::get_if<ValueObject::Assets>(&value.value);
+    if (assets == nullptr) {
+        return false;
+    }
+    std::set<std::string> names;
+    auto item = assets->begin();
+    while (item != assets->end()) {
+        if (!names.insert(item->name).second) {
+            LOG_ERROR("Duplicate assets! name = %{public}.6s", item->name.c_str());
+            return true;
+        }
+        item++;
+    }
+    return false;
+}
+
+bool RdbSqlUtils::HasDuplicateAssets(const std::vector<ValueObject> &values)
+{
+    for (auto &val : values) {
+        if (HasDuplicateAssets(val)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RdbSqlUtils::HasDuplicateAssets(const ValuesBucket &value)
+{
+    for (auto &[key, val] : value.values_) {
+        if (HasDuplicateAssets(val)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RdbSqlUtils::HasDuplicateAssets(const ValuesBuckets &values)
+{
+    const auto &[fields, vals] = values.GetFieldsAndValues();
+    for (const auto &valueObject : *vals) {
+        if (HasDuplicateAssets(valueObject)) {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace NativeRdb
 } // namespace OHOS

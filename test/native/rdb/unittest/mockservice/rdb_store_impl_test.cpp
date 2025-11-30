@@ -1422,7 +1422,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_002, TestSize.Lev
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_003, TestSize.Level2)
 {
-    EXPECT_CALL(*mockConnection, CreateStatement(_, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
+    EXPECT_CALL(*mockConnection, CreateStatement(_, _, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
     EXPECT_CALL(*mockStatement, Prepare(_)).WillOnce(Return(E_ERROR));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     RdbStoreConfig::CryptoParam cryptoParam;
@@ -1440,7 +1440,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_003, TestSize.Lev
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_004, TestSize.Level2)
 {
-    EXPECT_CALL(*mockConnection, CreateStatement(_, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
+    EXPECT_CALL(*mockConnection, CreateStatement(_, _, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
     std::vector<ValueObject> args;
     EXPECT_CALL(*mockStatement, Prepare(_)).WillOnce(Return(E_OK)).WillOnce(Return(E_ERROR));
     EXPECT_CALL(*mockStatement, Execute(args)).WillOnce(Return(E_OK));
@@ -1460,7 +1460,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_004, TestSize.Lev
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_005, TestSize.Level2)
 {
-    EXPECT_CALL(*mockConnection, CreateStatement(_, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
+    EXPECT_CALL(*mockConnection, CreateStatement(_, _, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
     std::vector<ValueObject> args;
     EXPECT_CALL(*mockStatement, Prepare(_)).WillOnce(Return(E_OK)).WillOnce(Return(E_OK)).WillOnce(Return(E_ERROR));
     EXPECT_CALL(*mockStatement, Execute(args)).WillOnce(Return(E_OK)).WillOnce(Return(E_OK));
@@ -1480,7 +1480,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_005, TestSize.Lev
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDefaultEncryptAlgo_Test_006, TestSize.Level2)
 {
-    EXPECT_CALL(*mockConnection, CreateStatement(_, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
+    EXPECT_CALL(*mockConnection, CreateStatement(_, _, _)).WillOnce(Return(std::make_pair(E_OK, mockStatement)));
     std::vector<ValueObject> args;
     EXPECT_CALL(*mockStatement, Prepare(_))
         .WillOnce(Return(E_OK))

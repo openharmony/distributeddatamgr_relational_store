@@ -43,11 +43,11 @@ public:
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        const std::vector<std::string> &returningFields, Resolution resolution) override;
+        const ReturningConfig &config, Resolution resolution) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &returningFields, Resolution resolution) override;
+        const ReturningConfig &config, Resolution resolution) override;
     std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields) override;
+        const AbsRdbPredicates &predicates, const ReturningConfig &config) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
         const QueryOptions &options) override;
@@ -136,8 +136,10 @@ private:
     static std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn(const RdbStoreConfig &config);
     std::vector<ValueObject> CreateBackupBindArgs(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
-    std::pair<int32_t, Stmt> GetStatement(const std::string &sql, std::shared_ptr<Connection> conn) const;
-    std::pair<int32_t, Stmt> GetStatement(const std::string &sql, bool read = false) const;
+    std::pair<int32_t, Stmt> GetStatement(
+        const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql = "") const;
+    std::pair<int32_t, Stmt> GetStatement(
+        const std::string &sql, bool read = false, const std::string &returngSql = "") const;
     int AttachInner(const RdbStoreConfig &config, const std::string &attachName, const std::string &dbPath,
         const std::vector<uint8_t> &key, int32_t waitTime);
     int SetDefaultEncryptSql(
@@ -152,9 +154,12 @@ private:
     int HandleCloudSyncAfterSetDistributedTables(
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
-    std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args);
-    static Results GenerateResult(int32_t code, std::shared_ptr<Statement> statement, bool isDML = true);
-    static std::shared_ptr<ResultSet> GetValues(std::shared_ptr<Statement> statement);
+    std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args,
+        int32_t maxCount = ReturningConfig::DEFAULT_RETURNING_COUNT, const std::string &returningSql = "");
+    std::pair<int32_t, Results> GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
+        std::vector<ValuesBucket> &&returningValues, bool isDML = true);
+    static std::pair<int32_t, std::shared_ptr<ResultSet>> GetValues(
+        std::shared_ptr<Statement> statement, int32_t maxCount);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> &&statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();
