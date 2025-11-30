@@ -511,7 +511,7 @@ std::pair<int, std::vector<ValuesBucket>> SqliteStatement::ExecuteForRows(
     }
 
     ret = GetRows(maxCount);
-    if (errCode != E_NO_MORE_ROWS && errCode != E_OK && errCode != E_SQLITE_CONSTRAINT) {
+    if (errCode != E_NO_MORE_ROWS && errCode != E_OK) {
         LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s, errno %{public}d", errCode,
             SqliteUtils::SqlAnonymous(sql_).c_str(), errno);
         auto db = sqlite3_db_handle(stmt_);
@@ -527,9 +527,6 @@ std::pair<int, std::vector<ValuesBucket>> SqliteStatement::ExecuteForRows(
                 SqliteUtils::SqlAnonymous(sql_).c_str(), errno, code);
             SqliteUtils::SetSlaveInvalid(config_->GetPath());
         }
-    }
-    if (errCode == E_SQLITE_CONSTRAINT) {
-        return ret;
     }
     return {E_OK, rows};
 }
