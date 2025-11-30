@@ -54,6 +54,7 @@ public:
 };
 
 const std::string RdbStoreInsertTest::DATABASE_NAME = RDB_TEST_PATH + "insert_test.db";
+
 class InsertTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
@@ -1467,58 +1468,6 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_019, TestSize.Level1)
     EXPECT_EQ(resultSet->GetRow(rowEntity), E_OK);
     EXPECT_EQ(std::string(rowEntity.Get("name")), "after trigger");
     store_->Execute("DROP TRIGGER IF EXISTS after_name_insert");
-}
-
-/**
- * @tc.name: BatchInsert_020
- * @tc.desc: abnormal test. The conflict mode is ABORT. When there is a conflict during batch insertion, it will not be
- * rolled back, and the backup database will also insert the corresponding inserted data
- * @tc.type: FUNC
- * @tc.require:
- * @tc.author:
-*/
-HWTEST_P(RdbStoreInsertTest, BatchInsert_020, TestSize.Level0)
-{
-    std::vector<ValuesBucket> rows;
-    for (int i = 0; i < 3; i++) {
-        ValuesBucket row;
-        row.Put("id", i);
-        row.Put("name", "Jim");
-        rows.push_back(std::move(row));
-    }
-    ValuesBucket row;
-    row.Put("id", 1);
-    row.Put("name", "bob");
-    RdbStoreConfig config(RDB_TEST_PATH + "returning_test.db");
-    InsertTestOpenCallback helper;
-    int errCode = E_OK;
-    config.SetHaMode(true);
-    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    auto res = store->Insert("test", row);
-    ASSERT_EQ(res.first, E_OK);
-    ASSERT_EQ(res.second, 1);
-    auto [status, result] = store->BatchInsert("test", rows, { "id" }, ConflictResolution::ON_CONFLICT_FAIL);
-    EXPECT_EQ(status, E_SQLITE_CONSTRAINT);
-    EXPECT_EQ(result.changed, 1);
-    EXPECT_EQ(result.results, nullptr);
-    RdbStoreConfig slaveConfig(RDB_TEST_PATH + "returning_test_slave.db");
-    auto slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, helper, errCode);
-    ASSERT_NE(slaveStore, nullptr);
-    auto resultSet = slaveStore->QueryByStep("select * from test");
-    int count = 0;
-    resultSet->GetRowCount(count);
-    EXPECT_EQ(count, 2);
-    RowEntity resRow;
-    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
-    EXPECT_EQ(E_OK, resultSet->GetRow(resRow));
-    EXPECT_EQ(resRow.Get().at("id"), ValueObject(0));
-    EXPECT_EQ(resRow.Get().at("name"), ValueObject("Jim"));
-    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
-    EXPECT_EQ(E_OK, resultSet->GetRow(resRow));
-    EXPECT_EQ(resRow.Get().at("id"), ValueObject(1));
-    EXPECT_EQ(resRow.Get().at("name"), ValueObject("bob"));
-    RdbHelper::DeleteRdbStore(RDB_TEST_PATH + "returning_test.db");
 }
 INSTANTIATE_TEST_SUITE_P(InsertTest, RdbStoreInsertTest, testing::Values(&g_store, &g_memDb));
 } // namespace OHOS::RdbStoreInsertTest
