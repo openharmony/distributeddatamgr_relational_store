@@ -54,6 +54,11 @@ public:
     API_EXPORT int GetAllColumnNames(std::vector<std::string> &columnNames) override;
 
     /**
+     * @brief Obtains a string array holding the names of all of the columns in the result set in order.
+     */
+    API_EXPORT std::pair<int, std::vector<std::string>> GetWholeColumnNames() override;
+
+    /**
      * @brief Obtains the value of the specified column in the current row as a byte array.
      *
      * The implementation class determines whether to throw an exception if the value of the specified column
@@ -163,6 +168,11 @@ public:
      * @brief Gets the entire row of data for the current row from the result set.
      */
     API_EXPORT int GetRow(RowEntity &rowEntity) override;
+
+    /**
+     * @brief Gets the entire row of data for the current row from the result set in order.
+     */
+    API_EXPORT std::pair<int, std::vector<ValueObject>> GetRowData() override;
 
     /**
      * @brief Move the cursor to an absolute position.
@@ -356,6 +366,7 @@ private:
     // Indicates whether the result set is closed
     int columnCount_ = -1;
     std::map<std::string, int> columnMap_;
+    std::vector<std::string> wholeColumnNames_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

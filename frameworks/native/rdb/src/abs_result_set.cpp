@@ -147,7 +147,26 @@ int AbsResultSet::InitColumnNames()
         columnMap_.insert(std::pair{ names[i], i });
     }
     columnCount_ = static_cast<int>(names.size());
+    wholeColumnNames_ = std::move(names);
     return E_OK;
+}
+
+std::pair<int, std::vector<std::string>> AbsResultSet::GetWholeColumnNames()
+{
+    std::vector<std::string> columnNames;
+    int errCode = E_OK;
+    if (columnCount_ < 0) {
+        errCode = InitColumnNames();
+    }
+
+    if (columnCount_ < 0) {
+        return { errCode, {} };
+    }
+    columnNames.reserve(columnCount_);
+    for (auto &columnName : wholeColumnNames_) {
+        columnNames.push_back(std::move(columnName));
+    }
+    return { E_OK, std::move(columnNames) };
 }
 
 int AbsResultSet::GetBlob(int columnIndex, std::vector<uint8_t> &blob)
@@ -266,6 +285,33 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
         rowEntity.Put(name, index, std::move(value));
     }
     return E_OK;
+}
+
+std::pair<int, std::vector<ValueObject>> AbsResultSet::GetRowData()
+{
+    int errCode = E_OK;
+    if (columnCount_ < 0) {
+        errCode = InitColumnNames();
+    }
+
+    if (columnCount_ < 0) {
+        return { errCode, {} };
+    }
+    std::vector<ValueObject> rowData;
+    rowData.reserve(columnCount_);
+    int index = 0;
+    for (auto &columnName : wholeColumnNames_) {
+        ValueObject value;
+        auto ret = Get(index, value);
+        if (ret != E_OK) {
+            LOG_ERROR("Get(%{public}d, %{public}s)->ret %{public}d", index,
+                SqliteUtils::Anonymous(columnName).c_str(), ret);
+            return { ret, {} };
+        }
+        rowData.push_back(std::move(value));
+        index++;
+    }
+    return { E_OK, std::move(rowData) };
 }
 
 int AbsResultSet::GoToRow(int position)
@@ -443,6 +489,7 @@ int AbsResultSet::Close()
 {
     // clear columnMap_
     auto map = std::move(columnMap_);
+    auto vct = std::move(wholeColumnNames_);
     isClosed_ = true;
     rowPos_ = INIT_POS;
     rowCount_ = NO_COUNT;
