@@ -33,9 +33,7 @@ config("module_private_config") {
     "${relational_store_base_path}/test/native/rdb/unittest",
   ]
 
-  defines = [
-    "RELATIONAL_STORE",
-  ]
+  defines = [ "RELATIONAL_STORE" ]
 }
 
 ohos_unittest("DynamicLoadTest") {
@@ -48,7 +46,6 @@ ohos_unittest("DynamicLoadTest") {
   sources = [ "dynamic_load_test.cpp" ]
 
   sources += [
-    "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
     "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
     "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
     "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
@@ -59,13 +56,14 @@ ohos_unittest("DynamicLoadTest") {
     "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
     "${relational_store_native_path}/rdb/src/base_transaction.cpp",
     "${relational_store_native_path}/rdb/src/big_integer.cpp",
+    "${relational_store_native_path}/rdb/src/cache_block.cpp",
     "${relational_store_native_path}/rdb/src/cache_result_set.cpp",
     "${relational_store_native_path}/rdb/src/connection.cpp",
     "${relational_store_native_path}/rdb/src/connection_pool.cpp",
-    "${relational_store_native_path}/rdb/src/delay_notify.cpp",
-    "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
-    "${relational_store_native_path}/rdb/src/global_resource.cpp",
     "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
+    "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+    "${relational_store_native_path}/rdb/src/global_resource.cpp",
+    "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
     "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
     "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
     "${relational_store_native_path}/rdb/src/rd_connection.cpp",
@@ -75,6 +73,7 @@ ohos_unittest("DynamicLoadTest") {
     "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
     "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
     "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
     "${relational_store_native_path}/rdb/src/rdb_obs_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_perfStat.cpp",

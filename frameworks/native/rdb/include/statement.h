@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "rdb_types.h"
 #include "value_object.h"
 #include "values_bucket.h"
 namespace OHOS::NativeRdb {
@@ -31,6 +32,7 @@ public:
     static constexpr int32_t COLUMN_TYPE_ASSETS = 1001;
     static constexpr int32_t COLUMN_TYPE_FLOATS = 1002;
     static constexpr int32_t COLUMN_TYPE_BIGINT = 1003;
+    static constexpr int RETRY_TIME = 50;
 
     virtual ~Statement() = default;
     virtual int32_t Prepare(const std::string &sql) = 0;
@@ -41,8 +43,12 @@ public:
     virtual int32_t Finalize() = 0;
     virtual int32_t Execute(const std::vector<ValueObject> &args = {}) = 0;
     virtual int32_t Execute(const std::vector<std::reference_wrapper<ValueObject>> &args) = 0;
-
     virtual std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject> &args = {}) = 0;
+    virtual std::pair<int, std::vector<ValuesBucket>> ExecuteForRows(
+        const std::vector<ValueObject> &args = {}, int32_t maxCount = ReturningConfig::DEFAULT_RETURNING_COUNT) = 0;
+    virtual std::pair<int, std::vector<ValuesBucket>> ExecuteForRows(
+        const std::vector<std::reference_wrapper<ValueObject>> &args = {},
+        int32_t maxCount = ReturningConfig::DEFAULT_RETURNING_COUNT) = 0;
     virtual int32_t Changes() const = 0;
     virtual int64_t LastInsertRowId() const = 0;
 
@@ -51,10 +57,11 @@ public:
     virtual std::pair<int32_t, int32_t> GetColumnType(int32_t index) const = 0;
     virtual std::pair<int32_t, size_t> GetSize(int32_t index) const = 0;
     virtual std::pair<int32_t, ValueObject> GetColumn(int32_t index) const = 0;
-    virtual std::pair<int32_t, std::vector<ValuesBucket>> GetRows(uint32_t maxCount = 1024) = 0;
+    virtual std::pair<int32_t, std::vector<ValuesBucket>> GetRows(
+        int32_t maxCount = ReturningConfig::DEFAULT_RETURNING_COUNT) = 0;
     virtual bool ReadOnly() const = 0;
     virtual bool SupportBlockInfo() const = 0;
-    virtual int32_t FillBlockInfo(SharedBlockInfo *info) const = 0;
+    virtual int32_t FillBlockInfo(SharedBlockInfo *info, int retiyTime = RETRY_TIME) const = 0;
     virtual int ModifyLockStatus(
         const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock)
     {

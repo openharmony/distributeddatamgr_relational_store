@@ -218,7 +218,7 @@ std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, c
 }
 
 std::pair<int32_t, Results> TransactionImpl::BatchInsert(const std::string &table, const RefRows &rows,
-    const std::vector<std::string> &returningFields, Resolution resolution)
+    const ReturningConfig &config, Resolution resolution)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_, rows.RowSize());
     auto store = GetStore();
@@ -226,11 +226,11 @@ std::pair<int32_t, Results> TransactionImpl::BatchInsert(const std::string &tabl
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->BatchInsert(table, rows, returningFields, resolution);
+    return store->BatchInsert(table, rows, config, resolution);
 }
 
 std::pair<int32_t, Results> TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
-    const std::vector<std::string> &returningFields, Resolution resolution)
+    const ReturningConfig &config, Resolution resolution)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -238,11 +238,11 @@ std::pair<int32_t, Results> TransactionImpl::Update(const Row &row, const AbsRdb
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Update(row, predicates, returningFields, resolution);
+    return store->Update(row, predicates, config, resolution);
 }
 
 std::pair<int32_t, Results> TransactionImpl::Delete(
-    const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields)
+    const AbsRdbPredicates &predicates, const ReturningConfig &config)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -250,7 +250,7 @@ std::pair<int32_t, Results> TransactionImpl::Delete(
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->Delete(predicates, returningFields);
+    return store->Delete(predicates, config);
 }
 
 void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)

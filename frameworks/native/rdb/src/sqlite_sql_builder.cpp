@@ -16,7 +16,6 @@
 #include "sqlite_sql_builder.h"
 
 #include <list>
-#include <regex>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -312,16 +311,17 @@ void SqliteSqlBuilder::UpdateAssetStatus(const ValueObject &val, int32_t status)
     }
 }
 
-void SqliteSqlBuilder::AppendReturning(std::string &sql, const std::vector<std::string> &fields)
+std::string SqliteSqlBuilder::GetReturningSql(const std::vector<std::string> &fields)
 {
     if (fields.empty()) {
-        return;
+        return "";
     }
-    sql.append(" returning ");
+    std::string sql = " returning ";
     for (const auto &field : fields) {
         sql.append(field).append(",");
     }
     sql.pop_back();
+    return sql;
 }
 } // namespace NativeRdb
 } // namespace OHOS

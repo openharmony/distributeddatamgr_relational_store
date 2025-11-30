@@ -35,7 +35,6 @@ public:
     static constexpr int COLUMN_TYPE_ASSETS = 1001;
     static constexpr int COLUMN_TYPE_FLOATS = 1002;
     static constexpr int COLUMN_TYPE_BIGINT = 1003;
-
     SqliteStatement(const RdbStoreConfig *config = nullptr);
     ~SqliteStatement();
     int Prepare(const std::string &sql) override;
@@ -47,6 +46,10 @@ public:
     int Execute(const std::vector<ValueObject> &args) override;
     int32_t Execute(const std::vector<std::reference_wrapper<ValueObject>> &args) override;
     std::pair<int, ValueObject> ExecuteForValue(const std::vector<ValueObject> &args) override;
+    std::pair<int, std::vector<ValuesBucket>> ExecuteForRows(
+        const std::vector<ValueObject> &args, int32_t maxCount) override;
+    std::pair<int, std::vector<ValuesBucket>> ExecuteForRows(
+        const std::vector<std::reference_wrapper<ValueObject>> &args, int32_t maxCount) override;
     int Changes() const override;
     int64_t LastInsertRowId() const override;
     int32_t GetColumnCount() const override;
@@ -54,10 +57,10 @@ public:
     std::pair<int32_t, int32_t> GetColumnType(int index) const override;
     std::pair<int32_t, size_t> GetSize(int index) const override;
     std::pair<int32_t, ValueObject> GetColumn(int index) const override;
-    std::pair<int32_t, std::vector<ValuesBucket>> GetRows(uint32_t maxCount) override;
+    std::pair<int32_t, std::vector<ValuesBucket>> GetRows(int32_t maxCount) override;
     bool ReadOnly() const override;
     bool SupportBlockInfo() const override;
-    int32_t FillBlockInfo(SharedBlockInfo *info) const override;
+    int32_t FillBlockInfo(SharedBlockInfo *info, int retiyTime = RETRY_TIME) const override;
     int ModifyLockStatus(
         const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock) override;
 
@@ -83,6 +86,7 @@ private:
     static constexpr Action ACTIONS[ValueObject::TYPE_MAX] = { BindNil, BindInteger, BindDouble, BindText, BindBool,
         BindBlob, BindAsset, BindAssets, BindFloats, BindBigInt };
 
+    int CheckEnvironment(int paramCount) const;
     int Prepare(sqlite3 *dbHandle, const std::string &sql);
     int BindArgs(const std::vector<ValueObject> &bindArgs);
     int BindArgs(const std::vector<std::reference_wrapper<ValueObject>> &bindArgs);

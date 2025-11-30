@@ -222,7 +222,7 @@ public:
      *
      * @param table Indicates the target table.
      * @param rows Indicates the rows of data {@link ValuesBucket} to be inserted into the table.
-     * @param returningFields Indicates the returning fields.
+     * @param config Indicates the returning info.
      * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      * @return Return the inserted result. Contains error codes, affected rows,
      * and returningField values for inserting data
@@ -231,7 +231,7 @@ public:
      * only the first 1024 returningFields will be returned
      */
     virtual std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        const std::vector<std::string> &returningFields, Resolution resolution = NO_ACTION);
+        const ReturningConfig &config, Resolution resolution = NO_ACTION);
 
     /**
      * @brief Updates data in the database based on specified conditions.
@@ -272,7 +272,7 @@ public:
      * @param row Indicates the row of data to be updated in the database.
      * The key-value pairs are associated with column names of the database table.
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param returningFields Indicates the returning fields.
+     * @param config Indicates the returning info.
      * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      * @return Return the updated result. Contains error code, number of affected rows,
      * and value of returningField after update
@@ -281,7 +281,7 @@ public:
      * only the first 1024 returningFields will be returned
      */
     virtual std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &returningFields, Resolution resolution = NO_ACTION);
+        const ReturningConfig &config, Resolution resolution = NO_ACTION);
 
     /**
      * @brief Updates data in the database based on specified conditions.
@@ -355,13 +355,13 @@ public:
      * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates.
      *
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param returningFields Indicates the returning fields.
+     * @param config Indicates the returning info.
      * @return Return the deleted result. Contains error code, number of affected rows,
      * and value of returningField before delete
      * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
      */
     virtual std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields = {});
+        const AbsRdbPredicates &predicates, const ReturningConfig &config = {});
     /**
      * @brief Queries data in the database based on specified conditions.
      *
