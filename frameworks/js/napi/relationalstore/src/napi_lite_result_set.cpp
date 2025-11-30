@@ -419,6 +419,22 @@ napi_value LiteResultSetProxy::GetColumnName(napi_env env, napi_callback_info in
     return JSUtils::Convert2JSValue(env, result);
 }
 
+napi_value LiteResultSetProxy::GetWholeColumnNames(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto resultSet = GetInnerResultSet(env, info);
+    int errCode = E_ALREADY_CLOSED;
+    std::vector<std::string> colNames;
+    if (resultSet != nullptr) {
+        std::tie(errCode, colNames) = resultSet->GetWholeColumnNames();
+    }
+    if (errCode == E_INVALID_ARGS) {
+        errCode = E_INVALID_ARGS_NEW;
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    return JSUtils::Convert2JSValue(env, std::move(colNames));
+}
+
 napi_value LiteResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -454,6 +470,23 @@ napi_value LiteResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
 
     return JSUtils::Convert2JSValue(env, rowEntity);
+}
+
+napi_value LiteResultSetProxy::GetRowData(napi_env env, napi_callback_info info)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto resultSet = GetInnerResultSet(env, info);
+    std::vector<ValueObject> rowData;
+    int errCode = E_ALREADY_CLOSED;
+    if (resultSet != nullptr) {
+        std::tie(errCode, rowData) = resultSet->GetRowData();
+    }
+    if (errCode == E_INVALID_ARGS) {
+        errCode = E_INVALID_ARGS_NEW;
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+
+    return JSUtils::Convert2JSValue(env, std::move(rowData));
 }
 
 std::pair<int, std::vector<RowEntity>> LiteResultSetProxy::GetRows(
@@ -543,6 +576,90 @@ napi_value LiteResultSetProxy::GetRows(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
+std::pair<int, std::vector<std::vector<ValueObject>>> LiteResultSetProxy::GetRowsData(
+    ResultSet &resultSet, int32_t maxCount, int32_t position)
+{
+    int rowPos = 0;
+    resultSet.GetRowIndex(rowPos);
+    int errCode = E_OK;
+    if (position != INIT_POSITION && position != rowPos) {
+        errCode = resultSet.GoToRow(position);
+    } else if (rowPos == INIT_POSITION) {
+        errCode = resultSet.GoToFirstRow();
+        if (errCode == E_ROW_OUT_RANGE) {
+            return { E_OK, {} };
+        }
+    }
+
+    if (errCode != E_OK) {
+        LOG_ERROR("Failed code:%{public}d. [maxCount:%{public}d, position:%{public}d]", errCode, maxCount, position);
+        return { errCode, {} };
+    }
+
+    std::vector<std::vector<ValueObject>> rowsData;
+    for (int32_t i = 0; i < maxCount; ++i) {
+        auto [ errCode, rowData ] = resultSet.GetRowData();
+        if (errCode == E_ROW_OUT_RANGE) {
+            break;
+        }
+        if (errCode != E_OK) {
+            return { errCode, {} };
+        }
+        rowsData.push_back(std::move(rowData));
+        errCode = resultSet.GoToNextRow();
+        if (errCode == E_ROW_OUT_RANGE) {
+            break;
+        }
+        if (errCode != E_OK) {
+            return { errCode, {} };
+        }
+    }
+    return { E_OK, std::move(rowsData) };
+}
+
+napi_value LiteResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
+{
+    struct RowsContextBase : public ContextBase {
+    public:
+        int32_t maxCount = 0;
+        int32_t position = INIT_POSITION;
+        std::weak_ptr<ResultSet> resultSet;
+        std::vector<std::vector<ValueObject>> rowsData;
+    };
+    std::shared_ptr<RowsContextBase> context = std::make_shared<RowsContextBase>();
+    auto resultSet = GetInnerResultSet(env, info);
+    RDB_NAPI_ASSERT(env, resultSet != nullptr, std::make_shared<InnerError>(E_ALREADY_CLOSED));
+    context->resultSet = resultSet;
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc > 0, std::make_shared<ParamNumError>("1 or 2"));
+        auto errCode = JSUtils::Convert2ValueExt(env, argv[0], context->maxCount);
+        CHECK_RETURN_SET_E(OK == errCode && context->maxCount > 0, std::make_shared<ParamError>("Invalid maxCount"));
+        if (argc == 2) {
+            errCode = JSUtils::Convert2ValueExt(env, argv[1], context->position);
+            CHECK_RETURN_SET_E(
+                OK == errCode && context->position >= 0, std::make_shared<ParamError>("Invalid position"));
+        }
+    };
+    auto exec = [context]() -> int {
+        auto result = context->resultSet.lock();
+        if (result == nullptr) {
+            return E_ALREADY_CLOSED;
+        }
+        int errCode = E_OK;
+        std::tie(errCode, context->rowsData) = GetRowsData(*result, context->maxCount, context->position);
+        if (errCode == E_INVALID_ARGS) {
+            errCode = E_INVALID_ARGS_NEW;
+        }
+        return errCode;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        result = JSUtils::Convert2JSValue(env, std::move(context->rowsData));
+    };
+    context->SetAction(env, info, input, exec, output);
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
 napi_value LiteResultSetProxy::GetValue(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
@@ -566,6 +683,7 @@ void LiteResultSetProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION_WITH_DATA("getColumnTypeSync", GetColumnType, SYNC),
             DECLARE_NAPI_FUNCTION("getColumnIndex", GetColumnIndex),
             DECLARE_NAPI_FUNCTION("getColumnName", GetColumnName),
+            DECLARE_NAPI_FUNCTION("getColumnNames", GetWholeColumnNames),
             DECLARE_NAPI_FUNCTION("close", Close),
             DECLARE_NAPI_FUNCTION("goToNextRow", GoToNextRow),
             DECLARE_NAPI_FUNCTION("getBlob", GetBlob),
@@ -578,6 +696,8 @@ void LiteResultSetProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION("getValue", GetValue),
             DECLARE_NAPI_FUNCTION("getRow", GetRow),
             DECLARE_NAPI_FUNCTION("getRows", GetRows),
+            DECLARE_NAPI_FUNCTION("getCurrentRowData", GetRowData),
+            DECLARE_NAPI_FUNCTION("getRowsData", GetRowsData),
         };
         return properties;
     };

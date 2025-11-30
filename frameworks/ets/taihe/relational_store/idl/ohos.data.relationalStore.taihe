@@ -283,7 +283,9 @@ union StringOrNumberArray {
 
     @get GetIsClosed() : bool;
 
-    @get GetColumnNames() : Array<String>;
+    @get("columnNames") GetAllColumnNames() : Array<String>;
+
+    GetColumnNames(): Array<String>;
 
     GetColumnIndex(columnName: String): i32;
 
@@ -318,6 +320,11 @@ union StringOrNumberArray {
     GetFloat32Array(columnIndex: i32): @typedarray Array<f32>;
 
     GetRow(): @record Map<String, ValueType>;
+
+    GetCurrentRowData(): Array<ValueType>;
+
+    @gen_promise("getRowsData")
+    GetRowsDataAsync(maxCount: i32, position: Optional<i32>): Array<Array<ValueType>>;
 
     IsColumnNull(columnIndex: i32): bool;
 
