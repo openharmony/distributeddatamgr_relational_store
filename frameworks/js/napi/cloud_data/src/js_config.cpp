@@ -150,6 +150,7 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
         std::string accountId;
         std::string bundleName;
         CloudService::Switch state;
+        CloudData::SwitchConfig config;
     };
     auto ctxt = std::make_shared<ChangeAppSwitchContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
@@ -169,6 +170,12 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
         ASSERT_BUSINESS_ERR(
             ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of status must be boolean.");
         ctxt->state = state ? CloudService::Switch::SWITCH_ON : CloudService::Switch::SWITCH_OFF;
+        napi_valuetype type = napi_undefined;
+        if (argc >= 4 && napi_typeof(env, argv[3], &type) == napi_ok && type != napi_function) {
+            status = JSUtils::Convert2Value(env, argv[3], ctxt->config);
+            ASSERT_BUSINESS_ERR(
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of status must be SwitchConfig.");
+        }
     });
 
     ASSERT_NULL(!ctxt->isThrowError, "ChangeAppCloudSwitch exit");
@@ -184,7 +191,7 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
                                : napi_generic_failure;
             return;
         }
-        int32_t cStatus = proxy->ChangeAppSwitch(ctxt->accountId, ctxt->bundleName, ctxt->state);
+        int32_t cStatus = proxy->ChangeAppSwitch(ctxt->accountId, ctxt->bundleName, ctxt->state, ctxt->config);
         LOG_DEBUG("ChangeAppCloudSwitch return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
@@ -205,6 +212,7 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
     struct CleanContext : public ContextBase {
         std::string accountId;
         std::map<std::string, int32_t> appActions;
+        std::map<std::string, CloudData::ClearConfig> configs;
     };
     auto ctxt = std::make_shared<CleanContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
@@ -221,6 +229,12 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
             ASSERT_BUSINESS_ERR(ctxt, ValidSubscribeType(item.second), Status::INVALID_ARGUMENT,
                 "Action in map appActions is incorrect.");
         }
+        napi_valuetype type = napi_undefined;
+        if (argc >= 3 && napi_typeof(env, argv[2], &type) == napi_ok && type != napi_function) {
+            status = JSUtils::Convert2Value(env, argv[2], ctxt->configs);
+            ASSERT_BUSINESS_ERR(
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of status must be ClearConfig.");
+        }
     });
 
     ASSERT_NULL(!ctxt->isThrowError, "Clean exit");
@@ -236,7 +250,7 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
                                : napi_generic_failure;
             return;
         }
-        int32_t cStatus = proxy->Clean(ctxt->accountId, ctxt->appActions);
+        int32_t cStatus = proxy->Clean(ctxt->accountId, ctxt->appActions, ctxt->configs);
         LOG_DEBUG("Clean return %{public}d", cStatus);
         ctxt->status = (GenerateNapiError(cStatus, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
                            ? napi_ok
