@@ -2108,3 +2108,30 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_003, TestSize.Level0)
     RdbHelper::DeleteRdbStore(config);
     ASSERT_EQ(store->SetTokenizer(Tokenizer::NONE_TOKENIZER), E_ALREADY_CLOSED);
 }
+
+/**
+ * @tc.name: RdbStore_ExecuteForChangedRowCount_001
+ * @tc.desc: test ExecuteForChangedRowCount
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ExecuteForChangedRowCount_001, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("");
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+    ValuesBucket row;
+    row.Put("id", 1);
+    row.Put("name", "name1");
+    row.Put("age", 18);
+    int64_t id;
+    store->Insert(id, "test", row);
+    int64_t outValue = 0;
+    errCode = store->ExecuteForChangedRowCount(outValue, "UPDATE test SET age = 20 WHERE id = 1");
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_EQ(outValue, 1);
+    RdbHelper::DeleteRdbStore(config);
+}

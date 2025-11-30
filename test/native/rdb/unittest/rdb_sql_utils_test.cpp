@@ -277,11 +277,22 @@ HWTEST_F(RdbSqlUtilsTest, GetDataBaseDir_002, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsValidTableName001
- * @tc.desc: test RdbStore IsValidTableName
+ * @tc.name: IsValidTableName_ValidateFormat
+ * @tc.desc: Test validation of table name format in IsValidTableName function
  * @tc.type: FUNC
+ * Test Point:
+ * Verify that IsValidTableName correctly validates table name formats according to SQL standards
+ * Test Steps:
+ * 1. Test with empty string - should return false
+ * 2. Test with numeric string "12345" - should return false
+ * 3. Test with invalid double dot format "a..b" - should return false
+ * 4. Test with leading dot ".a" - should return false
+ * 5. Test with trailing dot "a." - should return false
+ * 6. Test with valid underscore format "abc_def" - should return true
+ * 7. Test with valid dot notation "abc.def" - should return true
+ * 8. Test with alphanumeric string "abc123" - should return true
  */
-HWTEST_F(RdbSqlUtilsTest, IsValidTableName001, TestSize.Level1)
+HWTEST_F(RdbSqlUtilsTest, IsValidTableName_ValidateFormat, TestSize.Level1)
 {
     auto res = RdbSqlUtils::IsValidTableName("");
     EXPECT_FALSE(res);
@@ -302,11 +313,46 @@ HWTEST_F(RdbSqlUtilsTest, IsValidTableName001, TestSize.Level1)
 }
 
 /**
- * @tc.name: HasDuplicateAssets001
- * @tc.desc: test RdbStore HasDuplicateAssets
+ * @tc.name: IsValidFields_ValidateNames
+ * @tc.desc: Test validation of field names in IsValidFields function
  * @tc.type: FUNC
+ * Test Point:
+ * Verify that IsValidFields correctly validates field names according to SQL standards
+ * Test Steps:
+ * 1. Test with empty fields vector - should return false
+ * 2. Test with fields exceeding limit - should return false
+ * 3. Test with illegal field names containing special characters - should return false
+ * 4. Test with field names containing spaces - should return false
+ * 5. Test with field names containing commas - should return false
+ * 6. Test with valid field names including duplicates - should return true
  */
-HWTEST_F(RdbSqlUtilsTest, HasDuplicateAssets001, TestSize.Level1)
+HWTEST_F(RdbSqlUtilsTest, IsValidFields_ValidateNames, TestSize.Level1)
+{
+    const int32_t FIELDS_LIMIT = 4;
+    EXPECT_FALSE(RdbSqlUtils::IsValidFields(std::vector<std::string>()));
+    EXPECT_FALSE(RdbSqlUtils::IsValidFields(std::vector<std::string>(FIELDS_LIMIT + 1, "")));
+    EXPECT_FALSE(RdbSqlUtils::IsValidFields({"field1", "field2", "***illegal_field"}));
+    EXPECT_FALSE(RdbSqlUtils::IsValidFields({"field1", "field2", "illegal field"}));
+    EXPECT_FALSE(RdbSqlUtils::IsValidFields({"field1", "field2", "illegal,field"}));
+    EXPECT_TRUE(RdbSqlUtils::IsValidFields({"field1", "field2", "field2"}));
+}
+
+/**
+ * @tc.name: HasDuplicateAssets_CheckDuplicates
+ * @tc.desc: Test detection of duplicate assets in ValueObject
+ * @tc.type: FUNC
+ * Test Point:
+ * Verify that HasDuplicateAssets correctly detects duplicate assets within a ValueObject
+ * Test Steps:
+ * 1. Test with empty ValueObject - should return false
+ * 2. Create two assets with identical names
+ * 3. Put them into a ValueObject
+ * 4. Check if HasDuplicateAssets detects duplicates - should return true
+ * 5. Test with duplicated ValueObjects - should return true
+ * 6. Test with ValuesBucket containing duplicate assets - should return true
+ * 7. Test with ValuesBuckets containing duplicate assets - should return true
+ */
+HWTEST_F(RdbSqlUtilsTest, HasDuplicateAssets_CheckDuplicates, TestSize.Level1)
 {
     ValueObject value;
     auto res = RdbSqlUtils::HasDuplicateAssets(value);
@@ -331,11 +377,21 @@ HWTEST_F(RdbSqlUtilsTest, HasDuplicateAssets001, TestSize.Level1)
 }
 
 /**
- * @tc.name: HasDuplicateAssets002
- * @tc.desc: test RdbStore HasDuplicateAssets
+ * @tc.name: HasDuplicateAssets_CheckNonDuplicates
+ * @tc.desc: Test detection of non-duplicate assets in ValueObject
  * @tc.type: FUNC
+ * Test Point:
+ * Verify that HasDuplicateAssets correctly identifies when there are no duplicate assets within a ValueObject
+ * Test Steps:
+ * 1. Test with empty ValueObject - should return false
+ * 2. Create two assets with different names
+ * 3. Put them into a ValueObject
+ * 4. Check if HasDuplicateAssets detects duplicates - should return false
+ * 5. Test with non-duplicated ValueObjects - should return false
+ * 6. Test with ValuesBucket containing non-duplicate assets - should return false
+ * 7. Test with ValuesBuckets containing non-duplicate assets - should return false
  */
-HWTEST_F(RdbSqlUtilsTest, HasDuplicateAssets002, TestSize.Level1)
+HWTEST_F(RdbSqlUtilsTest, HasDuplicateAssets_CheckNonDuplicates, TestSize.Level1)
 {
     ValueObject value;
     auto res = RdbSqlUtils::HasDuplicateAssets(value);
@@ -360,11 +416,19 @@ HWTEST_F(RdbSqlUtilsTest, HasDuplicateAssets002, TestSize.Level1)
 }
 
 /**
- * @tc.name: BatchTrim001
- * @tc.desc: test RdbStore BatchTrim
+ * @tc.name: BatchTrim_TrimWhitespace
+ * @tc.desc: Test trimming whitespace from strings in BatchTrim function
  * @tc.type: FUNC
+ * Test Point:
+ * Verify that BatchTrim correctly trims whitespace from a vector of strings
+ *
+ * Test Steps:
+ * 1. Create a vector of strings with various whitespace patterns
+ * 2. Apply BatchTrim to the vector
+ * 3. Verify that whitespace is correctly trimmed from each string
+ * 4. Verify that empty strings remain empty
  */
-HWTEST_F(RdbSqlUtilsTest, BatchTrim001, TestSize.Level1)
+HWTEST_F(RdbSqlUtilsTest, BatchTrim_TrimWhitespace, TestSize.Level1)
 {
     std::vector<std::string> strs = {" str1 ", "str2", ""};
     std::vector<std::string> res = RdbSqlUtils::BatchTrim(strs);
@@ -375,27 +439,19 @@ HWTEST_F(RdbSqlUtilsTest, BatchTrim001, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsValidFields001
- * @tc.desc: test IsValidFields
+ * @tc.name: IsValidMaxCount_ValidateValues
+ * @tc.desc: Test RdbSqlUtils IsValidMaxCount function with various max returning count values
  * @tc.type: FUNC
+ * Test Point:
+ * Verify that IsValidMaxCount correctly validates maximum count values for returning operations
+ * Test Steps:
+ * 1. Test with a positive valid count (5) - should return true
+ * 2. Test with a negative count (-5) - should return false
+ * 3. Test with zero count (0) - should return false
+ * 4. Test with maximum allowed count (ReturningConfig::MAX_RETURNING_COUNT) - should return true
+ * 5. Test with exceeding maximum count (ReturningConfig::MAX_RETURNING_COUNT + 1) - should return false
  */
-HWTEST_F(RdbSqlUtilsTest, IsValidFields001, TestSize.Level1)
-{
-    const int32_t FIELDS_LIMIT = 4;
-    EXPECT_FALSE(RdbSqlUtils::IsValidFields(std::vector<std::string>()));
-    EXPECT_FALSE(RdbSqlUtils::IsValidFields(std::vector<std::string>(FIELDS_LIMIT + 1, "")));
-    EXPECT_FALSE(RdbSqlUtils::IsValidFields({"field1", "field2", "***illegal_field"}));
-    EXPECT_FALSE(RdbSqlUtils::IsValidFields({"field1", "field2", "illegal field"}));
-    EXPECT_FALSE(RdbSqlUtils::IsValidFields({"field1", "field2", "illegal,field"}));
-    EXPECT_TRUE(RdbSqlUtils::IsValidFields({"field1", "field2", "field2"}));
-}
-
-/**
- * @tc.name: IsValidMaxCount001
- * @tc.desc: test IsValidMaxCount
- * @tc.type: FUNC
- */
-HWTEST_F(RdbSqlUtilsTest, IsValidMaxCount001, TestSize.Level1)
+HWTEST_F(RdbSqlUtilsTest, IsValidMaxCount_ValidateValues, TestSize.Level1)
 {
     EXPECT_TRUE(RdbSqlUtils::IsValidMaxCount(5));
     EXPECT_FALSE(RdbSqlUtils::IsValidMaxCount(-5));
