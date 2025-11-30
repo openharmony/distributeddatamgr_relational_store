@@ -15,6 +15,7 @@
 #include "relationalstore_fuzzer.h"
 
 #include <fuzzer/FuzzedDataProvider.h>
+#include <fstream>
 #include <iostream>
 #include <sys/stat.h>
 
@@ -26,6 +27,8 @@
 #include "accesstoken_kit.h"
 
 static constexpr const char *RDB_TEST_PATH = "/data/storage/el2/database/com.ohos.example.distributedndk/entry/";
+const std::string RDB_TEST_PATH1 =
+    "/data/storage/el2/database/com.ohos.example.distributedndk/entry/rdb/rdb_store_test.db";
 
 using namespace OHOS::NativeRdb;
 using namespace OHOS::RdbNdk;
@@ -55,6 +58,11 @@ void CreateAndSetCryptoParam(FuzzedDataProvider &provider, OH_Rdb_ConfigV2 *conf
     }
 }
 
+void TestCorruptedHandler(void *context, OH_Rdb_ConfigV2 *config, OH_Rdb_Store *store)
+{
+    OH_Rdb_DeleteStoreV2(config);
+}
+
 constexpr int RDB_CONFIG_PLUGINS_MAX = 16;
 void CreateAndSetPlugins(FuzzedDataProvider &provider, OH_Rdb_ConfigV2 *config)
 {
@@ -81,6 +89,17 @@ void AppendApi20ConfigV2(FuzzedDataProvider &provider, struct OH_Rdb_ConfigV2 *c
     OH_Rdb_SetCustomDir(configV2, customDir.c_str());
     CreateAndSetPlugins(provider, configV2);
     CreateAndSetCryptoParam(provider, configV2);
+}
+
+void DestroyDb(const std::string &filePath)
+{
+    const char *message = "hello";
+    const size_t messageLength = 5;
+    const size_t seekPosition = 64;
+    std::ofstream fsDb(filePath, std::ios_base::binary | std::ios_base::out);
+    fsDb.seekp(seekPosition);
+    fsDb.write(message, messageLength);
+    fsDb.close();
 }
 
 struct OH_Rdb_ConfigV2 *CreateOHRdbConfigV2(FuzzedDataProvider &provider)
@@ -408,6 +427,32 @@ void RelationalStoreAttatchFuzzTest(FuzzedDataProvider &provider)
     DeleteFuzzerNormalStroe(store);
 }
 
+void RelationalStoreCorruptedHandlerFuzzTest(FuzzedDataProvider &provider)
+{
+    OH_Rdb_Store *store = GetFuzzerNormalStore();
+    if (store == nullptr || g_normalConfig == nullptr) {
+        return;
+    }
+    void *context = nullptr;
+    Rdb_CorruptedHandler handler = TestCorruptedHandler;
+    auto ret = OH_Rdb_RegisterCorruptedHandler(g_normalConfig, context, handler);
+    if (ret != RDB_OK) {
+        return;
+    }
+    int errCode = 0;
+    static OH_Rdb_Store *OHRdbStore = OH_Rdb_CreateOrOpen(g_normalConfig, &errCode);
+    OH_Rdb_CloseStore(OHRdbStore);
+    DestroyDb(RDB_TEST_PATH1);
+    int errCode2 = OH_Rdb_ErrCode::RDB_OK;
+    auto store2 = OH_Rdb_CreateOrOpen(g_normalConfig, &errCode2);
+    store2 = OH_Rdb_CreateOrOpen(g_normalConfig, &errCode2);
+    OH_Rdb_UnregisterCorruptedHandler(g_normalConfig, context, handler);
+
+    OH_Rdb_CloseStore(OHRdbStore);
+    OH_Rdb_DeleteStoreV2(g_normalConfig);
+    OH_Rdb_DestroyConfig(g_normalConfig);
+}
+
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -424,5 +469,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     // Test OH_Rdb_Attach and OH_Rdb_Detach
     RelationalStoreAttatchFuzzTest(provider);
+
+    RelationalStoreCorruptedHandlerFuzzTest(provider);
     return 0;
 }
