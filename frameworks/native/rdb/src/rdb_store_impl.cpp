@@ -1817,7 +1817,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
 
 int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql, const Values &args)
 {
-    auto [code, result] = ExecuteForRow(sql, args, 0);
+    auto [code, result] = ExecuteForRow(sql, args);
     outValue = result.changed;
     return code;
 }

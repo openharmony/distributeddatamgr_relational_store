@@ -22,6 +22,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "rdb_predicates.h"
 #include "sqlite_sql_builder.h"
 
 using namespace testing::ext;
@@ -1131,5 +1132,66 @@ HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_008, TestSize.Level1)
     store_->Execute("DROP TRIGGER IF EXISTS before_update");
 }
 
+/**
+ * @tc.name: UpdateWithReturning_HandleConstraintError
+ * @tc.desc: Test handling constraint error during update with returning operation
+ * @tc.type: FUNC
+ * Test Point:
+ * Verify that update operation with returning correctly handles constraint errors and partial updates
+ * Test Steps:
+ * 1. Insert multiple rows with BatchInsert operation
+ * 2. Attempt to update with conflict resolution ON_CONFLICT_FAIL
+ * 3. Verify that constraint error is properly reported
+ * 4. Check that only successful updates return results
+ * 5. Validate final state of data in database
+ */
+HWTEST_P(RdbStoreUpdateTest, UpdateWithReturning_HandleConstraintError, TestSize.Level0)
+{
+    std::vector<ValuesBucket> rows;
+    for (int i = 0; i < 3; i++) {
+        ValuesBucket row;
+        row.Put("id", i);
+        row.Put("name", "Jim" + std::to_string(i));
+        rows.push_back(std::move(row));
+    }
+    ValuesBucket row;
+    row.Put("id", 3);
+    row.Put("name", "bob");
+    RdbStoreConfig config(RDB_TEST_PATH + "returning_test.db");
+    UpdateTestOpenCallback helper;
+    int errCode = E_OK;
+    config.SetHaMode(true);
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    auto [status, result] = store->BatchInsert("test", rows, { "id" });
+    EXPECT_EQ(result.changed, 3);
+    EXPECT_NE(result.results, nullptr);
+    std::tie(status, result) =
+        store->Update(row, RdbPredicates("test"), { "id" }, ConflictResolution::ON_CONFLICT_FAIL);
+    EXPECT_EQ(status, E_SQLITE_CONSTRAINT);
+    EXPECT_EQ(result.changed, 1);
+    EXPECT_EQ(result.results, nullptr);
+    RdbStoreConfig slaveConfig(RDB_TEST_PATH + "returning_test_slave.db");
+    auto slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, helper, errCode);
+    ASSERT_NE(slaveStore, nullptr);
+    auto resultSet = slaveStore->QueryByStep("select * from test");
+    int count = 0;
+    resultSet->GetRowCount(count);
+    EXPECT_EQ(count, 3);
+    RowEntity resRow;
+    EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
+    EXPECT_EQ(E_OK, resultSet->GetRow(resRow));
+    EXPECT_EQ(resRow.Get().at("id"), ValueObject(1));
+    EXPECT_EQ(resRow.Get().at("name"), ValueObject("Jim1"));
+    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
+    EXPECT_EQ(E_OK, resultSet->GetRow(resRow));
+    EXPECT_EQ(resRow.Get().at("id"), ValueObject(2));
+    EXPECT_EQ(resRow.Get().at("name"), ValueObject("Jim2"));
+    EXPECT_EQ(E_OK, resultSet->GoToNextRow());
+    EXPECT_EQ(E_OK, resultSet->GetRow(resRow));
+    EXPECT_EQ(resRow.Get().at("id"), ValueObject(3));
+    EXPECT_EQ(resRow.Get().at("name"), ValueObject("bob"));
+    RdbHelper::DeleteRdbStore(RDB_TEST_PATH + "returning_test.db");
+}
 INSTANTIATE_TEST_SUITE_P(UpdateTest, RdbStoreUpdateTest, testing::Values(&g_store, &g_memDb));
 } // namespace OHOS::RdbStoreUpdateTest

@@ -1468,7 +1468,7 @@ HWTEST_P(RdbStoreInsertTest, BatchInsert_019, TestSize.Level1)
     EXPECT_EQ(std::string(rowEntity.Get("name")), "after trigger");
     store_->Execute("DROP TRIGGER IF EXISTS after_name_insert");
 }
-// RDB_TEST_PATH + "insert_test_slave.db";
+
 /**
  * @tc.name: BatchInsert_020
  * @tc.desc: abnormal test. The conflict mode is ABORT. When there is a conflict during batch insertion, it will not be
