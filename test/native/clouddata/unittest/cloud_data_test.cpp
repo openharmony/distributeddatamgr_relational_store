@@ -306,7 +306,8 @@ HWTEST_F(CloudDataTest, ChangeAppSwitch001, TestSize.Level0)
     AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    auto status = proxy->ChangeAppSwitch(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, 0);
+    SwitchConfig config;
+    auto status = proxy->ChangeAppSwitch(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, 0, config);
     EXPECT_NE(status, CloudService::SUCCESS);
 }
 
@@ -323,7 +324,8 @@ HWTEST_F(CloudDataTest, Clean001, TestSize.Level1)
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
     std::map<std::string, int32_t> actions;
     actions.emplace(TEST_BUNDLE_NAME, 0);
-    auto status = proxy->Clean(TEST_ACCOUNT_ID, actions);
+    std::map<std::string, ClearConfig> configs;
+    auto status = proxy->Clean(TEST_ACCOUNT_ID, actions, configs);
     EXPECT_EQ(status, CloudService::ERROR);
 }
 

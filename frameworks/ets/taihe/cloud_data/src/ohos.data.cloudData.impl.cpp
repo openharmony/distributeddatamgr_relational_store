@@ -17,13 +17,15 @@
 #include "ani_cloud_data.h"
 #include "ani_error_code.h"
 #include "ani_cloud_data_utils.h"
+#include "cloud_types.h"
 
 namespace AniCloudData {
 using namespace OHOS::Rdb;
 void ConfigImpl::ChangeAppCloudSwitchImpl(string_view accountId, string_view bundleName, bool status)
 {
     auto work = [&accountId, &bundleName, &status](std::shared_ptr<CloudService> proxy) {
-        int32_t code = proxy->ChangeAppSwitch(std::string(accountId), std::string(bundleName), status);
+        OHOS::CloudData::SwitchConfig config;
+        int32_t code = proxy->ChangeAppSwitch(std::string(accountId), std::string(bundleName), status, config);
         if (code != CloudService::Status::SUCCESS) {
             LOG_ERROR("request, errcode = %{public}d", code);
             ThrowAniError(code);
@@ -42,6 +44,7 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
     }
     auto work = [&accountId, &appActions](std::shared_ptr<CloudService> proxy) {
         std::map<std::string, int32_t> actions;
+        std::map<std::string, OHOS::CloudData::ClearConfig> configs;
         for (auto const &item : appActions) {
             if (item.first.empty()) {
                 LOG_ERROR("Invalid bundle name length");
@@ -51,7 +54,7 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
             actions[std::string(item.first)] = item.second.get_value();
         }
 
-        int32_t code = proxy->Clean(std::string(accountId), actions);
+        int32_t code = proxy->Clean(std::string(accountId), actions, configs);
         if (code != CloudService::Status::SUCCESS) {
             LOG_ERROR("request, errcode = %{public}d", code);
             ThrowAniError(code);

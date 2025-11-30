@@ -72,10 +72,11 @@ int32_t CloudServiceProxy::DisableCloud(const std::string &id)
     return static_cast<Status>(status);
 }
 
-int32_t CloudServiceProxy::ChangeAppSwitch(const std::string &id, const std::string &bundleName, int32_t appSwitch)
+int32_t CloudServiceProxy::ChangeAppSwitch(
+    const std::string &id, const std::string &bundleName, int32_t appSwitch, const SwitchConfig &config)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(TRANS_CHANGE_APP_SWITCH, reply, id, bundleName, appSwitch);
+    int32_t status = IPC_SEND(TRANS_CHANGE_APP_SWITCH, reply, id, bundleName, appSwitch, config);
     if (status != SUCCESS) {
         LOG_ERROR("Status:0x%{public}x id:%{public}.6s bundleName:%{public}s switch:%{public}d", status, id.c_str(),
             bundleName.c_str(), appSwitch);
@@ -83,10 +84,11 @@ int32_t CloudServiceProxy::ChangeAppSwitch(const std::string &id, const std::str
     return static_cast<Status>(status);
 }
 
-int32_t CloudServiceProxy::Clean(const std::string &id, const std::map<std::string, int32_t> &actions)
+int32_t CloudServiceProxy::Clean(
+    const std::string &id, const std::map<std::string, int32_t> &actions, std::map<std::string, ClearConfig> &configs)
 {
     MessageParcel reply;
-    int32_t status = IPC_SEND(TRANS_CLEAN, reply, id, actions);
+    int32_t status = IPC_SEND(TRANS_CLEAN, reply, id, actions, configs);
     if (status != SUCCESS) {
         LOG_ERROR("Status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), actions.size());
     }
