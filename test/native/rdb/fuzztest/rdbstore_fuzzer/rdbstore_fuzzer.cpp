@@ -29,6 +29,8 @@ static const int MAX_BLOB_SIZE = 20;
 static const int MIN_ROWS_SIZE = 1;
 static const int MAX_ROWS_SIZE = 20;
 static const int STRING_MAX_LENGTH = 15;
+static const int CRYPTO_PAGESIZE1 = 4096;
+static const int CRYPTO_PAGESIZE2 = 2048;
 
 namespace OHOS {
 class RdbStoreFuzzTest {
@@ -162,7 +164,7 @@ bool RdbRekeyExFuzz(FuzzedDataProvider &provider)
     cryptoParam.hmacAlgo = hmacAlgo;
     cryptoParam.kdfAlgo = kdfAlgo;
     cryptoParam.iterNum = iter;
-    cryptoParam.cryptoPageSize = 2048;
+    cryptoParam.cryptoPageSize = CRYPTO_PAGESIZE2;
     config.SetCryptoParam(cryptoParam);
     RdbTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -179,7 +181,7 @@ bool RdbRekeyExFuzz(FuzzedDataProvider &provider)
     newCryptoParam.hmacAlgo = newHmacAlgo;
     newCryptoParam.kdfAlgo = newKdfAlgo;
     newCryptoParam.iterNum = newIter;
-    newCryptoParam.cryptoPageSize = 4096;
+    newCryptoParam.cryptoPageSize = CRYPTO_PAGESIZE1;
     errCode = store->RekeyEx(newCryptoParam);
     if (errCode != E_OK) {
         result = false;
