@@ -429,28 +429,34 @@ void RelationalStoreAttatchFuzzTest(FuzzedDataProvider &provider)
 
 void RelationalStoreCorruptedHandlerFuzzTest(FuzzedDataProvider &provider)
 {
-    OH_Rdb_Store *store = GetFuzzerNormalStore();
-    if (store == nullptr || g_normalConfig == nullptr) {
+    mkdir(RDB_TEST_PATH, 0770);
+    OH_Rdb_ConfigV2 *configV2 = CreateOHRdbConfigV2(provider);
+    if (configV2 == nullptr) {
         return;
     }
+    OH_Rdb_SetDatabaseDir(configV2, RDB_TEST_PATH);
+    OH_Rdb_SetStoreName(configV2, "rdb_store_test.db");
+    OH_Rdb_SetBundleName(configV2, "com.ohos.example.distributedndk");
     void *context = nullptr;
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
-    auto ret = OH_Rdb_RegisterCorruptedHandler(g_normalConfig, context, handler);
+    auto ret = OH_Rdb_RegisterCorruptedHandler(configV2, context, handler);
     if (ret != RDB_OK) {
         return;
     }
     int errCode = 0;
-    static OH_Rdb_Store *OHRdbStore = OH_Rdb_CreateOrOpen(g_normalConfig, &errCode);
-    OH_Rdb_CloseStore(OHRdbStore);
+    OH_Rdb_Store *store = OH_Rdb_CreateOrOpen(configV2, &errCode);
+    if (store == nullptr) {
+        return;
+    }
+    OH_Rdb_CloseStore(store);
     DestroyDb(RDB_TEST_PATH1);
     int errCode2 = OH_Rdb_ErrCode::RDB_OK;
-    auto store2 = OH_Rdb_CreateOrOpen(g_normalConfig, &errCode2);
-    store2 = OH_Rdb_CreateOrOpen(g_normalConfig, &errCode2);
-    OH_Rdb_UnregisterCorruptedHandler(g_normalConfig, context, handler);
-
-    OH_Rdb_CloseStore(OHRdbStore);
-    OH_Rdb_DeleteStoreV2(g_normalConfig);
-    OH_Rdb_DestroyConfig(g_normalConfig);
+    auto store2 = OH_Rdb_CreateOrOpen(configV2, &errCode2);
+    store2 = OH_Rdb_CreateOrOpen(configV2, &errCode2);
+    OH_Rdb_UnregisterCorruptedHandler(configV2, context, handler);
+    OH_Rdb_CloseStore(store2);
+    OH_Rdb_DeleteStoreV2(configV2);
+    OH_Rdb_DestroyConfig(configV2);
 }
 
 /* Fuzzer entry point */
