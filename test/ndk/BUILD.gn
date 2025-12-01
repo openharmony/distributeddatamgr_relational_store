@@ -49,6 +49,7 @@ ohos_unittest("NativeRdbNdkTest") {
     "unittest/rdb_store_configv2_test.cpp",
     "unittest/rdb_store_corrupt_handler_test.cpp",
     "unittest/rdb_store_rekeyEx_test.cpp",
+    "unittest/rdb_store_returning_test.cpp",
     "unittest/rdb_store_test.cpp",
     "unittest/rdb_transaction_capi_test.cpp",
     "unittest/rdb_transaction_query_without_rowCount_test.cpp",

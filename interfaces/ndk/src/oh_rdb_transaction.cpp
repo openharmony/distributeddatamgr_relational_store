@@ -16,15 +16,16 @@
 #define LOG_TAG "RdbTransaction"
 
 #include "oh_rdb_transaction.h"
+
+#include "convertor_error_code.h"
+#include "logger.h"
 #include "oh_data_define.h"
 #include "oh_data_utils.h"
-#include "relational_values_bucket.h"
-#include "relational_store_error_code.h"
-#include "convertor_error_code.h"
-#include "relational_predicates.h"
+#include "rdb_sql_utils.h"
 #include "relational_cursor.h"
-#include "logger.h"
-
+#include "relational_predicates.h"
+#include "relational_store_error_code.h"
+#include "relational_values_bucket.h"
 using namespace OHOS::RdbNdk;
 using namespace OHOS::NativeRdb;
 
@@ -361,4 +362,84 @@ int OH_RdbTrans_UpdateWithConflictResolution(OH_Rdb_Transaction *trans, const OH
             err, resolution, count);
     }
     return ConvertorErrorCode::GetInterfaceCode(err);
+}
+
+int OH_RdbTrans_BatchInsertWithReturning(OH_Rdb_Transaction *trans, const char *table, const OH_Data_VBuckets *rows,
+    Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context)
+{
+    if (!IsValidRdbTrans(trans) || table == nullptr || rows == nullptr || !rows->IsValid() || context == nullptr ||
+        context->config.columns.empty() ||
+        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE || !RdbSqlUtils::IsValidTableName(table)) {
+        return RDB_E_INVALID_ARGS;
+    }
+    ValuesBuckets datas;
+    for (size_t i = 0; i < rows->rows_.size(); i++) {
+        auto valuesBucket = RelationalValuesBucket::GetSelf(const_cast<OH_VBucket *>(rows->rows_[i]));
+        if (valuesBucket == nullptr) {
+            continue;
+        }
+        datas.Put(valuesBucket->Get());
+    }
+    if (RdbSqlUtils::HasDuplicateAssets(datas)) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto res = trans->trans_->BatchInsert(table, datas, context->config, Utils::ConvertConflictResolution(resolution));
+    if (res.first != E_OK) {
+        return ConvertorErrorCode::GetInterfaceCodeExtend(res.first);
+    }
+    context->changed = res.second.changed;
+    context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
+    if (context->cursor == nullptr) {
+        LOG_ERROR("new RelationalCursor failed.");
+        return RDB_E_ERROR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_RdbTrans_UpdateWithReturning(OH_Rdb_Transaction *trans, OH_VBucket *row, OH_Predicates *predicates,
+    Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context)
+{
+    auto rdbPredicate = RelationalPredicate::GetSelf(const_cast<OH_Predicates *>(predicates));
+    auto rdbValuesBucket = RelationalValuesBucket::GetSelf(const_cast<OH_VBucket *>(row));
+    if (!IsValidRdbTrans(trans) || rdbValuesBucket == nullptr || rdbPredicate == nullptr || context == nullptr ||
+        context->config.columns.empty() ||
+        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+        !RdbSqlUtils::IsValidTableName(rdbPredicate->Get().GetTableName())) {
+        return RDB_E_INVALID_ARGS;
+    }
+    auto res = trans->trans_->Update(rdbValuesBucket->Get(), rdbPredicate->Get(), context->config,
+        Utils::ConvertConflictResolution(resolution));
+    if (res.first != E_OK) {
+        return ConvertorErrorCode::GetInterfaceCodeExtend(res.first);
+    }
+    context->changed = res.second.changed;
+    context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
+    if (context->cursor == nullptr) {
+        LOG_ERROR("new RelationalCursor failed.");
+        return RDB_E_ERROR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_RdbTrans_DeleteWithReturning(
+    OH_Rdb_Transaction *trans, OH_Predicates *predicates, OH_RDB_ReturningContext *context)
+{
+    auto rdbPredicate = RelationalPredicate::GetSelf(const_cast<OH_Predicates *>(predicates));
+    if (!IsValidRdbTrans(trans) || rdbPredicate == nullptr || context == nullptr || context->config.columns.empty() ||
+        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+        !RdbSqlUtils::IsValidTableName(rdbPredicate->Get().GetTableName())) {
+        return RDB_E_INVALID_ARGS;
+    }
+    auto res = trans->trans_->Delete(rdbPredicate->Get(), context->config);
+    if (res.first != E_OK) {
+        return ConvertorErrorCode::GetInterfaceCodeExtend(res.first);
+    }
+    context->changed = res.second.changed;
+    context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
+    if (context->cursor == nullptr) {
+        LOG_ERROR("new RelationalCursor failed.");
+        return RDB_E_ERROR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
 }
