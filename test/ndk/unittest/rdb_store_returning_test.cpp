@@ -66,7 +66,7 @@ OH_VBucket *RdbStoreReturningTest::CreateOneVBucket()
     int blobLen = sizeof(arr) / sizeof(arr[0]);
     valueBucket->putBlob(valueBucket, "CODES", arr, blobLen);
     const float height = 172;
-    valueBucket->putReal(valueBucket, "HEIGHT", 172);
+    valueBucket->putReal(valueBucket, "HEIGHT", height);
     valueBucket->putText(valueBucket, "SEX", "MALE");
     return valueBucket;
 }
