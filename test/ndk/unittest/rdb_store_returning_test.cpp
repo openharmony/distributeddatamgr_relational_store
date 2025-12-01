@@ -77,7 +77,7 @@ OH_VBucket *RdbStoreReturningTest::CreateOneVBucket()
 
     const int floatsSize = 3;
     float floatArr[floatsSize] = { 1.0, 2.0, 3.0 };
-    int ret = OH_VBucket_PutFloatVector(valueBucket, "floats1", floatArr, floatsSize);
+    int ret = OH_VBucket_PutFloatVector(valueBucket, "FLOATS", floatArr, floatsSize);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
     return valueBucket;
 }
@@ -106,7 +106,7 @@ OH_VBucket *RdbStoreReturningTest::CreateOneUpdateVBucket()
 
     const int floatsSize = 3;
     float floatArr[floatsSize] = { 4.0, 5.0, 6.0 };
-    int ret = OH_VBucket_PutFloatVector(valueBucket, "floats2", floatArr, floatsSize);
+    int ret = OH_VBucket_PutFloatVector(valueBucket, "FLOATS", floatArr, floatsSize);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
     return valueBucket;
 }
@@ -153,10 +153,13 @@ void RdbStoreReturningTest::CursorWorksAsExpected(OH_Cursor *cursor)
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
     EXPECT_EQ(columnCount, 1);
 
+    EXPECT_EQ(cursor->goToNextRow(cursor), OH_Rdb_ErrCode::RDB_OK);
+
     size_t size = 0;
     ret = cursor->getSize(cursor, 0, &size);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
-    EXPECT_EQ(size, 4);
+    const int strSize = 5;
+    EXPECT_EQ(size, strSize);
 
     char dataValue[TEXT_MAX_SIZE];
     ret = cursor->getText(cursor, 0, dataValue, size);
@@ -1424,16 +1427,18 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_GetFloat32Array_
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
     EXPECT_EQ(columnCount, 1);
 
+    EXPECT_EQ(cursor->goToNextRow(cursor), OH_Rdb_ErrCode::RDB_OK);
+
     const int floatsSize = 3;
     float floatArr[floatsSize] = { 1.0, 2.0, 3.0 };
 
     size_t count = 0;
-    auto errCode = OH_Cursor_GetFloatVectorCount(cursor, 1, &count);
+    const int columnIndex = 0;
+    auto errCode = OH_Cursor_GetFloatVectorCount(cursor, columnIndex, &count);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
     EXPECT_EQ(count, floatsSize);
     float test[count];
     size_t outLen = 0;
-    const int columnIndex = 0;
     OH_Cursor_GetFloatVector(cursor, columnIndex, test, count, &outLen);
     EXPECT_EQ(outLen, floatsSize);
     EXPECT_EQ(test[0], floatArr[0]);
