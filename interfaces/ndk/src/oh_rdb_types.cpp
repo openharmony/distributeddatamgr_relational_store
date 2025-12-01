@@ -30,6 +30,11 @@ bool OH_RDB_ReturningContext::IsValid() const
 OH_RDB_ReturningContext *OH_RDB_CreateReturningContext(void)
 {
     OH_RDB_ReturningContext *context = new (std::nothrow) OH_RDB_ReturningContext;
+    if (context == nullptr) {
+        LOG_ERROR("failed to create context.");
+        return nullptr;
+    }
+    context->config.defaultRowIndex = OHOS::NativeRdb::ReturningConfig::DEFAULT_ROW_INDEX;
     return context;
 }
 

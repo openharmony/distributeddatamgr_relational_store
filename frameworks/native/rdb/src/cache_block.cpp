@@ -35,7 +35,7 @@ CacheBlock::~CacheBlock()
     rows_.clear();
 }
 
-int CacheBlock::CacheBlock::Clear()
+int CacheBlock::Clear()
 {
     rows_.clear();
     return BLOCK_OK;
@@ -98,7 +98,7 @@ int CacheBlock::PutString(uint32_t row, uint32_t column, const char *value, size
         rows_[row].PutString(columns_[column], "");
         return BLOCK_OK;
     }
-    rows_[row].Put(columns_[column], value);
+    rows_[row].PutString(columns_[column], std::string(value, size - 1));
     return BLOCK_OK;
 }
 

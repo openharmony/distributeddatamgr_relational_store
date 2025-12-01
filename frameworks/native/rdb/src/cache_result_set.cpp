@@ -28,8 +28,8 @@ namespace NativeRdb {
 CacheResultSet::CacheResultSet() : row_(0), maxRow_(0), maxCol_(0)
 {
 }
-CacheResultSet::CacheResultSet(std::vector<NativeRdb::ValuesBucket> &&valueBuckets)
-    : row_(0), maxCol_(0), valueBuckets_(std::move(valueBuckets))
+CacheResultSet::CacheResultSet(std::vector<NativeRdb::ValuesBucket> &&valueBuckets, int row)
+    : row_(row), maxCol_(0), valueBuckets_(std::move(valueBuckets))
 {
     maxRow_ = static_cast<int>(valueBuckets_.size());
     if (maxRow_ > 0) {
