@@ -77,9 +77,12 @@ int OH_RDB_SetReturningField(OH_RDB_ReturningContext *context, const char *const
 
 int OH_RDB_SetMaxReturningCount(OH_RDB_ReturningContext *context, int32_t count)
 {
-    if (context == nullptr || !context->IsValid() || !RdbSqlUtils::IsValidMaxCount(count)) {
-        context->config.maxReturningCount = ReturningConfig::ILLEGAL_RETURNING_COUNT;
+    if (context == nullptr || !context->IsValid()) {
         LOG_ERROR("failed. count: %{public}d", count);
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (!RdbSqlUtils::IsValidMaxCount(count)) {
+        context->config.maxReturningCount = ReturningConfig::ILLEGAL_RETURNING_COUNT;
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     context->config.maxReturningCount = count;
