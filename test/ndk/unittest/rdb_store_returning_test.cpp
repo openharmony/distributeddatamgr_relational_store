@@ -33,7 +33,7 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::Security::AccessToken;
 using namespace OHOS::RdbNdk;
 
-// static const int TEXT_MAX_SIZE = 128;
+static const int TEXT_MAX_SIZE = 128;
 
 class RdbStoreReturningTest : public testing::Test {
 public:
@@ -131,15 +131,15 @@ void RdbStoreReturningTest::CursorWorksAsExpected(OH_Cursor *cursor)
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
     EXPECT_EQ(columnCount, 1);
 
-    // size_t size = 0;
-    // ret = cursor->getSize(cursor, 0, &size);
-    // EXPECT_EQ(ret, RDB_OK);
-    // EXPECT_EQ(size, 4);
+    size_t size = 0;
+    ret = cursor->getSize(cursor, 0, &size);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_EQ(size, 4);
 
-    // char dataValue[TEXT_MAX_SIZE];
-    // ret = cursor->getText(cursor, 0, dataValue, size);
-    // EXPECT_EQ(ret, RDB_OK);
-    // EXPECT_EQ(dataValue, "Lisa");
+    char dataValue[TEXT_MAX_SIZE];
+    ret = cursor->getText(cursor, 0, dataValue, size);
+    EXPECT_EQ(ret, RDB_OK);
+    EXPECT_EQ(dataValue, "Lisa");
 }
 
 void RdbStoreReturningTest::InitRdbConfig()
