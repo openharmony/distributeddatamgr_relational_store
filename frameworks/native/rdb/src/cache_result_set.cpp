@@ -281,7 +281,7 @@ bool CacheResultSet::IsClosed() const
 
 int CacheResultSet::Close()
 {
-    return E_NOT_SUPPORT;
+    return E_OK;
 }
 
 int CacheResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
@@ -312,7 +312,15 @@ int CacheResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
 
 int CacheResultSet::GetFloat32Array(int32_t index, ValueObject::FloatVector &vecs)
 {
-    return E_NOT_SUPPORT;
+    if (index < 0 || index >= maxCol_) {
+        return E_INVALID_ARGS;
+    }
+    auto name = colNames_[index];
+    std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
+    if (row_ < 0 || row_ >= maxRow_) {
+        return E_ERROR;
+    }
+    return valueBuckets_[row_].values_[name].GetVecs(vecs);
 }
 
 int CacheResultSet::Get(int32_t col, ValueObject &value)
@@ -331,7 +339,29 @@ int CacheResultSet::Get(int32_t col, ValueObject &value)
 
 int CacheResultSet::GetSize(int columnIndex, size_t &size)
 {
-    return E_NOT_SUPPORT;
+    ColumnType type;
+    int32_t errCode = GetColumnType(columnIndex, type);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    ValueObject object;
+    errCode = Get(columnIndex, object);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    if (type == ColumnType::TYPE_BLOB) {
+        std::vector<uint8_t> value = object;
+        size = value.size();
+    } else if (type == ColumnType::TYPE_STRING) {
+        // Add 1 to size for the string terminator (null character).
+        std::string value = object;
+        size = value.size() + 1;
+    } else if (type == ColumnType::TYPE_NULL) {
+        size = 0;
+    } else {
+        return E_INVALID_COLUMN_TYPE;
+    }
+    return E_OK;
 }
 } // namespace NativeRdb
 } // namespace OHOS
