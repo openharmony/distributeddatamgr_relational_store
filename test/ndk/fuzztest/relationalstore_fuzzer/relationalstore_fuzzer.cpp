@@ -429,7 +429,6 @@ void RelationalStoreAttatchFuzzTest(FuzzedDataProvider &provider)
 
 void RelationalStoreCorruptedHandlerFuzzTest(FuzzedDataProvider &provider)
 {
-    mkdir(RDB_TEST_PATH, 0770);
     OH_Rdb_ConfigV2 *configV2 = CreateOHRdbConfigV2(provider);
     if (configV2 == nullptr) {
         return;
