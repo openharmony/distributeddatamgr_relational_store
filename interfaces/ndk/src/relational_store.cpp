@@ -16,8 +16,8 @@
 #include "relational_store.h"
 
 #include "convertor_error_code.h"
-#include "grd_api_manager.h"
 #include "corrupted_handle_manager.h"
+#include "grd_api_manager.h"
 #include "logger.h"
 #include "modify_time_cursor.h"
 #include "oh_data_define.h"
@@ -39,12 +39,13 @@
 #include "relational_values_bucket.h"
 #include "securec.h"
 #include "sqlite_global_config.h"
-#include "values_buckets.h"
 #include "sqlite_utils.h"
-
+#include "values_buckets.h"
 using namespace OHOS::RdbNdk;
 using namespace OHOS::DistributedRdb;
-constexpr int RDB_STORE_CID = 1234560;       // The class id used to uniquely identify the OH_Rdb_Store class.
+using namespace OHOS::NativeRdb;
+using RdbSqlUtils = OHOS::NativeRdb::RdbSqlUtils;
+constexpr int RDB_STORE_CID = 1234560; // The class id used to uniquely identify the OH_Rdb_Store class.
 constexpr int RDB_CONFIG_SIZE_V0 = 41;
 constexpr int RDB_CONFIG_SIZE_V1 = 45;
 constexpr int RDB_ATTACH_WAIT_TIME_MIN = 1;
@@ -358,7 +359,7 @@ RelationalStore::~RelationalStore()
     }
 }
 
-SyncMode NDKUtils::TransformMode(Rdb_SyncMode &mode)
+OHOS::DistributedRdb::SyncMode NDKUtils::TransformMode(Rdb_SyncMode &mode)
 {
     switch (mode) {
         case RDB_SYNC_MODE_TIME_FIRST:
@@ -368,7 +369,7 @@ SyncMode NDKUtils::TransformMode(Rdb_SyncMode &mode)
         case RDB_SYNC_MODE_CLOUD_FIRST:
             return CLOUD_FIRST;
         default:
-            return static_cast<SyncMode>(-1);
+            return static_cast<OHOS::DistributedRdb::SyncMode>(-1);
     }
 }
 
@@ -1555,4 +1556,88 @@ int OH_Rdb_RekeyEx(OH_Rdb_Store *store, OH_Rdb_CryptoParam *param)
     }
     auto errCode = innerStore->RekeyEx(param->cryptoParam);
     return ConvertorErrorCode::GetInterfaceCode(errCode);
+}
+
+int OH_Rdb_BatchInsertWithReturning(OH_Rdb_Store *store, const char *table, const OH_Data_VBuckets *rows,
+    Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context)
+{
+    auto rdbStore = GetRelationalStore(store);
+    if (rdbStore == nullptr || table == nullptr || rows == nullptr || context == nullptr ||
+        context->config.columns.empty() ||
+        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE || !RdbSqlUtils::IsValidTableName(table)) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    OHOS::NativeRdb::ValuesBuckets datas;
+    for (size_t i = 0; i < rows->rows_.size(); i++) {
+        auto valuesBucket = RelationalValuesBucket::GetSelf(const_cast<OH_VBucket *>(rows->rows_[i]));
+        if (valuesBucket == nullptr) {
+            continue;
+        }
+        datas.Put(valuesBucket->Get());
+    }
+    if (RdbSqlUtils::HasDuplicateAssets(datas)) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto res =
+        rdbStore->GetStore()->BatchInsert(table, datas, context->config, Utils::ConvertConflictResolution(resolution));
+    if (res.first != E_OK) {
+        return ConvertorErrorCode::GetInterfaceCodeExtend(res.first);
+    }
+    context->changed = res.second.changed;
+    context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
+    if (context->cursor == nullptr) {
+        LOG_ERROR("new RelationalCursor failed.");
+        return RDB_E_ERROR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_UpdateWithReturning(OH_Rdb_Store *store, OH_VBucket *row, OH_Predicates *predicates,
+    Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto bucket = RelationalValuesBucket::GetSelf(row);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || predicate == nullptr || bucket == nullptr || context == nullptr ||
+        context->config.columns.empty() ||
+        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE ||
+        !RdbSqlUtils::IsValidTableName(predicate->Get().GetTableName())) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto res = rdbStore->GetStore()->Update(
+        bucket->Get(), predicate->Get(), context->config, Utils::ConvertConflictResolution(resolution));
+    if (res.first != E_OK) {
+        return ConvertorErrorCode::GetInterfaceCodeExtend(res.first);
+    }
+    context->changed = res.second.changed;
+    context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
+    if (context->cursor == nullptr) {
+        LOG_ERROR("new RelationalCursor failed.");
+        return RDB_E_ERROR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
+}
+
+int OH_Rdb_DeleteWithReturning(OH_Rdb_Store *store, OH_Predicates *predicates, OH_RDB_ReturningContext *context)
+{
+    auto rdbStore = GetRelationalStore(store);
+    auto predicate = RelationalPredicate::GetSelf(predicates);
+    if (rdbStore == nullptr || predicate == nullptr || context == nullptr || context->config.columns.empty() ||
+        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+        !RdbSqlUtils::IsValidTableName(predicate->Get().GetTableName())) {
+        return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    auto res = rdbStore->GetStore()->Delete(predicate->Get(), context->config);
+    if (res.first != E_OK) {
+        return ConvertorErrorCode::GetInterfaceCodeExtend(res.first);
+    }
+    context->changed = res.second.changed;
+    context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
+    if (context->cursor == nullptr) {
+        LOG_ERROR("new RelationalCursor failed.");
+        return RDB_E_ERROR;
+    }
+    return OH_Rdb_ErrCode::RDB_OK;
 }
