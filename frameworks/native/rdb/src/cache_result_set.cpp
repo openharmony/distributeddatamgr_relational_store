@@ -13,6 +13,7 @@
 * limitations under the License.
 */
 
+#include <cstdint>
 #define LOG_TAG "CacheResultSet"
 #include "cache_result_set.h"
 
