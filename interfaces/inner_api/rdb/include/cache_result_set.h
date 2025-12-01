@@ -48,7 +48,7 @@ public:
     /**
     * @brief Constructor.
     */
-    API_EXPORT CacheResultSet(std::vector<NativeRdb::ValuesBucket> &&valueBuckets);
+    API_EXPORT CacheResultSet(std::vector<NativeRdb::ValuesBucket> &&valueBuckets, int row = 0);
     /**
     * @brief Destructor.
     */

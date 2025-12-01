@@ -61,7 +61,7 @@ public:
         int32_t maxCount = ReturningConfig::DEFAULT_RETURNING_COUNT) = 0;
     virtual bool ReadOnly() const = 0;
     virtual bool SupportBlockInfo() const = 0;
-    virtual int32_t FillBlockInfo(SharedBlockInfo *info, int retiyTime = RETRY_TIME) const = 0;
+    virtual int32_t FillBlockInfo(SharedBlockInfo *info, int retryTime = RETRY_TIME) const = 0;
     virtual int ModifyLockStatus(
         const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock)
     {

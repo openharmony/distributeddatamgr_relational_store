@@ -405,11 +405,12 @@ int OH_RdbTrans_UpdateWithReturning(OH_Rdb_Transaction *trans, OH_VBucket *row, 
     if (!IsValidRdbTrans(trans) || rdbValuesBucket == nullptr || rdbPredicate == nullptr || context == nullptr ||
         context->config.columns.empty() ||
         context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
-        !RdbSqlUtils::IsValidTableName(rdbPredicate->Get().GetTableName())) {
+        !RdbSqlUtils::IsValidTableName(rdbPredicate->Get().GetTableName()) ||
+        RdbSqlUtils::HasDuplicateAssets(rdbValuesBucket->Get())) {
         return RDB_E_INVALID_ARGS;
     }
-    auto res = trans->trans_->Update(rdbValuesBucket->Get(), rdbPredicate->Get(), context->config,
-        Utils::ConvertConflictResolution(resolution));
+    auto res = trans->trans_->Update(
+        rdbValuesBucket->Get(), rdbPredicate->Get(), context->config, Utils::ConvertConflictResolution(resolution));
     if (res.first != E_OK) {
         return ConvertorErrorCode::GetInterfaceCodeExtend(res.first);
     }

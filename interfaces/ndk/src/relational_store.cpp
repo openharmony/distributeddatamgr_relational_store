@@ -1603,7 +1603,8 @@ int OH_Rdb_UpdateWithReturning(OH_Rdb_Store *store, OH_VBucket *row, OH_Predicat
         context->config.columns.empty() ||
         context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
         resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE ||
-        !RdbSqlUtils::IsValidTableName(predicate->Get().GetTableName())) {
+        !RdbSqlUtils::IsValidTableName(predicate->Get().GetTableName()) ||
+        RdbSqlUtils::HasDuplicateAssets(bucket->Get())) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto res = rdbStore->GetStore()->Update(
