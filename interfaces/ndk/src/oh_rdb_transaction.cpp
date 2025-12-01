@@ -405,6 +405,7 @@ int OH_RdbTrans_UpdateWithReturning(OH_Rdb_Transaction *trans, OH_VBucket *row, 
     if (!IsValidRdbTrans(trans) || rdbValuesBucket == nullptr || rdbPredicate == nullptr || context == nullptr ||
         context->config.columns.empty() ||
         context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE ||
         !RdbSqlUtils::IsValidTableName(rdbPredicate->Get().GetTableName()) ||
         RdbSqlUtils::HasDuplicateAssets(rdbValuesBucket->Get())) {
         return RDB_E_INVALID_ARGS;
