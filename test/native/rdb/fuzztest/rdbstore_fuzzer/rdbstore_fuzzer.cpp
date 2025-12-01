@@ -43,6 +43,7 @@ public:
     static HmacAlgo SetHmacAlgo(FuzzedDataProvider &provider);
     static KdfAlgo SetKdfAlgo(FuzzedDataProvider &provider);
     static int32_t SetIterNum(FuzzedDataProvider &provider);
+    std::vector<uint8_t> SetEncryptKey(FuzzedDataProvider &provider)
 
     static std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
@@ -150,11 +151,19 @@ int32_t RdbStoreFuzzTest::SetIterNum(FuzzedDataProvider &provider)
     return iterNum;
 }
 
+std::vector<uint8_t> RdbStoreFuzzTest::SetEncryptKey(FuzzedDataProvider &provider)
+{
+    const int min = 0;
+    const int max = 100;
+    std::vector<uint8_t> encryptKey(provider.ConsumeIntegralInRange<size_t>(min, max));
+    return encryptKey;
+}
+
 bool RdbRekeyExFuzz(FuzzedDataProvider &provider)
 {
     int errCode = E_OK;
     RdbStoreConfig config("/data/test/rdbStoreRekeyExFuzz.db");
-    config.SetEncryptStatus(true);
+    config.SetEncryptStatus(provider.ConsumeBool());
     RdbStoreConfig::CryptoParam cryptoParam;
     auto encryptAlgo = RdbStoreFuzzTest::SetEncryptAlgo(provider);
     auto hmacAlgo = RdbStoreFuzzTest::SetHmacAlgo(provider);
@@ -166,6 +175,8 @@ bool RdbRekeyExFuzz(FuzzedDataProvider &provider)
     cryptoParam.iterNum = iter;
     cryptoParam.cryptoPageSize = CRYPTO_PAGESIZE2;
     config.SetCryptoParam(cryptoParam);
+    auto encryptKey = RdbStoreFuzzTest::SetEncryptKey(provider);
+    config.SetEncryptKey(encryptKey);
     RdbTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     if (store == nullptr || errCode != E_OK) {
@@ -194,6 +205,7 @@ bool RdbRekeyExFuzz(FuzzedDataProvider &provider)
     if (store == nullptr || errCode != E_OK) {
         return false;
     }
+    RdbHelper::DeleteRdbStore(config);
     return result;
 }
 
