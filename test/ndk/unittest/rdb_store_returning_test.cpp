@@ -58,11 +58,14 @@ OH_VBucket *RdbStoreReturningTest::CreateOneVBucket()
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
     EXPECT_NE(valueBucket, nullptr);
     valueBucket->putText(valueBucket, "NAME", "Lisa");
-    valueBucket->putInt64(valueBucket, "AGE", 18);
-    valueBucket->putReal(valueBucket, "SALARY", 100.5);
+    const int age = 18;
+    valueBucket->putInt64(valueBucket, "AGE", age);
+    const float salary = 100.5;
+    valueBucket->putReal(valueBucket, "SALARY", salary);
     uint8_t arr[] = {1, 2, 3, 4, 5};
     int blobLen = sizeof(arr) / sizeof(arr[0]);
     valueBucket->putBlob(valueBucket, "CODES", arr, blobLen);
+    const float height = 172;
     valueBucket->putReal(valueBucket, "HEIGHT", 172);
     valueBucket->putText(valueBucket, "SEX", "MALE");
     return valueBucket;
@@ -73,12 +76,15 @@ OH_VBucket *RdbStoreReturningTest::CreateOneUpdateVBucket()
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
     EXPECT_NE(valueBucket, nullptr);
     valueBucket->putText(valueBucket, "NAME", "Lucy");
-    valueBucket->putInt64(valueBucket, "AGE", 19);
-    valueBucket->putReal(valueBucket, "SALARY", 101.5);
+    const int age = 19;
+    valueBucket->putInt64(valueBucket, "AGE", age);
+    const float salary = 101.5;
+    valueBucket->putReal(valueBucket, "SALARY", salary);
     uint8_t arr[] = {1, 2, 3, 4, 5, 6};
     int blobLen = sizeof(arr) / sizeof(arr[0]);
     valueBucket->putBlob(valueBucket, "CODES", arr, blobLen);
-    valueBucket->putReal(valueBucket, "HEIGHT", 173);
+    const float height = 173;
+    valueBucket->putReal(valueBucket, "HEIGHT", height);
     valueBucket->putText(valueBucket, "SEX", "FEMALE");
     return valueBucket;
 }
@@ -138,7 +144,8 @@ void RdbStoreReturningTest::CursorWorksAsExpected(OH_Cursor *cursor)
 
 void RdbStoreReturningTest::InitRdbConfig()
 {
-    mkdir(RDB_TEST_PATH, 0770);
+    const mode_t mode = 0770;
+    mkdir(RDB_TEST_PATH, mode);
     OH_Rdb_SetDatabaseDir(config_, RDB_TEST_PATH);
     OH_Rdb_SetStoreName(config_, "rdb_store_test.db");
     OH_Rdb_SetBundleName(config_, "com.ohos.example.distributedndk");
