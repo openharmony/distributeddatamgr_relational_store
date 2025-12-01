@@ -43,7 +43,7 @@ public:
     static HmacAlgo SetHmacAlgo(FuzzedDataProvider &provider);
     static KdfAlgo SetKdfAlgo(FuzzedDataProvider &provider);
     static int32_t SetIterNum(FuzzedDataProvider &provider);
-    std::vector<uint8_t> SetEncryptKey(FuzzedDataProvider &provider);
+    static std::vector<uint8_t> SetEncryptKey(FuzzedDataProvider &provider);
 
     static std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
