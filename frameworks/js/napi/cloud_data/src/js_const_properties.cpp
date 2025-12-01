@@ -40,6 +40,7 @@ static napi_value ExportAction(napi_env env)
     napi_create_object(env, &action);
     SetNamedProperty(env, action, "CLEAR_CLOUD_INFO", (int32_t)Action::CLEAR_CLOUD_INFO);
     SetNamedProperty(env, action, "CLEAR_CLOUD_DATA_AND_INFO", (int32_t)Action::CLEAR_CLOUD_DATA_AND_INFO);
+    SetNamedProperty(env, action, "CLEAR_CLOUD_NONE", (int32_t)Action::CLEAR_CLOUD_NONE);
     napi_object_freeze(env, action);
     return action;
 }
