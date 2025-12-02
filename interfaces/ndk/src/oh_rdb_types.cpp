@@ -27,6 +27,12 @@ bool OH_RDB_ReturningContext::IsValid() const
     return id == OH_CRYPTO_PARAM_ID;
 }
 
+bool OH_RDB_ReturningContext::CheckParama() const
+{
+    return (config.columns.empty() ||
+            config.maxReturningCount == OHOS::NativeRdb::ReturningConfig::ILLEGAL_RETURNING_COUNT);
+}
+
 OH_RDB_ReturningContext *OH_RDB_CreateReturningContext(void)
 {
     OH_RDB_ReturningContext *context = new (std::nothrow) OH_RDB_ReturningContext;
@@ -71,7 +77,7 @@ int OH_RDB_SetReturningField(OH_RDB_ReturningContext *context, const char *const
         LOG_ERROR("illegal columnNames, maybe has [','|' '|'*']");
         return RDB_E_INVALID_ARGS;
     }
-    context->config.columns = columns;
+    context->config.columns = std::move(columns);
     return RDB_OK;
 }
 
@@ -81,7 +87,7 @@ int OH_RDB_SetMaxReturningCount(OH_RDB_ReturningContext *context, int32_t count)
         LOG_ERROR("failed. count: %{public}d", count);
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    if (!RdbSqlUtils::IsValidMaxCount(count)) {
+    if (!RdbSqlUtils::IsValidReturningMaxCount(count)) {
         context->config.maxReturningCount = ReturningConfig::ILLEGAL_RETURNING_COUNT;
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
