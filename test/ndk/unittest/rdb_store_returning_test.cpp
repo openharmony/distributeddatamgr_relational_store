@@ -1397,7 +1397,7 @@ HWTEST_F(RdbStoreReturningTest, OH_RDB_ReturningContext_test_001, TestSize.Level
 }
 
 /**
- * @tc.name: GetFloat32Array_test_001
+ * @tc.name: OH_Rdb_BatchInsertWithReturning_GetFloat32Array_test_001
  * @tc.desc: Normal testCase.
  * @tc.type: FUNC
  */
