@@ -98,6 +98,7 @@ int CacheBlock::PutString(uint32_t row, uint32_t column, const char *value, size
         rows_[row].PutString(columns_[column], "");
         return BLOCK_OK;
     }
+    // The size includes '\0', which needs to be removed when constructing the string.
     rows_[row].PutString(columns_[column], std::string(value, size - 1));
     return BLOCK_OK;
 }

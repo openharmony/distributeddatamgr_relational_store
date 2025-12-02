@@ -1436,7 +1436,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
     auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable(), resolution);
     // To ensure atomicity, execute SQL only once
     if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1 ||
-        !RdbSqlUtils::IsValidMaxCount(config.maxReturningCount)) {
+        !RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount)) {
         auto [fields, values] = rows.GetFieldsAndValues();
         LOG_ERROR("invalid! rows:%{public}zu, table:%{public}s, fields:%{public}zu, max:%{public}d.", rows.RowSize(),
             SqliteUtils::Anonymous(table).c_str(), fields != nullptr ? fields->size() : 0, conn->GetMaxVariable());
@@ -1818,7 +1818,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
-    if (!RdbSqlUtils::IsValidMaxCount(config.maxReturningCount)) {
+    if (!RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount)) {
         return { E_INVALID_ARGS, -1 };
     }
     auto [errCode, statement] = GetStatement(sql, false, returningSql);

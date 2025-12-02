@@ -368,9 +368,8 @@ int OH_RdbTrans_BatchInsertWithReturning(OH_Rdb_Transaction *trans, const char *
     Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context)
 {
     if (!IsValidRdbTrans(trans) || table == nullptr || rows == nullptr || !rows->IsValid() || context == nullptr ||
-        context->config.columns.empty() ||
-        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
-        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE || !RdbSqlUtils::IsValidTableName(table)) {
+        context->CheckParama() || resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE ||
+        !RdbSqlUtils::IsValidTableName(table)) {
         return RDB_E_INVALID_ARGS;
     }
     ValuesBuckets datas;
@@ -403,9 +402,7 @@ int OH_RdbTrans_UpdateWithReturning(OH_Rdb_Transaction *trans, OH_VBucket *row, 
     auto rdbPredicate = RelationalPredicate::GetSelf(const_cast<OH_Predicates *>(predicates));
     auto rdbValuesBucket = RelationalValuesBucket::GetSelf(const_cast<OH_VBucket *>(row));
     if (!IsValidRdbTrans(trans) || rdbValuesBucket == nullptr || rdbPredicate == nullptr || context == nullptr ||
-        context->config.columns.empty() ||
-        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
-        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE ||
+        context->CheckParama() || resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE ||
         !RdbSqlUtils::IsValidTableName(rdbPredicate->Get().GetTableName()) ||
         RdbSqlUtils::HasDuplicateAssets(rdbValuesBucket->Get())) {
         return RDB_E_INVALID_ARGS;
@@ -428,8 +425,7 @@ int OH_RdbTrans_DeleteWithReturning(
     OH_Rdb_Transaction *trans, OH_Predicates *predicates, OH_RDB_ReturningContext *context)
 {
     auto rdbPredicate = RelationalPredicate::GetSelf(const_cast<OH_Predicates *>(predicates));
-    if (!IsValidRdbTrans(trans) || rdbPredicate == nullptr || context == nullptr || context->config.columns.empty() ||
-        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+    if (!IsValidRdbTrans(trans) || rdbPredicate == nullptr || context == nullptr || context->CheckParama() ||
         !RdbSqlUtils::IsValidTableName(rdbPredicate->Get().GetTableName())) {
         return RDB_E_INVALID_ARGS;
     }

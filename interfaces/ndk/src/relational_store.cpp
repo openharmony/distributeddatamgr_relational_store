@@ -1562,9 +1562,7 @@ int OH_Rdb_BatchInsertWithReturning(OH_Rdb_Store *store, const char *table, cons
     Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context)
 {
     auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr || table == nullptr || rows == nullptr || context == nullptr ||
-        context->config.columns.empty() ||
-        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+    if (rdbStore == nullptr || table == nullptr || rows == nullptr || context == nullptr || context->CheckParama() ||
         resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE || !RdbSqlUtils::IsValidTableName(table)) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
@@ -1579,13 +1577,13 @@ int OH_Rdb_BatchInsertWithReturning(OH_Rdb_Store *store, const char *table, cons
     if (RdbSqlUtils::HasDuplicateAssets(datas)) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    auto res =
+    auto [code, result] =
         rdbStore->GetStore()->BatchInsert(table, datas, context->config, Utils::ConvertConflictResolution(resolution));
-    if (res.first != E_OK) {
-        return ConvertorErrorCode::GetInterfaceCodeExtend(res.first);
+    if (code != E_OK) {
+        return ConvertorErrorCode::GetInterfaceCodeExtend(code);
     }
-    context->changed = res.second.changed;
-    context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
+    context->changed = result.changed;
+    context->cursor = new (std::nothrow) RelationalCursor(std::move(result.results));
     if (context->cursor == nullptr) {
         LOG_ERROR("new RelationalCursor failed.");
         return RDB_E_ERROR;
@@ -1600,9 +1598,7 @@ int OH_Rdb_UpdateWithReturning(OH_Rdb_Store *store, OH_VBucket *row, OH_Predicat
     auto bucket = RelationalValuesBucket::GetSelf(row);
     auto predicate = RelationalPredicate::GetSelf(predicates);
     if (rdbStore == nullptr || predicate == nullptr || bucket == nullptr || context == nullptr ||
-        context->config.columns.empty() ||
-        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
-        resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE ||
+        context->CheckParama() || resolution < RDB_CONFLICT_NONE || resolution > RDB_CONFLICT_REPLACE ||
         !RdbSqlUtils::IsValidTableName(predicate->Get().GetTableName()) ||
         RdbSqlUtils::HasDuplicateAssets(bucket->Get())) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
@@ -1625,8 +1621,7 @@ int OH_Rdb_DeleteWithReturning(OH_Rdb_Store *store, OH_Predicates *predicates, O
 {
     auto rdbStore = GetRelationalStore(store);
     auto predicate = RelationalPredicate::GetSelf(predicates);
-    if (rdbStore == nullptr || predicate == nullptr || context == nullptr || context->config.columns.empty() ||
-        context->config.maxReturningCount == ReturningConfig::ILLEGAL_RETURNING_COUNT ||
+    if (rdbStore == nullptr || predicate == nullptr || context == nullptr || context->CheckParama() ||
         !RdbSqlUtils::IsValidTableName(predicate->Get().GetTableName())) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
