@@ -196,6 +196,7 @@ bool RdbRekeyExFuzz(FuzzedDataProvider &provider)
     config.SetCryptoParam(newCryptoParam);
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     if (store == nullptr || errCode != E_OK) {
+        RdbHelper::DeleteRdbStore(config);
         return false;
     }
     RdbHelper::DeleteRdbStore(config);
