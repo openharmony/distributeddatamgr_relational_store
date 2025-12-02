@@ -47,12 +47,18 @@ CacheResultSet::~CacheResultSet()
 
 int CacheResultSet::GetRowCount(int &count)
 {
+    if (isClosed_) {
+        return E_ALREADY_CLOSED;
+    }
     count = static_cast<int>(maxRow_);
     return E_OK;
 }
 
 int CacheResultSet::GetAllColumnNames(std::vector<std::string> &columnNames)
 {
+    if (isClosed_) {
+        return E_ALREADY_CLOSED;
+    }
     columnNames = colNames_;
     return E_OK;
 }
@@ -339,6 +345,7 @@ int CacheResultSet::Close()
         row_ = -1;
         maxRow_ = -1;
         maxCol_ = -1;
+        isClosed_ = true;
     }
     return E_OK;
 }
