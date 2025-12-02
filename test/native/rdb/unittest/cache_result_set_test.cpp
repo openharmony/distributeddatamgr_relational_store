@@ -726,7 +726,7 @@ HWTEST_F(CacheResultSetTest, CloseTest_001, TestSize.Level2)
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     int ret = cacheResultSet.Close();
-    EXPECT_EQ(E_NOT_SUPPORT, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 /* *
@@ -747,5 +747,5 @@ HWTEST_F(CacheResultSetTest, GetSizeTest_001, TestSize.Level2)
     int columnIndex = 0;
     size_t size;
     int ret = cacheResultSet.GetSize(columnIndex, size);
-    EXPECT_EQ(E_NOT_SUPPORT, ret);
+    EXPECT_EQ(E_OK, ret);
 }
