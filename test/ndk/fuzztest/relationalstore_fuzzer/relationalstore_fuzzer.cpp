@@ -440,11 +440,13 @@ void RelationalStoreCorruptedHandlerFuzzTest(FuzzedDataProvider &provider)
     Rdb_CorruptedHandler handler = TestCorruptedHandler;
     auto ret = OH_Rdb_RegisterCorruptedHandler(configV2, context, handler);
     if (ret != RDB_OK) {
+        OH_Rdb_DestroyConfig(configV2);
         return;
     }
     int errCode = 0;
     OH_Rdb_Store *store = OH_Rdb_CreateOrOpen(configV2, &errCode);
     if (store == nullptr) {
+        OH_Rdb_DestroyConfig(configV2);
         return;
     }
     OH_Rdb_CloseStore(store);
