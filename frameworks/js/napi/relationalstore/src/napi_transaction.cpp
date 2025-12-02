@@ -19,13 +19,15 @@
 #include "js_df_manager.h"
 #include "js_utils.h"
 #include "napi_async_call.h"
+#include "napi_lite_result_set.h"
+#include "napi_rdb_context.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_predicates.h"
-#include "napi_lite_result_set.h"
 #include "napi_result_set.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
+#include "rdb_types.h"
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
@@ -34,7 +36,7 @@ namespace OHOS::RelationalStoreJsKit {
     CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
 
 struct TransactionContext : public ContextBase {
-    void GetInstance(napi_value self)
+    void ParsedInstance(napi_value self)
     {
         auto status = napi_unwrap(env_, self, reinterpret_cast<void **>(&boundObj));
         if (status != napi_ok || boundObj == nullptr) {
@@ -49,155 +51,8 @@ struct TransactionContext : public ContextBase {
         transaction_ = nullptr;
         return trans;
     }
-    int32_t ParseRdbPredicatesProxy(napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates);
-    int32_t ParseSendableValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket);
-    int32_t ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket);
-    int32_t ParseValuesBuckets(napi_env env, napi_value arg, std::vector<ValuesBucket> &valuesBuckets);
-    int32_t ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets);
-    int32_t ParseConflictResolution(napi_env env, napi_value arg, NativeRdb::ConflictResolution &conflictResolution);
     std::shared_ptr<NativeRdb::Transaction> transaction_ = nullptr;
-    static constexpr int32_t KEY_INDEX = 0;
-    static constexpr int32_t VALUE_INDEX = 1;
 };
-
-int32_t TransactionContext::ParseRdbPredicatesProxy(
-    napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates)
-{
-    RdbPredicatesProxy *predicatesProxy = nullptr;
-    auto status = napi_unwrap(env, arg, reinterpret_cast<void **>(&predicatesProxy));
-    ASSERT_RETURN_SET_ERROR(status == napi_ok && predicatesProxy != nullptr,
-        std::make_shared<ParamError>("predicates", "an RdbPredicates."));
-    predicates = predicatesProxy->GetInstance();
-    ASSERT_RETURN_SET_ERROR(predicates != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."));
-    return OK;
-}
-
-int32_t TransactionContext::ParseSendableValuesBucket(
-    const napi_env env, const napi_value map, ValuesBucket &valuesBucket)
-{
-    uint32_t length = 0;
-    napi_status status = napi_map_get_size(env, map, &length);
-    auto error = std::make_shared<ParamError>("ValuesBucket is invalid.");
-    ASSERT_RETURN_SET_ERROR(status == napi_ok && length > 0, error);
-    napi_value entries = nullptr;
-    status = napi_map_get_entries(env, map, &entries);
-    ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_map_get_entries failed."));
-    for (uint32_t i = 0; i < length; ++i) {
-        napi_value iter = nullptr;
-        status = napi_map_iterator_get_next(env, entries, &iter);
-        ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_map_iterator_get_next failed."));
-        napi_value values = nullptr;
-        status = napi_get_named_property(env, iter, "value", &values);
-        ASSERT_RETURN_SET_ERROR(
-            status == napi_ok, std::make_shared<InnerError>("napi_get_named_property value failed."));
-        napi_value key = nullptr;
-        status = napi_get_element(env, values, KEY_INDEX, &key);
-        ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
-        std::string keyStr = JSUtils::Convert2String(env, key);
-        napi_value value = nullptr;
-        status = napi_get_element(env, values, VALUE_INDEX, &value);
-        ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_get_element value failed."));
-        ValueObject valueObject;
-        int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
-        if (ret == napi_ok) {
-            valuesBucket.values_.insert_or_assign(std::move(keyStr), std::move(valueObject));
-        } else if (ret != napi_generic_failure) {
-            ASSERT_RETURN_SET_ERROR(false, std::make_shared<ParamError>("The value type of " + keyStr, "invalid."));
-        }
-    }
-    return OK;
-}
-
-int32_t TransactionContext::ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket)
-{
-    bool isMap = false;
-    napi_status status = napi_is_map(env, arg, &isMap);
-    ASSERT_RETURN_SET_ERROR(
-        status == napi_ok, std::make_shared<InnerError>("call napi_is_map failed" + std::to_string(status)));
-    if (isMap) {
-        return ParseSendableValuesBucket(env, arg, valuesBucket);
-    }
-    napi_value keys = nullptr;
-    napi_get_all_property_names(env, arg, napi_key_own_only,
-        static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols), napi_key_numbers_to_strings, &keys);
-    uint32_t arrLen = 0;
-    status = napi_get_array_length(env, keys, &arrLen);
-    ASSERT_RETURN_SET_ERROR(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid"));
-
-    for (size_t i = 0; i < arrLen; ++i) {
-        napi_value key = nullptr;
-        status = napi_get_element(env, keys, i, &key);
-        ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<ParamError>("ValuesBucket is invalid."));
-        std::string keyStr = JSUtils::Convert2String(env, key);
-        napi_value value = nullptr;
-        napi_get_property(env, arg, key, &value);
-        ValueObject valueObject;
-        int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
-        if (ret == napi_ok) {
-            valuesBucket.values_.insert_or_assign(std::move(keyStr), std::move(valueObject));
-        } else if (ret != napi_generic_failure) {
-            ASSERT_RETURN_SET_ERROR(false, std::make_shared<ParamError>("The value type of " + keyStr, "invalid."));
-        }
-    }
-    return OK;
-}
-
-int32_t TransactionContext::ParseValuesBuckets(napi_env env, napi_value arg, std::vector<ValuesBucket> &valuesBuckets)
-{
-    bool isArray = false;
-    auto status = napi_is_array(env, arg, &isArray);
-    ASSERT_RETURN_SET_ERROR(status == napi_ok && isArray, std::make_shared<ParamError>("ValuesBucket is invalid."));
-
-    uint32_t arrLen = 0;
-    status = napi_get_array_length(env, arg, &arrLen);
-    ASSERT_RETURN_SET_ERROR(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid."));
-
-    for (uint32_t i = 0; i < arrLen; ++i) {
-        napi_value obj = nullptr;
-        status = napi_get_element(env, arg, i, &obj);
-        ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
-        ValuesBucket valuesBucket;
-        ASSERT_RETURN_SET_ERROR(
-            ParseValuesBucket(env, obj, valuesBucket) == OK, std::make_shared<ParamError>("ValuesBucket is invalid."));
-        valuesBuckets.push_back(std::move(valuesBucket));
-    }
-    return OK;
-}
-
-int32_t TransactionContext::ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets)
-{
-    bool isArray = false;
-    auto status = napi_is_array(env, arg, &isArray);
-    ASSERT_RETURN_SET_ERROR(status == napi_ok && isArray, std::make_shared<ParamError>("ValuesBucket is invalid."));
-
-    uint32_t arrLen = 0;
-    status = napi_get_array_length(env, arg, &arrLen);
-    ASSERT_RETURN_SET_ERROR(status == napi_ok && arrLen > 0, std::make_shared<ParamError>("ValuesBucket is invalid."));
-
-    for (uint32_t i = 0; i < arrLen; ++i) {
-        napi_value obj = nullptr;
-        status = napi_get_element(env, arg, i, &obj);
-        ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
-        ValuesBucket valuesBucket;
-        ASSERT_RETURN_SET_ERROR(
-            ParseValuesBucket(env, obj, valuesBucket) == OK, std::make_shared<ParamError>("ValuesBucket is invalid."));
-        valuesBuckets.Put(std::move(valuesBucket));
-    }
-    return OK;
-}
-
-int32_t TransactionContext::ParseConflictResolution(
-    const napi_env env, const napi_value arg, NativeRdb::ConflictResolution &conflictResolution)
-{
-    int32_t input = 0;
-    auto status = napi_get_value_int32(env, arg, &input);
-    int32_t min = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
-    int32_t max = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
-    bool checked = status == napi_ok && (input >= min) && (input <= max);
-    ASSERT_RETURN_SET_ERROR(checked, std::make_shared<ParamError>("conflictResolution", "a ConflictResolution."));
-    conflictResolution = static_cast<NativeRdb::ConflictResolution>(input);
-    return OK;
-}
 
 napi_value TransactionProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::Transaction> transaction)
 {
@@ -240,6 +95,9 @@ void TransactionProxy::Init(napi_env env, napi_value exports)
             DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlWithoutRowCount", QuerySqlWithoutRowCount, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("querySql", QuerySql, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("execute", Execute, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertWithReturning", BatchInsertWithReturning, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("updateWithReturning", UpdateWithReturning, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("deleteWithReturning", DeleteWithReturning, ASYNC),
         };
         AddSyncFunctions(properties);
         return properties;
@@ -263,6 +121,10 @@ void TransactionProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &p
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlWithoutRowCountSync", QuerySqlWithoutRowCount, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QuerySql, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC));
+    properties.push_back(
+        DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertWithReturningSync", BatchInsertWithReturning, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateWithReturningSync", UpdateWithReturning, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("deleteWithReturningSync", DeleteWithReturning, SYNC));
 }
 
 TransactionProxy::~TransactionProxy()
@@ -317,7 +179,7 @@ napi_value TransactionProxy::Initialize(napi_env env, napi_callback_info info)
 struct CommitContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         return OK;
     }
@@ -350,7 +212,7 @@ napi_value TransactionProxy::Commit(napi_env env, napi_callback_info info)
 struct RollbackContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         return OK;
     }
@@ -385,9 +247,9 @@ struct DeleteContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         ASSERT_RETURN_SET_ERROR(argc == 1, std::make_shared<ParamNumError>("1"));
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
-        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates) == OK);
+        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates, this) == OK);
         return OK;
     }
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
@@ -426,14 +288,14 @@ struct UpdateContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         ASSERT_RETURN_SET_ERROR(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 3"));
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
-        CHECK_RETURN_ERR(ParseValuesBucket(env, argv[0], valuesBucket) == OK);
-        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[1], rdbPredicates) == OK);
+        CHECK_RETURN_ERR(ParseValuesBucket(env, argv[0], valuesBucket, this, false) == OK);
+        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[1], rdbPredicates, this) == OK);
         // 'argv[2]' is an optional parameter
         if (argc > 2 && !JSUtils::IsNull(env, argv[2])) {
             // 'argv[2]' represents a ConflictResolution parameter
-            CHECK_RETURN_ERR(ParseConflictResolution(env, argv[2], conflictResolution));
+            CHECK_RETURN_ERR(ParseConflictResolution(env, argv[2], conflictResolution, this));
         }
         return OK;
     }
@@ -476,14 +338,14 @@ struct InsertContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         ASSERT_RETURN_SET_ERROR(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 3"));
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(JSUtils::Convert2Value(env, argv[0], tableName) == OK);
-        CHECK_RETURN_ERR(ParseValuesBucket(env, argv[1], valuesBucket) == OK);
+        CHECK_RETURN_ERR(ParseValuesBucket(env, argv[1], valuesBucket, this, false) == OK);
         // 'argv[2]' is an optional parameter
         if (argc > 2 && !JSUtils::IsNull(env, argv[2])) {
             // 'argv[2]' represents a ConflictResolution parameter
-            CHECK_RETURN_ERR(ParseConflictResolution(env, argv[2], conflictResolution));
+            CHECK_RETURN_ERR(ParseConflictResolution(env, argv[2], conflictResolution, this));
         }
         return OK;
     }
@@ -526,17 +388,17 @@ struct BatchInsertContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         ASSERT_RETURN_SET_ERROR(argc == 2, std::make_shared<ParamNumError>("2"));
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         ASSERT_RETURN_SET_ERROR(
             JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
-        CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets) == OK);
-        ASSERT_RETURN_SET_ERROR(!JSUtils::HasDuplicateAssets(valuesBuckets),
+        CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets, this, false) == OK);
+        ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBuckets),
             std::make_shared<ParamError>("Duplicate assets are not allowed"));
         return OK;
     }
     std::string tableName;
-    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBuckets valuesBuckets;
 
     int64_t insertRows = -1;
 };
@@ -572,17 +434,17 @@ struct BatchInsertWithConflictResolutionContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         ASSERT_RETURN_SET_ERROR(argc == 3, std::make_shared<ParamNumError>("3"));
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         ASSERT_RETURN_SET_ERROR(
             JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
-        CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets) == OK);
-        ASSERT_RETURN_SET_ERROR(!JSUtils::HasDuplicateAssets(valuesBuckets),
+        CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets, this, false) == OK);
+        ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBuckets),
             std::make_shared<ParamError>("Duplicate assets are not allowed"));
         // 'argv[2]' represents a ConflictResolution
         ASSERT_RETURN_SET_ERROR(!JSUtils::IsNull(env, argv[2]), std::make_shared<ParamError>("conflict", "not null"));
         // 'argv[2]' represents a ConflictResolution
-        CHECK_RETURN_ERR(ParseConflictResolution(env, argv[2], conflictResolution) == OK);
+        CHECK_RETURN_ERR(ParseConflictResolution(env, argv[2], conflictResolution, this) == OK);
         return OK;
     }
     std::string tableName;
@@ -625,9 +487,9 @@ struct QueryContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         ASSERT_RETURN_SET_ERROR(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
-        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates) == OK);
+        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates, this) == OK);
         if (argc > 1 && !JSUtils::IsNull(env, argv[1])) {
             ASSERT_RETURN_SET_ERROR(JSUtils::Convert2Value(env, argv[1], columns) == OK,
                 std::make_shared<ParamError>("columns", "a Array<string>."));
@@ -698,7 +560,7 @@ struct QuerySqlContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         ASSERT_RETURN_SET_ERROR(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         ASSERT_RETURN_SET_ERROR(
             JSUtils::Convert2Value(env, argv[0], sql) == OK, std::make_shared<ParamError>("sql", "a string."));
@@ -774,7 +636,7 @@ struct ExecuteContext : public TransactionContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         ASSERT_RETURN_SET_ERROR(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 2"));
-        GetInstance(self);
+        ParsedInstance(self);
         ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
         CHECK_RETURN_ERR(JSUtils::Convert2Value(env, argv[0], sql) == OK);
         if (argc > 1 && !JSUtils::IsNull(env, argv[1])) {
@@ -807,6 +669,202 @@ napi_value TransactionProxy::Execute(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = JSUtils::Convert2JSValue(env, context->output);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+struct TransBatchInsertWithReturningContext : public TransactionContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        // the parameters are either 3 or 4.
+        ASSERT_RETURN_SET_ERROR(argc == 3 || argc == 4, std::make_shared<ParamNumError>("3 or 4"));
+        ParsedInstance(self);
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(
+            JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(tableName),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
+        CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets, this) == OK);
+        ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBuckets),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
+        auto errCode = JSUtils::Convert2Value(env, argv[2], config);
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
+            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        config.columns = RdbSqlUtils::BatchTrim(config.columns);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidMaxCount(config.maxReturningCount),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningDunt exceeds the maximum limit."));
+        // 4 is the number of parameters, 3 is the index.
+        if (argc == 4 && !JSUtils::IsNull(env, argv[3])) {
+            // 3 is the index of conflict.
+            CHECK_RETURN_ERR(OK == ParseConflictResolution(env, argv[3], conflictResolution, this));
+        }
+        return OK;
+    }
+    std::string tableName;
+    ValuesBuckets valuesBuckets;
+    Results result;
+    ReturningConfig config;
+    NativeRdb::ConflictResolution conflictResolution = NativeRdb::ConflictResolution::ON_CONFLICT_NONE;
+};
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      batchInsertWithReturning(table: string, values: Array<ValuesBucket>, config: ReturningConfig,
+ *          conflict?: ConflictResolution): Promise<ResultSet>;
+ * [sync]
+ *      batchInsertWithReturningSync(table: string, values: Array<ValuesBucket>, config: ReturningConfig,
+ *          conflict?: ConflictResolution): ResultSet;
+ */
+napi_value TransactionProxy::BatchInsertWithReturning(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<TransBatchInsertWithReturningContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->transaction_ != nullptr);
+        auto result = context->StealTransaction()->BatchInsert(context->tableName, context->valuesBuckets,
+            context->config, context->conflictResolution);
+        context->result = result.second;
+        return result.first;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_value resultSet = ResultSetProxy::NewInstance(env, std::move(context->result.results));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        JSUtils::TsResult tsResults = {context->result.changed, resultSet};
+        result = JSUtils::Convert2JSValue(env, tsResults);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct TransUpdateWithReturningContext : public TransactionContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        // the parameters are either 3 or 4.
+        ASSERT_RETURN_SET_ERROR(argc == 3 || argc == 4, std::make_shared<ParamNumError>("3 to 4"));
+        ParsedInstance(self);
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        CHECK_RETURN_ERR(ParseValuesBucket(env, argv[0], valuesBucket, this) == OK);
+        ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBucket),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
+        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[1], rdbPredicates, this) == OK);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
+        auto errCode = JSUtils::Convert2Value(env, argv[2], config);
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
+            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        config.columns = RdbSqlUtils::BatchTrim(config.columns);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidMaxCount(config.maxReturningCount),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningDunt exceeds the maximum limit."));
+        // 4 is the number of parameters, 3 is the index.
+        if (argc == 4 && !JSUtils::IsNull(env, argv[3])) {
+            // 3 is the index of conflict.
+            CHECK_RETURN_ERR(OK == ParseConflictResolution(env, argv[3], conflictResolution, this));
+        }
+        return OK;
+    }
+    ValuesBucket valuesBucket;
+    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+    NativeRdb::ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE;
+    Results result;
+    ReturningConfig config;
+};
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      updateWithReturning(values: ValuesBucket, predicates: RdbPredicates, config: ReturningConfig,
+ *          conflict?: ConflictResolution): Promise<ResultSet>;
+ * [sync]
+ *      updateWithReturningSync(values: ValuesBucket, predicates: RdbPredicates, config: ReturningConfig,
+ *          conflict?: ConflictResolution): ResultSet;
+ */
+napi_value TransactionProxy::UpdateWithReturning(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<TransUpdateWithReturningContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
+        auto result = context->StealTransaction()->Update(
+            context->valuesBucket, *context->rdbPredicates, context->config, context->conflictResolution);
+        context->result = result.second;
+        return result.first;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_value resultSet = ResultSetProxy::NewInstance(env, std::move(context->result.results));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        JSUtils::TsResult tsResult = {context->result.changed, resultSet};
+        result = JSUtils::Convert2JSValue(env, tsResult);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct TransDeleteWithReturningContext : public TransactionContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        ASSERT_RETURN_SET_ERROR(argc == 2, std::make_shared<ParamNumError>("2"));
+        ParsedInstance(self);
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates, this) == OK);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
+        auto errCode = JSUtils::Convert2Value(env, argv[1], config);
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
+            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        config.columns = RdbSqlUtils::BatchTrim(config.columns);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidMaxCount(config.maxReturningCount),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningDunt exceeds the maximum limit."));
+        return OK;
+    }
+    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+    Results result;
+    ReturningConfig config;
+};
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      deleteWithReturning(predicates: RdbPredicates, config: ReturningConfig): Promise<ResultSet>;
+ * [sync]
+ *      deleteWithReturningSync(predicates: RdbPredicates, config: ReturningConfig): ResultSet;
+ */
+napi_value TransactionProxy::DeleteWithReturning(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<TransDeleteWithReturningContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
+        auto result = context->StealTransaction()->Delete(*(context->rdbPredicates), context->config);
+        context->result = result.second;
+        return result.first;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_value resultSet = ResultSetProxy::NewInstance(env, std::move(context->result.results));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        JSUtils::TsResult tsResults = {context->result.changed, resultSet};
+        result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);

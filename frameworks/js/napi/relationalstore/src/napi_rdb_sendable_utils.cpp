@@ -24,7 +24,6 @@
 
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
-
 template<>
 napi_value Convert2Sendable(napi_env env, const Asset &value)
 {

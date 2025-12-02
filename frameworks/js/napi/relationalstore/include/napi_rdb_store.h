@@ -102,6 +102,9 @@ private:
     static napi_value QueryLockedRow(napi_env env, napi_callback_info info);
     static napi_value LockCloudContainer(napi_env env, napi_callback_info info);
     static napi_value UnlockCloudContainer(napi_env env, napi_callback_info info);
+    static napi_value BatchInsertWithReturning(napi_env env, napi_callback_info info);
+    static napi_value UpdateWithReturning(napi_env env, napi_callback_info info);
+    static napi_value DeleteWithReturning(napi_env env, napi_callback_info info);
 
     static void SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError);
     static void UnregisterAll(
