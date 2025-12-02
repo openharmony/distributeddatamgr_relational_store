@@ -33,8 +33,6 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::Security::AccessToken;
 using namespace OHOS::RdbNdk;
 
-static const int TEXT_MAX_SIZE = 128;
-
 class RdbStoreReturningTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -46,7 +44,7 @@ public:
     static OH_VBucket *CreateOneUpdateVBucket();
     static OH_Data_VBuckets *CreateOneVBuckets();
     static OH_RDB_ReturningContext *CreateReturningContext(std::vector<const char *> fields);
-    static void CursorWorksAsExpected(OH_Cursor *cursor);
+    static void CursorWorksAsExpected(OH_Cursor *cursor, std::string expectedValue);
     static OH_Rdb_Transaction *CreateTransaction(OH_Rdb_Store *store);
 };
 
@@ -140,7 +138,7 @@ OH_Rdb_Transaction *RdbStoreReturningTest::CreateTransaction(OH_Rdb_Store *store
     return trans;
 }
 
-void RdbStoreReturningTest::CursorWorksAsExpected(OH_Cursor *cursor)
+void RdbStoreReturningTest::CursorWorksAsExpected(OH_Cursor *cursor, std::string expectedValue)
 {
     EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
@@ -161,10 +159,10 @@ void RdbStoreReturningTest::CursorWorksAsExpected(OH_Cursor *cursor)
     const int strSize = 5;
     EXPECT_EQ(size, strSize);
 
-    char dataValue[TEXT_MAX_SIZE];
+    char dataValue[size];
     ret = cursor->getText(cursor, 0, dataValue, size);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
-    EXPECT_EQ(dataValue, "Lisa");
+    EXPECT_EQ(std::string(dataValue), expectedValue);
 }
 
 void RdbStoreReturningTest::InitRdbConfig()
@@ -239,7 +237,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_001, TestSi
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
     EXPECT_NE(cursor, nullptr);
-    CursorWorksAsExpected(cursor);
+    CursorWorksAsExpected(cursor, "Lisa");
 
     int changed = OH_RDB_GetChanedCount(context);
     EXPECT_EQ(changed, 1);
@@ -428,7 +426,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_DeleteWithReturning_test_001, TestSize.Le
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
     EXPECT_NE(cursor, nullptr);
-    CursorWorksAsExpected(cursor);
+    CursorWorksAsExpected(cursor, "Lisa");
 
     int changed = OH_RDB_GetChanedCount(context);
     EXPECT_EQ(changed, 1);
@@ -574,7 +572,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_UpdateWithReturning_test_001, TestSize.Le
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
     EXPECT_NE(cursor, nullptr);
-    CursorWorksAsExpected(cursor);
+    CursorWorksAsExpected(cursor, "Lucy");
 
     int changed = OH_RDB_GetChanedCount(context);
     EXPECT_EQ(changed, 1);
@@ -759,7 +757,7 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_BatchInsertWithReturning_test_001, T
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
     EXPECT_NE(cursor, nullptr);
-    CursorWorksAsExpected(cursor);
+    CursorWorksAsExpected(cursor, "Lisa");
 
     int changed = OH_RDB_GetChanedCount(context);
     EXPECT_EQ(changed, 1);
@@ -993,7 +991,7 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_DeleteWithReturning_test_001, TestSi
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
     EXPECT_NE(cursor, nullptr);
-    CursorWorksAsExpected(cursor);
+    CursorWorksAsExpected(cursor, "Lisa");
 
     int changed = OH_RDB_GetChanedCount(context);
     EXPECT_EQ(changed, 1);
@@ -1157,7 +1155,7 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_UpdateWithReturning_test_001, TestSi
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
     EXPECT_NE(cursor, nullptr);
-    CursorWorksAsExpected(cursor);
+    CursorWorksAsExpected(cursor, "Lucy");
 
     int changed = OH_RDB_GetChanedCount(context);
     EXPECT_EQ(changed, 1);
