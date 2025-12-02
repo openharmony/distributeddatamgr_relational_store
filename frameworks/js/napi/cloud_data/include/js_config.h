@@ -44,7 +44,7 @@ public:
 
     static inline bool ValidSubscribeType(int32_t type)
     {
-        return (CLEAR_CLOUD_INFO <= type) && (type <= CLEAR_CLOUD_DATA_AND_INFO);
+        return (CLEAR_CLOUD_INFO <= type) && (type <= CLEAR_CLOUD_NONE);
     }
 
     static inline bool VerifyExtraData(const ExtraData &data)
