@@ -29,6 +29,8 @@ static const int MAX_BLOB_SIZE = 20;
 static const int MIN_ROWS_SIZE = 1;
 static const int MAX_ROWS_SIZE = 20;
 static const int STRING_MAX_LENGTH = 15;
+static const int CRYPTO_PAGESIZE1 = 4096;
+static const int CRYPTO_PAGESIZE2 = 2048;
 
 namespace OHOS {
 class RdbStoreFuzzTest {
@@ -37,6 +39,11 @@ public:
 
     static bool InsertData(std::shared_ptr<RdbStore> store, FuzzedDataProvider &provider);
     static bool BatchInsertData(std::shared_ptr<RdbStore> store, FuzzedDataProvider &provider);
+    static EncryptAlgo GetEncryptAlgo(FuzzedDataProvider &provider);
+    static HmacAlgo GetHmacAlgo(FuzzedDataProvider &provider);
+    static KdfAlgo GetKdfAlgo(FuzzedDataProvider &provider);
+    static int32_t GetIterNum(FuzzedDataProvider &provider);
+    static std::vector<uint8_t> GetEncryptKey(FuzzedDataProvider &provider);
 
     static std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store_;
@@ -98,6 +105,102 @@ bool RdbStoreFuzzTest::InsertData(std::shared_ptr<RdbStore> store, FuzzedDataPro
 
     int64_t id;
     return store->Insert(id, tableName, values);
+}
+
+EncryptAlgo RdbStoreFuzzTest::GetEncryptAlgo(FuzzedDataProvider &provider)
+{
+    EncryptAlgo min = EncryptAlgo::AES_256_GCM;
+    int intValueMin = static_cast<int>(min);
+
+    EncryptAlgo max = EncryptAlgo::PLAIN_TEXT;
+    int intValueMax = static_cast<int>(max);
+
+    EncryptAlgo encryptAlgo = static_cast<EncryptAlgo>(provider.ConsumeIntegralInRange<int>(intValueMin, intValueMax));
+    return encryptAlgo;
+}
+
+HmacAlgo RdbStoreFuzzTest::GetHmacAlgo(FuzzedDataProvider &provider)
+{
+    HmacAlgo min = HmacAlgo::SHA1;
+    int intValueMin = static_cast<int>(min);
+
+    HmacAlgo max = HmacAlgo::SHA512;
+    int intValueMax = static_cast<int>(max);
+
+    HmacAlgo hmacAlgo = static_cast<HmacAlgo>(provider.ConsumeIntegralInRange<int>(intValueMin, intValueMax));
+    return hmacAlgo;
+}
+
+KdfAlgo RdbStoreFuzzTest::GetKdfAlgo(FuzzedDataProvider &provider)
+{
+    KdfAlgo min = KdfAlgo::KDF_SHA1;
+    int intValueMin = static_cast<int>(min);
+
+    KdfAlgo max = KdfAlgo::KDF_SHA256;
+    int intValueMax = static_cast<int>(max);
+
+    KdfAlgo kdfAlgo = static_cast<KdfAlgo>(provider.ConsumeIntegralInRange<int>(intValueMin, intValueMax));
+    return kdfAlgo;
+}
+
+int32_t RdbStoreFuzzTest::GetIterNum(FuzzedDataProvider &provider)
+{
+    int32_t intValueMin = 1000;
+    int32_t intValueMax = 9000;
+    int32_t iterNum = provider.ConsumeIntegralInRange<int>(intValueMin, intValueMax);
+    return iterNum;
+}
+
+std::vector<uint8_t> RdbStoreFuzzTest::GetEncryptKey(FuzzedDataProvider &provider)
+{
+    const int min = 0;
+    const int max = 100;
+    std::vector<uint8_t> encryptKey(provider.ConsumeIntegralInRange<size_t>(min, max));
+    return encryptKey;
+}
+
+bool RdbRekeyExFuzz(FuzzedDataProvider &provider)
+{
+    int errCode = E_OK;
+    std::string dbPath = "/data/test/" + provider.ConsumeRandomLengthString(STRING_MAX_LENGTH) + ".db";
+    RdbStoreConfig config(dbPath);
+    config.SetEncryptStatus(provider.ConsumeBool());
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptAlgo = RdbStoreFuzzTest::GetEncryptAlgo(provider);
+    cryptoParam.hmacAlgo = RdbStoreFuzzTest::GetHmacAlgo(provider);
+    cryptoParam.kdfAlgo = RdbStoreFuzzTest::GetKdfAlgo(provider);
+    cryptoParam.iterNum = RdbStoreFuzzTest::GetIterNum(provider);
+    cryptoParam.cryptoPageSize = CRYPTO_PAGESIZE2;
+    config.SetCryptoParam(cryptoParam);
+    config.SetEncryptKey(RdbStoreFuzzTest::GetEncryptKey(provider));
+    RdbTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    if (store == nullptr || errCode != E_OK) {
+        return false;
+    }
+    bool result = true;
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    auto newEncryptAlgo = RdbStoreFuzzTest::GetEncryptAlgo(provider);
+    newCryptoParam.encryptAlgo = newEncryptAlgo;
+    newCryptoParam.hmacAlgo = RdbStoreFuzzTest::GetHmacAlgo(provider);
+    newCryptoParam.kdfAlgo = RdbStoreFuzzTest::GetKdfAlgo(provider);
+    newCryptoParam.iterNum = RdbStoreFuzzTest::GetIterNum(provider);
+    newCryptoParam.cryptoPageSize = CRYPTO_PAGESIZE1;
+    errCode = store->RekeyEx(newCryptoParam);
+    if (errCode != E_OK) {
+        result = false;
+    }
+    store = nullptr;
+    auto encrypt = newEncryptAlgo != EncryptAlgo::PLAIN_TEXT;
+    config.SetEncryptStatus(encrypt);
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    if (store == nullptr || errCode != E_OK) {
+        RdbHelper::DeleteRdbStore(config);
+        return false;
+    }
+    RdbHelper::DeleteRdbStore(config);
+    return result;
 }
 
 bool RdbInsertFuzz(FuzzedDataProvider &provider)
@@ -526,5 +629,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RdbQueryLockedRowFuzz2(provider);
     OHOS::RdbInitKnowledgeSchemaFuzz(provider);
     OHOS::RdbRegisterAlgoFuzz(provider);
+    OHOS::RdbRekeyExFuzz(provider);
     return 0;
 }
