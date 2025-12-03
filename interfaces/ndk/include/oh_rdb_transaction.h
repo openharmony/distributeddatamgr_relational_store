@@ -427,7 +427,7 @@ int OH_RdbTrans_Execute(OH_Rdb_Transaction *trans, const char *sql, const OH_Dat
 int OH_RdbTrans_Destroy(OH_Rdb_Transaction *trans);
 
 /**
- * @brief Inserts a batch of data into the target table and output a cursor of changed fields.
+ * @brief Inserts a batch of data into the target table and output change info to context.
  *
  * @param trans Represents a pointer to an instance of OH_Rdb_Transaction.
  * @param table Represents the target table.
@@ -451,7 +451,8 @@ int OH_RdbTrans_Destroy(OH_Rdb_Transaction *trans);
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
  *         Returns {@link RDB_E_SQLITE_CONSTRAINT} SQLite: Abort due to constraint violation.
- *         Returns {@link RDB_E_SQLITE_ERROR} SQLite: Generic error.
+ *         Returns {@link RDB_E_SQLITE_ERROR} SQLite error.
+ *             Possible causes: syntax error, such as a table or column not existing.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Transaction, OH_Data_VBuckets, OH_Rdb_ErrCode, OH_RDB_ReturningContext.
  * @since 23

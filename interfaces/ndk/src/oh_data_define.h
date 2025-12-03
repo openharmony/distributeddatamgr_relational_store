@@ -81,6 +81,5 @@ struct OH_RDB_ReturningContext {
     OH_Cursor *cursor = nullptr;
     OHOS::NativeRdb::ReturningConfig config;
     bool IsValid() const;
-    bool CheckParama() const;
 };
 #endif

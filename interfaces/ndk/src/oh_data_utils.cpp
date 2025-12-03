@@ -90,4 +90,42 @@ bool Utils::IsContainTerminator()
     isInited_ = true;
     return flag_;
 }
+
+bool Utils::IsValidContext(const OH_RDB_ReturningContext *context)
+{
+    if (context == nullptr || context->cursor != nullptr) {
+        LOG_ERROR("context param has null data.");
+        return false;
+    }
+    if (!context->IsValid()) {
+        LOG_ERROR("invalid context.");
+        return false;
+    }
+    return !(config.columns.empty() ||
+             config.maxReturningCount == OHOS::NativeRdb::ReturningConfig::ILLEGAL_RETURNING_COUNT);
+}
+
+bool Utils::IsValidRows(const OH_Data_VBuckets *rows)
+{
+    if (rows == nullptr) {
+        LOG_ERROR("rows is null data.");
+        return false;
+    }
+    if (!rows->IsValid()) {
+        LOG_ERROR("invalid rows.");
+        return false;
+    }
+    return true;
+}
+
+bool Utils::IsValidResolution(Rdb_ConflictResolution resolution)
+{
+    if (resolution < Rdb_ConflictResolution::RDB_CONFLICT_NONE ||
+        resolution > Rdb_ConflictResolution::RDB_CONFLICT_REPLACE) {
+        LOG_ERROR("resolution is not valid. %{public}d", resolution);
+        return false;
+    }
+    return true;
+}
+
 } // namespace OHOS::RdbNdk

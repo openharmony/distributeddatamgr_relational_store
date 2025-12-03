@@ -27,12 +27,6 @@ bool OH_RDB_ReturningContext::IsValid() const
     return id == OH_CRYPTO_PARAM_ID;
 }
 
-bool OH_RDB_ReturningContext::CheckParama() const
-{
-    return (config.columns.empty() ||
-            config.maxReturningCount == OHOS::NativeRdb::ReturningConfig::ILLEGAL_RETURNING_COUNT);
-}
-
 OH_RDB_ReturningContext *OH_RDB_CreateReturningContext(void)
 {
     OH_RDB_ReturningContext *context = new (std::nothrow) OH_RDB_ReturningContext;
