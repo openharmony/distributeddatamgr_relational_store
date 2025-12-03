@@ -106,14 +106,14 @@ void OH_RDB_DestroyReturningContext(OH_RDB_ReturningContext *context);
  * @brief Get the number of rows affected bu this operation.
  *
  * @param context Represents a pointer to an instance of OH_RDB_ReturningContext.
- * @param columnNames Indicates the columnNames to returning.
- * @param len Indicates the length of columnNames.
+ * @param fields Indicates the fields to returning.
+ * @param len Indicates the length of fields.
  * @return Returns the error code.
  *         Returns {@link RDB_OK} if the execution is successful.
  *         Returns {@link RDB_E_INVALID_ARGS} if invalid input parameter.
  * @since 23
  */
-int OH_RDB_SetReturningField(OH_RDB_ReturningContext *context, const char *const columnNames[], int32_t len);
+int OH_RDB_SetReturningFields(OH_RDB_ReturningContext *context, const char *const fields[], int32_t len);
 
 /**
  * @brief Get the number of rows affected bu this operation.

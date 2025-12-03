@@ -120,7 +120,7 @@ OH_RDB_ReturningContext *RdbStoreReturningTest::CreateReturningContext(std::vect
 {
     OH_RDB_ReturningContext *returningContext = OH_RDB_CreateReturningContext();
     EXPECT_NE(returningContext, nullptr);
-    OH_RDB_SetReturningField(returningContext, fields.data(), static_cast<int32_t>(fields.size()));
+    OH_RDB_SetReturningFields(returningContext, fields.data(), static_cast<int32_t>(fields.size()));
     return returningContext;
 }
 
@@ -1363,26 +1363,26 @@ HWTEST_F(RdbStoreReturningTest, OH_RDB_ReturningContext_test_001, TestSize.Level
     const char *columns[] = {"NAME", "AGE", "SALARY"};
     int32_t len = sizeof(columns) / sizeof(columns[0]);
 
-    ret = OH_RDB_SetReturningField(context, columns, len);
+    ret = OH_RDB_SetReturningFields(context, columns, len);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
-    ret = OH_RDB_SetReturningField(nullptr, columns, len);
+    ret = OH_RDB_SetReturningFields(nullptr, columns, len);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
-    ret = OH_RDB_SetReturningField(context, nullptr, len);
+    ret = OH_RDB_SetReturningFields(context, nullptr, len);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
-    ret = OH_RDB_SetReturningField(context, columns, -1);
+    ret = OH_RDB_SetReturningFields(context, columns, -1);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     const char *columns1[] = {"NAME", "*", "SALARY"};
     int32_t len1 = sizeof(columns1) / sizeof(columns1[0]);
-    ret = OH_RDB_SetReturningField(context, columns1, len1);
+    ret = OH_RDB_SetReturningFields(context, columns1, len1);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     const char *columns2[] = {"NAME", nullptr, "SALARY"};
     int32_t len2 = sizeof(columns2) / sizeof(columns2[0]);
-    ret = OH_RDB_SetReturningField(context, columns2, len2);
+    ret = OH_RDB_SetReturningFields(context, columns2, len2);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(nullptr);
