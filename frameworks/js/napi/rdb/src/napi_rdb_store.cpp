@@ -67,8 +67,8 @@ struct RdbStoreContext : public BaseContext {
     std::vector<ValuesBucket> valuesBuckets;
     std::map<std::string, ValueObject> numberMaps;
     std::vector<ValueObject> bindArgs;
-    uint64_t rowId;
-    uint64_t insertNum;
+    int64_t rowId;
+    int64_t insertNum;
     std::vector<uint8_t> newKey;
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     std::shared_ptr<AbsSharedResultSet> resultSet;
