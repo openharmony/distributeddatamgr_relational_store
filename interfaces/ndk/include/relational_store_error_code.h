@@ -432,7 +432,7 @@ typedef enum OH_Rdb_ErrCode {
     RDB_E_SUB_LIMIT_REACHED = (E_BASE + 66),
 
     /**
-     * @brief Generic error.
+     * @brief SQLite error. Possible causes: syntax error, such as a table or column not existing.
      *
      * @since 23
      */

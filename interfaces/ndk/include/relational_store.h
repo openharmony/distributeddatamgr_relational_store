@@ -1696,7 +1696,7 @@ int OH_Rdb_SetLocale(OH_Rdb_Store *store, const char *locale);
 int OH_Rdb_RekeyEx(OH_Rdb_Store *store, OH_Rdb_CryptoParam *param);
 
 /**
- * @brief Inserts a batch of data into the target table and output a cursor of changed fields.
+ * @brief Inserts a batch of data into the target table and output change info to context.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param table Represents the target table.
@@ -1719,7 +1719,8 @@ int OH_Rdb_RekeyEx(OH_Rdb_Store *store, OH_Rdb_CryptoParam *param);
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
  *         Returns {@link RDB_E_SQLITE_CONSTRAINT} SQLite: Abort due to constraint violation.
- *         Returns {@link RDB_E_SQLITE_ERROR} SQLite: Generic error.
+ *         Returns {@link RDB_E_SQLITE_ERROR} SQLite error.
+ *             Possible causes: syntax error, such as a table or column not existing.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Data_VBuckets, OH_Rdb_ErrCode, OH_RDB_ReturningContext.
  * @since 23
@@ -1728,10 +1729,10 @@ int OH_Rdb_BatchInsertWithReturning(OH_Rdb_Store *store, const char *table, cons
     Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context);
 
 /**
- * @brief Updates data in the database based on specified conditions and output a cursor of changed fields.
+ * @brief Updates data in the database based on specified conditions and output change info to context.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
- * @param row Represents the row data to be inserted into the table.
+ * @param row Represents the row data to be updated into the table.
  * @param predicates Represents  a pointer to an {link OH_Predicates} instance.
  * @param resolution Represents the resolution when conflict occurs.
  * @param context Represents a pointer to a pointer to an {@link OH_RDB_ReturningContext} instance.
@@ -1752,7 +1753,8 @@ int OH_Rdb_BatchInsertWithReturning(OH_Rdb_Store *store, const char *table, cons
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
  *         Returns {@link RDB_E_SQLITE_CONSTRAINT} SQLite: Abort due to constraint violation.
- *         Returns {@link RDB_E_SQLITE_ERROR} SQLite: Generic error.
+ *         Returns {@link RDB_E_SQLITE_ERROR} SQLite error.
+ *             Possible causes: syntax error, such as a table or column not existing.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Data_VBuckets, OH_Predicates, OH_Rdb_ErrCode, OH_RDB_ReturningContext.
  * @since 23
@@ -1761,7 +1763,7 @@ int OH_Rdb_UpdateWithReturning(OH_Rdb_Store *store, OH_VBucket *row, OH_Predicat
     Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context);
 
 /**
- * @brief Deletes data from the database based on specified conditions and output a cursor of changed fields.
+ * @brief Deletes data from the database based on specified conditions and output change info to context.
  *
  * @param store Represents a pointer to an {@link OH_Rdb_Store} instance.
  * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
@@ -1781,7 +1783,8 @@ int OH_Rdb_UpdateWithReturning(OH_Rdb_Store *store, OH_VBucket *row, OH_Predicat
  *         Returns {@link RDB_E_SQLITE_IOERR} SQLite: Some kind of disk I/O error occurred.
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
- *         Returns {@link RDB_E_SQLITE_ERROR} SQLite: Generic error.
+ *         Returns {@link RDB_E_SQLITE_ERROR} SQLite error.
+ *             Possible causes: syntax error, such as a table or column not existing.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Store, OH_Predicates, OH_Rdb_ErrCode, OH_RDB_ReturningContext.
  * @since 23
