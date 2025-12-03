@@ -289,6 +289,11 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
 
 std::pair<int, std::vector<ValueObject>> AbsResultSet::GetRowData()
 {
+    if (lastErr_ != E_OK) {
+        LOG_ERROR("ResultSet has lastErr %{public}d", lastErr_);
+        return { lastErr_, {} };
+    }
+
     int errCode = E_OK;
     if (columnCount_ < 0) {
         errCode = InitColumnNames();
@@ -312,6 +317,54 @@ std::pair<int, std::vector<ValueObject>> AbsResultSet::GetRowData()
         index++;
     }
     return { E_OK, std::move(rowData) };
+}
+
+std::pair<int, std::vector<std::vector<ValueObject>>> AbsResultSet::GetRowsData(int32_t maxCount, int32_t position)
+{
+    if (lastErr_ != E_OK) {
+        LOG_ERROR("ResultSet has lastErr %{public}d", lastErr_);
+        return { lastErr_, {} };
+    }
+
+    if (maxCount < 0 || position < 0) {
+        LOG_ERROR("invalid params! maxCount:%{public}d, position:%{public}d", maxCount, position);
+        return { E_INVALID_ARGS_NEW, {} };
+    }
+
+    if (maxCount == 0) {
+        LOG_WARN("maxCount is 0");
+        return { E_OK, {} };
+    }
+
+    int errCode = E_OK;
+    int rowPos = 0;
+    GetRowIndex(rowPos);
+    if (position != INIT_POS && position != rowPos) {
+        errCode = GoToRow(position);
+    } else if (rowPos == INIT_POS) {
+        errCode = GoToFirstRow();
+        if (errCode == E_ROW_OUT_RANGE) {
+            return { E_OK, {} };
+        }
+    }
+
+    if (errCode != E_OK) {
+        LOG_ERROR("Failed code:%{public}d. maxCount:%{public}d, position:%{public}d", errCode, maxCount, position);
+        return { errCode, {} };
+    }
+
+    std::vector<std::vector<ValueObject>> rowsData;
+    std::tie(errCode, rowsData) = GetMultiRowsData(maxCount);
+    if (errCode == E_ROW_OUT_RANGE) {
+        return { E_OK, std::move(rowsData) };
+    }
+
+    if (errCode != E_OK) {
+        LOG_ERROR("GetMultiRowsData Failed, code:%{public}d. maxCount:%{public}d, position:%{public}d",
+            errCode, maxCount, position);
+        return { errCode, {} };
+    }
+    return { E_OK, std::move(rowsData) };
 }
 
 int AbsResultSet::GoToRow(int position)
@@ -349,7 +402,7 @@ int AbsResultSet::GoToLastRow()
         return ret;
     }
     if (rowCnt == 0) {
-        return E_ERROR;
+        return E_ROW_OUT_RANGE;
     }
 
     return GoToRow(rowCnt - 1);
@@ -558,6 +611,11 @@ int AbsResultSet::GetFloat32Array(int32_t col, ValueObject::FloatVector &value)
 }
 
 std::pair<int, std::vector<std::string>> AbsResultSet::GetColumnNames()
+{
+    return { E_NOT_SUPPORT, {} };
+}
+
+std::pair<int, std::vector<std::vector<ValueObject>>> AbsResultSet::GetMultiRowsData(int32_t maxCount)
 {
     return { E_NOT_SUPPORT, {} };
 }

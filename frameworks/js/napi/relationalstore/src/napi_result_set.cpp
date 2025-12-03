@@ -731,53 +731,12 @@ napi_value ResultSetProxy::GetRows(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
-std::pair<int, std::vector<std::vector<ValueObject>>> ResultSetProxy::GetRowsData(
-    ResultSet &resultSet, int32_t maxCount, int32_t position)
-{
-    int rowPos = 0;
-    resultSet.GetRowIndex(rowPos);
-    int errCode = E_OK;
-    if (position != INIT_POSITION && position != rowPos) {
-        errCode = resultSet.GoToRow(position);
-    } else if (rowPos == INIT_POSITION) {
-        errCode = resultSet.GoToFirstRow();
-        if (errCode == E_ROW_OUT_RANGE) {
-            return { E_OK, {} };
-        }
-    }
-
-    if (errCode != E_OK) {
-        LOG_ERROR("Failed code:%{public}d. [maxCount:%{public}d, position:%{public}d]", errCode, maxCount, position);
-        return { errCode, {} };
-    }
-
-    std::vector<std::vector<ValueObject>> rowsData;
-    for (int32_t i = 0; i < maxCount; ++i) {
-        auto [ errCode, rowData ] = resultSet.GetRowData();
-        if (errCode == E_ROW_OUT_RANGE) {
-            break;
-        }
-        if (errCode != E_OK) {
-            return { errCode, {} };
-        }
-        rowsData.push_back(std::move(rowData));
-        errCode = resultSet.GoToNextRow();
-        if (errCode == E_ROW_OUT_RANGE) {
-            break;
-        }
-        if (errCode != E_OK) {
-            return { errCode, {} };
-        }
-    }
-    return { E_OK, std::move(rowsData) };
-}
-
 napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
 {
     struct RowsContextBase : public ContextBase {
     public:
         int32_t maxCount = 0;
-        int32_t position = INIT_POSITION;
+        int32_t position = 0;
         std::weak_ptr<ResultSet> resultSet;
         std::vector<std::vector<ValueObject>> rowsData;
     };
@@ -788,11 +747,11 @@ napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc > 0, std::make_shared<ParamNumError>("1 or 2"));
         auto errCode = JSUtils::Convert2ValueExt(env, argv[0], context->maxCount);
-        CHECK_RETURN_SET_E(OK == errCode && context->maxCount > 0, std::make_shared<ParamError>("Invalid maxCount"));
+        CHECK_RETURN_SET_E(OK == errCode && context->maxCount > 0, std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid maxCount"));
         if (argc == 2) {
             errCode = JSUtils::Convert2ValueExt(env, argv[1], context->position);
             CHECK_RETURN_SET_E(
-                OK == errCode && context->position >= 0, std::make_shared<ParamError>("Invalid position"));
+                OK == errCode && context->position >= 0, std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid position"));
         }
     };
     auto exec = [context]() -> int {
@@ -801,7 +760,7 @@ napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
             return E_ALREADY_CLOSED;
         }
         int errCode = E_OK;
-        std::tie(errCode, context->rowsData) = GetRowsData(*result, context->maxCount, context->position);
+        std::tie(errCode, context->rowsData) = result->GetRowsData(context->maxCount, context->position);
         if (errCode == E_INVALID_ARGS) {
             errCode = E_INVALID_ARGS_NEW;
         }

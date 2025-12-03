@@ -190,7 +190,8 @@ void RdConnection::Interrupt()
     return;
 }
 
-std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::string &sql, Connection::SConn conn)
+std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(
+    const std::string &sql, Connection::SConn conn, const std::string &returningSql)
 {
     auto stmt = std::make_shared<RdStatement>();
     stmt->conn_ = conn;
@@ -208,8 +209,8 @@ std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateStatement(const std::
     return { ret, stmt };
 }
 
-std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateReplicaStatement([[gnu::unused]] const std::string &sql,
-    [[gnu::unused]] Connection::SConn conn)
+std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateReplicaStatement([[gnu::unused]]
+    const std::string &sql, [[gnu::unused]] Connection::SConn conn, const std::string &returningSql)
 {
     return { E_NOT_SUPPORT, nullptr };
 }

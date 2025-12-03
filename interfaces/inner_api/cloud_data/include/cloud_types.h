@@ -180,5 +180,23 @@ enum NetWorkStrategy : uint32_t {
     CELLULAR = 0x02,
     NETWORK_STRATEGY_BUTT
 };
+
+struct DBSwitchInfo {
+    bool enable = true;
+    std::map<std::string, bool> tableInfo;
+};
+
+struct SwitchConfig {
+    std::map<std::string, DBSwitchInfo> dbInfo;
+};
+
+struct DBActionInfo {
+    int32_t action;
+    std::map<std::string, int32_t> tableInfo;
+};
+
+struct ClearConfig {
+    std::map<std::string, DBActionInfo> dbInfo;
+};
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_H

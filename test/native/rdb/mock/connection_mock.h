@@ -39,9 +39,10 @@ public:
     using ReplayCallBack = std::function<void(void)>;
 
     MOCK_METHOD(int32_t, VerifyAndRegisterHook, (const RdbStoreConfig &config), (override));
-    MOCK_METHOD((std::pair<int32_t, Stmt>), CreateStatement, (const std::string &sql, SConn conn), (override));
+    MOCK_METHOD((std::pair<int32_t, Stmt>), CreateStatement,
+        (const std::string &sql, SConn conn, const std::string &returningSql), (override));
     MOCK_METHOD((std::pair<int32_t, Stmt>), CreateReplicaStatement,
-        (const std::string &sql, SConn conn), (override));
+        (const std::string &sql, SConn conn, const std::string &returningSql), (override));
     MOCK_METHOD(int, CheckReplicaForRestore, (), (override));
     MOCK_METHOD(int32_t, Rekey, (const RdbStoreConfig::CryptoParam &cryptoParam), (override));
     MOCK_METHOD(int32_t, GetDBType, (), (const, override));

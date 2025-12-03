@@ -173,8 +173,8 @@ void RdbSqliteSharedResultSetTest::CreateOtherTableWithDB()
 
     values.PutInt("id", 1);
     values.PutString("data1", std::string("hello1"));
-    values.PutInt("data2", 101); // set int value 10
-    values.PutDouble("data3", 1.1);
+    values.PutInt("data2", 101); // set int value 101
+    values.PutDouble("data3", 1.1); // set double value 1.1
     values.PutBlob("data4", std::vector<uint8_t>{ 66 }); // set uint8_t value 66
     values.Put("data5", asset);
     values.Put("data6", assets);
@@ -1594,7 +1594,7 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_036, TestSize.Le
     int ret = rstSet->GoToFirstRow();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
     ret = rstSet->GoToLastRow();
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
 }
 
 /* *
@@ -1774,5 +1774,30 @@ HWTEST_F(RdbSqliteSharedResultSetTest, GetWholeColumnNames_002, TestSize.Level1)
     allDuplicateColumn.insert(allDuplicateColumn.end(), ALL_DUPLICATE_COLUMN.begin(), ALL_DUPLICATE_COLUMN.end());
     allDuplicateColumn.insert(allDuplicateColumn.end(), ALL_DUPLICATE_COLUMN.begin(), ALL_DUPLICATE_COLUMN.end());
     EXPECT_EQ(colunmNames, allDuplicateColumn);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: GetRowData_001
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetRowData
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, GetRowData_001, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    CreateOtherTableWithDB();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql(QUERY_SQL_DUPLICATE_COLUMN);
+    EXPECT_NE(resultSet, nullptr);
+    EXPECT_EQ(resultSet->GoToFirstRow(), E_OK);
+    auto[err, valueObjects] = resultSet->GetRowData();
+    EXPECT_EQ(err, E_OK);
+    for (int i = 0; i < valueObjects.size(); ++i) {
+        ValueObject value;
+        err = resultSet->Get(i, value);
+        EXPECT_EQ(err, E_OK);
+        EXPECT_EQ(value, valueObjects[i]);
+    }
     resultSet->Close();
 }

@@ -175,6 +175,12 @@ public:
     API_EXPORT std::pair<int, std::vector<ValueObject>> GetRowData() override;
 
     /**
+     * @brief Gets the entire row of data for the multiple rows from the result set in order.
+     */
+    API_EXPORT std::pair<int, std::vector<std::vector<ValueObject>>> GetRowsData(int32_t maxCount,
+        int32_t position) override;
+
+    /**
      * @brief Move the cursor to an absolute position.
      *
      * @param position Indicates the specified column index, which starts from 0.
@@ -344,6 +350,7 @@ protected:
     using Mutex = Lock<std::mutex>;
 
     virtual std::pair<int, std::vector<std::string>> GetColumnNames();
+    virtual std::pair<int, std::vector<std::vector<ValueObject>>> GetMultiRowsData(int32_t maxCount);
     std::pair<int, bool> IsEnded();
 
     // The default position of the result set

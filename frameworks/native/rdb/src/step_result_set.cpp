@@ -389,5 +389,22 @@ std::shared_ptr<Statement> StepResultSet::GetStatement()
 
     return statement_;
 }
+
+std::pair<int, std::vector<std::vector<ValueObject>>> StepResultSet::GetMultiRowsData(int32_t maxCount)
+{
+    auto statement = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("statement is nullptr.");
+        return { E_ALREADY_CLOSED, {} };
+    }
+
+    auto [errCode, rowsData] = statement->GetMultiRowsData(maxCount);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetMultiRowsData error = %{public}d ", errCode);
+        return { errCode, {} };
+    }
+
+    return { E_OK, std::move(rowsData) };
+}
 } // namespace NativeRdb
 } // namespace OHOS

@@ -72,11 +72,19 @@ public:
     static std::string BuildQueryString(const AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
     
     static std::pair<int, SqlInfo> GetInsertSqlInfo(const std::string &table, const Row &row, Resolution resolution);
-    static std::pair<int, SqlInfo> GetUpdateSqlInfo(const AbsRdbPredicates &predicates, const Row &row,
-        Resolution resolution, const std::vector<std::string> &returningFields = {});
-    static std::pair<int, SqlInfo> GetDeleteSqlInfo(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields = {});
+    static std::pair<int, SqlInfo> GetUpdateSqlInfo(
+        const AbsRdbPredicates &predicates, const Row &row, Resolution resolution);
+    static std::pair<int, SqlInfo> GetDeleteSqlInfo(const AbsRdbPredicates &predicates);
     static std::pair<int, SqlInfo> GetQuerySqlInfo(const AbsRdbPredicates &predicates, const Fields &columns);
+    static bool IsValidTableName(const std::string &tableName);
+    static bool IsValidFields(const std::vector<std::string> &fields);
+    static std::string Trim(const std::string &str);
+    static std::vector<std::string> BatchTrim(const std::vector<std::string> &value);
+    static bool IsValidMaxCount(int32_t maxCount);
+    static bool HasDuplicateAssets(const ValueObject &value);
+    static bool HasDuplicateAssets(const std::vector<ValueObject> &values);
+    static bool HasDuplicateAssets(const ValuesBucket &value);
+    static bool HasDuplicateAssets(const ValuesBuckets &values);
 };
 } // namespace NativeRdb
 } // namespace OHOS

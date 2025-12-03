@@ -268,5 +268,32 @@ int32_t SqliteSharedResultSet::ExecuteForSharedBlock(AppDataFwk::SharedBlock *bl
     block->SetLastPos(blockInfo.startPos + block->GetRowNum());
     return E_OK;
 }
+
+std::shared_ptr<Statement> SqliteSharedResultSet::GetStatement()
+{
+    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
+    if (isClosed_ || conn_ == nullptr) {
+        return nullptr;
+    }
+
+    return statement_;
+}
+
+std::pair<int, std::vector<std::vector<ValueObject>>> SqliteSharedResultSet::GetMultiRowsData(int32_t maxCount)
+{
+    auto statement = GetStatement();
+    if (statement == nullptr) {
+        LOG_ERROR("statement is nullptr.");
+        return { E_ALREADY_CLOSED, {} };
+    }
+
+    auto [errCode, rowsData] = statement->GetMultiRowsData(maxCount);
+    if (errCode != E_OK) {
+        LOG_ERROR("GetMultiRowsData error = %{public}d ", errCode);
+        return { errCode, {} };
+    }
+
+    return { E_OK, std::move(rowsData) };
+}
 } // namespace NativeRdb
 } // namespace OHOS

@@ -37,11 +37,11 @@ public:
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        const std::vector<std::string> &returningFields, Resolution resolution) override;
+        const ReturningConfig &config, Resolution resolution) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const std::vector<std::string> &returningFields, Resolution resolution) override;
+        const ReturningConfig &config, Resolution resolution) override;
     std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields) override;
+        const AbsRdbPredicates &predicates, const ReturningConfig &config) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
         const QueryOptions &options) override;
     std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,

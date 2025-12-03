@@ -1,0 +1,65 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@!namespace("@ohos.data.cloudData", "cloudData")
+@!sts_inject("""
+static { loadLibraryWithPermissionCheck("cloud_data_taihe.z", "@ohos.data.cloudData"); }
+""")
+
+enum ClearAction: i32 {
+    CLEAR_CLOUD_INFO = 0,
+    CLEAR_CLOUD_DATA_AND_INFO = 1,
+    CLEAR_CLOUD_NONE = 2
+}
+
+struct DBSwitchInfo {
+    enable: bool;
+    tableInfo: Optional<@record Map<String, bool>>;
+}
+
+struct SwitchConfig {
+    dbInfo: @record Map<String, DBSwitchInfo>;
+}
+
+struct DBActionInfo {
+    action: ClearAction;
+    tableInfo: Optional<@record Map<String, ClearAction>>;
+}
+
+struct ClearConfig {
+    dbInfo: @record Map<String, DBActionInfo>;
+}
+
+@class
+interface Config {
+}
+
+@static("Config")
+@gen_promise("changeAppCloudSwitch")
+@gen_async("changeAppCloudSwitch")
+function ChangeAppCloudSwitchImpl(accountId: String, bundleName: String, status: bool): void;
+
+@static("Config")
+@gen_promise("clear")
+@gen_async("clear")
+function ClearImpl(accountId: String, appActions: @record Map<String, ClearAction>): void;
+
+@static("Config")
+@gen_promise("changeAppCloudSwitch")
+function ChangeAppCloudSwitchImplWithConfig(accountId: String, bundleName: String, status: bool, config: Optional<SwitchConfig>): void;
+
+@static("Config")
+@gen_promise("clear")
+function ClearImplWithConfig(accountId: String, appActions: @record Map<String, ClearAction>, config: Optional<@record Map<String, ClearConfig>>): void;

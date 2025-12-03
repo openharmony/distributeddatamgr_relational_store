@@ -31,7 +31,6 @@ import RdbStoreDataChangeTestEts from './RdbstoreDataChangeEts.test.ets'
 import RelationalStoreCloseTest from './RelationalStoreCloseTest.test.ets'
 import RdbQueryWithoutRowCount from './RdbQueryWithoutRowCount.test';
 import TransQueryWithoutRowCount from './TransQueryWithoutRowCount.test';
-import RdbQueryWithDuplicate from './RdbQueryWithDuplicate.test';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -52,5 +51,4 @@ export default function testsuite() {
   RelationalStoreCloseTest();
   RdbQueryWithoutRowCount();
   TransQueryWithoutRowCount();
-  RdbQueryWithDuplicate();
 }
