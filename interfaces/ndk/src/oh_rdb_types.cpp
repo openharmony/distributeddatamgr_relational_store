@@ -57,24 +57,24 @@ void OH_RDB_DestroyReturningContext(OH_RDB_ReturningContext *context)
     delete context;
 }
 
-int OH_RDB_SetReturningField(OH_RDB_ReturningContext *context, const char *const columnNames[], int32_t len)
+int OH_RDB_SetReturningFields(OH_RDB_ReturningContext *context, const char *const fields[], int32_t len)
 {
-    if (context == nullptr || !context->IsValid() || columnNames == nullptr || len <= 0) {
-        LOG_ERROR("failed. [%{public}d, %{public}d]", columnNames == nullptr, len);
+    if (context == nullptr || !context->IsValid() || fields == nullptr || len <= 0) {
+        LOG_ERROR("failed. [%{public}d, %{public}d]", fields == nullptr, len);
         return RDB_E_INVALID_ARGS;
     }
     std::vector<std::string> columns;
     columns.reserve(len);
     for (int i = 0; i < len; i++) {
-        if (columnNames[i] == nullptr) {
-            LOG_ERROR("failed. columnNames[%{public}d] is nullptr", i);
+        if (fields[i] == nullptr) {
+            LOG_ERROR("failed. fields[%{public}d] is nullptr", i);
             return RDB_E_INVALID_ARGS;
         }
-        columns.push_back(columnNames[i]);
+        columns.push_back(fields[i]);
     }
     columns = RdbSqlUtils::BatchTrim(columns);
     if (!RdbSqlUtils::IsValidFields(columns)) {
-        LOG_ERROR("illegal columnNames, maybe has [','|' '|'*']");
+        LOG_ERROR("illegal fields, maybe has [','|' '|'*']");
         return RDB_E_INVALID_ARGS;
     }
     context->config.columns = std::move(columns);
