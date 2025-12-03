@@ -93,7 +93,7 @@ group("distributedtest") {
   testonly = true
 
   deps = []
-  if (dm_part_is_enabled && relational_store_distributed_capability) {
+  if (relational_store_dm_part_is_enabled && relational_store_distributed_capability) {
     deps += [
       ":DistributedTest",
       ":DistributedTestAgent",

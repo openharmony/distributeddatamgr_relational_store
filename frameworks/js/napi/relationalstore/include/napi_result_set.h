@@ -43,8 +43,6 @@ public:
 
 private:
     static std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position);
-    static std::pair<int, std::vector<std::vector<ValueObject>>> GetRowsData(ResultSet &resultSet, int32_t maxCount,
-        int32_t position);
 
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);

@@ -163,4 +163,28 @@ bool Unmarshalling(Option &output, MessageParcel &data)
 {
     return Unmarshal(data, output.syncMode, output.seqNum);
 }
+
+template<>
+bool Marshalling(const SwitchConfig &input, MessageParcel &data)
+{
+    return Marshal(data, input.dbInfo);
+}
+
+template<>
+bool Marshalling(const DBSwitchInfo &input, MessageParcel &data)
+{
+    return Marshal(data, input.enable, input.tableInfo);
+}
+
+template<>
+bool Marshalling(const ClearConfig &input, MessageParcel &data)
+{
+    return Marshal(data, input.dbInfo);
+}
+
+template<>
+bool Marshalling(const DBActionInfo &input, MessageParcel &data)
+{
+    return Marshal(data, input.action, input.tableInfo);
+}
 } // namespace OHOS::ITypesUtil

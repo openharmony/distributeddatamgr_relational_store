@@ -17,6 +17,7 @@
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
 #include <cinttypes>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <set>
@@ -87,6 +88,7 @@ struct RdbSyncerParam {
     std::vector<std::string> permissionNames_ = {};
     bool asyncDownloadAsset_ = false;
     bool enableCloud_ = true;
+    bool autoSyncSwitch_ = true;
     int32_t subUser_ = 0;
     RdbDfxInfo dfxInfo_;
     ~RdbSyncerParam()
@@ -107,6 +109,8 @@ enum SyncMode {
     TIME_FIRST = 4,
     NATIVE_FIRST,
     CLOUD_FIRST,
+    CLOUD_CUSTOM_PUSH, //only upload
+    CLOUD_CUSTOM_PULL, //only download
 };
 
 struct SyncOption {
@@ -163,6 +167,7 @@ struct DistributedConfig {
     bool isRebuild = false;
     bool asyncDownloadAsset = false;
     bool enableCloud = true;
+    bool autoSyncSwitch = true;
 };
 
 enum Progress {
@@ -180,6 +185,7 @@ enum ProgressCode {
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
     BLOCKED_BY_NETWORK_STRATEGY,
+    CLOUD_TASK_INTERRUPTED,
 };
 
 struct Statistic {
@@ -286,6 +292,7 @@ enum SubscribeMode {
     REMOTE,
     CLOUD,
     CLOUD_DETAIL,
+    CLOUD_SYNC_TRIGGER,
     LOCAL,
     LOCAL_SHARED,
     LOCAL_DETAIL,
@@ -363,6 +370,8 @@ public:
         OnChange(origin.id);
     };
     virtual void OnChange() {};
+
+    virtual void OnChange(const int32_t triggerMode) {};
 };
 
 struct DropOption {};
@@ -417,8 +426,30 @@ struct Results {
     Results(int32_t count) : changed(count)
     {
     }
+    Results()
+    {
+    }
     int32_t changed = -1;
     std::shared_ptr<ResultSet> results;
+};
+
+struct ReturningConfig {
+    static constexpr int32_t MAX_RETURNING_COUNT = 0X7FFE;
+    static constexpr int32_t DEFAULT_RETURNING_COUNT = 1024;
+    static constexpr int32_t ILLEGAL_RETURNING_COUNT = -1;
+    ReturningConfig(const std::initializer_list<std::string> &value, int32_t count = DEFAULT_RETURNING_COUNT)
+        : columns(value), maxReturningCount(count)
+    {
+    }
+    ReturningConfig(const std::vector<std::string> &value, int32_t count = DEFAULT_RETURNING_COUNT)
+        : columns(value), maxReturningCount(count)
+    {
+    }
+    ReturningConfig()
+    {
+    }
+    std::vector<std::string> columns;
+    int32_t maxReturningCount = DEFAULT_RETURNING_COUNT;
 };
 
 class RdbStoreConfig;

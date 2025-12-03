@@ -35,6 +35,10 @@ using CommonAsset = CommonType::Asset;
 using Strategy = OHOS::CloudData::Strategy;
 using CloudSyncInfo = OHOS::CloudData::CloudSyncInfo;
 using Option = OHOS::CloudData::CloudService::Option;
+using SwitchConfig = OHOS::CloudData::SwitchConfig;
+using ClearConfig = OHOS::CloudData::ClearConfig;
+using DBSwitchInfo = OHOS::CloudData::DBSwitchInfo;
+using DBActionInfo = OHOS::CloudData::DBActionInfo;
 
 template<>
 bool Marshalling(const Participant &input, MessageParcel &data);
@@ -92,5 +96,17 @@ template<>
 bool Marshalling(const Option &input, MessageParcel &data);
 template<>
 bool Unmarshalling(Option &output, MessageParcel &data);
+
+template<>
+bool Marshalling(const SwitchConfig &input, MessageParcel &data);
+
+template<>
+bool Marshalling(const DBSwitchInfo &input, MessageParcel &data);
+
+template<>
+bool Marshalling(const ClearConfig &input, MessageParcel &data);
+
+template<>
+bool Marshalling(const DBActionInfo &input, MessageParcel &data);
 } // namespace OHOS::ITypesUtil
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_UTIL_H

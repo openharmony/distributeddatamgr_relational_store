@@ -70,6 +70,11 @@ public:
         return { E_NOT_SUPPORT, {} };
     }
 
+    virtual std::pair<int, std::vector<std::vector<ValueObject>>> GetRowsData(int32_t maxCount, int32_t position)
+    {
+        return { E_NOT_SUPPORT, {} };
+    }
+
     /**
      * @brief Get the size of blob or text.
      *

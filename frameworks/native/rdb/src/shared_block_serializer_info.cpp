@@ -25,7 +25,7 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 
 SharedBlockSerializerInfo::SharedBlockSerializerInfo(
-    AppDataFwk::SharedBlock *sharedBlock, sqlite3_stmt *stat, int numColumns, int startPos)
+    AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *stat, int numColumns, int startPos)
     : sharedBlock_(sharedBlock), statement_(stat), anumColumns(numColumns), atotalRows(0), astartPos(startPos),
       raddedRows(0)
 {
@@ -100,15 +100,15 @@ int SharedBlockSerializerInfo::PutDouble(int row, int column, double value)
 
 int SharedBlockSerializerInfo::PutBlob(int row, int column, const void *blob, int len)
 {
-    auto action = &AppDataFwk::SharedBlock::PutBlob;
+    auto action = &AppDataFwk::AbsSharedBlock::PutBlob;
     auto *declType = sqlite3_column_decltype(statement_, column);
     if (declType != nullptr) {
         auto type = StringUtils::TruncateAfterFirstParen(SqliteUtils::StrToUpper(declType));
-        action = (type == ValueObject::DeclType<ValueObject::Asset>())         ? &AppDataFwk::SharedBlock::PutAsset
-                 : (type == ValueObject::DeclType<ValueObject::Assets>())      ? &AppDataFwk::SharedBlock::PutAssets
-                 : (type == ValueObject::DeclType<ValueObject::FloatVector>()) ? &AppDataFwk::SharedBlock::PutFloats
-                 : (type == ValueObject::DeclType<ValueObject::BigInt>())      ? &AppDataFwk::SharedBlock::PutBigInt
-                                                                               : &AppDataFwk::SharedBlock::PutBlob;
+        action = (type == ValueObject::DeclType<ValueObject::Asset>())         ? &AppDataFwk::AbsSharedBlock::PutAsset
+                 : (type == ValueObject::DeclType<ValueObject::Assets>())      ? &AppDataFwk::AbsSharedBlock::PutAssets
+                 : (type == ValueObject::DeclType<ValueObject::FloatVector>()) ? &AppDataFwk::AbsSharedBlock::PutFloats
+                 : (type == ValueObject::DeclType<ValueObject::BigInt>())      ? &AppDataFwk::AbsSharedBlock::PutBigInt
+                                                                               : &AppDataFwk::AbsSharedBlock::PutBlob;
     }
 
     int status = (sharedBlock_->*action)(row, column, blob, len);

@@ -513,7 +513,7 @@ bool RdStatement::SupportBlockInfo() const
     return false;
 }
 
-int32_t RdStatement::FillBlockInfo(SharedBlockInfo *info) const
+int32_t RdStatement::FillBlockInfo(SharedBlockInfo *info, int retiyTime) const
 {
     return E_NOT_SUPPORT;
 }
@@ -523,9 +523,25 @@ void RdStatement::GetProperties()
     columnCount_ = RdUtils::RdSqlColCnt(stmtHandle_);
 }
 
-std::pair<int32_t, std::vector<ValuesBucket>> RdStatement::GetRows(uint32_t maxCount)
+std::pair<int32_t, std::vector<ValuesBucket>> RdStatement::GetRows(int32_t maxCount)
 {
     return { E_NOT_SUPPORT, {} };
+}
+
+std::pair<int32_t, std::vector<std::vector<ValueObject>>> RdStatement::GetMultiRowsData(int32_t maxCount)
+{
+    return { E_NOT_SUPPORT, {} };
+}
+
+std::pair<int, std::vector<ValuesBucket>> RdStatement::ExecuteForRows(
+    const std::vector<ValueObject> &args, int32_t maxCount)
+{
+    return std::pair<int, std::vector<ValuesBucket>>();
+}
+std::pair<int, std::vector<ValuesBucket>> RdStatement::ExecuteForRows(
+    const std::vector<std::reference_wrapper<ValueObject>> &args, int32_t maxCount)
+{
+    return std::pair<int, std::vector<ValuesBucket>>();
 }
 } // namespace NativeRdb
 } // namespace OHOS

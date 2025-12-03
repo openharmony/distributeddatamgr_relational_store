@@ -20,14 +20,12 @@
 
 #include "logger.h"
 #include "raw_data_parser.h"
-#include "values_bucket.h"
 namespace OHOS {
 using namespace NativeRdb;
 using namespace Rdb;
 namespace AppDataFwk {
-
-CacheDataBlock::CacheDataBlock(int32_t maxCount, const std::vector<std::string> &columns)
-    : columns_(columns), maxCount_(maxCount)
+CacheDataBlock::CacheDataBlock(int32_t maxCount, int32_t colCount)
+    : colCount_(colCount), maxCount_(maxCount)
 {
 }
 
@@ -51,7 +49,7 @@ int CacheDataBlock::AllocRow()
         isFull_ = true;
         return BLOCK_OK;
     }
-    // rows_.push_back(ValuesObject());
+    rows_.resize(rows_.size() + 1);
     return BLOCK_OK;
 }
 
@@ -69,15 +67,14 @@ int CacheDataBlock::PutBlob(uint32_t row, uint32_t column, const void *value, si
         return BLOCK_OK;
     }
 
-    if (row >= rows_.size() || column >= columns_.size() || value == nullptr) {
+    if (row >= rows_.size() || column >= static_cast<uint32_t>(colCount_) || value == nullptr) {
         LOG_ERROR("Failed to put row %{public}" PRIu32 ", column %{public}" PRIu32 " to a CacheDataBlock"
-                  " which has %{public}zu rows, %{public}zu columns.",
-            row, column, rows_.size(), columns_.size());
+                  " which has %{public}zu rows, %{public}d columns.", row, column, rows_.size(), colCount_);
         hasException_ = true;
         return BLOCK_BAD_VALUE;
     }
     const uint8_t *ptr = static_cast<const uint8_t *>(value);
-    rows_[row].emplace_back(ptr, ptr + size);
+    rows_[row].emplace_back(std::vector<uint8_t>(ptr, ptr + size));
     return BLOCK_OK;
 }
 
@@ -86,15 +83,14 @@ int CacheDataBlock::PutString(uint32_t row, uint32_t column, const char *value, 
     if (isFull_) {
         return BLOCK_OK;
     }
-    if (row >= rows_.size() || column >= columns_.size() || value == nullptr) {
+    if (row >= rows_.size() || column >= static_cast<uint32_t>(colCount_) || value == nullptr) {
         LOG_ERROR("Failed to put row %{public}" PRIu32 ", column %{public}" PRIu32 " to a CacheDataBlock"
-                  " which has %{public}zu rows, %{public}zu columns.",
-            row, column, rows_.size(), columns_.size());
+                  " which has %{public}zu rows, %{public}d columns.", row, column, rows_.size(), colCount_);
         hasException_ = true;
         return BLOCK_BAD_VALUE;
     }
     if (size < 1) {
-        rows_[row].emplace_back("")
+        rows_[row].emplace_back("");
         return BLOCK_OK;
     }
     rows_[row].emplace_back(value);
@@ -106,10 +102,9 @@ int CacheDataBlock::PutAsset(uint32_t row, uint32_t column, const void *value, s
     if (isFull_) {
         return BLOCK_OK;
     }
-    if (row >= rows_.size() || column >= columns_.size() || value == nullptr) {
+    if (row >= rows_.size() || column >= static_cast<uint32_t>(colCount_) || value == nullptr) {
         LOG_ERROR("Failed to put row %{public}" PRIu32 ", column %{public}" PRIu32 " to a CacheDataBlock"
-                  " which has %{public}zu rows, %{public}zu columns.",
-            row, column, rows_.size(), columns_.size());
+                  " which has %{public}zu rows, %{public}d columns.", row, column, rows_.size(), colCount_);
         hasException_ = true;
         return BLOCK_BAD_VALUE;
     }
@@ -128,10 +123,9 @@ int CacheDataBlock::PutAssets(uint32_t row, uint32_t column, const void *value, 
     if (isFull_) {
         return BLOCK_OK;
     }
-    if (row >= rows_.size() || column >= columns_.size() || value == nullptr) {
+    if (row >= rows_.size() || column >= static_cast<uint32_t>(colCount_) || value == nullptr) {
         LOG_ERROR("Failed to put row %{public}" PRIu32 ", column %{public}" PRIu32 " to a CacheDataBlock"
-                  " which has %{public}zu rows, %{public}zu columns.",
-            row, column, rows_.size(), columns_.size());
+                  " which has %{public}zu rows, %{public}d columns.", row, column, rows_.size(), colCount_);
         hasException_ = true;
         return BLOCK_BAD_VALUE;
     }
@@ -150,10 +144,9 @@ int CacheDataBlock::PutFloats(uint32_t row, uint32_t column, const void *value, 
     if (isFull_) {
         return BLOCK_OK;
     }
-    if (row >= rows_.size() || column >= columns_.size() || value == nullptr) {
+    if (row >= rows_.size() || column >= static_cast<uint32_t>(colCount_) || value == nullptr) {
         LOG_ERROR("Failed to put row %{public}" PRIu32 ", column %{public}" PRIu32 " to a CacheDataBlock"
-                  " which has %{public}zu rows, %{public}zu columns.",
-            row, column, rows_.size(), columns_.size());
+                  " which has %{public}zu rows, %{public}d columns.", row, column, rows_.size(), colCount_);
         hasException_ = true;
         return BLOCK_BAD_VALUE;
     }
@@ -172,10 +165,9 @@ int CacheDataBlock::PutBigInt(uint32_t row, uint32_t column, const void *value, 
     if (isFull_) {
         return BLOCK_OK;
     }
-    if (row >= rows_.size() || column >= columns_.size() || value == nullptr) {
+    if (row >= rows_.size() || column >= static_cast<uint32_t>(colCount_) || value == nullptr) {
         LOG_ERROR("Failed to put row %{public}" PRIu32 ", column %{public}" PRIu32 " to a CacheDataBlock"
-                  " which has %{public}zu rows, %{public}zu columns.",
-            row, column, rows_.size(), columns_.size());
+                  " which has %{public}zu rows, %{public}d columns.", row, column, rows_.size(), colCount_);
         hasException_ = true;
         return BLOCK_BAD_VALUE;
     }
@@ -194,10 +186,9 @@ int CacheDataBlock::PutLong(uint32_t row, uint32_t column, int64_t value)
     if (isFull_) {
         return BLOCK_OK;
     }
-    if (row >= rows_.size() || column >= columns_.size()) {
+    if (row >= rows_.size() || column >= static_cast<uint32_t>(colCount_)) {
         LOG_ERROR("Failed to put row %{public}" PRIu32 ", column %{public}" PRIu32 " to a CacheDataBlock"
-                  " which has %{public}zu rows, %{public}zu columns.",
-            row, column, rows_.size(), columns_.size());
+                  " which has %{public}zu rows, %{public}d columns.", row, column, rows_.size(), colCount_);
         hasException_ = true;
         return BLOCK_BAD_VALUE;
     }
@@ -210,10 +201,9 @@ int CacheDataBlock::PutDouble(uint32_t row, uint32_t column, double value)
     if (isFull_) {
         return BLOCK_OK;
     }
-    if (row >= rows_.size() || column >= columns_.size()) {
+    if (row >= rows_.size() || column >= static_cast<uint32_t>(colCount_)) {
         LOG_ERROR("Failed to put row %{public}" PRIu32 ", column %{public}" PRIu32 " to a CacheDataBlock"
-                  " which has %{public}zu rows, %{public}zu columns.",
-            row, column, rows_.size(), columns_.size());
+                  " which has %{public}zu rows, %{public}d columns.", row, column, rows_.size(), colCount_);
         hasException_ = true;
         return BLOCK_BAD_VALUE;
     }
@@ -226,10 +216,9 @@ int CacheDataBlock::PutNull(uint32_t row, uint32_t column)
     if (isFull_) {
         return BLOCK_OK;
     }
-    if (row >= rows_.size() || column >= columns_.size()) {
+    if (row >= rows_.size() || column >= static_cast<uint32_t>(colCount_)) {
         LOG_ERROR("Failed to put row %{public}" PRIu32 ", column %{public}" PRIu32 " to a CacheDataBlock"
-                  " which has %{public}zu rows, %{public}zu columns.",
-            row, column, rows_.size(), columns_.size());
+                  " which has %{public}zu rows, %{public}d columns.", row, column, rows_.size(), colCount_);
         hasException_ = true;
         return BLOCK_BAD_VALUE;
     }
@@ -242,7 +231,7 @@ bool CacheDataBlock::HasException()
     return hasException_;
 }
 
-std::vector<NativeRdb::ValuesBucket> CacheDataBlock::StealRows()
+std::vector<std::vector<NativeRdb::ValueObject>> CacheDataBlock::StealRows()
 {
     return std::move(rows_);
 }

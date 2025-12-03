@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_RDB_CACHE_BLOCK_H
-#define NATIVE_RDB_CACHE_BLOCK_H
+#ifndef NATIVE_RDB_CACHE_DATA_BLOCK_H
+#define NATIVE_RDB_CACHE_DATA_BLOCK_H
 
 #include <cinttypes>
 #include <cstdint>
@@ -22,15 +22,14 @@
 
 #include "abs_shared_block.h"
 #include "rdb_visibility.h"
+#include "value_object.h"
+
 namespace OHOS {
-namespace NativeRdb {
-class ValuesBucket;
-}
 namespace AppDataFwk {
-class CacheBlock : public AbsSharedBlock {
+class CacheDataBlock : public AbsSharedBlock {
 public:
-    CacheBlock(int32_t maxCount, const std::vector<std::string> &columns);
-    ~CacheBlock() override;
+    CacheDataBlock(int32_t maxCount, int32_t colCount);
+    ~CacheDataBlock() override;
     int Clear() override;
     int SetColumnNum(uint32_t numColumns) override;
     int AllocRow() override;
@@ -45,10 +44,10 @@ public:
     int PutBigInt(uint32_t row, uint32_t column, const void *value, size_t size) override;
     int PutNull(uint32_t row, uint32_t column) override;
     bool HasException();
-    std::vector<NativeRdb::ValuesBucket> StealRows();
+    std::vector<std::vector<NativeRdb::ValueObject>> StealRows();
 private:
     std::vector<std::vector<NativeRdb::ValueObject>> rows_;
-    const std::vector<std::string> columns_;
+    const int32_t colCount_;
     const int32_t maxCount_;
     bool isFull_ = false;
     bool hasException_ = false;

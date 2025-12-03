@@ -62,8 +62,10 @@ public:
     int ResetKey(const RdbStoreConfig &config) override;
     int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t GetJournalMode() override;
-    std::pair<int32_t, Stmt> CreateStatement(const std::string &sql, SConn conn) override;
-    std::pair<int32_t, Stmt> CreateReplicaStatement(const std::string &sql, SConn conn) override;
+    std::pair<int32_t, Stmt> CreateStatement(
+        const std::string &sql, SConn conn, const std::string &returningSql = "") override;
+    std::pair<int32_t, Stmt> CreateReplicaStatement(
+        const std::string &sql, SConn conn, const std::string &returningSql = "") override;
     int CheckReplicaForRestore() override;
     bool IsWriter() const override;
     int SubscribeTableChanges(const Notifier &notifier) override;
@@ -142,7 +144,7 @@ private:
     int RegisterClientObs();
     int RegisterHookIfNecessary();
     std::pair<int32_t, Stmt> CreateStatementInner(const std::string &sql, SConn conn,
-        sqlite3 *db, bool isFromReplica);
+        sqlite3 *db, bool isFromReplica, const std::string &returningSql = "");
     ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount);
     void DeleteCorruptSlave(const std::string &path);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(

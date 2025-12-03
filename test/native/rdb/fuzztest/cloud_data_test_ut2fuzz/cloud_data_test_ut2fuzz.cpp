@@ -142,6 +142,23 @@ void CloudDataTestCloudDataTest001(FuzzedDataProvider &fdp)
     proxy->EnableCloud(TEST_ACCOUNT_ID, switches);
 }
 
+CloudData::SwitchConfig CreateSwitchConfig(FuzzedDataProvider &fdp)
+{
+    CloudData::SwitchConfig config;
+    DBSwitchInfo switchInfo;
+    switchInfo.enable = fdp.ConsumeBool();
+    std::map<std::string, bool> tableInfo;
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());
+    switchInfo.tableInfo = tableInfo;
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);
+    return config;
+}
 void CloudDataTestChangeAppSwitch001(FuzzedDataProvider &fdp)
 {
     AllocSystemHapToken(g_systemPolicy);
@@ -149,9 +166,26 @@ void CloudDataTestChangeAppSwitch001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    proxy->ChangeAppSwitch(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, fdp.ConsumeIntegral<int32_t>());
+    proxy->ChangeAppSwitch(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, fdp.ConsumeIntegral<int32_t>(), CreateSwitchConfig(fdp));
 }
 
+CloudData::ClearConfig CreateClearConfig(FuzzedDataProvider &fdp)
+{
+    CloudData::ClearConfig config;
+    DBActionInfo actionInfo;
+    actionInfo.action = fdp.ConsumeIntegral<int32_t>();
+    std::map<std::string, int32_t> tableInfo;
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());
+    actionInfo.tableInfo = tableInfo;
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);
+    return config;
+}
 void CloudDataTestClean001(FuzzedDataProvider &fdp)
 {
     AllocSystemHapToken(g_systemPolicy);
@@ -161,7 +195,9 @@ void CloudDataTestClean001(FuzzedDataProvider &fdp)
     }
     std::map<std::string, int32_t> actions;
     actions.emplace(TEST_BUNDLE_NAME, fdp.ConsumeIntegral<int32_t>());
-    proxy->Clean(TEST_ACCOUNT_ID, actions);
+    std::map<std::string, ClearConfig> configs;
+    configs.emplace(fdp.ConsumeRandomLengthString(10), CreateClearConfig(fdp));
+    proxy->Clean(TEST_ACCOUNT_ID, actions, configs);
 }
 
 void CloudDataTestNotifyDataChange001(FuzzedDataProvider &fdp)

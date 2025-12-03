@@ -20,13 +20,14 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
   "${relational_store_native_path}/rdb/src/base_transaction.cpp",
   "${relational_store_native_path}/rdb/src/big_integer.cpp",
+  "${relational_store_native_path}/rdb/src/cache_block.cpp",
   "${relational_store_native_path}/rdb/src/cache_data_block.cpp",
   "${relational_store_native_path}/rdb/src/cache_result_set.cpp",
   "${relational_store_native_path}/rdb/src/connection.cpp",
   "${relational_store_native_path}/rdb/src/connection_pool.cpp",
+  "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
   "${relational_store_native_path}/rdb/src/delay_notify.cpp",
   "${relational_store_native_path}/rdb/src/global_resource.cpp",
-  "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
   "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
   "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
   "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
@@ -406,10 +407,10 @@ if (is_ohos && !build_ohos_sdk) {
     configs = [ ":native_rdb_config" ]
 
     sources += [
+      "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_file_system.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
-      "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp",
     ]
 
     deps = [
@@ -432,10 +433,10 @@ if (is_ohos && !build_ohos_sdk) {
     configs = [ ":native_rdb_config" ]
 
     sources += [
+      "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_file_system.cpp",
       "${relational_store_native_path}/rdb/mock/src/rdb_radar_reporter.cpp",
       "${relational_store_native_path}/rdb/mock/src/task_executor.cpp",
-      "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp",
     ]
 
     deps = [

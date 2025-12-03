@@ -21,15 +21,17 @@
 #include <sstream>
 #include <utility>
 
+#include "cache_block.h"
+#include "cache_data_block.h"
 #include "connection_pool.h"
 #include "corrupted_handle_manager.h"
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
+#include "rdb_perfStat.h"
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
-#include "rdb_perfStat.h"
 #include "rdb_types.h"
 #include "relational_store_client.h"
 #include "remote_result_set.h"
@@ -445,28 +447,11 @@ int SqliteStatement::Execute(const std::vector<ValueObject> &args)
 
 int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueObject>> &args)
 {
-    int count = static_cast<int>(args.size());
-    if (count != numParameters_) {
-        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d), sql is %{public}s", count, numParameters_,
-            SqliteUtils::SqlAnonymous(sql_).c_str());
-        return E_INVALID_BIND_ARGS_COUNT;
+    auto errCode = CheckEnvironment(static_cast<int>(args.size()));
+    if (errCode != E_OK) {
+        return errCode;
     }
-
-    if (conn_ != nullptr) {
-        if (!conn_->IsWriter() && !ReadOnly()) {
-            return E_EXECUTE_WRITE_IN_READ_CONNECTION;
-        }
-        auto errCode = E_OK;
-        int sqlType = SqliteUtils::GetSqlStatementType(sql_);
-        if (sqlType != SqliteUtils::STATEMENT_COMMIT && sqlType != SqliteUtils::STATEMENT_ROLLBACK) {
-            errCode = conn_->LimitWalSize();
-        }
-        if (errCode != E_OK) {
-            return errCode;
-        }
-    }
-
-    auto errCode = BindArgs(args);
+    errCode = BindArgs(args);
     if (errCode != E_OK) {
         return errCode;
     }
@@ -480,10 +465,10 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
     }
 
     if (slave_) {
-        int errCode = slave_->Execute(args);
-        if (errCode != E_OK) {
-            LOG_ERROR("slave execute error:%{public}d, sql is %{public}s, errno %{public}d",
-                errCode, SqliteUtils::SqlAnonymous(sql_).c_str(), errno);
+        int code = slave_->Execute(args);
+        if (code != E_OK) {
+            LOG_ERROR("slave execute errCode:%{public}d, sql is %{public}s, errno %{public}d code %{public}d", errCode,
+                SqliteUtils::SqlAnonymous(sql_).c_str(), errno, code);
             SqliteUtils::SetSlaveInvalid(config_->GetPath());
         }
     }
@@ -497,6 +482,54 @@ std::pair<int, ValueObject> SqliteStatement::ExecuteForValue(const std::vector<V
         return GetColumn(0);
     }
     return { errCode, ValueObject() };
+}
+
+std::pair<int, std::vector<ValuesBucket>> SqliteStatement::ExecuteForRows(
+    const std::vector<ValueObject> &args, int32_t maxCount)
+{
+    std::vector<std::reference_wrapper<ValueObject>> refArgs;
+    for (auto &object : args) {
+        refArgs.emplace_back(std::ref(const_cast<ValueObject &>(object)));
+    }
+    return ExecuteForRows(refArgs, maxCount);
+}
+
+std::pair<int, std::vector<ValuesBucket>> SqliteStatement::ExecuteForRows(
+    const std::vector<std::reference_wrapper<ValueObject>> &args, int32_t maxCount)
+{
+    if (columnCount_ <= 0) {
+        return { Execute(args), {} };
+    }
+    std::pair<int, std::vector<ValuesBucket>> ret;
+    auto &[errCode, rows] = ret;
+    errCode = CheckEnvironment(static_cast<int>(args.size()));
+    if (errCode != E_OK) {
+        return ret;
+    }
+    errCode = BindArgs(args);
+    if (errCode != E_OK) {
+        return ret;
+    }
+
+    ret = GetRows(maxCount);
+    if (errCode != E_NO_MORE_ROWS && errCode != E_OK) {
+        LOG_ERROR("sqlite3_step failed %{public}d, sql is %{public}s, errno %{public}d", errCode,
+            SqliteUtils::SqlAnonymous(sql_).c_str(), errno);
+        auto db = sqlite3_db_handle(stmt_);
+        // errno: 28 No space left on device
+        errCode = (errCode == E_SQLITE_IOERR && sqlite3_system_errno(db) == 28) ? E_SQLITE_IOERR_FULL : errCode;
+        return ret;
+    }
+
+    if (slave_) {
+        int code = slave_->Execute(args);
+        if (code != E_OK) {
+            LOG_ERROR("slave execute errCode:%{public}d, sql is %{public}s, errno %{public}d code %{public}d", errCode,
+                SqliteUtils::SqlAnonymous(sql_).c_str(), errno, code);
+            SqliteUtils::SetSlaveInvalid(config_->GetPath());
+        }
+    }
+    return {E_OK, rows};
 }
 
 int SqliteStatement::Changes() const
@@ -635,13 +668,12 @@ std::pair<int32_t, ValueObject> SqliteStatement::GetColumn(int index) const
     return { E_OK, GetValueFromBlob(index, type) };
 }
 
-std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(uint32_t maxCount)
+std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(int32_t maxCount)
 {
     auto colCount = GetColumnCount();
     if (colCount <= 0) {
         return { E_OK, {} };
     }
-    std::vector<ValuesBucket> valuesBuckets;
     std::vector<std::string> colNames;
     colNames.reserve(colCount);
     for (int i = 0; i < colCount; i++) {
@@ -652,24 +684,43 @@ std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(uint32_t 
         }
         colNames.push_back(std::move(colName));
     }
-    int32_t status = 0;
-    do {
-        if (valuesBuckets.size() >= maxCount) {
-            break;
-        }
-        ValuesBucket value;
-        for (int32_t i = 0; i < colCount; i++) {
-            auto [code, val] = GetColumn(i);
-            if (code != E_OK) {
-                LOG_WARN("GetColumn failed, errCode:%{public}d", code);
-                continue;
-            }
-            value.Put(colNames[i], std::move(val));
-        }
-        valuesBuckets.push_back(std::move(value));
-        status = InnerStep();
-    } while (status == E_OK);
-    return { status, valuesBuckets };
+    AppDataFwk::CacheBlock block(maxCount, colNames);
+    SharedBlockInfo info(&block);
+    info.isCountAllRows = true;
+    info.totalRows = -1;
+    auto res = FillBlockInfo(&info, 0);
+    if (res != E_OK) {
+        LOG_ERROR("FillBlockInfo ret %{public}d", res);
+        return { res, {} };
+    }
+    if (block.HasException()) {
+        LOG_ERROR("HasException ret");
+        return { E_ERROR, {} };
+    }
+    return { E_OK, block.StealRows() };
+}
+
+std::pair<int32_t, std::vector<std::vector<ValueObject>>> SqliteStatement::GetMultiRowsData(int32_t maxCount)
+{
+    auto colCount = GetColumnCount();
+    if (colCount <= 0) {
+        return { E_OK, {} };
+    }
+
+    AppDataFwk::CacheDataBlock block(maxCount, colCount);
+    SharedBlockInfo info(&block);
+    info.isCountAllRows = true;
+    info.totalRows = -1;
+    auto res = FillBlockInfo(&info, 0);
+    if (res != E_OK) {
+        LOG_ERROR("FillBlockInfo ret %{public}d", res);
+        return { res, {} };
+    }
+    if (block.HasException()) {
+        LOG_ERROR("HasException ret");
+        return { E_ERROR, {} };
+    }
+    return { E_OK, block.StealRows() };
 }
 
 ValueObject SqliteStatement::GetValueFromBlob(int32_t index, int32_t type) const
@@ -717,7 +768,7 @@ bool SqliteStatement::SupportBlockInfo() const
     return (sqlite3_db_config(db, SQLITE_USE_SHAREDBLOCK) == SQLITE_OK);
 }
 
-int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
+int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info, int retiyTime) const
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_EXECUTE, seqId_);
@@ -726,9 +777,9 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info) const
     }
     int32_t errCode = E_OK;
     if (SupportBlockInfo()) {
-        errCode = FillSharedBlockOpt(info, stmt_);
+        errCode = FillSharedBlockOpt(info, stmt_, retiyTime);
     } else {
-        errCode = FillSharedBlock(info, stmt_);
+        errCode = FillSharedBlock(info, stmt_, retiyTime);
     }
     if (errCode != E_OK) {
         if (config_ != nullptr) {
@@ -888,6 +939,30 @@ int SqliteStatement::InnerFinalize()
     if (errCode != SQLITE_OK) {
         LOG_ERROR("finalize ret is %{public}d, errno is %{public}d", errCode, errno);
         return SQLiteError::ErrNo(errCode);
+    }
+    return E_OK;
+}
+
+int SqliteStatement::CheckEnvironment(int paramCount) const
+{
+    if (paramCount != numParameters_) {
+        LOG_ERROR("bind args count(%{public}d) > numParameters(%{public}d), sql is %{public}s", paramCount,
+            numParameters_, SqliteUtils::SqlAnonymous(sql_).c_str());
+        return E_INVALID_BIND_ARGS_COUNT;
+    }
+
+    if (conn_ != nullptr) {
+        if (!conn_->IsWriter() && !ReadOnly()) {
+            return E_EXECUTE_WRITE_IN_READ_CONNECTION;
+        }
+        auto errCode = E_OK;
+        int sqlType = SqliteUtils::GetSqlStatementType(sql_);
+        if (sqlType != SqliteUtils::STATEMENT_COMMIT && sqlType != SqliteUtils::STATEMENT_ROLLBACK) {
+            errCode = conn_->LimitWalSize();
+        }
+        if (errCode != E_OK) {
+            return errCode;
+        }
     }
     return E_OK;
 }

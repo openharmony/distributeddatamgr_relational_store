@@ -16,7 +16,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <cstdint>
 #include <fstream>
+#include <random>
 #include <string>
 
 #include "accesstoken_kit.h"
@@ -25,6 +27,7 @@
 #include "corrupted_handle_manager.h"
 #include "oh_data_define.h"
 #include "oh_data_utils.h"
+#include "oh_data_values_buckets.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_ndk_utils.h"
@@ -33,6 +36,7 @@
 #include "relational_store_impl.h"
 #include "relational_store_inner_types.h"
 #include "token_setproc.h"
+#include "values_bucket.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -65,6 +69,9 @@ public:
     static void DestroyDb(const std::string &filePath);
     static void InsertData(int count, OH_Rdb_Store *store);
     static void TransInsertData(int count, OH_Rdb_Transaction *trans, const char *table);
+    static bool CorruptDatabaseFile(const std::string &filePath, int32_t offset = 0, int32_t size = 0);
+    static void CorruptDatabasePager(
+        OH_Rdb_Store *store, const std::string &filePath, const std::string &tableName);
 };
 
 void RdbStoreCorruptHandlerTest::TestCorruptedHandler(void *context, OH_Rdb_ConfigV2 *config, OH_Rdb_Store *store)
@@ -98,6 +105,85 @@ void RdbStoreCorruptHandlerTest::DestroyDbFile(const std::string &filePath, size
     std::vector<char> buf(len, ch);
     f.write(buf.data(), len);
     f.close();
+}
+
+bool RdbStoreCorruptHandlerTest::CorruptDatabaseFile(const string &filePath, int32_t offset, int32_t size)
+{
+    FILE* file = fopen(filePath.c_str(), "r+b");
+    if (file == nullptr) {
+        return false;
+    }
+
+    if (fseek(file, 0, SEEK_END) != 0) {
+        (void)fclose(file);
+        return false;
+    }
+    long fileSize = ftell(file);
+    if (fileSize <= 0) {
+        (void)fclose(file);
+        return false;
+    }
+
+    if (fseek(file, offset, SEEK_SET) != 0) {
+        (void)fclose(file);
+        return false;
+    }
+    int32_t corruptSize = std::min(size, static_cast<int32_t>(fileSize - offset));
+    if (corruptSize <= 0) {
+        (void)fclose(file);
+        return false;
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, UINT8_MAX);
+
+    std::vector<char> garbage(corruptSize);
+    for (int32_t i = 0; i < corruptSize; i++) {
+        garbage[i] = static_cast<char>(dis(gen));
+    }
+
+    size_t written = fwrite(garbage.data(), 1, corruptSize, file);
+    (void)fclose(file);
+
+    return written == static_cast<size_t>(corruptSize);
+}
+
+void RdbStoreCorruptHandlerTest::CorruptDatabasePager(OH_Rdb_Store *store, const std::string &filePath,
+    const std::string &tableName)
+{
+    OH_Data_VBuckets *largeDataSet = OH_VBuckets_Create();
+    const size_t dataSize = 2 * 1024 * 1024 + 1024; // 2MB + 1KB to ensure we exceed 2MB
+    std::vector<uint8_t> largeData(dataSize, 'A');  // Create large data vector
+
+    const int32_t recordCount = 5; // Number of records to insert
+    const int32_t age = 25;
+    const double salary = 5000.0;
+    const int32_t step = 100;
+    ValuesBucket vBucket;
+    std::vector<OH_VBucket *> vBuckets;
+    for (int32_t i = 0; i < recordCount; ++i) {
+        OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
+        valueBucket->putText(valueBucket, "data1", ("test_user_" + std::to_string(i)).c_str());
+        valueBucket->putInt64(valueBucket, "data2", age + i);
+        valueBucket->putReal(valueBucket, "data3", salary + i * step);
+        valueBucket->putBlob(valueBucket, "data4", largeData.data(), dataSize);
+        OH_VBuckets_PutRow(largeDataSet, valueBucket);
+        vBuckets.push_back(valueBucket);
+    }
+    int64_t changes;
+    int code = OH_Rdb_BatchInsert(
+        store, tableName.c_str(), largeDataSet, Rdb_ConflictResolution::RDB_CONFLICT_NONE, &changes);
+    EXPECT_EQ(code, OH_Rdb_ErrCode::RDB_OK);
+    EXPECT_EQ(changes, recordCount);
+
+    const int32_t pageSize = 4096;
+    const int32_t corruptSize = 20 * 1024 * 1024; // 20MB
+    EXPECT_TRUE(CorruptDatabaseFile(filePath, pageSize, corruptSize));
+    for (auto &valueBucket : vBuckets) {
+        valueBucket->destroy(valueBucket);
+    }
+    OH_VBuckets_Destroy(largeDataSet);
 }
 
 const char CREATE_TABLE_SQL[] =
@@ -289,9 +375,9 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_003, TestSize.Level1)
     EXPECT_EQ(errCode, 0);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
 
-    DestroyDbFile(RDB_TEST_PATH1, 8192, 1, 0xFF);
 
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    CorruptDatabasePager(store2, RDB_TEST_PATH1, "store_test");
     OH_VBucket *valueBucket1 = OH_Rdb_CreateValuesBucket();
     ASSERT_NE(valueBucket1, nullptr);
     valueBucket1->putInt64(valueBucket1, "id", 1001);
@@ -491,9 +577,8 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_007, TestSize.Level1)
     errCode = OH_Rdb_Backup(store1, BACKUP_PATH1.c_str());
     EXPECT_EQ(errCode, 0);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
-    DestroyDbFile(RDB_TEST_PATH1, 8192, 1, 0xFF);
-
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    CorruptDatabasePager(store2, RDB_TEST_PATH1, "store_test");
     OH_Data_VBuckets *rows = OH_VBuckets_Create();
     ASSERT_NE(rows, nullptr);
     OH_VBucket *vbs[5];
@@ -602,9 +687,8 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_009, TestSize.Level1)
     errCode = OH_Rdb_Backup(store1, BACKUP_PATH1.c_str());
     EXPECT_EQ(errCode, 0);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
-    DestroyDbFile(RDB_TEST_PATH1, 8192, 1, 0xFF);
-
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    CorruptDatabasePager(store2, RDB_TEST_PATH1, "store_test");
     ret = OH_Rdb_CreateTransaction(store2, g_options, &trans);
     OH_VBucket *valueBucket1 = OH_Rdb_CreateValuesBucket();
     ASSERT_NE(valueBucket1, nullptr);
@@ -696,9 +780,9 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_011, TestSize.Level1)
     errCode = OH_Rdb_Backup(store1, BACKUP_PATH1.c_str());
     EXPECT_EQ(errCode, 0);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
-    DestroyDbFile(RDB_TEST_PATH1, 8192, 1, 0xFF);
 
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    CorruptDatabasePager(store2, RDB_TEST_PATH1, "store_test");
     OH_VBucket *valueBucket1 = OH_Rdb_CreateValuesBucket();
     ASSERT_NE(valueBucket1, nullptr);
     valueBucket1->putInt64(valueBucket1, "id", 1001);
@@ -802,9 +886,9 @@ HWTEST_F(RdbStoreCorruptHandlerTest, RDB_Native_store_test_013, TestSize.Level1)
     errCode = OH_Rdb_Backup(store1, BACKUP_PATH1.c_str());
     EXPECT_EQ(errCode, 0);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(store1));
-    DestroyDbFile(RDB_TEST_PATH1, 8192, 1, 0xFF);
 
     auto store2 = OH_Rdb_CreateOrOpen(config1, &errCode);
+    CorruptDatabasePager(store2, RDB_TEST_PATH1, "store_test");
     ret = OH_Rdb_CreateTransaction(store2, g_options, &trans);
     OH_VBucket *valueBucket1 = OH_Rdb_CreateValuesBucket();
     ASSERT_NE(valueBucket1, nullptr);
