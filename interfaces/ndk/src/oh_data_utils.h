@@ -20,12 +20,15 @@
 #include "oh_rdb_types.h"
 #include "rdb_common.h"
 #include "serializable.h"
+#include "oh_data_define.h"
 namespace OHOS::RdbNdk {
 class Utils {
 public:
     static NativeRdb::ConflictResolution ConvertConflictResolution(Rdb_ConflictResolution resolution);
     static bool IsContainTerminator();
-
+    static bool IsValidContext(const OH_RDB_ReturningContext *context);
+    static bool IsValidRows(const OH_Data_VBuckets *rows);
+    static bool IsValidResolution(Rdb_ConflictResolution resolution);
 private:
     struct TrustsProxy final : public Serializable {
         std::string bundleName;
