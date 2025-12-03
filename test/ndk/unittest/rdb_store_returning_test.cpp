@@ -239,7 +239,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_001, TestSi
     EXPECT_NE(cursor, nullptr);
     CursorWorksAsExpected(cursor, "Lisa");
 
-    int changed = OH_RDB_GetChanedCount(context);
+    int changed = OH_RDB_GetChangedCount(context);
     EXPECT_EQ(changed, 1);
 
     OH_RDB_DestroyReturningContext(context);
@@ -428,7 +428,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_DeleteWithReturning_test_001, TestSize.Le
     EXPECT_NE(cursor, nullptr);
     CursorWorksAsExpected(cursor, "Lisa");
 
-    int changed = OH_RDB_GetChanedCount(context);
+    int changed = OH_RDB_GetChangedCount(context);
     EXPECT_EQ(changed, 1);
 
     OH_RDB_DestroyReturningContext(context);
@@ -574,7 +574,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_UpdateWithReturning_test_001, TestSize.Le
     EXPECT_NE(cursor, nullptr);
     CursorWorksAsExpected(cursor, "Lucy");
 
-    int changed = OH_RDB_GetChanedCount(context);
+    int changed = OH_RDB_GetChangedCount(context);
     EXPECT_EQ(changed, 1);
 
     OH_RDB_DestroyReturningContext(context);
@@ -759,7 +759,7 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_BatchInsertWithReturning_test_001, T
     EXPECT_NE(cursor, nullptr);
     CursorWorksAsExpected(cursor, "Lisa");
 
-    int changed = OH_RDB_GetChanedCount(context);
+    int changed = OH_RDB_GetChangedCount(context);
     EXPECT_EQ(changed, 1);
 
     OH_RDB_DestroyReturningContext(context);
@@ -993,7 +993,7 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_DeleteWithReturning_test_001, TestSi
     EXPECT_NE(cursor, nullptr);
     CursorWorksAsExpected(cursor, "Lisa");
 
-    int changed = OH_RDB_GetChanedCount(context);
+    int changed = OH_RDB_GetChangedCount(context);
     EXPECT_EQ(changed, 1);
 
     OH_RDB_DestroyReturningContext(context);
@@ -1157,7 +1157,7 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_UpdateWithReturning_test_001, TestSi
     EXPECT_NE(cursor, nullptr);
     CursorWorksAsExpected(cursor, "Lucy");
 
-    int changed = OH_RDB_GetChanedCount(context);
+    int changed = OH_RDB_GetChangedCount(context);
     EXPECT_EQ(changed, 1);
 
     OH_RDB_DestroyReturningContext(context);
@@ -1388,7 +1388,7 @@ HWTEST_F(RdbStoreReturningTest, OH_RDB_ReturningContext_test_001, TestSize.Level
     OH_Cursor *cursor = OH_RDB_GetReturningValues(nullptr);
     EXPECT_EQ(cursor, nullptr);
 
-    int64_t changedCount = OH_RDB_GetChanedCount(nullptr);
+    int64_t changedCount = OH_RDB_GetChangedCount(nullptr);
     EXPECT_EQ(changedCount, -1);
 
     OH_RDB_DestroyReturningContext(context);
@@ -1443,7 +1443,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_GetFloat32Array_
     EXPECT_EQ(test[1], floatArr[1]);
     EXPECT_EQ(test[2], floatArr[2]);
 
-    int changed = OH_RDB_GetChanedCount(context);
+    int changed = OH_RDB_GetChangedCount(context);
     EXPECT_EQ(changed, 1);
 
     OH_RDB_DestroyReturningContext(context);
