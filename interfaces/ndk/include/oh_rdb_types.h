@@ -145,7 +145,7 @@ OH_Cursor *OH_RDB_GetReturningValues(OH_RDB_ReturningContext *context);
  *         If Get changed failed, -1 is returned.
  * @since 23
  */
-int64_t OH_RDB_GetChanedCount(OH_RDB_ReturningContext *context);
+int64_t OH_RDB_GetChangedCount(OH_RDB_ReturningContext *context);
 #ifdef __cplusplus
 };
 #endif
