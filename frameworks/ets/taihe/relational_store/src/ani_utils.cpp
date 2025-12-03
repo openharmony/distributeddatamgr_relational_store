@@ -395,7 +395,7 @@ bool UnionAccessor::TryConvert<bool>(bool &value)
 template<>
 bool UnionAccessor::TryConvert<std::vector<uint8_t>>(std::vector<uint8_t> &value)
 {
-    if (!IsInstanceOf("escompat.Uint8Array")) {
+    if (!IsInstanceOf("std.core.Uint8Array")) {
         return false;
     }
     return TryConvertArray(value);
@@ -531,7 +531,7 @@ bool UnionAccessor::TryConvert<std::vector<AssetValue>>(std::vector<AssetValue> 
 template<>
 bool UnionAccessor::TryConvert<std::vector<float>>(std::vector<float> &value)
 {
-    if (!IsInstanceOf("escompat.Float32Array")) {
+    if (!IsInstanceOf("std.core.Float32Array")) {
         return false;
     }
     return TryConvertArray(value);
