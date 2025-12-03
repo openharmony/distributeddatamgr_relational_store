@@ -461,10 +461,10 @@ int OH_RdbTrans_BatchInsertWithReturning(OH_Rdb_Transaction *trans, const char *
     Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context);
 
 /**
- * @brief Updates data in the database based on specified conditions and output a cursor of changed fields.
+ * @brief Updates data in the database based on specified conditions and output change info to context.
  *
  * @param trans Represents a pointer to an instance of OH_Rdb_Transaction.
- * @param row Represents the row data to be inserted into the table.
+ * @param row Represents the row data to be updated into the table.
  * @param predicates Represents a pointer to an {link OH_Predicates} instance.
  * @param resolution Represents the resolution when conflict occurs.
  * @param context Represents a pointer to a pointer to an {@link OH_RDB_ReturningContext} instance.
@@ -486,7 +486,8 @@ int OH_RdbTrans_BatchInsertWithReturning(OH_Rdb_Transaction *trans, const char *
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
  *         Returns {@link RDB_E_SQLITE_CONSTRAINT} SQLite: Abort due to constraint violation.
- *         Returns {@link RDB_E_SQLITE_ERROR} SQLite: Generic error.
+ *         Returns {@link RDB_E_SQLITE_ERROR} SQLite error.
+ *             Possible causes: syntax error, such as a table or column not existing.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Transaction, OH_Data_VBuckets, OH_Predicates, OH_Rdb_ErrCode, OH_RDB_ReturningContext.
  * @since 23
@@ -495,7 +496,7 @@ int OH_RdbTrans_UpdateWithReturning(OH_Rdb_Transaction *trans, OH_VBucket *row, 
     Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context);
 
 /**
- * @brief Deletes data from the database based on specified conditions and output a cursor of changed fields.
+ * @brief Deletes data from the database based on specified conditions and output change info to context.
  *
  * @param trans Represents a pointer to an instance of OH_Rdb_Transaction.
  * @param predicates Represents a pointer to an {@link OH_Predicates} instance.
@@ -516,7 +517,8 @@ int OH_RdbTrans_UpdateWithReturning(OH_Rdb_Transaction *trans, OH_VBucket *row, 
  *         Returns {@link RDB_E_SQLITE_IOERR} SQLite: Some kind of disk I/O error occurred.
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
- *         Returns {@link RDB_E_SQLITE_ERROR} SQLite: Generic error.
+ *         Returns {@link RDB_E_SQLITE_ERROR} SQLite error.
+ *             Possible causes: syntax error, such as a table or column not existing.
  * Specific error codes can be referenced {@link OH_Rdb_ErrCode}.
  * @see OH_Rdb_Transaction, OH_Predicates, OH_Rdb_ErrCode, OH_RDB_ReturningContext.
  * @since 23

@@ -101,8 +101,8 @@ bool Utils::IsValidContext(const OH_RDB_ReturningContext *context)
         LOG_ERROR("invalid context.");
         return false;
     }
-    return !(config.columns.empty() ||
-             config.maxReturningCount == OHOS::NativeRdb::ReturningConfig::ILLEGAL_RETURNING_COUNT);
+    return !(context->config.columns.empty() ||
+             context->config.maxReturningCount == OHOS::NativeRdb::ReturningConfig::ILLEGAL_RETURNING_COUNT);
 }
 
 bool Utils::IsValidRows(const OH_Data_VBuckets *rows)

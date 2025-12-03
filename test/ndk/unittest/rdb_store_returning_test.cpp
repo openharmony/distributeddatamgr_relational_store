@@ -44,7 +44,7 @@ public:
     static OH_VBucket *CreateOneUpdateVBucket();
     static OH_Data_VBuckets *CreateOneVBuckets();
     static OH_RDB_ReturningContext *CreateReturningContext(std::vector<const char *> fields);
-    static void VerifyCursorData(OH_Cursor *cursor, std::string expectedValue);
+    static void VerifyCursorData(OH_Cursor *cursor, const std::string& expectedValue);
     static OH_Rdb_Transaction *CreateTransaction(OH_Rdb_Store *store);
 };
 
@@ -54,7 +54,7 @@ static OH_Rdb_ConfigV2 *config_ = OH_Rdb_CreateConfig();
 OH_VBucket *RdbStoreReturningTest::CreateOneVBucket()
 {
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    ASSERT_NE(valueBucket, nullptr);
+    EXPECT_NE(valueBucket, nullptr);
     valueBucket->putText(valueBucket, "NAME", "Lisa");
     const int age = 18;
     valueBucket->putInt64(valueBucket, "AGE", age);
@@ -83,7 +83,7 @@ OH_VBucket *RdbStoreReturningTest::CreateOneVBucket()
 OH_VBucket *RdbStoreReturningTest::CreateOneUpdateVBucket()
 {
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    ASSERT_NE(valueBucket, nullptr);
+    EXPECT_NE(valueBucket, nullptr);
     valueBucket->putText(valueBucket, "NAME", "Lucy");
     const int age = 19;
     valueBucket->putInt64(valueBucket, "AGE", age);
@@ -112,14 +112,14 @@ OH_VBucket *RdbStoreReturningTest::CreateOneUpdateVBucket()
 OH_Data_VBuckets *RdbStoreReturningTest::CreateOneVBuckets()
 {
     OH_Data_VBuckets *rows = OH_VBuckets_Create();
-    ASSERT_NE(rows, nullptr);
+    EXPECT_NE(rows, nullptr);
     return rows;
 }
 
 OH_RDB_ReturningContext *RdbStoreReturningTest::CreateReturningContext(std::vector<const char *> fields)
 {
     OH_RDB_ReturningContext *returningContext = OH_RDB_CreateReturningContext();
-    ASSERT_NE(returningContext, nullptr);
+    EXPECT_NE(returningContext, nullptr);
     OH_RDB_SetReturningFields(returningContext, fields.data(), static_cast<int32_t>(fields.size()));
     return returningContext;
 }
@@ -127,20 +127,20 @@ OH_RDB_ReturningContext *RdbStoreReturningTest::CreateReturningContext(std::vect
 OH_Rdb_Transaction *RdbStoreReturningTest::CreateTransaction(OH_Rdb_Store *store)
 {
     OH_RDB_TransOptions *options = OH_RdbTrans_CreateOptions();
-    ASSERT_NE(options, nullptr);
+    EXPECT_NE(options, nullptr);
     int ret = OH_RdbTransOption_SetType(options, RDB_TRANS_DEFERRED);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
     OH_Rdb_Transaction *trans = nullptr;
     ret = OH_Rdb_CreateTransaction(store, options, &trans);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
-    ASSERT_NE(trans, nullptr);
+    EXPECT_NE(trans, nullptr);
     return trans;
 }
 
 void RdbStoreReturningTest::VerifyCursorData(OH_Cursor *cursor, const std::string &expectedValue)
 {
-    ASSERT_NE(cursor, nullptr);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     int ret = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
@@ -225,17 +225,20 @@ struct BatchInsertInputData {
     const int assetsCount = 2;
     Data_Asset **assets = nullptr;
     OH_Rdb_Transaction *trans = nullptr;
-    BatchInsertInputData(const char *const fields[])
+    BatchInsertInputData(std::vector<const char *> fields)
     {
-        valueBucket = CreateOneVBucket();
-        rows = CreateOneVBuckets();
-        context = CreateReturningContext(fields);
+        valueBucket = RdbStoreReturningTest::CreateOneVBucket();
+        rows = RdbStoreReturningTest::CreateOneVBuckets();
+        context = RdbStoreReturningTest::CreateReturningContext(fields);
         assets = OH_Data_Asset_CreateMultiple(assetsCount);
     }
-    BatchInsertInputData(OH_Rdb_Store *store, const char *const fields[])
+    BatchInsertInputData(OH_Rdb_Store *store, std::vector<const char *> fields)
     {
-        trans = CreateTransaction(store);
-        BatchInsertInputData(fields);
+        trans = RdbStoreReturningTest::CreateTransaction(store);
+        valueBucket = RdbStoreReturningTest::CreateOneVBucket();
+        rows = RdbStoreReturningTest::CreateOneVBuckets();
+        context = RdbStoreReturningTest::CreateReturningContext(fields);
+        assets = OH_Data_Asset_CreateMultiple(assetsCount);
     }
     ~BatchInsertInputData()
     {
@@ -274,26 +277,31 @@ struct BatchInsertInputData {
         rows = OH_VBuckets_Create();
         ASSERT_NE(rows, nullptr);
     }
-}
+};
 
 struct DeleteInputData {
     OH_Rdb_Transaction *trans = nullptr;
     OH_RDB_ReturningContext *context = nullptr;
     OH_VObject *valueObject = nullptr;
     OH_Predicates *predicates = nullptr;
-    DeleteInputData(const char *table, const char *const fields[])
+    DeleteInputData(const char *table, std::vector<const char *> fields)
     {
         valueObject = OH_Rdb_CreateValueObject();
         valueObject->putText(valueObject, "Lisa");
         predicates = OH_Rdb_CreatePredicates(table);
-        ASSERT_NE(predicates, nullptr);
+        EXPECT_NE(predicates, nullptr);
         predicates->equalTo(predicates, "NAME", valueObject);
-        context = CreateReturningContext(fields);
+        context = RdbStoreReturningTest::CreateReturningContext(fields);
     }
-    DeleteInputData(OH_Rdb_Store *store, const char *table, const char *const fields[])
+    DeleteInputData(OH_Rdb_Store *store, const char *table, std::vector<const char *> fields)
     {
-        trans = CreateTransaction(store);
-        DeleteInputData(table, fields)
+        trans = RdbStoreReturningTest::CreateTransaction(store);
+        valueObject = OH_Rdb_CreateValueObject();
+        valueObject->putText(valueObject, "Lisa");
+        predicates = OH_Rdb_CreatePredicates(table);
+        EXPECT_NE(predicates, nullptr);
+        predicates->equalTo(predicates, "NAME", valueObject);
+        context = RdbStoreReturningTest::CreateReturningContext(fields);
     }
     ~DeleteInputData()
     {
@@ -309,7 +317,7 @@ struct DeleteInputData {
             trans = nullptr;
         }
     }
-}
+};
 
 struct UpdateInputData {
     OH_VBucket *valueBucketUpdate = nullptr;
@@ -317,20 +325,26 @@ struct UpdateInputData {
     OH_VObject *valueObject = nullptr;
     OH_Predicates *predicates = nullptr;
     OH_Rdb_Transaction *trans = nullptr;
-    UpdateInputData(const char *table, const char *const fields[])
+    UpdateInputData(const char *table, std::vector<const char *> fields)
     {
-        valueBucketUpdate = CreateOneUpdateVBucket();
+        valueBucketUpdate = RdbStoreReturningTest::CreateOneUpdateVBucket();
         valueObject = OH_Rdb_CreateValueObject();
         valueObject->putText(valueObject, "Lisa");
         predicates = OH_Rdb_CreatePredicates(table);
-        ASSERT_NE(predicates, nullptr);
+        EXPECT_NE(predicates, nullptr);
         predicates->equalTo(predicates, "NAME", valueObject);
-        context = CreateReturningContext(fields);
+        context = RdbStoreReturningTest::CreateReturningContext(fields);
     }
-    UpdateInputData(OH_Rdb_Store *store, const char *table, const char *const fields[])
+    UpdateInputData(OH_Rdb_Store *store, const char *table, std::vector<const char *> fields)
     {
-        trans = CreateTransaction(store);
-        UpdateInputData(table, fields);
+        trans = RdbStoreReturningTest::CreateTransaction(store);
+        valueBucketUpdate = RdbStoreReturningTest::CreateOneUpdateVBucket();
+        valueObject = OH_Rdb_CreateValueObject();
+        valueObject->putText(valueObject, "Lisa");
+        predicates = OH_Rdb_CreatePredicates(table);
+        EXPECT_NE(predicates, nullptr);
+        predicates->equalTo(predicates, "NAME", valueObject);
+        context = RdbStoreReturningTest::CreateReturningContext(fields);
     }
     ~UpdateInputData()
     {
@@ -355,7 +369,7 @@ struct UpdateInputData {
         valueBucketUpdate = OH_Rdb_CreateValuesBucket();
         ASSERT_NE(valueBucketUpdate, nullptr);
     }
-}
+};
 /**
  * @tc.name: OH_Rdb_BatchInsertWithReturning_test_001
  * @tc.desc: Normal testCase.
@@ -390,7 +404,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_002, TestSi
         nullptr, "EMPLOYEE", data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     ret = OH_Rdb_BatchInsertWithReturning(
-        store_, nullptr, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, context);
+        store_, nullptr, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     ret = OH_Rdb_BatchInsertWithReturning(
         store_, "EMPLOYEE", nullptr, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
@@ -484,11 +498,11 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_DeleteWithReturning_test_001, TestSize.Le
     int ret = OH_Rdb_DeleteWithReturning(store_, data.predicates, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
+    OH_Cursor *cursor = OH_RDB_GetReturningValues(data.context);
     EXPECT_NE(cursor, nullptr);
     VerifyCursorData(cursor, "Lisa");
 
-    int changed = OH_RDB_GetChangedCount(context);
+    int changed = OH_RDB_GetChangedCount(data.context);
     EXPECT_EQ(changed, 1);
 }
 
@@ -566,11 +580,11 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_UpdateWithReturning_test_001, TestSize.Le
         store_, data.valueBucketUpdate, data.predicates, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
+    OH_Cursor *cursor = OH_RDB_GetReturningValues(data.context);
     ASSERT_NE(cursor, nullptr);
     VerifyCursorData(cursor, "Lucy");
 
-    int changed = OH_RDB_GetChangedCount(context);
+    int changed = OH_RDB_GetChangedCount(data.context);
     EXPECT_EQ(changed, 1);
 }
 
@@ -676,11 +690,11 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_BatchInsertWithReturning_test_001, T
         data.trans, "EMPLOYEE", data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
+    OH_Cursor *cursor = OH_RDB_GetReturningValues(data.context);
     ASSERT_NE(cursor, nullptr);
     VerifyCursorData(cursor, "Lisa");
 
-    int changed = OH_RDB_GetChangedCount(context);
+    int changed = OH_RDB_GetChangedCount(data.context);
     EXPECT_EQ(changed, 1);
 }
 
@@ -807,11 +821,11 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_DeleteWithReturning_test_001, TestSi
     int ret = OH_RdbTrans_DeleteWithReturning(data.trans, data.predicates, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
+    OH_Cursor *cursor = OH_RDB_GetReturningValues(data.context);
     ASSERT_NE(cursor, nullptr);
     VerifyCursorData(cursor, "Lisa");
 
-    int changed = OH_RDB_GetChangedCount(context);
+    int changed = OH_RDB_GetChangedCount(data.context);
     EXPECT_EQ(changed, 1);
 }
 
@@ -889,11 +903,11 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_UpdateWithReturning_test_001, TestSi
         Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
+    OH_Cursor *cursor = OH_RDB_GetReturningValues(data.context);
     ASSERT_NE(cursor, nullptr);
     VerifyCursorData(cursor, "Lucy");
 
-    int changed = OH_RDB_GetChangedCount(context);
+    int changed = OH_RDB_GetChangedCount(data.context);
     EXPECT_EQ(changed, 1);
 }
 
@@ -938,6 +952,7 @@ HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_UpdateWithReturning_test_002, TestSi
 HWTEST_F(RdbStoreReturningTest, OH_RdbTrans_UpdateWithReturning_test_003, TestSize.Level1)
 {
     UpdateInputData data(store_, "EMPLOYEE", { "NAME" });
+    data.EmptyValueBucketUpdate();
     int ret = OH_RdbTrans_UpdateWithReturning(data.trans, data.valueBucketUpdate, data.predicates,
         Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
@@ -1055,7 +1070,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_GetFloat32Array_
         store_, "EMPLOYEE", data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
-    OH_Cursor *cursor = OH_RDB_GetReturningValues(context);
+    OH_Cursor *cursor = OH_RDB_GetReturningValues(data.context);
     ASSERT_NE(cursor, nullptr);
     int rowCount = 0;
     ret = cursor->getRowCount(cursor, &rowCount);
@@ -1085,6 +1100,6 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_GetFloat32Array_
     EXPECT_EQ(test[1], floatArr[1]);
     EXPECT_EQ(test[2], floatArr[2]);
 
-    int changed = OH_RDB_GetChangedCount(context);
+    int changed = OH_RDB_GetChangedCount(data.context);
     EXPECT_EQ(changed, 1);
 }
