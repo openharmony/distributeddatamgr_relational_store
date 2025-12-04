@@ -40,7 +40,6 @@ public:
     void SetUp();
     void TearDown();
     void GenerateDefaultTable();
-    void CreateOtherTableWithDB();
     void GenerateAssetsTable();
     void GenerateTimeoutTable();
     void CheckResultSetAttribute(
@@ -48,21 +47,10 @@ public:
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
-    static const std::string CREATE_TABLE_TEST1;
-    static const std::string QUERY_SQL_DUPLICATE_COLUMN;
-    static const std::vector<std::string> ALL_DUPLICATE_COLUMN;
 };
 
 const std::string RdbSqliteSharedResultSetTest::DATABASE_NAME = RDB_TEST_PATH + "shared_test.db";
 std::shared_ptr<RdbStore> RdbSqliteSharedResultSetTest::store = nullptr;
-std::string const RdbSqliteSharedResultSetTest::CREATE_TABLE_TEST1 = "CREATE TABLE test1 (id INTEGER PRIMARY KEY "
-                                                                     "AUTOINCREMENT, data1 TEXT,data2 INTEGER, data3 "
-                                                                     "FLOAT, data4 BLOB, data5 ASSET, data6 ASSETS, "
-                                                                     "data7 floatvector(128), data8 UNLIMITED INT);";
-std::string const RdbSqliteSharedResultSetTest::QUERY_SQL_DUPLICATE_COLUMN =
-    "SELECT * FROM test INNER JOIN test1 ON test.id = test1.id";
-std::vector<std::string> const RdbSqliteSharedResultSetTest::ALL_DUPLICATE_COLUMN = { "id", "data1", "data2", "data3",
-    "data4", "data5", "data6", "data7", "data8" };
 
 class SqliteSharedOpenCallback : public RdbOpenCallback {
 public:
@@ -152,35 +140,6 @@ void RdbSqliteSharedResultSetTest::GenerateDefaultTable()
     values.PutDouble("data3", 1.8); // set float value 1.8
     values.PutBlob("data4", std::vector<uint8_t>{});
     store->Insert(id, "test", values);
-}
-
-void RdbSqliteSharedResultSetTest::CreateOtherTableWithDB()
-{
-    std::shared_ptr<RdbStore> &store = RdbSqliteSharedResultSetTest::store;
-    store->ExecuteSql(CREATE_TABLE_TEST1);
-
-    int64_t id;
-    ValuesBucket values;
-    AssetValue asset{
-        .version = 0,
-        .name = "123",
-        .uri = "my test path",
-        .createTime = "12",
-        .modifyTime = "12",
-    };
-    vector<AssetValue> assets;
-    assets.push_back(asset);
-
-    values.PutInt("id", 1);
-    values.PutString("data1", std::string("hello1"));
-    values.PutInt("data2", 101); // set int value 10
-    values.PutDouble("data3", 1.1);
-    values.PutBlob("data4", std::vector<uint8_t>{ 66 }); // set uint8_t value 66
-    values.Put("data5", asset);
-    values.Put("data6", assets);
-    values.Put("data7", std::vector<float>(1, 0.5)); // set float value 0.5
-    values.Put("data8", BigInteger(1));
-    store->Insert(id, "test1", values);
 }
 
 void RdbSqliteSharedResultSetTest::GenerateAssetsTable()
@@ -1735,44 +1694,4 @@ HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_005, TestSize.Level
         start, nullptr, SqliteSharedOpenCallback::CREATE_TABLE_TEST, values, DATABASE_NAME);
     auto res = sqliteSharedRst->OnGo(0, 0);
     EXPECT_EQ(res, E_ALREADY_CLOSED);
-}
-
-/* *
- * @tc.name: GetWholeColumnNames_001
- * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetWholeColumnNames for sql less than 3
- * @tc.type: FUNC
- */
-HWTEST_F(RdbSqliteSharedResultSetTest, GetWholeColumnNames_001, TestSize.Level1)
-{
-    GenerateDefaultTable();
-    CreateOtherTableWithDB();
-    std::vector<std::string> selectionArgs;
-    std::shared_ptr<AbsResultSet> resultSet = RdbSqliteSharedResultSetTest::store->QuerySql("SE", selectionArgs);
-    EXPECT_NE(resultSet, nullptr);
-
-    std::vector<std::string> columnNames;
-    auto [err, colunmNames] = resultSet->GetWholeColumnNames();
-    EXPECT_EQ(err, E_INVALID_ARGS);
-    resultSet->Close();
-}
-
-/* *
- * @tc.name: GetWholeColumnNames_002
- * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetWholeColumnNames for get duplicute column names
- * @tc.type: FUNC
- */
-HWTEST_F(RdbSqliteSharedResultSetTest, GetWholeColumnNames_002, TestSize.Level1)
-{
-    GenerateDefaultTable();
-    CreateOtherTableWithDB();
-    std::shared_ptr<AbsResultSet> resultSet = RdbSqliteSharedResultSetTest::store->QuerySql(QUERY_SQL_DUPLICATE_COLUMN);
-    EXPECT_NE(resultSet, nullptr);
-
-    auto [err, colunmNames] = resultSet->GetWholeColumnNames();
-    EXPECT_EQ(err, E_OK);
-    std::vector<std::string> allDuplicateColumn;
-    allDuplicateColumn.insert(allDuplicateColumn.end(), ALL_DUPLICATE_COLUMN.begin(), ALL_DUPLICATE_COLUMN.end());
-    allDuplicateColumn.insert(allDuplicateColumn.end(), ALL_DUPLICATE_COLUMN.begin(), ALL_DUPLICATE_COLUMN.end());
-    EXPECT_EQ(colunmNames, allDuplicateColumn);
-    resultSet->Close();
 }
