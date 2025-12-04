@@ -46,8 +46,7 @@ private:
         const std::string &sql, const std::string &returningSql = "") const;
     void HandleSchemaDDL(std::shared_ptr<Statement> statement);
     static std::pair<int32_t, Results> GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
-        std::vector<ValuesBucket> &&returningValues, bool isDML);
-
+        std::vector<ValuesBucket> &&returningValues, bool isDML, int32_t rowIndex = ReturningConfig::FIRST_ROW_INDEX);
     int32_t maxArgs_ = 0;
     int64_t vSchema_ = 0;
     std::weak_ptr<Connection> conn_;

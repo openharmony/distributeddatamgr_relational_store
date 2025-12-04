@@ -28,6 +28,7 @@ private:
 public:
     static int NativeToNdk(int nativeErrCode);
     static int GetInterfaceCode(int nativeErrCode);
+    static int GetInterfaceCodeExtend(int nativeErrCode);
 private:
     static int ConvertCode(const NdkErrorCode *codeMap, int count, int innerCode);
 };

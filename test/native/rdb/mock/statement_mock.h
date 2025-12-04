@@ -49,7 +49,7 @@ public:
     MOCK_METHOD((std::pair<int32_t, std::vector<std::vector<ValueObject>>>), GetMultiRowsData, (int32_t maxCount), (override));
     MOCK_METHOD(bool, ReadOnly, (), (const, override));
     MOCK_METHOD(bool, SupportBlockInfo, (), (const, override));
-    MOCK_METHOD(int32_t, FillBlockInfo, (SharedBlockInfo * info, int retiyTime), (const, override));
+    MOCK_METHOD(int32_t, FillBlockInfo, (SharedBlockInfo * info, int retryTime), (const, override));
     MOCK_METHOD(int, ModifyLockStatus,
         (const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock), (override));
 };
