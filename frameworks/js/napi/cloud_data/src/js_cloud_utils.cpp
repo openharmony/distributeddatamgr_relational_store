@@ -156,8 +156,7 @@ int32_t Convert2Value(napi_env env, napi_value input, DBSwitchInfo &output)
     napi_value jsTableInfo = nullptr;
     status = napi_get_named_property(env, input, "tableInfo", &jsTableInfo);
     if (status != napi_ok || jsTableInfo == nullptr) {
-        LOG_ERROR("Required field 'tableInfo' missing: status=%{public}d", status);
-        return napi_invalid_arg;
+        return napi_ok;
     }
 
     return Convert2Value(env, jsTableInfo, output.tableInfo);
@@ -208,8 +207,7 @@ int32_t Convert2Value(napi_env env, napi_value input, DBActionInfo &output)
     napi_value jsTableInfo = nullptr;
     status = napi_get_named_property(env, input, "tableInfo", &jsTableInfo);
     if (status != napi_ok || jsTableInfo == nullptr) {
-        LOG_ERROR("Required field 'tableInfo' missing");
-        return napi_invalid_arg;
+        return napi_ok;
     }
     return Convert2Value(env, jsTableInfo, output.tableInfo);
 }

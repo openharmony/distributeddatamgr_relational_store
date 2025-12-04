@@ -72,6 +72,7 @@ private:
     };
     static void HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::shared_ptr<CloudSyncContext> ctxt);
     static uint32_t GetSeqNum();
+    static bool ValidClearConfig(const std::map<std::string, CloudData::ClearConfig> &configs);
     static std::atomic<uint32_t> seqNum_;
 };
 
