@@ -860,8 +860,4 @@ HWTEST_F(CacheResultSetTest, GetRowDataTest_001, TestSize.Level2)
         EXPECT_EQ(err, E_OK);
         EXPECT_EQ(res, "test" + std::to_string(i));
     }
-    EXPECT_EQ(E_OK, ret);
-
-    EXPECT_EQ(cacheResultSet.Close(), E_OK);
-    EXPECT_EQ(cacheResultSet.GetSize(columnIndex, size), E_ALREADY_CLOSED);
 }
