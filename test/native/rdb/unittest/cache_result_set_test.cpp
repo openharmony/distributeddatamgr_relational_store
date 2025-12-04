@@ -71,6 +71,9 @@ HWTEST_F(CacheResultSetTest, GetRowCountTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetRowCount(count);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(count, 1);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetRowCount(count), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -93,6 +96,9 @@ HWTEST_F(CacheResultSetTest, GetAllColumnNamesTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetAllColumnNames(columnNamesTmp);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(std::set<std::string>(columnNamesTmp.begin(), columnNamesTmp.end()), columnNames);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetAllColumnNames(columnNamesTmp), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -119,6 +125,11 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 
     EXPECT_EQ(E_OK, cacheResultSet.GetColumnIndex("id", columnIndex));
     EXPECT_NE(E_OK, cacheResultSet.GetBlob(columnIndex, blobOut));
+
+    columnIndex = -1;
+    EXPECT_EQ(cacheResultSet.GetBlob(columnIndex, blobOut), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetBlob(columnIndex, blobOut), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -142,6 +153,11 @@ HWTEST_F(CacheResultSetTest, GetStringTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetString(columnIndex, value);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ("test", value);
+
+    columnIndex = -1;
+    EXPECT_EQ(cacheResultSet.GetString(columnIndex, value), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetString(columnIndex, value), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -165,6 +181,11 @@ HWTEST_F(CacheResultSetTest, GetIntTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetInt(columnIndex, value);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(111, value);
+
+    columnIndex = -1;
+    EXPECT_EQ(cacheResultSet.GetInt(columnIndex, value), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetInt(columnIndex, value), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -188,6 +209,11 @@ HWTEST_F(CacheResultSetTest, GetLongTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetLong(columnIndex, value);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(11111111, value);
+
+    columnIndex = -1;
+    EXPECT_EQ(cacheResultSet.GetLong(columnIndex, value), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetLong(columnIndex, value), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -211,6 +237,11 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetDouble(columnIndex, value);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(1111.1111, value);
+
+    columnIndex = -1;
+    EXPECT_EQ(cacheResultSet.GetDouble(columnIndex, value), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetDouble(columnIndex, value), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -236,6 +267,11 @@ HWTEST_F(CacheResultSetTest, GetAssetTest_001, TestSize.Level2)
 
     EXPECT_EQ(E_OK, cacheResultSet.GetColumnIndex("id", col));
     EXPECT_NE(E_OK, cacheResultSet.GetAsset(col, valueOut));
+
+    col = -1;
+    EXPECT_EQ(cacheResultSet.GetAsset(col, valueOut), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetAsset(col, valueOut), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -261,6 +297,11 @@ HWTEST_F(CacheResultSetTest, GetAssetsTest_001, TestSize.Level2)
 
     EXPECT_EQ(E_OK, cacheResultSet.GetColumnIndex("id", col));
     EXPECT_NE(E_OK, cacheResultSet.GetAssets(col, valueOut));
+
+    col = -1;
+    EXPECT_EQ(cacheResultSet.GetAssets(col, valueOut), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetAssets(col, valueOut), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -284,6 +325,11 @@ HWTEST_F(CacheResultSetTest, GetTest_001, TestSize.Level2)
     EXPECT_EQ(E_OK, cacheResultSet.Get(0, value));
     EXPECT_EQ(E_OK, value.GetInt(res));
     EXPECT_EQ(res, 10);
+
+    int index = -1;
+    EXPECT_EQ(cacheResultSet.Get(index, value), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.Get(0, value), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -312,6 +358,11 @@ HWTEST_F(CacheResultSetTest, IsColumnNullTest_001, TestSize.Level2)
     int rets = cacheResultSet.IsColumnNull(columnIndex, isNull);
     EXPECT_EQ(E_OK, rets);
     EXPECT_EQ(true, isNull);
+
+    columnIndex = -1;
+    EXPECT_EQ(cacheResultSet.IsColumnNull(columnIndex, isNull), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.IsColumnNull(columnIndex, isNull), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -338,6 +389,9 @@ HWTEST_F(CacheResultSetTest, GetRowTest_001, TestSize.Level2)
         EXPECT_EQ(E_OK, value.GetString(res));
         EXPECT_EQ("1", res);
     }
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetRow(rowEntity), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -360,6 +414,9 @@ HWTEST_F(CacheResultSetTest, GoToRowTest_001, TestSize.Level2)
     int ret = cacheResultSet.GoToRow(position);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(0, position);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GoToRow(position), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -383,6 +440,11 @@ HWTEST_F(CacheResultSetTest, GetColumnTypeTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetColumnType(columnIndex, columnType);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(ColumnType::TYPE_STRING, columnType);
+
+    columnIndex = -1;
+    EXPECT_EQ(cacheResultSet.GetColumnType(columnIndex, columnType), E_COLUMN_OUT_RANGE);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetColumnType(columnIndex, columnType), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -405,6 +467,9 @@ HWTEST_F(CacheResultSetTest, GetRowIndexTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetRowIndex(columnIndex);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(0, columnIndex);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetRowIndex(columnIndex), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -553,6 +618,9 @@ HWTEST_F(CacheResultSetTest, IsAtFirstRowTest_001, TestSize.Level2)
     EXPECT_NE(E_OK, cacheResultSet.GoToNextRow());
     EXPECT_EQ(E_OK, cacheResultSet.IsAtLastRow(result));
     EXPECT_FALSE(result);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.IsAtFirstRow(result), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -576,6 +644,9 @@ HWTEST_F(CacheResultSetTest, IsAtLastRowTest_001, TestSize.Level2)
     EXPECT_NE(E_OK, cacheResultSet.GoToNextRow());
     EXPECT_EQ(E_OK, cacheResultSet.IsAtLastRow(result));
     EXPECT_FALSE(result);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.IsAtLastRow(result), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -597,6 +668,9 @@ HWTEST_F(CacheResultSetTest, IsStartedTest_001, TestSize.Level2)
     int ret = cacheResultSet.IsStarted(result);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(false, result);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.IsStarted(result), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -618,6 +692,9 @@ HWTEST_F(CacheResultSetTest, IsEndedTest_001, TestSize.Level2)
     int ret = cacheResultSet.IsEnded(result);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(false, result);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.IsEnded(result), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -639,6 +716,9 @@ HWTEST_F(CacheResultSetTest, GetColumnCountTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetColumnCount(count);
     EXPECT_EQ(E_OK, ret);
     EXPECT_EQ(3, count);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetColumnCount(count), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -665,6 +745,9 @@ HWTEST_F(CacheResultSetTest, GetColumnIndexTest_001, TestSize.Level2)
     columnName = "wang";
     ret = cacheResultSet.GetColumnIndex(columnName, columnIndex);
     EXPECT_NE(E_OK, ret);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetColumnIndex(columnName, columnIndex), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -690,6 +773,9 @@ HWTEST_F(CacheResultSetTest, GetColumnNameTest_001, TestSize.Level2)
         columnNamesTmp.push_back(columnName);
     }
     EXPECT_EQ(std::set<std::string>(columnNamesTmp.begin(), columnNamesTmp.end()), columnNames);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetColumnName(0, columnName), E_ALREADY_CLOSED);
 }
 
 /* *
@@ -726,7 +812,7 @@ HWTEST_F(CacheResultSetTest, CloseTest_001, TestSize.Level2)
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     int ret = cacheResultSet.Close();
-    EXPECT_EQ(E_NOT_SUPPORT, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 /* *
@@ -747,5 +833,8 @@ HWTEST_F(CacheResultSetTest, GetSizeTest_001, TestSize.Level2)
     int columnIndex = 0;
     size_t size;
     int ret = cacheResultSet.GetSize(columnIndex, size);
-    EXPECT_EQ(E_NOT_SUPPORT, ret);
+    EXPECT_EQ(E_OK, ret);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetSize(columnIndex, size), E_ALREADY_CLOSED);
 }

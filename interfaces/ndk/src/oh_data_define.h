@@ -16,14 +16,16 @@
 #ifndef OH_DATA_DEFINE_H
 #define OH_DATA_DEFINE_H
 
+#include <cstdint>
 #include <vector>
-#include "value_object.h"
-#include "oh_values_bucket.h"
-#include "transaction.h"
+
+#include "oh_cursor.h"
 #include "oh_predicates.h"
 #include "oh_rdb_transaction.h"
+#include "oh_values_bucket.h"
 #include "rdb_store_config.h"
-
+#include "transaction.h"
+#include "value_object.h"
 struct OH_Rdb_Transaction {
     static constexpr int64_t OH_RDB_TRANS_ID = 0x10000000;
     int64_t id = OH_RDB_TRANS_ID;
@@ -69,6 +71,15 @@ struct OH_Rdb_CryptoParam {
     int64_t id = OH_CRYPTO_PARAM_ID;
 
     OHOS::NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
+    bool IsValid() const;
+};
+
+struct OH_RDB_ReturningContext {
+    static constexpr int64_t OH_CRYPTO_PARAM_ID = 0x10006000;
+    int64_t id = OH_CRYPTO_PARAM_ID;
+    int64_t changed = -1;
+    OH_Cursor *cursor = nullptr;
+    OHOS::NativeRdb::ReturningConfig config;
     bool IsValid() const;
 };
 #endif

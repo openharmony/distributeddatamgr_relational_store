@@ -128,7 +128,7 @@ HWTEST_F(CacheBlockTest, PutString001, TestSize.Level2)
     EXPECT_EQ(CacheBlock::BLOCK_BAD_VALUE, block.PutString(0, 2, nullptr, 0));
     EXPECT_EQ(CacheBlock::BLOCK_BAD_VALUE, block.PutString(0, 0, nullptr, 0));
     const char * value = "test";
-    EXPECT_EQ(CacheBlock::BLOCK_OK, block.PutString(0, 0, value, 4));
+    EXPECT_EQ(CacheBlock::BLOCK_OK, block.PutString(0, 0, value, 5));
     ValueObject object;
     block.rows_[0].GetObject("name", object);
     EXPECT_EQ(ValueObjectType::TYPE_STRING, object.GetType());

@@ -140,7 +140,7 @@ std::pair<int32_t, Results> TransDB::BatchInsert(const std::string &table, const
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,args:%{public}zu,resolution:%{public}d.", errCode,
             SqliteUtils::Anonymous(table).c_str(), args.get().size(), static_cast<int32_t>(resolution));
     }
-    return GenerateResult(errCode, statement, std::move(values), true);
+    return GenerateResult(errCode, statement, std::move(values), true, config.defaultRowIndex);
 }
 
 std::pair<int32_t, Results> TransDB::Update(const Row &row, const AbsRdbPredicates &predicates,
@@ -187,7 +187,7 @@ std::pair<int32_t, Results> TransDB::Update(const Row &row, const AbsRdbPredicat
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,returningFields:%{public}zu,resolution:%{public}d.",
             errCode, SqliteUtils::Anonymous(table).c_str(), config.columns.size(), static_cast<int32_t>(resolution));
     }
-    return GenerateResult(errCode, statement, std::move(values), true);
+    return GenerateResult(errCode, statement, std::move(values), true, config.defaultRowIndex);
 }
 
 std::pair<int32_t, Results> TransDB::Delete(
@@ -216,7 +216,7 @@ std::pair<int32_t, Results> TransDB::Delete(
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,returningFields:%{public}zu.", errCode,
             SqliteUtils::Anonymous(table).c_str(), config.columns.size());
     }
-    return GenerateResult(errCode, statement, std::move(values), true);
+    return GenerateResult(errCode, statement, std::move(values), true, config.defaultRowIndex);
 }
 
 std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, const Values &args)
@@ -357,8 +357,8 @@ std::pair<int32_t, std::shared_ptr<Statement>> TransDB::GetStatement(
     return connection->CreateStatement(sql, connection, returningSql);
 }
 
-std::pair<int32_t, Results> TransDB::GenerateResult(
-    int32_t code, std::shared_ptr<Statement> statement, std::vector<ValuesBucket> &&returningValues, bool isDML)
+std::pair<int32_t, Results> TransDB::GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
+    std::vector<ValuesBucket> &&returningValues, bool isDML, int32_t rowIndex)
 {
     Results result{ -1 };
     if (statement == nullptr) {
@@ -366,7 +366,8 @@ std::pair<int32_t, Results> TransDB::GenerateResult(
     }
     // There are no data changes in other scenarios
     if (code == E_OK) {
-        std::shared_ptr<ResultSet> resultSet = std::make_shared<CacheResultSet>(std::move(returningValues));
+        std::shared_ptr<ResultSet> resultSet =
+            std::make_shared<CacheResultSet>(std::move(returningValues), rowIndex);
         result.results = resultSet;
         result.changed = isDML ? statement->Changes() : 0;
     }
