@@ -14,13 +14,16 @@
  */
 #define LOG_TAG "OhDataUtils"
 
-#include <sstream>
-#include <fstream>
-
 #include "oh_data_utils.h"
-#include "rdb_helper.h"
-#include "logger.h"
 
+#include <fstream>
+#include <sstream>
+
+#include "logger.h"
+#include "rdb_helper.h"
+#include "rdb_sql_utils.h"
+
+using namespace OHOS::NativeRdb;
 namespace OHOS::RdbNdk {
 static constexpr const char *TRUSTS_CONF_PATH = "/system/etc/trusts/conf/";
 static constexpr const char *TRUSTS_CONFIG_JSON_PATH = "trusts_config.json";
@@ -94,7 +97,7 @@ bool Utils::IsContainTerminator()
 bool Utils::IsValidContext(const OH_RDB_ReturningContext *context)
 {
     if (context == nullptr || context->cursor != nullptr) {
-        LOG_ERROR("context param has null data.");
+        LOG_ERROR("context or cursor is nullptr.");
         return false;
     }
     if (!context->IsValid()) {
@@ -126,6 +129,24 @@ bool Utils::IsValidResolution(Rdb_ConflictResolution resolution)
         return false;
     }
     return true;
+}
+
+bool Utils::IsValidTableName(const char *table)
+{
+    if (table == nullptr) {
+        LOG_ERROR("table is nullptr.");
+        return false;
+    }
+    return RdbSqlUtils::IsValidTableName(table);
+}
+
+bool Utils::IsValidRdbValuesBucket(OHOS::RdbNdk::RelationalValuesBucket *rdbValuesBucket)
+{
+    if (rdbValuesBucket == nullptr) {
+        LOG_ERROR("rdbValuesBucket is nullptr.");
+        return false;
+    }
+    return !RdbSqlUtils::HasDuplicateAssets(rdbValuesBucket->Get());
 }
 
 } // namespace OHOS::RdbNdk
