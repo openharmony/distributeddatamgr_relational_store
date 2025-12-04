@@ -34,6 +34,9 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static void InitValuesBucketsForGetBlobTest(std::vector<ValuesBucket>& valuesBuckets);
+    static void InitValuesBucketsForGetDoubleTest(std::vector<ValuesBucket>& valuesBuckets);
+    static void InitValuesBucketsForGetFloat32ArrayTest(std::vector<ValuesBucket>& valuesBuckets);
 };
 
 void CacheResultSetTest::SetUpTestCase(void)
@@ -50,6 +53,35 @@ void CacheResultSetTest::SetUp()
 
 void CacheResultSetTest::TearDown()
 {
+}
+
+void CacheResultSetTest::InitValuesBucketsForGetBlobTest(std::vector<ValuesBucket>& valuesBuckets)
+{
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
+    valuesBucket.Put("data", blob);
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
+}
+
+void CacheResultSetTest::InitValuesBucketsForGetDoubleTest(std::vector<ValuesBucket>& valuesBuckets)
+{
+    ValuesBucket valuesBucket;
+    std::set<std::string> columnNames = { "id", "data", "field" };
+    for (auto &column : columnNames) {
+        valuesBucket.Put(column, 1111.1111);
+    }
+    valuesBuckets.push_back(std::move(valuesBucket));
+}
+
+void CacheResultSetTest::InitValuesBucketsForGetFloat32ArrayTest(std::vector<ValuesBucket>& valuesBuckets)
+{
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    valuesBucket.Put("data", "test");
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
 }
 
 /* *
@@ -109,12 +141,7 @@ HWTEST_F(CacheResultSetTest, GetAllColumnNamesTest_001, TestSize.Level2)
 HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
-    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
-    valuesBucket.Put("data", blob);
-    valuesBucket.Put("field", "test");
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetBlobTest(valuesBuckets);
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     int columnIndex = 0;
@@ -134,18 +161,13 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetBlobTest_002
- * @tc.desc: Normal testCase for CacheResultSet, get blob of type from the list
+ * @tc.desc: Abnormal test cases for CacheResultSet, GetBlob return E_ROW_OUT_RANGE
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetBlobTest_002, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
-    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
-    valuesBucket.Put("data", blob);
-    valuesBucket.Put("field", "test");
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetBlobTest(valuesBuckets);
 
     int initPos = -1;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
@@ -156,18 +178,13 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_002, TestSize.Level2)
 
 /* *
  * @tc.name: GetBlobTest_003
- * @tc.desc: Normal testCase for CacheResultSet, get blob of type from the list
+ * @tc.desc: Abnormal test cases for CacheResultSet, GetBlob return E_ROW_OUT_RANGE
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetBlobTest_003, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
-    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
-    valuesBucket.Put("data", blob);
-    valuesBucket.Put("field", "test");
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetBlobTest(valuesBuckets);
 
     int initPos = 10;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
@@ -268,12 +285,7 @@ HWTEST_F(CacheResultSetTest, GetLongTest_001, TestSize.Level2)
 HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto &column : columnNames) {
-        valuesBucket.Put(column, 1111.1111);
-    }
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetDoubleTest(valuesBuckets);
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     int columnIndex = 1;
@@ -290,18 +302,13 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetDoubleTest_002
- * @tc.desc: Normal testCase for CacheResultSet, get double of type from the list
+ * @tc.desc: Abnormal test cases for CacheResultSet, GetDouble return E_ROW_OUT_RANGE
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetDoubleTest_002, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto &column : columnNames) {
-        valuesBucket.Put(column, 1111.1111);
-    }
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetDoubleTest(valuesBuckets);
 
     int initPos = -1;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
@@ -312,18 +319,13 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_002, TestSize.Level2)
 
 /* *
  * @tc.name: GetDoubleTest_003
- * @tc.desc: Normal testCase for CacheResultSet, get double of type from the list
+ * @tc.desc: Abnormal test cases for CacheResultSet, GetDouble return E_ROW_OUT_RANGE
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetDoubleTest_003, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto &column : columnNames) {
-        valuesBucket.Put(column, 1111.1111);
-    }
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetDoubleTest(valuesBuckets);
 
     int initPos = 10;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
@@ -929,17 +931,13 @@ HWTEST_F(CacheResultSetTest, GetSizeTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_001
- * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_ROW_OUT_RANGE
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
-    valuesBucket.Put("data", "test");
-    valuesBucket.Put("field", "test");
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
     int initPos = -1;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
     int index = 0;
@@ -950,17 +948,13 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_002
- * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_ROW_OUT_RANGE
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_002, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
-    valuesBucket.Put("data", "test");
-    valuesBucket.Put("field", "test");
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
     int initPos = 10;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
     int index = 0;
@@ -971,17 +965,13 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_002, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_003
- * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_COLUMN_OUT_RANGE
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_003, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
-    valuesBucket.Put("data", "test");
-    valuesBucket.Put("field", "test");
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
     int initPos = 0;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
     int index = -1;
@@ -992,17 +982,13 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_003, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_004
- * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_COLUMN_OUT_RANGE
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_004, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
-    valuesBucket.Put("data", "test");
-    valuesBucket.Put("field", "test");
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
     int initPos = 0;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
     int index = 10;
@@ -1013,17 +999,13 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_004, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_005
- * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_ALREADY_CLOSED
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_005, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
-    valuesBucket.Put("data", "test");
-    valuesBucket.Put("field", "test");
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
     int initPos = 0;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
     EXPECT_EQ(cacheResultSet.Close(), E_OK);
