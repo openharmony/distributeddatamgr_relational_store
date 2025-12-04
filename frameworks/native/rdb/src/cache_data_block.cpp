@@ -33,7 +33,7 @@ CacheDataBlock::~CacheDataBlock()
 {
 }
 
-int CacheDataBlock::CacheDataBlock::Clear()
+int CacheDataBlock::Clear()
 {
     return BLOCK_OK;
 }

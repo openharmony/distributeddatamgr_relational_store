@@ -747,11 +747,12 @@ napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc > 0, std::make_shared<ParamNumError>("1 or 2"));
         auto errCode = JSUtils::Convert2ValueExt(env, argv[0], context->maxCount);
-        CHECK_RETURN_SET_E(OK == errCode && context->maxCount > 0, std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid maxCount"));
+        CHECK_RETURN_SET_E(OK == errCode && context->maxCount > 0,
+            std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid maxCount"));
         if (argc == 2) {
             errCode = JSUtils::Convert2ValueExt(env, argv[1], context->position);
-            CHECK_RETURN_SET_E(
-                OK == errCode && context->position >= 0, std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid position"));
+            CHECK_RETURN_SET_E(OK == errCode && context->position >= 0,
+                std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid position"));
         }
     };
     auto exec = [context]() -> int {

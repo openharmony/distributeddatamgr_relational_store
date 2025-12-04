@@ -355,10 +355,6 @@ std::pair<int, std::vector<std::vector<ValueObject>>> AbsResultSet::GetRowsData(
 
     std::vector<std::vector<ValueObject>> rowsData;
     std::tie(errCode, rowsData) = GetMultiRowsData(maxCount);
-    if (errCode == E_ROW_OUT_RANGE) {
-        return { E_OK, std::move(rowsData) };
-    }
-
     if (errCode != E_OK) {
         LOG_ERROR("GetMultiRowsData Failed, code:%{public}d. maxCount:%{public}d, position:%{public}d",
             errCode, maxCount, position);
