@@ -55,11 +55,11 @@ void CacheResultSetTest::TearDown()
 {
 }
 
-void CacheResultSetTest::InitValuesBucketsForGetBlobTest(std::vector<ValuesBucket>& valuesBuckets)
+void CacheResultSetTest::InitValuesBucketsForGetBlobTest(
+    std::vector<ValuesBucket> &valuesBuckets, const std::vector<uint8_t> &blob)
 {
     ValuesBucket valuesBucket;
     valuesBucket.Put("id", 1);
-    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
     valuesBucket.Put("data", blob);
     valuesBucket.Put("field", "test");
     valuesBuckets.push_back(std::move(valuesBucket));
@@ -67,10 +67,11 @@ void CacheResultSetTest::InitValuesBucketsForGetBlobTest(std::vector<ValuesBucke
 
 void CacheResultSetTest::InitValuesBucketsForGetDoubleTest(std::vector<ValuesBucket>& valuesBuckets)
 {
+    const double number = 1111.1111;
     ValuesBucket valuesBucket;
     std::set<std::string> columnNames = { "id", "data", "field" };
     for (auto &column : columnNames) {
-        valuesBucket.Put(column, 1111.1111);
+        valuesBucket.Put(column, number);
     }
     valuesBuckets.push_back(std::move(valuesBucket));
 }
@@ -141,7 +142,8 @@ HWTEST_F(CacheResultSetTest, GetAllColumnNamesTest_001, TestSize.Level2)
 HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    InitValuesBucketsForGetBlobTest(valuesBuckets);
+    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
+    InitValuesBucketsForGetBlobTest(valuesBuckets, blob);
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     int columnIndex = 0;
@@ -167,7 +169,8 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 HWTEST_F(CacheResultSetTest, GetBlobTest_002, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    InitValuesBucketsForGetBlobTest(valuesBuckets);
+    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
+    InitValuesBucketsForGetBlobTest(valuesBuckets, blob);
 
     int initPos = -1;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
@@ -184,7 +187,8 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_002, TestSize.Level2)
 HWTEST_F(CacheResultSetTest, GetBlobTest_003, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    InitValuesBucketsForGetBlobTest(valuesBuckets);
+    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
+    InitValuesBucketsForGetBlobTest(valuesBuckets, blob);
 
     int initPos = 10;
     CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
