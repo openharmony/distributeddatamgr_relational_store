@@ -133,6 +133,50 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 }
 
 /* *
+ * @tc.name: GetBlobTest_002
+ * @tc.desc: Normal testCase for CacheResultSet, get blob of type from the list
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetBlobTest_002, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
+    valuesBucket.Put("data", blob);
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
+
+    int initPos = -1;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int columnIndex = 0;
+    std::vector<uint8_t> blobOut = {};
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetBlob(columnIndex, blobOut));
+}
+
+/* *
+ * @tc.name: GetBlobTest_003
+ * @tc.desc: Normal testCase for CacheResultSet, get blob of type from the list
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetBlobTest_003, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
+    valuesBucket.Put("data", blob);
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
+
+    int initPos = 10;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int columnIndex = 0;
+    std::vector<uint8_t> blobOut = {};
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetBlob(columnIndex, blobOut));
+}
+
+/* *
  * @tc.name: GetStringTest_001
  * @tc.desc: Normal testCase for CacheResultSet, get string of type from the list
  * @tc.type: FUNC
@@ -242,6 +286,50 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
     EXPECT_EQ(cacheResultSet.GetDouble(columnIndex, value), E_COLUMN_OUT_RANGE);
     EXPECT_EQ(cacheResultSet.Close(), E_OK);
     EXPECT_EQ(cacheResultSet.GetDouble(columnIndex, value), E_ALREADY_CLOSED);
+}
+
+/* *
+ * @tc.name: GetDoubleTest_002
+ * @tc.desc: Normal testCase for CacheResultSet, get double of type from the list
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetDoubleTest_002, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    std::set<std::string> columnNames = { "id", "data", "field" };
+    for (auto &column : columnNames) {
+        valuesBucket.Put(column, 1111.1111);
+    }
+    valuesBuckets.push_back(std::move(valuesBucket));
+
+    int initPos = -1;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int columnIndex = 1;
+    double value;
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetDouble(columnIndex, value));
+}
+
+/* *
+ * @tc.name: GetDoubleTest_003
+ * @tc.desc: Normal testCase for CacheResultSet, get double of type from the list
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetDoubleTest_003, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    std::set<std::string> columnNames = { "id", "data", "field" };
+    for (auto &column : columnNames) {
+        valuesBucket.Put(column, 1111.1111);
+    }
+    valuesBuckets.push_back(std::move(valuesBucket));
+
+    int initPos = 10;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int columnIndex = 1;
+    double value;
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetDouble(columnIndex, value));
 }
 
 /* *
@@ -837,4 +925,109 @@ HWTEST_F(CacheResultSetTest, GetSizeTest_001, TestSize.Level2)
 
     EXPECT_EQ(cacheResultSet.Close(), E_OK);
     EXPECT_EQ(cacheResultSet.GetSize(columnIndex, size), E_ALREADY_CLOSED);
+}
+
+/* *
+ * @tc.name: GetFloat32ArrayTest_001
+ * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_001, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    valuesBucket.Put("data", "test");
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
+    int initPos = -1;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int index = 0;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetFloat32Array(index, vecs));
+}
+
+
+/* *
+ * @tc.name: GetFloat32ArrayTest_002
+ * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_002, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    valuesBucket.Put("data", "test");
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
+    int initPos = 10;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int index = 0;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetFloat32Array(index, vecs));
+}
+
+
+/* *
+ * @tc.name: GetFloat32ArrayTest_003
+ * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_003, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    valuesBucket.Put("data", "test");
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
+    int initPos = 0;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int index = -1;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, cacheResultSet.GetFloat32Array(index, vecs));
+}
+
+
+/* *
+ * @tc.name: GetFloat32ArrayTest_004
+ * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_004, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    valuesBucket.Put("data", "test");
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
+    int initPos = 0;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int index = 10;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, cacheResultSet.GetFloat32Array(index, vecs));
+}
+
+
+/* *
+ * @tc.name: GetFloat32ArrayTest_005
+ * @tc.desc: Normal testCase for CacheResultSet, GetFloat32Array
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_005, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    valuesBucket.Put("data", "test");
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
+    int initPos = 0;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    int index = 0;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_ALREADY_CLOSED, cacheResultSet.GetFloat32Array(index, vecs));
 }
