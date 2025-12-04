@@ -368,8 +368,8 @@ int OH_RdbTrans_UpdateWithConflictResolution(OH_Rdb_Transaction *trans, const OH
 int OH_RdbTrans_BatchInsertWithReturning(OH_Rdb_Transaction *trans, const char *table, const OH_Data_VBuckets *rows,
     Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context)
 {
-    if (!IsValidRdbTrans(trans) || table == nullptr || !Utils::IsValidRows(rows) || !Utils::IsValidContext(context) ||
-        !Utils::IsValidResolution(resolution) || !RdbSqlUtils::IsValidTableName(table)) {
+    if (!IsValidRdbTrans(trans) || !Utils::IsValidTableName(table) || !Utils::IsValidRows(rows) ||
+        !Utils::IsValidContext(context) || !Utils::IsValidResolution(resolution)) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     ValuesBuckets datas;
@@ -391,6 +391,7 @@ int OH_RdbTrans_BatchInsertWithReturning(OH_Rdb_Transaction *trans, const char *
     context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
     if (context->cursor == nullptr) {
         LOG_ERROR("new RelationalCursor failed.");
+        context->changed = -1;
         return RDB_E_ERROR;
     }
     return OH_Rdb_ErrCode::RDB_OK;
@@ -401,10 +402,9 @@ int OH_RdbTrans_UpdateWithReturning(OH_Rdb_Transaction *trans, OH_VBucket *row, 
 {
     auto rdbPredicate = RelationalPredicate::GetSelf(const_cast<OH_Predicates *>(predicates));
     auto rdbValuesBucket = RelationalValuesBucket::GetSelf(const_cast<OH_VBucket *>(row));
-    if (!IsValidRdbTrans(trans) || rdbValuesBucket == nullptr || rdbPredicate == nullptr ||
+    if (!IsValidRdbTrans(trans) || !Utils::IsValidRdbValuesBucket(rdbValuesBucket) || rdbPredicate == nullptr ||
         !Utils::IsValidContext(context) || !Utils::IsValidResolution(resolution) ||
-        !RdbSqlUtils::IsValidTableName(rdbPredicate->Get().GetTableName()) ||
-        RdbSqlUtils::HasDuplicateAssets(rdbValuesBucket->Get())) {
+        !RdbSqlUtils::IsValidTableName(rdbPredicate->Get().GetTableName())) {
         return RDB_E_INVALID_ARGS;
     }
     auto res = trans->trans_->Update(
@@ -416,6 +416,7 @@ int OH_RdbTrans_UpdateWithReturning(OH_Rdb_Transaction *trans, OH_VBucket *row, 
     context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
     if (context->cursor == nullptr) {
         LOG_ERROR("new RelationalCursor failed.");
+        context->changed = -1;
         return RDB_E_ERROR;
     }
     return OH_Rdb_ErrCode::RDB_OK;
@@ -437,6 +438,7 @@ int OH_RdbTrans_DeleteWithReturning(
     context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
     if (context->cursor == nullptr) {
         LOG_ERROR("new RelationalCursor failed.");
+        context->changed = -1;
         return RDB_E_ERROR;
     }
     return OH_Rdb_ErrCode::RDB_OK;

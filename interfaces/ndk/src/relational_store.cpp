@@ -1562,8 +1562,8 @@ int OH_Rdb_BatchInsertWithReturning(OH_Rdb_Store *store, const char *table, cons
     Rdb_ConflictResolution resolution, OH_RDB_ReturningContext *context)
 {
     auto rdbStore = GetRelationalStore(store);
-    if (rdbStore == nullptr || table == nullptr || !Utils::IsValidRows(rows) || !Utils::IsValidContext(context) ||
-        !Utils::IsValidResolution(resolution) || !RdbSqlUtils::IsValidTableName(table)) {
+    if (rdbStore == nullptr || !Utils::IsValidTableName(table) || !Utils::IsValidRows(rows) ||
+        !Utils::IsValidContext(context) || !Utils::IsValidResolution(resolution)) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     OHOS::NativeRdb::ValuesBuckets datas;
@@ -1597,9 +1597,9 @@ int OH_Rdb_UpdateWithReturning(OH_Rdb_Store *store, OH_VBucket *row, OH_Predicat
     auto rdbStore = GetRelationalStore(store);
     auto bucket = RelationalValuesBucket::GetSelf(row);
     auto predicate = RelationalPredicate::GetSelf(predicates);
-    if (rdbStore == nullptr || predicate == nullptr || bucket == nullptr || !Utils::IsValidContext(context) ||
-        !Utils::IsValidResolution(resolution) || !RdbSqlUtils::IsValidTableName(predicate->Get().GetTableName()) ||
-        RdbSqlUtils::HasDuplicateAssets(bucket->Get())) {
+    if (rdbStore == nullptr || predicate == nullptr || !Utils::IsValidRdbValuesBucket(bucket) ||
+        !Utils::IsValidContext(context) || !Utils::IsValidResolution(resolution) ||
+        !RdbSqlUtils::IsValidTableName(predicate->Get().GetTableName())) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     auto res = rdbStore->GetStore()->Update(
@@ -1611,6 +1611,7 @@ int OH_Rdb_UpdateWithReturning(OH_Rdb_Store *store, OH_VBucket *row, OH_Predicat
     context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
     if (context->cursor == nullptr) {
         LOG_ERROR("new RelationalCursor failed.");
+        context->changed = -1;
         return RDB_E_ERROR;
     }
     return OH_Rdb_ErrCode::RDB_OK;
@@ -1632,6 +1633,7 @@ int OH_Rdb_DeleteWithReturning(OH_Rdb_Store *store, OH_Predicates *predicates, O
     context->cursor = new (std::nothrow) RelationalCursor(std::move(res.second.results));
     if (context->cursor == nullptr) {
         LOG_ERROR("new RelationalCursor failed.");
+        context->changed = -1;
         return RDB_E_ERROR;
     }
     return OH_Rdb_ErrCode::RDB_OK;
