@@ -833,7 +833,10 @@ HWTEST_F(CacheResultSetTest, GetSizeTest_001, TestSize.Level2)
     int columnIndex = 0;
     size_t size;
     int ret = cacheResultSet.GetSize(columnIndex, size);
-    EXPECT_EQ(E_NOT_SUPPORT, ret);
+    EXPECT_EQ(E_OK, ret);
+
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    EXPECT_EQ(cacheResultSet.GetSize(columnIndex, size), E_ALREADY_CLOSED);
 }
 
 /* *

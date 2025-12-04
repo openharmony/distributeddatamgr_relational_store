@@ -46,7 +46,8 @@ public:
     MOCK_METHOD((std::pair<int32_t, size_t>), GetSize, (int32_t index), (const, override));
     MOCK_METHOD((std::pair<int32_t, ValueObject>), GetColumn, (int32_t index), (const, override));
     MOCK_METHOD((std::pair<int32_t, std::vector<ValuesBucket>>), GetRows, (int32_t maxCount), (override));
-    MOCK_METHOD((std::pair<int32_t, std::vector<std::vector<ValueObject>>>), GetMultiRowsData, (int32_t maxCount), (override));
+    MOCK_METHOD((std::pair<int32_t, std::vector<std::vector<ValueObject>>>), GetMultiRowsData,
+        (int32_t maxCount), (override));
     MOCK_METHOD(bool, ReadOnly, (), (const, override));
     MOCK_METHOD(bool, SupportBlockInfo, (), (const, override));
     MOCK_METHOD(int32_t, FillBlockInfo, (SharedBlockInfo * info, int retryTime), (const, override));

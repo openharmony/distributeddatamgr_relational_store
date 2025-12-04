@@ -469,51 +469,6 @@ public:
         return array<ValueType>(::taihe::copy_data_t{}, rowDataTemp.data(), rowDataTemp.size());
     }
 
-    std::pair<int, std::vector<std::vector<ValueObject>>> GetRows(OHOS::NativeRdb::ResultSet &resultSet,
-        int32_t maxCount, int32_t position)
-    {
-        int rowPos = 0;
-        int errCode = OHOS::NativeRdb::E_OK;
-        resultSet.GetRowIndex(rowPos);
-        if (position != INIT_POSITION && position != rowPos) {
-            errCode = resultSet.GoToRow(position);
-        } else if (rowPos == INIT_POSITION) {
-            errCode = resultSet.GoToFirstRow();
-        }
-
-        if (errCode == OHOS::NativeRdb::E_ROW_OUT_RANGE) {
-            return { OHOS::NativeRdb::E_OK, {} };
-        }
-        if (errCode != OHOS::NativeRdb::E_OK) {
-            LOG_ERROR("Failed code:%{public}d. [maxCount:%{public}d, position:%{public}d]", errCode, maxCount,
-                position);
-            return { errCode, {} };
-        }
-
-        std::vector<std::vector<ValueObject>> rowsData;
-        for (int32_t i = 0; i < maxCount; ++i) {
-            std::vector<ValueObject> rowData;
-            std::tie(errCode, rowData) = resultSet.GetRowData();
-            if (errCode == OHOS::NativeRdb::E_ROW_OUT_RANGE) {
-                break;
-            }
-            if (errCode != OHOS::NativeRdb::E_OK) {
-                return { errCode, {} };
-            }
-
-            rowsData.push_back(std::move(rowData));
-
-            errCode = resultSet.GoToNextRow();
-            if (errCode == OHOS::NativeRdb::E_ROW_OUT_RANGE) {
-                break;
-            }
-            if (errCode != OHOS::NativeRdb::E_OK) {
-                return { errCode, {} };
-            }
-        }
-        return { OHOS::NativeRdb::E_OK, rowsData };
-    }
-
     array<array<ValueType>> GetRowsDataAsync(int32_t maxCount, optional_view<int32_t> position)
     {
         if (maxCount < 0) {
@@ -533,7 +488,7 @@ public:
         int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
         std::vector<std::vector<ValueObject>> rowsData;
         if (nativeResultSet_ != nullptr) {
-            std::tie(errCode, rowsData) = GetRows(*nativeResultSet_, maxCount, nativePosition);
+            std::tie(errCode, rowsData) = nativeResultSet_->GetRowsData(maxCount, nativePosition);
         }
 
         if (errCode == OHOS::NativeRdb::E_INVALID_ARGS) {
