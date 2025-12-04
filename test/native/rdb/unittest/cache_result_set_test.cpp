@@ -34,9 +34,10 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    static void InitValuesBucketsForGetBlobTest(std::vector<ValuesBucket>& valuesBuckets);
-    static void InitValuesBucketsForGetDoubleTest(std::vector<ValuesBucket>& valuesBuckets);
-    static void InitValuesBucketsForGetFloat32ArrayTest(std::vector<ValuesBucket>& valuesBuckets);
+    static void InitValuesBucketsForGetBlobTest(
+        std::vector<ValuesBucket> &valuesBuckets, const std::vector<uint8_t> &blob);
+    static void InitValuesBucketsForGetDoubleTest(std::vector<ValuesBucket> &valuesBuckets);
+    static void InitValuesBucketsForGetFloat32ArrayTest(std::vector<ValuesBucket> &valuesBuckets);
 };
 
 void CacheResultSetTest::SetUpTestCase(void)
