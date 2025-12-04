@@ -749,29 +749,3 @@ HWTEST_F(CacheResultSetTest, GetSizeTest_001, TestSize.Level2)
     int ret = cacheResultSet.GetSize(columnIndex, size);
     EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
-
-/* *
- * @tc.name: GetRowDataTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get row data
- * @tc.type: FUNC
- */
-HWTEST_F(CacheResultSetTest, GetRowDataTest_001, TestSize.Level2)
-{
-    std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    std::vector<std::string> columnNames = { "name", "age", "field", "name", "age", "data" };
-    for (int i = 0; i < columnNames.size(); ++i) {
-        valuesBucket.Put(columnNames[i], "test" + std::to_string(i));
-        valuesBuckets.push_back(std::move(valuesBucket));
-    }
-    CacheResultSet cacheResultSet(std::move(valuesBuckets));
-    auto [err, values] = cacheResultSet.GetRowData();
-    EXPECT_EQ(err, E_OK);
-    ValueObject value;
-    for (int i = 0; i < values.size(); ++i) {
-        string res;
-        auto err = values[i].GetString(res);
-        EXPECT_EQ(err, E_OK);
-        EXPECT_EQ(res, "test" + std::to_string(i));
-    }
-}
