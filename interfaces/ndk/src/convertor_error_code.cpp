@@ -98,6 +98,10 @@ static constexpr NdkErrorCode INTERFACE_CODE_MAP[] = {
     { OHOS::NativeRdb::E_SUB_LIMIT_REACHED, RDB_E_SUB_LIMIT_REACHED },
 };
 
+static constexpr NdkErrorCode INTERFACE_CODE_MAP_EXTEND[] = {
+    { OHOS::NativeRdb::E_SQLITE_ERROR, RDB_E_SQLITE_ERROR },
+};
+
 int ConvertorErrorCode::ConvertCode(const NdkErrorCode *codeMap, int count, int innerCode)
 {
     auto errorCode = NdkErrorCode{ innerCode, -1 };
@@ -120,5 +124,16 @@ int ConvertorErrorCode::GetInterfaceCode(int nativeErrCode)
 {
     int count = static_cast<int>(sizeof(INTERFACE_CODE_MAP) / sizeof(INTERFACE_CODE_MAP[0]));
     return ConvertCode(INTERFACE_CODE_MAP, count, nativeErrCode);
+}
+
+int ConvertorErrorCode::GetInterfaceCodeExtend(int nativeErrCode)
+{
+    int count = static_cast<int>(sizeof(INTERFACE_CODE_MAP) / sizeof(INTERFACE_CODE_MAP[0]));
+    auto errCode = ConvertCode(INTERFACE_CODE_MAP, count, nativeErrCode);
+    if (errCode != RDB_E_ERROR) {
+        return errCode;
+    }
+    count = static_cast<int>(sizeof(INTERFACE_CODE_MAP_EXTEND) / sizeof(INTERFACE_CODE_MAP_EXTEND[0]));
+    return ConvertCode(INTERFACE_CODE_MAP_EXTEND, count, nativeErrCode);
 }
 }

@@ -48,7 +48,7 @@ public:
     /**
     * @brief Constructor.
     */
-    API_EXPORT CacheResultSet(std::vector<NativeRdb::ValuesBucket> &&valueBuckets);
+    API_EXPORT CacheResultSet(std::vector<NativeRdb::ValuesBucket> &&valueBuckets, int initPos = 0);
     /**
     * @brief Destructor.
     */
@@ -338,6 +338,7 @@ RDB_UTILS_POP_WARNING
     mutable std::shared_mutex rwMutex_;
     int32_t maxRow_;
     int32_t maxCol_;
+    bool isClosed_ = false;
     std::vector<std::string> colNames_;
     std::vector<int32_t> colTypes_;
     std::vector<NativeRdb::ValuesBucket> valueBuckets_;

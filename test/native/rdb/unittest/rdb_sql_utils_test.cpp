@@ -328,9 +328,9 @@ HWTEST_F(RdbSqlUtilsTest, IsValidTableName_ValidateFormat, TestSize.Level1)
  */
 HWTEST_F(RdbSqlUtilsTest, IsValidFields_ValidateNames, TestSize.Level1)
 {
-    const int32_t FIELDS_LIMIT = 4;
+    const int32_t limit = 4;
     EXPECT_FALSE(RdbSqlUtils::IsValidFields(std::vector<std::string>()));
-    EXPECT_FALSE(RdbSqlUtils::IsValidFields(std::vector<std::string>(FIELDS_LIMIT + 1, "")));
+    EXPECT_FALSE(RdbSqlUtils::IsValidFields(std::vector<std::string>(limit + 1, "")));
     EXPECT_FALSE(RdbSqlUtils::IsValidFields({"field1", "field2", "***illegal_field"}));
     EXPECT_FALSE(RdbSqlUtils::IsValidFields({"field1", "field2", "illegal field"}));
     EXPECT_FALSE(RdbSqlUtils::IsValidFields({"field1", "field2", "illegal,field"}));
@@ -440,10 +440,10 @@ HWTEST_F(RdbSqlUtilsTest, BatchTrim_TrimWhitespace, TestSize.Level1)
 
 /**
  * @tc.name: IsValidMaxCount_ValidateValues
- * @tc.desc: Test RdbSqlUtils IsValidMaxCount function with various max returning count values
+ * @tc.desc: Test RdbSqlUtils IsValidReturningMaxCount function with various max returning count values
  * @tc.type: FUNC
  * Test Point:
- * Verify that IsValidMaxCount correctly validates maximum count values for returning operations
+ * Verify that IsValidReturningMaxCount correctly validates maximum count values for returning operations
  * Test Steps:
  * 1. Test with a positive valid count (5) - should return true
  * 2. Test with a negative count (-5) - should return false
@@ -453,9 +453,9 @@ HWTEST_F(RdbSqlUtilsTest, BatchTrim_TrimWhitespace, TestSize.Level1)
  */
 HWTEST_F(RdbSqlUtilsTest, IsValidMaxCount_ValidateValues, TestSize.Level1)
 {
-    EXPECT_TRUE(RdbSqlUtils::IsValidMaxCount(5));
-    EXPECT_FALSE(RdbSqlUtils::IsValidMaxCount(-5));
-    EXPECT_FALSE(RdbSqlUtils::IsValidMaxCount(0));
-    EXPECT_TRUE(RdbSqlUtils::IsValidMaxCount(ReturningConfig::MAX_RETURNING_COUNT));
-    EXPECT_FALSE(RdbSqlUtils::IsValidMaxCount(ReturningConfig::MAX_RETURNING_COUNT + 1));
+    EXPECT_TRUE(RdbSqlUtils::IsValidReturningMaxCount(5));
+    EXPECT_FALSE(RdbSqlUtils::IsValidReturningMaxCount(-5));
+    EXPECT_FALSE(RdbSqlUtils::IsValidReturningMaxCount(0));
+    EXPECT_TRUE(RdbSqlUtils::IsValidReturningMaxCount(ReturningConfig::MAX_RETURNING_COUNT));
+    EXPECT_FALSE(RdbSqlUtils::IsValidReturningMaxCount(ReturningConfig::MAX_RETURNING_COUNT + 1));
 }

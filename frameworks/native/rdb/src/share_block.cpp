@@ -138,7 +138,7 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTimes
     return SQLiteError::ErrNo(errCode);
 }
 
-int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTime)
+int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retryTime)
 {
     int retryCount = 0;
     info->totalRows = info->addedRows = 0;
@@ -161,7 +161,7 @@ int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTime)
             break;
         } else if (err == SQLITE_LOCKED || err == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying");
-            if (retryCount >= retiyTime) {
+            if (retryCount >= retryTime) {
                 LOG_ERROR("Bailing on database busy retry.");
                 hasException = true;
                 return E_DATABASE_BUSY;
