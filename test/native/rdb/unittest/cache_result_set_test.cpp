@@ -164,7 +164,9 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetBlobTest_002
- * @tc.desc: Abnormal test cases for CacheResultSet, GetBlob return E_ROW_OUT_RANGE
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ < 0 returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_ 
+            branch is executed in the GetBlob interface
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetBlobTest_002, TestSize.Level2)
@@ -182,7 +184,9 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_002, TestSize.Level2)
 
 /* *
  * @tc.name: GetBlobTest_003
- * @tc.desc: Abnormal test cases for CacheResultSet, GetBlob return E_ROW_OUT_RANGE
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ >= maxRow_  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_ 
+            branch is executed in the GetBlob interface
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetBlobTest_003, TestSize.Level2)
@@ -307,7 +311,9 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetDoubleTest_002
- * @tc.desc: Abnormal test cases for CacheResultSet, GetDouble return E_ROW_OUT_RANGE
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ < 0  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_ 
+            branch is executed in the GetDouble interface
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetDoubleTest_002, TestSize.Level2)
@@ -324,7 +330,9 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_002, TestSize.Level2)
 
 /* *
  * @tc.name: GetDoubleTest_003
- * @tc.desc: Abnormal test cases for CacheResultSet, GetDouble return E_ROW_OUT_RANGE
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ >= maxRow_  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_ 
+            branch is executed in the GetDouble interface
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetDoubleTest_003, TestSize.Level2)
@@ -936,7 +944,9 @@ HWTEST_F(CacheResultSetTest, GetSizeTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_001
- * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_ROW_OUT_RANGE
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where 
+            row_ < 0 returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_ 
+            branch is executed in the GetFloat32Array interface
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_001, TestSize.Level2)
@@ -953,7 +963,9 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_001, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_002
- * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_ROW_OUT_RANGE
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where 
+            row_ >= maxRow_ returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_ 
+            branch is executed in the GetFloat32Array interface
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_002, TestSize.Level2)
@@ -970,7 +982,9 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_002, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_003
- * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_COLUMN_OUT_RANGE
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where 
+            the index < 0 || index >= maxCol_ branch is executed in the GetFloat32Array interface, 
+            and when index < 0, E_COLUMN_OUT_RANGE is returned
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_003, TestSize.Level2)
@@ -987,7 +1001,9 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_003, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_004
- * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_COLUMN_OUT_RANGE
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where 
+            the index < 0 || index >= maxCol_ branch is executed in the GetFloat32Array interface, 
+            and when index >= maxCol_, E_COLUMN_OUT_RANGE is returned
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_004, TestSize.Level2)
@@ -1001,10 +1017,10 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_004, TestSize.Level2)
     EXPECT_EQ(E_COLUMN_OUT_RANGE, cacheResultSet.GetFloat32Array(index, vecs));
 }
 
-
 /* *
  * @tc.name: GetFloat32ArrayTest_005
- * @tc.desc: Abnormal test cases for CacheResultSet, GetFloat32Array return E_ALREADY_CLOSED
+ * @tc.desc: Abnormal test cases for CacheResultSet, After the CacheResultSet calls the Close interface, 
+             E_ALReadY_ClosedD is returned. This test case is used to test this scenario.
  * @tc.type: FUNC
  */
 HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_005, TestSize.Level2)
