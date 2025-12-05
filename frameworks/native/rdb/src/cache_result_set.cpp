@@ -23,11 +23,8 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_trace.h"
-#include "sqlite_utils.h"
-
 namespace OHOS {
 namespace NativeRdb {
-using namespace OHOS::Rdb;
 CacheResultSet::CacheResultSet() : row_(0), maxRow_(0), maxCol_(0)
 {
 }
@@ -183,28 +180,6 @@ int CacheResultSet::GetRow(RowEntity &rowEntity)
         index++;
     }
     return E_OK;
-}
-
-std::pair<int, std::vector<ValueObject>> CacheResultSet::GetRowData()
-{
-    std::shared_lock<decltype(rwMutex_)> lock(rwMutex_);
-    if (row_ < 0 || row_ >= maxRow_) {
-        LOG_ERROR("row:%{public}d, maxRow:%{public}d", row_, maxRow_);
-        return { E_ERROR, {} };
-    }
-    std::vector<ValueObject> rowData;
-    rowData.reserve(colNames_.size());
-    int32_t index = 0;
-    for (auto &columnName : colNames_) {
-        ValueObject object;
-        if (!valueBuckets_[row_].GetObject(columnName, object)) {
-            LOG_ERROR("index:%{public}d, name:%{public}s", index, SqliteUtils::Anonymous(columnName).c_str());
-            return { E_ERROR, {} };
-        }
-        rowData.push_back(std::move(object));
-        index++;
-    }
-    return { E_OK, std::move(rowData) };
 }
 
 int CacheResultSet::GoToRow(int position)

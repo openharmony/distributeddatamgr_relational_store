@@ -736,7 +736,7 @@ napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
     struct RowsContextBase : public ContextBase {
     public:
         int32_t maxCount = 0;
-        int32_t position = 0;
+        int32_t position = INIT_POSITION;
         std::weak_ptr<ResultSet> resultSet;
         std::vector<std::vector<ValueObject>> rowsData;
     };
@@ -749,7 +749,8 @@ napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
         auto errCode = JSUtils::Convert2ValueExt(env, argv[0], context->maxCount);
         CHECK_RETURN_SET_E(OK == errCode && context->maxCount > 0,
             std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid maxCount"));
-        if (argc == 2) {
+        // parameter number is 2
+        if (argc == 2 && !JSUtils::IsNull(env, argv[1])) {
             errCode = JSUtils::Convert2ValueExt(env, argv[1], context->position);
             CHECK_RETURN_SET_E(OK == errCode && context->position >= 0,
                 std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid position"));

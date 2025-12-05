@@ -34,6 +34,10 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static void InitValuesBucketsForGetBlobTest(
+        std::vector<ValuesBucket> &valuesBuckets, const std::vector<uint8_t> &blob);
+    static void InitValuesBucketsForGetDoubleTest(std::vector<ValuesBucket> &valuesBuckets);
+    static void InitValuesBucketsForGetFloat32ArrayTest(std::vector<ValuesBucket> &valuesBuckets);
 };
 
 void CacheResultSetTest::SetUpTestCase(void)
@@ -50,6 +54,36 @@ void CacheResultSetTest::SetUp()
 
 void CacheResultSetTest::TearDown()
 {
+}
+
+void CacheResultSetTest::InitValuesBucketsForGetBlobTest(
+    std::vector<ValuesBucket> &valuesBuckets, const std::vector<uint8_t> &blob)
+{
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    valuesBucket.Put("data", blob);
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
+}
+
+void CacheResultSetTest::InitValuesBucketsForGetDoubleTest(std::vector<ValuesBucket>& valuesBuckets)
+{
+    const double number = 1111.1111;
+    ValuesBucket valuesBucket;
+    std::set<std::string> columnNames = { "id", "data", "field" };
+    for (auto &column : columnNames) {
+        valuesBucket.Put(column, number);
+    }
+    valuesBuckets.push_back(std::move(valuesBucket));
+}
+
+void CacheResultSetTest::InitValuesBucketsForGetFloat32ArrayTest(std::vector<ValuesBucket>& valuesBuckets)
+{
+    ValuesBucket valuesBucket;
+    valuesBucket.Put("id", 1);
+    valuesBucket.Put("data", "test");
+    valuesBucket.Put("field", "test");
+    valuesBuckets.push_back(std::move(valuesBucket));
 }
 
 /* *
@@ -109,12 +143,8 @@ HWTEST_F(CacheResultSetTest, GetAllColumnNamesTest_001, TestSize.Level2)
 HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    valuesBucket.Put("id", 1);
     std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
-    valuesBucket.Put("data", blob);
-    valuesBucket.Put("field", "test");
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetBlobTest(valuesBuckets, blob);
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     int columnIndex = 0;
@@ -130,6 +160,46 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_001, TestSize.Level2)
     EXPECT_EQ(cacheResultSet.GetBlob(columnIndex, blobOut), E_COLUMN_OUT_RANGE);
     EXPECT_EQ(cacheResultSet.Close(), E_OK);
     EXPECT_EQ(cacheResultSet.GetBlob(columnIndex, blobOut), E_ALREADY_CLOSED);
+}
+
+/* *
+ * @tc.name: GetBlobTest_002
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ < 0 returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_
+            branch is executed in the GetBlob interface
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetBlobTest_002, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
+    InitValuesBucketsForGetBlobTest(valuesBuckets, blob);
+
+    int initPos = -1;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int columnIndex = 0;
+    std::vector<uint8_t> blobOut = {};
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetBlob(columnIndex, blobOut));
+}
+
+/* *
+ * @tc.name: GetBlobTest_003
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ >= maxRow_  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_
+            branch is executed in the GetBlob interface
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetBlobTest_003, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    std::vector<uint8_t> blob = { 't', 'e', 's', 't' };
+    InitValuesBucketsForGetBlobTest(valuesBuckets, blob);
+
+    int initPos = 10;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int columnIndex = 0;
+    std::vector<uint8_t> blobOut = {};
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetBlob(columnIndex, blobOut));
 }
 
 /* *
@@ -224,12 +294,7 @@ HWTEST_F(CacheResultSetTest, GetLongTest_001, TestSize.Level2)
 HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    std::set<std::string> columnNames = { "id", "data", "field" };
-    for (auto &column : columnNames) {
-        valuesBucket.Put(column, 1111.1111);
-    }
-    valuesBuckets.push_back(std::move(valuesBucket));
+    InitValuesBucketsForGetDoubleTest(valuesBuckets);
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     int columnIndex = 1;
@@ -242,6 +307,44 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
     EXPECT_EQ(cacheResultSet.GetDouble(columnIndex, value), E_COLUMN_OUT_RANGE);
     EXPECT_EQ(cacheResultSet.Close(), E_OK);
     EXPECT_EQ(cacheResultSet.GetDouble(columnIndex, value), E_ALREADY_CLOSED);
+}
+
+/* *
+ * @tc.name: GetDoubleTest_002
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ < 0  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_
+            branch is executed in the GetDouble interface
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetDoubleTest_002, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    InitValuesBucketsForGetDoubleTest(valuesBuckets);
+
+    int initPos = -1;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int columnIndex = 1;
+    double value;
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetDouble(columnIndex, value));
+}
+
+/* *
+ * @tc.name: GetDoubleTest_003
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ >= maxRow_  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_
+            branch is executed in the GetDouble interface
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetDoubleTest_003, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    InitValuesBucketsForGetDoubleTest(valuesBuckets);
+
+    int initPos = 10;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int columnIndex = 1;
+    double value;
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetDouble(columnIndex, value));
 }
 
 /* *
@@ -840,27 +943,94 @@ HWTEST_F(CacheResultSetTest, GetSizeTest_001, TestSize.Level2)
 }
 
 /* *
- * @tc.name: GetRowDataTest_001
- * @tc.desc: Normal testCase for CacheResultSet, get row data
+ * @tc.name: GetFloat32ArrayTest_001
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ < 0 returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_
+            branch is executed in the GetFloat32Array interface
  * @tc.type: FUNC
  */
-HWTEST_F(CacheResultSetTest, GetRowDataTest_001, TestSize.Level2)
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_001, TestSize.Level2)
 {
     std::vector<ValuesBucket> valuesBuckets;
-    ValuesBucket valuesBucket;
-    std::vector<std::string> columnNames = { "name", "age", "field", "name", "age", "data" };
-    for (int i = 0; i < columnNames.size(); ++i) {
-        valuesBucket.Put(columnNames[i], "test" + std::to_string(i));
-        valuesBuckets.push_back(std::move(valuesBucket));
-    }
-    CacheResultSet cacheResultSet(std::move(valuesBuckets));
-    auto [err, values] = cacheResultSet.GetRowData();
-    EXPECT_EQ(err, E_OK);
-    ValueObject value;
-    for (int i = 0; i < values.size(); ++i) {
-        string res;
-        auto err = values[i].GetString(res);
-        EXPECT_EQ(err, E_OK);
-        EXPECT_EQ(res, "test" + std::to_string(i));
-    }
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
+    int initPos = -1;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int index = 0;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetFloat32Array(index, vecs));
+}
+
+
+/* *
+ * @tc.name: GetFloat32ArrayTest_002
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            row_ >= maxRow_ returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_
+            branch is executed in the GetFloat32Array interface
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_002, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
+    int initPos = 10;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int index = 0;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_ROW_OUT_RANGE, cacheResultSet.GetFloat32Array(index, vecs));
+}
+
+
+/* *
+ * @tc.name: GetFloat32ArrayTest_003
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            the index < 0 || index >= maxCol_ branch is executed in the GetFloat32Array interface,
+            and when index < 0, E_COLUMN_OUT_RANGE is returned
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_003, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
+    int initPos = 0;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int index = -1;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, cacheResultSet.GetFloat32Array(index, vecs));
+}
+
+
+/* *
+ * @tc.name: GetFloat32ArrayTest_004
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            the index < 0 || index >= maxCol_ branch is executed in the GetFloat32Array interface,
+            and when index >= maxCol_, E_COLUMN_OUT_RANGE is returned
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_004, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
+    int initPos = 0;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    int index = 10;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_COLUMN_OUT_RANGE, cacheResultSet.GetFloat32Array(index, vecs));
+}
+
+/* *
+ * @tc.name: GetFloat32ArrayTest_005
+ * @tc.desc: Abnormal test cases for CacheResultSet, After the CacheResultSet calls the Close interface,
+             E_ALReadY_ClosedD is returned. This test case is used to test this scenario.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_005, TestSize.Level2)
+{
+    std::vector<ValuesBucket> valuesBuckets;
+    InitValuesBucketsForGetFloat32ArrayTest(valuesBuckets);
+    int initPos = 0;
+    CacheResultSet cacheResultSet(std::move(valuesBuckets), initPos);
+    EXPECT_EQ(cacheResultSet.Close(), E_OK);
+    int index = 0;
+    ValueObject::FloatVector vecs;
+    EXPECT_EQ(E_ALREADY_CLOSED, cacheResultSet.GetFloat32Array(index, vecs));
 }

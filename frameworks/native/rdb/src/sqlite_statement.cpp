@@ -22,7 +22,6 @@
 #include <utility>
 
 #include "cache_block.h"
-#include "cache_data_block.h"
 #include "connection_pool.h"
 #include "corrupted_handle_manager.h"
 #include "logger.h"
@@ -685,29 +684,6 @@ std::pair<int32_t, std::vector<ValuesBucket>> SqliteStatement::GetRows(int32_t m
         colNames.push_back(std::move(colName));
     }
     AppDataFwk::CacheBlock block(maxCount, colNames);
-    SharedBlockInfo info(&block);
-    info.isCountAllRows = true;
-    info.totalRows = -1;
-    auto res = FillBlockInfo(&info, 0);
-    if (res != E_OK) {
-        LOG_ERROR("FillBlockInfo ret %{public}d", res);
-        return { res, {} };
-    }
-    if (block.HasException()) {
-        LOG_ERROR("HasException ret");
-        return { E_ERROR, {} };
-    }
-    return { E_OK, block.StealRows() };
-}
-
-std::pair<int32_t, std::vector<std::vector<ValueObject>>> SqliteStatement::GetMultiRowsData(int32_t maxCount)
-{
-    auto colCount = GetColumnCount();
-    if (colCount <= 0) {
-        return { E_OK, {} };
-    }
-
-    AppDataFwk::CacheDataBlock block(maxCount, colCount);
     SharedBlockInfo info(&block);
     info.isCountAllRows = true;
     info.totalRows = -1;

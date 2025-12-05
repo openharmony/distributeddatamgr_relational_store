@@ -63,7 +63,6 @@ ohos_unittest("NativeRdbConditionTest") {
     "${relational_store_native_path}/rdb/src/base_transaction.cpp",
     "${relational_store_native_path}/rdb/src/big_integer.cpp",
     "${relational_store_native_path}/rdb/src/cache_block.cpp",
-    "${relational_store_native_path}/rdb/src/cache_data_block.cpp",
     "${relational_store_native_path}/rdb/src/cache_result_set.cpp",
     "${relational_store_native_path}/rdb/src/connection.cpp",
     "${relational_store_native_path}/rdb/src/connection_pool.cpp",

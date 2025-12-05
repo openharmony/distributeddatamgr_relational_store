@@ -59,7 +59,6 @@ public:
     virtual std::pair<int32_t, ValueObject> GetColumn(int32_t index) const = 0;
     virtual std::pair<int32_t, std::vector<ValuesBucket>> GetRows(
         int32_t maxCount = ReturningConfig::DEFAULT_RETURNING_COUNT) = 0;
-    virtual std::pair<int32_t, std::vector<std::vector<ValueObject>>> GetMultiRowsData(int32_t maxCount) = 0;
     virtual bool ReadOnly() const = 0;
     virtual bool SupportBlockInfo() const = 0;
     virtual int32_t FillBlockInfo(SharedBlockInfo *info, int retryTime = RETRY_TIME) const = 0;

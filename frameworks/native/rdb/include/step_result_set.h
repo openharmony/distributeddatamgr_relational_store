@@ -47,7 +47,6 @@ public:
 
 protected:
     std::pair<int, std::vector<std::string>> GetColumnNames() override;
-    std::pair<int, std::vector<std::vector<ValueObject>>> GetMultiRowsData(int32_t maxCount) override;
 
 private:
     template<typename T>

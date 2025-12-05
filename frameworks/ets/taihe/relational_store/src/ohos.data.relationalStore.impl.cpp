@@ -44,7 +44,6 @@ using ValueType = ohos::data::relationalStore::ValueType;
 using ValueObject = OHOS::NativeRdb::ValueObject;
 
 static constexpr int ERR_NULL = -1;
-static constexpr int INIT_POSITION = -1;
 
 void ThrowInnerError(int errcode)
 {
@@ -476,7 +475,7 @@ public:
             return {};
         }
 
-        int32_t nativePosition = INIT_POSITION;
+        int32_t nativePosition = 0;
         if (position.has_value()) {
             nativePosition = position.value();
             if (nativePosition < 0) {

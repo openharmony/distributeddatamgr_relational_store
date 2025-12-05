@@ -188,11 +188,6 @@ public:
     API_EXPORT int GetRow(RowEntity &rowEntity) override;
 
     /**
-     * @brief Gets the entire row of data for the current row from the result set in order.
-     */
-    API_EXPORT std::pair<int, std::vector<ValueObject>> GetRowData() override;
-
-    /**
     * @brief Move the cursor to an absolute position.
     *
     * @param position Indicates the specified column index, which starts from 0.
