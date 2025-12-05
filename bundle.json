@@ -92,6 +92,7 @@
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_extension:cloudextension",
+                "//foundation/distributeddatamgr/relational_store/frameworks/ets/cloud_extension:cloud_extension_ext_ani_package",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/common:commontype_napi",
                 "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/sendablerelationalstore:sendablerelationalstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/icu:build_module",
