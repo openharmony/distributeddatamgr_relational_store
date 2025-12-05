@@ -648,18 +648,31 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
 
 bool JsConfig::ValidClearConfig(const std::map<std::string, CloudData::ClearConfig> &configs)
 {
-    for (auto &item : configs) {
-        auto &dbInfos = item.second.dbInfo;
-        for (auto &dbInfo : dbInfos) {
-            auto &info = dbInfo.second;
-            if (!ValidSubscribeType(info.action)) {
-                return false;
-            }
-            for (auto &table : info.tableInfo) {
-                if (!ValidSubscribeType(table.second)) {
-                    return false;
-                }
-            }
+    for (const auto &[key, config] : configs) {
+        if (!IsDbInfoValid(config.dbInfo)) {
+            return false;
+        }
+    }
+    return true;
+}
+bool JsConfig::IsDbInfoValid(const std::map<std::string, CloudData::DBActionInfo> &dbInfos)
+{
+    for (const auto &[dbName, dbInfo] : dbInfos) {
+        if (!ValidSubscribeType(dbInfo.action)) {
+            return false;
+        }
+        
+        if (!IsTablesValid(dbInfo.tableInfo)) {
+            return false;
+        }
+    }
+    return true;
+}
+bool JsConfig::IsTablesValid(const std::map<std::string, int32_t> &tableInfo)
+{
+    for (const auto &[tableName, action] : tableInfo) {
+        if (!ValidSubscribeType(action)) {
+            return false;
         }
     }
     return true;
