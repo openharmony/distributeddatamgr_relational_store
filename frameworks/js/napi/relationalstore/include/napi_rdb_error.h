@@ -86,12 +86,17 @@ public:
     virtual ~Error() {};
     virtual std::string GetMessage() = 0;
     virtual int GetCode() = 0;
+    virtual int GetNativeCode()
+    {
+        return ERR;
+    }
 };
 
 class InnerError : public Error {
 public:
     InnerError(int code, const std::string &msg = "")
     {
+        nativeCode_ = code;
         auto errorMsg = GetJsErrorCode(code);
         if (errorMsg.has_value()) {
             auto napiError = errorMsg.value();
@@ -119,8 +124,14 @@ public:
         return code_;
     }
 
+    int GetNativeCode() override
+    {
+        return nativeCode_;
+    }
+
 private:
     int code_;
+    int nativeCode_;
     std::string msg_;
 };
 

@@ -16,7 +16,8 @@
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Level, Size, TestType } from "@ohos/hypium";
 import relationalStore from '@ohos.data.relationalStore';
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
-import fs from '@ohos.file.fs';
+import fs from '@ohos.file.fs'
+
 const TAG = "[RDB_STORE_DELETE_WITH_RETURNING_TEST]";
 let rdbStore: relationalStore.RdbStore | undefined = undefined;
 
@@ -43,6 +44,14 @@ const context = delegator.getAppContext().getApplicationContext();
 const dbPath = context.databaseDir + "/rdb/" + dbName;
 const dbPathWal = dbPath + "-wal";
 const dbPathShm = dbPath + "-shm";
+
+function getRowCount(resultSet:relationalStore.LiteResultSet|undefined):number {
+  let count = 0;
+  while(resultSet?.goToNextRow()) {
+    count++;
+  }
+  return count;
+}
 
 async function createCorruptDb() {
   try {
@@ -117,7 +126,7 @@ export default function RdbStoreDeleteWithReturning() {
     afterAll(async () => {
       console.info(TAG + 'afterAll');
     })
-    console.log(TAG + "************* deleteWithReturning Begin *************");
+
     /**
      * @tc.name deleteWithReturning test.
      * @tc.number deleteWithReturning001
@@ -133,12 +142,9 @@ export default function RdbStoreDeleteWithReturning() {
       try {
         let results = await rdbStore?.deleteWithReturning(predicates, config);
         expect(results?.changed).assertEqual(1);
-        expect(results?.resultSet.rowCount).assertEqual(1);
-        results?.resultSet.goToFirstRow();
-        const name = results?.resultSet.getString(results?.resultSet.getColumnIndex('name'));
-        const age = results?.resultSet.getLong(results?.resultSet.getColumnIndex('age'));
-        expect(name).assertEqual("zhangsan1");
-        expect(age).assertEqual(19);
+        results?.resultSet.goToNextRow();
+        expect(results?.resultSet.getRow().name).assertEqual("zhangsan1");
+        expect(results?.resultSet.getRow().age).assertEqual(19);
       } catch (e) {
         console.error(TAG + `deleteWithReturning failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -146,7 +152,6 @@ export default function RdbStoreDeleteWithReturning() {
       console.log(TAG + "************* deleteWithReturning001 end *************");
       done();
     })
-
     /**
      * @tc.name deleteWithReturningSync test.
      * @tc.number deleteWithReturningSync001
@@ -162,12 +167,10 @@ export default function RdbStoreDeleteWithReturning() {
       try {
         let results = rdbStore?.deleteWithReturningSync(predicates, config);
         expect(results?.changed).assertEqual(1);
-        expect(results?.resultSet.rowCount).assertEqual(1);
-        results?.resultSet.goToFirstRow();
-        const name = results?.resultSet.getString(results?.resultSet.getColumnIndex('name'));
-        const age = results?.resultSet.getLong(results?.resultSet.getColumnIndex('age'));
-        expect(name).assertEqual("zhangsan4");
-        expect(age).assertEqual(22);
+        results?.resultSet.goToNextRow();
+        expect(results?.resultSet.getRow().name).assertEqual("zhangsan4");
+        expect(results?.resultSet.getRow().age).assertEqual(22);
+        expect(results?.resultSet.goToNextRow()).assertFalse();
       } catch (e) {
         console.error(TAG + `deleteWithReturningSync001 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -340,7 +343,7 @@ export default function RdbStoreDeleteWithReturning() {
       try {
         let result = await rdbStore?.deleteWithReturning(predicates, config);
         expect(result?.changed).assertEqual(1024);
-        expect(result?.resultSet.rowCount).assertEqual(1024);
+        expect(getRowCount(result?.resultSet)).assertEqual(1024);
       } catch (e) {
         console.error(TAG + `deleteWithReturning006 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -373,9 +376,9 @@ export default function RdbStoreDeleteWithReturning() {
       let predicates = new relationalStore.RdbPredicates("test");
       predicates.contains('name', 'zhangsan');
       try {
-        let results = rdbStore?.deleteWithReturningSync(predicates, config);
-        expect(results?.changed).assertEqual(1024);
-        expect(results?.resultSet.rowCount).assertEqual(1024);
+        let result = rdbStore?.deleteWithReturningSync(predicates, config);
+        expect(result?.changed).assertEqual(1024);
+        expect(getRowCount(result?.resultSet)).assertEqual(1024);
       } catch (e) {
         console.error(TAG + `deleteWithReturningSync006 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -411,7 +414,7 @@ export default function RdbStoreDeleteWithReturning() {
       try {
         let results = await rdbStore?.deleteWithReturning(predicates, config);
         expect(results?.changed).assertEqual(1100);
-        expect(results?.resultSet.rowCount).assertEqual(1024);
+        expect(getRowCount(results?.resultSet)).assertEqual(1024);
       } catch (e) {
         console.error(TAG + `deleteWithReturning007 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -445,9 +448,9 @@ export default function RdbStoreDeleteWithReturning() {
       let predicates = new relationalStore.RdbPredicates("test");
       predicates.contains('name', 'zhangsan');
       try {
-        let results = rdbStore?.deleteWithReturningSync(predicates, config);
-        expect(results?.changed).assertEqual(1100);
-        expect(results?.resultSet.rowCount).assertEqual(1024);
+        let result = rdbStore?.deleteWithReturningSync(predicates, config);
+        expect(result?.changed).assertEqual(1100);
+        expect(getRowCount(result?.resultSet)).assertEqual(1024);
       } catch (e) {
         console.error(TAG + `deleteWithReturningSync007 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -466,19 +469,13 @@ export default function RdbStoreDeleteWithReturning() {
       let predicates = new relationalStore.RdbPredicates("test");
       predicates.equalTo('name', 'zhangsan4');
       const config: relationalStore.ReturningConfig = {
-        columns: ['name', 'age', 'salary']
+        columns: ['name', 'age', 'salary'],
       }
       try {
         let results = await rdbStore?.deleteWithReturning(predicates, config);
-        results?.resultSet.columnNames.forEach(colName => {
-          expect(config.columns).assertContain(colName);
-        })
-        expect(results?.resultSet.columnCount).assertEqual(config.columns.length);
-        results?.resultSet.goToFirstRow();
-        const name = results?.resultSet.getString(results?.resultSet.getColumnIndex('name'));
-        const age = results?.resultSet.getLong(results?.resultSet.getColumnIndex('age'));
-        expect(name).assertEqual("zhangsan4");
-        expect(age).assertEqual(22);
+        results?.resultSet.goToNextRow();
+        expect(results?.resultSet.getRow().name).assertEqual("zhangsan4");
+        expect(results?.resultSet.getRow().age).assertEqual(22);
       } catch (e) {
         console.error(TAG + `deleteWithReturning008 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -501,15 +498,9 @@ export default function RdbStoreDeleteWithReturning() {
       }
       try {
         let results = rdbStore?.deleteWithReturningSync(predicates, config);
-        results?.resultSet.columnNames.forEach(colName => {
-          expect(config.columns).assertContain(colName);
-        })
-        expect(results?.resultSet.columnCount).assertEqual(config.columns.length);
-        results?.resultSet.goToFirstRow();
-        const name = results?.resultSet.getString(results?.resultSet.getColumnIndex('name'));
-        const age = results?.resultSet.getLong(results?.resultSet.getColumnIndex('age'));
-        expect(name).assertEqual("zhangsan5");
-        expect(age).assertEqual(23);
+        results?.resultSet.goToNextRow();
+        expect(results?.resultSet.getRow().name).assertEqual("zhangsan5");
+        expect(results?.resultSet.getRow().age).assertEqual(23);
       } catch (e) {
         console.error(TAG + `deleteWithReturningSync008 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -1120,7 +1111,7 @@ export default function RdbStoreDeleteWithReturning() {
       try {
         let results = await rdbStore?.deleteWithReturning(predicates, config);
         expect(results?.changed).assertEqual(2);
-        expect(results?.resultSet.rowCount).assertEqual(2);
+        expect(getRowCount(results?.resultSet)).assertEqual(2);
       } catch (e) {
         console.error(TAG + `deleteWithReturning019 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -1145,7 +1136,7 @@ export default function RdbStoreDeleteWithReturning() {
       try {
         let results = rdbStore?.deleteWithReturningSync(predicates, config);
         expect(results?.changed).assertEqual(2);
-        expect(results?.resultSet.rowCount).assertEqual(2);
+        expect(getRowCount(results?.resultSet)).assertEqual(2);
       } catch (e) {
         console.error(TAG + `deleteWithReturningSync019 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -1170,7 +1161,7 @@ export default function RdbStoreDeleteWithReturning() {
       try {
         let results = await rdbStore?.deleteWithReturning(predicates, config);
         expect(results?.changed).assertEqual(10);
-        expect(results?.resultSet.rowCount).assertEqual(5);
+        expect(getRowCount(results?.resultSet)).assertEqual(5);
       } catch (e) {
         console.error(TAG + `deleteWithReturning020 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -1195,7 +1186,7 @@ export default function RdbStoreDeleteWithReturning() {
       try {
         let results = rdbStore?.deleteWithReturningSync(predicates, config);
         expect(results?.changed).assertEqual(10);
-        expect(results?.resultSet.rowCount).assertEqual(5);
+        expect(getRowCount(results?.resultSet)).assertEqual(5);
       } catch (e) {
         console.error(TAG + `deleteWithReturningSync020 failed. code is ${e.code}, message is ${e.message}`);
         expect(true).assertFail();
@@ -1249,6 +1240,5 @@ export default function RdbStoreDeleteWithReturning() {
       console.log(TAG + "************* deleteWithReturningSync021 end *************");
       done();
     })
-    console.log(TAG + "************* deleteWithReturning end *************");
   })
 }
