@@ -158,20 +158,17 @@ int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr
 
 int ParseConflictResolution(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 
-int ParseRdbPredicatesProxy(
-    napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates, ContextBase *context);
+std::shared_ptr<Error> ParseRdbPredicatesProxy(
+    napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates);
 
-int ParseSendableValuesBucket(const napi_env env, const napi_value map, ValuesBucket &valuesBucket,
-    ContextBase *context, bool isNewErr = true);
+std::shared_ptr<Error> ParseSendableValuesBucket(const napi_env env, const napi_value map, ValuesBucket &valuesBucket);
 
-int ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket, ContextBase *context,
-    bool isNewErr = true);
+std::shared_ptr<Error> ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket);
 
-int ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets,
-    ContextBase *context, bool isNewErr = true);
+std::shared_ptr<Error> ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets);
 
-int ParseConflictResolution(const napi_env env, const napi_value arg,
-    NativeRdb::ConflictResolution &conflictResolution, ContextBase *context);
+std::shared_ptr<Error> ParseConflictResolution(
+    const napi_env env, const napi_value arg, NativeRdb::ConflictResolution &conflictResolution);
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
 #endif // NAPI_RDB_CONTEXT_H

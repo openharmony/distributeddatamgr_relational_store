@@ -2124,7 +2124,8 @@ struct RdbBatchInsertWithReturningContext : public RdbContext {
             JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(tableName),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
-        CHECK_RETURN_ERR(ParseValuesBuckets(env, argv[1], valuesBuckets, this) == OK);
+        auto err = ParseValuesBuckets(env, argv[1], valuesBuckets);
+        ASSERT_RETURN_SET_ERROR(!err, err);
         ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBuckets),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
         auto errCode = JSUtils::Convert2Value(env, argv[2], config);
@@ -2133,12 +2134,14 @@ struct RdbBatchInsertWithReturningContext : public RdbContext {
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
-        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidMaxCount(config.maxReturningCount),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningDunt exceeds the maximum limit."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount),
+            std::make_shared<InnerError>(
+                NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."));
         // 4 is the number of parameters, 3 is the index.
         if (argc == 4 && !JSUtils::IsNull(env, argv[3])) {
             // 3 is the index of conflict.
-            CHECK_RETURN_ERR(OK == ParseConflictResolution(env, argv[3], conflictResolution, this));
+            err = ParseConflictResolution(env, argv[3], conflictResolution);
+            ASSERT_RETURN_SET_ERROR(!err, err);
         }
         return OK;
     }
@@ -2172,7 +2175,7 @@ napi_value RdbStoreProxy::BatchInsertWithReturning(napi_env env, napi_callback_i
         return result.first;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        napi_value resultSet = ResultSetProxy::NewInstance(env, std::move(context->result.results));
+        napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
         JSUtils::TsResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
@@ -2189,10 +2192,12 @@ struct RdbUpdateWithReturningContext : public RdbContext {
         // the parameters are either 3 or 4.
         ASSERT_RETURN_SET_ERROR(argc == 3 || argc == 4, std::make_shared<ParamNumError>("3 to 4"));
         CHECK_RETURN_ERR(OK == ParsedInstance(self));
-        CHECK_RETURN_ERR(ParseValuesBucket(env, argv[0], valuesBucket, this) == OK);
+        std::shared_ptr<Error> err = ParseValuesBucket(env, argv[0], valuesBucket);
+        ASSERT_RETURN_SET_ERROR(!err, err);
         ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBucket),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
-        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[1], rdbPredicates, this) == OK);
+        err = ParseRdbPredicatesProxy(env, argv[1], rdbPredicates);
+        ASSERT_RETURN_SET_ERROR(!err, err);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto errCode = JSUtils::Convert2Value(env, argv[2], config);
@@ -2201,12 +2206,14 @@ struct RdbUpdateWithReturningContext : public RdbContext {
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
-        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidMaxCount(config.maxReturningCount),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningDunt exceeds the maximum limit."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount),
+            std::make_shared<InnerError>(
+                NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."));
         // 4 is the number of parameters, 3 is the index.
         if (argc == 4 && !JSUtils::IsNull(env, argv[3])) {
             // 3 is the index of conflict.
-            CHECK_RETURN_ERR(OK == ParseConflictResolution(env, argv[3], conflictResolution, this));
+            err = ParseConflictResolution(env, argv[3], conflictResolution);
+            ASSERT_RETURN_SET_ERROR(!err, err);
         }
         return OK;
     }
@@ -2240,7 +2247,7 @@ napi_value RdbStoreProxy::UpdateWithReturning(napi_env env, napi_callback_info i
         return result.first;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        napi_value resultSet = ResultSetProxy::NewInstance(env, std::move(context->result.results));
+        napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
         JSUtils::TsResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
@@ -2258,7 +2265,8 @@ struct RdbDeleteWithReturningContext : public RdbContext {
         // There are two parameters.
         ASSERT_RETURN_SET_ERROR(argc == 2, std::make_shared<ParamNumError>("2"));
         CHECK_RETURN_ERR(OK == ParsedInstance(self));
-        CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates, this) == OK);
+        std::shared_ptr<Error> err = ParseRdbPredicatesProxy(env, argv[0], rdbPredicates);
+        ASSERT_RETURN_SET_ERROR(!err, err);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto errCode = JSUtils::Convert2Value(env, argv[1], config);
@@ -2267,8 +2275,9 @@ struct RdbDeleteWithReturningContext : public RdbContext {
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
-        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidMaxCount(config.maxReturningCount),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningDunt exceeds the maximum limit."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount),
+            std::make_shared<InnerError>(
+                NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."));
         return OK;
     }
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
@@ -2296,7 +2305,7 @@ napi_value RdbStoreProxy::DeleteWithReturning(napi_env env, napi_callback_info i
         return result.first;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        napi_value resultSet = ResultSetProxy::NewInstance(env, std::move(context->result.results));
+        napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
         JSUtils::TsResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);

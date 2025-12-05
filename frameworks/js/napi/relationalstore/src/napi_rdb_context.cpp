@@ -21,6 +21,10 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 constexpr int32_t KEY_INDEX = 0;
 constexpr int32_t VALUE_INDEX = 1;
+
+#define CHECK_RETURN_CUSTOM_ERR(assertion, ERROR) CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, ERROR)
+#define CHECK_ERR(ERROR) CHECK_RETURN_CORE(!(ERROR), RDB_REVT_NOTHING, ERROR)
+
 std::shared_ptr<NativeRdb::RdbStore> RdbStoreContextBase::StealRdbStore()
 {
     auto rdb = std::move(rdbStore);
@@ -246,108 +250,117 @@ int ParseTxId(const napi_env env, const napi_value arg, std::shared_ptr<RdbStore
 
 int ParseSendableValuesBucket(const napi_env env, const napi_value map, std::shared_ptr<RdbStoreContext> context)
 {
-    return ParseSendableValuesBucket(env, map, context->valuesBucket, context.get(), false);
+    auto err = ParseSendableValuesBucket(env, map, context->valuesBucket);
+    CHECK_RETURN_SET(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
+                               ? std::make_shared<ParamError>("ValuesBuckets is invalid.")
+                               : err);
+    return OK;
 }
 
 int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    return ParseValuesBucket(env, arg, context->valuesBucket, context.get(), false);
+    auto err = ParseValuesBucket(env, arg, context->valuesBucket);
+    CHECK_RETURN_SET(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
+                               ? std::make_shared<ParamError>("ValuesBuckets is invalid.")
+                               : err);
+    return OK;
 }
 
 int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    return ParseValuesBuckets(env, arg, context->sharedValuesBuckets, context.get(), false);
+    auto err = ParseValuesBuckets(env, arg, context->sharedValuesBuckets);
+    CHECK_RETURN_SET(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
+                               ? std::make_shared<ParamError>("ValuesBuckets is invalid.")
+                               : err);
+    return OK;
 }
 
 int ParseConflictResolution(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
-    return ParseConflictResolution(env, arg, context->conflictResolution, context.get());
-}
-
-int ParseRdbPredicatesProxy(
-    napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates, ContextBase *context)
-{
-    RdbPredicatesProxy *predicatesProxy = nullptr;
-    auto status = napi_unwrap(env, arg, reinterpret_cast<void **>(&predicatesProxy));
-    CHECK_RETURN_SET(status == napi_ok && predicatesProxy != nullptr,
-        std::make_shared<ParamError>("predicates", "an RdbPredicates."));
-    predicates = predicatesProxy->GetInstance();
-    CHECK_RETURN_SET(predicates != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."));
+    auto err = ParseConflictResolution(env, arg, context->conflictResolution);
+    CHECK_RETURN_SET(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
+                               ? std::make_shared<ParamError>("ValuesBuckets is invalid.")
+                               : err);
     return OK;
 }
 
-int ParseSendableValuesBucket(const napi_env env, const napi_value map, ValuesBucket &valuesBucket,
-    ContextBase *context, bool isNewErr)
+std::shared_ptr<Error> ParseRdbPredicatesProxy(
+    napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates)
+{
+    RdbPredicatesProxy *predicatesProxy = nullptr;
+    auto status = napi_unwrap(env, arg, reinterpret_cast<void **>(&predicatesProxy));
+    CHECK_RETURN_CUSTOM_ERR(status == napi_ok && predicatesProxy != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."));
+    predicates = predicatesProxy->GetInstance();
+    CHECK_RETURN_CUSTOM_ERR(predicates != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."));
+    return nullptr;
+}
+
+std::shared_ptr<Error> ParseSendableValuesBucket(
+    const napi_env env, const napi_value map, ValuesBucket &valuesBucket)
 {
     uint32_t length = 0;
     napi_status status = napi_map_get_size(env, map, &length);
     std::shared_ptr<Error> err = std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "empty map.");
-    if (!isNewErr) {
-        err = std::make_shared<ParamError>("ValuesBucket is invalid.");
-    }
-    CHECK_RETURN_SET(status == napi_ok && length > 0, err);
+    CHECK_RETURN_CUSTOM_ERR(status == napi_ok && length > 0, err);
     napi_value entries = nullptr;
     status = napi_map_get_entries(env, map, &entries);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_map_get_entries failed."));
+    CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_map_get_entries failed."));
     for (uint32_t i = 0; i < length; ++i) {
         napi_value iter = nullptr;
         status = napi_map_iterator_get_next(env, entries, &iter);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_map_iterator_get_next failed."));
+        CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_map_iterator_get_next failed."));
         napi_value values = nullptr;
         status = napi_get_named_property(env, iter, "value", &values);
-        CHECK_RETURN_SET(
+        CHECK_RETURN_CUSTOM_ERR(
             status == napi_ok, std::make_shared<InnerError>("napi_get_named_property value failed."));
         napi_value key = nullptr;
         status = napi_get_element(env, values, KEY_INDEX, &key);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
+        CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
         std::string keyStr;
         int32_t ret = JSUtils::Convert2Value(env, key, keyStr);
-        CHECK_RETURN_SET(
+        CHECK_RETURN_CUSTOM_ERR(
             ret == napi_ok && !keyStr.empty(), std::make_shared<InnerError>("Convert2Value keyStr failed."));
         napi_value value = nullptr;
         status = napi_get_element(env, values, VALUE_INDEX, &value);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element value failed."));
+        CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element value failed."));
         ValueObject valueObject;
         ret = JSUtils::Convert2Value(env, value, valueObject.value);
         if (ret == napi_ok) {
             valuesBucket.values_.insert_or_assign(std::move(keyStr), std::move(valueObject));
-        } else if (ret != napi_generic_failure) {
-            CHECK_RETURN_SET(false, std::make_shared<ParamError>("The value type of " + keyStr, "invalid."));
+        } else {
+            CHECK_RETURN_CUSTOM_ERR(
+                ret != napi_generic_failure, std::make_shared<ParamError>("The value type of " + keyStr, "invalid."));
         }
     }
-    return OK;
+    return nullptr;
 }
 
-int ParseValuesBucket(
-    napi_env env, napi_value arg, ValuesBucket &valuesBucket, ContextBase *context, bool isNewErr)
+std::shared_ptr<Error> ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket)
 {
     bool isMap = false;
     napi_status status = napi_is_map(env, arg, &isMap);
-    CHECK_RETURN_SET(
+    CHECK_RETURN_CUSTOM_ERR(
         status == napi_ok, std::make_shared<InnerError>("call napi_is_map failed" + std::to_string(status)));
     if (isMap) {
-        return ParseSendableValuesBucket(env, arg, valuesBucket, context, isNewErr);
+        return ParseSendableValuesBucket(env, arg, valuesBucket);
     }
     napi_value keys = nullptr;
     status = napi_get_all_property_names(env, arg, napi_key_own_only,
         static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols), napi_key_numbers_to_strings, &keys);
-    CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_all_property_names key failed."));
     uint32_t arrLen = 0;
     status = napi_get_array_length(env, keys, &arrLen);
-    std::shared_ptr<Error> err = std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "empty Array.");
-    if (!isNewErr) {
-        err = std::make_shared<ParamError>("ValuesBuckets is invalid.");
-    }
-    CHECK_RETURN_SET(status == napi_ok && arrLen > 0, err);
+    std::shared_ptr err = std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "empty Array.");
+    CHECK_RETURN_CUSTOM_ERR(status == napi_ok && arrLen > 0, err);
 
     for (size_t i = 0; i < arrLen; ++i) {
         napi_value key = nullptr;
         status = napi_get_element(env, keys, i, &key);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
+        CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
         std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value = nullptr;
         status = napi_get_property(env, arg, key, &value);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element value failed."));
+        CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element value failed."));
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
         // The blob is an empty vector.
@@ -362,48 +375,45 @@ int ParseValuesBucket(
         if (ret == napi_ok) {
             valuesBucket.values_.insert_or_assign(std::move(keyStr), std::move(valueObject));
         } else if (ret != napi_generic_failure) {
-            CHECK_RETURN_SET(false, std::make_shared<ParamError>("The value type of " + keyStr, "invalid."));
+            CHECK_RETURN_CUSTOM_ERR(false, std::make_shared<ParamError>("The value type of " + keyStr, "invalid."));
         }
     }
-    return OK;
+    return nullptr;
 }
 
-int ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets,
-    ContextBase *context, bool isNewErr)
+std::shared_ptr<Error> ParseValuesBuckets(
+    napi_env env, napi_value arg, ValuesBuckets &valuesBuckets)
 {
     bool isArray = false;
     auto status = napi_is_array(env, arg, &isArray);
-    CHECK_RETURN_SET(status == napi_ok && isArray, std::make_shared<ParamError>("ValuesBucket is invalid."));
+    CHECK_RETURN_CUSTOM_ERR(status == napi_ok && isArray, std::make_shared<ParamError>("ValuesBucket is invalid."));
 
     uint32_t arrLen = 0;
     status = napi_get_array_length(env, arg, &arrLen);
     std::shared_ptr<Error> err = std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "empty Array.");
-    if (!isNewErr) {
-        err = std::make_shared<ParamError>("ValuesBuckets is invalid.");
-    }
-    CHECK_RETURN_SET(status == napi_ok && arrLen > 0, err);
+    CHECK_RETURN_CUSTOM_ERR(status == napi_ok && arrLen > 0, err);
     for (uint32_t i = 0; i < arrLen; ++i) {
         napi_value obj = nullptr;
         status = napi_get_element(env, arg, i, &obj);
-        CHECK_RETURN_SET(status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
+        CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element failed."));
         ValuesBucket valuesBucket;
-        CHECK_RETURN_ERR(ParseValuesBucket(env, obj, valuesBucket, context, isNewErr) == OK);
+        CHECK_ERR(ParseValuesBucket(env, obj, valuesBucket));
         valuesBuckets.Put(std::move(valuesBucket));
     }
-    return OK;
+    return nullptr;
 }
 
-int ParseConflictResolution(const napi_env env, const napi_value arg,
-    NativeRdb::ConflictResolution &conflictResolution, ContextBase *context)
+std::shared_ptr<Error> ParseConflictResolution(
+    const napi_env env, const napi_value arg, ConflictResolution &conflictResolution)
 {
     int32_t input = 0;
     auto status = napi_get_value_int32(env, arg, &input);
     int32_t min = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
     int32_t max = static_cast<int32_t>(NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
     bool checked = status == napi_ok && (input >= min) && (input <= max);
-    CHECK_RETURN_SET(checked, std::make_shared<ParamError>("conflictResolution", "a ConflictResolution."));
+    CHECK_RETURN_CUSTOM_ERR(checked, std::make_shared<ParamError>("conflictResolution", "a ConflictResolution."));
     conflictResolution = static_cast<NativeRdb::ConflictResolution>(input);
-    return OK;
+    return nullptr;
 }
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

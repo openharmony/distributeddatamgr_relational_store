@@ -13,7 +13,6 @@
 * limitations under the License.
 */
 
-#include <cstdint>
 #define LOG_TAG "CacheResultSet"
 #include "cache_result_set.h"
 
@@ -191,11 +190,11 @@ int CacheResultSet::GoToRow(int position)
     std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
     if (position >= maxRow_) {
         row_ = maxRow_;
-        return E_ERROR;
+        return E_ROW_OUT_RANGE;
     }
     if (position < 0) {
         row_ = -1;
-        return E_ERROR;
+        return E_ROW_OUT_RANGE;
     }
     row_ = position;
     return E_OK;
