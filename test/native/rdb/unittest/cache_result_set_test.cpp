@@ -185,7 +185,7 @@ HWTEST_F(CacheResultSetTest, GetBlobTest_002, TestSize.Level2)
 /* *
  * @tc.name: GetBlobTest_003
  * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
-            row_ >= maxRow_  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_ 
+            row_ >= maxRow_  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_
             branch is executed in the GetBlob interface
  * @tc.type: FUNC
  */
@@ -312,7 +312,7 @@ HWTEST_F(CacheResultSetTest, GetDoubleTest_001, TestSize.Level2)
 /* *
  * @tc.name: GetDoubleTest_002
  * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
-            row_ < 0  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_ 
+            row_ < 0  returns E_Rown_OUT_RANGE when the row_ < 0 || row_ >= maxRow_
             branch is executed in the GetDouble interface
  * @tc.type: FUNC
  */
@@ -982,8 +982,8 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_002, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_003
- * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where 
-            the index < 0 || index >= maxCol_ branch is executed in the GetFloat32Array interface, 
+ * @tc.desc: Abnormal test cases for CacheResultSet, This test case is used to test the scenario where
+            the index < 0 || index >= maxCol_ branch is executed in the GetFloat32Array interface,
             and when index < 0, E_COLUMN_OUT_RANGE is returned
  * @tc.type: FUNC
  */
@@ -1019,7 +1019,7 @@ HWTEST_F(CacheResultSetTest, GetFloat32ArrayTest_004, TestSize.Level2)
 
 /* *
  * @tc.name: GetFloat32ArrayTest_005
- * @tc.desc: Abnormal test cases for CacheResultSet, After the CacheResultSet calls the Close interface, 
+ * @tc.desc: Abnormal test cases for CacheResultSet, After the CacheResultSet calls the Close interface,
              E_ALReadY_ClosedD is returned. This test case is used to test this scenario.
  * @tc.type: FUNC
  */
