@@ -129,9 +129,21 @@ int ParseDistributedConfigArg(
     context->distributedConfig = { false };
     // '2' Ensure that the incoming argv contains 3 parameter
     if (argc > 2) {
+        if(context->distributedType == DistributedRdb::DISTRIBUTED_CLOUD){
+            // cloud default is SINGLE_VERSION
+            context->distributedConfig.tableType = DistributedRdb::SINGLE_VERSION;
+        }
         auto status = JSUtils::Convert2Value(env, argv[2], context->distributedConfig);
-        bool checked = status == napi_ok || JSUtils::IsNull(env, argv[2]);
-        CHECK_RETURN_SET(checked, std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
+        bool checked = status == napi_ok &&
+                       context->distributedConfig.tableType >= DistributedRdb::DEVICE_COLLABORATION &&
+                       context->distributedConfig.tableType <= DistributedRdb::SINGLE_VERSION;
+        CHECK_RETURN_SET(checked || JSUtils::IsNull(env, argv[2]),
+            std::make_shared<ParamError>("distributedConfig", "a DistributedConfig type"));
+        if(context->distributedType == DistributedRdb::DISTRIBUTED_CLOUD){
+            // cloud not support DEVICE_COLLABORATION
+            checked = context->distributedConfig.tableType != DistributedRdb::DEVICE_COLLABORATION;
+            CHECK_RETURN_SET(checked, std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
+        }
     }
     return OK;
 }
