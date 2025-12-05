@@ -152,11 +152,7 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
         return { E_NOT_SUPPORT, nullptr };
     }
 
-    sptr<RdbServiceProxy> rdbService = iface_cast<RdbServiceProxy>(remote);
-    if (rdbService == nullptr) {
-        rdbService = new (std::nothrow) RdbServiceProxy(remote);
-    }
-
+    sptr<RdbServiceProxy> rdbService = new (std::nothrow) RdbServiceProxy(remote);
     if (rdbService == nullptr || rdbService->InitNotifier(param) != RDB_OK) {
         LOG_ERROR("Init notifier failed.");
         return { E_ERROR, nullptr };
