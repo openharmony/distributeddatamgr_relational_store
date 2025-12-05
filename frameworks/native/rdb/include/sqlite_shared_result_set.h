@@ -47,10 +47,8 @@ public:
 protected:
     void Finalize() override;
     std::pair<int, std::vector<std::string>> GetColumnNames() override;
-    std::pair<int, std::vector<std::vector<ValueObject>>> GetMultiRowsData(int32_t maxCount) override;
 
 private:
-    std::shared_ptr<Statement> GetStatement();
     std::pair<std::shared_ptr<Statement>, int> PrepareStep();
     int32_t FillBlock(int requiredPos);
     int32_t ExecuteForSharedBlock(AppDataFwk::SharedBlock *block, int start, int required);

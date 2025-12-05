@@ -527,12 +527,6 @@ std::pair<int32_t, std::vector<ValuesBucket>> RdStatement::GetRows(int32_t maxCo
 {
     return { E_NOT_SUPPORT, {} };
 }
-
-std::pair<int32_t, std::vector<std::vector<ValueObject>>> RdStatement::GetMultiRowsData(int32_t maxCount)
-{
-    return { E_NOT_SUPPORT, {} };
-}
-
 std::pair<int, std::vector<ValuesBucket>> RdStatement::ExecuteForRows(
     const std::vector<ValueObject> &args, int32_t maxCount)
 {

@@ -58,7 +58,6 @@ public:
     std::pair<int32_t, size_t> GetSize(int index) const override;
     std::pair<int32_t, ValueObject> GetColumn(int index) const override;
     std::pair<int32_t, std::vector<ValuesBucket>> GetRows(int32_t maxCount) override;
-    std::pair<int32_t, std::vector<std::vector<ValueObject>>> GetMultiRowsData(int32_t maxCount) override;
     bool ReadOnly() const override;
     bool SupportBlockInfo() const override;
     int32_t FillBlockInfo(SharedBlockInfo *info, int retryTime = RETRY_TIME) const override;
