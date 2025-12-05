@@ -62,7 +62,7 @@ export default function RdbSetDistributedTable() {
     /**
      * @tc.number setDistributedTableTest0001
      * @tc.name set COLLABORATION table
-     * @tc.desc execute DDL by executeSql
+     * @tc.desc set device distributedtable COLLABORATION success
      */
     it('SetDistributedTableTest0001', 0, async () => {
       console.log(TAG + "************* SetDistributedTableTest0001 start *************");
@@ -100,7 +100,7 @@ export default function RdbSetDistributedTable() {
     /**
      * @tc.number setDistributedTableTest0002
      * @tc.name set SINGLE_VERSION table
-     * @tc.desc execute DDL by executeSql
+     * @tc.desc set device distributedtable SINGLE_VERSION success
      */
     it('setDistributedTableTest0002', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0002 start *************");
@@ -138,7 +138,7 @@ export default function RdbSetDistributedTable() {
     /**
      * @tc.number setDistributedTableTest0003
      * @tc.name set default table
-     * @tc.desc execute DDL by executeSql
+     * @tc.desc set device distributedtable tabletype is default(COLLABORATION) success
      */
     it('setDistributedTableTest0003', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0003 start *************");
@@ -165,7 +165,7 @@ export default function RdbSetDistributedTable() {
     /**
      * @tc.number setDistributedTableTest0004
      * @tc.name set SINGLE_VERSION table no schema
-     * @tc.desc execute DDL by executeSql
+     * @tc.desc set device distributedtable SINGLE_VERSION fail because no schema
      */
     it('setDistributedTableTest0004', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0004 start *************");
