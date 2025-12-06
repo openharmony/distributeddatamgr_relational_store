@@ -40,8 +40,8 @@ enum RdbDistributedType {
     RDB_DISTRIBUTED_TYPE_MAX
 };
 
-enum DistributedTableVersion {
-    DEVICE_COLLABORATION = 0,
+enum DistributedTableMode {
+    DEVICE_COLLABORATION = 0, //多表类型
     SINGLE_VERSION
 };
 
@@ -96,7 +96,7 @@ struct RdbSyncerParam {
     bool autoSyncSwitch_ = true;
     int32_t subUser_ = 0;
     RdbDfxInfo dfxInfo_;
-    int32_t distributedTableVersion_ = DEVICE_COLLABORATION;
+    int32_t distributedTableMode_ = DEVICE_COLLABORATION;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
