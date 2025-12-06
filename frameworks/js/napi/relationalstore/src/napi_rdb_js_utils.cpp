@@ -247,7 +247,7 @@ napi_value Convert2JSValue(napi_env env, const SqlInfo &sqlInfo)
 }
 
 template<>
-napi_value Convert2JSValue(napi_env env, const TsResult &value)
+napi_value Convert2JSValue(napi_env env, const ReturningResult &value)
 {
     napi_value resultSet = value.results;
     if (resultSet == nullptr) {

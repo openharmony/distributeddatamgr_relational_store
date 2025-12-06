@@ -80,7 +80,6 @@ const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode);
 #define CHECK_RETURN_ERR(assertion) CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, ERR)
 
 #define CHECK_RETURN(assertion) CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, RDB_REVT_NOTHING)
-
 class Error {
 public:
     virtual ~Error() {};
