@@ -41,7 +41,7 @@ enum RdbDistributedType {
 };
 
 enum DistributedTableMode {
-    DEVICE_COLLABORATION = 0, //多表类型
+    DEVICE_COLLABORATION = 0, // table split by device
     SINGLE_VERSION
 };
 
