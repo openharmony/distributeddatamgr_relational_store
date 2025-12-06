@@ -17,6 +17,7 @@
 #define RDB_JSKIT_NAPI_RDB_JS_UTILS_H
 
 #include <stdint.h>
+#include <cstdint>
 
 #include "asset_value.h"
 #include "js_sendable_utils.h"
@@ -84,6 +85,11 @@ struct ContextParam {
     bool isStageMode = true;
 };
 
+struct ReturningResult {
+    int32_t changed = -1;
+    napi_value results = nullptr;
+};
+
 struct TransactionOptions {
     int32_t transactionType = 0;
 };
@@ -111,6 +117,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, TransactionOptions &tran
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &context);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, NativeRdb::ReturningConfig &config);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const Asset &value);
@@ -147,16 +156,11 @@ napi_value Convert2JSValue(napi_env env, const ExceptionMessage &value);
 template<>
 napi_value Convert2JSValue(napi_env env, const SqlInfo &sqlinfo);
 bool IsNapiString(napi_env env, napi_value value);
-
+template<>
+napi_value Convert2JSValue(napi_env env, const ReturningResult &value);
 std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
     napi_env env, napi_value jsValue, RdbConfig &rdbConfig, ContextParam &param);
 RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam &param);
-
-bool HasDuplicateAssets(const ValueObject &value);
-bool HasDuplicateAssets(const std::vector<ValueObject> &values);
-bool HasDuplicateAssets(const ValuesBucket &value);
-bool HasDuplicateAssets(const std::vector<ValuesBucket> &values);
-bool HasDuplicateAssets(const ValuesBuckets &values);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H

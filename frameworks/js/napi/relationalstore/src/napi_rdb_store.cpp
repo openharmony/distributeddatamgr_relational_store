@@ -15,7 +15,6 @@
 
 #define LOG_TAG "NapiRdbStore"
 #include "napi_rdb_store.h"
-
 #include <algorithm>
 #include <cinttypes>
 #include <cstdint>
@@ -71,7 +70,8 @@ struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
 #endif
-
+#define ASSERT_RETURN_SET_ERROR(assertion, paramError) \
+    CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
 RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NapiRdbStoreData>()) {}
 
 RdbStoreProxy::~RdbStoreProxy()
@@ -186,6 +186,9 @@ Descriptor RdbStoreProxy::GetDescriptors()
             DECLARE_NAPI_FUNCTION_WITH_DATA("replace", Replace, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("queryByStep", QueryByStep, ASYNC),
             DECLARE_NAPI_FUNCTION_WITH_DATA("rollback", RollBackByTxId, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertWithReturning", BatchInsertWithReturning, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("updateWithReturning", UpdateWithReturning, ASYNC),
+            DECLARE_NAPI_FUNCTION_WITH_DATA("deleteWithReturning", DeleteWithReturning, ASYNC),
             DECLARE_NAPI_FUNCTION("backup", Backup),
             DECLARE_NAPI_FUNCTION("beginTransaction", BeginTransaction),
             DECLARE_NAPI_FUNCTION("beginTrans", BeginTrans),
@@ -225,6 +228,10 @@ void RdbStoreProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &prop
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", QueryByStep, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("queryWithoutRowCountSync", QueryWithoutRowCount, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlWithoutRowCountSync", QuerySqlWithoutRowCount, SYNC));
+    properties.push_back(
+        DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertWithReturningSync", BatchInsertWithReturning, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateWithReturningSync", UpdateWithReturning, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("deleteWithReturningSync", DeleteWithReturning, SYNC));
 }
 
 void RdbStoreProxy::Init(napi_env env, napi_value exports)
@@ -331,8 +338,9 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBucket(env, argv[1], context));
-        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->valuesBucket), std::make_shared<ParamError>("Duplicate assets "
-                                                                                                    "are not allowed"));
+        CHECK_RETURN_SET_E(
+            !RdbSqlUtils::HasDuplicateAssets(context->valuesBucket), std::make_shared<ParamError>("Duplicate assets "
+                                                                                                  "are not allowed"));
         if (argc == 3) {
             CHECK_RETURN(OK == ParseConflictResolution(env, argv[2], context));
         }
@@ -361,7 +369,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBuckets(env, argv[1], context));
-        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->sharedValuesBuckets),
+        CHECK_RETURN_SET_E(!RdbSqlUtils::HasDuplicateAssets(context->sharedValuesBuckets),
             std::make_shared<ParamError>("Duplicate assets are not allowed"));
     };
     auto exec = [context]() -> int {
@@ -390,7 +398,7 @@ napi_value RdbStoreProxy::BatchInsertWithConflictResolution(napi_env env, napi_c
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         // 'argv[1]' represents a valuesBucket
         CHECK_RETURN(OK == ParseValuesBuckets(env, argv[1], context));
-        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->sharedValuesBuckets),
+        CHECK_RETURN_SET_E(!RdbSqlUtils::HasDuplicateAssets(context->sharedValuesBuckets),
             std::make_shared<ParamError>("Duplicate assets are not allowed"));
         // 'argv[2]' represents a ConflictResolution
         CHECK_RETURN_SET_E(!JSUtils::IsNull(env, argv[2]), std::make_shared<ParamError>("conflict", "not null"));
@@ -521,11 +529,10 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
 #if defined(CROSS_PLATFORM)
-        context->resultSet = context->rdbStore->QueryByStep(*(context->rdbPredicates), context->columns, false);
+        context->resultSet = context->StealRdbStore()->QueryByStep(*(context->rdbPredicates), context->columns, false);
 #else
-        context->resultSet = context->rdbStore->Query(*(context->rdbPredicates), context->columns);
+        context->resultSet = context->StealRdbStore()->Query(*(context->rdbPredicates), context->columns);
 #endif
-        context->rdbStore = nullptr;
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -591,11 +598,10 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
             return (context->resultSet != nullptr) ? E_OK : E_ERROR;
         }
 #if defined(CROSS_PLATFORM)
-        context->resultSet = context->rdbStore->QueryByStep(context->sql, context->bindArgs, false);
+        context->resultSet = context->StealRdbStore()->QueryByStep(context->sql, context->bindArgs, false);
 #else
-        context->resultSet = context->rdbStore->QuerySql(context->sql, context->bindArgs);
+        context->resultSet = context->StealRdbStore()->QuerySql(context->sql, context->bindArgs);
 #endif
-        context->rdbStore = nullptr;
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -617,14 +623,14 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParseSql(env, argv[0], context));
         if (argc == 2) {
             CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
-            CHECK_RETURN_SET_E(!HasDuplicateAssets(context->bindArgs), std::make_shared<ParamError>("Duplicate assets "
-                                                                                                    "are not allowed"));
+            CHECK_RETURN_SET_E(
+                !RdbSqlUtils::HasDuplicateAssets(context->bindArgs), std::make_shared<ParamError>("Duplicate assets "
+                                                                                                  "are not allowed"));
         }
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->ExecuteSql(context->sql, context->bindArgs);
+        return context->StealRdbStore()->ExecuteSql(context->sql, context->bindArgs);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -650,14 +656,14 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
                 CHECK_RETURN(OK == ParseTxId(env, argv[1], context));
             } else {
                 CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
-                CHECK_RETURN_SET_E(!HasDuplicateAssets(context->bindArgs),
+                CHECK_RETURN_SET_E(!RdbSqlUtils::HasDuplicateAssets(context->bindArgs),
                     std::make_shared<ParamError>("Duplicate assets are not allowed"));
             }
         }
         if (argc == 3) {
             CHECK_RETURN(OK == ParseTxId(env, argv[1], context));
             CHECK_RETURN(OK == ParseBindArgs(env, argv[2], context));
-            CHECK_RETURN_SET_E(!HasDuplicateAssets(context->bindArgs),
+            CHECK_RETURN_SET_E(!RdbSqlUtils::HasDuplicateAssets(context->bindArgs),
                 std::make_shared<ParamError>("Duplicate assets are not allowed"));
         }
     };
@@ -687,13 +693,12 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
         CHECK_RETURN(OK == ParseValuesBucket(env, argv[1], context));
-        CHECK_RETURN_SET_E(!HasDuplicateAssets(context->valuesBucket),
+        CHECK_RETURN_SET_E(!RdbSqlUtils::HasDuplicateAssets(context->valuesBucket),
             std::make_shared<ParamError>("Duplicate assets are not allowed"));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->Replace(context->int64Output, context->tableName, context->valuesBucket);
+        return context->StealRdbStore()->Replace(context->int64Output, context->tableName, context->valuesBucket);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->int64Output, &result);
@@ -715,8 +720,7 @@ napi_value RdbStoreProxy::Backup(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        auto res = rdbStore->Backup(context->tableName, context->newKey);
+        auto res = context->StealRdbStore()->Backup(context->tableName, context->newKey);
         if (res == E_DB_NOT_EXIST) {
             return E_OK;
         }
@@ -778,9 +782,8 @@ napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto res = context->rdbStore->Attach(
+        auto res = context->StealRdbStore()->Attach(
             GetRdbStoreConfig(context->config, context->param), context->attachName, context->waitTime);
-        context->rdbStore = nullptr;
         context->attachedNum = res.second;
         return res.first;
     };
@@ -912,8 +915,7 @@ napi_value RdbStoreProxy::RollBackByTxId(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::roll back by txId start async.");
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->RollBack(context->txId);
+        return context->StealRdbStore()->RollBack(context->txId);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -948,8 +950,7 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::commit by txId start async.");
         CHECK_RETURN_ERR(context != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->Commit(context->txId);
+        return context->StealRdbStore()->Commit(context->txId);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -983,7 +984,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
+        auto rdbStore = context->StealRdbStore();
         context->resultSet = context->isQuerySql ? rdbStore->QueryByStep(context->sql, context->bindArgs)
                                                  : rdbStore->QueryByStep(*(context->rdbPredicates), context->columns);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
@@ -1117,8 +1118,7 @@ napi_value RdbStoreProxy::Restore(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::Restore Async.");
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->Restore(context->srcName, context->newKey);
+        return context->StealRdbStore()->Restore(context->srcName, context->newKey);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -1146,8 +1146,7 @@ napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->Rekey(context->cryptoParam);
+        return context->StealRdbStore()->Rekey(context->cryptoParam);
     };
 
     auto output = [context](napi_env env, napi_value &result) {
@@ -1199,8 +1198,7 @@ napi_value RdbStoreProxy::SetLocale(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        auto errCode = rdbStore->ConfigLocale(context->srcName);
+        auto errCode = context->StealRdbStore()->ConfigLocale(context->srcName);
         return errCode;
     };
 
@@ -1534,8 +1532,7 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->SetDistributedTables(
+        return context->StealRdbStore()->SetDistributedTables(
             context->tablesNames, context->distributedType, context->distributedConfig);
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -1603,7 +1600,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         napi_get_undefined(env, &promise);
     }
     auto predicates = *context->predicatesProxy->GetPredicates();
-    auto exec = [queue, defer, callback, predicates, rdbStore = std::move(context->rdbStore),
+    auto exec = [queue, defer, callback, predicates, rdbStore = context->StealRdbStore(),
                     enumArg = context->enumArg]() mutable {
         SyncOption option{ static_cast<DistributedRdb::SyncMode>(enumArg), false };
         auto ret = rdbStore->Sync(option, predicates, [queue, defer, callback](const SyncResult &result) {
@@ -1676,7 +1673,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
         option.isBlock = false;
         CHECK_RETURN_ERR(obj != nullptr && context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
+        auto rdbStore = context->StealRdbStore();
         auto async = [queue = obj->queue_, callback = context->asyncHolder](const Details &details) {
             if (queue == nullptr || callback == nullptr) {
                 return;
@@ -1751,8 +1748,7 @@ napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::CleanDirtyData Async.");
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->CleanDirtyData(context->tableName, context->cursor);
+        return context->StealRdbStore()->CleanDirtyData(context->tableName, context->cursor);
     };
 
     auto output = [context](napi_env env, napi_value &result) {
@@ -1951,8 +1947,7 @@ napi_value RdbStoreProxy::ModifyLockStatus(napi_env env, napi_callback_info info
     };
     auto exec = [context, isLock]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->ModifyLockStatus(*(context->rdbPredicates), isLock);
+        return context->StealRdbStore()->ModifyLockStatus(*(context->rdbPredicates), isLock);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -2016,8 +2011,7 @@ napi_value RdbStoreProxy::LockCloudContainer(napi_env env, napi_callback_info in
     auto exec = [context]() -> int {
         LOG_DEBUG("RdbStoreProxy::LockCloudContainer Async.");
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        auto result = rdbStore->LockCloudContainer();
+        auto result = context->StealRdbStore()->LockCloudContainer();
         context->expiredTime = result.second;
         return result.first;
     };
@@ -2044,8 +2038,7 @@ napi_value RdbStoreProxy::UnlockCloudContainer(napi_env env, napi_callback_info 
     auto exec = [context]() {
         LOG_DEBUG("RdbStoreProxy::UnlockCloudContainer Async.");
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->UnlockCloudContainer();
+        return context->StealRdbStore()->UnlockCloudContainer();
     };
     auto output = [context](napi_env env, napi_value &result) {
         auto status = napi_get_undefined(env, &result);
@@ -2102,6 +2095,220 @@ napi_value RdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info inf
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = TransactionProxy::NewInstance(env, context->transaction);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+struct RdbContext : public RdbStoreContextBase {
+    int ParsedInstance(napi_value self)
+    {
+        auto status = napi_unwrap(env_, self, reinterpret_cast<void **>(&boundObj));
+        ASSERT_RETURN_SET_ERROR(status == napi_ok || boundObj != nullptr,
+            std::make_shared<ParamError>("RdbStore", "not nullptr."));
+        rdbStore = reinterpret_cast<RdbStoreProxy *>(boundObj)->GetInstance();
+        ASSERT_RETURN_SET_ERROR(rdbStore != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        return OK;
+    }
+};
+
+struct RdbBatchInsertWithReturningContext : public RdbContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        // the parameters are either 3 or 4.
+        ASSERT_RETURN_SET_ERROR(argc == 3 || argc == 4, std::make_shared<ParamNumError>("3 or 4"));
+        CHECK_RETURN_ERR(OK == ParsedInstance(self));
+        ASSERT_RETURN_SET_ERROR(
+            JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(tableName),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
+        auto err = ParseValuesBuckets(env, argv[1], valuesBuckets);
+        ASSERT_RETURN_SET_ERROR(!err, err);
+        ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBuckets),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
+        auto errCode = JSUtils::Convert2Value(env, argv[2], config);
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
+            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        config.columns = RdbSqlUtils::BatchTrim(config.columns);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount),
+            std::make_shared<InnerError>(
+                NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."));
+        // 4 is the number of parameters, 3 is the index.
+        if (argc == 4 && !JSUtils::IsNull(env, argv[3])) {
+            // 3 is the index of conflict.
+            err = ParseConflictResolution(env, argv[3], conflictResolution);
+            ASSERT_RETURN_SET_ERROR(!err, err);
+        }
+        return OK;
+    }
+    std::string tableName;
+    ValuesBuckets valuesBuckets;
+    Results result;
+    ReturningConfig config;
+    NativeRdb::ConflictResolution conflictResolution = NativeRdb::ConflictResolution::ON_CONFLICT_NONE;
+};
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      batchInsertWithReturning(table: string, values: Array<ValuesBucket>, config: ReturningConfig,
+ *          conflict?: ConflictResolution): Promise<ResultSet>;
+ * [sync]
+ *      batchInsertWithReturningSync(table: string, values: Array<ValuesBucket>, config: ReturningConfig,
+ *          conflict?: ConflictResolution): ResultSet;
+ */
+napi_value RdbStoreProxy::BatchInsertWithReturning(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbBatchInsertWithReturningContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto result = context->StealRdbStore()->BatchInsert(context->tableName, context->valuesBuckets,
+            context->config, context->conflictResolution);
+        context->result = result.second;
+        return result.first;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        result = JSUtils::Convert2JSValue(env, tsResults);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct RdbUpdateWithReturningContext : public RdbContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        // the parameters are either 3 or 4.
+        ASSERT_RETURN_SET_ERROR(argc == 3 || argc == 4, std::make_shared<ParamNumError>("3 to 4"));
+        CHECK_RETURN_ERR(OK == ParsedInstance(self));
+        std::shared_ptr<Error> err = ParseValuesBucket(env, argv[0], valuesBucket);
+        ASSERT_RETURN_SET_ERROR(!err, err);
+        ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBucket),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
+        err = ParseRdbPredicatesProxy(env, argv[1], rdbPredicates);
+        ASSERT_RETURN_SET_ERROR(!err, err);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
+        auto errCode = JSUtils::Convert2Value(env, argv[2], config);
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
+            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        config.columns = RdbSqlUtils::BatchTrim(config.columns);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount),
+            std::make_shared<InnerError>(
+                NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."));
+        // 4 is the number of parameters, 3 is the index.
+        if (argc == 4 && !JSUtils::IsNull(env, argv[3])) {
+            // 3 is the index of conflict.
+            err = ParseConflictResolution(env, argv[3], conflictResolution);
+            ASSERT_RETURN_SET_ERROR(!err, err);
+        }
+        return OK;
+    }
+    ValuesBucket valuesBucket;
+    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+    NativeRdb::ConflictResolution conflictResolution = ConflictResolution::ON_CONFLICT_NONE;
+    Results result;
+    ReturningConfig config;
+};
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      updateWithReturning(values: ValuesBucket, predicates: RdbPredicates, config: ReturningConfig,
+ *          conflict?: ConflictResolution): Promise<ResultSet>;
+ * [sync]
+ *      updateWithReturningSync(values: ValuesBucket, predicates: RdbPredicates, config: ReturningConfig,
+ *          conflict?: ConflictResolution): ResultSet;
+ */
+napi_value RdbStoreProxy::UpdateWithReturning(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbUpdateWithReturningContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
+        auto result = context->StealRdbStore()->Update(
+            context->valuesBucket, *context->rdbPredicates, context->config, context->conflictResolution);
+        context->result = result.second;
+        return result.first;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        result = JSUtils::Convert2JSValue(env, tsResults);
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct RdbDeleteWithReturningContext : public RdbContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        // There are two parameters.
+        ASSERT_RETURN_SET_ERROR(argc == 2, std::make_shared<ParamNumError>("2"));
+        CHECK_RETURN_ERR(OK == ParsedInstance(self));
+        std::shared_ptr<Error> err = ParseRdbPredicatesProxy(env, argv[0], rdbPredicates);
+        ASSERT_RETURN_SET_ERROR(!err, err);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
+        auto errCode = JSUtils::Convert2Value(env, argv[1], config);
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
+            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        config.columns = RdbSqlUtils::BatchTrim(config.columns);
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
+            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
+        ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount),
+            std::make_shared<InnerError>(
+                NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."));
+        return OK;
+    }
+    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+    Results result;
+    ReturningConfig config;
+};
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *      deleteWithReturning(predicates: RdbPredicates, config: ReturningConfig): Promise<ResultSet>;
+ * [sync]
+ *      deleteWithReturningSync(predicates: RdbPredicates, config: ReturningConfig): ResultSet;
+ */
+napi_value RdbStoreProxy::DeleteWithReturning(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbDeleteWithReturningContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
+        auto result = context->StealRdbStore()->Delete(*(context->rdbPredicates), context->config);
+        context->result = result.second;
+        return result.first;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
