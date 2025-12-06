@@ -2019,23 +2019,23 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet005, TestSize.Level1)
     // if row_ = maxRow_
     RowEntity rowEntity;
     errCode = resultSet->GetRow(rowEntity);
-    EXPECT_EQ(errCode, E_ERROR);
+    EXPECT_EQ(errCode, E_ROW_OUT_RANGE);
     // if row_ = maxRow_
     bool IsNull;
     errCode = resultSet->IsColumnNull(1, IsNull);
-    EXPECT_EQ(errCode, E_ERROR);
+    EXPECT_EQ(errCode, E_ROW_OUT_RANGE);
     // if row_ = maxRow_
     ValueObject::Asset asset;
     errCode = resultSet->GetAsset(1, asset);
-    EXPECT_EQ(errCode, E_ERROR);
+    EXPECT_EQ(errCode, E_ROW_OUT_RANGE);
     // if row_ = maxRow_
     ValueObject::Assets assets;
     errCode = resultSet->GetAssets(1, assets);
-    EXPECT_EQ(errCode, E_ERROR);
+    EXPECT_EQ(errCode, E_ROW_OUT_RANGE);
     // if row_ = maxRow_
     ValueObject value;
     errCode = resultSet->Get(1, value);
-    EXPECT_EQ(errCode, E_ERROR);
+    EXPECT_EQ(errCode, E_ROW_OUT_RANGE);
 }
 
 /**

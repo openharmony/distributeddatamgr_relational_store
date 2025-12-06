@@ -143,7 +143,7 @@ export default function RdbSetDistributedTable() {
     /**
      * @tc.number setDistributedTableTest0002
      * @tc.name set SINGLE_VERSION table
-     * @tc.desc has schema set SINGLE_VERSION success, after set DEVICE_COLLABORATION fail
+     * @tc.desc has schema set SINGLE_VERSION fail, after set DEVICE_COLLABORATION success
      */
     it('setDistributedTableTest0002', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0002 start *************");
@@ -160,18 +160,18 @@ export default function RdbSetDistributedTable() {
         try {
           await rdbStore.setDistributedTables(["EMPLOYEE"], relationalStore.DistributedType.DISTRIBUTED_DEVICE, DISTRIBUTED_CONFIG_SINGLE);
           console.info('SetDistributedTables EMPLOYEE SINGLE_VERSION successfully.');
-          expect(true).assertTrue();
+          expect(null).assertFail();
         } catch (err) {
           console.error(`SetDistributedTables EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
-          expect(null).assertFail();
+          expect(true).assertTrue();
         }
         try {
           await rdbStore.setDistributedTables(["EMPLOYEE"], relationalStore.DistributedType.DISTRIBUTED_DEVICE, DISTRIBUTED_CONFIG_COLLABORATION);
           console.info('SetDistributedTables EMPLOYEE DEVICE_COLLABORATION successfully.');
-          expect(null).assertFail();
+          expect(true).assertTrue();
         } catch (err) {
           console.error(`SetDistributedTables EMPLOYEE DEVICE_COLLABORATION failed, code is ${err.code},message is ${err.message}`);
-          expect(true).assertTrue();
+          expect(null).assertFail();
         }
       }
       console.log(TAG + "************* setDistributedTableTest0002 end *************");
@@ -252,10 +252,10 @@ export default function RdbSetDistributedTable() {
         try {
           await rdbStore.setDistributedTables(["EMPLOYEE"], relationalStore.DistributedType.DISTRIBUTED_DEVICE, DISTRIBUTED_CONFIG_SINGLE);
           console.info('SetDistributedTables EMPLOYEE SINGLE_VERSION successfully.');
-          expect(true).assertTrue();
+          expect(null).assertFail();
         } catch (err) {
           console.error(`SetDistributedTables EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
-          expect(null).assertFail();
+          expect(true).assertTrue();
         }
       }
       console.log(TAG + "************* setDistributedTableTest0004 end *************");
@@ -428,10 +428,10 @@ export default function RdbSetDistributedTable() {
         try {
           await rdbStore2.setDistributedTables(["EMPLOYEE"], relationalStore.DistributedType.DISTRIBUTED_DEVICE, DISTRIBUTED_CONFIG_SINGLE);
           console.info('SetDistributedTables EMPLOYEE successfully.');
-          expect(true).assertTrue();
+          expect(null).assertFail();
         } catch (err) {
           console.error(`SetDistributedTables EMPLOYEE failed, code is ${err.code},message is ${err.message}`);
-          expect(null).assertFail();
+          expect(true).assertTrue();
         }
       }
       console.log(TAG + "************* setDistributedTableTest0010 end *************");
@@ -515,10 +515,10 @@ export default function RdbSetDistributedTable() {
         try {
           await rdbStore3.setDistributedTables(["EMPLOYEE"], relationalStore.DistributedType.DISTRIBUTED_DEVICE, DISTRIBUTED_CONFIG_SINGLE);
           console.info('SetDistributedTables EMPLOYEE successfully.');
-          expect(true).assertTrue();
+          expect(null).assertFail();
         } catch (err) {
           console.error(`SetDistributedTables EMPLOYEE failed, code is ${err.code},message is ${err.message}`);
-          expect(null).assertFail();
+          expect(true).assertTrue();
         }
       }
       console.log(TAG + "************* setDistributedTableTest0013 end *************");

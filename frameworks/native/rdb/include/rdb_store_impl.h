@@ -236,9 +236,9 @@ private:
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args,
-        int32_t maxCount = ReturningConfig::DEFAULT_RETURNING_COUNT, const std::string &returningSql = "");
+        const ReturningConfig &config = {}, const std::string &returningSql = "");
     std::pair<int32_t, Results> GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
-        std::vector<ValuesBucket> &&returningValues, bool isDML = true);
+        std::vector<ValuesBucket> &&returningValues, bool isDML, int32_t rowIndex = ReturningConfig::FIRST_ROW_INDEX);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> &&statement, const std::string &sql);
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();
@@ -261,7 +261,6 @@ private:
     static inline constexpr uint32_t RETRY_INTERVAL = 5; // s
     static inline constexpr int32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
-
     bool isOpen_ = false;
     bool isReadOnly_ = false;
     bool isMemoryRdb_ = false;

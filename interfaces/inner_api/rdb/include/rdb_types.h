@@ -444,8 +444,11 @@ struct ReturningConfig {
     static constexpr int32_t MAX_RETURNING_COUNT = 0X7FFE;
     static constexpr int32_t DEFAULT_RETURNING_COUNT = 1024;
     static constexpr int32_t ILLEGAL_RETURNING_COUNT = -1;
-    ReturningConfig(const std::initializer_list<std::string> &value, int32_t count = DEFAULT_RETURNING_COUNT)
-        : columns(value), maxReturningCount(count)
+    static constexpr int32_t DEFAULT_ROW_INDEX = -1;
+    static constexpr int32_t FIRST_ROW_INDEX = 0;
+    ReturningConfig(const std::initializer_list<std::string> &value, int32_t rowIndex = FIRST_ROW_INDEX,
+        int32_t count = DEFAULT_RETURNING_COUNT)
+        : columns(value), maxReturningCount(count), defaultRowIndex(rowIndex)
     {
     }
     ReturningConfig(const std::vector<std::string> &value, int32_t count = DEFAULT_RETURNING_COUNT)
@@ -457,6 +460,7 @@ struct ReturningConfig {
     }
     std::vector<std::string> columns;
     int32_t maxReturningCount = DEFAULT_RETURNING_COUNT;
+    int32_t defaultRowIndex = FIRST_ROW_INDEX;
 };
 
 class RdbStoreConfig;

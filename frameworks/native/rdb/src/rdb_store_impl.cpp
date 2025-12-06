@@ -1437,7 +1437,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
     auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable(), resolution);
     // To ensure atomicity, execute SQL only once
     if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1 ||
-        !RdbSqlUtils::IsValidMaxCount(config.maxReturningCount)) {
+        !RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount)) {
         auto [fields, values] = rows.GetFieldsAndValues();
         LOG_ERROR("invalid! rows:%{public}zu, table:%{public}s, fields:%{public}zu, max:%{public}d.", rows.RowSize(),
             SqliteUtils::Anonymous(table).c_str(), fields != nullptr ? fields->size() : 0, conn->GetMaxVariable());
@@ -1464,7 +1464,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
             SqliteUtils::Anonymous(table).c_str(), bindArgs.front().size(), static_cast<int32_t>(resolution));
     }
     Results result;
-    std::tie(errCode, result) = GenerateResult(errCode, statement, std::move(values), true);
+    std::tie(errCode, result) = GenerateResult(errCode, statement, std::move(values), true, config.defaultRowIndex);
     if (result.changed > 0) {
         DoCloudSync(table);
     }
@@ -1486,7 +1486,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPre
         return { status, -1 };
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
-    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, config.maxReturningCount, returningSql);
+    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, config, returningSql);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1509,7 +1509,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [code, result] =
-        ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), config.maxReturningCount, returningSql);
+        ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), config, returningSql);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1814,12 +1814,12 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
-    const std::string &sql, const Values &args, int32_t maxCount, const std::string &returningSql)
+    const std::string &sql, const Values &args, const ReturningConfig &config, const std::string &returningSql)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
-    if (!RdbSqlUtils::IsValidMaxCount(maxCount)) {
+    if (!RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount)) {
         return { E_INVALID_ARGS, -1 };
     }
     auto [errCode, statement] = GetStatement(sql, false, returningSql);
@@ -1827,9 +1827,9 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
         return { errCode, -1 };
     }
     std::vector<ValuesBucket> values;
-    std::tie(errCode, values) = statement->ExecuteForRows(args, maxCount);
+    std::tie(errCode, values) = statement->ExecuteForRows(args, config.maxReturningCount);
     TryDump(errCode, "UPG DEL");
-    return GenerateResult(errCode, statement, std::move(values), true);
+    return GenerateResult(errCode, statement, std::move(values), true, config.defaultRowIndex);
 }
 
 int RdbStoreImpl::ExecuteForChangedRowCount(int64_t &outValue, const std::string &sql, const Values &args)
@@ -3114,7 +3114,7 @@ int RdbStoreImpl::CleanDirtyLog(const std::string &table, uint64_t cursor)
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
-    std::vector<ValuesBucket> &&returningValues, bool isDML)
+    std::vector<ValuesBucket> &&returningValues, bool isDML, int32_t rowIndex)
 {
     Results result{ -1 };
     if (statement == nullptr) {
@@ -3122,7 +3122,8 @@ std::pair<int32_t, Results> RdbStoreImpl::GenerateResult(int32_t code, std::shar
     }
     // There are no data changes in other scenarios
     if (code == E_OK) {
-        std::shared_ptr<ResultSet> resultSet = std::make_shared<CacheResultSet>(std::move(returningValues));
+        std::shared_ptr<ResultSet> resultSet =
+            std::make_shared<CacheResultSet>(std::move(returningValues), rowIndex);
         result.results = resultSet;
         result.changed = isDML ? statement->Changes() : 0;
     }
