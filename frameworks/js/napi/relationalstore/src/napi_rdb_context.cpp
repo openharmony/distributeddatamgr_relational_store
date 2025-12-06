@@ -248,39 +248,37 @@ int ParseTxId(const napi_env env, const napi_value arg, std::shared_ptr<RdbStore
     return OK;
 }
 
+
+#define CHECK_RETURN_SET_PARAM_ERROR(oriErr, newErr)                                              \
+    CHECK_RETURN_SET(!(oriErr), (oriErr)->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW        \
+                               ? (newErr)                                                         \
+                               : (oriErr))                                                        \
+
 int ParseSendableValuesBucket(const napi_env env, const napi_value map, std::shared_ptr<RdbStoreContext> context)
 {
     auto err = ParseSendableValuesBucket(env, map, context->valuesBucket);
-    CHECK_RETURN_SET(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
-                               ? std::make_shared<ParamError>("ValuesBuckets is invalid.")
-                               : err);
+    CHECK_RETURN_SET_PARAM_ERROR(err, std::make_shared<ParamError>("SendableValuesBucket is invalid."));
     return OK;
 }
 
 int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     auto err = ParseValuesBucket(env, arg, context->valuesBucket);
-    CHECK_RETURN_SET(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
-                               ? std::make_shared<ParamError>("ValuesBuckets is invalid.")
-                               : err);
+    CHECK_RETURN_SET_PARAM_ERROR(err, std::make_shared<ParamError>("ValuesBucket is invalid."));
     return OK;
 }
 
 int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     auto err = ParseValuesBuckets(env, arg, context->sharedValuesBuckets);
-    CHECK_RETURN_SET(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
-                               ? std::make_shared<ParamError>("ValuesBuckets is invalid.")
-                               : err);
+    CHECK_RETURN_SET_PARAM_ERROR(err, std::make_shared<ParamError>("ValuesBuckets is invalid."));
     return OK;
 }
 
 int ParseConflictResolution(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     auto err = ParseConflictResolution(env, arg, context->conflictResolution);
-    CHECK_RETURN_SET(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
-                               ? std::make_shared<ParamError>("ValuesBuckets is invalid.")
-                               : err);
+    CHECK_RETURN_SET(!err, err);
     return OK;
 }
 

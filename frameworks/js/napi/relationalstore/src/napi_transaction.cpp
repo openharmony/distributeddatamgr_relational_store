@@ -66,21 +66,22 @@ int32_t TransactionContext::ParseRdbPredicatesProxy(
     return OK;
 }
 
+#define CHECK_RETURN_SET_PARAM_ERROR(oriErr, newErr)                                                     \
+    ASSERT_RETURN_SET_ERROR(!(oriErr), (oriErr)->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW        \
+                               ? (newErr)                                                                \
+                               : (oriErr))                                                               \
+
 int32_t TransactionContext::ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket)
 {
     auto err = RelationalStoreJsKit::ParseValuesBucket(env, arg, valuesBucket);
-    ASSERT_RETURN_SET_ERROR(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
-                            ? std::make_shared<ParamError>("ValuesBucket is invalid.")
-                            : err);
+    CHECK_RETURN_SET_PARAM_ERROR(err, std::make_shared<ParamError>("ValuesBucket is invalid."));
     return OK;
 }
 
 int32_t TransactionContext::ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets)
 {
     auto err = RelationalStoreJsKit::ParseValuesBuckets(env, arg, valuesBuckets);
-    ASSERT_RETURN_SET_ERROR(!err, err->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW
-                            ? std::make_shared<ParamError>("ValuesBuckets is invalid.")
-                            : err);
+    CHECK_RETURN_SET_PARAM_ERROR(err, std::make_shared<ParamError>("ValuesBuckets is invalid."));
     return OK;
 }
 
@@ -777,7 +778,7 @@ napi_value TransactionProxy::BatchInsertWithReturning(napi_env env, napi_callbac
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
-        JSUtils::TsResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
@@ -849,8 +850,8 @@ napi_value TransactionProxy::UpdateWithReturning(napi_env env, napi_callback_inf
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
-        JSUtils::TsResult tsResult = {context->result.changed, resultSet};
-        result = JSUtils::Convert2JSValue(env, tsResult);
+        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
@@ -906,7 +907,7 @@ napi_value TransactionProxy::DeleteWithReturning(napi_env env, napi_callback_inf
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
-        JSUtils::TsResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };

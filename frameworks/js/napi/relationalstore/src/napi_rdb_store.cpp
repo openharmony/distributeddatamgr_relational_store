@@ -2177,7 +2177,7 @@ napi_value RdbStoreProxy::BatchInsertWithReturning(napi_env env, napi_callback_i
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
-        JSUtils::TsResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
@@ -2249,7 +2249,7 @@ napi_value RdbStoreProxy::UpdateWithReturning(napi_env env, napi_callback_info i
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
-        JSUtils::TsResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
@@ -2307,7 +2307,7 @@ napi_value RdbStoreProxy::DeleteWithReturning(napi_env env, napi_callback_info i
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
-        JSUtils::TsResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };

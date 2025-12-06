@@ -85,7 +85,7 @@ struct ContextParam {
     bool isStageMode = true;
 };
 
-struct TsResult {
+struct ReturningResult {
     int32_t changed = -1;
     napi_value results = nullptr;
 };
@@ -157,7 +157,7 @@ template<>
 napi_value Convert2JSValue(napi_env env, const SqlInfo &sqlinfo);
 bool IsNapiString(napi_env env, napi_value value);
 template<>
-napi_value Convert2JSValue(napi_env env, const TsResult &value);
+napi_value Convert2JSValue(napi_env env, const ReturningResult &value);
 std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
     napi_env env, napi_value jsValue, RdbConfig &rdbConfig, ContextParam &param);
 RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam &param);
