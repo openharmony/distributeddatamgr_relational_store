@@ -31,6 +31,7 @@ import RdbStoreDataChangeTestEts from './RdbstoreDataChangeEts.test.ets'
 import RelationalStoreCloseTest from './RelationalStoreCloseTest.test.ets'
 import RdbQueryWithoutRowCount from './RdbQueryWithoutRowCount.test';
 import TransQueryWithoutRowCount from './TransQueryWithoutRowCount.test';
+import RdbStoreDeleteWithReturning from './RdbStoreDeleteWithReturning.test';
 import RdbSetDistributedTable from './RdbSetDistributedTable.test';
 export default function testsuite() {
   RdbPredicatesEtsTest();
@@ -52,5 +53,6 @@ export default function testsuite() {
   RelationalStoreCloseTest();
   RdbQueryWithoutRowCount();
   TransQueryWithoutRowCount();
+  RdbStoreDeleteWithReturning();
   RdbSetDistributedTable();
 }
