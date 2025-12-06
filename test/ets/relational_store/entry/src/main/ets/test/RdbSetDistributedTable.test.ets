@@ -106,11 +106,13 @@ export default function RdbSetDistributedTable() {
     /**
      * @tc.number setDistributedTableTest0001
      * @tc.name set COLLABORATION table
-     * @tc.desc has schema set DEVICE_COLLABORATION success，after set SINGLE_VERSION fail
+     * @tc.desc has schema set DEVICE_COLLABORATION success, after set SINGLE_VERSION fail
      */
     it('SetDistributedTableTest0001', 0, async () => {
       console.log(TAG + "************* SetDistributedTableTest0001 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else { 
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -141,11 +143,13 @@ export default function RdbSetDistributedTable() {
     /**
      * @tc.number setDistributedTableTest0002
      * @tc.name set SINGLE_VERSION table
-     * @tc.desc has schema set SINGLE_VERSION success，after set DEVICE_COLLABORATION fail
+     * @tc.desc has schema set SINGLE_VERSION success, after set DEVICE_COLLABORATION fail
      */
     it('setDistributedTableTest0002', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0002 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL UNIQUE, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -176,11 +180,13 @@ export default function RdbSetDistributedTable() {
     /**
      * @tc.number setDistributedTableTest0003
      * @tc.name set SINGLE_VERSION table no schema
-     * @tc.desc no schema set SINGLE_VERSION fail，after set DEVICE_COLLABORATION success
+     * @tc.desc no schema set SINGLE_VERSION fail, after set DEVICE_COLLABORATION success
      */
     it('setDistributedTableTest0003', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0003 start *************");
-      if (rdbStoreNoschema != undefined) {
+      if (rdbStoreNoschema == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStoreNoschema.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL UNIQUE, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -211,11 +217,13 @@ export default function RdbSetDistributedTable() {
     /**
      * @tc.number setDistributedTableTest0004
      * @tc.name set SINGLE_VERSION table no schema
-     * @tc.desc rdbStore has schema set SINGLE_VERSION sucsess，rdbStoreNoschema noschema set SINGLE_VERSION fail
+     * @tc.desc rdbStore has schema set SINGLE_VERSION sucsess, rdbStoreNoschema noschema set SINGLE_VERSION fail
      */
     it('setDistributedTableTest0004', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0004 start *************");
-      if (rdbStoreNoschema != undefined) {
+      if (rdbStoreNoschema == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStoreNoschema.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL UNIQUE, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -260,7 +268,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setDistributedTableTest0005', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0005 start *************");
-      if (rdbStore1 != undefined) {
+      if (rdbStore1 == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore1.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL UNIQUE, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -287,7 +297,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setDistributedTableTest0006', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0006 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL UNIQUE, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -315,7 +327,9 @@ export default function RdbSetDistributedTable() {
 
     it('setDistributedTableTest0007', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0007 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL UNIQUE, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -343,7 +357,9 @@ export default function RdbSetDistributedTable() {
 
     it('setDistributedTableTest0008', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0008 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL UNIQUE, AGE INTEGER UNIQUE, SALARY REAL)');
         } catch (e) {
@@ -370,7 +386,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setDistributedTableTest0009', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0009 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, AGE INTEGER UNIQUE, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -397,7 +415,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setDistributedTableTest0010', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0010 start *************");
-      if (rdbStore2 != undefined) {
+      if (rdbStore2 == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore2.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (NAME TEXT NOT NULL PRIMARY KEY, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -424,7 +444,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setDistributedTableTest0011', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0011 start *************");
-      if (rdbStore2 != undefined) {
+      if (rdbStore2 == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore2.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (NAME TEXT NOT NULL PRIMARY KEY, AGE INTEGER UNIQUE NOT NULL, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -451,7 +473,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setDistributedTableTest0012', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0012 start *************");
-      if (rdbStore2 != undefined) {
+      if (rdbStore2 == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore2.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (NAME TEXT NOT NULL PRIMARY KEY, AGE INTEGER UNIQUE, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -478,7 +502,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setDistributedTableTest0013', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0013 start *************");
-      if (rdbStore3 != undefined) {
+      if (rdbStore3 == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore3.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (NAME TEXT NOT NULL PRIMARY KEY, AGE INTEGER UNIQUE, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -505,7 +531,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setDistributedTableTest0014', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0014 start *************");
-      if (rdbStore3 != undefined) {
+      if (rdbStore3 == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore3.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (NAME TEXT NOT NULL, AGE INTEGER UNIQUE, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -532,7 +560,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setDistributedTableTest0015', 0, async () => {
       console.log(TAG + "************* setDistributedTableTest0015 start *************");
-      if (rdbStore3 != undefined) {
+      if (rdbStore3 == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore3.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (NAME TEXT NOT NULL, AGE INTEGER PRIMARY KEY, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -559,7 +589,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setCloudDistributedTableTest0001', 0, async () => {
       console.log(TAG + "************* setCloudDistributedTableTest0001 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -586,7 +618,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setCloudDistributedTableTest0002', 0, async () => {
       console.log(TAG + "************* setCloudDistributedTableTest0002 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -613,7 +647,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setCloudDistributedTableTest0003', 0, async () => {
       console.log(TAG + "************* setCloudDistributedTableTest0003 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {
@@ -640,7 +676,9 @@ export default function RdbSetDistributedTable() {
      */
     it('setCloudDistributedTableTest0004', 0, async () => {
       console.log(TAG + "************* setCloudDistributedTableTest0004 start *************");
-      if (rdbStore != undefined) {
+      if (rdbStore == undefined) {
+        expect().assertFail();
+      } else {
         try {
           await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, AGE INTEGER, SALARY REAL, CODES BLOB)');
         } catch (e) {

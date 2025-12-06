@@ -26,7 +26,7 @@ using OHOS::DistributedRdb::SubscribeMode;
 using OHOS::DistributedRdb::SyncMode;
 #endif
 using OHOS::DistributedRdb::DistributedTableType;
-using OHOS::DistributedRdb::DistributedTableVersion;
+using OHOS::DistributedRdb::DistributedTableMode;
 using OHOS::DistributedRdb::ProgressCode;
 using OHOS::NativeRdb::ConflictResolution;
 using OHOS::NativeRdb::SecurityLevel;
@@ -180,8 +180,8 @@ static napi_value ExportDistributedTableType(napi_env env)
     }
 
     SET_NAPI_PROPERTY(
-        distributedTableType, "DEVICE_COLLABORATION", int32_t(DistributedTableVersion::DEVICE_COLLABORATION));
-    SET_NAPI_PROPERTY(distributedTableType, "SINGLE_VERSION", int32_t(DistributedTableVersion::SINGLE_VERSION));
+        distributedTableType, "DEVICE_COLLABORATION", int32_t(DistributedTableMode::DEVICE_COLLABORATION));
+    SET_NAPI_PROPERTY(distributedTableType, "SINGLE_VERSION", int32_t(DistributedTableMode::SINGLE_VERSION));
     napi_object_freeze(env, distributedTableType);
     return distributedTableType;
 }
