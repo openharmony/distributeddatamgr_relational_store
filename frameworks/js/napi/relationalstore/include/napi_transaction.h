@@ -48,6 +48,9 @@ private:
     static napi_value QuerySqlWithoutRowCount(napi_env env, napi_callback_info info);
     static napi_value QuerySql(napi_env env, napi_callback_info info);
     static napi_value Execute(napi_env env, napi_callback_info info);
+    static napi_value BatchInsertWithReturning(napi_env env, napi_callback_info info);
+    static napi_value UpdateWithReturning(napi_env env, napi_callback_info info);
+    static napi_value DeleteWithReturning(napi_env env, napi_callback_info info);
     static void AddSyncFunctions(std::vector<napi_property_descriptor> &properties);
 };
 } // namespace RelationalStoreJsKit

@@ -513,7 +513,7 @@ bool RdStatement::SupportBlockInfo() const
     return false;
 }
 
-int32_t RdStatement::FillBlockInfo(SharedBlockInfo *info, int retiyTime) const
+int32_t RdStatement::FillBlockInfo(SharedBlockInfo *info, int retryTime) const
 {
     return E_NOT_SUPPORT;
 }

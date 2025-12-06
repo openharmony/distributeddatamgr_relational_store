@@ -323,7 +323,7 @@ std::vector<std::string> RdbSqlUtils::BatchTrim(const std::vector<std::string> &
     return res;
 }
 
-bool RdbSqlUtils::IsValidMaxCount(int32_t maxCount)
+bool RdbSqlUtils::IsValidReturningMaxCount(int32_t maxCount)
 {
     if (maxCount <= 0 || maxCount > ReturningConfig::MAX_RETURNING_COUNT) {
         LOG_ERROR("illegal maxCount %{public}d.", maxCount);

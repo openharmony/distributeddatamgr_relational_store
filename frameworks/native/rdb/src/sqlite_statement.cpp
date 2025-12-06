@@ -744,7 +744,7 @@ bool SqliteStatement::SupportBlockInfo() const
     return (sqlite3_db_config(db, SQLITE_USE_SHAREDBLOCK) == SQLITE_OK);
 }
 
-int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info, int retiyTime) const
+int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info, int retryTime) const
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_EXECUTE, seqId_);
@@ -753,9 +753,9 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info, int retiyTime) con
     }
     int32_t errCode = E_OK;
     if (SupportBlockInfo()) {
-        errCode = FillSharedBlockOpt(info, stmt_, retiyTime);
+        errCode = FillSharedBlockOpt(info, stmt_, retryTime);
     } else {
-        errCode = FillSharedBlock(info, stmt_, retiyTime);
+        errCode = FillSharedBlock(info, stmt_, retryTime);
     }
     if (errCode != E_OK) {
         if (config_ != nullptr) {
