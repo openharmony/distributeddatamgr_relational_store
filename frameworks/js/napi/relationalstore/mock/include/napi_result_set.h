@@ -43,6 +43,7 @@ private:
 
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static napi_value GetAllColumnNames(napi_env env, napi_callback_info info);
+    static napi_value GetWholeColumnNames(napi_env env, napi_callback_info info);
     static napi_value GoToRow(napi_env env, napi_callback_info info);
     static napi_value GetColumnCount(napi_env env, napi_callback_info info);
     static napi_value GetLong(napi_env env, napi_callback_info info);
@@ -71,6 +72,8 @@ private:
     static napi_value IsColumnNull(napi_env env, napi_callback_info info);
     static napi_value GetRow(napi_env env, napi_callback_info info);
     static napi_value GetRows(napi_env env, napi_callback_info info);
+    static napi_value GetRowData(napi_env env, napi_callback_info info);
+    static napi_value GetRowsData(napi_env env, napi_callback_info info);
     static napi_value GetSendableRow(napi_env env, napi_callback_info info);
     static napi_value GetValue(napi_env env, napi_callback_info info);
     static napi_value IsClosed(napi_env env, napi_callback_info info);

@@ -43,6 +43,7 @@ public:
     static std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position);
     static napi_value GetColumnIndex(napi_env env, napi_callback_info info);
     static napi_value GetColumnName(napi_env env, napi_callback_info info);
+    static napi_value GetWholeColumnNames(napi_env env, napi_callback_info info);
     static napi_value GetColumnType(napi_env env, napi_callback_info info);
     static napi_value GoToNextRow(napi_env env, napi_callback_info info);
     static napi_value GetLong(napi_env env, napi_callback_info info);
@@ -55,6 +56,8 @@ public:
     static napi_value GetFloat32Array(napi_env env, napi_callback_info info);
     static napi_value GetRow(napi_env env, napi_callback_info info);
     static napi_value GetRows(napi_env env, napi_callback_info info);
+    static napi_value GetRowData(napi_env env, napi_callback_info info);
+    static napi_value GetRowsData(napi_env env, napi_callback_info info);
     static napi_value IsColumnNull(napi_env env, napi_callback_info info);
     static napi_value Close(napi_env env, napi_callback_info info);
 };
