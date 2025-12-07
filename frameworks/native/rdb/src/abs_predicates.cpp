@@ -31,8 +31,6 @@ using namespace OHOS::Rdb;
 static constexpr const char *FLAG[AbsPredicates::Origin::BUTT] = { "0x02", "0x0", "0x0" };
 AbsPredicates::AbsPredicates()
 {
-
-    
     Initial();
 }
 
