@@ -40,6 +40,11 @@ enum RdbDistributedType {
     RDB_DISTRIBUTED_TYPE_MAX
 };
 
+enum DistributedTableMode {
+    DEVICE_COLLABORATION = 0, // table split by device
+    SINGLE_VERSION
+};
+
 struct RdbDebugInfo {
     struct DebugTime {
         int64_t sec_ = 0;
@@ -91,6 +96,7 @@ struct RdbSyncerParam {
     bool autoSyncSwitch_ = true;
     int32_t subUser_ = 0;
     RdbDfxInfo dfxInfo_;
+    int32_t distributedTableMode_ = DEVICE_COLLABORATION;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
@@ -168,6 +174,7 @@ struct DistributedConfig {
     bool asyncDownloadAsset = false;
     bool enableCloud = true;
     bool autoSyncSwitch = true;
+    int32_t tableType = DEVICE_COLLABORATION;
 };
 
 enum Progress {
