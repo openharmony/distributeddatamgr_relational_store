@@ -36,6 +36,11 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
 
 namespace OHOS::RdbStoreRekeyExTest {
+constexpr int64_t ITER_NUM = 500;
+constexpr int64_t NEW_ITER_NUM = 5000;
+constexpr int CRYPTO_PAGE_SIZE = 2048;
+constexpr int NEW_CRYPTO_PAGE_SIZE = 1024;
+constexpr int AGE_VALUE = 18;
 struct RekeyExTestParam {
     RdbStoreConfig::CryptoParam srcCryptoParam;
     RdbStoreConfig::CryptoParam dstCryptoParam;
@@ -51,8 +56,8 @@ std::vector<RekeyExTestParam> GenerateAllRekeyExParams()
                 param.encryptAlgo = static_cast<EncryptAlgo>(encrypt);
                 param.hmacAlgo = static_cast<HmacAlgo>(hmac);
                 param.kdfAlgo = static_cast<KdfAlgo>(kdf);
-                param.iterNum = 500;
-                param.cryptoPageSize = 2048;
+                param.iterNum = ITER_NUM;
+                param.cryptoPageSize = CRYPTO_PAGE_SIZE;
                 allCryptoParams.push_back(param);
             }
         }
@@ -154,7 +159,7 @@ void RdbRekeyExTest::VerifyResultSet(std::shared_ptr<ResultSet> resultSet)
     int ageVal = -1;
     ret = resultSet->GetInt(columnIndex, ageVal);
     ASSERT_EQ(ret, E_OK);
-    ASSERT_EQ(ageVal, 18);
+    ASSERT_EQ(ageVal, AGE_VALUE);
 }
 
 /**
@@ -167,8 +172,8 @@ HWTEST_P(RdbRekeyExTest, RdbStore_RekeyEx_001, TestSize.Level1)
     int errCode = E_OK;
     auto &srcParam = currentParam_.srcCryptoParam;
     auto &dstParam = currentParam_.dstCryptoParam;
-    dstParam.iterNum = 5000;
-    dstParam.cryptoPageSize = 1024;
+    dstParam.iterNum = NEW_ITER_NUM;
+    dstParam.cryptoPageSize = NEW_CRYPTO_PAGE_SIZE;
 
     RdbStoreConfig config(encryptedDatabasePath_);
     config.SetSecurityLevel(SecurityLevel::S1);
@@ -185,7 +190,7 @@ HWTEST_P(RdbRekeyExTest, RdbStore_RekeyEx_001, TestSize.Level1)
     ValuesBucket values;
     values.PutInt("id", 1);
     values.PutString("name", "zhangsan");
-    values.PutInt("age", 18);
+    values.PutInt("age", AGE_VALUE);
     int ret = store_->Insert(insertId, "test1", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(insertId, 1);
