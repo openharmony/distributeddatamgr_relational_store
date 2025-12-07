@@ -40,6 +40,8 @@ using namespace ohos::data::relationalStore;
 
 namespace {
 using namespace OHOS::Rdb;
+using ValueType = ohos::data::relationalStore::ValueType;
+using ValueObject = OHOS::NativeRdb::ValueObject;
 
 static constexpr int ERR_NULL = -1;
 
@@ -113,11 +115,29 @@ public:
         return reinterpret_cast<int64_t>(proxy_.get());
     }
 
-    array<string> GetColumnNames()
+    array<string> GetAllColumnNames()
     {
         std::vector<std::string> colNames;
         if (nativeResultSet_ != nullptr) {
             nativeResultSet_->GetAllColumnNames(colNames);
+        }
+        return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
+    }
+
+    array<string> GetColumnNames()
+    {
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        std::vector<std::string> colNames;
+        if (nativeResultSet_ != nullptr) {
+            std::tie(errCode, colNames) = nativeResultSet_->GetWholeColumnNames();
+        }
+
+        if (errCode == OHOS::NativeRdb::E_INVALID_ARGS) {
+            errCode = OHOS::NativeRdb::E_INVALID_ARGS_NEW;
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+            return {};
         }
         return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
     }
@@ -423,6 +443,72 @@ public:
             aniMap.emplace(string(key), ani_rdbutils::ValueObjectToAni(value));
         }
         return aniMap;
+    }
+
+    array<ohos::data::relationalStore::ValueType> GetCurrentRowData()
+    {
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        std::vector<OHOS::NativeRdb::ValueObject> rowData;
+        if (nativeResultSet_ != nullptr) {
+            std::tie(errCode, rowData) = nativeResultSet_->GetRowData();
+        }
+
+        if (errCode == OHOS::NativeRdb::E_INVALID_ARGS) {
+            errCode = OHOS::NativeRdb::E_INVALID_ARGS_NEW;
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+            return {};
+        }
+
+        std::vector<ValueType> rowDataTemp;
+        rowDataTemp.reserve(rowData.size());
+        std::transform(rowData.begin(), rowData.end(), std::back_inserter(rowDataTemp),
+            [](const OHOS::NativeRdb::ValueObject &object) { return ani_rdbutils::ValueObjectToAni(object); });
+        return array<ValueType>(::taihe::copy_data_t{}, rowDataTemp.data(), rowDataTemp.size());
+    }
+
+    array<array<ValueType>> GetRowsDataAsync(int32_t maxCount, optional_view<int32_t> position)
+    {
+        if (maxCount < 0) {
+            ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+            return {};
+        }
+
+        int32_t nativePosition = 0;
+        if (position.has_value()) {
+            nativePosition = position.value();
+            if (nativePosition < 0) {
+                ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+                return {};
+            }
+        }
+
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        std::vector<std::vector<ValueObject>> rowsData;
+        if (nativeResultSet_ != nullptr) {
+            std::tie(errCode, rowsData) = nativeResultSet_->GetRowsData(maxCount, nativePosition);
+        }
+
+        if (errCode == OHOS::NativeRdb::E_INVALID_ARGS) {
+            errCode = OHOS::NativeRdb::E_INVALID_ARGS_NEW;
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+            return {};
+        }
+
+        std::vector<std::vector<ValueType>> rowsDataTemp;
+        rowsDataTemp.reserve(rowsData.size());
+        for (const auto &rowData : rowsData) {
+            std::vector<ValueType> rowDataTemp;
+            rowDataTemp.reserve(rowData.size());
+            std::transform(rowData.begin(), rowData.end(), std::back_inserter(rowDataTemp),
+                [](const ValueObject &object) { return ani_rdbutils::ValueObjectToAni(object); });
+            rowsDataTemp.push_back(std::move(rowDataTemp));
+        }
+
+        return array<array<ValueType>>(::taihe::copy_data_t{}, rowsDataTemp.data(), rowsDataTemp.size());
     }
 
     bool IsColumnNull(int32_t columnIndex)

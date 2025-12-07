@@ -63,6 +63,19 @@ public:
     virtual int GetRow(RowEntity &rowEntity) = 0;
 
     /**
+     * @brief Gets the entire row of data for the current row from the result set in order.
+     */
+    virtual std::pair<int, std::vector<ValueObject>> GetRowData()
+    {
+        return { E_NOT_SUPPORT, {} };
+    }
+
+    virtual std::pair<int, std::vector<std::vector<ValueObject>>> GetRowsData(int32_t maxCount, int32_t position)
+    {
+        return { E_NOT_SUPPORT, {} };
+    }
+
+    /**
      * @brief Get the size of blob or text.
      *
      * @param columnIndex Indicates the zero-based index of the target column.

@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "rdb_errno.h"
 #include "rdb_visibility.h"
 #include "rdb_types.h"
 
@@ -86,6 +87,16 @@ public:
      * @return Returns the names of the columns contains in this query result.
      */
     virtual int GetAllColumnNames(std::vector<std::string> &columnNames) = 0;
+
+    /**
+     * @brief Obtains a string array holding the names of all of the columns in the result set in order.
+     *
+     * @return Returns the names of the columns contains in this query result.
+     */
+    virtual std::pair<int, std::vector<std::string>> GetWholeColumnNames()
+    {
+        return { E_NOT_SUPPORT, {} };
+    }
 
     /**
      * @brief Obtains the total number of columns.
