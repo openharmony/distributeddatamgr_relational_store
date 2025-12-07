@@ -26,6 +26,7 @@ using OHOS::DistributedRdb::SubscribeMode;
 using OHOS::DistributedRdb::SyncMode;
 #endif
 using OHOS::DistributedRdb::DistributedTableType;
+using OHOS::DistributedRdb::DistributedTableMode;
 using OHOS::DistributedRdb::ProgressCode;
 using OHOS::NativeRdb::ConflictResolution;
 using OHOS::NativeRdb::SecurityLevel;
@@ -168,6 +169,21 @@ static napi_value ExportDistributedType(napi_env env)
     SET_NAPI_PROPERTY(distributedType, "DISTRIBUTED_CLOUD", int32_t(DistributedTableType::DISTRIBUTED_CLOUD));
     napi_object_freeze(env, distributedType);
     return distributedType;
+}
+
+static napi_value ExportDistributedTableType(napi_env env)
+{
+    napi_value distributedTableType = nullptr;
+    napi_status status = napi_create_object(env, &distributedTableType);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    SET_NAPI_PROPERTY(
+        distributedTableType, "DEVICE_COLLABORATION", int32_t(DistributedTableMode::DEVICE_COLLABORATION));
+    SET_NAPI_PROPERTY(distributedTableType, "SINGLE_VERSION", int32_t(DistributedTableMode::SINGLE_VERSION));
+    napi_object_freeze(env, distributedTableType);
+    return distributedTableType;
 }
 
 static napi_value ExportChangeType(napi_env env)
@@ -358,6 +374,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("Progress", ExportProgress(env)),
         DECLARE_NAPI_PROPERTY("ProgressCode", ExportProgressCode(env)),
         DECLARE_NAPI_PROPERTY("DistributedType", ExportDistributedType(env)),
+        DECLARE_NAPI_PROPERTY("DistributedTableType", ExportDistributedTableType(env)),
         DECLARE_NAPI_PROPERTY("AssetStatus", ExportAssetStatus(env)),
         DECLARE_NAPI_PROPERTY("ChangeType", ExportChangeType(env)),
         DECLARE_NAPI_PROPERTY("Origin", ExportOrigin(env)),
