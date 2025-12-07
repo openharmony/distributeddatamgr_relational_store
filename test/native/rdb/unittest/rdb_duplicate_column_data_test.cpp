@@ -755,9 +755,9 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_007, Test
 /* *
  * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_008
  * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
- *           1. query some fields
- *           1. execute GetRowsData(2, )
- *           2. get some values
+ *           1. query all fields
+ *           1. execute GetRowsData(2, 0)
+ *           2. get all values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_008, TestSize.Level1)
@@ -1363,9 +1363,9 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_007, TestSize.Leve
 /* *
  * @tc.name: Step_Result_Set_GetRowsData_008
  * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
- *           1. query some fields
- *           1. execute GetRowsData(2, )
- *           2. get some values
+ *           1. query all fields
+ *           1. execute GetRowsData(2, 0)
+ *           2. get all values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_008, TestSize.Level1)

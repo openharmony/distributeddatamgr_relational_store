@@ -443,6 +443,7 @@ int RdbStoreImpl::SetDistributedTables(
     syncerParam_.asyncDownloadAsset_ = distributedConfig.asyncDownloadAsset;
     syncerParam_.enableCloud_ = distributedConfig.enableCloud;
     syncerParam_.autoSyncSwitch_ = distributedConfig.autoSyncSwitch;
+    syncerParam_.distributedTableMode_ = distributedConfig.tableType;
     int32_t errorCode = service->SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
     if (errorCode != E_OK) {

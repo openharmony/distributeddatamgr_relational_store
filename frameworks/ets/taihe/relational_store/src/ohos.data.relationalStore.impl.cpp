@@ -46,10 +46,10 @@ using ValueObject = OHOS::NativeRdb::ValueObject;
 static constexpr int ERR_NULL = -1;
 static constexpr int INIT_POSITION = -1;
 
-void ThrowInnerError(int errcode)
+void ThrowInnerError(int errCode)
 {
-    LOG_ERROR("ThrowInnerError, errcode = %{public}d", errcode);
-    auto innErr = std::make_shared<OHOS::RelationalStoreJsKit::InnerError>(errcode);
+    LOG_ERROR("ThrowInnerError, errCode = %{public}d", errCode);
+    auto innErr = std::make_shared<OHOS::RelationalStoreJsKit::InnerError>(errCode);
     if (innErr != nullptr) {
         taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
     }
@@ -469,9 +469,9 @@ public:
         return array<ValueType>(::taihe::copy_data_t{}, rowDataTemp.data(), rowDataTemp.size());
     }
 
-    array<array<ValueType>> GetRowsDataAsync(int32_t maxCount, optional_view<int32_t> position)
+    array<array<ValueType>> GetRowsDataSync(int32_t maxCount, optional_view<int32_t> position)
     {
-        if (maxCount < 0) {
+        if (maxCount <= 0) {
             ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
             return {};
         }
@@ -852,9 +852,9 @@ public:
         }
         OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
         auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictres.get_key();
-        auto [errcode, output] = nativeTransaction_->Insert(std::string(table), bucket, nativeConflictValue);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, output] = nativeTransaction_->Insert(std::string(table), bucket, nativeConflictValue);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return output;
         }
         return output;
@@ -871,9 +871,9 @@ public:
             ThrowParamError("Duplicate assets are not allowed");
             return ERR_NULL;
         }
-        auto [errcode, output] = nativeTransaction_->BatchInsert(std::string(table), buckets);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, output] = nativeTransaction_->BatchInsert(std::string(table), buckets);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return output;
         }
         return output;
@@ -898,9 +898,9 @@ public:
         }
         OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
         auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictres.get_key();
-        auto [errcode, rows] = nativeTransaction_->Update(bucket, *rdbPredicateNative, nativeConflictValue);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, rows] = nativeTransaction_->Update(bucket, *rdbPredicateNative, nativeConflictValue);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return rows;
         }
         return rows;
@@ -918,9 +918,9 @@ public:
             LOG_ERROR("rdbPredicateNative is nullptr");
             return ERR_NULL;
         }
-        auto [errcode, rows] = nativeTransaction_->Delete(*rdbPredicateNative);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, rows] = nativeTransaction_->Delete(*rdbPredicateNative);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return rows;
         }
         return rows;
@@ -977,9 +977,9 @@ public:
             std::transform(args.value().begin(), args.value().end(), para.begin(),
                 [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
         }
-        auto [errcode, nativeValue] = nativeTransaction_->Execute(std::string(sql), para);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, nativeValue] = nativeTransaction_->Execute(std::string(sql), para);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return aniValue;
         }
         return ani_rdbutils::ValueObjectToAni(nativeValue);
@@ -1041,9 +1041,9 @@ public:
             return ERR_NULL;
         }
         int32_t version = 0;
-        int errcode = nativeRdbStore_->GetVersion(version);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->GetVersion(version);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
         return version;
     }
@@ -1054,9 +1054,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->SetVersion(veriosn);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->SetVersion(veriosn);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1067,9 +1067,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return (RebuildType::key_t)rebuilt;
         }
-        int errcode = nativeRdbStore_->GetRebuilt(rebuilt);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->GetRebuilt(rebuilt);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
         return (RebuildType::key_t)rebuilt;
     }
@@ -1093,10 +1093,10 @@ public:
             return ERR_NULL;
         }
 
-        int errcode = nativeRdbStore_->InsertWithConflictResolution(
+        int errCode = nativeRdbStore_->InsertWithConflictResolution(
             int64Output, std::string(table), bucket, (OHOS::NativeRdb::ConflictResolution)conflict.get_key());
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return 0;
         }
         return int64Output;
@@ -1128,9 +1128,9 @@ public:
             ThrowParamError("Duplicate assets are not allowed");
             return ERR_NULL;
         }
-        auto [errcode, output] = nativeRdbStore_->BatchInsert(std::string(table), buckets);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, output] = nativeRdbStore_->BatchInsert(std::string(table), buckets);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return output;
         }
         return output;
@@ -1162,10 +1162,10 @@ public:
         OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
         auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictres.get_key();
         int output = 0;
-        int errcode = nativeRdbStore_->UpdateWithConflictResolution(output, rdbPredicateNative->GetTableName(), bucket,
+        int errCode = nativeRdbStore_->UpdateWithConflictResolution(output, rdbPredicateNative->GetTableName(), bucket,
             rdbPredicateNative->GetWhereClause(), rdbPredicateNative->GetBindArgs(), nativeConflictValue);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return ERR_NULL;
         }
         return output;
@@ -1194,11 +1194,11 @@ public:
         OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values.get_VALUESBUCKET_ref());
 
         int output = 0;
-        int errcode = nativeRdbStore_->UpdateWithConflictResolution(output, rdbPredicates.GetTableName(), bucket,
+        int errCode = nativeRdbStore_->UpdateWithConflictResolution(output, rdbPredicates.GetTableName(), bucket,
             rdbPredicates.GetWhereClause(), rdbPredicates.GetBindArgs(),
             OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return ERR_NULL;
         }
         return output;
@@ -1217,9 +1217,9 @@ public:
             return ERR_NULL;
         }
         int output = 0;
-        int errcode = nativeRdbStore_->Delete(output, *rdbPredicateNative);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->Delete(output, *rdbPredicateNative);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return 0;
         }
         return output;
@@ -1245,9 +1245,9 @@ public:
         }
         auto rdbPredicates = OHOS::RdbDataShareAdapter::RdbUtils::ToPredicates(*holder, std::string(table));
         int output = 0;
-        int errcode = nativeRdbStore_->Delete(output, rdbPredicates);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->Delete(output, rdbPredicates);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return 0;
         }
         return output;
@@ -1405,9 +1405,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->ExecuteSql(std::string(sql));
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->ExecuteSql(std::string(sql));
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1423,9 +1423,9 @@ public:
             return;
         }
         if (!bindArgs.has_value()) {
-            int errcode = nativeRdbStore_->ExecuteSql(std::string(sql));
-            if (errcode != OHOS::NativeRdb::E_OK) {
-                ThrowInnerError(errcode);
+            int errCode = nativeRdbStore_->ExecuteSql(std::string(sql));
+            if (errCode != OHOS::NativeRdb::E_OK) {
+                ThrowInnerError(errCode);
             }
             return;
         }
@@ -1437,9 +1437,9 @@ public:
             ThrowParamError("Duplicate assets are not allowed");
             return;
         }
-        int errcode = nativeRdbStore_->ExecuteSql(std::string(sql), para);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->ExecuteSql(std::string(sql), para);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1469,9 +1469,9 @@ public:
             ThrowParamError("Duplicate assets are not allowed");
             return aniValue;
         }
-        auto [errcode, sqlExeOutput] = nativeRdbStore_->Execute(std::string(sql), nativeValues, txId);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, sqlExeOutput] = nativeRdbStore_->Execute(std::string(sql), nativeValues, txId);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return aniValue;
         }
         return ani_rdbutils::ValueObjectToAni(sqlExeOutput);
@@ -1488,9 +1488,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->BeginTransaction();
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->BeginTransaction();
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1500,9 +1500,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return ERR_NULL;
         }
-        auto [errcode, rxid] = nativeRdbStore_->BeginTrans();
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, rxid] = nativeRdbStore_->BeginTrans();
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return 0;
         }
         return rxid;
@@ -1514,9 +1514,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->Commit();
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->Commit();
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1526,9 +1526,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->Commit(txId);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->Commit(txId);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1538,9 +1538,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->RollBack();
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->RollBack();
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1550,9 +1550,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->RollBack(txId);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->RollBack(txId);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1562,9 +1562,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->Backup(std::string(destName));
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->Backup(std::string(destName));
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1574,9 +1574,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->Restore(std::string(srcName));
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->Restore(std::string(srcName));
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1586,9 +1586,9 @@ public:
             ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
             return;
         }
-        int errcode = nativeRdbStore_->Restore("");
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->Restore("");
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     }
 
@@ -1756,9 +1756,9 @@ public:
                 transactionType = (int)(optType.transactionType.value());
             }
         }
-        auto [errcode, transaction] = nativeRdbStore_->CreateTransaction(transactionType);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, transaction] = nativeRdbStore_->CreateTransaction(transactionType);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return make_holder<TransactionImpl, Transaction>();
         }
         return make_holder<TransactionImpl, Transaction>(transaction);
@@ -1809,8 +1809,8 @@ void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
     }
     OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
 
-    int errcode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
-    LOG_INFO("deleteRdbStoreWithConfig errcode %{public}d", errcode);
+    int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
+    LOG_INFO("deleteRdbStoreWithConfig errCode %{public}d", errCode);
 }
 
 } // namespace

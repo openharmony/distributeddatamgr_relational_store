@@ -15,7 +15,7 @@
 
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Level, Size, TestType } from "@ohos/hypium";
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
-import { relationalStore } from '@ohos.data.relationalStore';
+import relationalStore from '@ohos.data.relationalStore';
 
 const TAG = "[RELATIONAL_STORE_TEST]";
 let rdbStore:relationalStore.RdbStore | undefined = undefined;
