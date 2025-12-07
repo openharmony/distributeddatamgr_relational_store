@@ -157,6 +157,18 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
 int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 
 int ParseConflictResolution(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+std::shared_ptr<Error> ParseRdbPredicatesProxy(
+    napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates);
+
+std::shared_ptr<Error> ParseSendableValuesBucket(const napi_env env, const napi_value map, ValuesBucket &valuesBucket);
+
+std::shared_ptr<Error> ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket);
+
+std::shared_ptr<Error> ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets);
+
+std::shared_ptr<Error> ParseConflictResolution(
+    const napi_env env, const napi_value arg, NativeRdb::ConflictResolution &conflictResolution);
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
 #endif // NAPI_RDB_CONTEXT_H

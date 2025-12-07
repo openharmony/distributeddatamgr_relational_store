@@ -1,0 +1,186 @@
+{
+    "dbSchema": [
+      {
+        "version": 0,
+        "bundleName": "com.example.myapplication",
+        "dbName": "RdbTest",
+        "tables": [
+          {
+            "cloudType": ["Local", "Device DB"],
+            "tableName": "EMPLOYEE",
+            "deviceSyncFields": ["NAME", "AGE", "SALARY", "CODES"],
+            "fields": [
+              {
+                "columnName": "ID",
+                "type": "Integer",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": true
+              },
+              {
+                "columnName": "NAME",
+                "type": "Text",
+                "primaryKey": true,
+                "notNull": true,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "AGE",
+                "type": "Integer",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "SALARY",
+                "type": "Float",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "CODES",
+                "type": "Blob",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "version": 0,
+        "bundleName": "com.example.myapplication1",
+        "dbName": "RdbTest1",
+        "tables": [
+          {
+            "cloudType": ["Local", "Device DB"],
+            "tableName": "EMPLOYEE",
+            "deviceSyncFields": ["NAME", "AGE", "SALARY", "CODES"],
+            "fields": [
+              {
+                "columnName": "ID",
+                "type": "Integer",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": true
+              },
+              {
+                "columnName": "NAME",
+                "type": "Text",
+                "primaryKey": true,
+                "notNull": true,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "AGE",
+                "type": "Integer",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "SALARY",
+                "type": "Float",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "CODES",
+                "type": "Blob",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "version": 0,
+        "bundleName": "com.example.myapplication",
+        "dbName": "RdbTest2",
+        "tables": [
+          {
+            "cloudType": ["Local", "Device DB"],
+            "tableName": "EMPLOYEE",
+            "deviceSyncFields": ["NAME", "SALARY", "CODES"],
+            "fields": [
+              {
+                "columnName": "NAME",
+                "type": "Text",
+                "primaryKey": true,
+                "notNull": true,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "AGE",
+                "type": "Integer",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "SALARY",
+                "type": "Float",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "CODES",
+                "type": "Blob",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "version": 0,
+        "bundleName": "com.example.myapplication",
+        "dbName": "RdbTest3",
+        "tables": [
+          {
+            "cloudType": ["Local", "Device DB"],
+            "tableName": "EMPLOYEE",
+            "deviceSyncFields": ["NAME", "AGE", "SALARY", "CODES"],
+            "fields": [
+              {
+                "columnName": "NAME",
+                "type": "Text",
+                "primaryKey": true,
+                "notNull": true,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "AGE",
+                "type": "Integer",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "SALARY",
+                "type": "Float",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              },
+              {
+                "columnName": "CODES",
+                "type": "Blob",
+                "primaryKey": false,
+                "notNull": false,
+                "autoIncrement": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }

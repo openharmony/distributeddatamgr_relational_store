@@ -103,6 +103,8 @@ int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Distribute
     NAPI_CALL_RETURN_ERR(
         GetNamedProperty(env, input, "asyncDownloadAsset", output.asyncDownloadAsset, true), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "enableCloud", output.enableCloud, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(
+        GetNamedProperty(env, input, "tableType", output.tableType, true), napi_invalid_arg);
     return napi_ok;
 }
 
@@ -238,6 +240,24 @@ napi_value Convert2JSValue(napi_env env, const SqlInfo &sqlInfo)
     std::vector<napi_property_descriptor> descriptors = {
         DECLARE_JS_PROPERTY(env, "sql", sqlInfo.sql),
         DECLARE_JS_PROPERTY(env, "args", sqlInfo.args),
+    };
+
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
+    return object;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const ReturningResult &value)
+{
+    napi_value resultSet = value.results;
+    if (resultSet == nullptr) {
+        napi_get_undefined(env, &resultSet);
+    }
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "changed", value.changed),
+        napi_property_descriptor(DECLARE_NAPI_DEFAULT_PROPERTY("resultSet", resultSet))
     };
 
     napi_value object = nullptr;
@@ -497,6 +517,18 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, ContextParam &param)
     return napi_ok;
 }
 
+template<>
+int32_t Convert2Value(napi_env env, napi_value jsValue, NativeRdb::ReturningConfig &config)
+{
+    config.defaultRowIndex = NativeRdb::ReturningConfig::DEFAULT_ROW_INDEX;
+    int32_t status = GetNamedProperty(env, jsValue, "columns", config.columns);
+    ASSERT(OK == status, "get columns failed.", napi_invalid_arg);
+
+    status = GetNamedProperty(env, jsValue, "maxReturningCount", config.maxReturningCount, true);
+    ASSERT(OK == status, "get maxReturningCount failed.", napi_invalid_arg);
+    return napi_ok;
+}
+
 std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
     napi_env env, napi_value jsValue, RdbConfig &rdbConfig, ContextParam &param)
 {
@@ -579,65 +611,6 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
 
     rdbStoreConfig.SetEnableSemanticIndex(rdbConfig.enableSemanticIndex);
     return rdbStoreConfig;
-}
-
-bool HasDuplicateAssets(const ValueObject &value)
-{
-    auto *assets = std::get_if<ValueObject::Assets>(&value.value);
-    if (assets == nullptr) {
-        return false;
-    }
-    std::set<std::string> names;
-    auto item = assets->begin();
-    while (item != assets->end()) {
-        if (!names.insert(item->name).second) {
-            LOG_ERROR("Duplicate assets! name = %{public}.6s", item->name.c_str());
-            return true;
-        }
-        item++;
-    }
-    return false;
-}
-
-bool HasDuplicateAssets(const std::vector<ValueObject> &values)
-{
-    for (auto &val : values) {
-        if (HasDuplicateAssets(val)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool HasDuplicateAssets(const ValuesBucket &value)
-{
-    for (auto &[key, val] : value.values_) {
-        if (HasDuplicateAssets(val)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool HasDuplicateAssets(const std::vector<ValuesBucket> &values)
-{
-    for (auto &valueBucket : values) {
-        if (HasDuplicateAssets(valueBucket)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool HasDuplicateAssets(const ValuesBuckets &values)
-{
-    const auto &[fields, vals] = values.GetFieldsAndValues();
-    for (const auto &valueObject : *vals) {
-        if (HasDuplicateAssets(valueObject)) {
-            return true;
-        }
-    }
-    return false;
 }
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
