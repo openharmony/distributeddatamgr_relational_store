@@ -16,6 +16,7 @@ import RdbPredicatesEtsTest from './RdbstorePredicatesEts.test.ets';
 import RdbPredicatesPrefEtsTest from './RdbPredicatesPerfEts.test.ets';
 import RelationalStoreDataGroupId from './RdbGroupIdEts.test.ets';
 import PerfStatEtsTest from './RdbstorePerfStatEts.test.ets';
+import RdbQueryWithDuplicateColumns from './RdbQueryWithDuplicateColumns.test.ets';
 import RdbRekeyEtsTest from './RdbstoreRekeyEts.test.ets';
 import RdbStoreErrorlogTest from './RdbOnErrorLog.test.ets';
 import RDBstoreGetSqlInfoTest from './RdbstoreGetSqlInfoEts.test.ets';
@@ -32,6 +33,7 @@ import RelationalStoreCloseTest from './RelationalStoreCloseTest.test.ets'
 import RdbQueryWithoutRowCount from './RdbQueryWithoutRowCount.test';
 import TransQueryWithoutRowCount from './TransQueryWithoutRowCount.test';
 export default function testsuite() {
+  RdbQueryWithDuplicateColumns();
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
   RelationalStoreDataGroupId();
