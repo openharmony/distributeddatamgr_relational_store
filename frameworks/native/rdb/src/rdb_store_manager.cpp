@@ -88,7 +88,7 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
         LOG_WARN("Diff config! app[%{public}s:%{public}s] path[%{public}s] cfg[%{public}s]",
             config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
             log.c_str());
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
         if (rdbStore->GetConfig().IsMemoryRdb() || config.IsMemoryRdb()) {
             errCode = E_CONFIG_INVALID_CHANGE;
             rdbStore = nullptr;
@@ -316,7 +316,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
             << lastParam.hapName_.c_str() << "->" << config.GetModuleName().c_str() << ", area:"
             << lastParam.area_ << "->" << config.GetArea();
         LOG_WARN("%{public}s", ss.str().c_str());
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, ss.str()));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_CONFIG_INVALID_CHANGE, config, ss.str()));
         return false;
     }
     if (config.GetSecurityLevel() != SecurityLevel::LAST &&
