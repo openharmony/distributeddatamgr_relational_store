@@ -36,11 +36,9 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
 
 namespace OHOS::RdbStoreRekeyExTest {
-constexpr int64_t ITER_NUM = 500;
-constexpr int64_t NEW_ITER_NUM = 5000;
-constexpr int CRYPTO_PAGE_SIZE = 2048;
-constexpr int NEW_CRYPTO_PAGE_SIZE = 1024;
 constexpr int AGE_VALUE = 18;
+constexpr int64_t ITER_NUMS[2] = { 500, 5000 };
+constexpr int CRYPTO_PAGE_SIZES[3] = { 1024, 2048, 4096 };
 struct RekeyExTestParam {
     RdbStoreConfig::CryptoParam srcCryptoParam;
     RdbStoreConfig::CryptoParam dstCryptoParam;
@@ -49,6 +47,7 @@ struct RekeyExTestParam {
 std::vector<RekeyExTestParam> GenerateAllRekeyExParams()
 {
     std::vector<RdbStoreConfig::CryptoParam> allCryptoParams;
+    int index = 0;
     for (int encrypt = 0; encrypt <= static_cast<int>(EncryptAlgo::PLAIN_TEXT); encrypt++) {
         for (int hmac = 0; hmac < static_cast<int>(HmacAlgo::HMAC_BUTT); hmac++) {
             for (int kdf = 0; kdf < static_cast<int>(KdfAlgo::KDF_BUTT); kdf++) {
@@ -56,18 +55,16 @@ std::vector<RekeyExTestParam> GenerateAllRekeyExParams()
                 param.encryptAlgo = static_cast<EncryptAlgo>(encrypt);
                 param.hmacAlgo = static_cast<HmacAlgo>(hmac);
                 param.kdfAlgo = static_cast<KdfAlgo>(kdf);
-                param.iterNum = ITER_NUM;
-                param.cryptoPageSize = CRYPTO_PAGE_SIZE;
+                param.iterNum = ITER_NUMS[index % 2];
+                param.cryptoPageSize = CRYPTO_PAGE_SIZES[index % 3];
                 allCryptoParams.push_back(param);
+                index++;
             }
         }
     }
     std::vector<RekeyExTestParam> allTestParams;
     for (const auto &srcCryptoParam : allCryptoParams) {
-        for (const auto &dstParam : allCryptoParams) {
-            auto dstCryptoParam = dstParam;
-            dstCryptoParam.iterNum = NEW_ITER_NUM;
-            dstCryptoParam.cryptoPageSize = NEW_CRYPTO_PAGE_SIZE;
+        for (const auto &dstCryptoParam : allCryptoParams) {
             allTestParams.push_back({ srcCryptoParam, dstCryptoParam });
         }
     }
