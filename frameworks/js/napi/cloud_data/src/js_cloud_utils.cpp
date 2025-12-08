@@ -158,7 +158,9 @@ int32_t Convert2Value(napi_env env, napi_value input, DBSwitchInfo &output)
     if (status != napi_ok || jsTableInfo == nullptr) {
         return napi_ok;
     }
-
+    if(JSUtils::IsNull(env, jsTableInfo)) {
+        return napi_ok;
+    }
     return Convert2Value(env, jsTableInfo, output.tableInfo);
 }
 
@@ -207,6 +209,9 @@ int32_t Convert2Value(napi_env env, napi_value input, DBActionInfo &output)
     napi_value jsTableInfo = nullptr;
     status = napi_get_named_property(env, input, "tableInfo", &jsTableInfo);
     if (status != napi_ok || jsTableInfo == nullptr) {
+        return napi_ok;
+    }
+    if(JSUtils::IsNull(env, jsTableInfo)) {
         return napi_ok;
     }
     return Convert2Value(env, jsTableInfo, output.tableInfo);
