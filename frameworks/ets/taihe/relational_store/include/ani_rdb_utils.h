@@ -21,10 +21,12 @@
 #include "napi_rdb_js_utils.h"
 #include "ohos.data.relationalStore.impl.hpp"
 #include "ohos.data.relationalStore.proj.hpp"
+#include "result_set.h"
 #include "taihe/runtime.hpp"
 #include "value_object.h"
 
 namespace ani_rdbutils {
+using namespace OHOS::NativeRdb;
 
 OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset const &asset);
 ::ohos::data::relationalStore::Asset AssetToAni(OHOS::NativeRdb::AssetValue const &value);
@@ -50,6 +52,8 @@ bool HasDuplicateAssets(const OHOS::NativeRdb::ValuesBucket &value);
 bool HasDuplicateAssets(const std::vector<OHOS::NativeRdb::ValuesBucket> &values);
 bool HasDuplicateAssets(const OHOS::NativeRdb::ValuesBuckets &values);
 
+std::pair<int, std::vector<RowEntity>> GetRows(
+    ResultSet &resultSet, int32_t maxCount, int32_t position);
 } // namespace ani_rdbutils
 
 #endif

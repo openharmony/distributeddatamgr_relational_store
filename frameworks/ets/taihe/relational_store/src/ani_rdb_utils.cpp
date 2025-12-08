@@ -40,6 +40,7 @@ using TaiheValueType = ::ohos::data::relationalStore::ValueType;
 static constexpr int ERR = -1;
 static const int E_OK = 0;
 static const int REALPATH_MAX_LEN = 1024;
+static const int INIT_POSITION = -1;
 #define API_VERSION_MOD 100
 
 OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset const &asset)
@@ -486,6 +487,45 @@ bool HasDuplicateAssets(const OHOS::NativeRdb::ValuesBuckets &values)
         }
     }
     return false;
+}
+
+std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position)
+{
+    int rowPos = 0;
+    resultSet.GetRowIndex(rowPos);
+    int errCode = E_OK;
+    if (position != INIT_POSITION && position != rowPos) {
+        errCode = resultSet.GoToRow(position);
+    } else if (rowPos == INIT_POSITION) {
+        errCode = resultSet.GoToFirstRow();
+        if (errCode == OHOS::NativeRdb::E_ROW_OUT_RANGE) {
+            return {E_OK, std::vector<RowEntity>()};
+        }
+    }
+    if (errCode != E_OK) {
+        LOG_ERROR("Failed code:%{public}d. [%{public}d, %{public}d]", errCode, maxCount, position);
+        return {errCode, std::vector<RowEntity>()};
+    }
+    std::vector<RowEntity> rowEntities;
+    for (int32_t i = 0; i < maxCount; ++i) {
+        RowEntity rowEntity;
+        int errCode = resultSet.GetRow(rowEntity);
+        if (errCode == E_ROW_OUT_RANGE) {
+            break;
+        }
+        if (errCode != E_OK) {
+            return {errCode, std::vector<RowEntity>()};
+        }
+        rowEntities.push_back(rowEntity);
+        errCode = resultSet.GoToNextRow();
+        if (errCode == E_ROW_OUT_RANGE) {
+            break;
+        }
+        if (errCode != E_OK) {
+            return {errCode, std::vector<RowEntity>()};
+        }
+    }
+    return {E_OK, rowEntities};
 }
 
 } //namespace ani_rdbutils
