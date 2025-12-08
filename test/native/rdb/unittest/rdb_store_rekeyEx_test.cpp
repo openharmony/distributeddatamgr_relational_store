@@ -182,6 +182,10 @@ HWTEST_P(RdbRekeyExTest, RdbStore_RekeyEx_001, TestSize.Level1)
     config.SetCryptoParam(srcParam);
     config.SetEncryptStatus(true);
     RekeyTestOpenCallback helper;
+    LOG_INFO("srcParam: [%{public}d,%{public}d,%{public}d,%{public}d,%{public}u]"
+             "-> dstParam: [%{public}d,%{public}d,%{public}d,%{public}d,%{public}u]",
+        srcParam.encryptAlgo, srcParam.hmacAlgo, srcParam.kdfAlgo, srcParam.iterNum, srcParam.cryptoPageSize,
+        dstParam.encryptAlgo, dstParam.hmacAlgo, dstParam.kdfAlgo, dstParam.iterNum, dstParam.cryptoPageSize);
     store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store_, nullptr);
     ASSERT_EQ(errCode, E_OK);
