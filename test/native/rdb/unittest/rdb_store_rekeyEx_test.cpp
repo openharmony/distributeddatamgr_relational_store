@@ -63,9 +63,12 @@ std::vector<RekeyExTestParam> GenerateAllRekeyExParams()
         }
     }
     std::vector<RekeyExTestParam> allTestParams;
-    for (const auto &srcParam : allCryptoParams) {
+    for (const auto &srcCryptoParam : allCryptoParams) {
         for (const auto &dstParam : allCryptoParams) {
-            allTestParams.push_back({ srcParam, dstParam });
+            auto dstCryptoParam = dstParam;
+            dstCryptoParam.iterNum = NEW_ITER_NUM;
+            dstCryptoParam.cryptoPageSize = NEW_CRYPTO_PAGE_SIZE;
+            allTestParams.push_back({ srcCryptoParam, dstCryptoParam });
         }
     }
     return allTestParams;
@@ -172,8 +175,6 @@ HWTEST_P(RdbRekeyExTest, RdbStore_RekeyEx_001, TestSize.Level1)
     int errCode = E_OK;
     auto &srcParam = currentParam_.srcCryptoParam;
     auto &dstParam = currentParam_.dstCryptoParam;
-    dstParam.iterNum = NEW_ITER_NUM;
-    dstParam.cryptoPageSize = NEW_CRYPTO_PAGE_SIZE;
 
     RdbStoreConfig config(encryptedDatabasePath_);
     config.SetSecurityLevel(SecurityLevel::S1);
