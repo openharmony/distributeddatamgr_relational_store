@@ -328,15 +328,12 @@ std::shared_ptr<Error> ParseSendableValuesBucket(
         napi_value key = nullptr;
         status = napi_get_element(env, values, KEY_INDEX, &key);
         CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
-        std::string keyStr;
-        int32_t ret = JSUtils::Convert2Value(env, key, keyStr);
-        CHECK_RETURN_CUSTOM_ERR(
-            ret == napi_ok && !keyStr.empty(), std::make_shared<InnerError>("Convert2Value keyStr failed."));
+        std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value = nullptr;
         status = napi_get_element(env, values, VALUE_INDEX, &value);
         CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element value failed."));
         ValueObject valueObject;
-        ret = JSUtils::Convert2Value(env, value, valueObject.value);
+        int ret = JSUtils::Convert2Value(env, value, valueObject.value);
         if (ret == napi_ok) {
             valuesBucket.values_.insert_or_assign(std::move(keyStr), std::move(valueObject));
         } else {
@@ -370,8 +367,7 @@ std::shared_ptr<Error> ParseValuesBucket(napi_env env, napi_value arg, ValuesBuc
         CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
         std::string keyStr = JSUtils::Convert2String(env, key);
         napi_value value = nullptr;
-        status = napi_get_property(env, arg, key, &value);
-        CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element value failed."));
+        napi_get_property(env, arg, key, &value);
         ValueObject valueObject;
         int32_t ret = JSUtils::Convert2Value(env, value, valueObject.value);
         // The blob is an empty vector.
