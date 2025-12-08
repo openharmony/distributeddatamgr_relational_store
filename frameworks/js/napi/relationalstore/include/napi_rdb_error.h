@@ -152,22 +152,15 @@ class InnerErrorExt : public Error {
 public:
     InnerErrorExt(int code, const std::string &msg = "")
     {
-        auto errorMsg = GetJsErrorCode(code);
-        if (errorMsg.has_value()) {
-            auto napiError = errorMsg.value();
-            code_ = napiError.jsCode;
-            msg_ = napiError.message + msg;
-            return;
-        }
         auto errorMsgExt = GetJsErrorCodeExt(code);
         if (errorMsgExt.has_value()) {
             auto napiError = errorMsgExt.value();
             code_ = napiError.jsCode;
             msg_ = napiError.message + msg;
-            return;
+        } else {
+            code_ = E_INNER_ERROR;
+            msg_ = "Inner error.";
         }
-        code_ = E_INNER_ERROR;
-        msg_ = "Inner error.";
     }
 
     std::string GetMessage() override

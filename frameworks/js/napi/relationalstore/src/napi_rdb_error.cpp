@@ -78,34 +78,33 @@ static constexpr bool IsIncreasing()
 // JS_ERROR_CODE_MSGS must ensure increment
 static_assert(IsIncreasing());
 
-const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
+const std::optional<JsErrorCode> ConvertCode(const JsErrorCode *codeMap, int count, int errorCode)
 {
     auto jsErrorCode = JsErrorCode{ errorCode, -1, "" };
-    auto iter = std::lower_bound(JS_ERROR_CODE_MSGS,
-        JS_ERROR_CODE_MSGS + sizeof(JS_ERROR_CODE_MSGS) / sizeof(JS_ERROR_CODE_MSGS[0]), jsErrorCode,
+    auto iter = std::lower_bound(codeMap, codeMap + count, jsErrorCode,
         [](const JsErrorCode &jsErrorCode1, const JsErrorCode &jsErrorCode2) {
             return jsErrorCode1.status < jsErrorCode2.status;
         });
-    if (iter < JS_ERROR_CODE_MSGS + sizeof(JS_ERROR_CODE_MSGS) / sizeof(JS_ERROR_CODE_MSGS[0]) &&
-        iter->status == errorCode) {
+    if (iter < codeMap + count && iter->status == errorCode) {
         return *iter;
     }
     return std::nullopt;
 }
 
+const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode)
+{
+    int count = sizeof(JS_ERROR_CODE_MSGS) / sizeof(JS_ERROR_CODE_MSGS[0]);
+    return ConvertCode(JS_ERROR_CODE_MSGS, count, errorCode);
+}
+
 const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode)
 {
-    auto jsErrorCode = JsErrorCode{ errorCode, -1, "" };
-    auto iter = std::lower_bound(JS_ERROR_CODE_MSGS_EXT,
-        JS_ERROR_CODE_MSGS_EXT + sizeof(JS_ERROR_CODE_MSGS_EXT) / sizeof(JS_ERROR_CODE_MSGS_EXT[0]), jsErrorCode,
-        [](const JsErrorCode &jsErrorCode1, const JsErrorCode &jsErrorCode2) {
-            return jsErrorCode1.status < jsErrorCode2.status;
-        });
-    if (iter < JS_ERROR_CODE_MSGS_EXT + sizeof(JS_ERROR_CODE_MSGS_EXT) / sizeof(JS_ERROR_CODE_MSGS_EXT[0]) &&
-        iter->status == errorCode) {
-        return *iter;
+    auto jsErrorCode = GetJsErrorCode(errorCode);
+    if (jsErrorCode.has_value()) {
+        return jsErrorCode;
     }
-    return std::nullopt;
+    int count = sizeof(JS_ERROR_CODE_MSGS_EXT) / sizeof(JS_ERROR_CODE_MSGS_EXT[0]);
+    return ConvertCode(JS_ERROR_CODE_MSGS_EXT, count, errorCode);
 }
 
 } // namespace RelationalStoreJsKit
