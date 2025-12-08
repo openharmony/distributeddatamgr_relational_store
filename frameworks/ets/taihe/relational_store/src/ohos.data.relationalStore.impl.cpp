@@ -126,27 +126,32 @@ public:
         if (maxCount < 0) {
             LOG_ERROR("invalid maxCount");
             ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+            return {};
         }
         int positionNative = INIT_POSITION;
         if (position.has_value()) {
             if (position.value() < 0) {
                 LOG_ERROR("invalid position");
                 ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+                return {};
             }
             positionNative = position.value();
         }
         int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
         std::vector<OHOS::NativeRdb::RowEntity> rowEntities;
+        
         if (nativeResultSet_ != nullptr) {
             std::weak_ptr<OHOS::NativeRdb::ResultSet> resultSet = nativeResultSet_;
             auto result = resultSet.lock();
             if (result == nullptr) {
                 ThrowInnerError(errCode);
+                return {};
             }
             std::tie(errCode, rowEntities) = ani_rdbutils::GetRows(*result, maxCount, positionNative);
         }
         if (errCode != OHOS::NativeRdb::E_OK) {
             ThrowInnerErrorExt(errCode);
+            return {};
         }
         std::vector<map<string, ValueType>> valuesBuckets;
         for (size_t  i = 0; i < rowEntities.size(); ++i) {
@@ -155,7 +160,7 @@ public:
             for (auto const &[key, value] : rowMap) {
                 aniMap.emplace(string(key), ani_rdbutils::ValueObjectToAni(value));
             }
-            valuesBuckets.push_back(aniMap);
+            valuesBuckets.push_back(std::move(aniMap));
         }
 
         return array<map<string, ValueType>>(::taihe::copy_data_t{}, valuesBuckets.data(), valuesBuckets.size());
@@ -214,7 +219,7 @@ public:
 
     string GetString(int32_t columnIndex)
     {
-        std::string result;
+        std::string result = "";
         int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
         if (nativeResultSet_ != nullptr) {
             errCode = nativeResultSet_->GetString(columnIndex, result);
