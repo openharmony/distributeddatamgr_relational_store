@@ -41,6 +41,7 @@ struct JsErrorCode {
     const char *message;
 };
 const std::optional<JsErrorCode> GetJsErrorCode(int32_t errorCode);
+const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
 
 #define RDB_REVT_NOTHING
 #define RDB_DO_NOTHING
@@ -131,6 +132,36 @@ public:
 private:
     int code_;
     int nativeCode_;
+    std::string msg_;
+};
+
+class InnerErrorExt : public Error {
+public:
+    InnerErrorExt(int code, const std::string &msg = "")
+    {
+        auto errorMsgExt = GetJsErrorCodeExt(code);
+        if (errorMsgExt.has_value()) {
+            auto napiError = errorMsgExt.value();
+            code_ = napiError.jsCode;
+            msg_ = napiError.message + msg;
+        } else {
+            code_ = E_INNER_ERROR;
+            msg_ = "Inner error.";
+        }
+    }
+
+    std::string GetMessage() override
+    {
+        return msg_;
+    }
+
+    int GetCode() override
+    {
+        return code_;
+    }
+
+private:
+    int code_;
     std::string msg_;
 };
 

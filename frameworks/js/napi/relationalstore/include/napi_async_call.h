@@ -59,7 +59,7 @@ public:
     };
     void SetAction(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
     void SetAll(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
-    void SetError(std::shared_ptr<Error> error);
+    virtual void SetError(std::shared_ptr<Error> error);
     virtual ~ContextBase();
 
     napi_env env_ = nullptr;
