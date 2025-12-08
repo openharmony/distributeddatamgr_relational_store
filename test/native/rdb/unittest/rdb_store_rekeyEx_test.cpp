@@ -39,6 +39,8 @@ namespace OHOS::RdbStoreRekeyExTest {
 constexpr int AGE_VALUE = 18;
 constexpr int64_t ITER_NUMS[2] = { 500, 5000 };
 constexpr int CRYPTO_PAGE_SIZES[3] = { 1024, 2048, 4096 };
+constexpr size_t ITER_NUMS_SIZE = sizeof(ITER_NUMS) / sizeof(ITER_NUMS[0]);
+constexpr size_t CRYPTO_PAGE_SIZES_SIZE = sizeof(CRYPTO_PAGE_SIZES) / sizeof(CRYPTO_PAGE_SIZES[0]);
 struct RekeyExTestParam {
     RdbStoreConfig::CryptoParam srcCryptoParam;
     RdbStoreConfig::CryptoParam dstCryptoParam;
@@ -55,8 +57,8 @@ std::vector<RekeyExTestParam> GenerateAllRekeyExParams()
                 param.encryptAlgo = static_cast<EncryptAlgo>(encrypt);
                 param.hmacAlgo = static_cast<HmacAlgo>(hmac);
                 param.kdfAlgo = static_cast<KdfAlgo>(kdf);
-                param.iterNum = ITER_NUMS[index % 2];
-                param.cryptoPageSize = CRYPTO_PAGE_SIZES[index % 3];
+                param.iterNum = ITER_NUMS[index % ITER_NUMS_SIZE];
+                param.cryptoPageSize = CRYPTO_PAGE_SIZES[index % CRYPTO_PAGE_SIZES_SIZE];
                 allCryptoParams.push_back(param);
                 index++;
             }
