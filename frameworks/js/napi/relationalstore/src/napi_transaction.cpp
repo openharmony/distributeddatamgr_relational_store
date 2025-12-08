@@ -721,7 +721,7 @@ struct TransBatchInsertWithReturningContext : public TransactionContext {
         // the parameters are either 3 or 4.
         ASSERT_RETURN_SET_ERROR(argc == 3 || argc == 4, std::make_shared<ParamNumError>("3 or 4"));
         ParsedInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         ASSERT_RETURN_SET_ERROR(
             JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(tableName),
@@ -794,7 +794,7 @@ struct TransUpdateWithReturningContext : public TransactionContext {
         // the parameters are either 3 or 4.
         ASSERT_RETURN_SET_ERROR(argc == 3 || argc == 4, std::make_shared<ParamNumError>("3 to 4"));
         ParsedInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         auto err = RelationalStoreJsKit::ParseValuesBucket(env, argv[0], valuesBucket);
         ASSERT_RETURN_SET_ERROR(!err, err);
         ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBucket),
@@ -865,7 +865,7 @@ struct TransDeleteWithReturningContext : public TransactionContext {
     {
         ASSERT_RETURN_SET_ERROR(argc == 2, std::make_shared<ParamNumError>("2"));
         ParsedInstance(self);
-        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<ParamError>("transaction", "a transaction."));
+        ASSERT_RETURN_SET_ERROR(transaction_ != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         CHECK_RETURN_ERR(ParseRdbPredicatesProxy(env, argv[0], rdbPredicates) == OK);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
