@@ -39,16 +39,27 @@ using namespace taihe;
 using namespace ohos::data::relationalStore;
 
 namespace {
+using namespace OHOS;
 using namespace OHOS::Rdb;
 using ValueType = ohos::data::relationalStore::ValueType;
 using ValueObject = OHOS::NativeRdb::ValueObject;
 
 static constexpr int ERR_NULL = -1;
+static const int INIT_POSITION = -1;
 
 void ThrowInnerError(int errcode)
 {
     LOG_ERROR("ThrowInnerError, errcode = %{public}d", errcode);
     auto innErr = std::make_shared<OHOS::RelationalStoreJsKit::InnerError>(errcode);
+    if (innErr != nullptr) {
+        taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
+    }
+}
+
+// Error codes that cannot be thrown in some old scenarios need to be converted in new scenarios.
+void ThrowInnerErrorExt(int errcode)
+{
+    auto innErr = std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errcode);
     if (innErr != nullptr) {
         taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
     }
@@ -72,6 +83,281 @@ void ThrowParamError(const char *message)
         taihe::set_business_error(paraErr->GetCode(), paraErr->GetMessage());
     }
 }
+
+class LiteResultSetProxy final : public OHOS::JSProxy::JSProxy<OHOS::NativeRdb::ResultSet> {
+public:
+    LiteResultSetProxy() = default;
+    explicit LiteResultSetProxy(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+    {
+        resultSet_ = resultSet;
+    }
+
+    LiteResultSetProxy& operator=(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+    {
+        if (resultSet_ == resultSet) {
+            return *this;
+        }
+        resultSet_ = resultSet;
+        return *this;
+    }
+
+protected:
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet_;
+};
+
+class LiteResultSetImpl {
+public:
+    LiteResultSetImpl()
+    {
+    }
+    explicit LiteResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
+    {
+        nativeResultSet_ = resultSet;
+        proxy_ = std::make_shared<LiteResultSetProxy>(resultSet);
+    }
+
+    intptr_t GetProxy()
+    {
+        return reinterpret_cast<intptr_t>(proxy_.get());
+    }
+
+    array<map<string, ValueType>> GetRowsSync(int32_t maxCount, optional_view<int32_t> position)
+    {
+        if (maxCount < 0) {
+            LOG_ERROR("invalid maxCount");
+            ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+        }
+        int positionNative = INIT_POSITION;
+        if (position.has_value()) {
+            if (position.value() < 0) {
+                LOG_ERROR("invalid position");
+                ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+            }
+            positionNative = position.value();
+        }
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        std::vector<OHOS::NativeRdb::RowEntity> rowEntities;
+        if (nativeResultSet_ != nullptr) {
+            std::weak_ptr<OHOS::NativeRdb::ResultSet> resultSet = nativeResultSet_;
+            auto result = resultSet.lock();
+            if (result == nullptr) {
+                ThrowInnerError(errCode);
+            }
+            std::tie(errCode, rowEntities) = ani_rdbutils::GetRows(*result, maxCount, positionNative);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        std::vector<map<string, ValueType>> valuesBuckets;
+        for (size_t  i = 0; i < rowEntities.size(); ++i) {
+            map<string, ValueType> aniMap;
+            const std::map<std::string, OHOS::NativeRdb::ValueObject> &rowMap = rowEntities[i].Get();
+            for (auto const &[key, value] : rowMap) {
+                aniMap.emplace(string(key), ani_rdbutils::ValueObjectToAni(value));
+            }
+            valuesBuckets.push_back(aniMap);
+        }
+
+        return array<map<string, ValueType>>(::taihe::copy_data_t{}, valuesBuckets.data(), valuesBuckets.size());
+    }
+
+    int32_t GetColumnIndex(string_view columnName)
+    {
+        int32_t result = -1;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetColumnIndex(std::string(columnName), result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        return result;
+    }
+
+    string GetColumnName(int32_t columnIndex)
+    {
+        std::string result;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetColumnName(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        return string(result);
+    }
+
+    bool GoToNextRow()
+    {
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GoToNextRow();
+        }
+        if (errCode != OHOS::NativeRdb::E_ROW_OUT_RANGE && errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        return errCode == OHOS::NativeRdb::E_OK;
+    }
+
+    array<uint8_t> GetBlob(int32_t columnIndex)
+    {
+        std::vector<uint8_t> result;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetBlob(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        return array<uint8_t>(::taihe::copy_data_t{}, result.data(), result.size());
+    }
+
+    string GetString(int32_t columnIndex)
+    {
+        std::string result;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetString(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        return string(result);
+    }
+
+    int64_t GetLong(int32_t columnIndex)
+    {
+        int64_t result = 0;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetLong(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        return result;
+    }
+
+    double GetDouble(int32_t columnIndex)
+    {
+        double result = 0.0;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetDouble(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        return result;
+    }
+
+    ohos::data::relationalStore::Asset GetAsset(int32_t columnIndex)
+    {
+        OHOS::NativeRdb::AssetValue result;
+        ohos::data::relationalStore::Asset aniret = {};
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetAsset(columnIndex, result);
+        }
+        if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
+            return aniret;
+        } else if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        return ani_rdbutils::AssetToAni(result);
+    }
+
+    array<ohos::data::relationalStore::Asset> GetAssets(int32_t columnIndex)
+    {
+        std::vector<OHOS::NativeRdb::AssetValue> result;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetAssets(columnIndex, result);
+        }
+        if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
+            return {};
+        } else if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+            return {};
+        }
+        std::vector<ohos::data::relationalStore::Asset> resultTemp;
+        resultTemp.reserve(result.size());
+        std::transform(result.begin(), result.end(), std::back_inserter(resultTemp),
+            [](const OHOS::NativeRdb::AssetValue &asset) { return ani_rdbutils::AssetToAni(asset); });
+        return array<ohos::data::relationalStore::Asset>(::taihe::copy_data_t{}, resultTemp.data(), resultTemp.size());
+    }
+
+    ValueType GetValue(int32_t columnIndex)
+    {
+        OHOS::NativeRdb::ValueObject object;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->Get(columnIndex, object);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
+        }
+        return ani_rdbutils::ValueObjectToAni(object);
+    }
+
+    array<float> GetFloat32Array(int32_t columnIndex)
+    {
+        std::vector<float> result = {};
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetFloat32Array(columnIndex, result);
+        }
+        if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
+            return {};
+        } else if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+            return {};
+        }
+        return array<float>(::taihe::copy_data_t{}, result.data(), result.size());
+    }
+
+    map<string, ValueType> GetRow()
+    {
+        OHOS::NativeRdb::RowEntity rowEntity;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->GetRow(rowEntity);
+        }
+        map<string, ValueType> aniMap;
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+            return aniMap;
+        }
+        const std::map<std::string, OHOS::NativeRdb::ValueObject> &rowMap = rowEntity.Get();
+        for (auto const &[key, value] : rowMap) {
+            aniMap.emplace(string(key), ani_rdbutils::ValueObjectToAni(value));
+        }
+        return aniMap;
+    }
+
+    bool IsColumnNull(int32_t columnIndex)
+    {
+        bool result = false;
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        if (nativeResultSet_ != nullptr) {
+            errCode = nativeResultSet_->IsColumnNull(columnIndex, result);
+        }
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerErrorExt(errCode);
+        }
+        return result;
+    }
+
+    void Close()
+    {
+        nativeResultSet_ = nullptr;
+        proxy_ = nullptr;
+    }
+
+protected:
+    std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet_;
+    std::shared_ptr<LiteResultSetProxy> proxy_;
+};
 
 class ResultSetProxy final : public OHOS::JSProxy::JSCreator<OHOS::DataShare::ResultSetBridge> {
 public:
@@ -963,6 +1249,53 @@ public:
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
     }
 
+    LiteResultSet QueryWithoutRowCountSync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
+    {
+        if (nativeTransaction_ == nullptr) {
+            LOG_ERROR("nativeTransaction_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+            return make_holder<LiteResultSetImpl, LiteResultSet>();
+        }
+        std::vector<std::string> columnNames;
+        if (columns.has_value()) {
+            columnNames = std::vector<std::string>(columns.value().begin(), columns.value().end());
+        }
+        RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+        if (impl == nullptr) {
+            LOG_ERROR("RdbPredicatesImpl is nullptr");
+            return make_holder<LiteResultSetImpl, LiteResultSet>();
+        }
+        std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
+        if (rdbPredicateNative == nullptr) {
+            LOG_ERROR("rdbPredicateNative is nullptr");
+            return make_holder<LiteResultSetImpl, LiteResultSet>();
+        }
+        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+        auto nativeResultSet = nativeTransaction_->QueryByStep(*rdbPredicateNative, columnNames, options);
+        return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
+    }
+
+    LiteResultSet QuerySqlWithoutRowCountSync(string_view sql, optional_view<array<ValueType>> args)
+    {
+        if (nativeTransaction_ == nullptr) {
+            LOG_ERROR("nativeTransaction_ is nullptr");
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+            return make_holder<LiteResultSetImpl, LiteResultSet>();
+        }
+        if (sql.empty()) {
+            LOG_ERROR("sql is empty");
+            ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+        }
+        std::vector<OHOS::NativeRdb::ValueObject> para;
+        if (args.has_value()) {
+            para.resize(args.value().size());
+            std::transform(args.value().begin(), args.value().end(), para.begin(),
+                [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
+        }
+        auto nativeResultSet = nativeTransaction_->QueryByStep(std::string(sql), para);
+        return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
+    }
+
     ValueType ExecuteSync(string_view sql, optional_view<array<ValueType>> args)
     {
         ValueType aniValue = ::ohos::data::relationalStore::ValueType::make_EMPTY();
@@ -1286,6 +1619,54 @@ public:
         }
         auto nativeResultSet = nativeRdbStore_->Query(*rdbPredicateNative, stdcolumns);
         return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
+    }
+
+    LiteResultSet QueryWithoutRowCountSync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
+    {
+        if (nativeRdbStore_ == nullptr) {
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+            return make_holder<LiteResultSetImpl, LiteResultSet>();
+        }
+        
+        std::vector<std::string> columnNames;
+        if (columns.has_value()) {
+            columnNames = std::vector<std::string>(columns.value().begin(), columns.value().end());
+        }
+        RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+        if (impl == nullptr) {
+            LOG_ERROR("RdbPredicatesImpl is nullptr");
+            return make_holder<LiteResultSetImpl, LiteResultSet>();
+        }
+        std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
+        if (rdbPredicateNative == nullptr) {
+            LOG_ERROR("rdbPredicateNative is nullptr");
+            return make_holder<LiteResultSetImpl, LiteResultSet>();
+        }
+        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+        auto nativeResultSet = nativeRdbStore_->QueryByStep(*rdbPredicateNative, columnNames, options);
+        return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
+    }
+
+    LiteResultSet QuerySqlWithoutRowCountSync(string_view sql, optional_view<array<ValueType>> bindArgs)
+    {
+        if (nativeRdbStore_ == nullptr) {
+            ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+            return taihe::make_holder<LiteResultSetImpl, LiteResultSet>();
+        }
+        if (sql.empty()) {
+            LOG_ERROR("sql is empty");
+            ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+        }
+        std::vector<OHOS::NativeRdb::ValueObject> para;
+        if (bindArgs.has_value()) {
+            para.resize(bindArgs.value().size());
+            std::transform(bindArgs.value().begin(), bindArgs.value().end(), para.begin(),
+                [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
+        }
+        std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet = nullptr;
+        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+        nativeResultSet = nativeRdbStore_->QueryByStep(std::string(sql), para, options);
+        return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
     }
 
     ResultSet QueryDataShareSync(::taihe::string_view table, uintptr_t predicates)
