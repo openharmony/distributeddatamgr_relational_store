@@ -90,9 +90,6 @@ public:
     {
         return ERR;
     }
-    virtual void ErrCodeConversion(int code)
-    {
-    }
 };
 
 class InnerError : public Error {
@@ -130,16 +127,6 @@ public:
     int GetNativeCode() override
     {
         return nativeCode_;
-    }
-
-    void ErrCodeConversion(int code) override
-    {
-        auto errorMsg = GetJsErrorCodeExt(code);
-        if (errorMsg.has_value()) {
-            auto napiError = errorMsg.value();
-            code_ = napiError.jsCode;
-            msg_ = napiError.message;
-        }
     }
 
 private:
