@@ -94,6 +94,7 @@ struct RdbSyncerParam {
     bool asyncDownloadAsset_ = false;
     bool enableCloud_ = true;
     bool autoSyncSwitch_ = true;
+    bool isAsyncCreatedistTable_ = false;
     int32_t subUser_ = 0;
     RdbDfxInfo dfxInfo_;
     int32_t distributedTableMode_ = DEVICE_COLLABORATION;
@@ -175,6 +176,7 @@ struct DistributedConfig {
     bool enableCloud = true;
     bool autoSyncSwitch = true;
     int32_t tableType = DEVICE_COLLABORATION;
+    bool isAsyncCreatedistTable = false;
 };
 
 enum Progress {
