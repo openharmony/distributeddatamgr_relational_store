@@ -1039,7 +1039,8 @@ int32_t ConnPool::Container::Dump(const char *header, int32_t count)
     }
     LOG_WARN("%{public}s %{public}s:%{public}s", header, title.c_str(), info.c_str());
     allInfo.append(header).append(": ").append(title).append(std::move(info));
-    Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_DUMP_INFO, BUNDLE_NAME_COMMON, allInfo));
+    Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD,
+        E_DFX_DUMP_INFO, RdbFaultType::BUNDLE_NAME_COMMON, allInfo));
     return 0;
 }
 

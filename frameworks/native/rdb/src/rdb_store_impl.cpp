@@ -674,7 +674,7 @@ std::string RdbStoreImpl::GetUri(const std::string &event)
         rdbUri = SCHEME_RDB + config_.GetBundleName() + "/" + path_ + "/" + event;
     } else {
         rdbUri = SCHEME_RDB + config_.GetDataGroupId() + "/" + path_ + "/" + event;
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_GROUPID_INFO, config_.GetBundleName(),
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_GROUPID_INFO, config_.GetBundleName(),
             "GetUri GroupId db:[" + SqliteUtils::Anonymous(name_) + "]"));
     }
     return rdbUri;
@@ -1331,6 +1331,7 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
 std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    CheckFoundationVisitor();
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1354,6 +1355,7 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
 std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, const ValuesBuckets &rows)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    CheckFoundationVisitor();
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1408,8 +1410,8 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
 void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
 {
     if (argsSize > 1) {
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_BATCH_INSERT_ARGS_SIZE, config_.GetBundleName(),
-            "BatchInsert executeSqlArgs size[ " + std::to_string(argsSize) + "]"));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_BATCH_INSERT_ARGS_SIZE,
+            config_.GetBundleName(), "BatchInsert executeSqlArgs size[ " + std::to_string(argsSize) + "]"));
     }
 }
 
@@ -1417,6 +1419,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
     const ReturningConfig &config, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    CheckFoundationVisitor();
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1475,6 +1478,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPre
     const ReturningConfig &config, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    CheckFoundationVisitor();
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1497,6 +1501,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(
     const AbsRdbPredicates &predicates, const ReturningConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    CheckFoundationVisitor();
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1571,7 +1576,7 @@ void WriteToCompareFile(const std::string &dbPath, const std::string &bundleName
             std::string comparePath = dbPath + "-compare";
             if (SqliteUtils::CleanFileContent(comparePath)) {
                 Reportor::ReportFault(
-                    RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_EXIST, bundleName, "compare file is deleted"));
+                    RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_IS_NOT_EXIST, bundleName, "compare file is deleted"));
             }
             SqliteUtils::WriteSqlToFile(comparePath, sql);
         });
@@ -1970,7 +1975,8 @@ int RdbStoreImpl::Backup(const std::string &databasePath, const std::vector<uint
     ret = InnerBackup(backupFilePath, encryptKey);
     if (ret != E_OK || access(walFile.c_str(), F_OK) == E_OK) {
         if (ret == E_DB_NOT_EXIST) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, ret, config_.GetBundleName(), "BackupFailed"));
+            Reportor::ReportFault(
+                RdbFaultEvent(RdbFaultType::FT_EX_FILE, ret, config_.GetBundleName(), "BackupFailed"));
         }
         if (SqliteUtils::DeleteDirtyFiles(backupFilePath)) {
             SqliteUtils::RenameFile(tempPath, backupFilePath);
@@ -2437,7 +2443,7 @@ int RdbStoreImpl::RollBack()
     auto [err, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
         if (err == E_DATABASE_BUSY) {
-            Reportor::ReportFault(RdbFaultEvent(FT_CURD, err, config_.GetBundleName(), "RollBusy"));
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, err, config_.GetBundleName(), "RollBusy"));
         }
         // size + 1 means the number of transactions in process
         LOG_ERROR("statement err. [%{public}zu, %{public}s]", id + 1, SqliteUtils::Anonymous(name_).c_str());
@@ -2446,7 +2452,7 @@ int RdbStoreImpl::RollBack()
     err = statement->Execute();
     if (err != E_OK) {
         if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
-            Reportor::ReportFault(RdbFaultEvent(FT_CURD, err, config_.GetBundleName(), "RollBusy"));
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, err, config_.GetBundleName(), "RollBusy"));
         }
         LOG_ERROR("failed. [%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
         return err;
@@ -2536,7 +2542,7 @@ int RdbStoreImpl::Commit()
     auto [err, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
         if (err == E_DATABASE_BUSY) {
-            Reportor::ReportFault(RdbFaultEvent(FT_CURD, err, config_.GetBundleName(), "ComBusy"));
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, err, config_.GetBundleName(), "ComBusy"));
         }
         LOG_ERROR("statement error. [%{public}zu, %{public}s]", id, SqliteUtils::Anonymous(name_).c_str());
         return E_DATABASE_BUSY;
@@ -2544,7 +2550,7 @@ int RdbStoreImpl::Commit()
     err = statement->Execute();
     if (err != E_OK) {
         if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
-            Reportor::ReportFault(RdbFaultEvent(FT_CURD, err, config_.GetBundleName(), "ComBusy"));
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, err, config_.GetBundleName(), "ComBusy"));
         }
         LOG_ERROR("failed. [%{public}zu, %{public}s, %{public}d]", id, SqliteUtils::Anonymous(name_).c_str(), err);
         return err;
@@ -2574,6 +2580,22 @@ bool RdbStoreImpl::IsInTransaction()
         return false;
     }
     return pool->IsInTransaction();
+}
+
+void RdbStoreImpl::CheckFoundationVisitor()
+{
+    if (config_.GetName() == "bmsdb.db") {
+        std::string callingName;
+        #if !defined(CROSS_PLATFORM)
+        callingName = RdbMgr::GetInstance().GetSelfBundleName();
+        #endif
+        if (callingName != "foundation") {
+        LOG_ERROR("GetSelfBundleName:%{public}s, bundleName:%{public}s",
+            callingName.c_str(), config_.GetBundleName().c_str());
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FOUNDATION_FAULT,
+                E_DFX_FOUNDATION_VERIFY_FAULT, callingName, "Database Visitor is not foundation"));
+        }
+    }
 }
 
 int RdbStoreImpl::CheckAttach(const std::string &sql)
