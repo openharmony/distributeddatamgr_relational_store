@@ -190,6 +190,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_store_impl_test.cpp",
     "unittest/rdb_store_interface_test.cpp",
     "unittest/rdb_store_rekey_test.cpp",
+    "unittest/rdb_store_rekeyEx_test.cpp",
     "unittest/rdb_store_subscribe_test.cpp",
     "unittest/rdb_trans_db_test.cpp",
     "unittest/rdb_transaction_test.cpp",
