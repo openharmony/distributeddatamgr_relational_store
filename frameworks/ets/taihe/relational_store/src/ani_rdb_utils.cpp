@@ -43,6 +43,228 @@ static const int REALPATH_MAX_LEN = 1024;
 static const int INIT_POSITION = -1;
 #define API_VERSION_MOD 100
 
+std::mutex DataObserver::mainHandlerMutex_;
+std::shared_ptr<OHOS::AppExecFwk::EventHandler> DataObserver::mainHandler_;
+
+DataObserver::DataObserver(VarCallbackType cb, ani_ref jsCallbackRef) : jsCallback_(cb), jsCallbackRef_(jsCallbackRef)
+{
+    LOG_INFO("DataObserver");
+}
+
+DataObserver::~DataObserver()
+{
+    LOG_INFO("~DataObserver");
+    Release();
+}
+
+std::shared_ptr<DataObserver> DataObserver::Create(VarCallbackType cb, ani_ref jsCallbackRef)
+{
+    return std::make_shared<DataObserver>(cb, jsCallbackRef);
+}
+
+void DataObserver::SetNotifyDataChangeInfoFunc(
+    std::function<void(DataObserver *, const OHOS::DistributedRdb::Origin &,
+        const OHOS::DistributedRdb::RdbStoreObserver::PrimaryFields &,
+        const OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &)> func)
+{
+    notifyDataChangeInfoFunc_ = func;
+}
+void DataObserver::SetNotifyDataChangeArrFunc(
+    std::function<void(DataObserver *, const std::vector<std::string> &)> func)
+{
+    notifyDataChangeArrFunc_ = func;
+}
+
+void DataObserver::SetNotifyProcessFunc(std::function<void(DataObserver *,
+    const OHOS::DistributedRdb::Details &)> func)
+{
+    notifyProgressDetailsFunc_ = func;
+}
+
+void DataObserver::SetNotifySqlExecutionFunc(std::function<void(DataObserver *, const SqlExecutionInfo &)> func)
+{
+    notifySqlExecutionInfoFunc_ = func;
+}
+
+void DataObserver::SetNotifyCommonEventFunc(std::function<void(DataObserver *)> func)
+{
+    notifyCommonEventFunc_ = func;
+}
+
+bool DataObserver::SendEventToMainThread(const std::function<void()> func)
+{
+    if (func == nullptr) {
+        return false;
+    }
+    if (mainHandler_) {
+        mainHandler_->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+        return true;
+    }
+    std::lock_guard<std::mutex> locker(mainHandlerMutex_);
+    if (mainHandler_ == nullptr) {
+        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        if (!runner) {
+            LOG_ERROR("GetMainEventRunner failed");
+            return false;
+        }
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+        mainHandler_->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    } else {
+        mainHandler_->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    }
+    return true;
+}
+
+void DataObserver::OnChange()
+{
+    if (notifyCommonEventFunc_ == nullptr) {
+        return;
+    }
+    auto weakSelf = weak_from_this();
+    SendEventToMainThread([weakSelf] {
+        auto self = weakSelf.lock();
+        if (self != nullptr) {
+            self->OnChangeInMainThread();
+        } else {
+            LOG_ERROR("Weak self lock failed");
+        }
+    });
+}
+
+void DataObserver::OnChangeInMainThread()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (jsCallbackRef_ == nullptr || notifyCommonEventFunc_ == nullptr) {
+        return;
+    }
+    notifyCommonEventFunc_(this);
+}
+void DataObserver::OnChange(const std::vector<std::string> &devices)
+{
+    if (notifyDataChangeArrFunc_ == nullptr) {
+        return;
+    }
+    auto weakSelf = weak_from_this();
+    SendEventToMainThread([devices, weakSelf] {
+        auto self = weakSelf.lock();
+        if (self != nullptr) {
+            self->OnChangeArrInMainThread(devices);
+        } else {
+            LOG_ERROR("Weak self lock failed");
+        }
+    });
+}
+
+void DataObserver::OnChangeArrInMainThread(const std::vector<std::string> &devices)
+{
+    std::function<void(DataObserver *, const std::vector<std::string> &)> cb;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (!jsCallbackRef_ || !notifyDataChangeArrFunc_) {
+            return;
+        }
+        cb = notifyDataChangeArrFunc_;
+    }
+    cb(this, devices);
+}
+
+void DataObserver::OnChange(const OHOS::DistributedRdb::Origin &origin,
+    const OHOS::DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
+    OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo)
+{
+    if (notifyDataChangeInfoFunc_ == nullptr) {
+        return;
+    }
+    auto weakSelf = weak_from_this();
+    SendEventToMainThread(
+        [origin, fields, changeInfo, weakSelf] {
+            auto self = weakSelf.lock();
+            if (self != nullptr) {
+                self->OnChangeInfoInMainThread(origin, fields, changeInfo);
+            } else {
+                LOG_ERROR("Weak self lock failed");
+            }
+        });
+};
+void DataObserver::OnChangeInfoInMainThread(const OHOS::DistributedRdb::Origin &origin,
+    const OHOS::DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
+    const OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &changeInfo)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (jsCallbackRef_ == nullptr || notifyDataChangeInfoFunc_ == nullptr) {
+        return;
+    }
+    notifyDataChangeInfoFunc_(this, origin, fields, changeInfo);
+};
+
+void DataObserver::OnStatistic(const SqlExecutionInfo &info)
+{
+    if (notifySqlExecutionInfoFunc_ == nullptr) {
+        return;
+    }
+    auto weakSelf = weak_from_this();
+    SendEventToMainThread([info, weakSelf] {
+        auto self = weakSelf.lock();
+        if (self != nullptr) {
+            self->OnStatisticInMainThread(info);
+        } else {
+            LOG_ERROR("Weak self lock failed");
+        }
+    });
+}
+void DataObserver::OnStatisticInMainThread(const SqlExecutionInfo &info)
+{
+    LOG_INFO("DataObserver::OnStatisticInMainThread");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (jsCallbackRef_ == nullptr || notifySqlExecutionInfoFunc_ == nullptr) {
+        return;
+    }
+    notifySqlExecutionInfoFunc_(this, info);
+}
+
+void DataObserver::ProgressNotification(const OHOS::DistributedRdb::Details &details)
+{
+    LOG_ERROR("syy 100");
+    if (notifyProgressDetailsFunc_ == nullptr) {
+        return;
+    }
+    auto weakSelf = weak_from_this();
+    SendEventToMainThread([details, weakSelf] {
+        auto self = weakSelf.lock();
+        if (self != nullptr) {
+            self->ProgressNotificationInMainThread(details);
+        } else {
+            LOG_ERROR("Weak self lock failed");
+        }
+    });
+}
+
+void DataObserver::ProgressNotificationInMainThread(const OHOS::DistributedRdb::Details &details)
+{
+    LOG_ERROR("syy 101");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (jsCallbackRef_ == nullptr || notifyProgressDetailsFunc_ == nullptr) {
+        return;
+    }
+    notifyProgressDetailsFunc_(this, details);
+}
+
+void DataObserver::Release()
+{
+    LOG_INFO("DataObserver::Release");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    taihe::env_guard guard;
+    if (auto *env = guard.get_env()) {
+        env->GlobalReference_Delete(jsCallbackRef_);
+        jsCallbackRef_ = nullptr;
+    }
+    notifyDataChangeInfoFunc_ = nullptr;
+    notifyDataChangeArrFunc_ = nullptr;
+    notifySqlExecutionInfoFunc_ = nullptr;
+    notifyProgressDetailsFunc_ = nullptr;
+    notifyCommonEventFunc_ = nullptr;
+}
+
 OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset const &asset)
 {
     OHOS::NativeRdb::AssetValue value;
@@ -62,7 +284,6 @@ std::vector<OHOS::NativeRdb::AssetValue> AssetsToNative(
     ::taihe::array<::ohos::data::relationalStore::Asset> const &assets)
 {
     std::vector<OHOS::NativeRdb::AssetValue> result;
-    result.reserve(assets.size());
     std::transform(assets.begin(), assets.end(), std::back_inserter(result),
         [](const ::ohos::data::relationalStore::Asset &asset) { return AssetToNative(asset); });
     return result;
@@ -209,6 +430,17 @@ OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::Va
     return value;
 }
 
+ohos::data::relationalStore::ValuesBucket ValuesBucketToAni(OHOS::NativeRdb::ValuesBucket const &valuesBucket)
+{
+    auto result = ohos::data::relationalStore::ValuesBucket::make_VALUESBUCKET();
+    auto &aniMap = result.get_VALUESBUCKET_ref();
+    auto nativeMap = valuesBucket.GetAll();
+    for (const auto &[key, value] : nativeMap) {
+        aniMap.emplace(taihe::string(key), ValueObjectToAni(value));
+    }
+    return result;
+}
+
 OHOS::NativeRdb::ValuesBucket MapValuesToNative(
     taihe::map_view<taihe::string, ::ohos::data::relationalStore::ValueType> const &values)
 {
@@ -286,7 +518,24 @@ OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
     return value;
 }
 
-OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(const ::ohos::data::relationalStore::StoreConfig &storeConfig)
+void AniGetRdbConfigAppend(const ohos::data::relationalStore::StoreConfig &storeConfig,
+    OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &storeConfigNative)
+{
+    if (storeConfig.rootDir.has_value()) {
+        storeConfigNative.rootDir = std::string(storeConfig.rootDir.value());
+    }
+    if (storeConfig.isSearchable.has_value()) {
+        storeConfigNative.isSearchable = storeConfig.isSearchable.value();
+    }
+    if (storeConfig.persist.has_value()) {
+        storeConfigNative.persist = storeConfig.persist.value();
+    }
+    if (storeConfig.tokenizer.has_value()) {
+        storeConfigNative.tokenizer = TokenizerToNative(storeConfig.tokenizer.value());
+    }
+}
+
+OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(const ohos::data::relationalStore::StoreConfig &storeConfig)
 {
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig;
     if (storeConfig.encrypt.has_value()) {
@@ -306,7 +555,6 @@ OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(const ::ohos::data::re
         rdbConfig.isAutoClean = storeConfig.autoCleanDirtyData.value();
     }
     rdbConfig.name = std::string(storeConfig.name);
-
     if (storeConfig.customDir.has_value()) {
         rdbConfig.customDir = std::string(storeConfig.customDir.value());
     }
@@ -327,6 +575,7 @@ OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(const ::ohos::data::re
         ::ohos::data::relationalStore::CryptoParam param = storeConfig.cryptoParam.value();
         rdbConfig.cryptoParam = CryptoParamToNative(param);
     }
+    AniGetRdbConfigAppend(storeConfig, rdbConfig);
     return rdbConfig;
 }
 
@@ -464,6 +713,304 @@ std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
     InitRdbStoreConfig(nativeStoreConfig, rdbConfig, contextParam);
     return std::make_pair(true, nativeStoreConfig);
 };
+
+OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalStore::SubscribeType type)
+{
+    switch (type.get_key()) {
+        case ohos::data::relationalStore::SubscribeType::key_t::SUBSCRIBE_TYPE_REMOTE:
+            return OHOS::DistributedRdb::SubscribeMode::REMOTE;
+        case ohos::data::relationalStore::SubscribeType::key_t::SUBSCRIBE_TYPE_CLOUD:
+            return OHOS::DistributedRdb::SubscribeMode::CLOUD;
+        case ohos::data::relationalStore::SubscribeType::key_t::SUBSCRIBE_TYPE_CLOUD_DETAILS:
+            return OHOS::DistributedRdb::SubscribeMode::CLOUD_DETAIL;
+        default:
+            return OHOS::DistributedRdb::SubscribeMode::LOCAL_DETAIL;
+    }
+}
+
+OHOS::DistributedRdb::DistributedConfig DistributedConfigToNative(
+    const ohos::data::relationalStore::DistributedConfig &config)
+{
+    OHOS::DistributedRdb::DistributedConfig nativeConfig;
+    nativeConfig.autoSync = config.autoSync;
+    if (config.references.has_value()) {
+        auto values = config.references.value();
+        std::vector<OHOS::DistributedRdb::Reference> nativeReferences;
+        std::transform(values.begin(), values.end(), std::back_inserter(nativeReferences),
+            [](const ohos::data::relationalStore::Reference &c) {
+            OHOS::DistributedRdb::Reference value = ReferenceToNative(c);
+            return value;
+        });
+        nativeConfig.references = std::move(nativeReferences);
+    }
+    if (config.asyncDownloadAsset.has_value()) {
+        nativeConfig.asyncDownloadAsset = config.asyncDownloadAsset.value();
+    }
+    if (config.enableCloud.has_value()) {
+        nativeConfig.enableCloud = config.enableCloud.value();
+    }
+    return nativeConfig;
+}
+
+OHOS::DistributedRdb::Reference ReferenceToNative(const ohos::data::relationalStore::Reference &reference)
+{
+    OHOS::DistributedRdb::Reference nativeReference;
+    nativeReference.sourceTable = reference.sourceTable;
+    nativeReference.targetTable = reference.targetTable;
+    for (const auto &[key, value] : reference.refFields) {
+        nativeReference.refFields[std::string(key)] = std::string(value);
+    }
+    return nativeReference;
+}
+
+ohos::data::relationalStore::ProgressDetails ProgressDetailToTaihe(
+    const OHOS::DistributedRdb::ProgressDetail &OrgDetails)
+{
+    taihe::map<taihe::string, ohos::data::relationalStore::TableDetails> mapTableDetail;
+    for (const auto &[key, value] : OrgDetails.details) {
+        const OHOS::DistributedRdb::TableDetail tableDetail = value;
+        mapTableDetail.emplace(taihe::string(key), ohos::data::relationalStore::TableDetails {
+            StatisticToTaihe(tableDetail.upload),
+            StatisticToTaihe(tableDetail.download)
+        });
+    }
+    return ohos::data::relationalStore::ProgressDetails {
+        ohos::data::relationalStore::Progress::from_value(OrgDetails.progress),
+        ohos::data::relationalStore::ProgressCode::from_value(OrgDetails.code),
+        mapTableDetail
+    };
+}
+
+OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey PRIKeyToNative(
+    const ohos::data::relationalStore::PRIKeyType &priKey)
+{
+    switch (priKey.get_tag()) {
+        case ohos::data::relationalStore::PRIKeyType::tag_t::STRING:
+            return std::string(priKey.get_STRING_ref());
+        case ohos::data::relationalStore::PRIKeyType::tag_t::INT64:
+            return priKey.get_INT64_ref();
+        case ohos::data::relationalStore::PRIKeyType::tag_t::F64:
+            return priKey.get_F64_ref();
+        default:
+            LOG_ERROR("Invalid PRIKeyType tag");
+            return std::monostate{};
+    }
+}
+
+ohos::data::relationalStore::PRIKeyType ToNativePRIKeyType(
+    const OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey &priKey)
+{
+    if (std::holds_alternative<std::string>(priKey)) {
+        return ::ohos::data::relationalStore::PRIKeyType::make_STRING(std::get<std::string>(priKey));
+    } else if (std::holds_alternative<int64_t>(priKey)) {
+        return ::ohos::data::relationalStore::PRIKeyType::make_INT64(std::get<int64_t>(priKey));
+    } else if (std::holds_alternative<double>(priKey)) {
+        return ::ohos::data::relationalStore::PRIKeyType::make_F64(std::get<double>(priKey));
+    } else  {
+        return ::ohos::data::relationalStore::PRIKeyType::make_STRING("");
+    }
+}
+
+ohos::data::relationalStore::ModifyTime ToAniModifyTime(
+    const std::map<OHOS::NativeRdb::RdbStore::PRIKey, OHOS::NativeRdb::RdbStore::Date> &mapResult)
+{
+    taihe::map<::ohos::data::relationalStore::PRIKeyType, ohos::data::relationalStore::UTCTime> modifyTime;
+    for (const auto &[key, value] : mapResult) {
+        ohos::data::relationalStore::PRIKeyType nativeKey = ToNativePRIKeyType(key);
+        double time = value;
+        auto date = ohos::data::relationalStore::UTCTime::make_UTCTIIME(uintptr_t(&time));
+        modifyTime.emplace(nativeKey, date);
+    }
+    return ohos::data::relationalStore::ModifyTime::make_MODIFYTIME(modifyTime);
+}
+
+ohos::data::relationalStore::Origin OriginToTaihe(const OHOS::DistributedRdb::Origin &origin)
+{
+    switch (origin.origin) {
+        case OHOS::DistributedRdb::Origin::ORIGIN_LOCAL:  //  means LOCAL
+            return ohos::data::relationalStore::Origin::key_t::LOCAL;
+        case OHOS::DistributedRdb::Origin::ORIGIN_CLOUD:  //  means cloud
+            return ohos::data::relationalStore::Origin::key_t::CLOUD;
+        case OHOS::DistributedRdb::Origin::ORIGIN_NEARBY:  //  means remote
+            return ohos::data::relationalStore::Origin::key_t::REMOTE;
+        default:
+            return ohos::data::relationalStore::Origin::key_t::LOCAL;
+    }
+}
+
+ohos::data::relationalStore::ChangeType ToAniChangeType(const OHOS::DistributedRdb::Origin &origin)
+{
+    switch (origin.dataType) {
+        case OHOS::DistributedRdb::Origin::BASIC_DATA:
+            return ohos::data::relationalStore::ChangeType::from_value(0);
+        case OHOS::DistributedRdb::Origin::ASSET_DATA:
+            return ohos::data::relationalStore::ChangeType::from_value(1);
+        default:
+            return ohos::data::relationalStore::ChangeType::from_value(0);
+    }
+}
+
+ohos::data::relationalStore::StringOrNumberArray VectorToAniArrayType(
+    const std::vector<OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey> &array)
+{
+    std::vector<int64_t> int64Array;
+    std::vector<taihe::string> strArray;
+    for (auto &tempPrimaryKey : array) {
+        if (std::holds_alternative<std::string>(tempPrimaryKey)) {
+            strArray.emplace_back(std::get<std::string>(tempPrimaryKey));
+        } else if (std::holds_alternative<int64_t>(tempPrimaryKey)) {
+            int64Array.emplace_back(std::get<int64_t>(tempPrimaryKey));
+        } else if (std::holds_alternative<double>(tempPrimaryKey)) {
+            int64Array.emplace_back(std::get<double>(tempPrimaryKey));
+        }
+    }
+    if (int64Array.size() > 0) {
+        return ohos::data::relationalStore::StringOrNumberArray::make_Int64Array(taihe::array<int64_t>(int64Array));
+    } else {
+        return ohos::data::relationalStore::StringOrNumberArray::make_STRINGARRAY(
+            taihe::array<taihe::string>(strArray));
+    }
+}
+
+taihe::array<ohos::data::relationalStore::ChangeInfo> RdbChangeInfoToTaihe(
+    const OHOS::DistributedRdb::Origin &origin,
+    const OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &changeInfo)
+{
+    std::vector<ohos::data::relationalStore::ChangeInfo> arrChangeInfo;
+    
+    ohos::data::relationalStore::ChangeType mapType = ToAniChangeType(origin);
+    for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
+        ohos::data::relationalStore::ChangeInfo info{std::string(it->first), mapType,
+        VectorToAniArrayType(it->
+            second[OHOS::DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_INSERT]),
+        VectorToAniArrayType(it->
+            second[OHOS::DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_UPDATE]),
+        VectorToAniArrayType(it->
+            second[OHOS::DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_DELETE])};
+        arrChangeInfo.emplace_back(info);
+    }
+    return taihe::array<ohos::data::relationalStore::ChangeInfo>(arrChangeInfo);
+}
+
+taihe::array_view<taihe::string> VectorToTaiheArray(const std::vector<std::string> &vec)
+{
+    std::vector<taihe::string> strArray;
+    for (auto &tempStr : vec) {
+        strArray.emplace_back(tempStr);
+    }
+    return taihe::array_view<taihe::string>(strArray);
+}
+
+ohos::data::relationalStore::SqlExecutionInfo SqlExecutionToTaihe(
+    const OHOS::DistributedRdb::SqlObserver::SqlExecutionInfo &sqlInfo)
+{
+    std::vector<taihe::string> strArray;
+    for (auto &tempStr : sqlInfo.sql_) {
+        strArray.emplace_back(tempStr);
+    }
+    return ohos::data::relationalStore::SqlExecutionInfo {
+        taihe::array<taihe::string>(strArray), sqlInfo.totalTime_, sqlInfo.waitTime_, sqlInfo.prepareTime_,
+            sqlInfo.executeTime_
+    };
+}
+
+ohos::data::relationalStore::Statistic StatisticToTaihe(const OHOS::DistributedRdb::Statistic &statistic)
+{
+    return ohos::data::relationalStore::Statistic {
+        statistic.total, statistic.success, statistic.failed, statistic.untreated
+    };
+}
+
+uintptr_t ColumnTypeToTaihe(const OHOS::DistributedRdb::ColumnType columnType)
+{
+    ani_env *env = taihe::get_env();
+    ani_enum enumType;
+    if (ANI_OK != env->FindEnum("@ohos.data.relationalStore.relationalStore.ColumnType", &enumType)) {
+        LOG_ERROR("Find enum failed.");
+        return 0;
+    }
+    ani_enum_item enumItem;
+    env->Enum_GetEnumItemByName(enumType, "NULL", &enumItem);
+    switch (columnType) {
+        case OHOS::DistributedRdb::ColumnType::TYPE_NULL:
+            env->Enum_GetEnumItemByName(enumType, "NULL", &enumItem);
+            break;
+        case OHOS::DistributedRdb::ColumnType::TYPE_INTEGER:
+            env->Enum_GetEnumItemByName(enumType, "INTEGER", &enumItem);
+            break;
+        case OHOS::DistributedRdb::ColumnType::TYPE_FLOAT:
+            env->Enum_GetEnumItemByName(enumType, "REAL", &enumItem);
+            break;
+        case OHOS::DistributedRdb::ColumnType::TYPE_STRING:
+            env->Enum_GetEnumItemByName(enumType, "TEXT", &enumItem);
+            break;
+        case OHOS::DistributedRdb::ColumnType::TYPE_BLOB:
+            env->Enum_GetEnumItemByName(enumType, "BLOB", &enumItem);
+            break;
+        case OHOS::DistributedRdb::ColumnType::TYPE_ASSET:
+            env->Enum_GetEnumItemByName(enumType, "ASSET", &enumItem);
+            break;
+        case OHOS::DistributedRdb::ColumnType::TYPE_ASSETS:
+            env->Enum_GetEnumItemByName(enumType, "ASSETS", &enumItem);
+            break;
+        case OHOS::DistributedRdb::ColumnType::TYPE_FLOAT32_ARRAY:
+            env->Enum_GetEnumItemByName(enumType, "FLOAT_VECTOR", &enumItem);
+            break;
+        default:
+            env->Enum_GetEnumItemByName(enumType, "UNLIMITED_INT", &enumItem);
+            break;
+    }
+    return reinterpret_cast<uintptr_t>(enumItem);
+}
+
+OHOS::DistributedRdb::SyncMode SyncModeToNative(ohos::data::relationalStore::SyncMode syncMode)
+{
+    switch (syncMode.get_key()) {
+        case ohos::data::relationalStore::SyncMode::key_t::SYNC_MODE_PUSH:
+            return OHOS::DistributedRdb::SyncMode::PUSH;
+        case ohos::data::relationalStore::SyncMode::key_t::SYNC_MODE_PULL:
+            return OHOS::DistributedRdb::SyncMode::PULL;
+        case ohos::data::relationalStore::SyncMode::key_t::SYNC_MODE_TIME_FIRST:
+            return OHOS::DistributedRdb::SyncMode::TIME_FIRST;
+        case ohos::data::relationalStore::SyncMode::key_t::SYNC_MODE_NATIVE_FIRST:
+            return OHOS::DistributedRdb::SyncMode::NATIVE_FIRST;
+        case ohos::data::relationalStore::SyncMode::key_t::SYNC_MODE_CLOUD_FIRST:
+            return OHOS::DistributedRdb::SyncMode::CLOUD_FIRST;
+        default:
+            return OHOS::DistributedRdb::SyncMode::PULL_PUSH;
+    }
+}
+
+OHOS::NativeRdb::ConflictResolution ConflictResolutionToNative(
+    ohos::data::relationalStore::ConflictResolution conflictResolution)
+{
+    switch (conflictResolution.get_key()) {
+        case ohos::data::relationalStore::ConflictResolution::key_t::ON_CONFLICT_ROLLBACK:
+            return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_ROLLBACK;
+        case ohos::data::relationalStore::ConflictResolution::key_t::ON_CONFLICT_ABORT:
+            return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_ABORT;
+        case ohos::data::relationalStore::ConflictResolution::key_t::ON_CONFLICT_FAIL:
+            return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_FAIL;
+        case ohos::data::relationalStore::ConflictResolution::key_t::ON_CONFLICT_IGNORE:
+            return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_IGNORE;
+        case ohos::data::relationalStore::ConflictResolution::key_t::ON_CONFLICT_REPLACE:
+            return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE;
+        default:
+            return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_NONE;
+    }
+}
+
+OHOS::NativeRdb::Tokenizer TokenizerToNative(ohos::data::relationalStore::Tokenizer tokenizer)
+{
+    switch (tokenizer.get_key()) {
+        case ohos::data::relationalStore::Tokenizer::key_t::ICU_TOKENIZER:
+            return OHOS::NativeRdb::Tokenizer::ICU_TOKENIZER;
+        case ohos::data::relationalStore::Tokenizer::key_t::CUSTOM_TOKENIZER:
+            return OHOS::NativeRdb::Tokenizer::CUSTOM_TOKENIZER;
+        default:
+            return OHOS::NativeRdb::Tokenizer::NONE_TOKENIZER;
+    }
+}
 
 bool HasDuplicateAssets(const OHOS::NativeRdb::ValueObject &value)
 {
