@@ -37,7 +37,8 @@
 
 using namespace taihe;
 using namespace ohos::data::relationalStore;
-
+using namespace OHOS::RelationalStoreJsKit;
+using RdbSqlUtils =  OHOS::NativeRdb::RdbSqlUtils;
 namespace {
 using namespace OHOS;
 using namespace OHOS::Rdb;
@@ -47,19 +48,25 @@ using ValueObject = OHOS::NativeRdb::ValueObject;
 static constexpr int ERR_NULL = -1;
 static const int INIT_POSITION = -1;
 
+void ThrowError(std::shared_ptr<Error> err)
+{
+    if (err != nullptr) {
+        LOG_ERROR("code[%{public}d,%{public}d][%{public}s]", err->GetNativeCode(), err->GetCode(),
+            err->GetMessage().c_str());
+        taihe::set_business_error(err->GetCode(), err->GetMessage());
+    }
+}
+#define ASSERT_RETURN_THROW_ERROR(assertion, error, retVal) CHECK_RETURN_CORE(assertion, ThrowError(error), retVal)
 void ThrowInnerError(int errcode)
 {
-    LOG_ERROR("ThrowInnerError, errcode = %{public}d", errcode);
-    auto innErr = std::make_shared<OHOS::RelationalStoreJsKit::InnerError>(errcode);
-    if (innErr != nullptr) {
-        taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
-    }
+    auto innErr = std::make_shared<InnerError>(errcode);
+    ThrowError(innErr);
 }
 
 // Error codes that cannot be thrown in some old scenarios need to be converted in new scenarios.
 void ThrowInnerErrorExt(int errcode)
 {
-    auto innErr = std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errcode);
+    auto innErr = std::make_shared<InnerErrorExt>(errcode);
     if (innErr != nullptr) {
         taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
     }
@@ -67,10 +74,8 @@ void ThrowInnerErrorExt(int errcode)
 
 void ThrowNonSystemError()
 {
-    auto innErr = std::make_shared<OHOS::RelationalStoreJsKit::NonSystemError>();
-    if (innErr != nullptr) {
-        taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
-    }
+    auto innErr = std::make_shared<NonSystemError>();
+    ThrowError(innErr);
 }
 
 void ThrowParamError(const char *message)
@@ -78,12 +83,18 @@ void ThrowParamError(const char *message)
     if (message == nullptr) {
         return;
     }
-    auto paraErr = std::make_shared<OHOS::RelationalStoreJsKit::ParamError>(message);
-    if (paraErr != nullptr) {
-        taihe::set_business_error(paraErr->GetCode(), paraErr->GetMessage());
-    }
+    auto paraErr = std::make_shared<ParamError>(message);
+    ThrowError(paraErr);
 }
-
+template <class T>
+Result BatchInsertWithReturningSync(std::shared_ptr<T> store, string_view table,
+    array_view<ValuesBucket> values, ReturningConfig const &config,
+    optional_view<ConflictResolution> conflict);
+template <class T>
+Result UpdateWithReturningSync(std::shared_ptr<T> store, ValuesBucket values,
+    weak::RdbPredicates predicates, ReturningConfig const &config, optional_view<ConflictResolution> conflict);
+template<class T>
+Result DeleteWithReturningSync(std::shared_ptr<T> store, weak::RdbPredicates predicates, ReturningConfig const &config);
 class LiteResultSetProxy final : public OHOS::JSProxy::JSProxy<OHOS::NativeRdb::ResultSet> {
 public:
     LiteResultSetProxy() = default;
@@ -359,6 +370,65 @@ public:
         proxy_ = nullptr;
     }
 
+    array<string> GetColumnNames()
+    {
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        std::vector<std::string> colNames;
+        if (nativeResultSet_ != nullptr) {
+            std::tie(errCode, colNames) = nativeResultSet_->GetWholeColumnNames();
+        }
+        ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
+            std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode), {});
+        return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
+    }
+
+    array<ohos::data::relationalStore::ValueType> GetCurrentRowData()
+    {
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        std::vector<OHOS::NativeRdb::ValueObject> rowData;
+        if (nativeResultSet_ != nullptr) {
+            std::tie(errCode, rowData) = nativeResultSet_->GetRowData();
+        }
+        ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
+            std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode), {});
+        std::vector<ValueType> rowDataTemp;
+        rowDataTemp.reserve(rowData.size());
+        std::transform(rowData.begin(), rowData.end(), std::back_inserter(rowDataTemp),
+            [](const OHOS::NativeRdb::ValueObject &object) { return ani_rdbutils::ValueObjectToAni(object); });
+        return array<ValueType>(::taihe::copy_data_t{}, rowDataTemp.data(), rowDataTemp.size());
+    }
+
+    array<array<ValueType>> GetRowsDataSync(int32_t maxCount, optional_view<int32_t> position)
+    {
+        ASSERT_RETURN_THROW_ERROR(maxCount > 0,
+            std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Invalid maxCount"), {});
+        int32_t nativePosition = INIT_POSITION;
+        if (position.has_value()) {
+            nativePosition = position.value();
+            ASSERT_RETURN_THROW_ERROR(nativePosition >= 0,
+                std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "position is invalid."), {});
+        }
+
+        int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
+        std::vector<std::vector<ValueObject>> rowsData;
+        if (nativeResultSet_ != nullptr) {
+            std::tie(errCode, rowsData) = nativeResultSet_->GetRowsData(maxCount, nativePosition);
+        }
+        ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
+            std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode), {});
+
+        std::vector<std::vector<ValueType>> rowsDataTemp;
+        rowsDataTemp.reserve(rowsData.size());
+        for (const auto &rowData : rowsData) {
+            std::vector<ValueType> rowDataTemp;
+            rowDataTemp.reserve(rowData.size());
+            std::transform(rowData.begin(), rowData.end(), std::back_inserter(rowDataTemp),
+                [](const ValueObject &object) { return ani_rdbutils::ValueObjectToAni(object); });
+            rowsDataTemp.push_back(std::move(rowDataTemp));
+        }
+
+        return array<array<ValueType>>(::taihe::copy_data_t{}, rowsDataTemp.data(), rowsDataTemp.size());
+    }
 protected:
     std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet_;
     std::shared_ptr<LiteResultSetProxy> proxy_;
@@ -761,7 +831,7 @@ public:
 
     array<array<ValueType>> GetRowsDataAsync(int32_t maxCount, optional_view<int32_t> position)
     {
-        if (maxCount < 0) {
+        if (maxCount <= 0) {
             ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
             return {};
         }
@@ -820,7 +890,6 @@ public:
         nativeResultSet_ = nullptr;
         proxy_ = nullptr;
     }
-
 protected:
     std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet_;
     std::shared_ptr<ResultSetProxy> proxy_;
@@ -1320,6 +1389,23 @@ public:
             return aniValue;
         }
         return ani_rdbutils::ValueObjectToAni(nativeValue);
+    }
+
+    Result BatchInsertWithReturningSync(string_view table, array_view<ValuesBucket> values,
+        ReturningConfig const &config, optional_view<ConflictResolution> conflict)
+    {
+        return ::BatchInsertWithReturningSync(nativeTransaction_, table, values, config, conflict);
+    }
+
+    Result UpdateWithReturningSync(ValuesBucket values, weak::RdbPredicates predicates,
+        ReturningConfig const &config, optional_view<ConflictResolution> conflict)
+    {
+        return ::UpdateWithReturningSync(nativeTransaction_, values, predicates, config, conflict);
+    }
+
+    Result DeleteWithReturningSync(weak::RdbPredicates predicates, ReturningConfig const &config)
+    {
+        return ::DeleteWithReturningSync(nativeTransaction_, predicates, config);
     }
 
 protected:
@@ -2149,6 +2235,23 @@ public:
         return make_holder<TransactionImpl, Transaction>(transaction);
     }
 
+    Result BatchInsertWithReturningSync(string_view table, array_view<ValuesBucket> values,
+        ReturningConfig const &config, optional_view<ConflictResolution> conflict)
+    {
+        return ::BatchInsertWithReturningSync(nativeRdbStore_, table, values, config, conflict);
+    }
+
+    Result UpdateWithReturningSync(ValuesBucket values, weak::RdbPredicates predicates,
+        ReturningConfig const &config, optional_view<ConflictResolution> conflict)
+    {
+        return ::UpdateWithReturningSync(nativeRdbStore_, values, predicates, config, conflict);
+    }
+
+    Result DeleteWithReturningSync(weak::RdbPredicates predicates, ReturningConfig const &config)
+    {
+        return ::DeleteWithReturningSync(nativeRdbStore_, predicates, config);
+    }
+
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> nativeRdbStore_;
     bool isSystemApp_ = false;
@@ -2198,6 +2301,101 @@ void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
     LOG_INFO("deleteRdbStoreWithConfig errcode %{public}d", errcode);
 }
 
+template <class T>
+Result BatchInsertWithReturningSync(std::shared_ptr<T> store, string_view table,
+    array_view<ValuesBucket> values, ReturningConfig const &config,
+    optional_view<ConflictResolution> conflict)
+{
+    Result returnVal = { -1, make_holder<LiteResultSetImpl, LiteResultSet>() };
+    ASSERT_RETURN_THROW_ERROR(
+        store != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), returnVal);
+    ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidTableName(std::string(table)),
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"), returnVal);
+    auto buckets = ani_rdbutils::ValueBucketsToNative(values);
+    ASSERT_RETURN_THROW_ERROR(buckets.RowSize() != 0,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "ValuesBuckets is invalid."), returnVal);
+    ASSERT_RETURN_THROW_ERROR(!RdbSqlUtils::HasDuplicateAssets(buckets),
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"),
+        returnVal);
+    auto nativeConfig = ani_rdbutils::ReturningConfigToNative(config);
+    nativeConfig.columns = RdbSqlUtils::BatchTrim(nativeConfig.columns);
+    ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidFields(nativeConfig.columns),
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."), returnVal);
+    ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidReturningMaxCount(nativeConfig.maxReturningCount),
+        std::make_shared<InnerError>(
+            OHOS::NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."), returnVal);
+    auto nativeConflict = OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_NONE;
+    if (conflict.has_value()) {
+        nativeConflict = (OHOS::NativeRdb::ConflictResolution)conflict.value().get_key();
+    }
+    auto [errCode, result] =
+        store->BatchInsert(std::string(table), buckets, nativeConfig, nativeConflict);
+    ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK, std::make_shared<InnerError>(errCode), returnVal);
+    return { result.changed, make_holder<LiteResultSetImpl, LiteResultSet>(result.results) };
+}
+
+template <class T>
+Result UpdateWithReturningSync(std::shared_ptr<T> store, ValuesBucket values,
+    weak::RdbPredicates predicates, ReturningConfig const &config, optional_view<ConflictResolution> conflict)
+{
+    Result returnVal = { -1, make_holder<LiteResultSetImpl, LiteResultSet>() };
+    ASSERT_RETURN_THROW_ERROR(
+        store != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), returnVal);
+    auto bucket = ani_rdbutils::ValueBucketToNative(values);
+    ASSERT_RETURN_THROW_ERROR(bucket.Size() != 0,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "ValuesBucket is invalid."), returnVal);
+    ASSERT_RETURN_THROW_ERROR(!RdbSqlUtils::HasDuplicateAssets(bucket),
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"),
+        returnVal);
+    RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+    ASSERT_RETURN_THROW_ERROR(
+        impl != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."), returnVal);
+    std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
+    ASSERT_RETURN_THROW_ERROR(
+        rdbPredicateNative != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."), returnVal);
+    ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicateNative->GetTableName()),
+            std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"), returnVal);
+    auto nativeConfig = ani_rdbutils::ReturningConfigToNative(config);
+    nativeConfig.columns = RdbSqlUtils::BatchTrim(nativeConfig.columns);
+    ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidFields(nativeConfig.columns),
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."), returnVal);
+    ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidReturningMaxCount(nativeConfig.maxReturningCount),
+        std::make_shared<InnerError>(
+            OHOS::NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."), returnVal);
+    auto nativeConflict = OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_NONE;
+    if (conflict.has_value()) {
+        nativeConflict = (OHOS::NativeRdb::ConflictResolution)conflict.value().get_key();
+    }
+    auto [errCode, result] = store->Update(bucket, *rdbPredicateNative, nativeConfig, nativeConflict);
+    ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK, std::make_shared<InnerError>(errCode), returnVal);
+    return { result.changed, make_holder<LiteResultSetImpl, LiteResultSet>(result.results) };
+}
+
+template <class T>
+Result DeleteWithReturningSync(std::shared_ptr<T> store, weak::RdbPredicates predicates, ReturningConfig const &config)
+{
+    Result returnVal = { -1, make_holder<LiteResultSetImpl, LiteResultSet>() };
+    ASSERT_RETURN_THROW_ERROR(
+        store != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), returnVal);
+    RdbPredicatesImpl *impl = reinterpret_cast<RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+    ASSERT_RETURN_THROW_ERROR(
+        impl != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."), returnVal);
+    std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
+    ASSERT_RETURN_THROW_ERROR(
+        rdbPredicateNative != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."), returnVal);
+    ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicateNative->GetTableName()),
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"), returnVal);
+    auto nativeConfig = ani_rdbutils::ReturningConfigToNative(config);
+    nativeConfig.columns = RdbSqlUtils::BatchTrim(nativeConfig.columns);
+    ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidFields(nativeConfig.columns),
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."), returnVal);
+    ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidReturningMaxCount(nativeConfig.maxReturningCount),
+        std::make_shared<InnerError>(
+            OHOS::NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."), returnVal);
+    auto [errCode, result] = store->Delete(*rdbPredicateNative, nativeConfig);
+    ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK, std::make_shared<InnerError>(errCode), returnVal);
+    return { result.changed, make_holder<LiteResultSetImpl, LiteResultSet>(result.results) };
+}
 } // namespace
 
 // Since these macros are auto-generate, lint will cause false positive.
