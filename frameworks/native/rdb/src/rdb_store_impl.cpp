@@ -1331,7 +1331,6 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
 std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    CheckFoundationVisitor();
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1355,7 +1354,6 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
 std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, const ValuesBuckets &rows)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    CheckFoundationVisitor();
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1419,7 +1417,6 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(const std::string &table, 
     const ReturningConfig &config, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    CheckFoundationVisitor();
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1478,7 +1475,6 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPre
     const ReturningConfig &config, Resolution resolution)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    CheckFoundationVisitor();
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -1501,7 +1497,6 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(
     const AbsRdbPredicates &predicates, const ReturningConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    CheckFoundationVisitor();
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
     }
@@ -2580,22 +2575,6 @@ bool RdbStoreImpl::IsInTransaction()
         return false;
     }
     return pool->IsInTransaction();
-}
-
-void RdbStoreImpl::CheckFoundationVisitor()
-{
-    if (config_.GetName() == "bmsdb.db") {
-        std::string callingName;
-        #if !defined(CROSS_PLATFORM)
-        callingName = RdbMgr::GetInstance().GetSelfBundleName();
-        #endif
-        if (callingName != "foundation") {
-        LOG_ERROR("GetSelfBundleName:%{public}s, bundleName:%{public}s",
-            callingName.c_str(), config_.GetBundleName().c_str());
-            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FOUNDATION_FAULT,
-                E_DFX_FOUNDATION_VERIFY_FAULT, callingName, "Database Visitor is not foundation"));
-        }
-    }
 }
 
 int RdbStoreImpl::CheckAttach(const std::string &sql)
