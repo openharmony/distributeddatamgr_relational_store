@@ -116,6 +116,7 @@ private:
     int SetTokenizer(const RdbStoreConfig &config);
     int SetBinlog();
     void LimitPermission(const RdbStoreConfig &config, const std::string &dbPath) const;
+    void CheckFoundationVisitor();
 
     int SetPersistWal(const RdbStoreConfig &config);
     int SetBusyTimeout(int timeout);
@@ -220,6 +221,8 @@ private:
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     const RdbStoreConfig config_;
+
+    static bool isBMS_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

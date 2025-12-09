@@ -77,6 +77,7 @@ constexpr int32_t SERVICE_GID = 3012;
 constexpr int32_t BINLOG_FILE_REPLAY_LIMIT = 50;
 constexpr int64_t BINLOG_REPLAY_REPORT_TIME = 15 * 60 * 1000; // ms
 constexpr char const *SUFFIX_BINLOG = "_binlog/";
+bool SqliteConnection::isBMS_ = false;
 ConcurrentMap<uint64_t, Connection::ReplayCallBack> SqliteConnection::replayCallback_ = {};
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
@@ -580,6 +581,9 @@ int SqliteConnection::CheckReplicaForRestore()
 std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql)
 {
+    if (IsWriter()) {
+        CheckFoundationVisitor();
+    }
     return CreateStatementInner(sql, conn, dbHandle_, false, returningSql);
 }
 
@@ -1835,7 +1839,26 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
             }
         }
     }
+    if (config.GetName() == "bmsdb.db") {
+        isBMS_ = true;
+    }
     return result;
+}
+
+void SqliteConnection::CheckFoundationVisitor()
+{
+    if (isBMS_) {
+#if !defined(CROSS_PLATFORM)
+        std::string bmsProcess = "foundation";
+        std::string callingName = DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
+        if (callingName != bmsProcess) {
+        LOG_ERROR("GetSelfBundleName:%{public}s, bundleName:%{public}s",
+            callingName.c_str(), config_.GetBundleName().c_str());
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FOUNDATION_FAULT,
+                E_DFX_FOUNDATION_VERIFY_FAULT, callingName, "Database Visitor is not foundation"));
+        }
+#endif
+    }
 }
 
 int SqliteConnection::VerifySlaveIntegrity()

@@ -155,7 +155,6 @@ public:
     const RdbStoreConfig &GetConfig();
     std::string GetName();
     int32_t ExchangeSlaverToMaster();
-    void CheckFoundationVisitor();
     void Close();
 
 protected:
