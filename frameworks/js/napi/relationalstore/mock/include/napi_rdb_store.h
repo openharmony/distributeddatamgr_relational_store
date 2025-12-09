@@ -86,6 +86,9 @@ private:
     static napi_value SetLocale(napi_env env, napi_callback_info info);
     static napi_value OnEvent(napi_env env, napi_callback_info info);
     static napi_value OffEvent(napi_env env, napi_callback_info info);
+    static napi_value BatchInsertWithReturning(napi_env env, napi_callback_info info);
+    static napi_value UpdateWithReturning(napi_env env, napi_callback_info info);
+    static napi_value DeleteWithReturning(napi_env env, napi_callback_info info);
 
     static constexpr int EVENT_HANDLE_NUM = 3;
     napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,  napi_value callback);
