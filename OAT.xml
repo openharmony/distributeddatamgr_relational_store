@@ -65,10 +65,6 @@ Note:If the text contains special characters, please escape them according to th
                             desc="png for unittest"/>
                 <filteritem type="filepath" name="test/ets/cloud_data/entry/src/main/resources/base/media/icon.png"
                             desc="png for unittest"/>
-                <filteritem type="filepath" name="test/ets/cloud_data_no_permission/entry/src/main/resources/base/media/icon.png"
-                            desc="png for unittest"/>
-                <filteritem type="filepath" name="test/ets/cloud_data_system/entry/src/main/resources/base/media/icon.png"
-                            desc="png for unittest"/>
             </filefilter>
         </filefilterlist>
     </oatconfig>
