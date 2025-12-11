@@ -250,6 +250,16 @@ enum TransactionType : i32  {
     EXCLUSIVE
 }
 
+struct ReturningConfig {
+    columns: Array<String>;
+    maxReturningCount: Optional<i32>;
+}
+
+struct Result {
+    changed: i64;
+    resultSet: LiteResultSet;
+}
+
 struct TransactionOptions {
     transactionType: Optional<TransactionType>;
 }
@@ -264,7 +274,7 @@ union StringOrNumberArray {
     Int64Array : Array<i64>;
 }
 
- interface ResultSet {
+interface ResultSet {
     GetProxy (): i64;
 
     @get GetColumnCount() : i32;
@@ -329,7 +339,7 @@ union StringOrNumberArray {
     IsColumnNull(columnIndex: i32): bool;
 
     Close(): void;
-  }
+}
 
 @class
 interface LiteResultSet {
@@ -338,6 +348,7 @@ interface LiteResultSet {
     GetRowsSync(maxCount: i32, position: Optional<i32>): Array<@record Map<String, ValueType>>;
     GetColumnIndex(columnName: String): i32;
     GetColumnName(columnIndex: i32): String;
+    GetColumnNames(): Array<String>;
     GoToNextRow(): bool;
     GetBlob(columnIndex: i32): @typedarray Array<u8>;
     GetString(columnIndex: i32): String;
@@ -348,6 +359,9 @@ interface LiteResultSet {
     GetValue(columnIndex: i32): ValueType;
     GetFloat32Array(columnIndex: i32): @typedarray Array<f32>;
     GetRow(): @record Map<String, ValueType>;
+    GetCurrentRowData(): Array<ValueType>;
+    @gen_promise("getRowsData")
+    GetRowsDataSync(maxCount: i32, position: Optional<i32>): Array<Array<ValueType>>;
     IsColumnNull(columnIndex: i32): bool;
     Close(): void;
 }
@@ -557,6 +571,15 @@ interface Transaction {
     @gen_promise("execute")
     ExecuteSync(sql: String, args: Optional<Array<ValueType>>): ValueType;
 
+    @gen_promise("batchInsertWithReturning")
+    BatchInsertWithReturningSync(table: String, values: Array<ValuesBucket>, config: ReturningConfig, conflict: Optional<ConflictResolution>): Result;
+
+    @gen_promise("updateWithReturning")
+    UpdateWithReturningSync(values: ValuesBucket, predicates: RdbPredicates, config: ReturningConfig, conflict: Optional<ConflictResolution>): Result;
+
+    @gen_promise("deleteWithReturning")
+    DeleteWithReturningSync(predicates: RdbPredicates, config: ReturningConfig): Result;
+
 @!sts_inject_into_class("""
     insertSync(table: string, values: Record<string, ValueType>) : long
     {
@@ -577,6 +600,14 @@ interface Transaction {
     executeSync(sql: string): ValueType
     {
         return this.executeSync(sql, undefined);
+    }
+    BatchInsertWithReturningSync(table: String, values: Array<ValuesBucket>, config: ReturningConfig): Result
+    {
+        return this.batchInsertWithReturningSync(table, values, config, undefined);
+    }
+    UpdateWithReturningSync(values: ValuesBucket, predicates: RdbPredicates, config: ReturningConfig): Result
+    {
+        return this.updateWithReturningSync(values, predicates, config, undefined);
     }
 """)
   }
@@ -767,6 +798,15 @@ interface RdbStore {
     @gen_promise("remoteQuery")
     RemoteQuerySync(device: String, table: String, predicates: RdbPredicates, columns: Array<String>): ResultSet;
 
+    @gen_promise("batchInsertWithReturning")
+    BatchInsertWithReturningSync(table: String, values: Array<ValuesBucket>, config: ReturningConfig, conflict: Optional<ConflictResolution>): Result;
+
+    @gen_promise("updateWithReturning")
+    UpdateWithReturningSync(values: ValuesBucket, predicates: RdbPredicates, config: ReturningConfig, conflict: Optional<ConflictResolution>): Result;
+
+    @gen_promise("deleteWithReturning")
+    DeleteWithReturningSync(predicates: RdbPredicates, config: ReturningConfig): Result;
+
     @!sts_inject_into_class("""
         insertSync(table: string, values: Record<string, ValueType>): long
         {
@@ -831,6 +871,16 @@ interface RdbStore {
 
         off(event: String, interProcess: boolean, cb?: Object) : void {
           return this.offCommon(interProcess, cb);
+        }
+
+        BatchInsertWithReturningSync(table: String, values: Array<ValuesBucket>, config: ReturningConfig): Result
+        {
+            return this.batchInsertWithReturningSync(table, values, config, undefined);
+        }
+
+        UpdateWithReturningSync(values: ValuesBucket, predicates: RdbPredicates, config: ReturningConfig): Result
+        {
+            return this.updateWithReturningSync(values, predicates, config, undefined);
         }
     """)
 
