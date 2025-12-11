@@ -1,0 +1,3 @@
+{
+  "src": ["MainAbility/pages/index/index"]
+}
