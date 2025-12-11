@@ -124,4 +124,23 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
 
     EXPECT_TRUE(nullObj == emptyObj);
 }
+
+/**
+ * @tc.name: ValueObject_Test_005
+ * @tc.desc: test func ValueObject::operator bool() const
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValueObjectTest, ValueObject_Test_005, TestSize.Level1)
+{
+    ValueObject vo1(100); // 整数，true
+    EXPECT_TRUE(vo1);
+    ValueObject vo2(0.0); // 浮点数，false
+    EXPECT_FALSE(vo2);
+    ValueObject vo3(true); // 布尔，true
+    EXPECT_TRUE(vo3);
+    ValueObject vo4("hello"); // 字符串，true
+    EXPECT_TRUE(vo4);
+    ValueObject vo5("0"); // 字符串"0"，false
+    EXPECT_FALSE(vo5);
+}
 } // namespace Test
