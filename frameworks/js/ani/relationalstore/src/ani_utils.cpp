@@ -421,9 +421,9 @@ bool UnionAccessor::TryConvert<std::vector<AssetValue>>(std::vector<AssetValue> 
     }
     for (int i = 0; i < int(arrayLength); i++) {
         ani_ref result;
-        status = env_->Array_Get_Ref(static_cast<ani_array_ref>(obj_), i, &result);
+        status = env_->Array_Get(static_cast<ani_array>(obj_), i, &result);
         if (status != ANI_OK) {
-            LOG_ERROR("Array_Get_Ref failed");
+            LOG_ERROR("Array_Get failed");
             return false;
         }
         ani_object asset = static_cast<ani_object>(result);
@@ -451,7 +451,7 @@ bool UnionAccessor::TryConvert<std::vector<float>>(std::vector<float> &value)
 template<>
 bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
 {
-    std::string clsName = "Lescompat/BigInt;";
+    std::string clsName = "Lstd/core/BigInt;";
     ani_class cls;
     auto status = env_->FindClass(clsName.c_str(), &cls);
     if (status != ANI_OK) {
@@ -484,7 +484,7 @@ bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
 template<>
 bool UnionAccessor::TryConvert<std::vector<ani_ref>>(std::vector<ani_ref> &value)
 {
-    if (!IsInstanceOf("Lescompat/Array;")) {
+    if (!IsInstanceOf("Lstd/core/Array;")) {
         return false;
     }
     return TryConvertArray(value);
@@ -514,7 +514,7 @@ ani_ref UnionAccessor::AniIteratorNext(ani_ref interator, bool &isSuccess)
 template<>
 bool UnionAccessor::TryConvert<ValuesBucket>(ValuesBucket &value)
 {
-    if (!IsInstanceOf("Lescompat/Record;")) {
+    if (!IsInstanceOf("Lstd/core/Record;")) {
         return false;
     }
     ani_ref keys;
@@ -611,16 +611,8 @@ ani_status CleanerInit(ani_env *env)
         return ANI_ERROR;
     }
 
-    static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
-    ani_namespace ns;
-    if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
-        LOG_ERROR("Not found '%{public}s", namespaceName);
-        return ANI_ERROR;
-    }
-
-    ani_class cls;
-    const char *className = "LCleaner;";
-    if (ANI_OK != env->Namespace_FindClass(ns, className, &cls)) {
+    const char *className = "@ohos.data.relationalStore.relationalStore.Cleaner;";
+    if (ANI_OK != env->FindClass(className, &cls)) {
         LOG_ERROR("Not found '%{public}s", className);
         return ANI_ERROR;
     }
