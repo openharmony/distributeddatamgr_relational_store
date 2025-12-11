@@ -2106,7 +2106,7 @@ struct RdbContext : public RdbStoreContextBase {
     int ParsedInstance(napi_value self)
     {
         auto status = napi_unwrap(env_, self, reinterpret_cast<void **>(&boundObj));
-        ASSERT_RETURN_SET_ERROR(status == napi_ok || boundObj != nullptr,
+        ASSERT_RETURN_SET_ERROR(status == napi_ok && boundObj != nullptr,
             std::make_shared<ParamError>("RdbStore", "not nullptr."));
         rdbStore = reinterpret_cast<RdbStoreProxy *>(boundObj)->GetInstance();
         ASSERT_RETURN_SET_ERROR(rdbStore != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));

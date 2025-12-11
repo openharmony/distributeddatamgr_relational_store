@@ -97,6 +97,17 @@ std::vector<::ohos::data::relationalStore::Asset> AssetsToAni(OHOS::NativeRdb::V
     return AssetsToAni(nativeAssets);
 }
 
+OHOS::NativeRdb::ReturningConfig ReturningConfigToNative(::ohos::data::relationalStore::ReturningConfig returningConfig)
+{
+    OHOS::NativeRdb::ReturningConfig config;
+    config.columns = std::vector<std::string>(returningConfig.columns.begin(), returningConfig.columns.end());
+    if (returningConfig.maxReturningCount.has_value()) {
+        config.maxReturningCount = returningConfig.maxReturningCount.value();
+    }
+    config.defaultRowIndex = OHOS::NativeRdb::ReturningConfig::DEFAULT_ROW_INDEX;
+    return config;
+}
+
 OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value)
 {
     OHOS::NativeRdb::ValueObject valueObj;
@@ -226,6 +237,30 @@ OHOS::NativeRdb::ValuesBuckets BucketValuesToNative(
         buckets.Put(MapValuesToNative(val));
     }
     return buckets;
+}
+
+OHOS::NativeRdb::ValuesBuckets ValueBucketsToNative(
+    taihe::array_view<::ohos::data::relationalStore::ValuesBucket> const &values)
+{
+    OHOS::NativeRdb::ValuesBuckets buckets;
+    for (const auto &val : values) {
+        auto bucket = ValueBucketToNative(val);
+        if (bucket.IsEmpty()) {
+            return {};
+        }
+        buckets.Put(std::move(bucket));
+    }
+    return buckets;
+}
+
+OHOS::NativeRdb::ValuesBucket ValueBucketToNative(::ohos::data::relationalStore::ValuesBucket const &value)
+{
+    std::map<std::string, OHOS::NativeRdb::ValueObject> valueMap;
+    auto const &values = value.get_VALUESBUCKET_ref();
+    for (const auto &[key, value] : values) {
+        valueMap.emplace(std::string(key), ValueTypeToNative(value));
+    }
+    return OHOS::NativeRdb::ValuesBucket(std::move(valueMap));
 }
 
 OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
