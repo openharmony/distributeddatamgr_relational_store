@@ -77,7 +77,6 @@ constexpr int32_t SERVICE_GID = 3012;
 constexpr int32_t BINLOG_FILE_REPLAY_LIMIT = 50;
 constexpr int64_t BINLOG_REPLAY_REPORT_TIME = 15 * 60 * 1000; // ms
 constexpr char const *SUFFIX_BINLOG = "_binlog/";
-bool SqliteConnection::isBMS_ = false;
 ConcurrentMap<uint64_t, Connection::ReplayCallBack> SqliteConnection::replayCallback_ = {};
 __attribute__((used))
 const int32_t SqliteConnection::regCreator_ = Connection::RegisterCreator(DB_SQLITE, SqliteConnection::Create);
@@ -335,6 +334,10 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
                 Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
             }
         }
+    }
+
+    if (config.GetName() == "bmsdb.db") {
+        isBMS_ = true;
     }
     return E_OK;
 }
@@ -1838,9 +1841,6 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
                 LOG_INFO("binlog files found, %{public}zu deleted", num);
             }
         }
-    }
-    if (config.GetName() == "bmsdb.db") {
-        isBMS_ = true;
     }
     return result;
 }

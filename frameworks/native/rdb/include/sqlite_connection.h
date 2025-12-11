@@ -216,13 +216,12 @@ private:
     bool isSupportBinlog_ = false;
     bool isSlave_ = false;
     bool isReplay_ = false;
+    bool isBMS_ = false;
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
     const RdbStoreConfig config_;
-
-    static bool isBMS_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
