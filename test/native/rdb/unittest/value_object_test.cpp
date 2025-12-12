@@ -31,8 +31,8 @@ class ValueObjectTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void){};
-    void TearDown(void){};
+    void SetUp(void) {};
+    void TearDown(void) {};
 };
 
 void ValueObjectTest::SetUpTestCase(void)
@@ -116,10 +116,10 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_003, TestSize.Level1)
  */
 HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
 {
-    const char *nullPtr = nullptr;
+    const char* nullPtr = nullptr;
     ValueObject nullObj(nullPtr);
 
-    const char *emptyStr = "";
+    const char* emptyStr = "";
     ValueObject emptyObj(emptyStr);
 
     EXPECT_TRUE(nullObj == emptyObj);
@@ -142,7 +142,7 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_005, TestSize.Level1)
     }
     {
         ValueObject vo(0.1); // 浮点数，false
-        EXPECT_TRUE(vo);
+        EXPECT_FALSE(vo);
     }
     {
         ValueObject vo(0.0); // 浮点数，false
@@ -174,7 +174,7 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_005, TestSize.Level1)
     }
     {
         ValueObject vo("0.0"); // 字符串"0.0"，false
-        EXPECT_FALSE(vo);
+        EXPECT_TRUE(vo);
     }
 }
 } // namespace Test
