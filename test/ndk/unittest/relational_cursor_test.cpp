@@ -30,11 +30,25 @@
 #include "relational_store_impl.h"
 #include "token_setproc.h"
 
-
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::Security::AccessToken;
 using namespace OHOS::RdbNdk;
+
+class RelationalCursorSubClass : public RelationalCursor {
+public:
+    RelationalCursorSubClass(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, bool isNeedTerminator = true,
+        bool isSupportRowCount = true)
+        : RelationalCursor(resultSet, isNeedTerminator, isSupportRowCount)
+    {
+    }
+
+    using RelationalCursor::GetAssetsCount;
+    int GetAssetsCountForSub(int32_t columnIndex, uint32_t *count)
+    {
+        return RelationalCursor::GetAssetsCount(columnIndex, count);
+    }
+};
 
 class RelationalCursorTest : public testing::Test {
 public:
@@ -67,10 +81,11 @@ void RelationalCursorTest::TearDown(void)
  */
 HWTEST_F(RelationalCursorTest, GetAssetsCount_test_001, TestSize.Level1)
 {
-    RelationalCursor cursor(nullptr);
-    const int columnIndex = 0;
-    int count = 0 int ret = cursor.GetAssetsCount(columnIndex, &count);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    ret = cursor.GetAssetsCount(columnIndex, nullptr);
-    EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    RelationalCursorSubClass cursor(nullptr);
+    const int32_t columnIndex = 0;
+    uint32_t count = 0;
+    int ret = cursor.GetAssetsCountForSub(columnIndex, &count);
+    EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
+    ret = cursor.GetAssetsCountForSub(columnIndex, nullptr);
+    EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 }
