@@ -31,8 +31,8 @@ class ValueObjectTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp(void) {};
-    void TearDown(void) {};
+    void SetUp(void){};
+    void TearDown(void){};
 };
 
 void ValueObjectTest::SetUpTestCase(void)
@@ -116,10 +116,10 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_003, TestSize.Level1)
  */
 HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
 {
-    const char* nullPtr = nullptr;
+    const char *nullPtr = nullptr;
     ValueObject nullObj(nullPtr);
-   
-    const char* emptyStr = "";
+
+    const char *emptyStr = "";
     ValueObject emptyObj(emptyStr);
 
     EXPECT_TRUE(nullObj == emptyObj);
@@ -132,15 +132,49 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
  */
 HWTEST_F(ValueObjectTest, ValueObject_Test_005, TestSize.Level1)
 {
-    ValueObject vo1(100); // 整数，true
-    EXPECT_TRUE(vo1);
-    ValueObject vo2(0.0); // 浮点数，false
-    EXPECT_FALSE(vo2);
-    ValueObject vo3(true); // 布尔，true
-    EXPECT_TRUE(vo3);
-    ValueObject vo4("hello"); // 字符串，true
-    EXPECT_TRUE(vo4);
-    ValueObject vo5("0"); // 字符串"0"，false
-    EXPECT_FALSE(vo5);
+    {
+        ValueObject vo(100); // 整数，true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo0); // 整数，true
+        EXPECT_FALSE(vo);
+    }
+    {
+        ValueObject vo(0.1); // 浮点数，false
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo(0.0); // 浮点数，false
+        EXPECT_FALSE(vo);
+    }
+    {
+        ValueObject vo(true); // 布尔，true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo(false); // 布尔，true
+        EXPECT_FALSE(vo);
+    }
+    {
+        ValueObject vo("hello"); // 字符串，true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo("true"); // 字符串，true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo("false"); // 字符串，true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo("0"); // 字符串"0"，false
+        EXPECT_FALSE(vo);
+    }
+    {
+        ValueObject vo("0.0"); // 字符串"0.0"，false
+        EXPECT_FALSE(vo);
+    }
 }
 } // namespace Test
