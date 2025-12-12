@@ -37,8 +37,8 @@ using namespace OHOS::RdbNdk;
 
 class RelationalCursorSubClass : public RelationalCursor {
 public:
-    explicit RelationalCursorSubClass(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet, bool isNeedTerminator = true,
-        bool isSupportRowCount = true)
+    explicit RelationalCursorSubClass(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet,
+        bool isNeedTerminator = true, bool isSupportRowCount = true)
         : RelationalCursor(resultSet, isNeedTerminator, isSupportRowCount)
     {
     }
