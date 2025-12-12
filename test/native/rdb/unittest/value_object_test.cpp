@@ -137,7 +137,7 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_005, TestSize.Level1)
         EXPECT_TRUE(vo);
     }
     {
-        ValueObject vo0); // 整数，true
+        ValueObject vo(0); // 整数，true
         EXPECT_FALSE(vo);
     }
     {
