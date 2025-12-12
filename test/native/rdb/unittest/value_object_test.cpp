@@ -118,7 +118,6 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
 {
     const char* nullPtr = nullptr;
     ValueObject nullObj(nullPtr);
-
     const char* emptyStr = "";
     ValueObject emptyObj(emptyStr);
 
