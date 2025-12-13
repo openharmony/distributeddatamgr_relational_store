@@ -25,6 +25,7 @@
 #include "logger.h"
 #include "napi_rdb_error.h"
 #include "rdb_helper.h"
+#include "rdb_predicates_impl.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store_config.h"
 
@@ -96,22 +97,18 @@ bool DataObserver::SendEventToMainThread(const std::function<void()> func)
     if (func == nullptr) {
         return false;
     }
+    std::lock_guard<std::mutex> locker(mainHandlerMutex_);
     if (mainHandler_) {
         mainHandler_->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
         return true;
     }
-    std::lock_guard<std::mutex> locker(mainHandlerMutex_);
-    if (mainHandler_ == nullptr) {
-        std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
-        if (!runner) {
-            LOG_ERROR("GetMainEventRunner failed");
-            return false;
-        }
-        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-        mainHandler_->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
-    } else {
-        mainHandler_->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+    if (!runner) {
+        LOG_ERROR("GetMainEventRunner failed");
+        return false;
     }
+    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    mainHandler_->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     return true;
 }
 
@@ -157,15 +154,11 @@ void DataObserver::OnChange(const std::vector<std::string> &devices)
 
 void DataObserver::OnChangeArrInMainThread(const std::vector<std::string> &devices)
 {
-    std::function<void(DataObserver *, const std::vector<std::string> &)> cb;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        if (!jsCallbackRef_ || !notifyDataChangeArrFunc_) {
-            return;
-        }
-        cb = notifyDataChangeArrFunc_;
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (!jsCallbackRef_ || !notifyDataChangeArrFunc_) {
+        return;
     }
-    cb(this, devices);
+    notifyDataChangeArrFunc_(this, devices);
 }
 
 void DataObserver::OnChange(const OHOS::DistributedRdb::Origin &origin,
@@ -224,7 +217,6 @@ void DataObserver::OnStatisticInMainThread(const SqlExecutionInfo &info)
 
 void DataObserver::ProgressNotification(const OHOS::DistributedRdb::Details &details)
 {
-    LOG_ERROR("syy 100");
     if (notifyProgressDetailsFunc_ == nullptr) {
         return;
     }
@@ -241,7 +233,6 @@ void DataObserver::ProgressNotification(const OHOS::DistributedRdb::Details &det
 
 void DataObserver::ProgressNotificationInMainThread(const OHOS::DistributedRdb::Details &details)
 {
-    LOG_ERROR("syy 101");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (jsCallbackRef_ == nullptr || notifyProgressDetailsFunc_ == nullptr) {
         return;
@@ -736,11 +727,9 @@ OHOS::DistributedRdb::DistributedConfig DistributedConfigToNative(
     if (config.references.has_value()) {
         auto values = config.references.value();
         std::vector<OHOS::DistributedRdb::Reference> nativeReferences;
-        std::transform(values.begin(), values.end(), std::back_inserter(nativeReferences),
-            [](const ohos::data::relationalStore::Reference &c) {
-            OHOS::DistributedRdb::Reference value = ReferenceToNative(c);
-            return value;
-        });
+        for (const auto &value : values) {
+            nativeReferences.push_back(ReferenceToNative(value));
+        }
         nativeConfig.references = std::move(nativeReferences);
     }
     if (config.asyncDownloadAsset.has_value()) {
@@ -768,10 +757,9 @@ ohos::data::relationalStore::ProgressDetails ProgressDetailToTaihe(
 {
     taihe::map<taihe::string, ohos::data::relationalStore::TableDetails> mapTableDetail;
     for (const auto &[key, value] : OrgDetails.details) {
-        const OHOS::DistributedRdb::TableDetail tableDetail = value;
         mapTableDetail.emplace(taihe::string(key), ohos::data::relationalStore::TableDetails {
-            StatisticToTaihe(tableDetail.upload),
-            StatisticToTaihe(tableDetail.download)
+            StatisticToTaihe(value.upload),
+            StatisticToTaihe(value.download)
         });
     }
     return ohos::data::relationalStore::ProgressDetails {
@@ -834,6 +822,7 @@ ohos::data::relationalStore::Origin OriginToTaihe(const OHOS::DistributedRdb::Or
         case OHOS::DistributedRdb::Origin::ORIGIN_NEARBY:  //  means remote
             return ohos::data::relationalStore::Origin::key_t::REMOTE;
         default:
+            LOG_ERROR("Invalid origin value.");
             return ohos::data::relationalStore::Origin::key_t::LOCAL;
     }
 }
@@ -842,11 +831,12 @@ ohos::data::relationalStore::ChangeType ToAniChangeType(const OHOS::DistributedR
 {
     switch (origin.dataType) {
         case OHOS::DistributedRdb::Origin::BASIC_DATA:
-            return ohos::data::relationalStore::ChangeType::from_value(0);
+            return ohos::data::relationalStore::ChangeType::key_t::DATA_CHANGE;
         case OHOS::DistributedRdb::Origin::ASSET_DATA:
-            return ohos::data::relationalStore::ChangeType::from_value(1);
+            return ohos::data::relationalStore::ChangeType::key_t::ASSET_CHANGE;
         default:
-            return ohos::data::relationalStore::ChangeType::from_value(0);
+            LOG_ERROR("Invalid origin value.");
+            return ohos::data::relationalStore::ChangeType::key_t::DATA_CHANGE;
     }
 }
 
@@ -880,14 +870,16 @@ taihe::array<ohos::data::relationalStore::ChangeInfo> RdbChangeInfoToTaihe(
     
     ohos::data::relationalStore::ChangeType mapType = ToAniChangeType(origin);
     for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
-        ohos::data::relationalStore::ChangeInfo info{std::string(it->first), mapType,
-        VectorToAniArrayType(it->
-            second[OHOS::DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_INSERT]),
-        VectorToAniArrayType(it->
-            second[OHOS::DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_UPDATE]),
-        VectorToAniArrayType(it->
-            second[OHOS::DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_DELETE])};
-        arrChangeInfo.emplace_back(info);
+        ohos::data::relationalStore::ChangeInfo info {
+            std::string(it->first), mapType,
+            VectorToAniArrayType(it->
+                second[OHOS::DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_INSERT]),
+            VectorToAniArrayType(it->
+                second[OHOS::DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_UPDATE]),
+            VectorToAniArrayType(it->
+                second[OHOS::DistributedRdb::RdbStoreObserver::ChangeType::CHG_TYPE_DELETE])
+        };
+        arrChangeInfo.emplace_back(std::move(info));
     }
     return taihe::array<ohos::data::relationalStore::ChangeInfo>(arrChangeInfo);
 }
@@ -930,7 +922,6 @@ uintptr_t ColumnTypeToTaihe(const OHOS::DistributedRdb::ColumnType columnType)
         return 0;
     }
     ani_enum_item enumItem;
-    env->Enum_GetEnumItemByName(enumType, "NULL", &enumItem);
     switch (columnType) {
         case OHOS::DistributedRdb::ColumnType::TYPE_NULL:
             env->Enum_GetEnumItemByName(enumType, "NULL", &enumItem);
@@ -956,8 +947,11 @@ uintptr_t ColumnTypeToTaihe(const OHOS::DistributedRdb::ColumnType columnType)
         case OHOS::DistributedRdb::ColumnType::TYPE_FLOAT32_ARRAY:
             env->Enum_GetEnumItemByName(enumType, "FLOAT_VECTOR", &enumItem);
             break;
-        default:
+        case OHOS::DistributedRdb::ColumnType::TYPE_BIGINT:
             env->Enum_GetEnumItemByName(enumType, "UNLIMITED_INT", &enumItem);
+            break;
+        default:
+            LOG_ERROR("Invalid ColumnType value.");
             break;
     }
     return reinterpret_cast<uintptr_t>(enumItem);
@@ -977,6 +971,7 @@ OHOS::DistributedRdb::SyncMode SyncModeToNative(ohos::data::relationalStore::Syn
         case ohos::data::relationalStore::SyncMode::key_t::SYNC_MODE_CLOUD_FIRST:
             return OHOS::DistributedRdb::SyncMode::CLOUD_FIRST;
         default:
+            LOG_ERROR("Invalid SyncMode value.");
             return OHOS::DistributedRdb::SyncMode::PULL_PUSH;
     }
 }
@@ -985,6 +980,8 @@ OHOS::NativeRdb::ConflictResolution ConflictResolutionToNative(
     ohos::data::relationalStore::ConflictResolution conflictResolution)
 {
     switch (conflictResolution.get_key()) {
+        case ohos::data::relationalStore::ConflictResolution::key_t::ON_CONFLICT_NONE:
+            return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_NONE;
         case ohos::data::relationalStore::ConflictResolution::key_t::ON_CONFLICT_ROLLBACK:
             return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_ROLLBACK;
         case ohos::data::relationalStore::ConflictResolution::key_t::ON_CONFLICT_ABORT:
@@ -996,6 +993,7 @@ OHOS::NativeRdb::ConflictResolution ConflictResolutionToNative(
         case ohos::data::relationalStore::ConflictResolution::key_t::ON_CONFLICT_REPLACE:
             return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE;
         default:
+            LOG_ERROR("Invalid ConflictResolution value.");
             return OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_NONE;
     }
 }
@@ -1007,7 +1005,10 @@ OHOS::NativeRdb::Tokenizer TokenizerToNative(ohos::data::relationalStore::Tokeni
             return OHOS::NativeRdb::Tokenizer::ICU_TOKENIZER;
         case ohos::data::relationalStore::Tokenizer::key_t::CUSTOM_TOKENIZER:
             return OHOS::NativeRdb::Tokenizer::CUSTOM_TOKENIZER;
+        case ohos::data::relationalStore::Tokenizer::key_t::NONE_TOKENIZER:
+            return OHOS::NativeRdb::Tokenizer::NONE_TOKENIZER;
         default:
+            LOG_ERROR("Invalid Tokenizer value.");
             return OHOS::NativeRdb::Tokenizer::NONE_TOKENIZER;
     }
 }
@@ -1069,6 +1070,22 @@ bool HasDuplicateAssets(const OHOS::NativeRdb::ValuesBuckets &values)
         }
     }
     return false;
+}
+
+std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePredicatesFromTaihe(
+    ohos::data::relationalStore::weak::RdbPredicates predicates)
+{
+    auto *impl = reinterpret_cast<OHOS::RdbTaihe::RdbPredicatesImpl *>(predicates->GetSpecificImplPtr());
+    if (impl == nullptr) {
+        LOG_ERROR("Rdb predicates impl is nullptr.");
+        return nullptr;
+    }
+    auto rdbPredicateNative = impl->GetNativePtr();
+    if (rdbPredicateNative == nullptr) {
+        LOG_ERROR("Rdb predicate native is nullptr.");
+        return nullptr;
+    }
+    return rdbPredicateNative;
 }
 
 std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position)

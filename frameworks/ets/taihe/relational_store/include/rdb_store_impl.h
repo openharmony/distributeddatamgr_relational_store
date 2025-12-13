@@ -100,19 +100,19 @@ public:
     ResultSet RemoteQuerySync(
         string_view device, string_view table, weak::RdbPredicates predicates, array_view<string> columns);
     void OnDataChangeWithChangeInfo(ohos::data::relationalStore::SubscribeType type,
-        taihe::callback_view<void(taihe::array_view<::ohos::data::relationalStore::ChangeInfo> info)> f,
+        taihe::callback_view<void(taihe::array_view<::ohos::data::relationalStore::ChangeInfo> info)> callback,
         uintptr_t opq);
     void OnDataChangeWithDevices(ohos::data::relationalStore::SubscribeType type,
-        taihe::callback_view<void(taihe::array_view<::taihe::string> info)> f,
+        taihe::callback_view<void(taihe::array_view<::taihe::string> info)> callback,
         uintptr_t opq);
     void OffDataChangeInner(ohos::data::relationalStore::SubscribeType type, taihe::optional_view<uintptr_t> opq);
-    void OnAutoSyncProgressInner(taihe::callback_view<void(ohos::data::relationalStore::ProgressDetails const& info)> f,
-        uintptr_t opq);
+    void OnAutoSyncProgressInner(
+        taihe::callback_view<void(ohos::data::relationalStore::ProgressDetails const& info)> callback, uintptr_t opq);
     void OffAutoSyncProgressInner(optional_view<uintptr_t> opq);
-    void OnStatisticsInner(taihe::callback_view<void(ohos::data::relationalStore::SqlExecutionInfo const& info)> f,
-        uintptr_t opq);
+    void OnStatisticsInner(
+        taihe::callback_view<void(ohos::data::relationalStore::SqlExecutionInfo const& info)> callback, uintptr_t opq);
     void OffStatisticsInner(optional_view<uintptr_t> opq);
-    void OnCommon(taihe::string_view event, bool interProcess, callback_view<void()> f, uintptr_t opq);
+    void OnCommon(taihe::string_view event, bool interProcess, callback_view<void()> callback, uintptr_t opq);
     void OffCommon(taihe::string_view event, bool interProcess, optional_view<uintptr_t> opq);
     void Emit(string_view event);
     void CloseSync();

@@ -18,7 +18,6 @@
 @!sts_inject_into_module("""
 import BaseContext from 'application.BaseContext';
 import dataSharePredicates from '@ohos.data.dataSharePredicates';
-import sendableRelationalStore from '@ohos.data.sendableRelationalStore';
 """)
 
 @!sts_inject("""
@@ -69,11 +68,6 @@ union PRIKeyType {
 
 union ModifyTime {
     MODIFYTIME : @record Map<PRIKeyType, UTCTime>;
-}
-
-union DataChangeInfo {
-    device: String;
-    changeInfo: ChangeInfo;
 }
 
 union UTCTime {
@@ -374,8 +368,6 @@ interface ResultSet {
 
     @gen_promise("getRows")
     GetRowsSync(maxCount: i32, position: Optional<i32>): Array<ValuesBucket>;
-
-    GetSendableRow(): @sts_type("sendableRelationalStore.ValuesBucket") Opaque;
 
     GetCurrentRowData(): Array<ValueType>;
 

@@ -34,10 +34,7 @@ using JsDevicesCallbackType = taihe::callback<void(taihe::array_view<taihe::stri
 using JsSqlExecutionCallbackType = taihe::callback<void(ohos::data::relationalStore::SqlExecutionInfo const& info)>;
 using JsVoidCallbackType = taihe::callback<void()>;
 using JsProgressDetailsCallbackType = taihe::callback<void(ohos::data::relationalStore::ProgressDetails const& info)>;
-using JsDataChangeInfoCallbackType =
-    taihe::callback<void(taihe::array_view<ohos::data::relationalStore::DataChangeInfo> info)>;
 using VarCallbackType = std::variant<
-    JsDataChangeInfoCallbackType,
     JsDevicesCallbackType,
     JsChangeInfoCallbackType,
     JsSqlExecutionCallbackType,
@@ -47,7 +44,6 @@ using VarCallbackType = std::variant<
 constexpr std::string_view EVENT_DATA_CHANGE = "dataChange";
 constexpr std::string_view EVENT_SYNC_PROGRESS = "autoSyncProgress";
 constexpr std::string_view EVENT_STATISTICS = "statistics";
-constexpr std::string_view EVENT_COMMON = "common";
 
 enum {
     /* exported js SubscribeType */
@@ -210,6 +206,9 @@ bool HasDuplicateAssets(const std::vector<OHOS::NativeRdb::ValueObject> &values)
 bool HasDuplicateAssets(const OHOS::NativeRdb::ValuesBucket &value);
 bool HasDuplicateAssets(const std::vector<OHOS::NativeRdb::ValuesBucket> &values);
 bool HasDuplicateAssets(const OHOS::NativeRdb::ValuesBuckets &values);
+
+std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePredicatesFromTaihe(
+    ohos::data::relationalStore::weak::RdbPredicates predicates);
 
 std::pair<int, std::vector<RowEntity>> GetRows(
     ResultSet &resultSet, int32_t maxCount, int32_t position);
