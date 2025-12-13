@@ -57,7 +57,7 @@ ani_status PredicatesInit(ani_env *env)
         return ANI_ERROR;
     }
 
-    static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
+    static const char *namespaceName = "@ohos.data.relationalStore.relationalStore";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
         LOG_ERROR("Not found '%{public}s'", namespaceName);

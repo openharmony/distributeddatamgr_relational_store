@@ -256,26 +256,26 @@ ani_object QuerySqlSync(ani_env *env, ani_object object, ani_string sql, ani_obj
         return nullptr;
     }
 
-    static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
-    static const char *className = "LResultSetInner;";
+    static const char *namespaceName = "@ohos.data.relationalStore.relationalStore";
+    static const char *className = "ResultSetInner";
     static const char *initFinalizer = "initFinalizer";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
         delete resultsetProxy;
-        ThrowBusinessError(env, E_INNER_ERROR, "Create ResultSet failed.class: LResultSetInner;");
+        ThrowBusinessError(env, E_INNER_ERROR, "Create ResultSet failed.class: ResultSetInner");
         return nullptr;
     }
     ani_status status = AniObjectUtils::Wrap(env, obj, resultsetProxy);
     if (ANI_OK != status) {
         delete resultsetProxy;
-        ThrowBusinessError(env, E_INNER_ERROR, "Wrap ResultSet  failed.class: LResultSetInner;");
+        ThrowBusinessError(env, E_INNER_ERROR, "Wrap ResultSet  failed.class: ResultSetInner");
         return nullptr;
     }
     status = AniObjectUtils::CallObjMethod(env, namespaceName, className, initFinalizer, obj);
     if (ANI_OK != status) {
         // After successful wrapping, the resultsetProxy's lifecycle is managed by obj and does not require
         // manual release
-        ThrowBusinessError(env, E_INNER_ERROR, "init ResultSet finalizer failed.class: LResultSetInner;");
+        ThrowBusinessError(env, E_INNER_ERROR, "init ResultSet finalizer failed.class: ResultSetInner");
         return nullptr;
     }
     return obj;
@@ -298,7 +298,7 @@ ani_status RdbStoreInit(ani_env *env)
     std::array methods = {
         ani_native_function {"batchInsertSync", nullptr, reinterpret_cast<void *>(BatchInsert)},
         ani_native_function {"beginTransaction", nullptr, reinterpret_cast<void *>(BeginTransaction)},
-        ani_native_function {"commit", ":V", reinterpret_cast<void *>(Commit)},
+        ani_native_function {"commit", ":", reinterpret_cast<void *>(Commit)},
         ani_native_function {"rollBack", nullptr, reinterpret_cast<void *>(RollBack)},
         ani_native_function {"executeSqlSync", nullptr, reinterpret_cast<void *>(ExecuteSqlSync)},
         ani_native_function {"deleteSync", nullptr, reinterpret_cast<void *>(DeleteSync)},

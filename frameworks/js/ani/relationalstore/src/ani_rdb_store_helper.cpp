@@ -70,8 +70,8 @@ static ani_object GetRdbStoreSync([[maybe_unused]] ani_env *env, ani_object cont
         ThrowBusinessError(env, E_INNER_ERROR, "RdbHelper returned nullptr.");
         return nullptr;
     }
-    static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
-    static const char *className = "LRdbStoreInner;";
+    static const char *namespaceName = "@ohos.data.relationalStore.relationalStore";
+    static const char *className = "RdbStoreInner";
     static const char *initFinalizer = "initFinalizer";
     ani_object obj = AniObjectUtils::Create(env, namespaceName, className);
     if (nullptr == obj) {
@@ -104,7 +104,7 @@ ani_status RdbStoreHelperInit(ani_env *env)
         return ANI_ERROR;
     }
 
-    static const char *namespaceName = "L@ohos/data/relationalStore/relationalStore;";
+    static const char *namespaceName = "@ohos.data.relationalStore.relationalStore";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
         LOG_ERROR("Not found '%{public}s'", namespaceName);
