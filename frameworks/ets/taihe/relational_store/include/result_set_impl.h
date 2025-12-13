@@ -65,7 +65,6 @@ public:
     void GetRowsResult(int32_t maxCount, std::vector<ohos::data::relationalStore::ValuesBucket> &result);
     taihe::array<ohos::data::relationalStore::ValuesBucket> GetRowsSync(int32_t maxCount,
         taihe::optional_view<int32_t> position);
-    uintptr_t GetSendableRow();
     array<ohos::data::relationalStore::ValueType> GetCurrentRowData();
     array<array<ValueType>> GetRowsDataAsync(int32_t maxCount, optional_view<int32_t> position);
     bool IsColumnNull(int32_t columnIndex);

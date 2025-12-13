@@ -429,28 +429,6 @@ taihe::array<ohos::data::relationalStore::ValuesBucket> ResultSetImpl::GetRowsSy
     return taihe::array<ohos::data::relationalStore::ValuesBucket>(result);
 }
 
-uintptr_t ResultSetImpl::GetSendableRow()
-{
-    OHOS::NativeRdb::RowEntity rowEntity;
-    int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeResultSet_ == nullptr) {
-        ThrowInnerError(errCode);
-        return 0;
-    }
-    errCode = nativeResultSet_->GetRow(rowEntity);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
-        return 0;
-    }
-    map<string, ValueType> valuesBucket;
-    auto &rowMap = rowEntity.Get();
-    for (auto const &[key, value] : rowMap) {
-        valuesBucket.emplace(string(key), ani_rdbutils::ValueObjectToAni(value));
-    }
-    // need wrap valuesBucket to ani object
-    return 0;
-}
-
 array<ohos::data::relationalStore::ValueType> ResultSetImpl::GetCurrentRowData()
 {
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
