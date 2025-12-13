@@ -128,7 +128,7 @@ public:
         }
 
         ani_method objMethod;
-        status = env->Class_FindMethod(clazz, method, ":V", &objMethod);
+        status = env->Class_FindMethod(clazz, method, ":", &objMethod);
         if (status != ANI_OK) {
             return status;
         }

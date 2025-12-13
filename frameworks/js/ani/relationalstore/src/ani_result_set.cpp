@@ -111,7 +111,7 @@ ani_status ResultSetInit(ani_env *env)
     }
 
     ani_class cls;
-    const char *className = "@ohos.data.relationalStore.relationalStore.ResultSetInner;";
+    const char *className = "@ohos.data.relationalStore.relationalStore.ResultSetInner";
     if (ANI_OK != env->FindClass(className, &cls)) {
         LOG_ERROR("Not found '%{public}s", className);
         return ANI_ERROR;
