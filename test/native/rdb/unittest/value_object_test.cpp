@@ -118,10 +118,63 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
 {
     const char* nullPtr = nullptr;
     ValueObject nullObj(nullPtr);
-   
+
     const char* emptyStr = "";
     ValueObject emptyObj(emptyStr);
 
     EXPECT_TRUE(nullObj == emptyObj);
+}
+
+/**
+ * @tc.name: ValueObject_Test_005
+ * @tc.desc: test func ValueObject::operator bool() const
+ * @tc.type: FUNC
+ */
+HWTEST_F(ValueObjectTest, ValueObject_Test_005, TestSize.Level1)
+{
+    {
+        ValueObject vo(100); // int, true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo(0); // int, true
+        EXPECT_FALSE(vo);
+    }
+    {
+        ValueObject vo(0.1); // float, false
+        EXPECT_FALSE(vo);
+    }
+    {
+        ValueObject vo(0.0); // float, false
+        EXPECT_FALSE(vo);
+    }
+    {
+        ValueObject vo(true); // bool, true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo(false); // bool, false
+        EXPECT_FALSE(vo);
+    }
+    {
+        ValueObject vo("hello"); // string, true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo("true"); // string, true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo("false"); // string, true
+        EXPECT_TRUE(vo);
+    }
+    {
+        ValueObject vo("0"); // string "0", false
+        EXPECT_FALSE(vo);
+    }
+    {
+        ValueObject vo("0.0"); // string "0.0", true
+        EXPECT_TRUE(vo);
+    }
 }
 } // namespace Test

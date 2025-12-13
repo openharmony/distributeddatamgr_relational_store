@@ -54,6 +54,7 @@ ohos_unittest("NativeRdbNdkTest") {
     "unittest/rdb_transaction_capi_test.cpp",
     "unittest/rdb_transaction_query_without_rowCount_test.cpp",
     "unittest/rdb_vector_test.cpp",
+    "unittest/relational_cursor_test.cpp",
   ]
 
   configs = [ ":module_private_config" ]

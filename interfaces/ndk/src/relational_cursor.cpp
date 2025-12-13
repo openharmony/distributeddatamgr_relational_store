@@ -410,7 +410,7 @@ int RelationalCursor::Destroy()
 
 int RelationalCursor::GetAssetsCount(int32_t columnIndex, uint32_t *count)
 {
-    if (count == nullptr) {
+    if (count == nullptr || resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     std::vector<NativeRdb::AssetValue> assets;
