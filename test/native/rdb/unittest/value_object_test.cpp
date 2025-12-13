@@ -133,47 +133,47 @@ HWTEST_F(ValueObjectTest, ValueObject_Test_004, TestSize.Level1)
 HWTEST_F(ValueObjectTest, ValueObject_Test_005, TestSize.Level1)
 {
     {
-        ValueObject vo(100); // 整数，true
+        ValueObject vo(100); // int, true
         EXPECT_TRUE(vo);
     }
     {
-        ValueObject vo(0); // 整数，true
+        ValueObject vo(0); // int, true
         EXPECT_FALSE(vo);
     }
     {
-        ValueObject vo(0.1); // 浮点数，false
+        ValueObject vo(0.1); // float, false
         EXPECT_FALSE(vo);
     }
     {
-        ValueObject vo(0.0); // 浮点数，false
+        ValueObject vo(0.0); // float, false
         EXPECT_FALSE(vo);
     }
     {
-        ValueObject vo(true); // 布尔，true
+        ValueObject vo(true); // bool, true
         EXPECT_TRUE(vo);
     }
     {
-        ValueObject vo(false); // 布尔，true
+        ValueObject vo(false); // bool, false
         EXPECT_FALSE(vo);
     }
     {
-        ValueObject vo("hello"); // 字符串，true
+        ValueObject vo("hello"); // string, true
         EXPECT_TRUE(vo);
     }
     {
-        ValueObject vo("true"); // 字符串，true
+        ValueObject vo("true"); // string, true
         EXPECT_TRUE(vo);
     }
     {
-        ValueObject vo("false"); // 字符串，true
+        ValueObject vo("false"); // string, true
         EXPECT_TRUE(vo);
     }
     {
-        ValueObject vo("0"); // 字符串"0"，false
+        ValueObject vo("0"); // string "0", false
         EXPECT_FALSE(vo);
     }
     {
-        ValueObject vo("0.0"); // 字符串"0.0"，false
+        ValueObject vo("0.0"); // string "0.0", true
         EXPECT_TRUE(vo);
     }
 }
