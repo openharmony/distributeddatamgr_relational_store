@@ -239,7 +239,7 @@ ValueObject::operator bool() const
         val = std::get<bool>(value);
     } else if (type == ValueObject::TYPE_STRING) {
         auto temp = std::get<std::string>(value);
-        val = (temp == "true" || temp != "0");
+        val = (temp != "0");
     }
     return val;
 }
