@@ -140,27 +140,9 @@ int32_t Convert2Value(napi_env env, napi_value input, DBSwitchInfo &output)
         LOG_ERROR("Invalid input type: status=%{public}d, type=%{public}d", status, type);
         return napi_invalid_arg;
     }
-
-    napi_value jsEnable = nullptr;
-    status = napi_get_named_property(env, input, "enable", &jsEnable);
-    if (status != napi_ok || jsEnable == nullptr) {
-        LOG_ERROR("Required field 'enable' missing: status=%{public}d", status);
-        return napi_invalid_arg;
-    }
-    int32_t ret = Convert2Value(env, jsEnable, output.enable);
-    if (ret != napi_ok) {
-        LOG_ERROR("Convert enable failed: ret=%{public}d", ret);
-        return ret;
-    }
-
-    napi_value jsTableInfo = nullptr;
-    status = napi_get_named_property(env, input, "tableInfo", &jsTableInfo);
-    if (status != napi_ok || jsTableInfo == nullptr) {
-        LOG_ERROR("Required field 'tableInfo' missing: status=%{public}d", status);
-        return napi_invalid_arg;
-    }
-
-    return Convert2Value(env, jsTableInfo, output.tableInfo);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "enable", output.enable), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "tableInfo", output.tableInfo, true), napi_invalid_arg);
+    return napi_ok;
 }
 
 template<>
@@ -172,14 +154,8 @@ int32_t Convert2Value(napi_env env, napi_value input, SwitchConfig &output)
         LOG_ERROR("Invalid input type: status=%{public}d, type=%{public}d", status, type);
         return napi_invalid_arg;
     }
-
-    napi_value jsDbInfo = nullptr;
-    status = napi_get_named_property(env, input, "dbInfo", &jsDbInfo);
-    if (status != napi_ok || jsDbInfo == nullptr) {
-        LOG_DEBUG("Required field 'dbInfo' missing");
-        return napi_invalid_arg;
-    }
-    return Convert2Value(env, jsDbInfo, output.dbInfo);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "dbInfo", output.dbInfo), napi_invalid_arg);
+    return napi_ok;
 }
 
 template<>
@@ -191,27 +167,9 @@ int32_t Convert2Value(napi_env env, napi_value input, DBActionInfo &output)
         LOG_ERROR("Invalid input type: status=%{public}d, type=%{public}d", status, type);
         return napi_invalid_arg;
     }
-
-    napi_value jsAction = nullptr;
-    status = napi_get_named_property(env, input, "action", &jsAction);
-    if (status != napi_ok || jsAction == nullptr) {
-        LOG_ERROR("Required field 'action' missing");
-        return napi_invalid_arg;
-    }
-
-    int32_t ret = Convert2ValueExt(env, jsAction, output.action);
-    if (ret != napi_ok) {
-        LOG_ERROR("Convert action failed: ret=%{public}d", ret);
-        return ret;
-    }
-
-    napi_value jsTableInfo = nullptr;
-    status = napi_get_named_property(env, input, "tableInfo", &jsTableInfo);
-    if (status != napi_ok || jsTableInfo == nullptr) {
-        LOG_ERROR("Required field 'tableInfo' missing");
-        return napi_invalid_arg;
-    }
-    return Convert2Value(env, jsTableInfo, output.tableInfo);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "action", output.action), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "tableInfo", output.tableInfo, true), napi_invalid_arg);
+    return napi_ok;
 }
 
 template<>
@@ -223,14 +181,8 @@ int32_t Convert2Value(napi_env env, napi_value input, ClearConfig &output)
         LOG_ERROR("Invalid input type: status=%{public}d, type=%{public}d", status, type);
         return napi_invalid_arg;
     }
-
-    napi_value jsDbInfo = nullptr;
-    status = napi_get_named_property(env, input, "dbInfo", &jsDbInfo);
-    if (status != napi_ok || jsDbInfo == nullptr) {
-        LOG_ERROR("Required field 'dbInfo' missing");
-        return napi_invalid_arg;
-    }
-    return Convert2Value(env, jsDbInfo, output.dbInfo);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "dbInfo", output.dbInfo), napi_invalid_arg);
+    return napi_ok;
 }
 
 template<>

@@ -142,6 +142,8 @@ napi_value JsConfig::DisableCloud(napi_env env, napi_callback_info info)
  *      callback: AsyncCallback<void>): void;
  * [Promise]
  *      changeAppCloudSwitch(accountId: string, bundleName: string, status :boolean): Promise<void>;
+ *      changeAppCloudSwitch(accountId: string, bundleName: string, status :boolean,
+ *          config?: SwitchConfig): Promise<void>;
  */
 
 napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
@@ -206,6 +208,8 @@ napi_value JsConfig::ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
  *      clean(accountId: string, appActions: {[bundleName: string]: Action}, callback: AsyncCallback<void>): void;
  * [Promise]
  *      clean(accountId: string, appActions: {[bundleName: string]: Action}): Promise<void>;
+ *      clean(accountId: string, appActions: {[bundleName: string]: Action},
+ *          config?: {[bundleName: string] : ClearConfig}): Promise<void>;
  */
 napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
 {
@@ -233,7 +237,9 @@ napi_value JsConfig::Clean(napi_env env, napi_callback_info info)
         if (argc >= 3 && napi_typeof(env, argv[2], &type) == napi_ok && type != napi_function) {
             status = JSUtils::Convert2Value(env, argv[2], ctxt->configs);
             ASSERT_BUSINESS_ERR(
-                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of status must be ClearConfig.");
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of config must be ClearConfig.");
+            ASSERT_BUSINESS_ERR(ctxt, ValidClearConfig(ctxt->configs), Status::INVALID_ARGUMENT,
+                "The type of config must be ClearConfig.");
         }
     });
 
@@ -638,4 +644,36 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
     auto jsCtor = JSUtils::DefineClass(env, "ohos.data.cloudData", "Config", lambda, JsConfig::New);
     NAPI_CALL(env, napi_set_named_property(env, exports, "Config", jsCtor));
     return exports;
+}
+
+bool JsConfig::ValidClearConfig(const std::map<std::string, CloudData::ClearConfig> &configs)
+{
+    for (const auto &[key, config] : configs) {
+        if (!IsDbInfoValid(config.dbInfo)) {
+            return false;
+        }
+    }
+    return true;
+}
+bool JsConfig::IsDbInfoValid(const std::map<std::string, CloudData::DBActionInfo> &dbInfos)
+{
+    for (const auto &[dbName, dbInfo] : dbInfos) {
+        if (!ValidSubscribeType(dbInfo.action)) {
+            return false;
+        }
+        
+        if (!IsTablesValid(dbInfo.tableInfo)) {
+            return false;
+        }
+    }
+    return true;
+}
+bool JsConfig::IsTablesValid(const std::map<std::string, int32_t> &tableInfo)
+{
+    for (const auto &[tableName, action] : tableInfo) {
+        if (!ValidSubscribeType(action)) {
+            return false;
+        }
+    }
+    return true;
 }

@@ -241,6 +241,23 @@ void TestGetColumnName(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSe
     resultSet->GetColumnName(columnIndex, columnName);
 }
 
+void TestGetWholeColumnNames(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+{
+    resultSet->GetWholeColumnNames();
+}
+
+void TestGetRowData(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+{
+    resultSet->GetRowData();
+}
+
+void TestGetRowsData(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+{
+    int32_t maxCount = provider.ConsumeIntegral<int32_t>();
+    int32_t position = provider.ConsumeIntegral<int32_t>();
+    resultSet->GetRowsData(maxCount, position);
+}
+
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -289,5 +306,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::TestGetColumnCount(provider, resultSet);
     OHOS::TestGetColumnIndex(provider, resultSet);
     OHOS::TestGetColumnName(provider, resultSet);
+    OHOS::TestGetWholeColumnNames(provider, resultSet);
+    OHOS::TestGetRowData(provider, resultSet);
+    OHOS::TestGetRowsData(provider, resultSet);
     return 0;
 }

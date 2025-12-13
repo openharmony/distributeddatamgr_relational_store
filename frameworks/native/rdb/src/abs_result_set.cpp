@@ -329,6 +329,7 @@ std::pair<int, std::vector<std::vector<ValueObject>>> AbsResultSet::GetRowsData(
     }
 
     if (maxCount == 0) {
+        LOG_WARN("maxCount is 0, no data");
         return { E_OK, {} };
     }
 
@@ -363,8 +364,7 @@ std::pair<int, std::vector<std::vector<ValueObject>>> AbsResultSet::GetRowsData(
             break;
         }
         if (errCode != E_OK) {
-            LOG_ERROR("code:%{public}d. maxCount:%{public}d, position:%{public}d, rowPos:%{public}d",
-                errCode, maxCount, position, rowPos_);
+            LOG_ERROR("code:%{public}d. [%{public}d, %{public}d, %{public}d]", errCode, maxCount, position, rowPos_);
             return { errCode, {} };
         }
     }
