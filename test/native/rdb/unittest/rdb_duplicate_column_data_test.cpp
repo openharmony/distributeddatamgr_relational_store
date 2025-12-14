@@ -86,7 +86,7 @@ void DuplicateColumnDataTest::SetUpTestCase(void)
     int errCode = E_ERROR;
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
-    EXPECT_NE(store, nullptr);
+    ASSERT_NE(store, nullptr);
 }
 
 void DuplicateColumnDataTest::TearDownTestCase(void)
@@ -186,7 +186,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_0
 
     std::shared_ptr<ResultSet> resultSet = store->QuerySql(
         "SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_OK);
@@ -214,7 +214,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_0
     std::string const sql = "SELECT t1.data1, t2.data1, t1.age, t2.age, t1.name, t2.name FROM test1 t1 LEFT JOIN "
         "test2 t2 ON t1.age=t2.age";
     std::shared_ptr<ResultSet> resultSet = store->QuerySql(sql);
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_OK);
@@ -237,7 +237,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_0
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_003, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -245,7 +245,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_0
     resultSet->Close();
 
     resultSet = store->QuerySql("SEL");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::tie(ret, columnNames) = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -264,7 +264,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_0
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_004, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_SQLITE_ERROR);
@@ -284,7 +284,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_0
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT t1.data1, t2.data1 FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->Close();
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
@@ -303,7 +303,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_0
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_006, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("DROP TABLE test1");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_NOT_SELECT);
@@ -325,7 +325,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_0
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT t1.data1, t2.data1 FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
@@ -354,7 +354,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_001, TestS
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->GoToFirstRow();
     auto [ret, rowData] = resultSet->GetRowData();
@@ -411,7 +411,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_002, TestS
     std::string const sql = "SELECT t1.salary, t2.salary, t1.age, t2.age, t1.name, t2.name FROM test1 t1 LEFT JOIN "
         "test2 t2 ON t1.age=t2.age";
     std::shared_ptr<ResultSet> resultSet = store->QuerySql(sql);
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->GoToFirstRow();
     auto [ret, rowData] = resultSet->GetRowData();
@@ -444,7 +444,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_003, TestS
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT t1.name, t2.name, t1.age, t2.age FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->GoToRow(1);
     auto [ret, rowData] = resultSet->GetRowData();
@@ -470,7 +470,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_003, TestS
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_004, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -478,7 +478,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_004, TestS
     resultSet->Close();
 
     resultSet = store->QuerySql("SEL");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::tie(ret, rowData) = resultSet->GetRowData();
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -497,7 +497,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_004, TestS
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_005, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_SQLITE_ERROR);
@@ -517,7 +517,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_006, TestS
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT t1.data1, t2.data1 FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->Close();
     auto [ret, columnNames] = resultSet->GetRowData();
@@ -535,7 +535,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_006, TestS
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_007, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("DROP TABLE test1");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_NOT_SELECT);
@@ -557,7 +557,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_008, TestS
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -581,7 +581,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_008, TestS
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_001, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
     // maxCount is -1
     auto [ret, rowsData] = resultSet->GetRowsData(1, 0);
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -589,7 +589,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_001, Test
     resultSet->Close();
 
     resultSet = store->QuerySql("SEL");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::tie(ret, rowsData) = resultSet->GetRowsData(1, 0);
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -598,7 +598,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_001, Test
 
     resultSet =
         store->QuerySql("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::tie(ret, rowsData) = resultSet->GetRowsData(-1, 0); // maxCount is -1, position is 0
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -621,7 +621,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_001, Test
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_002, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(1, 0);
     EXPECT_EQ(ret, E_SQLITE_ERROR);
@@ -641,7 +641,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_003, Test
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT t1.data1, t2.data1 FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->Close();
     auto [ret, rowsData] = resultSet->GetRowsData(1, 0);
@@ -659,7 +659,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_003, Test
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_004, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("DROP TABLE test1");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(1, 0);
     EXPECT_EQ(ret, E_NOT_SELECT);
@@ -681,7 +681,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_005, Test
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, 2); // maxCount is 2, position is 2
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -704,7 +704,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_006, Test
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT t1.name, t2.name, t1.age, t2.age FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, 0);  // maxCount is 2
     EXPECT_EQ(ret, E_OK);
@@ -755,7 +755,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_007, Test
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT t1.name, t2.name, t1.age, t2.age FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, -1);  // maxCount is 2, position is -1
     EXPECT_EQ(ret, E_OK);
@@ -800,7 +800,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_008, Test
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, 0);  // maxCount is 2, position is 0
     EXPECT_EQ(ret, E_OK);
@@ -825,7 +825,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_009, Test
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(0, 0);  // maxCount is 0, position is 0
     EXPECT_EQ(ret, E_OK);
@@ -848,7 +848,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_010, Test
 
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(3, 0);  // maxCount is 3, position is 0
     EXPECT_EQ(ret, E_OK);
@@ -870,7 +870,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_001, TestS
 
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep(
         "SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_OK);
@@ -898,7 +898,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_002, TestS
     std::string const sql = "SELECT t1.data1, t2.data1, t1.age, t2.age, t1.name, t2.name FROM test1 t1 LEFT JOIN "
         "test2 t2 ON t1.age=t2.age";
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep(sql);
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_OK);
@@ -921,7 +921,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_002, TestS
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_003, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -929,7 +929,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_003, TestS
     resultSet->Close();
 
     resultSet = store->QuerySql("SEL");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::tie(ret, columnNames) = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -948,7 +948,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_003, TestS
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_004, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_SQLITE_ERROR);
@@ -968,7 +968,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_005, TestS
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT t1.data1, t2.data1 FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->Close();
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
@@ -986,7 +986,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_005, TestS
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_006, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("DROP TABLE test1");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_NOT_SELECT);
@@ -1007,7 +1007,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_007, TestS
 
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT t1.data1, t2.data1 FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
@@ -1036,7 +1036,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_001, TestSize.Level
 
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->GoToFirstRow();
     auto [ret, rowData] = resultSet->GetRowData();
@@ -1093,7 +1093,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_002, TestSize.Level
     std::string const sql = "SELECT t1.salary, t2.salary, t1.age, t2.age, t1.name, t2.name FROM test1 t1 LEFT JOIN "
         "test2 t2 ON t1.age=t2.age";
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep(sql);
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->GoToFirstRow();
     auto [ret, rowData] = resultSet->GetRowData();
@@ -1127,7 +1127,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_003, TestSize.Level
     std::string const sql = "SELECT t1.name, t2.name, t1.age, t2.age "
         "FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age";
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep(sql);
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->GoToRow(1);
     auto [ret, rowData] = resultSet->GetRowData();
@@ -1153,7 +1153,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_003, TestSize.Level
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_004, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -1161,7 +1161,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_004, TestSize.Level
     resultSet->Close();
 
     resultSet = store->QueryByStep("SEL");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::tie(ret, rowData) = resultSet->GetRowData();
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -1180,7 +1180,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_004, TestSize.Level
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_005, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_SQLITE_ERROR);
@@ -1200,7 +1200,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_006, TestSize.Level
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT t1.data1, t2.data1 FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->Close();
     auto [ret, columnNames] = resultSet->GetRowData();
@@ -1218,7 +1218,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_006, TestSize.Level
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_007, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("DROP TABLE test1");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_NOT_SELECT);
@@ -1240,7 +1240,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_008, TestSize.Level
 
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -1264,7 +1264,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_008, TestSize.Level
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_001, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
     // maxCount is -1
     auto [ret, columnNames] = resultSet->GetRowsData(1, 0);
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -1272,7 +1272,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_001, TestSize.Leve
     resultSet->Close();
 
     resultSet = store->QueryByStep("SEL");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::tie(ret, columnNames) = resultSet->GetRowsData(1, 0);
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -1281,7 +1281,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_001, TestSize.Leve
 
     resultSet =
         store->QueryByStep("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     std::tie(ret, columnNames) = resultSet->GetRowsData(-1, 0);
     EXPECT_EQ(ret, E_INVALID_ARGS);
@@ -1304,7 +1304,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_001, TestSize.Leve
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_002, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELE");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowData] = resultSet->GetRowsData(1, 0);
     EXPECT_EQ(ret, E_SQLITE_ERROR);
@@ -1325,7 +1325,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_003, TestSize.Leve
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT t1.data1, t2.data1 FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     resultSet->Close();
     auto [ret, columnNames] = resultSet->GetRowsData(1, 0);
@@ -1344,7 +1344,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_003, TestSize.Leve
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_004, TestSize.Level1)
 {
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("DROP TABLE test1");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetRowsData(1, 0);
     EXPECT_EQ(ret, E_NOT_SELECT);
@@ -1366,7 +1366,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_005, TestSize.Leve
 
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, columnNames] = resultSet->GetRowsData(2, 2);
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
@@ -1389,7 +1389,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_006, TestSize.Leve
 
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT t1.name, t2.name, t1.age, t2.age FROM test1 t1 "
         "LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, 0);
     EXPECT_EQ(ret, E_OK);
@@ -1408,6 +1408,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_006, TestSize.Leve
 
     ret = resultSet->GoToFirstRow();
     EXPECT_EQ(ret, E_OK);
+    int rowPos = 0;
     resultSet->GetRowIndex(rowPos);
     EXPECT_EQ(rowPos, 0);   // rowPos is 0
     std::tie(ret, rowsData) = resultSet->GetRowsData(2, 0);
@@ -1442,7 +1443,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_007, TestSize.Leve
 
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT t1.name, t2.name, t1.age, t2.age FROM test1 t1 "
         "LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, -1);  // maxCount is 2, position is -1
     EXPECT_EQ(ret, E_OK);
@@ -1487,7 +1488,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_008, TestSize.Leve
 
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, 0);  // maxCount is 2, position is 0
     EXPECT_EQ(ret, E_OK);
@@ -1512,7 +1513,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_009, TestSize.Leve
 
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(0, 0);  // maxCount is 0, position is 0
     EXPECT_EQ(ret, E_OK);
@@ -1535,7 +1536,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_010, TestSize.Leve
 
     std::shared_ptr<ResultSet> resultSet =
         store->QueryByStep("SELECT * FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     auto [ret, rowsData] = resultSet->GetRowsData(3, 0);  // maxCount is 3, position is 0
     EXPECT_EQ(ret, E_OK);
