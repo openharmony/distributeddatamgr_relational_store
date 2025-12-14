@@ -671,7 +671,7 @@ std::string AniStringUtils::ToStd(ani_env *env, ani_string ani_str)
     ani_size strSize = 0;
     auto status = env->String_GetUTF8Size(ani_str, &strSize);
     if (ANI_OK != status) {
-        LOG_ERROR("[ANI] String_GetUTF8Size failed errcode:%{public}d", status);
+        LOG_ERROR("[ANI] String_GetUTF8Size failed errCode:%{public}d", status);
         return std::string();
     }
     if (strSize == 0) {
@@ -680,7 +680,7 @@ std::string AniStringUtils::ToStd(ani_env *env, ani_string ani_str)
     std::string result(strSize + 1, '\0');
     status = env->String_GetUTF8(ani_str, result.data(), result.size(), &strSize);
     if (ANI_OK != status) {
-        LOG_ERROR("[ANI] String_GetUTF8Size failed errcode:%{public}d", status);
+        LOG_ERROR("[ANI] String_GetUTF8Size failed errCode:%{public}d", status);
         return std::string();
     }
     result.resize(strSize);

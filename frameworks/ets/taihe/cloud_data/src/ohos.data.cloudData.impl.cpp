@@ -27,7 +27,7 @@ void ConfigImpl::ChangeAppCloudSwitchImpl(string_view accountId, string_view bun
         OHOS::CloudData::SwitchConfig config;
         int32_t code = proxy->ChangeAppSwitch(std::string(accountId), std::string(bundleName), status, config);
         if (code != CloudService::Status::SUCCESS) {
-            LOG_ERROR("request, errcode = %{public}d", code);
+            LOG_ERROR("request, errCode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -56,7 +56,7 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
 
         int32_t code = proxy->Clean(std::string(accountId), actions, configs);
         if (code != CloudService::Status::SUCCESS) {
-            LOG_ERROR("request, errcode = %{public}d", code);
+            LOG_ERROR("request, errCode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -79,7 +79,7 @@ void ConfigImpl::ChangeAppCloudSwitchImplWithConfig(string_view accountId, strin
     auto work = [&accountId, &bundleName, &status, &switchConfig](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->ChangeAppSwitch(std::string(accountId), std::string(bundleName), status, switchConfig);
         if (code != CloudService::Status::SUCCESS) {
-            LOG_ERROR("request, errcode = %{public}d", code);
+            LOG_ERROR("request, errCode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -115,7 +115,7 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
 
         int32_t code = proxy->Clean(std::string(accountId), actions, clearConfig);
         if (code != CloudService::Status::SUCCESS) {
-            LOG_ERROR("request, errcode = %{public}d", code);
+            LOG_ERROR("request, errCode = %{public}d", code);
             ThrowAniError(code);
         }
     };
