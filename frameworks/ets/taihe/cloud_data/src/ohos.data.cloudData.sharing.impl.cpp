@@ -21,7 +21,7 @@
 #include "ani_cloud_data_utils.h"
 #include "result_set_impl.h"
 
-namespace AniCloudData{
+namespace AniCloudData {
 namespace AniSharing {
 using namespace OHOS::Rdb;
 
@@ -77,7 +77,7 @@ Result_TH ShareImpl(string_view sharingResource, array_view<Participant_TH> part
 {
     Result_TH ret;
     Results ipcRet;
-    int32_t code = CloudService::Status::ERROR; 
+    int32_t code = CloudService::Status::ERROR;
     auto work = [&sharingResource, &participants, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
         Participants info;
         ParticipantConvert(participants, info);
@@ -97,7 +97,7 @@ Result_TH UnshareImpl(string_view sharingResource, array_view<Participant_TH> pa
 {
     Result_TH ret;
     Results ipcRet;
-    int32_t code = CloudService::Status::ERROR;   
+    int32_t code = CloudService::Status::ERROR;
     auto work = [&sharingResource, &participants, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
         Participants info;
         ParticipantConvert(participants, info);
@@ -116,7 +116,7 @@ Result_TH UnshareImpl(string_view sharingResource, array_view<Participant_TH> pa
 Result_TH ExitImpl(string_view sharingResource)
 {
     Result_TH ret;
-    int32_t code = CloudService::Status::ERROR;    
+    int32_t code = CloudService::Status::ERROR;
     std::pair<int32_t, std::string> ipcRet;
     auto work = [&sharingResource, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
         code = proxy->Exit(std::string(sharingResource), ipcRet);
@@ -190,6 +190,7 @@ Result_TH QueryParticipantsByInvitationImpl(string_view invitationCode)
 
 Result_TH ConfirmInvitationImpl(string_view invitationCode, State state)
 {
+    const uint32_t INDEX_TWO = 2;
     Result_TH ret;
     std::tuple<int32_t, std::string, std::string> ipcRet;
     int32_t code = CloudService::Status::ERROR;
@@ -209,7 +210,7 @@ Result_TH ConfirmInvitationImpl(string_view invitationCode, State state)
     }
     ret.code = std::get<0>(ipcRet);
     ret.description = optional<string>(std::in_place, std::get<1>(ipcRet));
-    ret.value = optional<ResultValue>(std::in_place, ResultValue::make_stringValue(std::get<2>(ipcRet)));
+    ret.value = optional<ResultValue>(std::in_place, ResultValue::make_stringValue(std::get<INDEX_TWO>(ipcRet)));
     return ret;
 }
 

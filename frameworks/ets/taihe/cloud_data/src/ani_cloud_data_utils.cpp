@@ -26,6 +26,7 @@
 namespace AniCloudData {
 using namespace OHOS::Rdb;
 using Participant_INNER = OHOS::CloudData::Participant;
+const uint32_t INDEX_TWO = 2;
 
 uint32_t GetSeqNum()
 {
@@ -105,14 +106,14 @@ void StatisticInfoConvert(std::map<std::string, StatisticInfos> &in, map<string,
 void SyncInfoConvert(QueryLastResults &in, map<string, SyncInfo> &out)
 {
     using SyncStatus_T = ::ohos::data::cloudData::SyncStatus;
-    for(auto &it : in) {
+    for (auto &it : in) {
         SyncInfo info = {0, 0, ProgressCode::key_t::UNKNOWN_ERROR};
         info.code = ProgressCode::from_value(it.second.code);
         info.startTime = it.second.startTime;
         info.finishTime = it.second.finishTime;
         info.syncStatus = optional<SyncStatus_T>(std::in_place, SyncStatus_T::from_value(it.second.syncStatus));
         out.emplace(it.first, info);
-    }    
+    }
 }
 
 ProgressDetails ProgressDetailConvert(const OHOS::DistributedRdb::ProgressDetail &in)
@@ -137,7 +138,7 @@ void ParticipantConvert(const array_view<Participant_TH> &in, Participants &out)
 {
     Participant_INNER inner;
     for (auto it = in.begin(); it != in.end(); ++it) {
-        inner.identity = std::string(it->identity);            
+        inner.identity = std::string(it->identity);
         if (it->role.has_value()) {
             inner.role = it->role.value().get_value();
         }
@@ -173,7 +174,7 @@ void ResultsConvert(const Results &in, Result_TH &out)
     out.code = std::get<0>(in);
     out.description = optional<string>(std::in_place, std::get<1>(in));
     std::vector<Result_TH> subResult;
-    for (auto &it : std::get<2>(in)) {
+    for (auto &it : std::get<INDEX_TWO>(in)) {
         subResult.push_back({it.first, optional<string>(std::in_place, it.second)});
     }
     out.value =  optional<ResultValue>(std::in_place, ResultValue::make_resultParticipantsValue(subResult));
@@ -187,7 +188,7 @@ void QueryResultsConvert(const QueryResults &in, Result_TH &out)
     out.code = std::get<0>(in);
     out.description = optional<string>(std::in_place, std::get<1>(in));
     std::vector<Participant_TH> thVec;
-    for (auto &it : std::get<2>(in)) {
+    for (auto &it : std::get<INDEX_TWO>(in)) {
         Participant_TH th = {""};
         th.identity = it.identity;
         if (it.role != OHOS::CloudData::Role::ROLE_NIL) {
