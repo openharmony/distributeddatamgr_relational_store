@@ -24,7 +24,7 @@ using namespace OHOS::Rdb;
 
 void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> switches)
 {
-    LOG_INFO("EnableCloudImpl start"); 
+    LOG_INFO("EnableCloudImpl start");
     auto work = [&accountId, &switches](std::shared_ptr<CloudService> proxy) {
         LOG_INFO("EnableCloudImpl work start");
         std::map<std::string, int32_t> realSwitches;
@@ -40,7 +40,7 @@ void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> s
             ThrowAniError(code);
         }
     };
-    LOG_INFO("EnableCloudImpl RequestIPC"); 
+    LOG_INFO("EnableCloudImpl RequestIPC");
     RequestIPC(work);
 }
 
@@ -109,7 +109,7 @@ map<string, array<StatisticInfo_TH>> ConfigImpl::QueryStatisticsImpl(
     string_view accountId, string_view bundleName, optional_view<string> storeId)
 {
     std::optional<std::pair<int32_t, std::map<std::string, StatisticInfos>>> result;
-    map<string, array<StatisticInfo_TH>> ret;    
+    map<string, array<StatisticInfo_TH>> ret;
     auto work = [&accountId, &bundleName, &storeId, &result](std::shared_ptr<CloudService> proxy) {
         result = proxy->QueryStatistics(std::string(accountId), std::string(bundleName),
             std::string(storeId.has_value() ? storeId.value() : ""));
@@ -238,22 +238,22 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
 void ConfigImpl::SetGlobalCloudStrategyImpl(
     StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
 {
-    auto work = [&strategy, &param](std::shared_ptr<CloudService> proxy) {
-        std::vector<OHOS::CommonType::Value> values;
-        if (param.has_value()) {            
-            for (auto it = param.value().begin(); it != param.value().end(); ++it) {
-                if (!it->holds_F64()) {
-                    ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
-                    return;
-                }
-                auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
-                if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
-                    ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
-                    return;
-                }
-                values.push_back(it->get_F64_ref());
+    std::vector<OHOS::CommonType::Value> values;
+    if (param.has_value()) {
+        for (auto it = param.value().begin(); it != param.value().end(); ++it) {
+            if (!it->holds_F64()) {
+                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                return;
             }
+            auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
+            if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
+                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                return;
+            }
+            values.push_back(it->get_F64_ref());
         }
+    }
+    auto work = [&strategy, &param, &values](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->SetGlobalCloudStrategy(static_cast<Strategy>(strategy.get_value()), values);
         if (code != CloudService::Status::SUCCESS) {
             LOG_ERROR("request, errcode = %{public}d", code);
@@ -291,22 +291,22 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
 
 void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
 {
-    auto work = [&strategy, &param](std::shared_ptr<CloudService> proxy) {
-        std::vector<OHOS::CommonType::Value> values;
-        if (param.has_value()) {
-            for (auto it = param.value().begin(); it != param.value().end(); ++it) {
-                if (!it->holds_F64()) {
-                    ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
-                    return;
-                }
-                auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
-                if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
-                    ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
-                    return;
-                }
-                values.push_back(it->get_F64_ref());
+    std::vector<OHOS::CommonType::Value> values;
+    if (param.has_value()) {
+        for (auto it = param.value().begin(); it != param.value().end(); ++it) {
+            if (!it->holds_F64()) {
+                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                return;
             }
+            auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
+            if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
+                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                return;
+            }
+            values.push_back(it->get_F64_ref());
         }
+    }
+    auto work = [&strategy, &param, &values](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->SetCloudStrategy(static_cast<Strategy>(strategy.get_value()), values);
         if (code != CloudService::Status::SUCCESS) {
             LOG_ERROR("request, errcode = %{public}d", code);
