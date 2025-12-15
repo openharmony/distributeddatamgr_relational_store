@@ -23,7 +23,7 @@ struct AniErrorCode {
     const char *message = nullptr;
 };
 
-void ThrowAniError(int32_t status);
-const std::optional<AniErrorCode> GetAniErrorCode(int32_t status);
+void ThrowAniError(int32_t errorCode);
+const std::optional<AniErrorCode> GetAniErrorCode(int32_t errorCode);
 }
 #endif

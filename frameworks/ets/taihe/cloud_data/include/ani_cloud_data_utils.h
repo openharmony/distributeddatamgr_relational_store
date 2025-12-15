@@ -18,9 +18,16 @@
 #include "cloud_types.h"
 
 namespace AniCloudData {
+uint32_t GetSeqNum();
 void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work);
 OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(::ohos::data::cloudData::DBSwitchInfo dbSwitchInfo);
 OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(::ohos::data::cloudData::ClearConfig clearConfig);
 OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(::ohos::data::cloudData::DBActionInfo actionInfo);
+void StatisticInfoConvert(std::map<std::string, StatisticInfos> &in, map<string, array<StatisticInfo_TH>> &out);
+void SyncInfoConvert(QueryLastResults &in, map<string, SyncInfo> &out);
+ProgressDetails ProgressDetailConvert(const OHOS::DistributedRdb::ProgressDetail &in);
+void ParticipantConvert(const array_view<Participant_TH> &in, Participants &out);
+void ResultsConvert(const Results &in, Result_TH &out);
+void QueryResultsConvert(const QueryResults &in, Result_TH &out);
 } // namespace AniCloudData
 #endif

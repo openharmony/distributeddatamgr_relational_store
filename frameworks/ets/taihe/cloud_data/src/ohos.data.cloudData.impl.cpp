@@ -21,6 +21,41 @@
 
 namespace AniCloudData {
 using namespace OHOS::Rdb;
+
+void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> switches)
+{
+    LOG_INFO("EnableCloudImpl start"); 
+    auto work = [&accountId, &switches](std::shared_ptr<CloudService> proxy) {
+        LOG_INFO("EnableCloudImpl work start");
+        std::map<std::string, int32_t> realSwitches;
+        for (auto &item : switches) {
+            realSwitches[std::string(item.first)] = item.second ? CloudService::Switch::SWITCH_ON
+                : CloudService::Switch::SWITCH_OFF;
+        }
+
+        int32_t code = proxy->EnableCloud(std::string(accountId), realSwitches);
+        LOG_INFO("EnableCloudImpl work code(%{public}d)", code);
+        if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("c = %{public}d", code);
+            ThrowAniError(code);
+        }
+    };
+    LOG_INFO("EnableCloudImpl RequestIPC"); 
+    RequestIPC(work);
+}
+
+void ConfigImpl::DisableCloudImpl(string_view accountId)
+{
+    auto work = [&accountId](std::shared_ptr<CloudService> proxy) {
+        int32_t code = proxy->DisableCloud(std::string(accountId));
+        if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
+            ThrowAniError(code);
+        }
+    };
+    RequestIPC(work);
+}
+
 void ConfigImpl::ChangeAppCloudSwitchImpl(string_view accountId, string_view bundleName, bool status)
 {
     auto work = [&accountId, &bundleName, &status](std::shared_ptr<CloudService> proxy) {
@@ -32,6 +67,84 @@ void ConfigImpl::ChangeAppCloudSwitchImpl(string_view accountId, string_view bun
         }
     };
     RequestIPC(work);
+}
+
+void ConfigImpl::NotifyDataChangeVarargs(
+    ExtraData const& extInfo, optional_view<int32_t> userId)
+{
+    int32_t id = userId.has_value() ? userId.value() : CloudService::INVALID_USER_ID;
+    NotifyDataChangeWithId(extInfo, id);
+}
+
+void ConfigImpl::NotifyDataChangeImpl(ExtraData const& extInfo)
+{
+    NotifyDataChangeWithId(extInfo, CloudService::INVALID_USER_ID);
+}
+
+void ConfigImpl::NotifyDataChangeWithId(ExtraData const& extInfo, int32_t userId)
+{
+    auto work = [&extInfo, &userId](std::shared_ptr<CloudService> proxy) {
+        int32_t code = proxy->NotifyDataChange(std::string(extInfo.eventId), std::string(extInfo.extraData), userId);
+        if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
+            ThrowAniError(code);
+        }
+    };
+    RequestIPC(work);
+}
+
+void ConfigImpl::NotifyDataChangeBoth(string_view accountId, string_view bundleName)
+{
+    auto work = [&accountId, &bundleName](std::shared_ptr<CloudService> proxy) {
+        int32_t code = proxy->NotifyDataChange(std::string(accountId), std::string(bundleName));
+        if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
+            ThrowAniError(code);
+        }
+    };
+    RequestIPC(work);
+}
+
+map<string, array<StatisticInfo_TH>> ConfigImpl::QueryStatisticsImpl(
+    string_view accountId, string_view bundleName, optional_view<string> storeId)
+{
+    std::optional<std::pair<int32_t, std::map<std::string, StatisticInfos>>> result;
+    map<string, array<StatisticInfo_TH>> ret;    
+    auto work = [&accountId, &bundleName, &storeId, &result](std::shared_ptr<CloudService> proxy) {
+        result = proxy->QueryStatistics(std::string(accountId), std::string(bundleName),
+            std::string(storeId.has_value() ? storeId.value() : ""));
+    };
+    RequestIPC(work);
+    int errCode = CloudService::Status::ERROR;
+    if (result.has_value()) {
+        errCode = result.value().first;
+        StatisticInfoConvert(result.value().second, ret);
+    }
+    if (errCode != CloudService::Status::SUCCESS) {
+        ThrowAniError(errCode);
+    }
+    return ret;
+}
+
+map<string, SyncInfo> ConfigImpl::QueryLastSyncInfoImpl(
+    string_view accountId, string_view bundleName, optional_view<string> storeId)
+{
+    std::optional<std::pair<int32_t, QueryLastResults>> result;
+    map<string, SyncInfo> ret;
+    auto work = [&accountId, &bundleName, &storeId, &result](std::shared_ptr<CloudService> proxy) {
+        result = proxy->QueryLastSyncInfo(std::string(accountId), std::string(bundleName),
+            std::string(storeId.has_value() ? storeId.value() : ""));
+    };
+    RequestIPC(work);
+    int errCode = CloudService::Status::ERROR;
+    if (result.has_value()) {
+        errCode = result.value().first;
+        SyncInfoConvert(result.value().second, ret);
+    }
+    if (errCode != CloudService::Status::SUCCESS) {
+        ThrowAniError(errCode);
+    }
+    return ret;
 }
 
 void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> appActions)
@@ -121,13 +234,105 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
     };
     RequestIPC(work);
 }
+
+void ConfigImpl::SetGlobalCloudStrategyImpl(
+    StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
+{
+    auto work = [&strategy, &param](std::shared_ptr<CloudService> proxy) {
+        std::vector<OHOS::CommonType::Value> values;
+        if (param.has_value()) {            
+            for (auto it = param.value().begin(); it != param.value().end(); ++it) {
+                if (!it->holds_F64()) {
+                    ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                    return;
+                }
+                auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
+                if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
+                    ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                    return;
+                }
+                values.push_back(it->get_F64_ref());
+            }
+        }
+        int32_t code = proxy->SetGlobalCloudStrategy(static_cast<Strategy>(strategy.get_value()), values);
+        if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
+            ThrowAniError(code);
+        }
+    };
+    RequestIPC(work);
+}
+
+void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, SyncMode mode,
+    callback_view<void(ProgressDetails const& data)> progress)
+{
+    auto work = [&bundleName, &storeId, &mode, progress](std::shared_ptr<CloudService> proxy) {
+        auto async = [progress](const OHOS::DistributedRdb::Details &details) {
+            if (details.empty()) {
+                LOG_ERROR("details is nullptr");
+                return;
+            }
+            progress(ProgressDetailConvert(details.begin()->second));
+        };
+        CloudService::Option option;
+        option.syncMode = mode.get_value();
+        option.seqNum = GetSeqNum();
+        auto status = proxy->CloudSync(std::string(bundleName), std::string(storeId), option, async);
+        if (status == CloudService::Status::INVALID_ARGUMENT) {
+            status = CloudService::Status::INVALID_ARGUMENT_V20;
+        }
+        if (status != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", status);
+            ThrowAniError(status);
+        }
+    };
+    RequestIPC(work);
+}
+
+void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
+{
+    auto work = [&strategy, &param](std::shared_ptr<CloudService> proxy) {
+        std::vector<OHOS::CommonType::Value> values;
+        if (param.has_value()) {
+            for (auto it = param.value().begin(); it != param.value().end(); ++it) {
+                if (!it->holds_F64()) {
+                    ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                    return;
+                }
+                auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
+                if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
+                    ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                    return;
+                }
+                values.push_back(it->get_F64_ref());
+            }
+        }
+        int32_t code = proxy->SetCloudStrategy(static_cast<Strategy>(strategy.get_value()), values);
+        if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
+            ThrowAniError(code);
+        }
+    };
+    RequestIPC(work);
+}
 }
 
 // Since these macros are auto-generate, lint will cause false positive.
 // NOLINTBEGIN
+TH_EXPORT_CPP_API_EnableCloudImpl(AniCloudData::ConfigImpl::EnableCloudImpl);
+TH_EXPORT_CPP_API_DisableCloudImpl(AniCloudData::ConfigImpl::DisableCloudImpl);
 TH_EXPORT_CPP_API_ChangeAppCloudSwitchImpl(AniCloudData::ConfigImpl::ChangeAppCloudSwitchImpl);
+TH_EXPORT_CPP_API_NotifyDataChangeVarargs(AniCloudData::ConfigImpl::NotifyDataChangeVarargs);
+TH_EXPORT_CPP_API_NotifyDataChangeImpl(AniCloudData::ConfigImpl::NotifyDataChangeImpl);
+TH_EXPORT_CPP_API_NotifyDataChangeWithId(AniCloudData::ConfigImpl::NotifyDataChangeWithId);
+TH_EXPORT_CPP_API_NotifyDataChangeBoth(AniCloudData::ConfigImpl::NotifyDataChangeBoth);
+TH_EXPORT_CPP_API_QueryStatisticsImpl(AniCloudData::ConfigImpl::QueryStatisticsImpl);
+TH_EXPORT_CPP_API_QueryLastSyncInfoImpl(AniCloudData::ConfigImpl::QueryLastSyncInfoImpl);
 TH_EXPORT_CPP_API_ClearImpl(AniCloudData::ConfigImpl::ClearImpl);
 TH_EXPORT_CPP_API_ChangeAppCloudSwitchImplWithConfig(AniCloudData::ConfigImpl::ChangeAppCloudSwitchImplWithConfig);
 TH_EXPORT_CPP_API_ClearImplWithConfig(AniCloudData::ConfigImpl::ClearImplWithConfig);
+TH_EXPORT_CPP_API_SetGlobalCloudStrategyImpl(AniCloudData::ConfigImpl::SetGlobalCloudStrategyImpl);
+TH_EXPORT_CPP_API_CloudSyncImpl(AniCloudData::ConfigImpl::CloudSyncImpl);
+TH_EXPORT_CPP_API_SetCloudStrategyImpl(AniCloudData::SetCloudStrategyImpl);
 
 // NOLINTEND

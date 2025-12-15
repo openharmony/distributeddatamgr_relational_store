@@ -33,23 +33,27 @@ static constexpr AniErrorCode ANI_ERROR_CODE_MSGS[ANI_ERROR_CODE_COUNT] = {
     { Status::INVALID_ARGUMENT_V20, 14800001, "Invalid args." }
 };
 
-const std::optional<AniErrorCode> GetAniErrorCode(int32_t status)
+const std::optional<AniErrorCode> GetAniErrorCode(int32_t errorCode)
 {
-    for (size_t i = 0; i < ANI_ERROR_CODE_COUNT; ++i) {
-        if (ANI_ERROR_CODE_MSGS[i].status == status) {
-            return ANI_ERROR_CODE_MSGS[i];
-        }
+    auto aniErrorCode = AniErrorCode{ errorCode, -1, "" };
+    auto iter = std::lower_bound(ANI_ERROR_CODE_MSGS,
+        ANI_ERROR_CODE_MSGS + ANI_ERROR_CODE_COUNT, aniErrorCode,
+        [](const AniErrorCode &firstCode, const AniErrorCode &secondCode) {
+            return firstCode.status < secondCode.status;
+        });
+    if (iter < ANI_ERROR_CODE_MSGS + ANI_ERROR_CODE_COUNT && iter->status == errorCode) {
+        return *iter;
     }
     return std::nullopt;
 }
 
-void ThrowAniError(int32_t status)
+void ThrowAniError(int32_t errorCode)
 {
-    if (status == Status::SUCCESS) {
+    if (errorCode == Status::SUCCESS) {
         return;
     }
-    LOG_ERROR("ThrowAniError status: %{public}d", status);
-    auto errorMsg = GetAniErrorCode(status);
+    LOG_ERROR("ThrowAniError errorCode: %{public}d", errorCode);
+    auto errorMsg = GetAniErrorCode(errorCode);
     AniErrorCode aniError;
     if (errorMsg.has_value()) {
         aniError = errorMsg.value();
