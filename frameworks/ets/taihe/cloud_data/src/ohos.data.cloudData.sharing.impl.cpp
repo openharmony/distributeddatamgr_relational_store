@@ -40,6 +40,10 @@ ResultSet AllocResourceAndSharePromise(string_view storeId, RdbPredicates_TH pre
         }
         OHOS::RdbTaihe::RdbPredicatesImpl* impl = reinterpret_cast<OHOS::RdbTaihe::RdbPredicatesImpl*>(
             predicates->GetSpecificImplPtr());
+        if (impl == nullptr) {
+            LOG_ERROR("RdbPredicatesImpl is nullptr");
+            return;
+        }
         std::shared_ptr<OHOS::NativeRdb::RdbPredicates> rdbPredicateNative = impl->GetNativePtr();
         result = proxy->AllocResourceAndShare(std::string(storeId),
             rdbPredicateNative->GetDistributedPredicates(), realColumns, info);

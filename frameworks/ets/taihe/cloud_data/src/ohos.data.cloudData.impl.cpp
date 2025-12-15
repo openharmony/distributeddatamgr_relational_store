@@ -246,7 +246,7 @@ void ConfigImpl::SetGlobalCloudStrategyImpl(
                 return;
             }
             auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
-            if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
+            if (val < 0 || val >= OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
                 ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
                 return;
             }
