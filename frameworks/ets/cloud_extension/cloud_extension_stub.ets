@@ -213,11 +213,11 @@ namespace cloudExtension {
 
   export enum FieldType {
     NULL = 0,
-    LONG,
-    DOUBLE,
-    STRING,
-    BOOLEAN,
-    UINT8ARRAY,
+    NUMBER,
+    REAL,
+    TEXT,
+    BOOL,
+    BLOB,
     ASSET,
     ASSETS
   }
@@ -272,26 +272,26 @@ namespace cloudExtension {
   }
 
   const toFieldType = (value: int): cloudExtension.FieldType => {
-    switch (value) {
-      case 0:
-        return cloudExtension.FieldType.NULL;
-      case 1:
-        return cloudExtension.FieldType.LONG;
-      case 2:
-        return cloudExtension.FieldType.DOUBLE;
-      case 3:
-        return cloudExtension.FieldType.STRING;
-      case 4:
-        return cloudExtension.FieldType.BOOLEAN;
-      case 5:
-        return cloudExtension.FieldType.UINT8ARRAY;
-      case 6:
-        return cloudExtension.FieldType.ASSET;
-      case 7:
-        return cloudExtension.FieldType.ASSETS;
-      default:
-        return cloudExtension.FieldType.NULL;
-    }
+      switch (value) {
+        case 0:
+          return cloudExtension.FieldType.NULL;
+        case 1:
+          return cloudExtension.FieldType.NUMBER;
+        case 2:
+          return cloudExtension.FieldType.REAL;
+        case 3:
+          return cloudExtension.FieldType.TEXT;
+        case 4:
+          return cloudExtension.FieldType.BOOL;
+        case 5:
+          return cloudExtension.FieldType.BLOB;
+        case 6:
+          return cloudExtension.FieldType.ASSET;
+        case 7:
+          return cloudExtension.FieldType.ASSETS;
+        default:
+          return cloudExtension.FieldType.NULL;
+      }
   }
 
   class CloudServiceStub extends rpc.RemoteObject {
@@ -367,14 +367,14 @@ namespace cloudExtension {
       return false;
     }
 
-    marshallingCloudInfo = (reply: rpc.MessageSequence, cloudInfo: ServiceInfo): void => {
+    marshallingCloudInfo(reply: rpc.MessageSequence, cloudInfo: ServiceInfo): void {
       reply.writeBoolean(cloudInfo.enableCloud);
       reply.writeString(cloudInfo.id);
       reply.writeLong(cloudInfo.totalSpace);
       reply.writeLong(cloudInfo.remainingSpace);
       reply.writeInt(cloudInfo.user);
     }
-    marshallingAppBriefInfo = (reply: rpc.MessageSequence, appBriefInfo: Record<string, AppBriefInfo>): void => {
+    marshallingAppBriefInfo(reply: rpc.MessageSequence, appBriefInfo: Record<string, AppBriefInfo>): void {
       let keys = Object.keys(appBriefInfo);
       reply.writeInt(keys.length);
       keys.forEach(key => {
@@ -388,7 +388,7 @@ namespace cloudExtension {
         }
       });
     }
-    marshallingAppSchema = (reply: rpc.MessageSequence, appSchema: cloudExtension.AppSchema | undefined): void => {
+    marshallingAppSchema(reply: rpc.MessageSequence, appSchema: cloudExtension.AppSchema | undefined): void {
       reply.writeInt(appSchema?.version as int);
       reply.writeString(appSchema?.bundleName as string);
       reply.writeInt(appSchema?.databases.length as int);
@@ -410,7 +410,7 @@ namespace cloudExtension {
         });
       });
     }
-    unMarshallingSubInfo = (data: rpc.MessageSequence): Record<string, cloudExtension.Database[]> => {
+    unMarshallingSubInfo(data: rpc.MessageSequence): Record<string, cloudExtension.Database[]> {
       let key = data.readString();
       let subInfo: Record<string, cloudExtension.Database[]> = {};
       let count = data.readInt();
@@ -423,7 +423,7 @@ namespace cloudExtension {
       }
       return subInfo;
     }
-    unMarshallingDatabase = (data: rpc.MessageSequence): cloudExtension.Database => {
+    unMarshallingDatabase(data: rpc.MessageSequence): cloudExtension.Database {
       let database: cloudExtension.Database = {
         alias: '',
         name: '',
@@ -462,8 +462,7 @@ namespace cloudExtension {
       }
       return database;
     }
-    marshallingSubscribeInfo =
-      (reply: rpc.MessageSequence, subscribeInfo: cloudExtension.SubscribeInfo | undefined): void => {
+    marshallingSubscribeInfo(reply: rpc.MessageSequence, subscribeInfo: cloudExtension.SubscribeInfo | undefined): void {
         if (subscribeInfo !== undefined) {
           reply.writeLong((subscribeInfo as cloudExtension.SubscribeInfo)?.expirationTime as long);
           let keys: string[] = Object.keys(subscribeInfo.subscribe);
@@ -636,8 +635,7 @@ namespace cloudExtension {
       }
     }
 
-    marshallingValueBucket(reply: rpc.MessageSequence,
-      valueBucket: Record<string, cloudExtension.CloudType> | undefined): void {
+    marshallingValueBucket(reply: rpc.MessageSequence, valueBucket: Record<string, cloudExtension.CloudType> | undefined): void {
       if (valueBucket !== undefined) {
         let keys = Object.keys(valueBucket);
         reply.writeInt(keys.length as int);
@@ -647,14 +645,19 @@ namespace cloudExtension {
           if (value === undefined || value === null) {
             reply.writeInt(FieldType.NULL);
           } else {
-            if (typeof value === 'long') {
-              reply.writeInt(FieldType.LONG);
-              reply.writeLong(value as Long);
+            if (typeof value === 'number') {
+              if (value!.toString().indexOf('.') !== -1) {
+                reply.writeInt(FieldType.REAL)
+                reply.writeFloat(value as double);
+              } else {
+                reply.writeInt(FieldType.NUMBER);
+                reply.writeLong(value as long);
+              }
             } else if (typeof value === 'string') {
-              reply.writeInt(FieldType.STRING);
+              reply.writeInt(FieldType.TEXT);
               reply.writeString(value as string);
             } else if (typeof value === 'boolean') {
-              reply.writeInt(FieldType.BOOLEAN);
+              reply.writeInt(FieldType.BOOL);
               reply.writeBoolean(value as boolean);
             } else {
               if (value instanceof Array) {
@@ -677,7 +680,7 @@ namespace cloudExtension {
                   reply.writeString(asset.hash);
                 });
               } else if (value instanceof Uint8Array) {
-                reply.writeInt(FieldType.UINT8ARRAY);
+                reply.writeInt(FieldType.BLOB);
                 const byteArray: double[] = Array.from(value);
                 reply.writeDoubleArray(byteArray);
               } else {
@@ -769,18 +772,20 @@ namespace cloudExtension {
       return valueBucket;
     }
 
-    unMarshallingValueType(data: rpc.MessageSequence): CloudType {
+    unMarshallingValueType(data: rpc.MessageSequence): cloudExtension.CloudType {
       let type = data.readInt();
       switch (type) {
         case FieldType.NULL.valueOf(): // null
           return null;
-        case FieldType.LONG.valueOf(): // number
+        case FieldType.NUMBER.valueOf(): // number
           return data.readLong();
-        case FieldType.STRING.valueOf(): // string
+        case FieldType.REAL.valueOf(): // number
+          return data.readFloat();
+        case FieldType.TEXT.valueOf(): // string
           return data.readString()
-        case FieldType.BOOLEAN.valueOf(): // boolean
+        case FieldType.BOOL.valueOf(): // boolean
           return data.readBoolean();
-        case FieldType.UINT8ARRAY.valueOf(): // Uint8Array
+        case FieldType.BLOB.valueOf(): // Uint8Array
           return Uint8Array.from(data.readIntArray());
         case FieldType.ASSET.valueOf(): // Asset
           return {
