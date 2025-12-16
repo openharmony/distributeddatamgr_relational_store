@@ -32,8 +32,6 @@ ohos_taihe("cloud_data_generate") {
   taihe_generated_file_path = "$taihe_generated_file_path"
   deps = [ ":cloud_data_taihe_idl" ]
   outputs = [
-    "$taihe_generated_file_path/src/ohos.data.commonType.ani.cpp",
-    "$taihe_generated_file_path/src/ohos.data.commonType.abi.c",
     "$taihe_generated_file_path/src/ohos.data.cloudData.ani.cpp",
     "$taihe_generated_file_path/src/ohos.data.cloudData.abi.c",
     "$taihe_generated_file_path/src/ohos.data.cloudData.sharing.ani.cpp",
