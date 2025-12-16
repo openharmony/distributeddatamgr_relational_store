@@ -34,6 +34,9 @@ import RdbQueryWithoutRowCount from './RdbQueryWithoutRowCount.test';
 import TransQueryWithoutRowCount from './TransQueryWithoutRowCount.test';
 import RdbStoreDeleteWithReturning from './RdbStoreDeleteWithReturning.test';
 import RdbSetDistributedTable from './RdbSetDistributedTable.test';
+import RdbStoreBatchInsertWithReturning from './RdbStoreBatchInsertWithReturning.test';
+import RdbStoreUpdateWithReturning from './RdbStoreUpdateWithReturning.test';
+import ReturningMultiThreaded from './ReturningMultiThreaded.test';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -57,4 +60,7 @@ export default function testsuite() {
   TransQueryWithoutRowCount();
   RdbStoreDeleteWithReturning();
   RdbSetDistributedTable();
+  RdbStoreBatchInsertWithReturning();
+  RdbStoreUpdateWithReturning();
+  ReturningMultiThreaded();
 }
