@@ -39,18 +39,28 @@ const defaultReturningConfig: relationalStore.ReturningConfig = { columns: ['nam
 async function resetRdbStore()
 {
   console.info(TAG + 'resetRdbStore');
-  await relationalStore.deleteRdbStore(context, STORE_CONFIG);
-  rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
-  expect(rdbStore != undefined).assertTrue();
-  await rdbStore?.executeSql(CREATE_TABLE_TEST);
-  let valueBuckets = new Array<relationalStore.ValuesBucket>();
-  const num = 10;
-  for (let i = 0; i < num; i++) {
-    const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' + i, 'age': 18 + i };
-    valueBuckets.push(valueBucket);
+  try {
+    await rdbStore?.close();
+  } catch (e) {
+    console.info(TAG + 'close failed');
   }
-  let changedRows = await rdbStore?.batchInsert("test", valueBuckets);
-  expect(changedRows).assertEqual(num);
+  try {
+    await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+    rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
+    expect(rdbStore != undefined).assertTrue();
+    await rdbStore?.executeSql(CREATE_TABLE_TEST);
+    let valueBuckets = new Array<relationalStore.ValuesBucket>();
+    const num = 10;
+    for (let i = 0; i < num; i++) {
+        const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' + i, 'age': 18 + i };
+        valueBuckets.push(valueBucket);
+    }
+    let changedRows = await rdbStore?.batchInsert("test", valueBuckets);
+    expect(changedRows).assertEqual(num);
+  } catch(e) {
+    console.error(TAG + `resetRdbStore failed. code is ${e.code}, message is ${e.message}`);
+    expect(true).assertFail();
+  }
 }
 
 async function getTrans() : Promise<relationalStore.Transaction>
@@ -591,7 +601,7 @@ export default function RdbStoreUpdateWithReturning() {
         rdbStore?.updateWithReturningSync(valueBucket, predicates, defaultReturningConfig);
       });
       let trans = await getTrans();
-      trans.commit();
+      await trans.commit();
       await callAndCodeCheck(14800014, "transUpdateWithReturning016", async () => {
         await trans?.updateWithReturning(valueBucket, predicates, defaultReturningConfig);
       });
@@ -618,7 +628,7 @@ export default function RdbStoreUpdateWithReturning() {
         rdbStore?.updateWithReturningSync(valueBucket, predicates, config);
       });
       let trans = await getTrans();
-      trans.commit();
+      await trans.commit();
       await callAndCodeCheck(14800014, "transUpdateWithReturning017", async () => {
         await trans?.updateWithReturning(valueBucket, predicates, config);
       });
@@ -918,7 +928,7 @@ export default function RdbStoreUpdateWithReturning() {
         securityLevel: relationalStore.SecurityLevel.S1,
         persist: false,
       };
-      let rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
+      rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
       await rdbStore?.executeSql(CREATE_TABLE_TEST);
       let deferredTrans = await rdbStore?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
