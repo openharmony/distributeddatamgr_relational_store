@@ -1,4 +1,4 @@
-# Copyright (C) 2025-2025 Huawei Device Co., Ltd.
+# Copyright (C) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -22,9 +22,9 @@ taihe_generated_file_path =
     "$taihe_file_path/out/$subsystem_name/$part_name/cloud_data"
 
 copy_taihe_idl("cloud_data_taihe_idl") {
-  sources = [ "idl/ohos.data.cloudData.taihe" ]
-  deps = [
-    "${relational_store_frameworks_path}/ets/taihe/relational_store:copy_taihe",
+  sources = [
+    "idl/ohos.data.cloudData.sharing.taihe",
+    "idl/ohos.data.cloudData.taihe",
   ]
 }
 
@@ -34,6 +34,8 @@ ohos_taihe("cloud_data_generate") {
   outputs = [
     "$taihe_generated_file_path/src/ohos.data.cloudData.ani.cpp",
     "$taihe_generated_file_path/src/ohos.data.cloudData.abi.c",
+    "$taihe_generated_file_path/src/ohos.data.cloudData.sharing.ani.cpp",
+    "$taihe_generated_file_path/src/ohos.data.cloudData.sharing.abi.c",
   ]
 }
 
@@ -59,6 +61,7 @@ taihe_shared_library("cloud_data_taihe") {
     "${relational_store_frameworks_path}/ets/taihe/cloud_data/src/ani_constructor.cpp",
     "${relational_store_frameworks_path}/ets/taihe/cloud_data/src/ani_error_code.cpp",
     "${relational_store_frameworks_path}/ets/taihe/cloud_data/src/ohos.data.cloudData.impl.cpp",
+    "${relational_store_frameworks_path}/ets/taihe/cloud_data/src/ohos.data.cloudData.sharing.impl.cpp",
   ]
   deps = [
     ":cloud_data_generate",

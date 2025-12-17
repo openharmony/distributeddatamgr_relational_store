@@ -1,0 +1,123 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@!namespace("@ohos.data.cloudData", "cloudData.sharing")
+from ohos.data.relationalStore use RdbPredicates;
+from ohos.data.relationalStore use ResultSet;
+
+@!sts_inject("""
+static { loadLibraryWithPermissionCheck("cloud_data_taihe.z", "@ohos.data.cloudData"); }
+""")
+
+enum Role: i32 {
+    ROLE_INVITER = 0,
+    ROLE_INVITEE = 1,
+}
+
+enum State: i32 {
+    STATE_UNKNOWN = 0,
+    STATE_ACCEPTED = 1,
+    STATE_REJECTED = 2,
+    STATE_SUSPENDED = 3,
+    STATE_UNAVAILABLE = 4,
+}
+
+enum SharingCode: i32 {
+    SUCCESS = 0,
+    REPEATED_REQUEST = 1,
+    NOT_INVITER = 2,
+    NOT_INVITER_OR_INVITEE = 3,
+    OVER_QUOTA = 4,
+    TOO_MANY_PARTICIPANTS = 5,
+    INVALID_ARGS = 6,
+    NETWORK_ERROR = 7,
+    CLOUD_DISABLED = 8,
+    SERVER_ERROR = 9,
+    INNER_ERROR = 10,
+    INVALID_INVITATION = 11,
+    RATE_LIMIT = 12,
+    CUSTOM_ERROR = 1000,
+}
+
+struct Privilege {
+    writable: Optional<bool>;
+    readable: Optional<bool>;
+    creatable: Optional<bool>;
+    deletable: Optional<bool>;
+    shareable: Optional<bool>;
+}
+
+struct Participant {
+    identity: String;
+    role: Optional<Role>;
+    state: Optional<State>;
+    privilege: Optional<Privilege>;
+    attachInfo: Optional<String>;
+}
+
+struct Result {
+    code: i32;
+    description: Optional<String>;
+    value: Optional<ResultValue>;
+}
+
+union ResultValue {
+    @undefined undefinedValue;
+    stringValue: String;
+    participantsValue: Array<Participant>;
+    resultParticipantsValue: Array<Result>;
+    objValue: Opaque;
+}
+
+@gen_promise("allocResourceAndShare")
+function AllocResourceAndSharePromise(storeId: String, predicates: RdbPredicates, participants: Array<Participant>, columns: Optional<Array<String>>): ResultSet;
+
+@gen_async("allocResourceAndShare")
+function AllocResourceAndShareImpl(storeId: String, predicates: RdbPredicates, participants: Array<Participant>): ResultSet;
+
+@gen_async("allocResourceAndShare")
+function AllocResourceAndShareImplWithColumns(storeId: String, predicates: RdbPredicates, participants: Array<Participant>, columns: Array<String>): ResultSet;
+
+@gen_promise("share")
+@gen_async("share")
+function ShareImpl(sharingResource: String, participants: Array<Participant>): Result;
+
+@gen_promise("unshare")
+@gen_async("unshare")
+function UnshareImpl(sharingResource: String, participants: Array<Participant>): Result;
+
+@gen_promise("exit")
+@gen_async("exit")
+function ExitImpl(sharingResource: String): Result;
+
+@gen_promise("changePrivilege")
+@gen_async("changePrivilege")
+function ChangePrivilegeImpl(sharingResource: String, participants: Array<Participant>): Result;
+
+@gen_promise("queryParticipants")
+@gen_async("queryParticipants")
+function QueryParticipantsImpl(sharingResource: String): Result;
+
+@gen_promise("queryParticipantsByInvitation")
+@gen_async("queryParticipantsByInvitation")
+function QueryParticipantsByInvitationImpl(invitationCode: String): Result;
+
+@gen_promise("confirmInvitation")
+@gen_async("confirmInvitation")
+function ConfirmInvitationImpl(invitationCode: String, state: State): Result;
+
+@gen_promise("changeConfirmation")
+@gen_async("changeConfirmation")
+function ChangeConfirmationImpl(sharingResource: String, state: State): Result;
