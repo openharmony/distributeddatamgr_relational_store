@@ -17,6 +17,10 @@
 from ohos.data.relationalStore use RdbPredicates;
 from ohos.data.relationalStore use ResultSet;
 
+@!sts_inject("""
+static { loadLibraryWithPermissionCheck("cloud_data_taihe.z", "@ohos.data.cloudData"); }
+""")
+
 enum Role: i32 {
     ROLE_INVITER = 0,
     ROLE_INVITEE = 1,
@@ -70,10 +74,11 @@ struct Result {
 }
 
 union ResultValue {
+    @undefined undefinedValue;
     stringValue: String;
     participantsValue: Array<Participant>;
     resultParticipantsValue: Array<Result>;
-    @undefined undefinedValue;
+    objValue: Opaque;
 }
 
 @gen_promise("allocResourceAndShare")
@@ -83,7 +88,7 @@ function AllocResourceAndSharePromise(storeId: String, predicates: RdbPredicates
 function AllocResourceAndShareImpl(storeId: String, predicates: RdbPredicates, participants: Array<Participant>): ResultSet;
 
 @gen_async("allocResourceAndShare")
-function AllocResourceAndShareImplWithColumns(storeId: String, predicates: RdbPredicates, participants: Array<Participant>,columns: Array<String>): ResultSet;
+function AllocResourceAndShareImplWithColumns(storeId: String, predicates: RdbPredicates, participants: Array<Participant>, columns: Array<String>): ResultSet;
 
 @gen_promise("share")
 @gen_async("share")
