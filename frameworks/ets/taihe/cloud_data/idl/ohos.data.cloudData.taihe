@@ -14,9 +14,21 @@
  */
 
 @!namespace("@ohos.data.cloudData", "cloudData")
+from ohos.data.commonType use ValueType;
+from ohos.data.relationalStore use ProgressCode;
+from ohos.data.relationalStore use SyncMode;
+from ohos.data.relationalStore use ProgressDetails;
+from ohos.data.relationalStore use ResultSet;
+
 @!sts_inject("""
 static { loadLibraryWithPermissionCheck("cloud_data_taihe.z", "@ohos.data.cloudData"); }
+export const DATA_CHANGE_EVENT_ID = 'cloud_data_change';
 """)
+
+enum SyncStatus: i32 {
+    RUNNING = 0,
+    FINISHED = 1
+}
 
 enum ClearAction: i32 {
     CLEAR_CLOUD_INFO = 0,
@@ -42,14 +54,77 @@ struct ClearConfig {
     dbInfo: @record Map<String, DBActionInfo>;
 }
 
+enum StrategyType: i32 {
+    NETWORK = 0
+}
+
+enum NetWorkStrategy: i32 {
+    WIFI = 1,
+    CELLULAR = 2
+}
+
+struct StatisticInfo {
+    table: String;
+    inserted: i32;
+    updated: i32;
+    normal: i32;
+}
+
+struct SyncInfo {
+    startTime: @sts_type("Date") Opaque;
+    finishTime: @sts_type("Date") Opaque;
+    code: ProgressCode;
+    syncStatus: Optional<SyncStatus>;
+}
+
+struct ExtraData {
+    eventId: String;
+    extraData: String;
+}
+
 @class
 interface Config {
 }
 
 @static("Config")
+@gen_promise("enableCloud")
+@gen_async("enableCloud")
+function EnableCloudImpl(accountId: String, switches: @record Map<String, bool>): void;
+
+@static("Config")
+@gen_promise("disableCloud")
+@gen_async("disableCloud")
+function DisableCloudImpl(accountId: String): void;
+
+@static("Config")
 @gen_promise("changeAppCloudSwitch")
 @gen_async("changeAppCloudSwitch")
 function ChangeAppCloudSwitchImpl(accountId: String, bundleName: String, status: bool): void;
+
+@static("Config")
+@gen_promise("notifyDataChange")
+function NotifyDataChangeVarargs(extInfo: ExtraData, userId: Optional<i32>): void;
+
+@static("Config")
+@gen_async("notifyDataChange")
+function NotifyDataChangeImpl(extInfo: ExtraData): void;
+
+@static("Config")
+@gen_async("notifyDataChange")
+function NotifyDataChangeWithId(extInfo: ExtraData, userId: i32): void;
+
+@static("Config")
+@gen_promise("notifyDataChange")
+@gen_async("notifyDataChange")
+function NotifyDataChangeBoth(accountId: String, bundleName: String): void;
+
+@static("Config")
+@gen_promise("queryStatistics")
+function QueryStatisticsImpl(accountId: String, bundleName: String, storeId: Optional<String>): @record Map<String, Array<StatisticInfo>>;
+
+@static("Config")
+@gen_promise("queryLastSyncInfo")
+function QueryLastSyncInfoImpl(accountId: String, bundleName: String, storeId: Optional<String>): @record Map<String, SyncInfo>;
 
 @static("Config")
 @gen_promise("clear")
@@ -63,3 +138,15 @@ function ChangeAppCloudSwitchImplWithConfig(accountId: String, bundleName: Strin
 @static("Config")
 @gen_promise("clear")
 function ClearImplWithConfig(accountId: String, appActions: @record Map<String, ClearAction>, config: Optional<@record Map<String, ClearConfig>>): void;
+
+@static("Config")
+@gen_promise("setGlobalCloudStrategy")
+function SetGlobalCloudStrategyImpl(strategy: StrategyType, param: Optional<Array<ValueType>>): void;
+
+@static("Config")
+@gen_promise("cloudSync")
+function CloudSyncImpl(bundleName: String, storeId: String, mode: SyncMode, progress: (data: ProgressDetails)=> void): void;
+
+@gen_promise("setCloudStrategy")
+function SetCloudStrategyImpl(strategy: StrategyType, param: Optional<Array<ValueType>>): void;
+
