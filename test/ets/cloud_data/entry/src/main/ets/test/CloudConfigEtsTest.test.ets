@@ -506,5 +506,65 @@ export default function CloudConfigEtsTest() {
             done();
         }
     })
+
+    /**
+     * @tc.name changeAppCloudSwitch001
+     * @tc.desc Test changeAppCloudSwitch with no permission
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('changeAppCloudSwitch001', 0, async (done: () => void) => {
+      let config: cloudData.SwitchConfig = {
+        dbInfo: {
+            'default_db': {
+                enable: false
+            }
+        }
+      };
+
+      try {
+        await cloudData.Config.changeAppCloudSwitch("test_account_001", "com.example.app1", false, config);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('changeAppCloudSwitch001 fail' + `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 202).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name clear001
+     * @tc.desc Test clear with no permission
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('clear001', 0, async (done: () => void) => {
+      let appActions: Record<string, cloudData.ClearAction> = {
+        'com.example.simple': cloudData.ClearAction.CLEAR_CLOUD_INFO
+      };
+
+      let clearConfig: Record<string, cloudData.ClearConfig> = {
+        'com.example.simple': {
+          dbInfo: {
+            'default_db': {
+                action: cloudData.ClearAction.CLEAR_CLOUD_INFO
+            }
+          }
+        }
+      };
+
+      try {
+        await cloudData.Config.clear("test_account_002", appActions, clearConfig);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('clear001 fail' + `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 202).assertTrue();
+        done();
+      }
+    });
   })
 }
