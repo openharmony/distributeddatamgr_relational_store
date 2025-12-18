@@ -39,7 +39,6 @@ ohos_distributedtest("DistributedTest") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -48,6 +47,10 @@ ohos_distributedtest("DistributedTest") {
     "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
+
+  if (relational_store_dm_part_is_enabled && relational_store_distributed_capability) {
+    external_deps += [ "device_manager:devicemanagersdk", ]
+  }
 
   if (relational_store_rdb_support_icu) {
     external_deps += [
@@ -68,7 +71,6 @@ ohos_distributedtest("DistributedTestAgent") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -77,6 +79,10 @@ ohos_distributedtest("DistributedTestAgent") {
     "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
+
+  if (relational_store_dm_part_is_enabled && relational_store_distributed_capability) {
+    external_deps += [ "device_manager:devicemanagersdk", ]
+  }
 
   if (relational_store_rdb_support_icu) {
     external_deps += [
