@@ -330,8 +330,10 @@ RDB_UTILS_DISABLE_WARNING("-Wc99-designator")
         [ValueObject::TYPE_STRING] = ColumnType::TYPE_STRING,
         [ValueObject::TYPE_BOOL] = ColumnType::TYPE_INTEGER,
         [ValueObject::TYPE_BLOB] = ColumnType::TYPE_BLOB,
-        [ValueObject::TYPE_ASSET] = ColumnType::TYPE_BLOB,
-        [ValueObject::TYPE_ASSETS] = ColumnType::TYPE_BLOB,
+        [ValueObject::TYPE_ASSET] = ColumnType::TYPE_ASSET,
+        [ValueObject::TYPE_ASSETS] = ColumnType::TYPE_ASSETS,
+        [ValueObject::TYPE_VECS] = ColumnType::TYPE_FLOAT32_ARRAY,
+        [ValueObject::TYPE_BIGINT] = ColumnType::TYPE_BIGINT,
     };
 RDB_UTILS_POP_WARNING
     int32_t row_;
