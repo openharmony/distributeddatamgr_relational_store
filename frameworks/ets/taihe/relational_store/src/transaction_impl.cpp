@@ -72,9 +72,9 @@ int64_t TransactionImpl::InsertSync(
     }
     OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
     auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictResolution.get_key();
-    auto [errcode, output] = nativeTransaction_->Insert(std::string(table), bucket, nativeConflictValue);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, output] = nativeTransaction_->Insert(std::string(table), bucket, nativeConflictValue);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return output;
     }
     return output;
@@ -92,9 +92,9 @@ int64_t TransactionImpl::BatchInsertSync(string_view table, array_view<map<strin
         ThrowParamError("Duplicate assets are not allowed");
         return ERR_NULL;
     }
-    auto [errcode, output] = nativeTransaction_->BatchInsert(std::string(table), buckets);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, output] = nativeTransaction_->BatchInsert(std::string(table), buckets);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return output;
     }
     return output;
@@ -119,9 +119,9 @@ int64_t TransactionImpl::UpdateSync(
     }
     OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
     auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictResolution.get_key();
-    auto [errcode, rows] = nativeTransaction_->Update(bucket, *rdbPredicateNative, nativeConflictValue);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, rows] = nativeTransaction_->Update(bucket, *rdbPredicateNative, nativeConflictValue);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return rows;
     }
     return rows;
@@ -139,9 +139,9 @@ int64_t TransactionImpl::DeleteSync(weak::RdbPredicates predicates)
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
         return ERR_NULL;
     }
-    auto [errcode, rows] = nativeTransaction_->Delete(*rdbPredicateNative);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, rows] = nativeTransaction_->Delete(*rdbPredicateNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return rows;
     }
     return rows;
@@ -240,9 +240,9 @@ ValueType TransactionImpl::ExecuteSync(string_view sql, optional_view<array<Valu
         std::transform(args.value().begin(), args.value().end(), para.begin(),
             [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
     }
-    auto [errcode, nativeValue] = nativeTransaction_->Execute(std::string(sql), para);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, nativeValue] = nativeTransaction_->Execute(std::string(sql), para);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return aniValue;
     }
     return ani_rdbutils::ValueObjectToAni(nativeValue);
@@ -281,10 +281,10 @@ int64_t TransactionImpl::BatchInsertWithConflictResolutionSync(taihe::string_vie
     }
     ConflictResolution conflictResolution = ConflictResolution::key_t::ON_CONFLICT_NONE;
     conflictResolution = conflict.get_key();
-    auto [errcode, insertRows] = nativeTransaction_->BatchInsert(std::string(table),
+    auto [errCode, insertRows] = nativeTransaction_->BatchInsert(std::string(table),
         buckets, ani_rdbutils::ConflictResolutionToNative(conflict));
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return ERR_NULL;
     }
     return insertRows;

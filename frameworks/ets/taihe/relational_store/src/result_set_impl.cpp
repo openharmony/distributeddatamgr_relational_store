@@ -51,11 +51,8 @@ array<string> ResultSetImpl::GetColumnNames()
     if (nativeResultSet_ != nullptr) {
         std::tie(errCode, colNames) = nativeResultSet_->GetWholeColumnNames();
     }
-    if (errCode == OHOS::NativeRdb::E_INVALID_ARGS) {
-        errCode = OHOS::NativeRdb::E_INVALID_ARGS_NEW;
-    }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerErrorExt(errCode);
         return {};
     }
     return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
@@ -436,11 +433,8 @@ array<ohos::data::relationalStore::ValueType> ResultSetImpl::GetCurrentRowData()
     if (nativeResultSet_ != nullptr) {
         std::tie(errCode, rowData) = nativeResultSet_->GetRowData();
     }
-    if (errCode == OHOS::NativeRdb::E_INVALID_ARGS) {
-        errCode = OHOS::NativeRdb::E_INVALID_ARGS_NEW;
-    }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerErrorExt(errCode);
         return {};
     }
     std::vector<ValueType> rowDataTemp;
@@ -449,13 +443,13 @@ array<ohos::data::relationalStore::ValueType> ResultSetImpl::GetCurrentRowData()
     return array<ValueType>(::taihe::copy_data_t{}, rowDataTemp.data(), rowDataTemp.size());
 }
 
-array<array<ValueType>> ResultSetImpl::GetRowsDataAsync(int32_t maxCount, optional_view<int32_t> position)
+array<array<ValueType>> ResultSetImpl::GetRowsDataSync(int32_t maxCount, optional_view<int32_t> position)
 {
     if (maxCount <= 0) {
         ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
         return {};
     }
-    int32_t nativePosition = 0;
+    int32_t nativePosition = INIT_POSITION;
     if (position.has_value()) {
         nativePosition = position.value();
         if (nativePosition < 0) {
@@ -468,11 +462,8 @@ array<array<ValueType>> ResultSetImpl::GetRowsDataAsync(int32_t maxCount, option
     if (nativeResultSet_ != nullptr) {
         std::tie(errCode, rowsData) = nativeResultSet_->GetRowsData(maxCount, nativePosition);
     }
-    if (errCode == OHOS::NativeRdb::E_INVALID_ARGS) {
-        errCode = OHOS::NativeRdb::E_INVALID_ARGS_NEW;
-    }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerErrorExt(errCode);
         return {};
     }
     std::vector<std::vector<ValueType>> rowsDataTemp;

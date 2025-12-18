@@ -372,7 +372,7 @@ interface ResultSet {
     GetCurrentRowData(): Array<ValueType>;
 
     @gen_promise("getRowsData")
-    GetRowsDataAsync(maxCount: i32, position: Optional<i32>): Array<Array<ValueType>>;
+    GetRowsDataSync(maxCount: i32, position: Optional<i32>): Array<Array<ValueType>>;
 
     IsColumnNull(columnIndex: i32): bool;
 

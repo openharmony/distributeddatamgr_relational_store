@@ -91,9 +91,9 @@ int32_t RdbStoreImpl::GetVersion()
         return ERR_NULL;
     }
     int32_t version = 0;
-    int errcode = nativeRdbStore_->GetVersion(version);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->GetVersion(version);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
     return version;
 }
@@ -104,9 +104,9 @@ void RdbStoreImpl::SetVersion(int32_t veriosn)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->SetVersion(veriosn);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->SetVersion(veriosn);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -117,9 +117,9 @@ RebuildType RdbStoreImpl::GetRebuilt()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return (RebuildType::key_t)rebuilt;
     }
-    int errcode = nativeRdbStore_->GetRebuilt(rebuilt);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->GetRebuilt(rebuilt);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
     return (RebuildType::key_t)rebuilt;
 }
@@ -144,10 +144,10 @@ int64_t RdbStoreImpl::InsertWithConflict(string_view table, map_view<string, Val
         return ERR_NULL;
     }
 
-    int errcode = nativeRdbStore_->InsertWithConflictResolution(
+    int errCode = nativeRdbStore_->InsertWithConflictResolution(
         int64Output, std::string(table), bucket, (OHOS::NativeRdb::ConflictResolution)conflict.get_key());
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return 0;
     }
     return int64Output;
@@ -179,9 +179,9 @@ int64_t RdbStoreImpl::BatchInsertSync(string_view table, array_view<map<string, 
         ThrowParamError("Duplicate assets are not allowed");
         return ERR_NULL;
     }
-    auto [errcode, output] = nativeRdbStore_->BatchInsert(std::string(table), buckets);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, output] = nativeRdbStore_->BatchInsert(std::string(table), buckets);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return output;
     }
     return output;
@@ -212,10 +212,10 @@ int64_t RdbStoreImpl::UpdateSync(
     OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
     auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictResolution.get_key();
     int output = 0;
-    int errcode = nativeRdbStore_->UpdateWithConflictResolution(output, rdbPredicateNative->GetTableName(), bucket,
+    int errCode = nativeRdbStore_->UpdateWithConflictResolution(output, rdbPredicateNative->GetTableName(), bucket,
         rdbPredicateNative->GetWhereClause(), rdbPredicateNative->GetBindArgs(), nativeConflictValue);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return ERR_NULL;
     }
     return output;
@@ -244,11 +244,11 @@ int64_t RdbStoreImpl::UpdateDataShareSync(
     OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values.get_VALUESBUCKET_ref());
 
     int output = 0;
-    int errcode = nativeRdbStore_->UpdateWithConflictResolution(output, rdbPredicates.GetTableName(), bucket,
+    int errCode = nativeRdbStore_->UpdateWithConflictResolution(output, rdbPredicates.GetTableName(), bucket,
         rdbPredicates.GetWhereClause(), rdbPredicates.GetBindArgs(),
         OHOS::NativeRdb::ConflictResolution::ON_CONFLICT_NONE);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return ERR_NULL;
     }
     return output;
@@ -266,9 +266,9 @@ int64_t RdbStoreImpl::DeleteSync(weak::RdbPredicates predicates)
         return ERR_NULL;
     }
     int output = 0;
-    int errcode = nativeRdbStore_->Delete(output, *rdbPredicateNative);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Delete(output, *rdbPredicateNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return 0;
     }
     return output;
@@ -294,9 +294,9 @@ int64_t RdbStoreImpl::DeleteDataShareSync(::taihe::string_view table, uintptr_t 
     }
     auto rdbPredicates = OHOS::RdbDataShareAdapter::RdbUtils::ToPredicates(*holder, std::string(table));
     int output = 0;
-    int errcode = nativeRdbStore_->Delete(output, rdbPredicates);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Delete(output, rdbPredicates);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return 0;
     }
     return output;
@@ -489,9 +489,9 @@ void RdbStoreImpl::CleanDirtyDataWithCursor(string_view table, uint64_t cursor)
         return;
     }
     std::string nativeTable(table);
-    int32_t errcode = nativeRdbStore_->CleanDirtyData(nativeTable, cursor);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int32_t errCode = nativeRdbStore_->CleanDirtyData(nativeTable, cursor);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -502,9 +502,9 @@ void RdbStoreImpl::CleanDirtyDataWithTable(string_view table)
         return;
     }
     std::string nativeTable(table);
-    int32_t errcode = nativeRdbStore_->CleanDirtyData(nativeTable, 0);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int32_t errCode = nativeRdbStore_->CleanDirtyData(nativeTable, 0);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -598,9 +598,9 @@ void RdbStoreImpl::ExecuteSqlWithSql(string_view sql)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->ExecuteSql(std::string(sql));
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->ExecuteSql(std::string(sql));
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -616,9 +616,9 @@ void RdbStoreImpl::ExecuteSqlWithOptionArgs(string_view sql, optional_view<array
         return;
     }
     if (!bindArgs.has_value()) {
-        int errcode = nativeRdbStore_->ExecuteSql(std::string(sql));
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->ExecuteSql(std::string(sql));
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
         return;
     }
@@ -630,9 +630,9 @@ void RdbStoreImpl::ExecuteSqlWithOptionArgs(string_view sql, optional_view<array
         ThrowParamError("Duplicate assets are not allowed");
         return;
     }
-    int errcode = nativeRdbStore_->ExecuteSql(std::string(sql), para);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->ExecuteSql(std::string(sql), para);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -662,9 +662,9 @@ ValueType RdbStoreImpl::ExecuteWithTxId(string_view sql, int64_t txId, optional_
         ThrowParamError("Duplicate assets are not allowed");
         return aniValue;
     }
-    auto [errcode, sqlExeOutput] = nativeRdbStore_->Execute(std::string(sql), nativeValues, txId);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, sqlExeOutput] = nativeRdbStore_->Execute(std::string(sql), nativeValues, txId);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return aniValue;
     }
     return ani_rdbutils::ValueObjectToAni(sqlExeOutput);
@@ -681,9 +681,9 @@ void RdbStoreImpl::BeginTransaction()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->BeginTransaction();
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->BeginTransaction();
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -693,9 +693,9 @@ int64_t RdbStoreImpl::BeginTransSync()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return ERR_NULL;
     }
-    auto [errcode, rxid] = nativeRdbStore_->BeginTrans();
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, rxid] = nativeRdbStore_->BeginTrans();
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return 0;
     }
     return rxid;
@@ -707,9 +707,9 @@ void RdbStoreImpl::Commit()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->Commit();
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Commit();
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -719,9 +719,9 @@ void RdbStoreImpl::CommitWithTxId(int64_t txId)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->Commit(txId);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Commit(txId);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -731,9 +731,9 @@ void RdbStoreImpl::RollBack()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->RollBack();
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->RollBack();
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -743,9 +743,9 @@ void RdbStoreImpl::RollbackSync(int64_t txId)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->RollBack(txId);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->RollBack(txId);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -755,9 +755,9 @@ void RdbStoreImpl::BackupSync(string_view destName)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->Backup(std::string(destName));
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Backup(std::string(destName));
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -767,9 +767,9 @@ void RdbStoreImpl::RestoreWithSrcName(string_view srcName)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->Restore(std::string(srcName));
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Restore(std::string(srcName));
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -779,9 +779,9 @@ void RdbStoreImpl::RestoreWithVoid()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->Restore("");
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Restore("");
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -791,9 +791,9 @@ void RdbStoreImpl::SetDistributedTablesWithTables(array_view<string> tables)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()));
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()));
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -803,10 +803,10 @@ void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, Distr
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->SetDistributedTables(
+    int errCode = nativeRdbStore_->SetDistributedTables(
         std::vector<std::string>(tables.begin(), tables.end()), (OHOS::NativeRdb::DistributedType)type.get_key());
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -818,10 +818,10 @@ void RdbStoreImpl::SetDistributedTablesWithConfig(
         return;
     }
     auto nativeConfig = ani_rdbutils::DistributedConfigToNative(config);
-    int errcode = nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()),
+    int errCode = nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()),
         (OHOS::NativeRdb::DistributedType)type.get_key(), nativeConfig);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -842,9 +842,9 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
     if (config.has_value()) {
         nativeConfig = ani_rdbutils::DistributedConfigToNative(config.value());
     }
-    int errcode = nativeRdbStore_->SetDistributedTables(tableList, nativeType, nativeConfig);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->SetDistributedTables(tableList, nativeType, nativeConfig);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -856,10 +856,10 @@ string RdbStoreImpl::ObtainDistributedTableNameSync(string_view device, string_v
     }
     std::string deviceStr(device);
     std::string tableStr(table);
-    int errcode;
-    std::string distributedTableName = nativeRdbStore_->ObtainDistributedTableName(deviceStr, tableStr, errcode);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode;
+    std::string distributedTableName = nativeRdbStore_->ObtainDistributedTableName(deviceStr, tableStr, errCode);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return "";
     }
     return distributedTableName;
@@ -883,9 +883,9 @@ array<map<string, int32_t>> RdbStoreImpl::SyncSync(SyncMode mode, weak::RdbPredi
     auto nativeSyncCallback = [&promise](const OHOS::DistributedRdb::SyncResult &data) {
         promise.set_value(data);
     };
-    int errcode = nativeRdbStore_->Sync(option, *rdbPredicateNative, nativeSyncCallback);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Sync(option, *rdbPredicateNative, nativeSyncCallback);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return taiheResult;
     }
     auto result = future.get();
@@ -918,9 +918,9 @@ void RdbStoreImpl::CloudSyncWithProgress(SyncMode mode, callback_view<void(Progr
             }
         };
     std::vector<std::string> nativeTables;
-    int errcode = nativeRdbStore_->Sync(option, nativeTables, nativeProgressCallback);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Sync(option, nativeTables, nativeProgressCallback);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -943,9 +943,9 @@ void RdbStoreImpl::CloudSyncWithTable(
             progress(taiheProgress);
         }
     };
-    int errcode = nativeRdbStore_->Sync(option, nativeTables, nativeProgressCallback);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Sync(option, nativeTables, nativeProgressCallback);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -972,9 +972,9 @@ void RdbStoreImpl::CloudSyncWithPredicates(
             progress(aniProgress);
         }
     };
-    int errcode = nativeRdbStore_->Sync(option, *rdbPredicateNative, nativeProgressCallback);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Sync(option, *rdbPredicateNative, nativeProgressCallback);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -1126,9 +1126,9 @@ void RdbStoreImpl::Emit(string_view event)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->Notify(std::string(event));
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->Notify(std::string(event));
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -1161,9 +1161,9 @@ int32_t RdbStoreImpl::AttachWithWaitTime(string_view fullPath, string_view attac
         }
     }
     OHOS::NativeRdb::RdbStoreConfig config(fullPathStr);
-    auto [errcode, output] = nativeRdbStore_->Attach(config, attachNameStr, waitTimeNative);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, output] = nativeRdbStore_->Attach(config, attachNameStr, waitTimeNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return 0;
     }
     return output;
@@ -1196,9 +1196,9 @@ int32_t RdbStoreImpl::AttachWithContext(
         }
     }
 
-    auto [errcode, output] = nativeRdbStore_->Attach(nativeConfig, attachNameStr, waitTimeValue);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, output] = nativeRdbStore_->Attach(nativeConfig, attachNameStr, waitTimeValue);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return 0;
     }
     return output;
@@ -1212,16 +1212,16 @@ int32_t RdbStoreImpl::DetachSync(string_view attachName, optional_view<int32_t> 
     }
     if (waitTime.has_value()) {
         int32_t waitTimeValue = waitTime.value();
-        auto [errcode, output] = nativeRdbStore_->Detach(std::string(attachName), waitTimeValue);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, output] = nativeRdbStore_->Detach(std::string(attachName), waitTimeValue);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return 0;
         }
         return output;
     } else {
-        auto [errcode, output] = nativeRdbStore_->Detach(std::string(attachName));
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        auto [errCode, output] = nativeRdbStore_->Detach(std::string(attachName));
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
             return 0;
         }
         return output;
@@ -1240,9 +1240,9 @@ void RdbStoreImpl::LockRowSync(weak::RdbPredicates predicates)
         return;
     }
     if (rdbPredicateNative.get() != nullptr) {
-        int errcode = nativeRdbStore_->ModifyLockStatus(*rdbPredicateNative, true);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->ModifyLockStatus(*rdbPredicateNative, true);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     } else {
         LOG_ERROR("rdbPredicateNative.get() is nullptr");
@@ -1261,9 +1261,9 @@ void RdbStoreImpl::UnlockRowSync(weak::RdbPredicates predicates)
         return;
     }
     if (rdbPredicateNative.get() != nullptr) {
-        int errcode = nativeRdbStore_->ModifyLockStatus(*rdbPredicateNative, false);
-        if (errcode != OHOS::NativeRdb::E_OK) {
-            ThrowInnerError(errcode);
+        int errCode = nativeRdbStore_->ModifyLockStatus(*rdbPredicateNative, false);
+        if (errCode != OHOS::NativeRdb::E_OK) {
+            ThrowInnerError(errCode);
         }
     } else {
         LOG_ERROR("rdbPredicateNative.get() is nullptr");
@@ -1305,9 +1305,9 @@ uint32_t RdbStoreImpl::LockCloudContainerSync()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return ERR_NULL;
     }
-    auto [errcode, output] = nativeRdbStore_->LockCloudContainer();
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, output] = nativeRdbStore_->LockCloudContainer();
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return 0;
     }
     return output;
@@ -1319,9 +1319,9 @@ void RdbStoreImpl::UnlockCloudContainerSync()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errcode = nativeRdbStore_->UnlockCloudContainer();
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    int errCode = nativeRdbStore_->UnlockCloudContainer();
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
 }
 
@@ -1339,9 +1339,9 @@ Transaction RdbStoreImpl::CreateTransactionSync(
             transactionType = (int)(optType.transactionType.value());
         }
     }
-    auto [errcode, transaction] = nativeRdbStore_->CreateTransaction(transactionType);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, transaction] = nativeRdbStore_->CreateTransaction(transactionType);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return make_holder<TransactionImpl, Transaction>();
     }
     return make_holder<TransactionImpl, Transaction>(transaction);
@@ -1378,9 +1378,9 @@ int64_t RdbStoreImpl::BatchInsertWithConflictResolutionSync(taihe::string_view t
             valuesBucket.get_ref<ohos::data::relationalStore::ValuesBucket::tag_t::VALUESBUCKET>()));
     }
     auto conflictResolution = ani_rdbutils::ConflictResolutionToNative(conflict);
-    auto [errcode, output] = nativeRdbStore_->BatchInsert(std::string(table), buckets, conflictResolution);
-    if (errcode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errcode);
+    auto [errCode, output] = nativeRdbStore_->BatchInsert(std::string(table), buckets, conflictResolution);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
         return ERR_NULL;
     }
     return output;

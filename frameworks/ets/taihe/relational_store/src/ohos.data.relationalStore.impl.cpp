@@ -64,16 +64,16 @@ void ThrowError(std::shared_ptr<Error> err)
     }
 }
 
-void ThrowInnerError(int errcode)
+void ThrowInnerError(int errCode)
 {
-    auto innErr = std::make_shared<InnerError>(errcode);
+    auto innErr = std::make_shared<InnerError>(errCode);
     ThrowError(innErr);
 }
 
 // Error codes that cannot be thrown in some old scenarios need to be converted in new scenarios.
-void ThrowInnerErrorExt(int errcode)
+void ThrowInnerErrorExt(int errCode)
 {
-    auto innErr = std::make_shared<InnerErrorExt>(errcode);
+    auto innErr = std::make_shared<InnerErrorExt>(errCode);
     if (innErr != nullptr) {
         taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
     }
@@ -134,8 +134,8 @@ void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
     }
     OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
 
-    int errcode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
-    LOG_INFO("deleteRdbStoreWithConfig errcode %{public}d", errcode);
+    int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
+    LOG_INFO("deleteRdbStoreWithConfig errCode %{public}d", errCode);
 }
 
 bool IsVectorSupported()
