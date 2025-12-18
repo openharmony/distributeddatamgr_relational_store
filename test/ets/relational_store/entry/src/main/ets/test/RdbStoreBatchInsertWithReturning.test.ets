@@ -42,10 +42,20 @@ const defaultVb: relationalStore.ValuesBucket = { 'name': 'zhangsan' };
 async function resetRdbStore()
 {
   console.info(TAG + 'resetRdbStore');
-  await relationalStore.deleteRdbStore(context, STORE_CONFIG);
-  rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
-  expect(rdbStore != undefined).assertTrue();
-  await rdbStore?.executeSql(CREATE_TABLE_TEST);
+  try {
+    await rdbStore?.close();
+  } catch (e) {
+    console.info(TAG + 'close failed');
+  }
+  try {
+    await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+    rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
+    expect(rdbStore != undefined).assertTrue();
+    await rdbStore?.executeSql(CREATE_TABLE_TEST);
+  } catch(e) {
+    console.error(TAG + `resetRdbStore failed. code is ${e.code}, message is ${e.message}`);
+    expect(true).assertFail();
+  }
 }
 
 async function getTrans() : Promise<relationalStore.Transaction>
@@ -434,7 +444,7 @@ export default function RdbStoreBatchInsertWithReturning() {
      */
     it('batchInsertWithReturning013', 0, async (done: Function) => {
       const valueBucket: relationalStore.ValuesBucket = { id: 1, name: 'zhangsan' };
-      rdbStore?.insert("test", valueBucket);
+      await rdbStore?.insert("test", valueBucket);
       valueBucket.name = "lisi";
       await callAndCodeCheck(14800032, "batchInsertWithReturning013", async () => {
         await rdbStore?.batchInsertWithReturning("test", [valueBucket], defaultReturningConfig);
@@ -460,7 +470,7 @@ export default function RdbStoreBatchInsertWithReturning() {
      */
     it('batchInsertWithReturning014', 0, async (done: Function) => {
       const valueBucket: relationalStore.ValuesBucket = { 'id': 1, 'name': 'zhangsan' };
-      rdbStore?.insert("test", valueBucket);
+      await rdbStore?.insert("test", valueBucket);
       valueBucket.name = "lisi";
       await callAndCodeCheck(14800032, "batchInsertWithReturning014", async () => {
         await rdbStore?.batchInsertWithReturning("test", [valueBucket], defaultReturningConfig, null);
@@ -486,7 +496,7 @@ export default function RdbStoreBatchInsertWithReturning() {
      */
     it('batchInsertWithReturning015', 0, async (done: Function) => {
       const valueBucket: relationalStore.ValuesBucket = { 'id': 1, 'name': 'zhangsan' };
-      rdbStore?.insert("test", valueBucket);
+      await rdbStore?.insert("test", valueBucket);
       valueBucket.name = "lisi";
       await callAndCodeCheck(14800032, "batchInsertWithReturning015", async () => {
         await rdbStore?.batchInsertWithReturning("test", [valueBucket], defaultReturningConfig, undefined);
@@ -679,7 +689,7 @@ export default function RdbStoreBatchInsertWithReturning() {
         securityLevel: relationalStore.SecurityLevel.S1,
         persist: false,
       };
-      let rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
+      rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
       await rdbStore?.executeSql(CREATE_TABLE_TEST);
       let deferredTrans = await rdbStore?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
@@ -818,7 +828,7 @@ export default function RdbStoreBatchInsertWithReturning() {
         let results = await trans?.batchInsertWithReturning("test", [valueBucket2], config,
           relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
         await checkResult(results);
-        trans.commit();
+        await trans?.commit();
       });
       trans = await getTrans();
       await call("transBatchInsertWithReturningSync025", async () => {
@@ -826,7 +836,7 @@ export default function RdbStoreBatchInsertWithReturning() {
         let results = await trans?.batchInsertWithReturning("test", [valueBucket2], config,
           relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
         await checkResult(results);
-        trans.commit();
+        await trans?.commit();
       });
       done();
     })
