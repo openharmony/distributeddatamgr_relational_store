@@ -26,6 +26,9 @@ copy_taihe_idl("cloud_data_taihe_idl") {
     "idl/ohos.data.cloudData.sharing.taihe",
     "idl/ohos.data.cloudData.taihe",
   ]
+  external_deps = [
+    "data_object:copy_taihe"
+  ]
 }
 
 ohos_taihe("cloud_data_generate") {
