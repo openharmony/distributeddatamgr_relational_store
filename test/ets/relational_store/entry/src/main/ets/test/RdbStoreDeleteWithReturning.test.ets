@@ -48,6 +48,11 @@ const defaultReturningConfig: relationalStore.ReturningConfig = { columns: ['nam
 async function resetRdbStore()
 {
   console.info(TAG + 'resetRdbStore');
+  try {
+    await rdbStore?.close();
+  } catch (e) {
+    console.info(TAG + 'close failed');
+  }
   await relationalStore.deleteRdbStore(context, STORE_CONFIG);
   rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
   expect(rdbStore != undefined).assertTrue();
@@ -696,7 +701,7 @@ export default function RdbStoreDeleteWithReturning() {
         securityLevel: relationalStore.SecurityLevel.S1,
         persist: false,
       };
-      let rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
+      rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
       await rdbStore?.executeSql(CREATE_TABLE_TEST);
       let deferredTrans = await rdbStore?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
