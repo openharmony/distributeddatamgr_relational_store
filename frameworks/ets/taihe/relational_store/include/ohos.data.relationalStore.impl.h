@@ -62,8 +62,8 @@ static constexpr int INIT_POSITION = -1;
 
 void ThrowError(std::shared_ptr<Error> err);
 #define ASSERT_RETURN_THROW_ERROR(assertion, error, retVal) CHECK_RETURN_CORE(assertion, ThrowError(error), retVal)
-void ThrowInnerError(int errcode);
-void ThrowInnerErrorExt(int errcode);
+void ThrowInnerError(int errCode);
+void ThrowInnerErrorExt(int errCode);
 void ThrowNonSystemError();
 void ThrowParamError(const char *message);
 

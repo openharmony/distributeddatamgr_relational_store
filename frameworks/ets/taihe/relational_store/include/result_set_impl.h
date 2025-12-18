@@ -66,7 +66,7 @@ public:
     taihe::array<ohos::data::relationalStore::ValuesBucket> GetRowsSync(int32_t maxCount,
         taihe::optional_view<int32_t> position);
     array<ohos::data::relationalStore::ValueType> GetCurrentRowData();
-    array<array<ValueType>> GetRowsDataAsync(int32_t maxCount, optional_view<int32_t> position);
+    array<array<ValueType>> GetRowsDataSync(int32_t maxCount, optional_view<int32_t> position);
     bool IsColumnNull(int32_t columnIndex);
     void Close();
 
