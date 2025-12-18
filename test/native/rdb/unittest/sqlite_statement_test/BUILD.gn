@@ -65,6 +65,7 @@ ohos_unittest("SqliteStatementTest") {
     "${relational_store_native_path}/rdb/src/connection_pool.cpp",
     "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
     "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+    "${relational_store_native_path}/rdb/src/fault_db_list.cpp",
     "${relational_store_native_path}/rdb/src/global_resource.cpp",
     "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
     "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
