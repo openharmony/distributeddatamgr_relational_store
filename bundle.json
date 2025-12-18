@@ -223,6 +223,8 @@
                 "//foundation/distributeddatamgr/relational_store/test/ndk:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/ndk:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/ets/cloud_data:stage_unittest",
+                "//foundation/distributeddatamgr/relational_store/test/ets/cloud_data_no_permission:stage_unittest",
+                "//foundation/distributeddatamgr/relational_store/test/ets/cloud_data_system:stage_unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/appdatafwk:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/clouddata:fuzztest",
                 "//foundation/distributeddatamgr/relational_store/test/native/clouddata:unittest",
