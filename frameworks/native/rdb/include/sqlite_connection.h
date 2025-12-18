@@ -216,7 +216,8 @@ private:
     bool isSupportBinlog_ = false;
     bool isSlave_ = false;
     bool isReplay_ = false;
-    bool isBMS_ = false;
+    bool isTargetDb_;
+    std::string callingProcess;
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;
