@@ -273,26 +273,26 @@ namespace cloudExtension {
   }
 
   const toFieldType = (value: int): cloudExtension.FieldType => {
-      switch (value) {
-        case 0:
-          return cloudExtension.FieldType.NULL;
-        case 1:
-          return cloudExtension.FieldType.NUMBER;
-        case 2:
-          return cloudExtension.FieldType.REAL;
-        case 3:
-          return cloudExtension.FieldType.TEXT;
-        case 4:
-          return cloudExtension.FieldType.BOOL;
-        case 5:
-          return cloudExtension.FieldType.BLOB;
-        case 6:
-          return cloudExtension.FieldType.ASSET;
-        case 7:
-          return cloudExtension.FieldType.ASSETS;
-        default:
-          return cloudExtension.FieldType.NULL;
-      }
+    switch (value) {
+      case 0:
+        return cloudExtension.FieldType.NULL;
+      case 1:
+        return cloudExtension.FieldType.NUMBER;
+      case 2:
+        return cloudExtension.FieldType.REAL;
+      case 3:
+        return cloudExtension.FieldType.TEXT;
+      case 4:
+        return cloudExtension.FieldType.BOOL;
+      case 5:
+        return cloudExtension.FieldType.BLOB;
+      case 6:
+        return cloudExtension.FieldType.ASSET;
+      case 7:
+        return cloudExtension.FieldType.ASSETS;
+      default:
+        return cloudExtension.FieldType.NULL;
+    }
   }
 
   class CloudServiceStub extends rpc.RemoteObject {
@@ -320,7 +320,7 @@ namespace cloudExtension {
           let bundleName = data.readString();
           if (!bundleName) {
             reply.writeInt(ErrorCode.UNKNOWN_ERROR);
-            return true;
+            return false;
           }
           let appSchema: Result<AppSchema> = await this.cloudService.getAppSchema(bundleName);
           reply.writeInt(appSchema.code);
@@ -379,6 +379,7 @@ namespace cloudExtension {
       reply.writeLong(cloudInfo.remainingSpace);
       reply.writeInt(cloudInfo.user);
     }
+
     marshallingAppBriefInfo(reply: rpc.MessageSequence, appBriefInfo: Record<string, AppBriefInfo>): void {
       let keys = Object.keys(appBriefInfo);
       reply.writeInt(keys.length);
@@ -393,6 +394,7 @@ namespace cloudExtension {
         }
       });
     }
+
     marshallingAppSchema(reply: rpc.MessageSequence, appSchema: cloudExtension.AppSchema | undefined): void {
       reply.writeInt(appSchema?.version as int);
       reply.writeString(appSchema?.bundleName as string);
@@ -415,6 +417,7 @@ namespace cloudExtension {
         });
       });
     }
+
     unMarshallingSubInfo(data: rpc.MessageSequence): Record<string, cloudExtension.Database[]> {
       let key = data.readString();
       let subInfo: Record<string, cloudExtension.Database[]> = {};
@@ -428,6 +431,7 @@ namespace cloudExtension {
       }
       return subInfo;
     }
+
     unMarshallingDatabase(data: rpc.MessageSequence): cloudExtension.Database {
       let database: cloudExtension.Database = {
         alias: '',
@@ -467,23 +471,25 @@ namespace cloudExtension {
       }
       return database;
     }
-    marshallingSubscribeInfo(reply: rpc.MessageSequence, subscribeInfo: cloudExtension.SubscribeInfo | undefined): void {
-        if (subscribeInfo !== undefined) {
-          reply.writeLong((subscribeInfo as cloudExtension.SubscribeInfo)?.expirationTime as long);
-          let keys: string[] = Object.keys(subscribeInfo.subscribe);
-          reply.writeInt(keys.length);
-          keys.forEach(key => {
-            reply.writeString(key);
-            let subscribeDatabase: cloudExtension.SubscribeId[] =
-              subscribeInfo?.subscribe[key] as cloudExtension.SubscribeId[];
-            reply.writeInt(subscribeDatabase.length);
-            subscribeDatabase.forEach(database => {
-              reply.writeString(database.databaseAlias);
-              reply.writeString(database.id);
-            })
+
+    marshallingSubscribeInfo(reply: rpc.MessageSequence,
+      subscribeInfo: cloudExtension.SubscribeInfo | undefined): void {
+      if (subscribeInfo !== undefined) {
+        reply.writeLong((subscribeInfo as cloudExtension.SubscribeInfo)?.expirationTime as long);
+        let keys: string[] = Object.keys(subscribeInfo.subscribe);
+        reply.writeInt(keys.length);
+        keys.forEach(key => {
+          reply.writeString(key);
+          let subscribeDatabase: cloudExtension.SubscribeId[] =
+            subscribeInfo?.subscribe[key] as cloudExtension.SubscribeId[];
+          reply.writeInt(subscribeDatabase.length);
+          subscribeDatabase.forEach(database => {
+            reply.writeString(database.databaseAlias);
+            reply.writeString(database.id);
           })
-        }
+        })
       }
+    }
 
     unMarshallingUnSubInfo(data: rpc.MessageSequence): Record<string, string[]> {
       let unsubInfo: Record<string, string[]> = {};
@@ -520,7 +526,7 @@ namespace cloudExtension {
         return false;
       }
       let descriptor = this.getDescriptor();
-      option.setWaitTime(1500);
+      option.setWaitTime(IPC_WAIT_TIME);
       switch (code) {
         case DatabaseOperation.GenerateIds.valueOf():
           let count = data.readInt();
@@ -595,8 +601,8 @@ namespace cloudExtension {
           let lockResult: Result<LockInfo> = await this.cloudDb.lock() as Result<LockInfo>;
           reply.writeInt(lockResult.code);
           if (lockResult.code === 0) {
-            reply.writeInt((lockResult as Result<LockInfo>).value?.interval as int);
-            reply.writeInt((lockResult as Result<LockInfo>).value?.sessionId as int);
+            reply.writeInt(lockResult.value?.interval as int);
+            reply.writeInt(lockResult.value?.sessionId as int);
           }
           return true;
         case DatabaseOperation.Heartbeat.valueOf():
@@ -640,7 +646,8 @@ namespace cloudExtension {
       }
     }
 
-    marshallingValueBucket(reply: rpc.MessageSequence, valueBucket: Record<string, cloudExtension.CloudType> | undefined): void {
+    marshallingValueBucket(reply: rpc.MessageSequence,
+      valueBucket: Record<string, cloudExtension.CloudType> | undefined): void {
       if (valueBucket !== undefined) {
         let keys = Object.keys(valueBucket);
         reply.writeInt(keys.length as int);
@@ -799,7 +806,7 @@ namespace cloudExtension {
             createTime: data.readString(),
             modifyTime: data.readString(),
             size: data.readString(),
-            status: this.toAssetStatus(data.readInt()),
+            status: toAssetStatus(data.readInt()),
             assetId: data.readString(),
             hash: data.readString(),
           } as CloudAsset;
@@ -817,7 +824,7 @@ namespace cloudExtension {
               createTime: data.readString(),
               modifyTime: data.readString(),
               size: data.readString(),
-              status: this.toAssetStatus(data.readInt()),
+              status: toAssetStatus(data.readInt()),
               assetId: data.readString(),
               hash: data.readString(),
             });
@@ -826,24 +833,24 @@ namespace cloudExtension {
       }
       return null;
     }
+  }
 
-    toAssetStatus(value: int): relationalStore.AssetStatus {
-      switch (value) {
-        case 0:
-          return relationalStore.AssetStatus.ASSET_NORMAL;
-        case 1:
-          return relationalStore.AssetStatus.ASSET_INSERT;
-        case 2:
-          return relationalStore.AssetStatus.ASSET_UPDATE;
-        case 3:
-          return relationalStore.AssetStatus.ASSET_DELETE;
-        case 4:
-          return relationalStore.AssetStatus.ASSET_ABNORMAL;
-        case 5:
-          return relationalStore.AssetStatus.ASSET_DOWNLOADING;
-        default:
-          return relationalStore.AssetStatus.ASSET_NORMAL;
-      }
+  function toAssetStatus(value: int): relationalStore.AssetStatus {
+    switch (value) {
+      case 0:
+        return relationalStore.AssetStatus.ASSET_NORMAL;
+      case 1:
+        return relationalStore.AssetStatus.ASSET_INSERT;
+      case 2:
+        return relationalStore.AssetStatus.ASSET_UPDATE;
+      case 3:
+        return relationalStore.AssetStatus.ASSET_DELETE;
+      case 4:
+        return relationalStore.AssetStatus.ASSET_ABNORMAL;
+      case 5:
+        return relationalStore.AssetStatus.ASSET_DOWNLOADING;
+      default:
+        return relationalStore.AssetStatus.ASSET_NORMAL;
     }
   }
 
@@ -857,7 +864,7 @@ namespace cloudExtension {
 
     async onRemoteMessageRequest(code: int, data: rpc.MessageSequence, reply: rpc.MessageSequence,
       option: rpc.MessageOption): Promise<boolean> {
-      option.setWaitTime(500);
+      option.setWaitTime(IPC_WAIT_TIME);
       let descriptor = this.getDescriptor();
       let tableName = data.readString();
       let assetId = data.readString();
@@ -880,25 +887,6 @@ namespace cloudExtension {
       return false;
     }
 
-    toAssetStatus(value: int): relationalStore.AssetStatus {
-      switch (value) {
-        case 0:
-          return relationalStore.AssetStatus.ASSET_NORMAL;
-        case 1:
-          return relationalStore.AssetStatus.ASSET_INSERT;
-        case 2:
-          return relationalStore.AssetStatus.ASSET_UPDATE;
-        case 3:
-          return relationalStore.AssetStatus.ASSET_DELETE;
-        case 4:
-          return relationalStore.AssetStatus.ASSET_ABNORMAL;
-        case 5:
-          return relationalStore.AssetStatus.ASSET_DOWNLOADING;
-        default:
-          return relationalStore.AssetStatus.ASSET_NORMAL;
-      }
-    }
-
     unmarshallingAssets(data: rpc.MessageSequence): cloudExtension.CloudAsset[] {
       let count = data.readInt();
       let assets: cloudExtension.CloudAsset[] = [];
@@ -913,7 +901,7 @@ namespace cloudExtension {
           createTime: data.readString(),
           modifyTime: data.readString(),
           size: data.readString(),
-          status: this.toAssetStatus(data.readInt()) as relationalStore.AssetStatus,
+          status: toAssetStatus(data.readInt()) as relationalStore.AssetStatus,
           assetId: data.readString(),
           hash: data.readString()
         });
@@ -939,6 +927,7 @@ namespace cloudExtension {
         reply.writeString((assets[i]?.value as cloudExtension.CloudAsset).hash as string);
       }
     }
+
     private getAssetStatusValue(status: relationalStore.AssetStatus | undefined): int {
       if (status === undefined) {
         return relationalStore.AssetStatus.ASSET_NORMAL;
@@ -960,7 +949,7 @@ namespace cloudExtension {
       if (this.shareCenter == undefined) {
         return false;
       }
-      option.setWaitTime(1500);
+      option.setWaitTime(IPC_WAIT_TIME);
       switch (code) {
         case ShareOperation.Share.valueOf():
           let userId = data.readInt();
