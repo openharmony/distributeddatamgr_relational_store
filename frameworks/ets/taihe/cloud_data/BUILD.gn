@@ -21,20 +21,24 @@ part_name = "relational_store"
 taihe_generated_file_path =
     "$taihe_file_path/out/$subsystem_name/$part_name/cloud_data"
 
+copy_taihe_idl("common_type_taihe_idl") {
+  sources = [ "idl/ohos.data.commonType.taihe" ]
+}
+
 copy_taihe_idl("cloud_data_taihe_idl") {
   sources = [
     "idl/ohos.data.cloudData.sharing.taihe",
     "idl/ohos.data.cloudData.taihe",
   ]
-  external_deps = [
-    "data_object:copy_taihe"
-  ]
+  deps = [ ":common_type_taihe_idl" ]
 }
 
 ohos_taihe("cloud_data_generate") {
   taihe_generated_file_path = "$taihe_generated_file_path"
   deps = [ ":cloud_data_taihe_idl" ]
   outputs = [
+    "$taihe_generated_file_path/src/ohos.data.commonType.ani.cpp",
+    "$taihe_generated_file_path/src/ohos.data.commonType.abi.c",
     "$taihe_generated_file_path/src/ohos.data.cloudData.ani.cpp",
     "$taihe_generated_file_path/src/ohos.data.cloudData.abi.c",
     "$taihe_generated_file_path/src/ohos.data.cloudData.sharing.ani.cpp",
@@ -116,9 +120,27 @@ ohos_prebuilt_etc("clouddata_etc") {
   deps = [ ":clouddata_abc" ]
 }
 
+generate_static_abc("clouddata_commontype_abc") {
+  base_url = "$taihe_generated_file_path"
+  files = [ "$taihe_generated_file_path/@ohos.data.commonType.ets" ]
+  dst_file = "$target_out_dir/cloudDataCommonType.abc"
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/cloudDataCommonType.abc"
+  dependencies = [ ":cloud_data_generate" ]
+}
+
+ohos_prebuilt_etc("clouddata_commontype_etc") {
+  source = "$target_out_dir/cloudDataCommonType.abc"
+  module_install_dir = "framework"
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+  deps = [ ":clouddata_commontype_abc" ]
+}
+
 group("clouddata_ani_pack") {
   deps = [
     ":cloud_data_taihe",
+    ":clouddata_commontype_etc",
     ":clouddata_etc",
   ]
 }

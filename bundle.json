@@ -72,8 +72,7 @@
                 "sqlite",
                 "file_api",
                 "json",
-                "runtime_core",
-                "data_object"
+                "runtime_core"
             ],
             "third_party": [ "sqlite" ]
         },
@@ -212,6 +211,9 @@
                         "header_files": [],
                         "header_base": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/cloud_data/include"
                     }
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/frameworks/ets/taihe/cloud_data:common_type_taihe_idl"
                 }
             ],
             "test": [
