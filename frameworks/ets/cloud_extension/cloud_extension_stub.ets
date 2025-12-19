@@ -21,6 +21,7 @@ const TAG = 'cloudExtension';
 const INVALID_STATE = -1;
 const INVALID_STR = '';
 const MAX_SIZE: long = 1024 * 1024 - 1;
+const IPC_WAIT_TIME = 1000;
 
 namespace cloudExtension {
 
@@ -304,7 +305,7 @@ namespace cloudExtension {
 
     async onRemoteMessageRequest(code: int, data: rpc.MessageSequence, reply: rpc.MessageSequence,
       option: rpc.MessageOption): Promise<boolean> {
-      option.setWaitTime(1000);
+      option.setWaitTime(IPC_WAIT_TIME);
       let descriptor = this.getDescriptor();
       switch (code) {
         case ServiceOperation.GetServiceInfo.valueOf():
@@ -317,6 +318,10 @@ namespace cloudExtension {
           return true;
         case ServiceOperation.GetAppSchema.valueOf():
           let bundleName = data.readString();
+          if (!bundleName) {
+            reply.writeInt(ErrorCode.UNKNOWN_ERROR);
+            return true;
+          }
           let appSchema: Result<AppSchema> = await this.cloudService.getAppSchema(bundleName);
           reply.writeInt(appSchema.code);
           if (appSchema.code === ErrorCode.SUCCESS) {
@@ -324,9 +329,9 @@ namespace cloudExtension {
           }
           return true;
         case ServiceOperation.Subscribe.valueOf():
-          let tokenId: int = data.readInt();
+          let expirationTime: int = data.readInt();
           let subInfo: Record<string, cloudExtension.Database[]> = this.unMarshallingSubInfo(data);
-          let subscribeResult: Result<SubscribeInfo> = await this.cloudService.subscribe(subInfo, tokenId);
+          let subscribeResult: Result<SubscribeInfo> = await this.cloudService.subscribe(subInfo, expirationTime);
           reply.writeInt(subscribeResult.code);
           if (subscribeResult.code === ErrorCode.SUCCESS && subscribeResult.value !== undefined) {
             this.marshallingSubscribeInfo(reply, subscribeResult.value);
@@ -355,13 +360,13 @@ namespace cloudExtension {
           let shareCenterName = data.readString();
           let shareCenterConnection: rpc.RemoteObject =
             await this.cloudService.connectShareCenter(userId, shareCenterName);
-          if (shareCenterConnection == null) {
+          if (!shareCenterConnection) {
             return false;
           }
           reply.writeRemoteObject(shareCenterConnection);
           return true;
         default:
-          false;
+          return false;
       }
 
       return false;
@@ -614,7 +619,7 @@ namespace cloudExtension {
         default:
           break;
       }
-      return false
+      return false;
     }
 
     marshallingResultValueBucket(reply: rpc.MessageSequence,
@@ -706,9 +711,8 @@ namespace cloudExtension {
       }
     }
 
-    // 定义一个辅助函数来处理状态转换
     private getAssetStatusValue(status: relationalStore.AssetStatus | undefined): int {
-      if (status === undefined) {
+      if (status === undefined || status.valueOf === undefined) {
         return relationalStore.AssetStatus.ASSET_NORMAL;
       }
       return status.valueOf();
@@ -1207,7 +1211,7 @@ namespace cloudExtension {
   }
 
   export async function createCloudServiceStub(cloudService: CloudService): Promise<CloudServiceStub> {
-    return new CloudServiceStub("CloudServiceProxy", cloudService);
+    return new CloudServiceStub("CloudServiceStub", cloudService);
   }
 
   export async function createCloudDBStub(cloudDb: cloudExtension.CloudDB): Promise<CloudDbStub> {
