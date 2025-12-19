@@ -15,6 +15,7 @@
 #define LOG_TAG "CloudDataConstructor"
 #include "ohos.data.cloudData.sharing.ani.hpp"
 #include "ohos.data.cloudData.ani.hpp"
+#include "ohos.data.commonType.ani.hpp"
 #include "logger.h"
 using namespace OHOS::Rdb;
 
@@ -31,6 +32,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     }
     if (ANI_OK != ohos::data::cloudData::sharing::ANIRegister(env)) {
         LOG_WARN("Error from ohos::data::cloudData::sharing::ANIRegister");
+        status = ANI_ERROR;
+    }
+    if (ANI_OK != ohos::data::commonType::ANIRegister(env)) {
+        LOG_WARN("Error from ohos::data::commonType::ANIRegister");
         status = ANI_ERROR;
     }
     *result = ANI_VERSION_1;
