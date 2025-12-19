@@ -53,26 +53,31 @@ async function resetRdbStore()
   } catch (e) {
     console.info(TAG + 'close failed');
   }
-  await relationalStore.deleteRdbStore(context, STORE_CONFIG);
-  rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
-  expect(rdbStore != undefined).assertTrue();
-  await rdbStore?.executeSql(CREATE_TABLE_TEST1);
-  await rdbStore?.executeSql(CREATE_TABLE_TEST);
-  let valueBuckets = new Array<relationalStore.ValuesBucket>();
-  let valueBuckets1 = new Array<relationalStore.ValuesBucket>();
-  const num = 10;
-  for (let i = 0; i < num; i++) {
-    const valueBucket: relationalStore.ValuesBucket = { 'test_name': 'lisi' + i };
-    valueBuckets1.push(valueBucket);
+  try {
+    await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+    rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
+    expect(rdbStore != undefined).assertTrue();
+    await rdbStore?.executeSql(CREATE_TABLE_TEST1);
+    await rdbStore?.executeSql(CREATE_TABLE_TEST);
+    let valueBuckets = new Array<relationalStore.ValuesBucket>();
+    let valueBuckets1 = new Array<relationalStore.ValuesBucket>();
+    const num = 10;
+    for (let i = 0; i < num; i++) {
+      const valueBucket: relationalStore.ValuesBucket = { 'test_name': 'lisi' + i };
+      valueBuckets1.push(valueBucket);
+    }
+    let changeRows = await rdbStore?.batchInsert("test1", valueBuckets1);
+    expect(changeRows).assertEqual(num);
+    for (let i = 0; i < num; i++) {
+      const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' + i, 'age': 18 + i, 'test_id': i };
+      valueBuckets.push(valueBucket);
+    }
+    changeRows = await rdbStore?.batchInsert("test", valueBuckets);
+    expect(changeRows).assertEqual(num);
+  } catch (e) {
+    console.error(TAG + `resetRdbStore failed. code is ${e.code}, message is ${e.message}`);
+    expect(true).assertFail();
   }
-  let changeRows = await rdbStore?.batchInsert("test1", valueBuckets1);
-  expect(changeRows).assertEqual(num);
-  for (let i = 0; i < num; i++) {
-    const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' + i, 'age': 18 + i, 'test_id': i };
-    valueBuckets.push(valueBucket);
-  }
-  changeRows = await rdbStore?.batchInsert("test", valueBuckets);
-  expect(changeRows).assertEqual(num);
 }
 
 async function getTrans() : Promise<relationalStore.Transaction>
@@ -724,6 +729,34 @@ export default function RdbStoreDeleteWithReturning() {
       });
       await deferredTrans?.rollback();
       await trans?.rollback();
+      done();
+    })
+
+    /**
+     * @tc.name deleteWithReturning test.
+     * @tc.number deleteWithReturning021
+     * @tc.desc 1.args is null or undefined test.
+     */
+    it('deleteWithReturning021', 0, async (done: Function) => {
+      let defaultPredicate = new relationalStore.RdbPredicates("test");
+      let predicates = [defaultPredicate, defaultPredicate, null, undefined];
+      let configs = [null, undefined, defaultReturningConfig, defaultReturningConfig];
+      for (let i = 0; i < predicates.length; ++i) {
+        await callAndCodeCheck('401', "deleteWithReturning021", async () => {
+          await rdbStore?.deleteWithReturning(predicates[i], configs[i]);
+        });
+        await callAndCodeCheck('401', "deleteWithReturningSync021", async () => {
+          rdbStore?.deleteWithReturningSync(predicates[i], configs[i]);
+        });
+        let trans = await rdbStore?.createTransaction(options);
+        await callAndCodeCheck('401', "transDeleteWithReturning021", async () => {
+          await trans?.deleteWithReturning(predicates[i], configs[i]);
+        });
+        await callAndCodeCheck('401', "transDeleteWithReturningSync021", async () => {
+          trans?.deleteWithReturningSync(predicates[i], configs[i]);
+        });
+        await trans?.rollback();
+      }
       done();
     })
   })

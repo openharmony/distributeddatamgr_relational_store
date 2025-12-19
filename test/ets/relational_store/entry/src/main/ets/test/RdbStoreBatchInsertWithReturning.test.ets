@@ -990,5 +990,36 @@ export default function RdbStoreBatchInsertWithReturning() {
       await trans?.rollback();
       done();
     })
+
+    /**
+     * @tc.name batchInsertWithReturning test.
+     * @tc.number batchInsertWithReturning031
+     * @tc.desc 1.args is null or undefined test.
+     */
+    it('batchInsertWithReturning031', 0, async (done: Function) => {
+      const defaultVb: relationalStore.ValuesBucket = { 'name': 'zhangsan' };
+      let tables = [null, undefined, 'test', 'test', 'test', 'test'];
+      let values = [[defaultVb], [defaultVb], null, undefined, [defaultVb], [defaultVb]];
+      let configs = [
+        defaultReturningConfig, defaultReturningConfig, defaultReturningConfig, defaultReturningConfig, null, undefined
+      ];
+      for (let i = 0; i < values.length; ++i) {
+        await callAndCodeCheck('401', "batchInsertWithReturning031", async () => {
+          await rdbStore?.batchInsertWithReturning(tables[i], values[i], configs[i]);
+        });
+        await callAndCodeCheck('401', "batchInsertWithReturningSync031", async () => {
+          rdbStore?.batchInsertWithReturningSync(tables[i], values[i], configs[i]);
+        });
+        let trans = await rdbStore?.createTransaction(options);
+        await callAndCodeCheck('401', "transBatchInsertWithReturning031", async () => {
+          await trans?.batchInsertWithReturning(tables[i], values[i], configs[i]);
+        });
+        await callAndCodeCheck('401', "transBatchInsertWithReturningSync031", async () => {
+          trans?.batchInsertWithReturningSync(tables[i], values[i], configs[i]);
+        });
+        await trans?.rollback();
+      }
+      done();
+    })
   })
 }

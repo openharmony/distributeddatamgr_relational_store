@@ -52,8 +52,8 @@ async function resetRdbStore()
     let valueBuckets = new Array<relationalStore.ValuesBucket>();
     const num = 10;
     for (let i = 0; i < num; i++) {
-        const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' + i, 'age': 18 + i };
-        valueBuckets.push(valueBucket);
+      const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' + i, 'age': 18 + i };
+      valueBuckets.push(valueBucket);
     }
     let changedRows = await rdbStore?.batchInsert("test", valueBuckets);
     expect(changedRows).assertEqual(num);
@@ -951,6 +951,38 @@ export default function RdbStoreUpdateWithReturning() {
       });
       await deferredTrans?.rollback();
       await trans?.rollback();
+      done();
+    })
+
+        /**
+     * @tc.name updateWithReturning test.
+     * @tc.number updateWithReturning028
+     * @tc.desc 1.args is null or undefined test.
+     */
+    it('updateWithReturning028', 0, async (done: Function) => {
+      let defaultPredicate = new relationalStore.RdbPredicates("test");
+      const defaultVb: relationalStore.ValuesBucket = { 'name': 'zhangsan' };
+      let values = [null, undefined, defaultVb, defaultVb, defaultVb, defaultVb];
+      let predicates = [defaultPredicate, defaultPredicate, null, undefined, defaultPredicate, defaultPredicate];
+      let configs = [
+        defaultReturningConfig, defaultReturningConfig, defaultReturningConfig, defaultReturningConfig, null, undefined
+      ];
+      for (let i = 0; i < values.length; ++i) {
+        await callAndCodeCheck('401', "updateWithReturning028", async () => {
+          await rdbStore?.updateWithReturning(values[i], predicates[i], configs[i]);
+        });
+        await callAndCodeCheck('401', "updateWithReturningSync028", async () => {
+          rdbStore?.updateWithReturningSync(values[i], predicates[i], configs[i]);
+        });
+        let trans = await rdbStore?.createTransaction(options);
+        await callAndCodeCheck('401', "transUpdateWithReturning028", async () => {
+          await trans?.updateWithReturning(values[i], predicates[i], configs[i]);
+        });
+        await callAndCodeCheck('401', "transUpdateWithReturningSync028", async () => {
+          trans?.updateWithReturningSync(values[i], predicates[i], configs[i]);
+        });
+        await trans?.rollback();
+      }
       done();
     })
   })
