@@ -797,7 +797,7 @@ namespace cloudExtension {
         case FieldType.BOOL.valueOf(): // boolean
           return data.readBoolean();
         case FieldType.BLOB.valueOf(): // Uint8Array
-          return Uint8Array.from(data.readIntArray());
+          return Uint8Array.from(data.readDoubleArray());
         case FieldType.ASSET.valueOf(): // Asset
           return {
             name: data.readString(),
