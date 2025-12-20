@@ -802,7 +802,7 @@ ohos::data::relationalStore::PRIKeyType ToNativePRIKeyType(
 ohos::data::relationalStore::ModifyTime ToAniModifyTime(
     const std::map<OHOS::NativeRdb::RdbStore::PRIKey, OHOS::NativeRdb::RdbStore::Date> &mapResult)
 {
-    taihe::map<::ohos::data::relationalStore::PRIKeyType, ohos::data::relationalStore::UTCTime> modifyTime;
+    taihe::map<::ohos::data::relationalStore::PRIKeyType, uintptr_t> modifyTime;
     for (const auto &[key, value] : mapResult) {
         ani_object aniDate{};
         ohos::data::relationalStore::PRIKeyType nativeKey = ToNativePRIKeyType(key);
