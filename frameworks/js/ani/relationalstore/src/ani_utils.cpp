@@ -409,7 +409,7 @@ bool UnionAccessor::TryConvert<AssetValue>(AssetValue &value)
 template<>
 bool UnionAccessor::TryConvert<std::vector<AssetValue>>(std::vector<AssetValue> &value)
 {
-    std::string clsName = "escompat.Array";
+    std::string clsName = "std.core.Array";
     if (!IsInstanceOf(clsName)) {
         return false;
     }
