@@ -101,6 +101,17 @@ export default function RdbStoreDeleteWithReturning() {
     })
     afterAll(async () => {
       console.info(TAG + 'afterAll');
+      try {
+        await rdbStore?.close();
+      } catch (e) {
+        console.info(TAG + 'afterAll close failed');
+      }
+      try {
+        await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+      } catch(e) {
+        console.error(TAG + `afterAll resetRdbStore failed. code is ${e.code}, message is ${e.message}`);
+        expect(true).assertFail();
+      }
     })
 
     /**
