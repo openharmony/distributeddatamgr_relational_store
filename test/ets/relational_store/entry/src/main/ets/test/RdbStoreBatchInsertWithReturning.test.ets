@@ -82,6 +82,17 @@ export default function RdbStoreBatchInsertWithReturning() {
     })
     afterAll(async () => {
       console.info(TAG + 'afterAll');
+      try {
+        await rdbStore?.close();
+      } catch (e) {
+        console.info(TAG + 'afterAll close failed');
+      }
+      try {
+        await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+      } catch(e) {
+        console.error(TAG + `afterAll resetRdbStore failed. code is ${e.code}, message is ${e.message}`);
+        expect(true).assertFail();
+      }
     })
 
     /**
@@ -689,20 +700,20 @@ export default function RdbStoreBatchInsertWithReturning() {
         securityLevel: relationalStore.SecurityLevel.S1,
         persist: false,
       };
-      rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
-      await rdbStore?.execute(CREATE_TABLE_TEST);
-      let deferredTrans = await rdbStore?.createTransaction({
+      let rdbStore1 = await relationalStore.getRdbStore(context, STORE_CONFIG1);
+      await rdbStore1?.execute(CREATE_TABLE_TEST);
+      let deferredTrans = await rdbStore1?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
       });
-      let trans = await rdbStore?.createTransaction({
+      let trans = await rdbStore1?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
       });
       await deferredTrans?.insert("test", defaultVb);
       await callAndCodeCheck(14800025, "batchInsertWithReturning021", async () => {
-        await rdbStore?.batchInsertWithReturning("test", [defaultVb], defaultReturningConfig);
+        await rdbStore1?.batchInsertWithReturning("test", [defaultVb], defaultReturningConfig);
       });
       await callAndCodeCheck(14800025, "batchInsertWithReturningSync021", async () => {
-        rdbStore?.batchInsertWithReturningSync("test", [defaultVb], defaultReturningConfig);
+        rdbStore1?.batchInsertWithReturningSync("test", [defaultVb], defaultReturningConfig);
       });
       await callAndCodeCheck(14800025, "transBatchInsertWithReturning021", async () => {
         await trans?.batchInsertWithReturning("test", [defaultVb], defaultReturningConfig);
@@ -712,6 +723,8 @@ export default function RdbStoreBatchInsertWithReturning() {
       });
       await deferredTrans?.rollback();
       await trans?.rollback();
+      await rdbStore1?.close();
+      await relationalStore.deleteRdbStore(context, STORE_CONFIG1);
       done();
     })
 

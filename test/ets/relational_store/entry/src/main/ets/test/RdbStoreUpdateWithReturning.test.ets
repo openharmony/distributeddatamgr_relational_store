@@ -84,6 +84,17 @@ export default function RdbStoreUpdateWithReturning() {
     })
     afterAll(async () => {
       console.info(TAG + 'afterAll');
+      try {
+        await rdbStore?.close();
+      } catch (e) {
+        console.info(TAG + 'afterAll close failed');
+      }
+      try {
+        await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+      } catch(e) {
+        console.error(TAG + `afterAll resetRdbStore failed. code is ${e.code}, message is ${e.message}`);
+        expect(true).assertFail();
+      }
     })
 
     /**
@@ -928,20 +939,20 @@ export default function RdbStoreUpdateWithReturning() {
         securityLevel: relationalStore.SecurityLevel.S1,
         persist: false,
       };
-      rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
-      await rdbStore?.execute(CREATE_TABLE_TEST);
-      let deferredTrans = await rdbStore?.createTransaction({
+      let rdbStore1 = await relationalStore.getRdbStore(context, STORE_CONFIG1);
+      await rdbStore1?.execute(CREATE_TABLE_TEST);
+      let deferredTrans = await rdbStore1?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
       });
-      let trans = await rdbStore?.createTransaction({
+      let trans = await rdbStore1?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
       });
       await deferredTrans?.insert("test", defaultVb);
       await callAndCodeCheck(14800025, "updateWithReturning027", async () => {
-        await rdbStore?.updateWithReturning(defaultVb, predicates, defaultReturningConfig);
+        await rdbStore1?.updateWithReturning(defaultVb, predicates, defaultReturningConfig);
       });
       await callAndCodeCheck(14800025, "updateWithReturningSync027", async () => {
-        rdbStore?.updateWithReturningSync(defaultVb, predicates, defaultReturningConfig);
+        rdbStore1?.updateWithReturningSync(defaultVb, predicates, defaultReturningConfig);
       });
       await callAndCodeCheck(14800025, "transUpdateWithReturning027", async () => {
         await trans?.updateWithReturning(defaultVb, predicates, defaultReturningConfig);
@@ -951,6 +962,8 @@ export default function RdbStoreUpdateWithReturning() {
       });
       await deferredTrans?.rollback();
       await trans?.rollback();
+      await rdbStore1?.close();
+      relationalStore.deleteRdbStore(context, STORE_CONFIG1);
       done();
     })
 
