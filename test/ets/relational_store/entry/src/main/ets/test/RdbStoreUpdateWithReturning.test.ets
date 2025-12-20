@@ -16,7 +16,7 @@
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium";
 import relationalStore from '@ohos.data.relationalStore';
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
-import { createCorruptDb, getRowCount, callAndCodeCheck, call } from './TestUtils';
+import { createCorruptDb, getRowCount, callAndCodeCheck, call, callAndReturnCode } from './TestUtils';
 const TAG = "[RDB_STORE_UPDATE_WITH_RETURNING_TEST]";
 let rdbStore: relationalStore.RdbStore | undefined = undefined;
 
@@ -48,7 +48,7 @@ async function resetRdbStore()
     await relationalStore.deleteRdbStore(context, STORE_CONFIG);
     rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
     expect(rdbStore != undefined).assertTrue();
-    await rdbStore?.executeSql(CREATE_TABLE_TEST);
+    await rdbStore?.execute(CREATE_TABLE_TEST);
     let valueBuckets = new Array<relationalStore.ValuesBucket>();
     const num = 10;
     for (let i = 0; i < num; i++) {
@@ -929,7 +929,7 @@ export default function RdbStoreUpdateWithReturning() {
         persist: false,
       };
       rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
-      await rdbStore?.executeSql(CREATE_TABLE_TEST);
+      await rdbStore?.execute(CREATE_TABLE_TEST);
       let deferredTrans = await rdbStore?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
       });
@@ -954,7 +954,7 @@ export default function RdbStoreUpdateWithReturning() {
       done();
     })
 
-        /**
+    /**
      * @tc.name updateWithReturning test.
      * @tc.number updateWithReturning028
      * @tc.desc 1.args is null or undefined test.
@@ -968,19 +968,23 @@ export default function RdbStoreUpdateWithReturning() {
         defaultReturningConfig, defaultReturningConfig, defaultReturningConfig, defaultReturningConfig, null, undefined
       ];
       for (let i = 0; i < values.length; ++i) {
-        await callAndCodeCheck('401', "updateWithReturning028", async () => {
+        let code = await callAndReturnCode("updateWithReturning028-" + i, async () => {
           await rdbStore?.updateWithReturning(values[i], predicates[i], configs[i]);
         });
-        await callAndCodeCheck('401', "updateWithReturningSync028", async () => {
+        expect(code).assertEqual('401');
+        code = await callAndReturnCode("updateWithReturningSync028-" + i, async () => {
           rdbStore?.updateWithReturningSync(values[i], predicates[i], configs[i]);
         });
+        expect(code).assertEqual('401');
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('401', "transUpdateWithReturning028", async () => {
+        code = await callAndReturnCode("transUpdateWithReturning028-" + i, async () => {
           await trans?.updateWithReturning(values[i], predicates[i], configs[i]);
         });
-        await callAndCodeCheck('401', "transUpdateWithReturningSync028", async () => {
+        expect(code).assertEqual('401');
+        code = await callAndReturnCode("transUpdateWithReturningSync028-" + i, async () => {
           trans?.updateWithReturningSync(values[i], predicates[i], configs[i]);
         });
+        expect(code).assertEqual('401');
         await trans?.rollback();
       }
       done();
