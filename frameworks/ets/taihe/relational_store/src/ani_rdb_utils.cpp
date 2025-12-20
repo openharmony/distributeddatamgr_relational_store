@@ -804,10 +804,10 @@ ohos::data::relationalStore::ModifyTime ToAniModifyTime(
 {
     taihe::map<::ohos::data::relationalStore::PRIKeyType, ohos::data::relationalStore::UTCTime> modifyTime;
     for (const auto &[key, value] : mapResult) {
+        ani_object aniDate{};
         ohos::data::relationalStore::PRIKeyType nativeKey = ToNativePRIKeyType(key);
-        double time = value;
-        auto date = ohos::data::relationalStore::UTCTime::make_UTCTIIME(uintptr_t(&time));
-        modifyTime.emplace(nativeKey, date);
+        ani_rdbutils::WarpDate(static_cast<double>(value), aniDate);
+        modifyTime.emplace(nativeKey, reinterpret_cast<uintptr_t>(aniDate));
     }
     return ohos::data::relationalStore::ModifyTime::make_MODIFYTIME(modifyTime);
 }
@@ -1127,4 +1127,34 @@ std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t max
     return {E_OK, rowEntities};
 }
 
+bool WarpDate(double time, ani_object &outObj)
+{
+    ani_env *env = ::taihe::get_env();
+    if (env == nullptr || time < 0) {
+        LOG_ERROR("get_env failed");
+        return false;
+    }
+    ani_class cls;
+    ani_status status;
+    if (ANI_OK != (status = env->FindClass("escompat.Date", &cls))) {
+        LOG_ERROR("FindClass failed, status:%{public}d", status);
+        return false;
+    }
+    ani_method ctor;
+    if ((status = env->Class_FindMethod(cls, "<ctor>", ":", &ctor)) != ANI_OK) {
+        LOG_ERROR("Class_FindMethod failed, status:%{public}d", status);
+        return false;
+    }
+    if ((status = env->Object_New(cls, ctor, &outObj)) != ANI_OK) {
+        LOG_ERROR("Object_New failed, status:%{public}d", status);
+        return false;
+    }
+    ani_double msObj = 0;
+    if ((status = env->Object_CallMethodByName_Double(outObj, "setTime", "d:d", &msObj, time)) != ANI_OK) {
+        LOG_ERROR("Object_CallMethodByName_Double failed, status:%{public}d", status);
+        return false;
+    }
+    LOG_ERROR("Object_CallMethodByName_Double success, double:%{public}lf", msObj);
+    return true;
+}
 } //namespace ani_rdbutils
