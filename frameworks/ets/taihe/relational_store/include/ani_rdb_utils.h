@@ -106,7 +106,7 @@ public:
     void OnStatistic(const OHOS::DistributedRdb::SqlObserver::SqlExecutionInfo &info) override;
 
     void SetNotifyDataChangeInfoFunc(std::function<void(DataObserver *, const OHOS::DistributedRdb::Origin &,
-        const OHOS::DistributedRdb::RdbStoreObserver::PrimaryFields &,
+            const OHOS::DistributedRdb::RdbStoreObserver::PrimaryFields &,
         const OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &)> func);
     void SetNotifyDataChangeArrFunc(std::function<void(DataObserver *, const std::vector<std::string> &)> func);
     void SetNotifySqlExecutionFunc(std::function<void(DataObserver *,
@@ -212,6 +212,7 @@ std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePredicatesFromTaihe(
 
 std::pair<int, std::vector<RowEntity>> GetRows(
     ResultSet &resultSet, int32_t maxCount, int32_t position);
+bool WarpDate(double time, ani_object &outObj);
 } // namespace ani_rdbutils
 
 #endif

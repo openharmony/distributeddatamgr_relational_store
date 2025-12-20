@@ -158,7 +158,7 @@ private:
     std::recursive_mutex cbMapMutex_;
     std::map<std::string, std::vector<std::shared_ptr<ani_rdbutils::DataObserver>>> jsCbMap_;
 };
-}
-}
+} // namespace RdbTaihe
+} // namespace OHOS
 
 #endif // OHOS_RELATION_STORE_RDBSTORE_IMPL_H
