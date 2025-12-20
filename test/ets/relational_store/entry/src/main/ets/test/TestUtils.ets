@@ -71,3 +71,17 @@ export async function call(funName:string, fun:Function)
   }
   console.log(`*************${funName} end***************`);
 }
+
+export async function callAndReturnCode(funName:string, fun:Function)
+{
+  console.log(`*************${funName} start*************`);
+  let code = undefined;
+  try {
+    await fun();
+  } catch (e) {
+    console.error(`${funName} failed. code is ${e.code}, message is ${e.message}`);
+    code = e.code;
+  }
+  console.log(`*************${funName} end***************`);
+  return code;
+}

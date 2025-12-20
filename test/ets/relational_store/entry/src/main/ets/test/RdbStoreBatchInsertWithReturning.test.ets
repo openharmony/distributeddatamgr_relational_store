@@ -16,7 +16,7 @@
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium";
 import relationalStore from '@ohos.data.relationalStore';
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
-import { createCorruptDb, getRowCount, callAndCodeCheck, call } from './TestUtils';
+import { createCorruptDb, getRowCount, callAndCodeCheck, call, callAndReturnCode } from './TestUtils';
 const TAG = "[RDB_STORE_BATCHINSERT_WITH_RETURNING_TEST]";
 let rdbStore: relationalStore.RdbStore | undefined = undefined;
 
@@ -51,7 +51,7 @@ async function resetRdbStore()
     await relationalStore.deleteRdbStore(context, STORE_CONFIG);
     rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
     expect(rdbStore != undefined).assertTrue();
-    await rdbStore?.executeSql(CREATE_TABLE_TEST);
+    await rdbStore?.execute(CREATE_TABLE_TEST);
   } catch(e) {
     console.error(TAG + `resetRdbStore failed. code is ${e.code}, message is ${e.message}`);
     expect(true).assertFail();
@@ -74,7 +74,7 @@ export default function RdbStoreBatchInsertWithReturning() {
       console.info(TAG + 'beforeEach');
       rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
       expect(rdbStore != undefined).assertTrue();
-      await rdbStore?.executeSql(CREATE_TABLE_TEST);
+      await rdbStore?.execute(CREATE_TABLE_TEST);
     })
     afterEach(async () => {
       console.info(TAG + 'afterEach');
@@ -690,7 +690,7 @@ export default function RdbStoreBatchInsertWithReturning() {
         persist: false,
       };
       rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
-      await rdbStore?.executeSql(CREATE_TABLE_TEST);
+      await rdbStore?.execute(CREATE_TABLE_TEST);
       let deferredTrans = await rdbStore?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
       });
@@ -1004,19 +1004,23 @@ export default function RdbStoreBatchInsertWithReturning() {
         defaultReturningConfig, defaultReturningConfig, defaultReturningConfig, defaultReturningConfig, null, undefined
       ];
       for (let i = 0; i < values.length; ++i) {
-        await callAndCodeCheck('401', "batchInsertWithReturning031", async () => {
+        let code = await callAndReturnCode("batchInsertWithReturning031-" + i, async () => {
           await rdbStore?.batchInsertWithReturning(tables[i], values[i], configs[i]);
         });
-        await callAndCodeCheck('401', "batchInsertWithReturningSync031", async () => {
+        expect(code).assertEqual('401');
+        code = await callAndReturnCode("batchInsertWithReturningSync031-" + i, async () => {
           rdbStore?.batchInsertWithReturningSync(tables[i], values[i], configs[i]);
         });
+        expect(code).assertEqual('401');
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('401', "transBatchInsertWithReturning031", async () => {
+        code = await callAndReturnCode("transBatchInsertWithReturning031-" + i, async () => {
           await trans?.batchInsertWithReturning(tables[i], values[i], configs[i]);
         });
-        await callAndCodeCheck('401', "transBatchInsertWithReturningSync031", async () => {
+        expect(code).assertEqual('401');
+        code = await callAndReturnCode("transBatchInsertWithReturningSync031-" + i, async () => {
           trans?.batchInsertWithReturningSync(tables[i], values[i], configs[i]);
         });
+        expect(code).assertEqual('401');
         await trans?.rollback();
       }
       done();
