@@ -153,10 +153,6 @@ protected:
     void UnRegisterAll();
 
 private:
-    std::mutex mutex_;
-    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_;
-    std::shared_ptr<OHOS::AppExecFwk::EventHandler> GetHandler();
-
     std::shared_ptr<OHOS::NativeRdb::RdbStore> nativeRdbStore_;
     bool isSystemApp_ = false;
     std::recursive_mutex cbMapMutex_;
