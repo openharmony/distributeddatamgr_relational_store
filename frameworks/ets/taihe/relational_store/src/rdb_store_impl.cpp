@@ -910,11 +910,12 @@ void RdbStoreImpl::CloudSyncWithProgress(SyncMode mode, callback_view<void(Progr
         .mode = ani_rdbutils::SyncModeToNative(mode),
         .isBlock = false
     };
+    callback<void(ProgressDetails const &)> holder = progress;
     auto nativeProgressCallback =
-        [progress](std::map<std::string, OHOS::DistributedRdb::ProgressDetail> &&nativeProgressMap) {
+        [holder](std::map<std::string, OHOS::DistributedRdb::ProgressDetail> &&nativeProgressMap) {
             for (auto &[key, nativeProgress] : nativeProgressMap) {
                 auto taiheProgress = ani_rdbutils::ProgressDetailToTaihe(nativeProgress);
-                progress(taiheProgress);
+                holder(taiheProgress);
             }
         };
     std::vector<std::string> nativeTables;
@@ -936,13 +937,14 @@ void RdbStoreImpl::CloudSyncWithTable(
         .isBlock = false
     };
     std::vector<std::string> nativeTables(tables.begin(), tables.end());
-    auto nativeProgressCallback = [progress](
-        std::map<std::string, OHOS::DistributedRdb::ProgressDetail> &&nativeProgressMap) {
-        for (auto& [key, nativeProgress] : nativeProgressMap) {
-            auto taiheProgress = ani_rdbutils::ProgressDetailToTaihe(nativeProgress);
-            progress(taiheProgress);
-        }
-    };
+    callback<void(ProgressDetails const &)> holder = progress;
+    auto nativeProgressCallback =
+        [holder](std::map<std::string, OHOS::DistributedRdb::ProgressDetail> &&nativeProgressMap) {
+            for (auto &[key, nativeProgress] : nativeProgressMap) {
+                auto taiheProgress = ani_rdbutils::ProgressDetailToTaihe(nativeProgress);
+                holder(taiheProgress);
+            }
+        };
     int errCode = nativeRdbStore_->Sync(option, nativeTables, nativeProgressCallback);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -965,13 +967,14 @@ void RdbStoreImpl::CloudSyncWithPredicates(
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
         return;
     }
-    auto nativeProgressCallback = [progress](
-        std::map<std::string, OHOS::DistributedRdb::ProgressDetail> &&nativeProgressMap) {
-        for (auto& [key, nativeProgress] : nativeProgressMap) {
-            auto aniProgress = ani_rdbutils::ProgressDetailToTaihe(nativeProgress);
-            progress(aniProgress);
-        }
-    };
+    callback<void(ProgressDetails const &)> holder = progress;
+    auto nativeProgressCallback =
+        [holder](std::map<std::string, OHOS::DistributedRdb::ProgressDetail> &&nativeProgressMap) {
+            for (auto &[key, nativeProgress] : nativeProgressMap) {
+                auto taiheProgress = ani_rdbutils::ProgressDetailToTaihe(nativeProgress);
+                holder(taiheProgress);
+            }
+        };
     int errCode = nativeRdbStore_->Sync(option, *rdbPredicateNative, nativeProgressCallback);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
