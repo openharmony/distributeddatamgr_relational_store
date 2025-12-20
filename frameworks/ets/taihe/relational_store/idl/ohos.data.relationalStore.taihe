@@ -67,11 +67,7 @@ union PRIKeyType {
 }
 
 union ModifyTime {
-    MODIFYTIME : @record Map<PRIKeyType, UTCTime>;
-}
-
-union UTCTime {
-    UTCTIIME : @sts_type("Date") Opaque;
+    MODIFYTIME : @record Map<PRIKeyType, @sts_type("Date") Opaque>;
 }
 
 struct StoreConfig {

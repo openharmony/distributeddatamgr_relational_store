@@ -153,12 +153,16 @@ protected:
     void UnRegisterAll();
 
 private:
+    std::mutex mutex_;
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_;
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> GetHandler();
+
     std::shared_ptr<OHOS::NativeRdb::RdbStore> nativeRdbStore_;
     bool isSystemApp_ = false;
     std::recursive_mutex cbMapMutex_;
     std::map<std::string, std::vector<std::shared_ptr<ani_rdbutils::DataObserver>>> jsCbMap_;
 };
-}
-}
+} // namespace RdbTaihe
+} // namespace OHOS
 
 #endif // OHOS_RELATION_STORE_RDBSTORE_IMPL_H
