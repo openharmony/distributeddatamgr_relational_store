@@ -409,7 +409,7 @@ bool UnionAccessor::TryConvert<AssetValue>(AssetValue &value)
 template<>
 bool UnionAccessor::TryConvert<std::vector<AssetValue>>(std::vector<AssetValue> &value)
 {
-    std::string clsName = "std.core.Array";
+    std::string clsName = "A{C{@ohos.data.relationalStore.relationalStore.Asset}}";
     if (!IsInstanceOf(clsName)) {
         return false;
     }
