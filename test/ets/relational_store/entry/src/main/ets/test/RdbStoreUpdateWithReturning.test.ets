@@ -22,7 +22,9 @@ let rdbStore: relationalStore.RdbStore | undefined = undefined;
 
 const CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
   "name TEXT NOT NULL, " + "age INTEGER, " + "salary REAL, " + "data ASSET, " + "data1 ASSETS," + "blobType BLOB)";
-
+const CREATE_TABLE_TEST1 = "CREATE TABLE IF NOT EXISTS test1 (" + "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+  "data1 text," + "data2 long, " + "data3 double," + "data4 blob," + "data5 ASSET," + "data6 ASSETS," +
+  "data7 floatvector(128)," + "data8 UNLIMITED INT" + ")";
 const dbName = "UpdateRdbStore.db";
 const STORE_CONFIG: relationalStore.StoreConfig = {
   name: dbName,
@@ -1000,6 +1002,142 @@ export default function RdbStoreUpdateWithReturning() {
         expect(code).assertEqual('401');
         await trans?.rollback();
       }
+      done();
+    })
+
+    /**
+     * @tc.name updateWithReturning test.
+     * @tc.number updateWithReturning029
+     * @tc.desc 1. getColumnType with index.
+     */
+    it('updateWithReturning029', 0, async (done: Function) => {
+      await rdbStore?.execute(CREATE_TABLE_TEST1);
+      const config: relationalStore.ReturningConfig = { columns: ['id', 'data1', 'data2', 'data3']};
+      const asset:relationalStore.Asset = {
+        name: "name4",
+        uri: "uri4",
+        createTime: "createTime4",
+        modifyTime: "modifyTime4",
+        size: "size4",
+        path: "path4",
+      };
+      const assets = [asset];
+      const valueBucket:relationalStore.ValuesBucket = {
+        "data1": "hello world",
+        "data2": 3,
+        "data3": 10.5,
+        "data4": new Uint8Array([1, 2, 3]),
+        "data5":asset,
+        "data6":assets,
+        "data7":new Float32Array([1.5, 2.5]),
+        "data8":100n
+      };
+      await call("updateWithReturning029", async ()=> {
+        let res:relationalStore.Result|undefined = await rdbStore?.batchInsertWithReturning("test1", [valueBucket], config);
+        expect(1).assertEqual(res?.changed);
+        let predicates = new relationalStore.RdbPredicates("test1");
+        let results:relationalStore.Result|undefined = await rdbStore?.updateWithReturning(valueBucket, predicates, config,
+          relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+        expect(true).assertEqual(results?.resultSet.goToNextRow());
+        let type:relationalStore.ColumnType|undefined = relationalStore.ColumnType.NULL;
+        type = await results?.resultSet.getColumnType(results?.resultSet.getColumnIndex("id"));
+        expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+        type = await results?.resultSet.getColumnType(results?.resultSet.getColumnIndex("data1"));
+        expect(type).assertEqual(relationalStore.ColumnType.TEXT);
+        type = await results?.resultSet.getColumnType(results?.resultSet.getColumnIndex("data2"));
+        expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+        type = await results?.resultSet.getColumnType(results?.resultSet.getColumnIndex("data3"));
+        expect(type).assertEqual(relationalStore.ColumnType.REAL);
+        results?.resultSet.close();
+        config.columns = ['data4', 'data5', 'data6', 'data7'];
+        let results1:relationalStore.Result|undefined = await rdbStore?.updateWithReturning(valueBucket, predicates, config,
+          relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+        expect(true).assertEqual(results1?.resultSet.goToNextRow());
+        type = await results1?.resultSet.getColumnType(results1?.resultSet.getColumnIndex("data4"));
+        expect(type).assertEqual(relationalStore.ColumnType.BLOB);
+        type = await results1?.resultSet.getColumnType(results1?.resultSet.getColumnIndex("data5"));
+        expect(type).assertEqual(relationalStore.ColumnType.ASSET);
+        type = await results1?.resultSet.getColumnType(results1?.resultSet.getColumnIndex("data6"));
+        expect(type).assertEqual(relationalStore.ColumnType.ASSETS);
+        type = await results1?.resultSet.getColumnType(results1?.resultSet.getColumnIndex("data7"));
+        expect(type).assertEqual(relationalStore.ColumnType.FLOAT_VECTOR);
+        results1?.resultSet.close();
+        config.columns = ['data8'];
+        let results2:relationalStore.Result|undefined = await rdbStore?.updateWithReturning(valueBucket, predicates, config,
+          relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+        expect(true).assertEqual(results2?.resultSet.goToNextRow());
+        type = await results2?.resultSet.getColumnType(results2?.resultSet.getColumnIndex("data8"));
+        expect(type).assertEqual(relationalStore.ColumnType.UNLIMITED_INT);
+        results2?.resultSet.close();
+      });
+      done();
+    })
+
+    /**
+     * @tc.name updateWithReturning test.
+     * @tc.number updateWithReturning030
+     * @tc.desc 1. getColumnType with key.
+     */
+    it('updateWithReturning030', 0, async (done: Function) => {
+      await rdbStore?.execute(CREATE_TABLE_TEST1);
+      const config: relationalStore.ReturningConfig = { columns: ['id', 'data1', 'data2', 'data3']};
+      const asset:relationalStore.Asset = {
+        name: "name4",
+        uri: "uri4",
+        createTime: "createTime4",
+        modifyTime: "modifyTime4",
+        size: "size4",
+        path: "path4",
+      };
+      const assets = [asset];
+      const valueBucket:relationalStore.ValuesBucket = {
+        "data1": "hello world",
+        "data2": 3,
+        "data3": 10.5,
+        "data4": new Uint8Array([1, 2, 3]),
+        "data5":asset,
+        "data6":assets,
+        "data7":new Float32Array([1.5, 2.5]),
+        "data8":100n
+      };
+      await call("updateWithReturning030", async ()=> {
+        let res:relationalStore.Result|undefined = await rdbStore?.batchInsertWithReturning("test1", [valueBucket], config);
+        expect(1).assertEqual(res?.changed);
+        let predicates = new relationalStore.RdbPredicates("test1");
+        let results:relationalStore.Result|undefined = await rdbStore?.updateWithReturning(valueBucket, predicates, config,
+          relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+        expect(true).assertEqual(results?.resultSet.goToNextRow());
+        let type:relationalStore.ColumnType|undefined = relationalStore.ColumnType.NULL;
+        type = await results?.resultSet.getColumnType("id");
+        expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+        type = await results?.resultSet.getColumnType("data1");
+        expect(type).assertEqual(relationalStore.ColumnType.TEXT);
+        type = await results?.resultSet.getColumnType("data2");
+        expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
+        type = await results?.resultSet.getColumnType("data3");
+        expect(type).assertEqual(relationalStore.ColumnType.REAL);
+        results?.resultSet.close();
+        config.columns = ['data4', 'data5', 'data6', 'data7'];
+        let results1:relationalStore.Result|undefined = await rdbStore?.updateWithReturning(valueBucket, predicates, config,
+          relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+        expect(true).assertEqual(results1?.resultSet.goToNextRow());
+        type = await results1?.resultSet.getColumnType("data4");
+        expect(type).assertEqual(relationalStore.ColumnType.BLOB);
+        type = await results1?.resultSet.getColumnType("data5");
+        expect(type).assertEqual(relationalStore.ColumnType.ASSET);
+        type = await results1?.resultSet.getColumnType("data6");
+        expect(type).assertEqual(relationalStore.ColumnType.ASSETS);
+        type = await results1?.resultSet.getColumnType("data7");
+        expect(type).assertEqual(relationalStore.ColumnType.FLOAT_VECTOR);
+        results1?.resultSet.close();
+        config.columns = ['data8'];
+        let results2:relationalStore.Result|undefined = await rdbStore?.updateWithReturning(valueBucket, predicates, config,
+          relationalStore.ConflictResolution.ON_CONFLICT_REPLACE);
+        expect(true).assertEqual(results2?.resultSet.goToNextRow());
+        type = await results2?.resultSet.getColumnType("data8");
+        expect(type).assertEqual(relationalStore.ColumnType.UNLIMITED_INT);
+        results2?.resultSet.close();
+      });
       done();
     })
   })
