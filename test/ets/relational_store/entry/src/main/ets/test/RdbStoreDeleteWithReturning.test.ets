@@ -16,7 +16,7 @@
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from "@ohos/hypium";
 import relationalStore from '@ohos.data.relationalStore';
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
-import { createCorruptDb, getRowCount, callAndCodeCheck, call } from './TestUtils';
+import { createCorruptDb, getRowCount, callAndCodeCheck, call, callAndReturnCode } from './TestUtils';
 const TAG = "[RDB_STORE_DELETE_WITH_RETURNING_TEST]";
 let rdbStore: relationalStore.RdbStore | undefined = undefined;
 
@@ -53,26 +53,31 @@ async function resetRdbStore()
   } catch (e) {
     console.info(TAG + 'close failed');
   }
-  await relationalStore.deleteRdbStore(context, STORE_CONFIG);
-  rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
-  expect(rdbStore != undefined).assertTrue();
-  await rdbStore?.executeSql(CREATE_TABLE_TEST1);
-  await rdbStore?.executeSql(CREATE_TABLE_TEST);
-  let valueBuckets = new Array<relationalStore.ValuesBucket>();
-  let valueBuckets1 = new Array<relationalStore.ValuesBucket>();
-  const num = 10;
-  for (let i = 0; i < num; i++) {
-    const valueBucket: relationalStore.ValuesBucket = { 'test_name': 'lisi' + i };
-    valueBuckets1.push(valueBucket);
+  try {
+    await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+    rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
+    expect(rdbStore != undefined).assertTrue();
+    await rdbStore?.execute(CREATE_TABLE_TEST1);
+    await rdbStore?.execute(CREATE_TABLE_TEST);
+    let valueBuckets = new Array<relationalStore.ValuesBucket>();
+    let valueBuckets1 = new Array<relationalStore.ValuesBucket>();
+    const num = 10;
+    for (let i = 0; i < num; i++) {
+      const valueBucket: relationalStore.ValuesBucket = { 'test_name': 'lisi' + i };
+      valueBuckets1.push(valueBucket);
+    }
+    let changeRows = await rdbStore?.batchInsert("test1", valueBuckets1);
+    expect(changeRows).assertEqual(num);
+    for (let i = 0; i < num; i++) {
+      const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' + i, 'age': 18 + i, 'test_id': i };
+      valueBuckets.push(valueBucket);
+    }
+    changeRows = await rdbStore?.batchInsert("test", valueBuckets);
+    expect(changeRows).assertEqual(num);
+  } catch (e) {
+    console.error(TAG + `resetRdbStore failed. code is ${e.code}, message is ${e.message}`);
+    expect(true).assertFail();
   }
-  let changeRows = await rdbStore?.batchInsert("test1", valueBuckets1);
-  expect(changeRows).assertEqual(num);
-  for (let i = 0; i < num; i++) {
-    const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' + i, 'age': 18 + i, 'test_id': i };
-    valueBuckets.push(valueBucket);
-  }
-  changeRows = await rdbStore?.batchInsert("test", valueBuckets);
-  expect(changeRows).assertEqual(num);
 }
 
 async function getTrans() : Promise<relationalStore.Transaction>
@@ -96,6 +101,17 @@ export default function RdbStoreDeleteWithReturning() {
     })
     afterAll(async () => {
       console.info(TAG + 'afterAll');
+      try {
+        await rdbStore?.close();
+      } catch (e) {
+        console.info(TAG + 'afterAll close failed');
+      }
+      try {
+        await relationalStore.deleteRdbStore(context, STORE_CONFIG);
+      } catch(e) {
+        console.error(TAG + `afterAll resetRdbStore failed. code is ${e.code}, message is ${e.message}`);
+        expect(true).assertFail();
+      }
     })
 
     /**
@@ -411,14 +427,14 @@ export default function RdbStoreDeleteWithReturning() {
       let predicates = new relationalStore.RdbPredicates("test1");
       predicates.equalTo('test_id', 1);
       const config: relationalStore.ReturningConfig = { columns: ['test_name'] };
-      await rdbStore?.executeSql(FOREIGN_KEYS_ON);
+      await rdbStore?.execute(FOREIGN_KEYS_ON);
       await callAndCodeCheck(14800032, "deleteWithReturning010", async () => {
         await rdbStore?.deleteWithReturning(predicates, config);
       });
       await callAndCodeCheck(14800032, "deleteWithReturningSync010", async () => {
         rdbStore?.deleteWithReturningSync(predicates, config);
       });
-      await rdbStore?.executeSql(FOREIGN_KEYS_OFF);
+      await rdbStore?.execute(FOREIGN_KEYS_OFF);
       done();
     })
 
@@ -702,7 +718,7 @@ export default function RdbStoreDeleteWithReturning() {
         persist: false,
       };
       rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG1);
-      await rdbStore?.executeSql(CREATE_TABLE_TEST);
+      await rdbStore?.execute(CREATE_TABLE_TEST);
       let deferredTrans = await rdbStore?.createTransaction({
         transactionType: relationalStore.TransactionType.DEFERRED
       });
@@ -724,6 +740,38 @@ export default function RdbStoreDeleteWithReturning() {
       });
       await deferredTrans?.rollback();
       await trans?.rollback();
+      done();
+    })
+
+    /**
+     * @tc.name deleteWithReturning test.
+     * @tc.number deleteWithReturning021
+     * @tc.desc 1.args is null or undefined test.
+     */
+    it('deleteWithReturning021', 0, async (done: Function) => {
+      let defaultPredicate = new relationalStore.RdbPredicates("test");
+      let predicates = [defaultPredicate, defaultPredicate, null, undefined];
+      let configs = [null, undefined, defaultReturningConfig, defaultReturningConfig];
+      for (let i = 0; i < predicates.length; ++i) {
+        let code = await callAndReturnCode("deleteWithReturning021-" + i, async () => {
+          await rdbStore?.deleteWithReturning(predicates[i], configs[i]);
+        });
+        expect(code).assertEqual('401');
+        code = await callAndReturnCode("deleteWithReturningSync021-" + i, async () => {
+          rdbStore?.deleteWithReturningSync(predicates[i], configs[i]);
+        });
+        expect(code).assertEqual('401');
+        let trans = await rdbStore?.createTransaction(options);
+        code = await callAndReturnCode("transDeleteWithReturning021-" + i, async () => {
+          await trans?.deleteWithReturning(predicates[i], configs[i]);
+        });
+        expect(code).assertEqual('401');
+        code = await callAndReturnCode("transDeleteWithReturningSync021-" + i, async () => {
+          trans?.deleteWithReturningSync(predicates[i], configs[i]);
+        });
+        expect(code).assertEqual('401');
+        await trans?.rollback();
+      }
       done();
     })
   })

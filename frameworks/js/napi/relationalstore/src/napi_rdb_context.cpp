@@ -356,6 +356,7 @@ std::shared_ptr<Error> ParseValuesBucket(napi_env env, napi_value arg, ValuesBuc
     napi_value keys = nullptr;
     status = napi_get_all_property_names(env, arg, napi_key_own_only,
         static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols), napi_key_numbers_to_strings, &keys);
+    CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<ParamError>("ValuesBucket is invalid."));
     uint32_t arrLen = 0;
     status = napi_get_array_length(env, keys, &arrLen);
     std::shared_ptr err = std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "empty Array.");
@@ -393,7 +394,7 @@ std::shared_ptr<Error> ParseValuesBuckets(
 {
     bool isArray = false;
     auto status = napi_is_array(env, arg, &isArray);
-    CHECK_RETURN_CUSTOM_ERR(status == napi_ok && isArray, std::make_shared<ParamError>("ValuesBucket is invalid."));
+    CHECK_RETURN_CUSTOM_ERR(status == napi_ok && isArray, std::make_shared<ParamError>("ValuesBuckets is invalid."));
 
     uint32_t arrLen = 0;
     status = napi_get_array_length(env, arg, &arrLen);
