@@ -48,7 +48,7 @@ ohos_distributedtest("DistributedTest") {
     "sqlite:sqlite",
   ]
 
-  if (relational_store_dm_part_is_enabled && relational_store_distributed_capability) {
+  if (relational_store_dm_part_is_enabled) {
     external_deps += [ "device_manager:devicemanagersdk", ]
   }
 
@@ -80,7 +80,7 @@ ohos_distributedtest("DistributedTestAgent") {
     "sqlite:sqlite",
   ]
 
-  if (relational_store_dm_part_is_enabled && relational_store_distributed_capability) {
+  if (relational_store_dm_part_is_enabled) {
     external_deps += [ "device_manager:devicemanagersdk", ]
   }
 
@@ -99,7 +99,7 @@ group("distributedtest") {
   testonly = true
 
   deps = []
-  if (relational_store_dm_part_is_enabled && relational_store_distributed_capability) {
+  if (relational_store_dm_part_is_enabled) {
     deps += [
       ":DistributedTest",
       ":DistributedTestAgent",
