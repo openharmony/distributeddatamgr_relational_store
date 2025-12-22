@@ -85,11 +85,11 @@ public:
     void RestoreWithSrcName(string_view srcName);
     void RestoreWithVoid();
     void SetDistributedTablesWithTables(array_view<string> tables);
-    void SetDistributedTablesWithType(array_view<string> tables, DistributedType type);
+    void SetDistributedTablesWithType(array_view<string> tables, ohos::data::relationalStore::DistributedType type);
     void SetDistributedTablesWithConfig(
-        array_view<string> tables, DistributedType type, DistributedConfig const &config);
-    void SetDistributedTablesWithOptionConfig(
-        array_view<string> tables, optional_view<DistributedType> type, optional_view<DistributedConfig> config);
+        array_view<string> tables, ohos::data::relationalStore::DistributedType type, DistributedConfig const &config);
+    void SetDistributedTablesWithOptionConfig(array_view<string> tables,
+        optional_view<ohos::data::relationalStore::DistributedType> type, optional_view<DistributedConfig> config);
     string ObtainDistributedTableNameSync(string_view device, string_view table);
     array<map<string, int32_t>> SyncSync(SyncMode mode, weak::RdbPredicates predicates);
     void CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const &)> progress);

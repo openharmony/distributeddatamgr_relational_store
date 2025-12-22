@@ -203,6 +203,11 @@ enum DistributedType : i32 {
     DISTRIBUTED_CLOUD
 }
 
+enum DistributedTableType : i32 {
+    DEVICE_COLLABORATION,
+    SINGLE_VERSION
+}
+
 struct Reference {
     sourceTable: String;
     targetTable: String;
@@ -214,6 +219,7 @@ struct DistributedConfig {
     references: Optional<Array<Reference>>;
     asyncDownloadAsset: Optional<bool>;
     enableCloud: Optional<bool>;
+    tableType: Optional<DistributedTableType>;
 }
 
 enum ConflictResolution  : i32 {
