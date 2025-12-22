@@ -720,9 +720,13 @@ OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalSt
 }
 
 OHOS::DistributedRdb::DistributedConfig DistributedConfigToNative(
-    const ohos::data::relationalStore::DistributedConfig &config)
+    const ohos::data::relationalStore::DistributedConfig &config,
+    const OHOS::DistributedRdb::DistributedTableType &nativeType)
 {
     OHOS::DistributedRdb::DistributedConfig nativeConfig;
+    nativeConfig.tableType = nativeType == OHOS::DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE
+                                 ? OHOS::DistributedRdb::DistributedTableMode::DEVICE_COLLABORATION
+                                 : OHOS::DistributedRdb::DistributedTableMode::SINGLE_VERSION;
     nativeConfig.autoSync = config.autoSync;
     if (config.references.has_value()) {
         auto values = config.references.value();
@@ -737,6 +741,9 @@ OHOS::DistributedRdb::DistributedConfig DistributedConfigToNative(
     }
     if (config.enableCloud.has_value()) {
         nativeConfig.enableCloud = config.enableCloud.value();
+    }
+    if (config.tableType.has_value()) {
+        nativeConfig.tableType = config.tableType.value();
     }
     return nativeConfig;
 }
