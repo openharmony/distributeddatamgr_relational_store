@@ -1136,7 +1136,7 @@ bool WarpDate(double time, ani_object &outObj)
     }
     ani_class cls;
     ani_status status;
-    if (ANI_OK != (status = env->FindClass("escompat.Date", &cls))) {
+    if (ANI_OK != (status = env->FindClass("std.core.Date", &cls))) {
         LOG_ERROR("FindClass failed, status:%{public}d", status);
         return false;
     }
