@@ -222,7 +222,8 @@ Result_TH QueryParticipantsByInvitationImpl(string_view invitationCode)
 {
     Result_TH ret;
     if (invitationCode.empty()) {
-        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of invitationCode must be string and not empty.");
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+            "The type of invitationCode must be string and not empty.");
         return ret;
     }
     QueryResults ipcRet;
@@ -245,7 +246,8 @@ Result_TH ConfirmInvitationImpl(string_view invitationCode, State state)
     const uint32_t INDEX_TWO = 2;
     Result_TH ret;
     if (invitationCode.empty()) {
-        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of invitationCode must be string and not empty.");
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+            "The type of invitationCode must be string and not empty.");
         return ret;
     }
     if (!(state.get_value() > Confirmation::CFM_NIL && state.get_value() <= Confirmation::CFM_BUTT)) {
@@ -272,7 +274,8 @@ Result_TH ChangeConfirmationImpl(string_view sharingResource, State state)
 {
     Result_TH ret;
     if (sharingResource.empty()) {
-        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingResource must be string and not empty.");
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+            "The type of sharingResource must be string and not empty.");
         return ret;
     }
     if (!(state.get_value() > Confirmation::CFM_NIL && state.get_value() <= Confirmation::CFM_BUTT)) {
