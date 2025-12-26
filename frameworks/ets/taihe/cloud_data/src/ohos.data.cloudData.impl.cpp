@@ -195,6 +195,10 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
         return;
     }
+    if (appActions.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return;
+    }
     constexpr size_t MAX_ACTIONS = 1000;
     if (appActions.size() > MAX_ACTIONS) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Too many app actions");
@@ -297,18 +301,18 @@ void ConfigImpl::SetGlobalCloudStrategyImpl(
     std::vector<OHOS::CommonType::Value> values;
     if (param.has_value()) {
         for (auto it = param.value().begin(); it != param.value().end(); ++it) {
-            if (!it->holds_F64()) {
+            if (!it->holds_INT64()) {
                 ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
                     "member of param must be of type NetWorkStrategy");
                 return;
             }
-            auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
+            int64_t val = it->get_INT64_ref();
             if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
                 ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
                     "member of param must be of type NetWorkStrategy");
                 return;
             }
-            values.push_back(it->get_F64_ref());
+            values.push_back(it->get_INT64_ref());
         }
     }
     auto work = [&strategy, &param, &values](std::shared_ptr<CloudService> proxy) {
@@ -354,18 +358,18 @@ void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::dat
     std::vector<OHOS::CommonType::Value> values;
     if (param.has_value()) {
         for (auto it = param.value().begin(); it != param.value().end(); ++it) {
-            if (!it->holds_F64()) {
+            if (!it->holds_INT64()) {
                 ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
                     "member of param must be of type NetWorkStrategy");
                 return;
             }
-            auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
+            ino64_t val = it->get_INT64_ref();
             if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
                 ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
                     "member of param must be of type NetWorkStrategy");
                 return;
             }
-            values.push_back(it->get_F64_ref());
+            values.push_back(it->get_INT64_ref());
         }
     }
     auto work = [&strategy, &param, &values](std::shared_ptr<CloudService> proxy) {
