@@ -47,20 +47,22 @@ const std::optional<AniErrorCode> GetAniErrorCode(int32_t errorCode)
     return std::nullopt;
 }
 
-void ThrowAniError(int32_t errorCode)
+void ThrowAniError(int32_t errorCode, std::string errorMsg)
 {
     if (errorCode == Status::SUCCESS) {
         return;
     }
-    LOG_ERROR("ThrowAniError errorCode: %{public}d", errorCode);
-    auto errorMsg = GetAniErrorCode(errorCode);
+    LOG_ERROR("ThrowAniError errorCode: %{public}d errorMsg: %{public}s", errorCode, errorMsg.c_str());
+    auto errorInfo = GetAniErrorCode(errorCode);
     AniErrorCode aniError;
-    if (errorMsg.has_value()) {
-        aniError = errorMsg.value();
+    if (errorInfo.has_value()) {
+        aniError = errorInfo.value();
     } else {
         aniError.errorCode = -1;
         aniError.message = "";
     }
-    taihe::set_business_error(aniError.errorCode, aniError.message);
+    std::string completeError(aniError.message);
+    completeError += errorMsg;
+    taihe::set_business_error(aniError.errorCode, completeError);
 }
 }  // namespace

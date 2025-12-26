@@ -28,6 +28,15 @@ using namespace OHOS::Rdb;
 ResultSet AllocResourceAndSharePromise(string_view storeId, RdbPredicates_TH predicates,
     array_view<Participant_TH> participants, optional_view<array<string>> columns)
 {
+    if (storeId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of storeId must be string and not empty.");
+        return taihe::make_holder<OHOS::RdbTaihe::ResultSetImpl, ResultSet>();
+    }
+    if (participants.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+            "The type of participants must be Array<Participant> and not empty.");
+        return taihe::make_holder<OHOS::RdbTaihe::ResultSetImpl, ResultSet>();
+    }
     std::optional<std::pair<int32_t, std::vector<OHOS::NativeRdb::ValuesBucket>>> result;
     auto work = [&storeId, &predicates, &participants, &columns, &result](std::shared_ptr<CloudService> proxy) {
         Participants info;
@@ -80,6 +89,15 @@ ResultSet AllocResourceAndShareImplWithColumns(string_view storeId, RdbPredicate
 Result_TH ShareImpl(string_view sharingResource, array_view<Participant_TH> participants)
 {
     Result_TH ret;
+    if (sharingResource.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        return ret;
+    }
+    if (participants.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+            "The type of participants must be Array<Participant> and not empty.");
+        return ret;
+    }
     Results ipcRet;
     int32_t code = CloudService::Status::ERROR;
     auto work = [&sharingResource, &participants, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
@@ -100,6 +118,15 @@ Result_TH ShareImpl(string_view sharingResource, array_view<Participant_TH> part
 Result_TH UnshareImpl(string_view sharingResource, array_view<Participant_TH> participants)
 {
     Result_TH ret;
+    if (sharingResource.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        return ret;
+    }
+    if (participants.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+            "The type of participants must be Array<Participant> and not empty.");
+        return ret;
+    }
     Results ipcRet;
     int32_t code = CloudService::Status::ERROR;
     auto work = [&sharingResource, &participants, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
@@ -120,6 +147,10 @@ Result_TH UnshareImpl(string_view sharingResource, array_view<Participant_TH> pa
 Result_TH ExitImpl(string_view sharingResource)
 {
     Result_TH ret;
+    if (sharingResource.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        return ret;
+    }
     int32_t code = CloudService::Status::ERROR;
     std::pair<int32_t, std::string> ipcRet;
     auto work = [&sharingResource, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
@@ -139,6 +170,15 @@ Result_TH ExitImpl(string_view sharingResource)
 Result_TH ChangePrivilegeImpl(string_view sharingResource, array_view<Participant_TH> participants)
 {
     Result_TH ret;
+    if (sharingResource.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        return ret;
+    }
+    if (participants.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+            "The type of participants must be Array<Participant> and not empty.");
+        return ret;
+    }
     Results ipcRet;
     int32_t code = CloudService::Status::ERROR;
     auto work = [&sharingResource, &participants, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
@@ -159,6 +199,10 @@ Result_TH ChangePrivilegeImpl(string_view sharingResource, array_view<Participan
 Result_TH QueryParticipantsImpl(string_view sharingResource)
 {
     Result_TH ret;
+    if (sharingResource.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
+        return ret;
+    }
     QueryResults ipcRet;
     int32_t code = CloudService::Status::ERROR;
     auto work = [&sharingResource, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
@@ -177,6 +221,10 @@ Result_TH QueryParticipantsImpl(string_view sharingResource)
 Result_TH QueryParticipantsByInvitationImpl(string_view invitationCode)
 {
     Result_TH ret;
+    if (invitationCode.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of invitationCode must be string and not empty.");
+        return ret;
+    }
     QueryResults ipcRet;
     int32_t code = CloudService::Status::ERROR;
     auto work = [&invitationCode, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
@@ -196,19 +244,21 @@ Result_TH ConfirmInvitationImpl(string_view invitationCode, State state)
 {
     const uint32_t INDEX_TWO = 2;
     Result_TH ret;
+    if (invitationCode.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of invitationCode must be string and not empty.");
+        return ret;
+    }
+    if (!(state.get_value() > Confirmation::CFM_NIL && state.get_value() <= Confirmation::CFM_BUTT)) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of status must be Status.");
+        return ret;
+    }
     std::tuple<int32_t, std::string, std::string> ipcRet;
     int32_t code = CloudService::Status::ERROR;
     auto work = [&invitationCode, &state, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
-        if (!(state.get_value() > Confirmation::CFM_NIL && state.get_value() <= Confirmation::CFM_BUTT)) {
-            LOG_ERROR("status type error");
-            code = CloudService::Status::INVALID_ARGUMENT;
-            return;
-        }
         code = proxy->ConfirmInvitation(std::string(invitationCode), state.get_value(), ipcRet);
     };
     RequestIPC(work);
     if (code != CloudService::Status::SUCCESS) {
-        LOG_ERROR("request, errcode = %{public}d", code);
         ThrowAniError(code);
         return ret;
     }
@@ -221,19 +271,21 @@ Result_TH ConfirmInvitationImpl(string_view invitationCode, State state)
 Result_TH ChangeConfirmationImpl(string_view sharingResource, State state)
 {
     Result_TH ret;
+    if (sharingResource.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingResource must be string and not empty.");
+        return ret;
+    }
+    if (!(state.get_value() > Confirmation::CFM_NIL && state.get_value() <= Confirmation::CFM_BUTT)) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of status must be Status.");
+        return ret;
+    }
     std::pair<int32_t, std::string> ipcRet;
     int32_t code = CloudService::Status::ERROR;
     auto work = [&sharingResource, &state, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
-        if (!(state.get_value() > Confirmation::CFM_NIL && state.get_value() <= Confirmation::CFM_BUTT)) {
-            LOG_ERROR("status type error");
-            code = CloudService::Status::INVALID_ARGUMENT;
-            return;
-        }
         code = proxy->ChangeConfirmation(std::string(sharingResource), state.get_value(), ipcRet);
     };
     RequestIPC(work);
     if (code != CloudService::Status::SUCCESS) {
-        LOG_ERROR("request, errcode = %{public}d", code);
         ThrowAniError(code);
         return ret;
     }
