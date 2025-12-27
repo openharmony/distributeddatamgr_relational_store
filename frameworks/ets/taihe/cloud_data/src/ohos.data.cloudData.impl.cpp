@@ -209,7 +209,7 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
         std::map<std::string, int32_t> actions;
         std::map<std::string, OHOS::CloudData::ClearConfig> configs;
         for (auto const &item : appActions) {
-            if (ValidSubscribeType(item.second)) {
+            if (!ValidSubscribeType(item.second)) {
                 ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Action in map appActions is incorrect.");
                 return;
             }
@@ -276,7 +276,7 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
     auto work = [&accountId, &appActions, &clearConfig](std::shared_ptr<CloudService> proxy) {
         std::map<std::string, int32_t> actions;
         for (auto const &item : appActions) {
-            if (ValidSubscribeType(item.second)) {
+            if (!ValidSubscribeType(item.second)) {
                 ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Action in map appActions is incorrect.");
                 return;
             }
@@ -363,7 +363,7 @@ void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::dat
                     "member of param must be of type NetWorkStrategy");
                 return;
             }
-            ino64_t val = it->get_INT64_ref();
+            int64_t val = it->get_INT64_ref();
             if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
                 ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
                     "member of param must be of type NetWorkStrategy");
