@@ -504,6 +504,7 @@ std::string SqliteUtils::SqlAnonymous(const std::string &sql)
     std::regex idRegex(R"(\b[a-zA-Z0-9_]+\b)");
     auto begin = std::sregex_iterator(sql.begin(), sql.end(), idRegex);
     auto end = std::sregex_iterator();
+    bool prevNum = false;
 
     size_t lastPos = 0;
     for (auto it = begin; it != end; ++it) {
@@ -515,11 +516,18 @@ std::string SqliteUtils::SqlAnonymous(const std::string &sql)
 
         lastPos = pos + word.length();
         if (std::regex_match(word, std::regex(R"(\b[0-9a-fA-F]+\b)"))) {
-            result << AnonymousDigits(word);
+            if (prevNum && word.length() < CONTINUOUS_DIGITS_MINI_SIZE) {
+                result << REPLACE_CHAIN;
+            } else {
+                result << AnonymousDigits(word);
+                prevNum = true;
+            }
         } else if (IsKeyword(word)) {
             result << std::move(word);
+            prevNum = false;
         } else {
             result << GetAnonymousName(word);
+            prevNum = false;
         }
     }
 
