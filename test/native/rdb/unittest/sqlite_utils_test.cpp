@@ -129,7 +129,7 @@ HWTEST_F(SqliteUtilsTest, SqlAnonymous_001, TestSize.Level0)
         " sto*** in \"SELECT sto*** FROM tab*** JOIN tab*** ON tab***.i** = tab***.a_i***;\"");
     EXPECT_EQ(SqliteUtils::SqlAnonymous(
                   "errno is:25 2 values for 1 columns in \"INSERT INTO tableA(story) Values(1, '你好中文字符')\"."),
-        "errno is:25 2 values for 1 col*** in \"INSERT INTO tab***(sto***) Values(1, '***')\".");
+        "errno is:25 *** values for 1 col*** in \"INSERT INTO tab***(sto***) Values(1, '***')\".");
     EXPECT_EQ(
         SqliteUtils::SqlAnonymous("errno is:0 no such table: CommonAddressModel in"
                                   " \"SELECT * FROM CommonAddressModel WHERE addressType IN (? , ?)AND uid = ? \""),
@@ -176,7 +176,7 @@ HWTEST_F(SqliteUtilsTest, SqlAnonymous_002, TestSize.Level0)
         " AFTER UPDATE ON [con***ata] BEGIN IF UPDATE [ver***] RET***; UPDATE [con***ata] "
         "SET [ver***] = [O**].[ver***] + 1 WHERE [i**] = [O**].[i**]; END\".");
     EXPECT_EQ(SqliteUtils::SqlAnonymous("Fd 7 enable del monitor go wrong, errno = 13"),
-        "Fd 7 enable del monitor go wrong, errno = 13");
+        "Fd *** enable del monitor go wrong, errno = 13");
     EXPECT_EQ(SqliteUtils::SqlAnonymous(
                   "errno is:95 duplicate column name: Timestamp in \"ALTER TABLE BSD ADD COLUMN Timestamp TE."),
         "errno is:95 duplicate column name: Tim***amp in \"ALTER TABLE B** ADD COLUMN Tim***amp T**.");
@@ -188,7 +188,14 @@ HWTEST_F(SqliteUtilsTest, SqlAnonymous_002, TestSize.Level0)
 HWTEST_F(SqliteUtilsTest, SqlAnonymous_003, TestSize.Level1)
 {
     EXPECT_EQ(SqliteUtils::SqlAnonymous("30005245854585524412855412 123edf4 30005 300052"),
-        "***5412 ***edf4 30005 ***052");
+        "***5412 ***edf4 *** ***052");
+}
+
+HWTEST_F(SqliteUtilsTest, SqlAnonymous_004, TestSize.Level0)
+{
+    EXPECT_EQ(SqliteUtils::SqlAnonymous(
+                  "INSERT INTO test (mac, address) VALUES ('48:b2:d3:bd:74:33', 'EEC2B4EE-D8EB-4743-AA58-BBA471E7')"),
+        "INSERT INTO tes*** (m**, add***) VALUES ('48:***:***:***:***:***', '***B4EE-***-***-***-***71E7')");
 }
 
 HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0024, TestSize.Level1)
