@@ -46,7 +46,7 @@ int OH_Rdb_DestroyCryptoParam(OH_Rdb_CryptoParam *cryptoParam)
 
 int OH_Crypto_SetEncryptionKey(OH_Rdb_CryptoParam *param, const uint8_t *key, int32_t length)
 {
-    if (param == nullptr || !param->IsValid()) {
+    if (param == nullptr || !param->IsValid() || (key != nullptr && length < 0)) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     if (key == nullptr || length == 0) {
