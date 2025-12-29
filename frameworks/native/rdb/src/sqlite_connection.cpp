@@ -1853,8 +1853,8 @@ void SqliteConnection::CheckDBVisitor()
         if (callingName != callingProcess_) {
         LOG_ERROR("callingName:%{public}s, callingProcess_:%{public}s",
             callingName.c_str(), callingProcess_.c_str());
-            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FOUNDATION_FAULT,
-                E_DFX_FOUNDATION_VERIFY_FAULT, callingName, "Database Visitor is not foundation"));
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
+                E_DFX_VISITOR_VERIFY_FAULT, callingName, "Database Visitor is not foundation"));
         }
 #endif
     }

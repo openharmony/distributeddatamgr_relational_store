@@ -96,7 +96,7 @@ static constexpr int E_DFX_REPLAY_TIMEOUT_FAIL = (E_DFX_BASE + 0xE);
 /**
  * @brief Only use for dfx, print foundation database verify.
  */
-static constexpr int E_DFX_FOUNDATION_VERIFY_FAULT = (E_DFX_BASE + 0xF);
+static constexpr int E_DFX_VISITOR_VERIFY_FAULT = (E_DFX_BASE + 0xF);
 
 } // namespace NativeRdb
 } // namespace OHOS
