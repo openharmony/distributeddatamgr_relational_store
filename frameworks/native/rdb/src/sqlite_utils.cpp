@@ -462,11 +462,13 @@ std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
     return (fileName.substr(0, HEAD_SIZE) + REPLACE_CHAIN + fileName.substr(fileName.length() - END_SIZE, END_SIZE));
 }
 
-std::string SqliteUtils::AnonymousDigits(const std::string &digits)
+std::string SqliteUtils::AnonymousDigits(const std::string &digits, bool &prevDigit)
 {
     std::string::size_type digitsNum = digits.size();
     if (digitsNum < CONTINUOUS_DIGITS_MINI_SIZE) {
-        return digits;
+        auto res = prevDigit ? REPLACE_CHAIN : digits;
+        prevDigit = true;
+        return res;
     }
     std::string::size_type endDigitsNum = 4;
     std::string::size_type shortEndDigitsNum = 3;
@@ -477,7 +479,8 @@ std::string SqliteUtils::AnonymousDigits(const std::string &digits)
     } else {
         last = name.substr(name.size() - endDigitsNum);
     }
-    return "***" + last;
+    prevDigit = true;
+    return REPLACE_CHAIN + last;
 }
 
 std::string ByteAnonymous(const std::string &input)
@@ -504,7 +507,7 @@ std::string SqliteUtils::SqlAnonymous(const std::string &sql)
     std::regex idRegex(R"(\b[a-zA-Z0-9_]+\b)");
     auto begin = std::sregex_iterator(sql.begin(), sql.end(), idRegex);
     auto end = std::sregex_iterator();
-    bool prevNum = false;
+    bool prevDigit = false;
 
     size_t lastPos = 0;
     for (auto it = begin; it != end; ++it) {
@@ -515,19 +518,14 @@ std::string SqliteUtils::SqlAnonymous(const std::string &sql)
         result << ByteAnonymous(sql.substr(lastPos, pos - lastPos));
 
         lastPos = pos + word.length();
-        if (std::regex_match(word, std::regex(R"(\b[0-9a-fA-F]+\b)"))) {
-            if (prevNum && word.length() < CONTINUOUS_DIGITS_MINI_SIZE) {
-                result << REPLACE_CHAIN;
-            } else {
-                result << AnonymousDigits(word);
-                prevNum = true;
-            }
-        } else if (IsKeyword(word)) {
+        if (IsKeyword(word)) {
             result << std::move(word);
-            prevNum = false;
+            prevDigit = false;
+        } else if (std::regex_match(word, std::regex(R"(\b[0-9a-fA-F]+\b)"))) {
+            result << AnonymousDigits(word, prevDigit);
         } else {
             result << GetAnonymousName(word);
-            prevNum = false;
+            prevDigit = false;
         }
     }
 

@@ -144,7 +144,7 @@ private:
         " OR FAIL", " OR IGNORE", " OR REPLACE" };
 
     static std::string GetAnonymousName(const std::string &fileName);
-    static std::string AnonymousDigits(const std::string &digits);
+    static std::string AnonymousDigits(const std::string &digits, bool &prevDigit);
     static bool IsKeyword(const std::string& word);
     static std::string GetModeInfo(uint32_t st_mode);
     static int GetPageCountCallback(void *data, int argc, char **argv, char **azColName);
