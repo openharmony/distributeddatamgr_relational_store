@@ -110,6 +110,7 @@ public:
 
     InnerError(const std::string &msg)
     {
+        nativeCode_ = NativeRdb::E_ERROR;
         code_ = E_INNER_ERROR;
         msg_ = std::string("Inner error. ") + msg;
     }
