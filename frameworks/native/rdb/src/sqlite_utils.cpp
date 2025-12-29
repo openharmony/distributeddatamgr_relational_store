@@ -462,11 +462,11 @@ std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
     return (fileName.substr(0, HEAD_SIZE) + REPLACE_CHAIN + fileName.substr(fileName.length() - END_SIZE, END_SIZE));
 }
 
-std::string SqliteUtils::AnonymousDigits(const std::string &digits, bool fullyAnonymizeFollowingDigits)
+std::string SqliteUtils::AnonymousDigits(const std::string &digits, bool fullyAnonymize)
 {
     std::string::size_type digitsNum = digits.size();
     if (digitsNum < CONTINUOUS_DIGITS_MINI_SIZE) {
-        return fullyAnonymizeFollowingDigits ? REPLACE_CHAIN : digits;
+        return fullyAnonymize ? REPLACE_CHAIN : digits;
     }
     std::string::size_type endDigitsNum = 4;
     std::string::size_type shortEndDigitsNum = 3;
