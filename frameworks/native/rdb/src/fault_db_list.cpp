@@ -28,19 +28,18 @@ FaultDBList &FaultDBList::GetInstance()
     return faultDBList;
 }
 
-void FaultDBList::InitializeIfNeeded()
+bool FaultDBList::Contain(const std::string &storeName)
 {
-    if (isInitialized) {
-        return;
+    if (isInitialized_) {
+        return storeName_ == storeName;
     }
-    std::lock_guard<std::mutex> lock(initMutex);
-    if (isInitialized) {
-        return;
+    std::lock_guard<std::mutex> lock(initMutex_);
+    if (isInitialized_) {
+        return storeName_ == storeName;
     }
     std::ifstream fin(std::string(FAULT_CONF_PATH) + std::string(FAULT_LIST_JSON_PATH));
     if (!fin.good()) {
-        LOG_ERROR("Failed to open fault json file");
-        return;
+        return false;
     }
     std::string jsonStr;
     std::string line;
@@ -49,35 +48,31 @@ void FaultDBList::InitializeIfNeeded()
         std::getline(fin, line);
         jsonStr += line;
     }
-    Unmarshall(jsonStr);
+    FaultDBList::DBList dbList;
+    dbList.Unmarshall(jsonStr);
+    callingName_ = dbList.callingName;
+    storeName_ = dbList.storeName;
     fin.close();
-    isInitialized = true;
+    isInitialized_ = true;
+    return storeName_ == storeName;
 }
 
-bool FaultDBList::Contain(const std::string &dbName)
-{
-    InitializeIfNeeded();
-
-    LOG_INFO("Contain is begin storeName:%{public}s", storeName.c_str());
-    return storeName == dbName;
-}
-
-bool FaultDBList::Marshal(Serializable::json &node) const
+bool FaultDBList::DBList::Marshal(Serializable::json &node) const
 {
     SetValue(node[GET_NAME(callingName)], callingName);
     SetValue(node[GET_NAME(storeName)], storeName);
     return true;
 }
 
-bool FaultDBList::Unmarshal(const Serializable::json &node)
+bool FaultDBList::DBList::Unmarshal(const Serializable::json &node)
 {
     GetValue(node, GET_NAME(callingName), callingName);
     GetValue(node, GET_NAME(storeName), storeName);
     return true;
 }
- 
+
 std::string FaultDBList::GetCallingName()
 {
-    return callingName;
+    return callingName_;
 }
 } // namespace OHOS::NativeRdb
