@@ -195,7 +195,7 @@ SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteCon
 {
     backupId_ = TaskExecutor::INVALID_TASK_ID;
     isTargetDb_ = FaultDBList::GetInstance().Contain(config_.GetName());
-    callingProcess = FaultDBList::GetInstance().GetCallingName();
+    callingProcess_ = FaultDBList::GetInstance().GetCallingName();
 }
 
 std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSlaveConnection(
@@ -585,7 +585,7 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql)
 {
     if (IsWriter()) {
-        CheckFoundationVisitor();
+        CheckDBVisitor();
     }
     return CreateStatementInner(sql, conn, dbHandle_, false, returningSql);
 }
@@ -1845,14 +1845,14 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
     return result;
 }
 
-void SqliteConnection::CheckFoundationVisitor()
+void SqliteConnection::CheckDBVisitor()
 {
     if (isTargetDb_) {
 #if !defined(CROSS_PLATFORM)
         std::string callingName = DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
-        if (callingName != callingProcess) {
-        LOG_ERROR("callingName:%{public}s, callingProcess:%{public}s",
-            callingName.c_str(), callingProcess.c_str());
+        if (callingName != callingProcess_) {
+        LOG_ERROR("callingName:%{public}s, callingProcess_:%{public}s",
+            callingName.c_str(), callingProcess_.c_str());
             Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FOUNDATION_FAULT,
                 E_DFX_FOUNDATION_VERIFY_FAULT, callingName, "Database Visitor is not foundation"));
         }

@@ -116,7 +116,7 @@ private:
     int SetTokenizer(const RdbStoreConfig &config);
     int SetBinlog();
     void LimitPermission(const RdbStoreConfig &config, const std::string &dbPath) const;
-    void CheckFoundationVisitor();
+    void CheckDBVisitor();
 
     int SetPersistWal(const RdbStoreConfig &config);
     int SetBusyTimeout(int timeout);
@@ -217,7 +217,7 @@ private:
     bool isSlave_ = false;
     bool isReplay_ = false;
     bool isTargetDb_;
-    std::string callingProcess;
+    std::string callingProcess_;
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;

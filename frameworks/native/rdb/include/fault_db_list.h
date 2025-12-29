@@ -21,24 +21,26 @@
 #include "serializable.h"
 namespace OHOS {
 namespace NativeRdb {
-
-class FaultDBList final : public Serializable {
+ 
+class FaultDBList {
 public:
     static FaultDBList &GetInstance();
-    bool Contain(const std::string &dbName);
+    bool Contain(const std::string &storeName);
     std::string GetCallingName();
 private:
+    struct DBList final : public Serializable {
+        std::string callingName;
+        std::string storeName;
+        bool Marshal(json &node) const override;
+        bool Unmarshal(const json &node) override;
+    };
+ 
     FaultDBList() = default;
     ~FaultDBList() = default;
-    API_EXPORT bool Marshal(json &node) const override;
-    API_EXPORT bool Unmarshal(const json &node) override;
-
-    void InitializeIfNeeded();
-
-    std::string callingName;
-    std::string storeName;
-    bool isInitialized = false;
-    mutable std::mutex initMutex;
+    bool isInitialized_ = false;
+    mutable std::mutex initMutex_;
+    std::string callingName_;
+    std::string storeName_;
 };
 
 } // namespace NativeRdb
