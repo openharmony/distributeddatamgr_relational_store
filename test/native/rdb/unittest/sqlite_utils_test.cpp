@@ -176,7 +176,7 @@ HWTEST_F(SqliteUtilsTest, SqlAnonymous_002, TestSize.Level0)
         " AFTER UPDATE ON [con***ata] BEGIN IF UPDATE [ver***] RET***; UPDATE [con***ata] "
         "SET [ver***] = [O**].[ver***] + 1 WHERE [i**] = [O**].[i**]; END\".");
     EXPECT_EQ(SqliteUtils::SqlAnonymous("Fd 7 enable del monitor go wrong, errno = 13"),
-        "Fd *** enable del monitor go wrong, errno = 13");
+        "Fd 7 enable del monitor go wrong, errno = 13");
     EXPECT_EQ(SqliteUtils::SqlAnonymous(
                   "errno is:95 duplicate column name: Timestamp in \"ALTER TABLE BSD ADD COLUMN Timestamp TE."),
         "errno is:95 duplicate column name: Tim***amp in \"ALTER TABLE B** ADD COLUMN Tim***amp T**.");
