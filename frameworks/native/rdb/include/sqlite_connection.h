@@ -217,7 +217,7 @@ private:
     bool isSlave_ = false;
     bool isReplay_ = false;
     bool isTargetDb_;
-    std::string callingProcess_;
+    std::string caller_;
     JournalMode mode_ = JournalMode::MODE_WAL;
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;

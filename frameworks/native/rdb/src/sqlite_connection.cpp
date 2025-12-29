@@ -38,7 +38,7 @@
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
-#include "fault_db_list.h"
+#include "restricted_db_manger.h"
 #include "relational_store_client.h"
 #include "rdb_time_utils.h"
 #include "sqlite3.h"
@@ -194,8 +194,10 @@ SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteCon
       config_(config)
 {
     backupId_ = TaskExecutor::INVALID_TASK_ID;
-    isTargetDb_ = FaultDBList::GetInstance().Contain(config_.GetName());
-    callingProcess_ = FaultDBList::GetInstance().GetCallingName();
+#if !defined(CROSS_PLATFORM)
+    caller_ = DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
+    isTargetDb_ = RestrictedDBManger::GetInstance().IsDbAccessOutOfBounds(config_.GetName(), caller_);
+#endif
 }
 
 std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSlaveConnection(
@@ -1848,15 +1850,9 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
 void SqliteConnection::CheckDBVisitor()
 {
     if (isTargetDb_) {
-#if !defined(CROSS_PLATFORM)
-        std::string callingName = DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
-        if (callingName != callingProcess_) {
-        LOG_ERROR("callingName:%{public}s, callingProcess_:%{public}s",
-            callingName.c_str(), callingProcess_.c_str());
-            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
-                E_DFX_VISITOR_VERIFY_FAULT, callingName, "Database Visitor is not foundation"));
-        }
-#endif
+        LOG_ERROR("Database Visitor:%{public}s.", caller_.c_str());
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
+            E_DFX_VISITOR_VERIFY_FAULT, caller_, "Database Visitor is not foundation"));
     }
 }
 

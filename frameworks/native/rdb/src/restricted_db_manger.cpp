@@ -12,8 +12,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#define LOG_TAG "FaultDBList"
-#include "fault_db_list.h"
+#define LOG_TAG "RestrictedDBManger"
+#include "restricted_db_manger.h"
 #include <sstream>
 #include <fstream>
 
@@ -22,20 +22,20 @@ namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 static constexpr const char *FAULT_CONF_PATH = "/system/etc/faultdblist/conf/";
 static constexpr const char *FAULT_LIST_JSON_PATH = "faultdblist_config.json";
-FaultDBList &FaultDBList::GetInstance()
+RestrictedDBManger &RestrictedDBManger::GetInstance()
 {
-    static FaultDBList faultDBList;
-    return faultDBList;
+    static RestrictedDBManger restrictedDBManger;
+    return restrictedDBManger;
 }
 
-bool FaultDBList::Contain(const std::string &storeName)
+bool RestrictedDBManger::IsDbAccessOutOfBounds(const std::string &storeName, const std::string &caller)
 {
     if (isInitialized_) {
-        return storeName_ == storeName;
+        return storeName_ == storeName && owner_ != caller;
     }
     std::lock_guard<std::mutex> lock(initMutex_);
     if (isInitialized_) {
-        return storeName_ == storeName;
+        return storeName_ == storeName && owner_ != caller;
     }
     std::ifstream fin(std::string(FAULT_CONF_PATH) + std::string(FAULT_LIST_JSON_PATH));
     if (!fin.good()) {
@@ -48,31 +48,27 @@ bool FaultDBList::Contain(const std::string &storeName)
         std::getline(fin, line);
         jsonStr += line;
     }
-    FaultDBList::DBList dbList;
+    RestrictedDBManger::DBList dbList;
     dbList.Unmarshall(jsonStr);
-    callingName_ = dbList.callingName;
+    owner_ = dbList.callingName;
     storeName_ = dbList.storeName;
     fin.close();
     isInitialized_ = true;
-    return storeName_ == storeName;
+    return storeName_ == storeName && owner_ != caller;
 }
 
-bool FaultDBList::DBList::Marshal(Serializable::json &node) const
+bool RestrictedDBManger::DBList::Marshal(Serializable::json &node) const
 {
     SetValue(node[GET_NAME(callingName)], callingName);
     SetValue(node[GET_NAME(storeName)], storeName);
     return true;
 }
 
-bool FaultDBList::DBList::Unmarshal(const Serializable::json &node)
+bool RestrictedDBManger::DBList::Unmarshal(const Serializable::json &node)
 {
     GetValue(node, GET_NAME(callingName), callingName);
     GetValue(node, GET_NAME(storeName), storeName);
     return true;
 }
 
-std::string FaultDBList::GetCallingName()
-{
-    return callingName_;
-}
 } // namespace OHOS::NativeRdb
