@@ -25,6 +25,8 @@
 #include "napi/native_node_api.h"
 
 namespace OHOS::CloudData {
+
+
 napi_value InitClient(napi_env env, napi_value info);
 }
 
