@@ -20,7 +20,7 @@ group("cloud_extension_ext_ani_package") {
 
 generate_static_abc("cloud_extension_ext_abc") {
   base_url = "./"
-  files = [ "./cloud_extension_stub.ets" ]
+  files = [ "./@ohos.data.cloudExtension.ets" ]
   dst_file = "$target_out_dir/cloud_extension_ext.abc"
   out_puts = [ "$target_out_dir/cloud_extension_ext.abc" ]
   is_boot_abc = "True"

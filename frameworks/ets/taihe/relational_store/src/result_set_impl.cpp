@@ -158,6 +158,10 @@ uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnId
     int errCode = OHOS::NativeRdb::E_OK;
     if (columnIdentifier.holds_columnIndex()) {
         columnIndex = columnIdentifier.get_columnIndex_ref();
+        if (columnIndex < 0) {
+            ThrowParamError("Invalid columnIndex");
+            return ani_rdbutils::ColumnTypeToTaihe(columnType);
+        }
     } else {
         std::string columnName(columnIdentifier.get_columnName_ref());
         errCode = nativeResultSet_->GetColumnIndex(columnName, columnIndex);
