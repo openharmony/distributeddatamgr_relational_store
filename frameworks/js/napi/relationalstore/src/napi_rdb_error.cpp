@@ -80,6 +80,9 @@ static_assert(IsIncreasing());
 
 const std::optional<JsErrorCode> ConvertCode(const JsErrorCode *codeMap, int count, int errorCode)
 {
+    if (codeMap == nullptr) {
+        return std::nullopt;
+    }
     auto jsErrorCode = JsErrorCode{ errorCode, -1, "" };
     auto iter = std::lower_bound(codeMap, codeMap + count, jsErrorCode,
         [](const JsErrorCode &jsErrorCode1, const JsErrorCode &jsErrorCode2) {
