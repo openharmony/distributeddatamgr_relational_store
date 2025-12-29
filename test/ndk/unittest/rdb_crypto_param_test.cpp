@@ -222,3 +222,33 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_007, TestSize.Level1)
     ret = OH_Rdb_DestroyCryptoParam(obj);
     EXPECT_EQ(ret, RDB_OK);
 }
+
+/**
+ * @tc.name: RDB_Crypto_Param_test_008
+ * @tc.desc: All testCase of OH_Crypto_SetEncryptionKey.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_008, TestSize.Level1)
+{
+    OH_Rdb_CryptoParam *obj = OH_Rdb_CreateCryptoParam();
+    EXPECT_NE(obj, NULL);
+
+    auto ret = OH_Crypto_SetEncryptionKey(obj, nullptr, -1);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = OH_Crypto_SetEncryptionKey(obj, nullptr, 0);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = OH_Crypto_SetEncryptionKey(obj, nullptr, 10);
+    EXPECT_EQ(ret, RDB_OK);
+
+    const uint8_t key[] = "12345678";
+    ret = OH_Crypto_SetEncryptionKey(obj, key, -1);
+    EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
+    ret = OH_Crypto_SetEncryptionKey(obj, key, 0);
+    EXPECT_EQ(ret, RDB_OK);
+    ret = OH_Crypto_SetEncryptionKey(obj, key, sizeof(key));
+    EXPECT_EQ(ret, RDB_OK);
+
+    EXPECT_EQ(obj->cryptoParam.encryptKey_.size(), sizeof(key));
+    ret = OH_Rdb_DestroyCryptoParam(obj);
+    EXPECT_EQ(ret, RDB_OK);
+}
