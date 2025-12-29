@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FAULT_DB_LIST_H
-#define FAULT_DB_LIST_H
+#ifndef RESTRICTED_DB_MANGER_H
+#define RESTRICTED_DB_MANGER_H
 #include <string>
 #include <mutex>
 
@@ -22,11 +22,10 @@
 namespace OHOS {
 namespace NativeRdb {
  
-class FaultDBList {
+class RestrictedDBManger {
 public:
-    static FaultDBList &GetInstance();
-    bool Contain(const std::string &storeName);
-    std::string GetCallingName();
+    static RestrictedDBManger &GetInstance();
+    bool IsDbAccessOutOfBounds(const std::string &storeName, const std::string &caller);
 private:
     struct DBList final : public Serializable {
         std::string callingName;
@@ -35,14 +34,14 @@ private:
         bool Unmarshal(const json &node) override;
     };
  
-    FaultDBList() = default;
-    ~FaultDBList() = default;
+    RestrictedDBManger() = default;
+    ~RestrictedDBManger() = default;
     bool isInitialized_ = false;
     mutable std::mutex initMutex_;
-    std::string callingName_;
+    std::string owner_;
     std::string storeName_;
 };
 
 } // namespace NativeRdb
 } // namespace OHOS
-#endif // FAULT_DB_LIST_H
+#endif // RESTRICTED_DB_MANGER_H
