@@ -19,11 +19,13 @@
 #include <gtest/gtest.h>
 
 #include <climits>
+#include <filesystem>
 #include <string>
 
 #include "grd_type_export.h"
 #include "rd_utils.h"
 #include "logger.h"
+#include "rdb_platform.h"
 #include "sqlite_sql_builder.h"
 #include "values_buckets.h"
 #include "rdb_predicates.h"
@@ -458,4 +460,20 @@ HWTEST_F(RdbSqlUtilsTest, IsValidMaxCount_ValidateValues, TestSize.Level1)
     EXPECT_FALSE(RdbSqlUtils::IsValidReturningMaxCount(0));
     EXPECT_TRUE(RdbSqlUtils::IsValidReturningMaxCount(ReturningConfig::MAX_RETURNING_COUNT));
     EXPECT_FALSE(RdbSqlUtils::IsValidReturningMaxCount(ReturningConfig::MAX_RETURNING_COUNT + 1));
+}
+
+/**
+ * @tc.name: CreateDirectoryTest_001
+ * @tc.desc: Creating the directory again when it already exists does not return an error.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqlUtilsTest, CreateDirectoryTest_001, TestSize.Level1)
+{
+    EXPECT_EQ(E_OK, RdbSqlUtils::CreateDirectory("/data/dir"));
+    EXPECT_EQ(E_OK, access("/data/dir", F_OK));
+    EXPECT_NE(E_OK, MkDir("/data/dir", F_OK));
+    EXPECT_EQ(EEXIST, errno);
+    EXPECT_EQ(E_OK, RdbSqlUtils::CreateDirectory("/data/dir"));
+    EXPECT_EQ(E_OK, access("/data/dir", F_OK));
+    EXPECT_EQ(1, std::filesystem::remove_all("/data/dir"));
 }
