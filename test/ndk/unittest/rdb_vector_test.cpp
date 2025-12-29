@@ -60,6 +60,9 @@ float test_[] = { 1.2, 2.3 };
 
 void RdbVectorTest::SetUpTestCase(void)
 {
+    if (!OHOS::NativeRdb::IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+    }
     config_ = InitRdbConfig();
     mkdir(RDB_TEST_PATH, 0770);
     int errCode = 0;
@@ -78,7 +81,7 @@ void RdbVectorTest::TearDownTestCase(void)
 void RdbVectorTest::SetUp(void)
 {
     if (!OHOS::NativeRdb::IsUsingArkData()) {
-        GTEST_SKIP() << "Current testcase is not compatible from current gdb";
+        GTEST_SKIP() << "Current testcase is not compatible from current gdb1";
     }
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 floatvector(2));";
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_ExecuteByTrxId(store_, 0, createTableSql));
