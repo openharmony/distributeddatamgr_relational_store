@@ -27,7 +27,7 @@ public:
     static RestrictedDBManger &GetInstance();
     bool IsDbAccessOutOfBounds(const std::string &storeName, const std::string &caller);
 private:
-    struct DBList final : public Serializable {
+    struct DBInfo final : public Serializable {
         std::string callingName;
         std::string storeName;
         bool Marshal(json &node) const override;

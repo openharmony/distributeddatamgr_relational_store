@@ -25,6 +25,7 @@
 #include "rdb_radar_reporter.h"
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
+#include "restricted_db_manger.h"
 #include "sqlite_global_config.h"
 #include "task_executor.h"
 
@@ -143,7 +144,21 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     if (!rdbStore->GetConfig().IsMemoryRdb()) {
         configCache_.Set(path, GetSyncParam(rdbStore->GetConfig()));
     }
+    CheckDBVisitor(config.GetName());
     return rdbStore;
+}
+
+void RdbStoreManager::CheckDBVisitor(const std::string &storeName)
+{
+#if !defined(CROSS_PLATFORM)
+    std::string caller = GetSelfBundleName();
+    bool isTargetDb = RestrictedDBManger::GetInstance().IsDbAccessOutOfBounds(storeName, caller);
+    if (isTargetDb) {
+        LOG_ERROR("database visitor:%{public}s.", caller.c_str());
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
+            E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));
+    }
+#endif
 }
 
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdb(const RdbStoreConfig &config)
