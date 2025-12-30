@@ -38,7 +38,6 @@
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
-#include "restricted_db_manger.h"
 #include "relational_store_client.h"
 #include "rdb_time_utils.h"
 #include "sqlite3.h"
@@ -194,10 +193,6 @@ SqliteConnection::SqliteConnection(const RdbStoreConfig &config, bool isWriteCon
       config_(config)
 {
     backupId_ = TaskExecutor::INVALID_TASK_ID;
-#if !defined(CROSS_PLATFORM)
-    caller_ = DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
-    isTargetDb_ = RestrictedDBManger::GetInstance().IsDbAccessOutOfBounds(config_.GetName(), caller_);
-#endif
 }
 
 std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSlaveConnection(
@@ -586,9 +581,6 @@ int SqliteConnection::CheckReplicaForRestore()
 std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
     const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql)
 {
-    if (IsWriter()) {
-        CheckDBVisitor();
-    }
     return CreateStatementInner(sql, conn, dbHandle_, false, returningSql);
 }
 
@@ -1845,15 +1837,6 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
         }
     }
     return result;
-}
-
-void SqliteConnection::CheckDBVisitor()
-{
-    if (isTargetDb_) {
-        LOG_ERROR("Database Visitor:%{public}s.", caller_.c_str());
-        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
-            E_DFX_VISITOR_VERIFY_FAULT, caller_, "Database Visitor is not foundation"));
-    }
 }
 
 int SqliteConnection::VerifySlaveIntegrity()

@@ -48,23 +48,23 @@ bool RestrictedDBManger::IsDbAccessOutOfBounds(const std::string &storeName, con
         std::getline(fin, line);
         jsonStr += line;
     }
-    RestrictedDBManger::DBList dbList;
-    dbList.Unmarshall(jsonStr);
-    owner_ = dbList.callingName;
-    storeName_ = dbList.storeName;
+    RestrictedDBManger::DBInfo dbInfo;
+    dbInfo.Unmarshall(jsonStr);
+    owner_ = dbInfo.callingName;
+    storeName_ = dbInfo.storeName;
     fin.close();
     isInitialized_ = true;
     return storeName_ == storeName && owner_ != caller;
 }
 
-bool RestrictedDBManger::DBList::Marshal(Serializable::json &node) const
+bool RestrictedDBManger::DBInfo::Marshal(Serializable::json &node) const
 {
     SetValue(node[GET_NAME(callingName)], callingName);
     SetValue(node[GET_NAME(storeName)], storeName);
     return true;
 }
 
-bool RestrictedDBManger::DBList::Unmarshal(const Serializable::json &node)
+bool RestrictedDBManger::DBInfo::Unmarshal(const Serializable::json &node)
 {
     GetValue(node, GET_NAME(callingName), callingName);
     GetValue(node, GET_NAME(storeName), storeName);
