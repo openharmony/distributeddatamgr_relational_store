@@ -152,8 +152,8 @@ void RdbStoreManager::CheckDBVisitor(const std::string &storeName)
 {
 #if !defined(CROSS_PLATFORM)
     std::string caller = GetSelfBundleName();
-    bool isTargetDb = RestrictedDBManger::GetInstance().IsDbAccessOutOfBounds(storeName, caller);
-    if (isTargetDb) {
+    bool isIllegalAccess = RestrictedDBManger::GetInstance().IsDbAccessOutOfBounds(storeName, caller);
+    if (isIllegalAccess) {
         LOG_ERROR("database visitor:%{public}s.", caller.c_str());
         Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
             E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));

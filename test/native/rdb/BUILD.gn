@@ -66,7 +66,7 @@ ohos_unittest("FoundationDbTest") {
 
   sources = [
     "unittest/common.cpp",
-    "unittest/foundation_db_test.cpp",
+    "unittest/restricted_db_test.cpp",
   ]
 
   configs = [ ":module_private_config" ]
