@@ -462,11 +462,11 @@ std::string SqliteUtils::GetAnonymousName(const std::string &fileName)
     return (fileName.substr(0, HEAD_SIZE) + REPLACE_CHAIN + fileName.substr(fileName.length() - END_SIZE, END_SIZE));
 }
 
-std::string SqliteUtils::AnonymousDigits(const std::string &digits)
+std::string SqliteUtils::AnonymousDigits(const std::string &digits, bool fullyAnonymize)
 {
     std::string::size_type digitsNum = digits.size();
     if (digitsNum < CONTINUOUS_DIGITS_MINI_SIZE) {
-        return digits;
+        return fullyAnonymize ? REPLACE_CHAIN : digits;
     }
     std::string::size_type endDigitsNum = 4;
     std::string::size_type shortEndDigitsNum = 3;
@@ -477,7 +477,7 @@ std::string SqliteUtils::AnonymousDigits(const std::string &digits)
     } else {
         last = name.substr(name.size() - endDigitsNum);
     }
-    return "***" + last;
+    return REPLACE_CHAIN + last;
 }
 
 std::string ByteAnonymous(const std::string &input)
@@ -504,6 +504,7 @@ std::string SqliteUtils::SqlAnonymous(const std::string &sql)
     std::regex idRegex(R"(\b[a-zA-Z0-9_]+\b)");
     auto begin = std::sregex_iterator(sql.begin(), sql.end(), idRegex);
     auto end = std::sregex_iterator();
+    bool fullyAnonymizeFollowingDigits = false;
 
     size_t lastPos = 0;
     for (auto it = begin; it != end; ++it) {
@@ -514,12 +515,15 @@ std::string SqliteUtils::SqlAnonymous(const std::string &sql)
         result << ByteAnonymous(sql.substr(lastPos, pos - lastPos));
 
         lastPos = pos + word.length();
-        if (std::regex_match(word, std::regex(R"(\b[0-9a-fA-F]+\b)"))) {
-            result << AnonymousDigits(word);
-        } else if (IsKeyword(word)) {
+        if (IsKeyword(word)) {
             result << std::move(word);
+            fullyAnonymizeFollowingDigits = false;
+        } else if (std::regex_match(word, std::regex(R"(\b[0-9a-fA-F]+\b)"))) {
+            result << AnonymousDigits(word, fullyAnonymizeFollowingDigits);
+            fullyAnonymizeFollowingDigits = true;
         } else {
             result << GetAnonymousName(word);
+            fullyAnonymizeFollowingDigits = false;
         }
     }
 
