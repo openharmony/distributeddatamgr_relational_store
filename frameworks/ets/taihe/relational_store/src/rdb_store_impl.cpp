@@ -885,6 +885,7 @@ void RdbStoreImpl::Sync(
     auto nativeMode = ani_rdbutils::SyncModeToNative(mode);
     if (nativeMode != OHOS::DistributedRdb::SyncMode::PUSH && nativeMode != OHOS::DistributedRdb::SyncMode::PULL) {
         ThrowParamError("mode must be a SyncMode of device.");
+        return;
     }
     OHOS::DistributedRdb::SyncOption option{ nativeMode, false };
     std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
@@ -898,10 +899,9 @@ void RdbStoreImpl::Sync(
             ::taihe::env_guard gurd;
             ani_object object = {};
             ani_status status = ani_utils::Convert2AniValue(gurd.get_env(), data, object);
-            if (status != ANI_OK) {
+            context->result_ = static_cast<ani_ref>(object);
+            if (status != ANI_OK || context->result_ == nullptr) {
                 context->error_ = std::make_shared<InnerError>(NativeRdb::E_ERROR);
-            } else {
-                context->result_ = static_cast<ani_ref>(object);
             }
         }
         AniAsyncCall::ReturnResult(context);
