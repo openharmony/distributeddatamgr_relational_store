@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RESTRICTED_DB_MANGER_H
-#define RESTRICTED_DB_MANGER_H
+#ifndef RESTRICTED_DB_MANAGER_H
+#define RESTRICTED_DB_MANAGER_H
 #include <string>
 #include <mutex>
 
@@ -22,9 +22,9 @@
 namespace OHOS {
 namespace NativeRdb {
  
-class RestrictedDBManger {
+class RestrictedDBManager {
 public:
-    static RestrictedDBManger &GetInstance();
+    static RestrictedDBManager &GetInstance();
     bool IsDbAccessOutOfBounds(const std::string &storeName, const std::string &caller);
 private:
     struct DBInfo final : public Serializable {
@@ -34,8 +34,8 @@ private:
         bool Unmarshal(const json &node) override;
     };
  
-    RestrictedDBManger() = default;
-    ~RestrictedDBManger() = default;
+    RestrictedDBManager() = default;
+    ~RestrictedDBManager() = default;
     bool isInitialized_ = false;
     mutable std::mutex initMutex_;
     std::string owner_;
@@ -44,4 +44,4 @@ private:
 
 } // namespace NativeRdb
 } // namespace OHOS
-#endif // RESTRICTED_DB_MANGER_H
+#endif // RESTRICTED_DB_MANAGER_H

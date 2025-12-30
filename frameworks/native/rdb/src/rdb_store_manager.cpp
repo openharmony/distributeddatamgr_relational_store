@@ -25,7 +25,7 @@
 #include "rdb_radar_reporter.h"
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
-#include "restricted_db_manger.h"
+#include "restricted_db_manager.h"
 #include "sqlite_global_config.h"
 #include "task_executor.h"
 
@@ -152,7 +152,7 @@ void RdbStoreManager::CheckDBVisitor(const std::string &storeName)
 {
 #if !defined(CROSS_PLATFORM)
     std::string caller = GetSelfBundleName();
-    bool isIllegalAccess = RestrictedDBManger::GetInstance().IsDbAccessOutOfBounds(storeName, caller);
+    bool isIllegalAccess = RestrictedDBManager::GetInstance().IsDbAccessOutOfBounds(storeName, caller);
     if (isIllegalAccess) {
         LOG_ERROR("database visitor:%{public}s.", caller.c_str());
         Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
