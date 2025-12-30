@@ -28,7 +28,7 @@ public:
     bool IsDbAccessOutOfBounds(const std::string &storeName, const std::string &caller);
 private:
     struct DBInfo final : public Serializable {
-        std::string callingName;
+        std::string owner;
         std::string storeName;
         bool Marshal(json &node) const override;
         bool Unmarshal(const json &node) override;
