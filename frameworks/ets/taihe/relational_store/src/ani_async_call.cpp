@@ -12,9 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-
 #define LOG_TAG "AniAsyncCall"
 #include "ani_async_call.h"
 
@@ -33,7 +30,7 @@ AniContext::~AniContext()
     auto env = gurd.get_env();
     if (env != nullptr) {
         env->GlobalReference_Delete(callbackRef_);
-    } 
+    }
 }
 
 bool AniContext::Init(uintptr_t callback)
