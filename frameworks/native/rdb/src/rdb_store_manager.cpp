@@ -25,6 +25,7 @@
 #include "rdb_radar_reporter.h"
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
+#include "restricted_db_manger.h"
 #include "sqlite_global_config.h"
 #include "task_executor.h"
 
@@ -88,7 +89,7 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
         LOG_WARN("Diff config! app[%{public}s:%{public}s] path[%{public}s] cfg[%{public}s]",
             config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
             log.c_str());
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
         if (rdbStore->GetConfig().IsMemoryRdb() || config.IsMemoryRdb()) {
             errCode = E_CONFIG_INVALID_CHANGE;
             rdbStore = nullptr;
@@ -143,7 +144,21 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     if (!rdbStore->GetConfig().IsMemoryRdb()) {
         configCache_.Set(path, GetSyncParam(rdbStore->GetConfig()));
     }
+    CheckDBVisitor(config.GetName());
     return rdbStore;
+}
+
+void RdbStoreManager::CheckDBVisitor(const std::string &storeName)
+{
+#if !defined(CROSS_PLATFORM)
+    std::string caller = GetSelfBundleName();
+    bool isIllegalAccess = RestrictedDBManger::GetInstance().IsDbAccessOutOfBounds(storeName, caller);
+    if (isIllegalAccess) {
+        LOG_ERROR("database visitor:%{public}s.", caller.c_str());
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
+            E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));
+    }
+#endif
 }
 
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdb(const RdbStoreConfig &config)
@@ -316,7 +331,7 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
             << lastParam.hapName_.c_str() << "->" << config.GetModuleName().c_str() << ", area:"
             << lastParam.area_ << "->" << config.GetArea();
         LOG_WARN("%{public}s", ss.str().c_str());
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, ss.str()));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_CONFIG_INVALID_CHANGE, config, ss.str()));
         return false;
     }
     if (config.GetSecurityLevel() != SecurityLevel::LAST &&
