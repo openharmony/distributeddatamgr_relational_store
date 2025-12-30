@@ -14,6 +14,7 @@
  */
 
 #include "rdb_manager_impl_mock.h"
+#include "rdb_errno.h"
 namespace OHOS::DistributedRdb {
 
 RdbManagerImpl::RdbManagerImpl()
@@ -35,5 +36,10 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
         return { NativeRdb::E_ERROR, nullptr };
     }
     return BRdbManagerImpl::rdbManagerImpl->GetRdbService(param);
+}
+
+std::string RdbManagerImpl::GetSelfBundleName()
+{
+    return "";
 }
 } // namespace OHOS::DistributedRdb
