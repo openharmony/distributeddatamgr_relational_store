@@ -25,7 +25,8 @@ namespace NativeRdb {
 class RestrictedDBManager {
 public:
     static RestrictedDBManager &GetInstance();
-    bool IsDbAccessOutOfBounds(const std::string &storeName, const std::string &caller);
+    bool IsDbAccessOutOfBounds(const std::string &caller);
+    bool IsTargetDB(const std::string &storeName);
 private:
     struct DBInfo final : public Serializable {
         std::string owner;
@@ -36,6 +37,7 @@ private:
  
     RestrictedDBManager() = default;
     ~RestrictedDBManager() = default;
+    void Init();
     bool isInitialized_ = false;
     mutable std::mutex initMutex_;
     std::string owner_;
