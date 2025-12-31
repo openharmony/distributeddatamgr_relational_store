@@ -276,6 +276,18 @@ void RdbPredicatesImpl::InnerNotLike(string_view field, string_view value)
     }
 }
 
+void RdbPredicatesImpl::InnerHaving(string_view conditions, optional_view<array<ValueType>> args)
+{
+    std::vector<OHOS::NativeRdb::ValueObject> para;
+    if (args.has_value()) {
+        std::transform(args.value().begin(), args.value().end(), std::back_inserter(para),
+            [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
+    }
+    if (nativeRdbPredicates_ != nullptr) {
+        nativeRdbPredicates_->Having(std::string(conditions), para);
+    }
+}
+
 std::shared_ptr<OHOS::NativeRdb::RdbPredicates> RdbPredicatesImpl::GetNativePtr()
 {
     return nativeRdbPredicates_;
