@@ -65,6 +65,7 @@ public:
     void InnerNotInValues(string_view field, array_view<ValueType> value);
     void InnerNotContains(string_view field, string_view value);
     void InnerNotLike(string_view field, string_view value);
+    void InnerHaving(string_view conditions, optional_view<array<ValueType>> args);
     std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePtr();
 
 private:
