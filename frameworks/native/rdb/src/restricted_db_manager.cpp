@@ -28,18 +28,18 @@ RestrictedDBManager &RestrictedDBManager::GetInstance()
     return restrictedDBManager;
 }
 
-bool RestrictedDBManager::IsDbAccessOutOfBounds(const std::string &storeName, const std::string &caller)
+void RestrictedDBManager::Init()
 {
     if (isInitialized_) {
-        return storeName_ == storeName && owner_ != caller;
+        return;
     }
     std::lock_guard<std::mutex> lock(initMutex_);
     if (isInitialized_) {
-        return storeName_ == storeName && owner_ != caller;
+        return;
     }
     std::ifstream fin(std::string(RESTRICTED_DB_CONF_PATH) + std::string(RESTRICTED_DB_JSON_PATH));
     if (!fin.good()) {
-        return false;
+        return;
     }
     std::string jsonStr;
     std::string line;
@@ -54,7 +54,17 @@ bool RestrictedDBManager::IsDbAccessOutOfBounds(const std::string &storeName, co
     storeName_ = dbInfo.storeName;
     fin.close();
     isInitialized_ = true;
-    return storeName_ == storeName && owner_ != caller;
+}
+
+bool RestrictedDBManager::IsDbAccessOutOfBounds(const std::string &caller)
+{
+    return owner_ != caller;
+}
+
+bool RestrictedDBManager::IsTargetDB(const std::string &storeName)
+{
+    Init();
+    return storeName_ == storeName;
 }
 
 bool RestrictedDBManager::DBInfo::Marshal(Serializable::json &node) const
