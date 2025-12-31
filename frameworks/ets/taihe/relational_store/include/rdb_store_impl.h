@@ -91,7 +91,8 @@ public:
     void SetDistributedTablesWithOptionConfig(
         array_view<string> tables, optional_view<DistributedType> type, optional_view<DistributedConfig> config);
     string ObtainDistributedTableNameSync(string_view device, string_view table);
-    array<map<string, int32_t>> SyncSync(SyncMode mode, weak::RdbPredicates predicates);
+    void SyncAsync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback);
+    uintptr_t SyncPromise(SyncMode mode, weak::RdbPredicates predicates);
     void CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const &)> progress);
     void CloudSyncWithTable(
         SyncMode mode, array_view<string> tables, callback_view<void(ProgressDetails const &)> progress);
@@ -151,6 +152,7 @@ protected:
     int UnRegisterObserverExistOpq(
         OHOS::DistributedRdb::SubscribeOption &option, ani_ref jsCallbackRef, bool &isUpdateFlag);
     void UnRegisterAll();
+    void Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise);
 
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> nativeRdbStore_;
