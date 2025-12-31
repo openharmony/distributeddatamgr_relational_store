@@ -33,7 +33,10 @@ uint32_t GetSeqNum()
     static std::mutex mutex;
     static uint32_t seqNum = 0;
     std::lock_guard<std::mutex> lock(mutex);
-    return ++seqNum == 0 ? ++seqNum : seqNum;
+    if (++seqNum == 0) {
+        ++seqNum;
+    }
+    return seqNum;
 }
 
 void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work)

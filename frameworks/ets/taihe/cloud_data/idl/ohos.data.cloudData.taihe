@@ -58,7 +58,7 @@ enum StrategyType: i32 {
     NETWORK = 0
 }
 
-enum NetWorkStrategy: i32 {
+enum NetWorkStrategy: i64 {
     WIFI = 1,
     CELLULAR = 2
 }
