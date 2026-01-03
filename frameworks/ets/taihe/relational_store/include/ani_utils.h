@@ -20,6 +20,7 @@
 
 #include <cstdarg>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -33,7 +34,7 @@ enum class ErrorHandling {
     STRICT,  // Strict mode: All errors are returned.
     OPTIONAL // Optional mode: Skip 'ANI_NOT_FOUND' error, still handle other errors.
 };
-
+static constexpr uint32_t SYNC_RESULT_ELEMENT_NUM = 2;
 ani_status AniGetProperty(ani_env *env, ani_object ani_obj, const char *property, std::string &result,
     ErrorHandling handling = ErrorHandling::STRICT);
 
@@ -229,5 +230,12 @@ ani_status AniGetPropertyImpl(ani_env *env, ani_object ani_obj, const char *prop
     result = static_cast<NativeType>(ani_value);
     return ANI_OK;
 }
+
+ani_status CreateAniObj(ani_env *env, const std::string &className, const std::string &methodName,
+    const std::string &signature, ani_object &obj, ...);
+ani_method FindClassMethod(
+    ani_env *env, const std::string &className, const std::string &methodName, const std::string &signature);
+ani_status Convert2AniValue(ani_env *env, const std::map<std::string, int> &value, ani_object &result);
+ani_status CreateBusinessError(ani_env *env, int32_t code, const std::string &message, ani_ref &result);
 } //namespace ani_utils
 #endif

@@ -18,6 +18,7 @@
 @!sts_inject_into_module("""
 import BaseContext from 'application.BaseContext';
 import dataSharePredicates from '@ohos.data.dataSharePredicates';
+import { AsyncCallback } from '@ohos.base';
 """)
 
 @!sts_inject("""
@@ -815,9 +816,10 @@ interface RdbStore {
     @gen_promise("obtainDistributedTableName")
     ObtainDistributedTableNameSync(device: String, table: String): String;
 
-    @gen_async("sync")
-    @gen_promise("sync")
-    SyncSync(mode: SyncMode, predicates: RdbPredicates): Array<@record Map<String, i32>>;
+    @rename("sync")
+    SyncPromise(mode: SyncMode, predicates: RdbPredicates): @sts_type("Promise<Array<[string, int]>>") Opaque;
+    @rename("sync")
+    SyncAsync(mode: SyncMode, predicates: RdbPredicates, callback: @sts_type("AsyncCallback<Array<[string, int]>>") Opaque): void;
 
     @gen_async("cloudSync")
     @gen_promise("cloudSync")
