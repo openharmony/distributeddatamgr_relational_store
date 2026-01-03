@@ -12,31 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #define LOG_TAG "RdbStoreImpl"
+#include "rdb_store_impl.h"
+
+#include <future>
+#include <memory>
+
+#include "ani.h"
+#include "ani_async_call.h"
 #include "ani_rdb_utils.h"
 #include "ani_utils.h"
 #include "datashare_abs_predicates.h"
 #include "lite_result_set_impl.h"
+#include "napi_rdb_error.h"
 #include "ohos.data.relationalStore.impl.h"
 #include "ohos.data.relationalStore.proj.hpp"
-#include "result_set_impl.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "rdb_perfStat.h"
 #include "rdb_predicates_impl.h"
-#include "rdb_store_config.h"
-#include "rdb_store_impl.h"
+#include "rdb_result_set_bridge.h"
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
-#include "rdb_perfStat.h"
-#include "rdb_result_set_bridge.h"
+#include "rdb_store_config.h"
 #include "rdb_utils.h"
+#include "result_set_impl.h"
 #include "transaction_impl.h"
-
-#include <future>
 
 namespace OHOS {
 namespace RdbTaihe {
-constexpr size_t RESULT_INIT_SIZE = 5;
 static constexpr int WAIT_TIME_DEFAULT = 2;
 static constexpr int WAIT_TIME_MIN = 1;
 static constexpr int WAIT_TIME_MAX = 300;
@@ -865,39 +870,61 @@ string RdbStoreImpl::ObtainDistributedTableNameSync(string_view device, string_v
     return distributedTableName;
 }
 
-array<map<string, int32_t>> RdbStoreImpl::SyncSync(SyncMode mode, weak::RdbPredicates predicates)
+void RdbStoreImpl::Sync(
+    SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise)
 {
-    taihe::array<taihe::map<taihe::string, int32_t>> taiheResult(RESULT_INIT_SIZE);
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return taiheResult;
+        return;
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     if (rdbPredicateNative == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return taiheResult;
+        return;
     }
-    OHOS::DistributedRdb::SyncOption option{ static_cast<OHOS::DistributedRdb::SyncMode>(mode.get_value()), true };
-    std::promise<OHOS::DistributedRdb::SyncResult> promise;
-    std::future<OHOS::DistributedRdb::SyncResult> future = promise.get_future();
-    auto nativeSyncCallback = [&promise](const OHOS::DistributedRdb::SyncResult &data) {
-        promise.set_value(data);
+    auto nativeMode = ani_rdbutils::SyncModeToNative(mode);
+    if (nativeMode != OHOS::DistributedRdb::SyncMode::PUSH && nativeMode != OHOS::DistributedRdb::SyncMode::PULL) {
+        ThrowParamError("mode must be a SyncMode of device.");
+        return;
+    }
+    OHOS::DistributedRdb::SyncOption option{ nativeMode, false };
+    std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
+    if (!context->Init(callback)) {
+        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
+        return;
+    }
+    promise = context->promise_;
+    auto nativeSyncCallback = [context](const OHOS::DistributedRdb::SyncResult &data) {
+        {
+            ::taihe::env_guard gurd;
+            ani_object object = {};
+            ani_status status = ani_utils::Convert2AniValue(gurd.get_env(), data, object);
+            context->result_ = static_cast<ani_ref>(object);
+            if (status != ANI_OK || context->result_ == nullptr) {
+                context->error_ = std::make_shared<InnerError>(NativeRdb::E_ERROR);
+            }
+        }
+        AniAsyncCall::ReturnResult(context);
     };
     int errCode = nativeRdbStore_->Sync(option, *rdbPredicateNative, nativeSyncCallback);
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
-        return taiheResult;
+        context->error_ = std::make_shared<InnerError>(errCode);
+        AniAsyncCall::ReturnResult(context);
+        return;
     }
-    auto result = future.get();
-    if (result.size() == 0) {
-        return taiheResult;
-    }
-    map<string, int32_t> aniMap;
-    for (const auto &[key, value] : result) {
-        aniMap.emplace(taihe::string(key), value);
-    }
-    std::vector<map<string, int32_t>> retResult = { aniMap };
-    return array<map<string, int32_t>>(retResult);
+}
+
+void RdbStoreImpl::SyncAsync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback)
+{
+    ani_object promise = nullptr;
+    Sync(mode, predicates, callback, promise);
+}
+
+uintptr_t RdbStoreImpl::SyncPromise(SyncMode mode, weak::RdbPredicates predicates)
+{
+    ani_object promise = nullptr;
+    Sync(mode, predicates, 0, promise);
+    return reinterpret_cast<uintptr_t>(promise);
 }
 
 void RdbStoreImpl::CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const &)> progress)

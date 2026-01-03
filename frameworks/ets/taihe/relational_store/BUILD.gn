@@ -47,6 +47,7 @@ taihe_shared_library("relationalstore_ani") {
   sources = get_target_outputs(":run_taihe")
   sources += [
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_ability_utils.cpp",
+    "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_async_call.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_constructor.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_rdb_utils.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/ani_utils.cpp",
