@@ -25,7 +25,7 @@
 #include "rdb_radar_reporter.h"
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
-#include "restricted_db_manger.h"
+#include "restricted_db_manager.h"
 #include "sqlite_global_config.h"
 #include "task_executor.h"
 
@@ -150,15 +150,27 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
 
 void RdbStoreManager::CheckDBVisitor(const std::string &storeName)
 {
+    auto task = [storeName]() {
+        if (!RestrictedDBManager::GetInstance().IsTargetDB(storeName)) {
+            return;
+        }
 #if !defined(CROSS_PLATFORM)
-    std::string caller = GetSelfBundleName();
-    bool isIllegalAccess = RestrictedDBManger::GetInstance().IsDbAccessOutOfBounds(storeName, caller);
-    if (isIllegalAccess) {
-        LOG_ERROR("database visitor:%{public}s.", caller.c_str());
-        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
-            E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));
-    }
+        std::string caller = DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
+        bool isIllegalAccess = RestrictedDBManager::GetInstance().IsDbAccessOutOfBounds(caller);
+        if (isIllegalAccess) {
+            LOG_ERROR("database visitor:%{public}s.", caller.c_str());
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
+                E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));
+        }
 #endif
+    };
+
+    auto poolTask = TaskExecutor::GetInstance().GetExecutor();
+    if (poolTask != nullptr) {
+        poolTask->Execute(task);
+    } else {
+        task();
+    }
 }
 
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdb(const RdbStoreConfig &config)
