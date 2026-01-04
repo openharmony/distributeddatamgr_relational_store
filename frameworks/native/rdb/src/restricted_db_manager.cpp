@@ -24,8 +24,8 @@ static constexpr const char *RESTRICTED_DB_CONF_PATH = "/system/etc/restricteddb
 static constexpr const char *RESTRICTED_DB_JSON_PATH = "restricted_db_config.json";
 RestrictedDBManager &RestrictedDBManager::GetInstance()
 {
-    static RestrictedDBManager restrictedDBManager;
-    return restrictedDBManager;
+    static RestrictedDBManager instance;
+    return instance;
 }
 
 void RestrictedDBManager::Init()
