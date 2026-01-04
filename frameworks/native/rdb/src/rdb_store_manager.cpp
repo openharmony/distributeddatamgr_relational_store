@@ -150,22 +150,26 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
 
 void RdbStoreManager::CheckDBVisitor(const std::string &storeName)
 {
+    auto task = [storeName]() {
+        if (!RestrictedDBManager::GetInstance().IsTargetDB(storeName)) {
+            return;
+        }
+#if !defined(CROSS_PLATFORM)
+        std::string caller = DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
+        bool isIllegalAccess = RestrictedDBManager::GetInstance().IsDbAccessOutOfBounds(caller);
+        if (isIllegalAccess) {
+            LOG_ERROR("database visitor:%{public}s.", caller.c_str());
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
+                E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));
+        }
+#endif
+    };
+
     auto poolTask = TaskExecutor::GetInstance().GetExecutor();
     if (poolTask != nullptr) {
-        poolTask->Execute([storeName, this]() {
-            if (!RestrictedDBManager::GetInstance().IsTargetDB(storeName)) {
-                return ;
-            }
-#if !defined(CROSS_PLATFORM)
-            std::string caller = GetSelfBundleName();
-            bool isIllegalAccess = RestrictedDBManager::GetInstance().IsDbAccessOutOfBounds(caller);
-            if (isIllegalAccess) {
-                LOG_ERROR("database visitor:%{public}s.", caller.c_str());
-                Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
-                    E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));
-            }
-#endif
-        });
+        poolTask->Execute(task);
+    } else {
+        task();
     }
 }
 
