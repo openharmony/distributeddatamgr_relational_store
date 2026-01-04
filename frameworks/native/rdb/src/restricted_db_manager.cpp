@@ -12,34 +12,34 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#define LOG_TAG "RestrictedDBManger"
-#include "restricted_db_manger.h"
+#define LOG_TAG "RestrictedDBManager"
+#include "restricted_db_manager.h"
 #include <sstream>
 #include <fstream>
 
 #include "logger.h"
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
-static constexpr const char *FAULT_CONF_PATH = "/system/etc/faultdblist/conf/";
-static constexpr const char *FAULT_LIST_JSON_PATH = "faultdblist_config.json";
-RestrictedDBManger &RestrictedDBManger::GetInstance()
+static constexpr const char *RESTRICTED_DB_CONF_PATH = "/system/etc/restricteddb/conf/";
+static constexpr const char *RESTRICTED_DB_JSON_PATH = "restricted_db_config.json";
+RestrictedDBManager &RestrictedDBManager::GetInstance()
 {
-    static RestrictedDBManger restrictedDBManger;
-    return restrictedDBManger;
+    static RestrictedDBManager instance;
+    return instance;
 }
 
-bool RestrictedDBManger::IsDbAccessOutOfBounds(const std::string &storeName, const std::string &caller)
+void RestrictedDBManager::Init()
 {
     if (isInitialized_) {
-        return storeName_ == storeName && owner_ != caller;
+        return;
     }
     std::lock_guard<std::mutex> lock(initMutex_);
     if (isInitialized_) {
-        return storeName_ == storeName && owner_ != caller;
+        return;
     }
-    std::ifstream fin(std::string(FAULT_CONF_PATH) + std::string(FAULT_LIST_JSON_PATH));
+    std::ifstream fin(std::string(RESTRICTED_DB_CONF_PATH) + std::string(RESTRICTED_DB_JSON_PATH));
     if (!fin.good()) {
-        return false;
+        return;
     }
     std::string jsonStr;
     std::string line;
@@ -48,23 +48,33 @@ bool RestrictedDBManger::IsDbAccessOutOfBounds(const std::string &storeName, con
         std::getline(fin, line);
         jsonStr += line;
     }
-    RestrictedDBManger::DBInfo dbInfo;
+    RestrictedDBManager::DBInfo dbInfo;
     dbInfo.Unmarshall(jsonStr);
     owner_ = dbInfo.owner;
     storeName_ = dbInfo.storeName;
     fin.close();
     isInitialized_ = true;
-    return storeName_ == storeName && owner_ != caller;
 }
 
-bool RestrictedDBManger::DBInfo::Marshal(Serializable::json &node) const
+bool RestrictedDBManager::IsDbAccessOutOfBounds(const std::string &caller)
+{
+    return owner_ != caller;
+}
+
+bool RestrictedDBManager::IsTargetDB(const std::string &storeName)
+{
+    Init();
+    return storeName_ == storeName;
+}
+
+bool RestrictedDBManager::DBInfo::Marshal(Serializable::json &node) const
 {
     SetValue(node[GET_NAME(owner)], owner);
     SetValue(node[GET_NAME(storeName)], storeName);
     return true;
 }
 
-bool RestrictedDBManger::DBInfo::Unmarshal(const Serializable::json &node)
+bool RestrictedDBManager::DBInfo::Unmarshal(const Serializable::json &node)
 {
     GetValue(node, GET_NAME(owner), owner);
     GetValue(node, GET_NAME(storeName), storeName);
