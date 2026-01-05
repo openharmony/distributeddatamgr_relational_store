@@ -262,7 +262,7 @@ napi_value GetInsertSqlInfo(napi_env env, napi_callback_info info)
         std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "ValuesBucket is too long."));
     ConflictResolution conflict = ConflictResolution::ON_CONFLICT_NONE;
     //3 is number of input parameters, Third parameter is ConflictResolution
-    if (argc == 3) {
+    if (argc == 3 && !JSUtils::IsNull(env, argv[2])) {
         //2 is indicates the third input parameter.
         auto status = ParseConflictResolution(env, argv[2], context);
         RDB_NAPI_ASSERT(env,
@@ -296,7 +296,7 @@ napi_value GetUpdateSqlInfo(napi_env env, napi_callback_info info)
         std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Bucket must not be empty."));
     ConflictResolution conflict = ConflictResolution::ON_CONFLICT_NONE;
     //3 is number of input parameters, Third parameter is ConflictResolution
-    if (argc == 3) {
+    if (argc == 3 && !JSUtils::IsNull(env, argv[2])) {
         //2 is indicates the third input parameter.
         auto status = ParseConflictResolution(env, argv[2], context);
         RDB_NAPI_ASSERT(env,
