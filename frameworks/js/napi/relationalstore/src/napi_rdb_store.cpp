@@ -341,7 +341,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(
             !RdbSqlUtils::HasDuplicateAssets(context->valuesBucket), std::make_shared<ParamError>("Duplicate assets "
                                                                                                   "are not allowed"));
-        if (argc == 3) {
+        if (argc == 3 && !JSUtils::IsNull(env, argv[2])) {
             CHECK_RETURN(OK == ParseConflictResolution(env, argv[2], context));
         }
     };
@@ -477,14 +477,14 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
             CHECK_RETURN(OK == ParseTableName(env, argv[0], context));
             CHECK_RETURN(OK == ParseValuesBucket(env, argv[1], context));
             CHECK_RETURN(OK == ParseDataSharePredicates(env, argv[2], context));
-            if (argc == 4) {
+            if (argc == 4 && !JSUtils::IsNull(env, argv[3])) {
                 CHECK_RETURN(OK == ParseConflictResolution(env, argv[3], context));
             }
         } else {
             CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 5"));
             CHECK_RETURN(OK == ParseValuesBucket(env, argv[0], context));
             CHECK_RETURN(OK == ParsePredicates(env, argv[1], context));
-            if (argc == 3) {
+            if (argc == 3 && !JSUtils::IsNull(env, argv[2])) {
                 CHECK_RETURN(OK == ParseConflictResolution(env, argv[2], context));
             }
         }
