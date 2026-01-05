@@ -14,7 +14,7 @@
  */
 #define LOG_TAG "AniCloudDataImpl"
 #include "logger.h"
-#include "ani_cloud_data.h"
+#include "ani_cloud_data_config.h"
 #include "ani_error_code.h"
 #include "ani_cloud_data_utils.h"
 #include "cloud_types.h"
@@ -93,19 +93,19 @@ void ConfigImpl::ChangeAppCloudSwitchImpl(string_view accountId, string_view bun
     RequestIPC(work);
 }
 
-void ConfigImpl::NotifyDataChangeVarargs(
-    ExtraData const& extInfo, optional_view<int32_t> userId)
+void ConfigImpl::NotifyDataChangeOptional(
+    const ExtraData &extInfo, optional_view<int32_t> userId)
 {
     int32_t id = userId.has_value() ? userId.value() : CloudService::INVALID_USER_ID;
     NotifyDataChangeWithId(extInfo, id);
 }
 
-void ConfigImpl::NotifyDataChangeImpl(ExtraData const& extInfo)
+void ConfigImpl::NotifyDataChangeImpl(const ExtraData &extInfo)
 {
     NotifyDataChangeWithId(extInfo, CloudService::INVALID_USER_ID);
 }
 
-void ConfigImpl::NotifyDataChangeWithId(ExtraData const& extInfo, int32_t userId)
+void ConfigImpl::NotifyDataChangeWithId(const ExtraData &extInfo, int32_t userId)
 {
     if (!VerifyExtraData(extInfo)) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata and not empty.");
@@ -139,11 +139,11 @@ void ConfigImpl::NotifyDataChangeBoth(string_view accountId, string_view bundleN
     RequestIPC(work);
 }
 
-map<string, array<StatisticInfo_TH>> ConfigImpl::QueryStatisticsImpl(
+map<string, array<TaiHeStatisticInfo>> ConfigImpl::QueryStatisticsImpl(
     string_view accountId, string_view bundleName, optional_view<string> storeId)
 {
     std::optional<std::pair<int32_t, std::map<std::string, StatisticInfos>>> result;
-    map<string, array<StatisticInfo_TH>> ret;
+    map<string, array<TaiHeStatisticInfo>> ret;
     if (accountId.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
         return ret;
@@ -325,7 +325,7 @@ void ConfigImpl::SetGlobalCloudStrategyImpl(
 }
 
 void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, SyncMode mode,
-    callback_view<void(ProgressDetails const& data)> progress)
+    callback_view<void(const ProgressDetails &data)> progress)
 {
     auto work = [&bundleName, &storeId, &mode, progress](std::shared_ptr<CloudService> proxy) {
         auto async = [progress](const OHOS::DistributedRdb::Details &details) {
@@ -387,7 +387,7 @@ void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::dat
 TH_EXPORT_CPP_API_EnableCloudImpl(AniCloudData::ConfigImpl::EnableCloudImpl);
 TH_EXPORT_CPP_API_DisableCloudImpl(AniCloudData::ConfigImpl::DisableCloudImpl);
 TH_EXPORT_CPP_API_ChangeAppCloudSwitchImpl(AniCloudData::ConfigImpl::ChangeAppCloudSwitchImpl);
-TH_EXPORT_CPP_API_NotifyDataChangeVarargs(AniCloudData::ConfigImpl::NotifyDataChangeVarargs);
+TH_EXPORT_CPP_API_NotifyDataChangeOptional(AniCloudData::ConfigImpl::NotifyDataChangeOptional);
 TH_EXPORT_CPP_API_NotifyDataChangeImpl(AniCloudData::ConfigImpl::NotifyDataChangeImpl);
 TH_EXPORT_CPP_API_NotifyDataChangeWithId(AniCloudData::ConfigImpl::NotifyDataChangeWithId);
 TH_EXPORT_CPP_API_NotifyDataChangeBoth(AniCloudData::ConfigImpl::NotifyDataChangeBoth);

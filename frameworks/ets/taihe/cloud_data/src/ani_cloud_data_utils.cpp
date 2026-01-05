@@ -18,7 +18,7 @@
 #include <optional>
 #include <vector>
 #include <cmath>
-#include <mutex>
+#include <atomic>
 #include "ani_cloud_data_utils.h"
 #include "logger.h"
 #include "ani_error_code.h"
@@ -28,15 +28,14 @@ using namespace OHOS::Rdb;
 using Participant_INNER = OHOS::CloudData::Participant;
 const uint32_t INDEX_TWO = 2;
 
+static std::atomic<uint32_t> seqNum_ = 0;
 uint32_t GetSeqNum()
 {
-    static std::mutex mutex;
-    static uint32_t seqNum = 0;
-    std::lock_guard<std::mutex> lock(mutex);
-    if (++seqNum == 0) {
-        ++seqNum;
+    uint32_t value = ++seqNum_;
+    if (value == 0) {
+        value = ++seqNum_;
     }
-    return seqNum;
+    return value;
 }
 
 void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work)
@@ -95,10 +94,10 @@ OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(::ohos::data::cloudData::
     return dbActionInfo;
 }
 
-void StatisticInfoConvert(std::map<std::string, StatisticInfos> &in, map<string, array<StatisticInfo_TH>> &out)
+void StatisticInfoConvert(std::map<std::string, StatisticInfos> &in, map<string, array<TaiHeStatisticInfo>> &out)
 {
     for (auto &item : in) {
-        std::vector<StatisticInfo_TH> arrayInfo;
+        std::vector<TaiHeStatisticInfo> arrayInfo;
         for (auto &vIt : item.second) {
             arrayInfo.push_back({vIt.table, vIt.inserted, vIt.updated, vIt.normal});
         }
@@ -137,7 +136,7 @@ ProgressDetails ProgressDetailConvert(const OHOS::DistributedRdb::ProgressDetail
     return {Progress::from_value(in.progress), ProgressCode::from_value(in.code), tdMap};
 }
 
-void ParticipantConvert(const array_view<Participant_TH> &in, Participants &out)
+void ParticipantConvert(const array_view<TaiHeParticipant> &in, Participants &out)
 {
     Participant_INNER inner;
     for (auto it = in.begin(); it != in.end(); ++it) {
@@ -172,42 +171,42 @@ void ParticipantConvert(const array_view<Participant_TH> &in, Participants &out)
     }
 }
 
-void ResultsConvert(const Results &in, Result_TH &out)
+void ResultsConvert(const Results &in, TaiHeResult &out)
 {
     out.code = std::get<0>(in);
     out.description = optional<string>(std::in_place, std::get<1>(in));
-    std::vector<Result_TH> subResult;
+    std::vector<TaiHeResult> subResult;
     for (auto &it : std::get<INDEX_TWO>(in)) {
         subResult.push_back({it.first, optional<string>(std::in_place, it.second)});
     }
     out.value =  optional<ResultValue>(std::in_place, ResultValue::make_resultParticipantsValue(subResult));
 }
 
-void QueryResultsConvert(const QueryResults &in, Result_TH &out)
+void QueryResultsConvert(const QueryResults &in, TaiHeResult &out)
 {
-    using Role_TH = ::ohos::data::cloudData::sharing::Role;
-    using State_TH = ::ohos::data::cloudData::sharing::State;
-    using Privilege_TH = ::ohos::data::cloudData::sharing::Privilege;
+    using TaiHeRole = ::ohos::data::cloudData::sharing::Role;
+    using TaiheState = ::ohos::data::cloudData::sharing::State;
+    using TaiHePrivilege = ::ohos::data::cloudData::sharing::Privilege;
     out.code = std::get<0>(in);
     out.description = optional<string>(std::in_place, std::get<1>(in));
-    std::vector<Participant_TH> thVec;
+    std::vector<TaiHeParticipant> thVec;
     for (auto &it : std::get<INDEX_TWO>(in)) {
-        Participant_TH th = {""};
+        TaiHeParticipant th = {""};
         th.identity = it.identity;
         if (it.role != OHOS::CloudData::Role::ROLE_NIL) {
-            th.role = optional<Role_TH>(std::in_place, Role_TH::from_value(it.role));
+            th.role = optional<TaiHeRole>(std::in_place, TaiHeRole::from_value(it.role));
         }
         if (it.state != OHOS::CloudData::Confirmation::CFM_NIL) {
-            th.state = optional<State_TH>(std::in_place, State_TH::from_value(it.state));
+            th.state = optional<TaiheState>(std::in_place, TaiheState::from_value(it.state));
         }
         th.attachInfo = optional<string>(std::in_place, it.attachInfo);
-        Privilege_TH pri;
+        TaiHePrivilege pri;
         pri.writable = optional<bool>(std::in_place, it.privilege.writable);
         pri.readable = optional<bool>(std::in_place, it.privilege.readable);
         pri.creatable = optional<bool>(std::in_place, it.privilege.creatable);
         pri.deletable = optional<bool>(std::in_place, it.privilege.deletable);
         pri.shareable = optional<bool>(std::in_place, it.privilege.shareable);
-        th.privilege = optional<Privilege_TH>(std::in_place, pri);
+        th.privilege = optional<TaiHePrivilege>(std::in_place, pri);
         thVec.push_back(th);
     }
     out.value =  optional<ResultValue>(std::in_place, ResultValue::make_participantsValue(thVec));
