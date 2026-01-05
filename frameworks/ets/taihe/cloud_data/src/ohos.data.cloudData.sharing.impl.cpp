@@ -14,7 +14,8 @@
  */
 #define LOG_TAG "AniCloudDataSharingImpl"
 #include "logger.h"
-#include "ani_cloud_data.h"
+#include "ani_cloud_data_config.h"
+#include "ani_cloud_data_sharing.h"
 #include "ani_error_code.h"
 #include "rdb_predicates_impl.h"
 #include "cache_result_set.h"
@@ -25,8 +26,8 @@ namespace AniCloudData {
 namespace AniSharing {
 using namespace OHOS::Rdb;
 
-ResultSet AllocResourceAndSharePromise(string_view storeId, RdbPredicates_TH predicates,
-    array_view<Participant_TH> participants, optional_view<array<string>> columns)
+ResultSet AllocResourceAndSharePromise(string_view storeId, TaiHeRdbPredicates predicates,
+    array_view<TaiHeParticipant> participants, optional_view<array<string>> columns)
 {
     if (storeId.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of storeId must be string and not empty.");
@@ -73,22 +74,22 @@ ResultSet AllocResourceAndSharePromise(string_view storeId, RdbPredicates_TH pre
     return taihe::make_holder<OHOS::RdbTaihe::ResultSetImpl, ResultSet>();
 }
 
-ResultSet AllocResourceAndShareImpl(string_view storeId, RdbPredicates_TH predicates,
-    array_view<Participant_TH> participants)
+ResultSet AllocResourceAndShareImpl(string_view storeId, TaiHeRdbPredicates predicates,
+    array_view<TaiHeParticipant> participants)
 {
     return AllocResourceAndSharePromise(storeId, predicates, participants, optional_view<array<string>>(std::nullopt));
 }
 
-ResultSet AllocResourceAndShareImplWithColumns(string_view storeId, RdbPredicates_TH predicates,
-    array_view<Participant_TH> participants, array_view<string> columns)
+ResultSet AllocResourceAndShareImplWithColumns(string_view storeId, TaiHeRdbPredicates predicates,
+    array_view<TaiHeParticipant> participants, array_view<string> columns)
 {
     optional_view<array<string>> realColumns = optional<array<string>>(std::in_place, columns);
     return AllocResourceAndSharePromise(storeId, predicates, participants, realColumns);
 }
 
-Result_TH ShareImpl(string_view sharingResource, array_view<Participant_TH> participants)
+TaiHeResult ShareImpl(string_view sharingResource, array_view<TaiHeParticipant> participants)
 {
-    Result_TH ret;
+    TaiHeResult ret;
     if (sharingResource.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
         return ret;
@@ -115,9 +116,9 @@ Result_TH ShareImpl(string_view sharingResource, array_view<Participant_TH> part
     return ret;
 }
 
-Result_TH UnshareImpl(string_view sharingResource, array_view<Participant_TH> participants)
+TaiHeResult UnshareImpl(string_view sharingResource, array_view<TaiHeParticipant> participants)
 {
-    Result_TH ret;
+    TaiHeResult ret;
     if (sharingResource.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
         return ret;
@@ -144,9 +145,9 @@ Result_TH UnshareImpl(string_view sharingResource, array_view<Participant_TH> pa
     return ret;
 }
 
-Result_TH ExitImpl(string_view sharingResource)
+TaiHeResult ExitImpl(string_view sharingResource)
 {
-    Result_TH ret;
+    TaiHeResult ret;
     if (sharingResource.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
         return ret;
@@ -167,9 +168,9 @@ Result_TH ExitImpl(string_view sharingResource)
     return ret;
 }
 
-Result_TH ChangePrivilegeImpl(string_view sharingResource, array_view<Participant_TH> participants)
+TaiHeResult ChangePrivilegeImpl(string_view sharingResource, array_view<TaiHeParticipant> participants)
 {
-    Result_TH ret;
+    TaiHeResult ret;
     if (sharingResource.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
         return ret;
@@ -196,9 +197,9 @@ Result_TH ChangePrivilegeImpl(string_view sharingResource, array_view<Participan
     return ret;
 }
 
-Result_TH QueryParticipantsImpl(string_view sharingResource)
+TaiHeResult QueryParticipantsImpl(string_view sharingResource)
 {
-    Result_TH ret;
+    TaiHeResult ret;
     if (sharingResource.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of sharingRes must be string and not empty.");
         return ret;
@@ -218,9 +219,9 @@ Result_TH QueryParticipantsImpl(string_view sharingResource)
     return ret;
 }
 
-Result_TH QueryParticipantsByInvitationImpl(string_view invitationCode)
+TaiHeResult QueryParticipantsByInvitationImpl(string_view invitationCode)
 {
-    Result_TH ret;
+    TaiHeResult ret;
     if (invitationCode.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
             "The type of invitationCode must be string and not empty.");
@@ -241,10 +242,10 @@ Result_TH QueryParticipantsByInvitationImpl(string_view invitationCode)
     return ret;
 }
 
-Result_TH ConfirmInvitationImpl(string_view invitationCode, State state)
+TaiHeResult ConfirmInvitationImpl(string_view invitationCode, State state)
 {
     const uint32_t INDEX_TWO = 2;
-    Result_TH ret;
+    TaiHeResult ret;
     if (invitationCode.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
             "The type of invitationCode must be string and not empty.");
@@ -270,9 +271,9 @@ Result_TH ConfirmInvitationImpl(string_view invitationCode, State state)
     return ret;
 }
 
-Result_TH ChangeConfirmationImpl(string_view sharingResource, State state)
+TaiHeResult ChangeConfirmationImpl(string_view sharingResource, State state)
 {
-    Result_TH ret;
+    TaiHeResult ret;
     if (sharingResource.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
             "The type of sharingResource must be string and not empty.");

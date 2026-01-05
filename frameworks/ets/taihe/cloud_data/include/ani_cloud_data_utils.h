@@ -14,7 +14,7 @@
  */
 #ifndef OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H
 #define OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H
-#include "ani_cloud_data.h"
+#include "ani_cloud_data_config.h"
 #include "cloud_types.h"
 
 namespace AniCloudData {
@@ -23,11 +23,11 @@ void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work);
 OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(::ohos::data::cloudData::DBSwitchInfo dbSwitchInfo);
 OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(::ohos::data::cloudData::ClearConfig clearConfig);
 OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(::ohos::data::cloudData::DBActionInfo actionInfo);
-void StatisticInfoConvert(std::map<std::string, StatisticInfos> &in, map<string, array<StatisticInfo_TH>> &out);
+void StatisticInfoConvert(std::map<std::string, StatisticInfos> &in, map<string, array<TaiHeStatisticInfo>> &out);
 void SyncInfoConvert(QueryLastResults &in, map<string, SyncInfo> &out);
 ProgressDetails ProgressDetailConvert(const OHOS::DistributedRdb::ProgressDetail &in);
-void ParticipantConvert(const array_view<Participant_TH> &in, Participants &out);
-void ResultsConvert(const Results &in, Result_TH &out);
-void QueryResultsConvert(const QueryResults &in, Result_TH &out);
+void ParticipantConvert(const array_view<TaiHeParticipant> &in, Participants &out);
+void ResultsConvert(const Results &in, TaiHeResult &out);
+void QueryResultsConvert(const QueryResults &in, TaiHeResult &out);
 } // namespace AniCloudData
 #endif
