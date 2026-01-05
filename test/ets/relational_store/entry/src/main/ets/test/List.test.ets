@@ -37,6 +37,7 @@ import RdbSetDistributedTable from './RdbSetDistributedTable.test';
 import RdbStoreBatchInsertWithReturning from './RdbStoreBatchInsertWithReturning.test';
 import RdbStoreUpdateWithReturning from './RdbStoreUpdateWithReturning.test';
 import ReturningMultiThreaded from './ReturningMultiThreaded.test';
+import RdbStoreUndefinedTest from './RdbStoreUndefined.test';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -63,4 +64,5 @@ export default function testsuite() {
   RdbStoreBatchInsertWithReturning();
   RdbStoreUpdateWithReturning();
   ReturningMultiThreaded();
+  RdbStoreUndefinedTest();
 }
