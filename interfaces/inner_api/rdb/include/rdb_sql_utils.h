@@ -85,6 +85,8 @@ public:
     static bool HasDuplicateAssets(const std::vector<ValueObject> &values);
     static bool HasDuplicateAssets(const ValuesBucket &value);
     static bool HasDuplicateAssets(const ValuesBuckets &values);
+private:
+    static int CreateSingleDirectory(const std::string &databaseDirectory);
 };
 } // namespace NativeRdb
 } // namespace OHOS
