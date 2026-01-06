@@ -20,14 +20,14 @@
 namespace AniCloudData {
 uint32_t GetSeqNum();
 void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work);
-OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(::ohos::data::cloudData::DBSwitchInfo dbSwitchInfo);
-OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(::ohos::data::cloudData::ClearConfig clearConfig);
-OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(::ohos::data::cloudData::DBActionInfo actionInfo);
-void StatisticInfoConvert(std::map<std::string, StatisticInfos> &in, map<string, array<TaiHeStatisticInfo>> &out);
-void SyncInfoConvert(QueryLastResults &in, map<string, SyncInfo> &out);
-ProgressDetails ProgressDetailConvert(const OHOS::DistributedRdb::ProgressDetail &in);
-void ParticipantConvert(const array_view<TaiHeParticipant> &in, Participants &out);
-void ResultsConvert(const Results &in, TaiHeResult &out);
-void QueryResultsConvert(const QueryResults &in, TaiHeResult &out);
+OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(const ::ohos::data::cloudData::DBSwitchInfo &in);
+OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(const ::ohos::data::cloudData::ClearConfig &in);
+OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(const ::ohos::data::cloudData::DBActionInfo &in);
+map<string, array<TaiHeStatisticInfo>> ConvertStatisticInfo(std::map<std::string, StatisticInfos> &in);
+map<string, SyncInfo> ConvertSyncInfo(const QueryLastResults &in);
+ProgressDetails ConvertProgressDetail(const OHOS::DistributedRdb::ProgressDetail &in);
+Participants ConvertParticipant(const array_view<TaiHeParticipant> &in);
+TaiHeResult ConvertResults(const Results &in);
+TaiHeResult ConvertQueryResults(const QueryResults &in);
 } // namespace AniCloudData
 #endif

@@ -21,6 +21,13 @@
 
 namespace AniCloudData {
 using namespace OHOS::Rdb;
+static constexpr size_t MAX_ACTIONS = 1000;
+
+enum {
+    CLEAR_CLOUD_INFO = 0,
+    CLEAR_CLOUD_DATA_AND_INFO = 1,
+    CLEAR_CLOUD_NONE = 2,
+};
 
 bool VerifyExtraData(const ExtraData &data)
 {
@@ -29,19 +36,16 @@ bool VerifyExtraData(const ExtraData &data)
 
 bool ValidSubscribeType(ClearAction type)
 {
-    return (ClearAction::key_t::CLEAR_CLOUD_INFO <= type.get_key()) &&
-        (type.get_key() <= ClearAction::key_t::CLEAR_CLOUD_NONE);
+    return (CLEAR_CLOUD_INFO <= type.get_value()) && (type.get_value() <= CLEAR_CLOUD_NONE);
 }
 
 void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> switches)
 {
-    LOG_INFO("EnableCloudImpl start");
     if (accountId.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
         return;
     }
     auto work = [&accountId, &switches](std::shared_ptr<CloudService> proxy) {
-        LOG_INFO("EnableCloudImpl work start");
         std::map<std::string, int32_t> realSwitches;
         for (auto &item : switches) {
             realSwitches[std::string(item.first)] = item.second ? CloudService::Switch::SWITCH_ON
@@ -54,7 +58,6 @@ void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> s
             ThrowAniError(code);
         }
     };
-    LOG_INFO("EnableCloudImpl RequestIPC");
     RequestIPC(work);
 }
 
@@ -160,7 +163,7 @@ map<string, array<TaiHeStatisticInfo>> ConfigImpl::QueryStatisticsImpl(
     int errCode = CloudService::Status::ERROR;
     if (result.has_value()) {
         errCode = result.value().first;
-        StatisticInfoConvert(result.value().second, ret);
+        ret = ConvertStatisticInfo(result.value().second);
     }
     if (errCode != CloudService::Status::SUCCESS) {
         ThrowAniError(errCode);
@@ -181,7 +184,7 @@ map<string, SyncInfo> ConfigImpl::QueryLastSyncInfoImpl(
     int errCode = CloudService::Status::ERROR;
     if (result.has_value()) {
         errCode = result.value().first;
-        SyncInfoConvert(result.value().second, ret);
+        ret = ConvertSyncInfo(result.value().second);
     }
     if (errCode != CloudService::Status::SUCCESS) {
         ThrowAniError(errCode);
@@ -199,7 +202,6 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
         return;
     }
-    constexpr size_t MAX_ACTIONS = 1000;
     if (appActions.size() > MAX_ACTIONS) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Too many app actions");
         return;
@@ -261,7 +263,6 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
         return;
     }
-    constexpr size_t MAX_ACTIONS = 1000;
     if (appActions.size() > MAX_ACTIONS) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Too many app actions");
         return;
@@ -333,7 +334,7 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
                 LOG_ERROR("details is nullptr");
                 return;
             }
-            progress(ProgressDetailConvert(details.begin()->second));
+            progress(ConvertProgressDetail(details.begin()->second));
         };
         CloudService::Option option;
         option.syncMode = mode.get_value();
