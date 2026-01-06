@@ -40,9 +40,8 @@ ResultSet AllocResourceAndSharePromise(string_view storeId, TaiHeRdbPredicates p
     }
     std::optional<std::pair<int32_t, std::vector<OHOS::NativeRdb::ValuesBucket>>> result;
     auto work = [&storeId, &predicates, &participants, &columns, &result](std::shared_ptr<CloudService> proxy) {
-        Participants info;
+        Participants info = ConvertParticipant(participants);
         std::vector<std::string> realColumns;
-        ParticipantConvert(participants, info);
         if (columns.has_value()) {
             for (auto it = columns.value().begin(); it != columns.value().end(); ++it) {
                 realColumns.push_back(it->c_str());
@@ -100,19 +99,16 @@ TaiHeResult ShareImpl(string_view sharingResource, array_view<TaiHeParticipant> 
         return ret;
     }
     Results ipcRet;
-    int32_t code = CloudService::Status::ERROR;
-    auto work = [&sharingResource, &participants, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
-        Participants info;
-        ParticipantConvert(participants, info);
-        code = proxy->Share(std::string(sharingResource), info, ipcRet);
+    auto work = [&sharingResource, &participants, &ipcRet, &ret](std::shared_ptr<CloudService> proxy) {
+        Participants info = ConvertParticipant(participants);
+        int32_t code = proxy->Share(std::string(sharingResource), info, ipcRet);
+        if (code == CloudService::Status::SUCCESS) {
+            ret = ConvertResults(ipcRet);
+        } else {
+            ThrowAniError(code);
+        }
     };
     RequestIPC(work);
-    if (code != CloudService::Status::SUCCESS) {
-        LOG_ERROR("request, errcode = %{public}d", code);
-        ThrowAniError(code);
-        return ret;
-    }
-    ResultsConvert(ipcRet, ret);
     return ret;
 }
 
@@ -131,17 +127,15 @@ TaiHeResult UnshareImpl(string_view sharingResource, array_view<TaiHeParticipant
     Results ipcRet;
     int32_t code = CloudService::Status::ERROR;
     auto work = [&sharingResource, &participants, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
-        Participants info;
-        ParticipantConvert(participants, info);
+        Participants info = ConvertParticipant(participants);
         code = proxy->Unshare(std::string(sharingResource), info, ipcRet);
     };
     RequestIPC(work);
     if (code != CloudService::Status::SUCCESS) {
-        LOG_ERROR("request, errcode = %{public}d", code);
         ThrowAniError(code);
         return ret;
     }
-    ResultsConvert(ipcRet, ret);
+    ret = ConvertResults(ipcRet);
     return ret;
 }
 
@@ -159,7 +153,6 @@ TaiHeResult ExitImpl(string_view sharingResource)
     };
     RequestIPC(work);
     if (code != CloudService::Status::SUCCESS) {
-        LOG_ERROR("request, errcode = %{public}d", code);
         ThrowAniError(code);
         return ret;
     }
@@ -183,17 +176,15 @@ TaiHeResult ChangePrivilegeImpl(string_view sharingResource, array_view<TaiHePar
     Results ipcRet;
     int32_t code = CloudService::Status::ERROR;
     auto work = [&sharingResource, &participants, &ipcRet, &code](std::shared_ptr<CloudService> proxy) {
-        Participants info;
-        ParticipantConvert(participants, info);
+        Participants info = ConvertParticipant(participants);
         code = proxy->ChangePrivilege(std::string(sharingResource), info, ipcRet);
     };
     RequestIPC(work);
     if (code != CloudService::Status::SUCCESS) {
-        LOG_ERROR("request, errcode = %{public}d", code);
         ThrowAniError(code);
         return ret;
     }
-    ResultsConvert(ipcRet, ret);
+    ret = ConvertResults(ipcRet);
     return ret;
 }
 
@@ -211,11 +202,10 @@ TaiHeResult QueryParticipantsImpl(string_view sharingResource)
     };
     RequestIPC(work);
     if (code != CloudService::Status::SUCCESS) {
-        LOG_ERROR("request, errcode = %{public}d", code);
         ThrowAniError(code);
         return ret;
     }
-    QueryResultsConvert(ipcRet, ret);
+    ret = ConvertQueryResults(ipcRet);
     return ret;
 }
 
@@ -234,24 +224,22 @@ TaiHeResult QueryParticipantsByInvitationImpl(string_view invitationCode)
     };
     RequestIPC(work);
     if (code != CloudService::Status::SUCCESS) {
-        LOG_ERROR("request, errcode = %{public}d", code);
         ThrowAniError(code);
         return ret;
     }
-    QueryResultsConvert(ipcRet, ret);
+    ret = ConvertQueryResults(ipcRet);
     return ret;
 }
 
 TaiHeResult ConfirmInvitationImpl(string_view invitationCode, State state)
 {
-    const uint32_t INDEX_TWO = 2;
     TaiHeResult ret;
     if (invitationCode.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
             "The type of invitationCode must be string and not empty.");
         return ret;
     }
-    if (!(state.get_value() > Confirmation::CFM_NIL && state.get_value() <= Confirmation::CFM_BUTT)) {
+    if (state.get_value() <= Confirmation::CFM_NIL || state.get_value() > Confirmation::CFM_BUTT) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of status must be Status.");
         return ret;
     }
@@ -267,7 +255,8 @@ TaiHeResult ConfirmInvitationImpl(string_view invitationCode, State state)
     }
     ret.code = std::get<0>(ipcRet);
     ret.description = optional<string>(std::in_place, std::get<1>(ipcRet));
-    ret.value = optional<ResultValue>(std::in_place, ResultValue::make_stringValue(std::get<INDEX_TWO>(ipcRet)));
+    std::string strValue = std::get<2>(ipcRet); // 2 is the last element in tuple
+    ret.value = optional<ResultValue>(std::in_place, ResultValue::make_stringValue(strValue));
     return ret;
 }
 
