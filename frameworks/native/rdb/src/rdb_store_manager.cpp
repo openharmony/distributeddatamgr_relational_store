@@ -439,7 +439,7 @@ void RdbStoreManager::Clear()
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
         auto rdbStore = iter->second.lock();
-        if (rdbStore.use_count() > 1) {
+        if (rdbStore != nullptr && rdbStore.use_count() > 1) {
             LOG_WARN("store[%{public}s] in use by %{public}ld holders",
                 SqliteUtils::Anonymous(rdbStore->GetPath()).c_str(), rdbStore.use_count());
         }
