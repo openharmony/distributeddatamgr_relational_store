@@ -54,7 +54,7 @@ bool WarpDate(double time, ani_object &outObj)
         LOG_ERROR("Object_CallMethodByName_Double failed, status:%{public}d", status);
         return false;
     }
-    LOG_ERROR("Object_CallMethodByName_Double success, double:%{public}lf", msObj);
+    LOG_INFO("Object_CallMethodByName_Double success, double:%{public}lf", msObj);
     return true;
 }
 
