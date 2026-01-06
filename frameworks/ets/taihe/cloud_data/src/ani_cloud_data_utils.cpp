@@ -27,6 +27,37 @@ namespace AniCloudData {
 using namespace OHOS::Rdb;
 using Participant_INNER = OHOS::CloudData::Participant;
 
+bool WarpDate(double time, ani_object &outObj)
+{
+    ani_env *env = ::taihe::get_env();
+    if (env == nullptr || time < 0) {
+        LOG_ERROR("get_env failed");
+        return false;
+    }
+    ani_class cls;
+    ani_status status;
+    if (ANI_OK != (status = env->FindClass("std.core.Date", &cls))) {
+        LOG_ERROR("FindClass failed, status:%{public}d", status);
+        return false;
+    }
+    ani_method ctor;
+    if ((status = env->Class_FindMethod(cls, "<ctor>", ":", &ctor)) != ANI_OK) {
+        LOG_ERROR("Class_FindMethod failed, status:%{public}d", status);
+        return false;
+    }
+    if ((status = env->Object_New(cls, ctor, &outObj)) != ANI_OK) {
+        LOG_ERROR("Object_New failed, status:%{public}d", status);
+        return false;
+    }
+    ani_double msObj = 0;
+    if ((status = env->Object_CallMethodByName_Double(outObj, "setTime", "d:d", &msObj, time)) != ANI_OK) {
+        LOG_ERROR("Object_CallMethodByName_Double failed, status:%{public}d", status);
+        return false;
+    }
+    LOG_ERROR("Object_CallMethodByName_Double success, double:%{public}lf", msObj);
+    return true;
+}
+
 uint32_t GetSeqNum()
 {
     static std::atomic<uint32_t> seqNum = 0;
@@ -106,19 +137,29 @@ map<string, array<TaiHeStatisticInfo>> ConvertStatisticInfo(std::map<std::string
     return out;
 }
 
-map<string, SyncInfo> ConvertSyncInfo(const QueryLastResults &in)
+std::pair<bool, map<string, SyncInfo>> ConvertSyncInfo(const QueryLastResults &in)
 {
     map<string, SyncInfo> out;
     using TaiheSyncStatus = ::ohos::data::cloudData::SyncStatus;
     for (auto &it : in) {
         SyncInfo info = {0, 0, ProgressCode::key_t::UNKNOWN_ERROR};
         info.code = ProgressCode::from_value(it.second.code);
-        info.startTime = it.second.startTime;
-        info.finishTime = it.second.finishTime;
+        ani_object aniStartTime{};
+        ani_object aniFinishTime{};
+        if (!WarpDate(static_cast<double>(it.second.startTime), aniStartTime)) {
+            out.clear();
+            return std::make_pair(false, out);
+        }
+        if (!WarpDate(static_cast<double>(it.second.finishTime), aniFinishTime)) {
+            out.clear();
+            return std::make_pair(false, out);
+        }
+        info.startTime = reinterpret_cast<uintptr_t>(aniStartTime);
+        info.finishTime = reinterpret_cast<uintptr_t>(aniFinishTime);
         info.syncStatus = optional<TaiheSyncStatus>(std::in_place, TaiheSyncStatus::from_value(it.second.syncStatus));
         out.emplace(it.first, info);
     }
-    return out;
+    return std::make_pair(true, out);
 }
 
 ProgressDetails ConvertProgressDetail(const OHOS::DistributedRdb::ProgressDetail &in)

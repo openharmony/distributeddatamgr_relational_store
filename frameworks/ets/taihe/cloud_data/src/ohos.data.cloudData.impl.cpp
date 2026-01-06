@@ -184,7 +184,12 @@ map<string, SyncInfo> ConfigImpl::QueryLastSyncInfoImpl(
     int errCode = CloudService::Status::ERROR;
     if (result.has_value()) {
         errCode = result.value().first;
-        ret = ConvertSyncInfo(result.value().second);
+        auto syncInfo = ConvertSyncInfo(result.value().second);
+        if (!syncInfo.first) {
+            ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "query last sync info failed.");
+            return ret;
+        }
+        ret = syncInfo.second;
     }
     if (errCode != CloudService::Status::SUCCESS) {
         ThrowAniError(errCode);
@@ -199,7 +204,7 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
         return;
     }
     if (appActions.empty()) {
-        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of appActions not empty.");
         return;
     }
     if (appActions.size() > MAX_ACTIONS) {
@@ -261,6 +266,10 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
 {
     if (accountId.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return;
+    }
+    if (appActions.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of appActions not empty.");
         return;
     }
     if (appActions.size() > MAX_ACTIONS) {
