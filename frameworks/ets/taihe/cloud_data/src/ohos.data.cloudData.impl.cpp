@@ -14,34 +14,27 @@
  */
 #define LOG_TAG "AniCloudDataImpl"
 #include "logger.h"
-#include "ani_cloud_data.h"
+#include "ani_cloud_data_config.h"
 #include "ani_error_code.h"
 #include "ani_cloud_data_utils.h"
 #include "cloud_types.h"
 
 namespace AniCloudData {
 using namespace OHOS::Rdb;
+static constexpr size_t MAX_ACTIONS = 1000;
 
 bool VerifyExtraData(const ExtraData &data)
 {
     return (!data.eventId.empty()) && (!data.extraData.empty());
 }
 
-bool ValidSubscribeType(ClearAction type)
-{
-    return (ClearAction::key_t::CLEAR_CLOUD_INFO <= type.get_key()) &&
-        (type.get_key() <= ClearAction::key_t::CLEAR_CLOUD_NONE);
-}
-
 void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> switches)
 {
-    LOG_INFO("EnableCloudImpl start");
     if (accountId.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
         return;
     }
     auto work = [&accountId, &switches](std::shared_ptr<CloudService> proxy) {
-        LOG_INFO("EnableCloudImpl work start");
         std::map<std::string, int32_t> realSwitches;
         for (auto &item : switches) {
             realSwitches[std::string(item.first)] = item.second ? CloudService::Switch::SWITCH_ON
@@ -54,7 +47,6 @@ void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> s
             ThrowAniError(code);
         }
     };
-    LOG_INFO("EnableCloudImpl RequestIPC");
     RequestIPC(work);
 }
 
@@ -93,19 +85,19 @@ void ConfigImpl::ChangeAppCloudSwitchImpl(string_view accountId, string_view bun
     RequestIPC(work);
 }
 
-void ConfigImpl::NotifyDataChangeVarargs(
-    ExtraData const& extInfo, optional_view<int32_t> userId)
+void ConfigImpl::NotifyDataChangeOptional(
+    const ExtraData &extInfo, optional_view<int32_t> userId)
 {
     int32_t id = userId.has_value() ? userId.value() : CloudService::INVALID_USER_ID;
     NotifyDataChangeWithId(extInfo, id);
 }
 
-void ConfigImpl::NotifyDataChangeImpl(ExtraData const& extInfo)
+void ConfigImpl::NotifyDataChangeImpl(const ExtraData &extInfo)
 {
     NotifyDataChangeWithId(extInfo, CloudService::INVALID_USER_ID);
 }
 
-void ConfigImpl::NotifyDataChangeWithId(ExtraData const& extInfo, int32_t userId)
+void ConfigImpl::NotifyDataChangeWithId(const ExtraData &extInfo, int32_t userId)
 {
     if (!VerifyExtraData(extInfo)) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata and not empty.");
@@ -139,11 +131,11 @@ void ConfigImpl::NotifyDataChangeBoth(string_view accountId, string_view bundleN
     RequestIPC(work);
 }
 
-map<string, array<StatisticInfo_TH>> ConfigImpl::QueryStatisticsImpl(
+map<string, array<TaiHeStatisticInfo>> ConfigImpl::QueryStatisticsImpl(
     string_view accountId, string_view bundleName, optional_view<string> storeId)
 {
     std::optional<std::pair<int32_t, std::map<std::string, StatisticInfos>>> result;
-    map<string, array<StatisticInfo_TH>> ret;
+    map<string, array<TaiHeStatisticInfo>> ret;
     if (accountId.empty()) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
         return ret;
@@ -160,7 +152,7 @@ map<string, array<StatisticInfo_TH>> ConfigImpl::QueryStatisticsImpl(
     int errCode = CloudService::Status::ERROR;
     if (result.has_value()) {
         errCode = result.value().first;
-        StatisticInfoConvert(result.value().second, ret);
+        ret = ConvertStatisticInfo(result.value().second);
     }
     if (errCode != CloudService::Status::SUCCESS) {
         ThrowAniError(errCode);
@@ -181,7 +173,12 @@ map<string, SyncInfo> ConfigImpl::QueryLastSyncInfoImpl(
     int errCode = CloudService::Status::ERROR;
     if (result.has_value()) {
         errCode = result.value().first;
-        SyncInfoConvert(result.value().second, ret);
+        auto syncInfo = ConvertSyncInfo(result.value().second);
+        if (!syncInfo.first) {
+            ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "query last sync info failed.");
+            return ret;
+        }
+        ret = syncInfo.second;
     }
     if (errCode != CloudService::Status::SUCCESS) {
         ThrowAniError(errCode);
@@ -196,10 +193,9 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
         return;
     }
     if (appActions.empty()) {
-        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of appActions not empty.");
         return;
     }
-    constexpr size_t MAX_ACTIONS = 1000;
     if (appActions.size() > MAX_ACTIONS) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Too many app actions");
         return;
@@ -209,10 +205,6 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
         std::map<std::string, int32_t> actions;
         std::map<std::string, OHOS::CloudData::ClearConfig> configs;
         for (auto const &item : appActions) {
-            if (!ValidSubscribeType(item.second)) {
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Action in map appActions is incorrect.");
-                return;
-            }
             actions[std::string(item.first)] = item.second.get_value();
         }
 
@@ -261,7 +253,10 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
         return;
     }
-    constexpr size_t MAX_ACTIONS = 1000;
+    if (appActions.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of appActions not empty.");
+        return;
+    }
     if (appActions.size() > MAX_ACTIONS) {
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Too many app actions");
         return;
@@ -276,10 +271,6 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
     auto work = [&accountId, &appActions, &clearConfig](std::shared_ptr<CloudService> proxy) {
         std::map<std::string, int32_t> actions;
         for (auto const &item : appActions) {
-            if (!ValidSubscribeType(item.second)) {
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Action in map appActions is incorrect.");
-                return;
-            }
             actions[std::string(item.first)] = item.second.get_value();
         }
 
@@ -325,7 +316,7 @@ void ConfigImpl::SetGlobalCloudStrategyImpl(
 }
 
 void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, SyncMode mode,
-    callback_view<void(ProgressDetails const& data)> progress)
+    callback_view<void(const ProgressDetails &data)> progress)
 {
     auto work = [&bundleName, &storeId, &mode, progress](std::shared_ptr<CloudService> proxy) {
         auto async = [progress](const OHOS::DistributedRdb::Details &details) {
@@ -333,7 +324,7 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
                 LOG_ERROR("details is nullptr");
                 return;
             }
-            progress(ProgressDetailConvert(details.begin()->second));
+            progress(ConvertProgressDetail(details.begin()->second));
         };
         CloudService::Option option;
         option.syncMode = mode.get_value();
@@ -387,7 +378,7 @@ void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::dat
 TH_EXPORT_CPP_API_EnableCloudImpl(AniCloudData::ConfigImpl::EnableCloudImpl);
 TH_EXPORT_CPP_API_DisableCloudImpl(AniCloudData::ConfigImpl::DisableCloudImpl);
 TH_EXPORT_CPP_API_ChangeAppCloudSwitchImpl(AniCloudData::ConfigImpl::ChangeAppCloudSwitchImpl);
-TH_EXPORT_CPP_API_NotifyDataChangeVarargs(AniCloudData::ConfigImpl::NotifyDataChangeVarargs);
+TH_EXPORT_CPP_API_NotifyDataChangeOptional(AniCloudData::ConfigImpl::NotifyDataChangeOptional);
 TH_EXPORT_CPP_API_NotifyDataChangeImpl(AniCloudData::ConfigImpl::NotifyDataChangeImpl);
 TH_EXPORT_CPP_API_NotifyDataChangeWithId(AniCloudData::ConfigImpl::NotifyDataChangeWithId);
 TH_EXPORT_CPP_API_NotifyDataChangeBoth(AniCloudData::ConfigImpl::NotifyDataChangeBoth);
