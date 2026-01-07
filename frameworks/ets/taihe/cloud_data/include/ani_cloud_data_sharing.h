@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,7 @@
 namespace AniCloudData {
 namespace AniSharing {
 using TaiHeRdbPredicates = ::ohos::data::relationalStore::weak::RdbPredicates;
-ResultSet AllocResourceAndSharePromise(string_view storeId, TaiHeRdbPredicates predicates,
+ResultSet AllocResourceAndSharePromise(string_view storeId, const TaiHeRdbPredicates &predicates,
     array_view<TaiHeParticipant> participants, optional_view<array<string>> columns);
 ResultSet AllocResourceAndShareImpl(string_view storeId, TaiHeRdbPredicates predicates,
     array_view<TaiHeParticipant> participants);

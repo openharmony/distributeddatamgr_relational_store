@@ -124,7 +124,7 @@ OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(const ::ohos::data::cloud
     return dbActionInfo;
 }
 
-map<string, array<TaiHeStatisticInfo>> ConvertStatisticInfo(std::map<std::string, StatisticInfos> &in)
+map<string, array<TaiHeStatisticInfo>> ConvertStatisticInfo(const std::map<std::string, StatisticInfos> &in)
 {
     map<string, array<TaiHeStatisticInfo>> out;
     for (auto &item : in) {
@@ -223,7 +223,7 @@ TaiHeResult ConvertResults(const Results &in)
     out.code = std::get<0>(in);
     out.description = optional<string>(std::in_place, std::get<1>(in));
     std::vector<TaiHeResult> subResult;
-    for (auto &it : std::get<2>(in)) { // 2 is the last element in tuple
+    for (auto &it : std::get<2>(in)) { // 2 is of std::vector<std::pair<int32_t, std::string>> type
         subResult.push_back({it.first, optional<string>(std::in_place, it.second)});
     }
     out.value =  optional<ResultValue>(std::in_place, ResultValue::make_resultParticipantsValue(subResult));
@@ -239,7 +239,7 @@ TaiHeResult ConvertQueryResults(const QueryResults &in)
     out.code = std::get<0>(in);
     out.description = optional<string>(std::in_place, std::get<1>(in));
     std::vector<TaiHeParticipant> thVec;
-    for (auto &it : std::get<2>(in)) { // 2 is the last element in tuple
+    for (auto &it : std::get<2>(in)) { // 2 is of std::vector<Participant> type
         TaiHeParticipant th = {""};
         th.identity = it.identity;
         if (it.role != OHOS::CloudData::Role::ROLE_NIL) {

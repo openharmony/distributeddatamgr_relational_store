@@ -24,7 +24,7 @@ void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work);
 OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(const ::ohos::data::cloudData::DBSwitchInfo &in);
 OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(const ::ohos::data::cloudData::ClearConfig &in);
 OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(const ::ohos::data::cloudData::DBActionInfo &in);
-map<string, array<TaiHeStatisticInfo>> ConvertStatisticInfo(std::map<std::string, StatisticInfos> &in);
+map<string, array<TaiHeStatisticInfo>> ConvertStatisticInfo(const std::map<std::string, StatisticInfos> &in);
 std::pair<bool, map<string, SyncInfo>> ConvertSyncInfo(const QueryLastResults &in);
 ProgressDetails ConvertProgressDetail(const OHOS::DistributedRdb::ProgressDetail &in);
 Participants ConvertParticipant(const array_view<TaiHeParticipant> &in);
