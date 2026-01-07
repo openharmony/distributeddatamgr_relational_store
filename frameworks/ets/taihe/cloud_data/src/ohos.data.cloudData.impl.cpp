@@ -34,11 +34,6 @@ bool VerifyExtraData(const ExtraData &data)
     return (!data.eventId.empty()) && (!data.extraData.empty());
 }
 
-bool ValidSubscribeType(ClearAction type)
-{
-    return (CLEAR_CLOUD_INFO <= type.get_value()) && (type.get_value() <= CLEAR_CLOUD_NONE);
-}
-
 void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> switches)
 {
     if (accountId.empty()) {
@@ -216,10 +211,6 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
         std::map<std::string, int32_t> actions;
         std::map<std::string, OHOS::CloudData::ClearConfig> configs;
         for (auto const &item : appActions) {
-            if (!ValidSubscribeType(item.second)) {
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Action in map appActions is incorrect.");
-                return;
-            }
             actions[std::string(item.first)] = item.second.get_value();
         }
 
@@ -286,10 +277,6 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
     auto work = [&accountId, &appActions, &clearConfig](std::shared_ptr<CloudService> proxy) {
         std::map<std::string, int32_t> actions;
         for (auto const &item : appActions) {
-            if (!ValidSubscribeType(item.second)) {
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Action in map appActions is incorrect.");
-                return;
-            }
             actions[std::string(item.first)] = item.second.get_value();
         }
 
