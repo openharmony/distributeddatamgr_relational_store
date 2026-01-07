@@ -29,19 +29,12 @@ public:
 
     explicit TaiheLogObserver(
         ani_env *env,
-        ani_ref callbackRef,
+        ani_object callbackObj,
         std::shared_ptr<JsExceptionMessageCallbackType> callbackPtr
     );
     ~TaiheLogObserver();
-
-    bool IsEquals(ani_ref ref);
-
+    bool IsEquals(ani_object callbackObj);
     void OnErrorLog(const ExceptionMessage &message) override;
-
-    static int32_t AddCallback(RdbObserversData &rdbObserversData,
-        JsExceptionMessageCallbackType callbackFunc, uintptr_t opq, SubscribeFuncType subscribeFunc);
-    static void RemoveCallback(RdbObserversData &rdbObserversData,
-        std::optional<uintptr_t> opq, UnSubscribeFuncType unSubscribeFunc);
 
 private:
     ani_env *env_;

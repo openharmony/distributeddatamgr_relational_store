@@ -17,6 +17,7 @@
 #define OHOS_RELATION_STORE_RDBSTORE_IMPL_H
 
 #include "ani_rdb_utils.h"
+#include "taihe_rdb_observers_data.h"
 
 namespace OHOS {
 namespace RdbTaihe {
@@ -158,7 +159,7 @@ private:
     void UnRegisterDataChange();
 
 private:
-    ani_rdbutils::RdbObserversData rdbObserversData_;
+    ani_rdbutils::TaiheRdbObserversData rdbObserversData_;
 };
 } // namespace RdbTaihe
 } // namespace OHOS

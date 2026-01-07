@@ -29,19 +29,12 @@ public:
 
     explicit TaiheSyncObserver(
         ani_env *env,
-        ani_ref callbackRef,
+        ani_object callbackObj,
         std::shared_ptr<JsProgressDetailsCallbackType> callbackPtr
     );
     ~TaiheSyncObserver();
-
-    bool IsEquals(ani_ref ref);
-
+    bool IsEquals(ani_object callbackObj);
     void ProgressNotification(const OHOS::DistributedRdb::Details &details) override;
-
-    static int32_t AddCallback(RdbObserversData &rdbObserversData,
-        JsProgressDetailsCallbackType callbackFunc, uintptr_t opq, SubscribeFuncType subscribeFunc);
-    static void RemoveCallback(RdbObserversData &rdbObserversData,
-        std::optional<uintptr_t> opq, UnSubscribeFuncType unSubscribeFunc);
 
 private:
     ani_env *env_;

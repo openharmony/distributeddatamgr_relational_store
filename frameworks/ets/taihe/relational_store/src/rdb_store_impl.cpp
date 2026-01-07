@@ -1070,10 +1070,11 @@ void RdbStoreImpl::OnAutoSyncProgressInner(
             LOG_INFO("RegisterAutoSyncCallback success.");
         } else {
             LOG_ERROR("RegisterAutoSyncCallback failed, %{public}d.", errCode);
+            ThrowInnerError(errCode);
         }
         return errCode;
     };
-    auto result = ani_rdbutils::TaiheSyncObserver::AddCallback(rdbObserversData_, callback, opq, subscribeFunc);
+    auto result = rdbObserversData_.OnAutoSyncProgress(callback, opq, subscribeFunc);
     if (result != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("AddCallback failed, %{public}d.", result);
         ThrowInnerError(result);
@@ -1099,7 +1100,7 @@ void RdbStoreImpl::OffAutoSyncProgressInner(optional_view<uintptr_t> opq)
     if (opq.has_value()) {
         opqNative = opq.value();
     }
-    ani_rdbutils::TaiheSyncObserver::RemoveCallback(rdbObserversData_, opqNative, unSubscribeFunc);
+    rdbObserversData_.OffAutoSyncProgress(opqNative, unSubscribeFunc);
 }
 
 void RdbStoreImpl::OnStatisticsInner(
@@ -1115,11 +1116,11 @@ void RdbStoreImpl::OnStatisticsInner(
             LOG_INFO("Subscribe success.");
         } else {
             LOG_ERROR("Subscribe failed, %{public}d.", errCode);
+            ThrowInnerError(errCode);
         }
         return errCode;
     };
-    auto result = ani_rdbutils::TaiheSqlObserver::AddCallbackForStatistics(
-        rdbObserversData_, callback, opq, subscribeFunc);
+    auto result = rdbObserversData_.OnStatistics(callback, opq, subscribeFunc);
     if (result != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("AddCallbackForStatistics failed, %{public}d.", result);
         ThrowInnerError(result);
@@ -1145,7 +1146,7 @@ void RdbStoreImpl::OffStatisticsInner(optional_view<uintptr_t> opq)
     if (opq.has_value()) {
         opqNative = opq.value();
     }
-    ani_rdbutils::TaiheSqlObserver::RemoveCallbackForStatistics(rdbObserversData_, opqNative, unSubscribeFunc);
+    rdbObserversData_.OffStatistics(opqNative, unSubscribeFunc);
 }
 
 void RdbStoreImpl::OnCommon(taihe::string_view event, bool interProcess,
@@ -1164,7 +1165,7 @@ void RdbStoreImpl::OnCommon(taihe::string_view event, bool interProcess,
     if (interProcess) {
         subscribeMode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
     }
-    auto subscribeFunc = [&subscribeMode, &eventNative, this](
+    auto subscribeFunc = [subscribeMode, &eventNative, this](
         std::shared_ptr<ani_rdbutils::TaiheRdbStoreObserver> observer)->int32_t {
         OHOS::DistributedRdb::SubscribeOption option;
         option.mode = subscribeMode;
@@ -1174,11 +1175,11 @@ void RdbStoreImpl::OnCommon(taihe::string_view event, bool interProcess,
             LOG_INFO("Subscribe success.");
         } else {
             LOG_ERROR("Subscribe failed, %{public}d.", errCode);
+            ThrowInnerError(errCode);
         }
         return errCode;
     };
-    auto result = ani_rdbutils::TaiheRdbStoreObserver::AddCallback(rdbObserversData_, eventNative,
-        subscribeMode, callback, opq, subscribeFunc);
+    auto result = rdbObserversData_.OnCommon(eventNative, subscribeMode, callback, opq, subscribeFunc);
     if (result != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("AddCallback failed, %{public}d.", result);
         ThrowInnerError(result);
@@ -1200,7 +1201,7 @@ void RdbStoreImpl::OffCommon(taihe::string_view event, bool interProcess, option
     if (interProcess) {
         subscribeMode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
     }
-    auto unSubscribeFunc = [&subscribeMode, &eventNative, this](
+    auto unSubscribeFunc = [subscribeMode, &eventNative, this](
         std::shared_ptr<ani_rdbutils::TaiheRdbStoreObserver> observer)->int32_t {
         OHOS::DistributedRdb::SubscribeOption option;
         option.mode = subscribeMode;
@@ -1217,8 +1218,7 @@ void RdbStoreImpl::OffCommon(taihe::string_view event, bool interProcess, option
     if (opq.has_value()) {
         opqNative = opq.value();
     }
-    ani_rdbutils::TaiheRdbStoreObserver::RemoveCallback(rdbObserversData_,
-        eventNative, subscribeMode, opqNative, unSubscribeFunc);
+    rdbObserversData_.OffCommon(eventNative, subscribeMode, opqNative, unSubscribeFunc);
 }
 
 void RdbStoreImpl::OnSqliteErrorOccurredInner(
@@ -1238,11 +1238,11 @@ void RdbStoreImpl::OnSqliteErrorOccurredInner(
             LOG_INFO("Subscribe success.");
         } else {
             LOG_ERROR("Subscribe failed, %{public}d.", errCode);
+            ThrowInnerError(errCode);
         }
         return errCode;
     };
-    auto result = ani_rdbutils::TaiheLogObserver::AddCallback(
-        rdbObserversData_, observer, opq, subscribeFunc);
+    auto result = rdbObserversData_.OnSqliteErrorOccurred(observer, opq, subscribeFunc);
     if (result != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("AddCallback failed, %{public}d.", result);
         ThrowInnerError(result);
@@ -1272,7 +1272,7 @@ void RdbStoreImpl::OffSqliteErrorOccurredInner(taihe::optional_view<uintptr_t> o
     if (opq.has_value()) {
         opqNative = opq.value();
     }
-    ani_rdbutils::TaiheLogObserver::RemoveCallback(rdbObserversData_, opqNative, unSubscribeFunc);
+    rdbObserversData_.OffSqliteErrorOccurred(opqNative, unSubscribeFunc);
 }
 
 void RdbStoreImpl::OnPerfStatInner(
@@ -1292,11 +1292,11 @@ void RdbStoreImpl::OnPerfStatInner(
             LOG_INFO("Subscribe success.");
         } else {
             LOG_ERROR("Subscribe failed, %{public}d.", errCode);
+            ThrowInnerError(errCode);
         }
         return errCode;
     };
-    auto result = ani_rdbutils::TaiheSqlObserver::AddCallbackForPerfStat(
-        rdbObserversData_, observer, opq, subscribeFunc);
+    auto result = rdbObserversData_.OnPerfStat(observer, opq, subscribeFunc);
     if (result != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("AddCallbackForPerfStat failed, %{public}d.", result);
         ThrowInnerError(result);
@@ -1326,7 +1326,7 @@ void RdbStoreImpl::OffPerfStatInner(::taihe::optional_view<uintptr_t> opq)
     if (opq.has_value()) {
         opqNative = opq.value();
     }
-    ani_rdbutils::TaiheSqlObserver::RemoveCallbackForPerfStat(rdbObserversData_, opqNative, unSubscribeFunc);
+    rdbObserversData_.OffPerfStat(opqNative, unSubscribeFunc);
 }
 
 void RdbStoreImpl::Emit(string_view event)
@@ -1611,7 +1611,7 @@ void RdbStoreImpl::RekeySync(taihe::optional_view<ohos::data::relationalStore::C
     }
     auto errCode = nativeRdbStore_->Rekey(cryptoParamNative);
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode);
+        ThrowInnerError(errCode);
     }
 }
 
@@ -1628,7 +1628,7 @@ void RdbStoreImpl::RekeyExSync(ohos::data::relationalStore::CryptoParam const& c
     }
     auto errCode = nativeRdbStore_->RekeyEx(cryptoParamNative);
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode);
+        ThrowInnerError(errCode);
     }
 }
 
@@ -1645,7 +1645,7 @@ void RdbStoreImpl::SetLocaleSync(taihe::string_view locale)
     }
     auto errCode = nativeRdbStore_->ConfigLocale(localeNative);
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode);
+        ThrowInnerError(errCode);
     }
 }
 
@@ -1661,7 +1661,7 @@ void RdbStoreImpl::OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscr
         ThrowError(std::make_shared<ParamError>("type", "SubscribeType"));
         return;
     }
-    auto subscribeFunc = [&subscribeMode, this](
+    auto subscribeFunc = [subscribeMode, this](
         std::shared_ptr<ani_rdbutils::TaiheRdbStoreObserver> observer)->int32_t {
         OHOS::DistributedRdb::SubscribeOption option;
         option.mode = subscribeMode;
@@ -1672,6 +1672,7 @@ void RdbStoreImpl::OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscr
                 LOG_INFO("SubscribeObserver success.");
             } else {
                 LOG_ERROR("SubscribeObserver failed, %{public}d.", errCode);
+                ThrowInnerError(errCode);
             }
             return errCode;
         } else {
@@ -1680,12 +1681,12 @@ void RdbStoreImpl::OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscr
                 LOG_INFO("Subscribe success.");
             } else {
                 LOG_ERROR("Subscribe failed, %{public}d.", errCode);
+                ThrowInnerError(errCode);
             }
             return errCode;
         }
     };
-    auto result = ani_rdbutils::TaiheRdbStoreObserver::AddCallback(rdbObserversData_,
-        subscribeMode, callback, opq, subscribeFunc);
+    auto result = rdbObserversData_.OnDataChange(subscribeMode, callback, opq, subscribeFunc);
     if (result != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("AddCallback failed, %{public}d.", result);
         ThrowInnerError(result);
@@ -1703,7 +1704,7 @@ void RdbStoreImpl::OffDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subsc
         ThrowError(std::make_shared<ParamError>("type", "SubscribeType"));
         return;
     }
-    auto unSubscribeFunc = [&subscribeMode, this](
+    auto unSubscribeFunc = [subscribeMode, this](
         std::shared_ptr<ani_rdbutils::TaiheRdbStoreObserver> observer)->int32_t {
         OHOS::DistributedRdb::SubscribeOption option;
         option.mode = subscribeMode;
@@ -1730,7 +1731,7 @@ void RdbStoreImpl::OffDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subsc
     if (opq.has_value()) {
         opqNative = opq.value();
     }
-    ani_rdbutils::TaiheRdbStoreObserver::RemoveCallback(rdbObserversData_, subscribeMode, opqNative, unSubscribeFunc);
+    rdbObserversData_.OffDataChange(subscribeMode, opqNative, unSubscribeFunc);
 }
 
 void RdbStoreImpl::UnRegisterAll()

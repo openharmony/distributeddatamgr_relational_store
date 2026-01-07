@@ -29,29 +29,16 @@ public:
 
     explicit TaiheRdbStoreObserver(
         ani_env *env,
-        ani_ref callbackRef,
+        ani_object callbackObj,
         std::shared_ptr<RdbStoreVarCallbackType> callbackPtr,
         OHOS::DistributedRdb::SubscribeMode subscribeMode
     );
     ~TaiheRdbStoreObserver();
-
-    bool IsEquals(ani_ref ref);
-
+    bool IsEquals(ani_object callbackObj);
     void OnChange(const std::vector<std::string> &devices) override;
     void OnChange(const OHOS::DistributedRdb::Origin &origin, const PrimaryFields &fields,
         OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo) override;
     void OnChange() override;
-
-    static int32_t AddCallback(RdbObserversData &rdbObserversData, OHOS::DistributedRdb::SubscribeMode subscribeMode,
-        RdbStoreVarCallbackType callbackFunc, uintptr_t opq, SubscribeFuncType subscribeFunc);
-    static void RemoveCallback(RdbObserversData &rdbObserversData, OHOS::DistributedRdb::SubscribeMode subscribeMode,
-        std::optional<uintptr_t> opq, UnSubscribeFuncType unSubscribeFunc);
-    static int32_t AddCallback(RdbObserversData &rdbObserversData, std::string event,
-        OHOS::DistributedRdb::SubscribeMode subscribeMode,
-        RdbStoreVarCallbackType callbackFunc, uintptr_t opq, SubscribeFuncType subscribeFunc);
-    static void RemoveCallback(RdbObserversData &rdbObserversData, std::string event,
-        OHOS::DistributedRdb::SubscribeMode subscribeMode,
-        std::optional<uintptr_t> opq, UnSubscribeFuncType unSubscribeFunc);
 
 private:
     ani_env *env_;

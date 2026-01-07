@@ -40,46 +40,6 @@ using RdbStoreVarCallbackType = std::variant<JsDevicesCallbackType, JsChangeInfo
 
 constexpr std::string_view EVENT_DATA_CHANGE = "dataChange";
 
-class AniRefHolder {
-public:
-    AniRefHolder(ani_env *env, ani_ref ref) : env_(env), ref_(ref)
-    {
-    }
-    ~AniRefHolder()
-    {
-        if (env_ && ref_) {
-            env_->GlobalReference_Delete(ref_);
-        }
-        env_ = nullptr;
-        ref_ = nullptr;
-    }
-    ani_ref move()
-    {
-        auto ret = ref_;
-        ref_ = nullptr;
-        return ret;
-    }
-
-private:
-    ani_env *env_ = nullptr;
-    ani_ref ref_ = nullptr;
-};
-
-class TaiheRdbStoreObserver;
-class TaiheSyncObserver;
-class TaiheSqlObserver;
-class TaiheLogObserver;
-struct RdbObserversData {
-    std::mutex rdbObserversMutex_;
-    std::list<std::shared_ptr<TaiheRdbStoreObserver>> observers_[OHOS::DistributedRdb::SUBSCRIBE_MODE_MAX];
-    std::map<std::string, std::list<std::shared_ptr<TaiheRdbStoreObserver>>> localObservers_;
-    std::map<std::string, std::list<std::shared_ptr<TaiheRdbStoreObserver>>> localSharedObservers_;
-    std::list<std::shared_ptr<TaiheSyncObserver>> syncObservers_;
-    std::list<std::shared_ptr<TaiheSqlObserver>> statisticses_;
-    std::list<std::shared_ptr<TaiheSqlObserver>> perfStats_;
-    std::list<std::shared_ptr<TaiheLogObserver>> logObservers_;
-};
-
 OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset const &asset);
 ::ohos::data::relationalStore::Asset AssetToAni(OHOS::NativeRdb::AssetValue const &value);
 OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value);
