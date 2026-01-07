@@ -23,12 +23,6 @@ namespace AniCloudData {
 using namespace OHOS::Rdb;
 static constexpr size_t MAX_ACTIONS = 1000;
 
-enum {
-    CLEAR_CLOUD_INFO = 0,
-    CLEAR_CLOUD_DATA_AND_INFO = 1,
-    CLEAR_CLOUD_NONE = 2,
-};
-
 bool VerifyExtraData(const ExtraData &data)
 {
     return (!data.eventId.empty()) && (!data.extraData.empty());
