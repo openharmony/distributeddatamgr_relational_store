@@ -29,23 +29,12 @@ public:
 
     explicit TaiheSqlObserver(
         ani_env *env,
-        ani_ref callbackRef,
+        ani_object callbackObj,
         std::shared_ptr<JsSqlExecutionCallbackType> callbackPtr
     );
     ~TaiheSqlObserver();
-
-    bool IsEquals(ani_ref ref);
-
+    bool IsEquals(ani_object callbackObj);
     void OnStatistic(const SqlExecutionInfo &info) override;
-
-    static int32_t AddCallbackForStatistics(RdbObserversData &rdbObserversData,
-        JsSqlExecutionCallbackType callbackFunc, uintptr_t opq, SubscribeFuncType subscribeFunc);
-    static void RemoveCallbackForStatistics(RdbObserversData &rdbObserversData,
-        std::optional<uintptr_t> opq, UnSubscribeFuncType unSubscribeFunc);
-    static int32_t AddCallbackForPerfStat(RdbObserversData &rdbObserversData,
-        JsSqlExecutionCallbackType callbackFunc, uintptr_t opq, SubscribeFuncType subscribeFunc);
-    static void RemoveCallbackForPerfStat(RdbObserversData &rdbObserversData,
-        std::optional<uintptr_t> opq, UnSubscribeFuncType unSubscribeFunc);
 
 private:
     ani_env *env_;

@@ -59,6 +59,7 @@ taihe_shared_library("relationalstore_ani") {
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/result_set_impl.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/result_set_proxy.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/taihe_log_observer.cpp",
+    "${relational_store_frameworks_path}/ets/taihe/relational_store/src/taihe_rdb_observers_data.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/taihe_rdb_store_observer.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/taihe_sql_observer.cpp",
     "${relational_store_frameworks_path}/ets/taihe/relational_store/src/taihe_sync_observer.cpp",

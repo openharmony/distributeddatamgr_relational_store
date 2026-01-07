@@ -22,32 +22,44 @@ using namespace OHOS::Rdb;
 
 TaiheSyncObserver::TaiheSyncObserver(
     ani_env *env,
-    ani_ref callbackRef,
+    ani_object callbackObj,
     std::shared_ptr<JsProgressDetailsCallbackType> callbackPtr
-) : env_(env), callbackRef_(callbackRef), callbackPtr_(callbackPtr)
+) : env_(env), callbackPtr_(callbackPtr)
 {
+    if (ANI_OK != env->GlobalReference_Create(callbackObj, &callbackRef_)) {
+        LOG_ERROR("Call GlobalReference_Create failed");
+    }
 }
 
 TaiheSyncObserver::~TaiheSyncObserver()
 {
     if (env_ != nullptr && callbackRef_ != nullptr) {
-        env_->GlobalReference_Delete(callbackRef_);
+        if (ANI_OK != env_->GlobalReference_Delete(callbackRef_)) {
+            LOG_ERROR("Call GlobalReference_Delete failed");
+        }
     }
     env_ = nullptr;
     callbackRef_ = nullptr;
     callbackPtr_ = nullptr;
 }
 
-bool TaiheSyncObserver::IsEquals(ani_ref ref)
+bool TaiheSyncObserver::IsEquals(ani_object callbackObj)
 {
     if (env_ == nullptr) {
         LOG_ERROR("ANI env is nullptr.");
         return false;
     }
-    ani_boolean isEqual = false;
-    if (env_->Reference_StrictEquals(callbackRef_, ref, &isEqual) != ANI_OK) {
-        LOG_ERROR("Call Reference_StrictEquals failed.");
+    ani_ref callbackRef;
+    if (env_->GlobalReference_Create(callbackObj, &callbackRef) != ANI_OK) {
+        LOG_ERROR("Call GlobalReference_Create failed");
         return false;
+    }
+    ani_boolean isEqual = false;
+    if (env_->Reference_StrictEquals(callbackRef_, callbackRef, &isEqual) != ANI_OK) {
+        LOG_ERROR("Call Reference_StrictEquals failed.");
+    }
+    if (env_->GlobalReference_Delete(callbackRef) != ANI_OK) {
+        LOG_ERROR("Call GlobalReference_Delete failed");
     }
     return isEqual;
 }
@@ -62,81 +74,5 @@ void TaiheSyncObserver::ProgressNotification(const OHOS::DistributedRdb::Details
         auto jspara = ProgressDetailToTaihe(value);
         (*callbackPtr_)(jspara);
     }
-}
-
-int32_t TaiheSyncObserver::AddCallback(RdbObserversData &rdbObserversData,
-    JsProgressDetailsCallbackType callbackFunc, uintptr_t opq, SubscribeFuncType subscribeFunc)
-{
-    ani_ref callbackRef;
-    ani_object callbackObj = reinterpret_cast<ani_object>(opq);
-    ani_env *env = taihe::get_env();
-    if (env == nullptr) {
-        LOG_ERROR("Failed to register, env is nullptr");
-        return OHOS::NativeRdb::E_ERROR;
-    }
-    if (ANI_OK != env->GlobalReference_Create(callbackObj, &callbackRef)) {
-        LOG_ERROR("Failed to register, create reference failed");
-        return OHOS::NativeRdb::E_ERROR;
-    }
-    AniRefHolder aniRefHolder(env, callbackRef);
-    std::unique_lock<std::mutex> locker(rdbObserversData.rdbObserversMutex_);
-    auto &observers = rdbObserversData.syncObservers_;
-    for (auto &obs : observers) {
-        if (obs->IsEquals(callbackRef)) {
-            LOG_INFO("This callback has already been registered.");
-            return OHOS::NativeRdb::E_OK;
-        }
-    }
-    auto callbackPtr = std::make_shared<JsProgressDetailsCallbackType>(callbackFunc);
-    auto observer = std::make_shared<TaiheSyncObserver>(env, aniRefHolder.move(), callbackPtr);
-    if (subscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("Failed to register, call subscribe failed.");
-        return OHOS::NativeRdb::E_ERROR;
-    }
-    observers.push_back(observer);
-    return OHOS::NativeRdb::E_OK;
-}
-
-void TaiheSyncObserver::RemoveCallback(RdbObserversData &rdbObserversData,
-    std::optional<uintptr_t> opq, UnSubscribeFuncType unSubscribeFunc)
-{
-    std::unique_lock<std::mutex> locker(rdbObserversData.rdbObserversMutex_);
-    auto &observers = rdbObserversData.syncObservers_;
-    if (!opq.has_value()) {
-        for (auto &observer : observers) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
-                LOG_ERROR("Call unregister failed.");
-            }
-        }
-        observers.clear();
-        return;
-    }
-    ani_env *env = taihe::get_env();
-    if (env == nullptr) {
-        LOG_ERROR("Failed to register, env is nullptr");
-        return;
-    }
-    ani_ref callbackRef;
-    ani_object callbackObj = reinterpret_cast<ani_object>(opq.value());
-    if (ANI_OK != env->GlobalReference_Create(callbackObj, &callbackRef)) {
-        LOG_ERROR("Failed to register, create reference failed");
-        return;
-    }
-    bool isFound = false;
-    for (auto it = observers.begin(); it != observers.end(); ++it) {
-        auto &observer = *it;
-        if (observer->IsEquals(callbackRef)) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
-                LOG_ERROR("Call unregister failed.");
-            }
-            isFound = true;
-            observers.erase(it);
-            break;
-        }
-    }
-    if (!isFound) {
-        LOG_ERROR("This callback has not been registered yet.");
-    }
-    env->GlobalReference_Delete(callbackRef);
 }
 }
