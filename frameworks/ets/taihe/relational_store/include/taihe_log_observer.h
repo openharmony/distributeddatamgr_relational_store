@@ -24,9 +24,6 @@ using namespace taihe;
 class TaiheLogObserver : public OHOS::DistributedRdb::SqlErrorObserver,
     public std::enable_shared_from_this<TaiheLogObserver> {
 public:
-    using SubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheLogObserver> observer)>;
-    using UnSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheLogObserver> observer)>;
-
     explicit TaiheLogObserver(
         ani_env *env,
         ani_object callbackObj,

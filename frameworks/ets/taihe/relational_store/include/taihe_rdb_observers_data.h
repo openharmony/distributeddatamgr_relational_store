@@ -21,6 +21,15 @@
 #include "taihe_sync_observer.h"
 
 namespace ani_rdbutils {
+using RdbStoreObserverSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheRdbStoreObserver> observer)>;
+using RdbStoreObserverUnSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheRdbStoreObserver> observer)>;
+using SyncObserverSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheSyncObserver> observer)>;
+using SyncObserverUnSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheSyncObserver> observer)>;
+using SqlObserverSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheSqlObserver> observer)>;
+using SqlObserverUnSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheSqlObserver> observer)>;
+using LogObserverSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheLogObserver> observer)>;
+using LogObserverUnSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheLogObserver> observer)>;
+
 struct TaiheRdbObserversData {
     std::mutex rdbObserversMutex_;
     std::list<std::shared_ptr<TaiheRdbStoreObserver>> observers_[OHOS::DistributedRdb::SUBSCRIBE_MODE_MAX];
@@ -32,28 +41,28 @@ struct TaiheRdbObserversData {
     std::list<std::shared_ptr<TaiheLogObserver>> logObservers_;
 
     int32_t OnDataChange(OHOS::DistributedRdb::SubscribeMode subscribeMode,
-        RdbStoreVarCallbackType callbackFunc, uintptr_t opq, TaiheRdbStoreObserver::SubscribeFuncType subscribeFunc);
-    void OffDataChange(OHOS::DistributedRdb::SubscribeMode subscribeMode,
-        std::optional<uintptr_t> opq, TaiheRdbStoreObserver::UnSubscribeFuncType unSubscribeFunc);
+        RdbStoreVarCallbackType callbackFunc, uintptr_t opq, RdbStoreObserverSubscribeFuncType subscribeFunc);
+    int32_t OffDataChange(OHOS::DistributedRdb::SubscribeMode subscribeMode,
+        std::optional<uintptr_t> opq, RdbStoreObserverUnSubscribeFuncType unSubscribeFunc);
     int32_t OnCommon(std::string event, OHOS::DistributedRdb::SubscribeMode subscribeMode,
-        RdbStoreVarCallbackType callbackFunc, uintptr_t opq, TaiheRdbStoreObserver::SubscribeFuncType subscribeFunc);
-    void OffCommon(std::string event, OHOS::DistributedRdb::SubscribeMode subscribeMode,
-        std::optional<uintptr_t> opq, TaiheRdbStoreObserver::UnSubscribeFuncType unSubscribeFunc);
+        RdbStoreVarCallbackType callbackFunc, uintptr_t opq, RdbStoreObserverSubscribeFuncType subscribeFunc);
+    int32_t OffCommon(std::string event, OHOS::DistributedRdb::SubscribeMode subscribeMode,
+        std::optional<uintptr_t> opq, RdbStoreObserverUnSubscribeFuncType unSubscribeFunc);
 
     int32_t OnAutoSyncProgress(JsProgressDetailsCallbackType callbackFunc,
-        uintptr_t opq, TaiheSyncObserver::SubscribeFuncType subscribeFunc);
-    void OffAutoSyncProgress(std::optional<uintptr_t> opq, TaiheSyncObserver::UnSubscribeFuncType unSubscribeFunc);
+        uintptr_t opq, SyncObserverSubscribeFuncType subscribeFunc);
+    int32_t OffAutoSyncProgress(std::optional<uintptr_t> opq, SyncObserverUnSubscribeFuncType unSubscribeFunc);
 
     int32_t OnStatistics(JsSqlExecutionCallbackType callbackFunc,
-        uintptr_t opq, TaiheSqlObserver::SubscribeFuncType subscribeFunc);
-    void OffStatistics(std::optional<uintptr_t> opq, TaiheSqlObserver::UnSubscribeFuncType unSubscribeFunc);
+        uintptr_t opq, SqlObserverSubscribeFuncType subscribeFunc);
+    int32_t OffStatistics(std::optional<uintptr_t> opq, SqlObserverUnSubscribeFuncType unSubscribeFunc);
     int32_t OnPerfStat(JsSqlExecutionCallbackType callbackFunc,
-        uintptr_t opq, TaiheSqlObserver::SubscribeFuncType subscribeFunc);
-    void OffPerfStat(std::optional<uintptr_t> opq, TaiheSqlObserver::UnSubscribeFuncType unSubscribeFunc);
+        uintptr_t opq, SqlObserverSubscribeFuncType subscribeFunc);
+    int32_t OffPerfStat(std::optional<uintptr_t> opq, SqlObserverUnSubscribeFuncType unSubscribeFunc);
 
     int32_t OnSqliteErrorOccurred(JsExceptionMessageCallbackType callbackFunc,
-        uintptr_t opq, TaiheLogObserver::SubscribeFuncType subscribeFunc);
-    void OffSqliteErrorOccurred(std::optional<uintptr_t> opq, TaiheLogObserver::UnSubscribeFuncType unSubscribeFunc);
+        uintptr_t opq, LogObserverSubscribeFuncType subscribeFunc);
+    int32_t OffSqliteErrorOccurred(std::optional<uintptr_t> opq, LogObserverUnSubscribeFuncType unSubscribeFunc);
 };
 } // namespace ani_rdbutils
 

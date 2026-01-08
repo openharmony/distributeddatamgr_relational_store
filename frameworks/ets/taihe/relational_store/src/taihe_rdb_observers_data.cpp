@@ -21,8 +21,12 @@ namespace ani_rdbutils {
 using namespace OHOS::Rdb;
 
 int32_t TaiheRdbObserversData::OnDataChange(OHOS::DistributedRdb::SubscribeMode subscribeMode,
-    RdbStoreVarCallbackType callbackFunc, uintptr_t opq, TaiheRdbStoreObserver::SubscribeFuncType subscribeFunc)
+    RdbStoreVarCallbackType callbackFunc, uintptr_t opq, RdbStoreObserverSubscribeFuncType subscribeFunc)
 {
+    if (subscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, subscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq);
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
@@ -39,54 +43,64 @@ int32_t TaiheRdbObserversData::OnDataChange(OHOS::DistributedRdb::SubscribeMode 
     }
     auto callbackPtr = std::make_shared<RdbStoreVarCallbackType>(callbackFunc);
     auto observer = std::make_shared<TaiheRdbStoreObserver>(env, callbackObj, callbackPtr, subscribeMode);
-    if (subscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+    auto errCode = subscribeFunc(observer);
+    if (errCode != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("Failed to register, call subscribe failed.");
-        return OHOS::NativeRdb::E_ERROR;
+        return errCode;
     }
     observers.push_back(observer);
     return OHOS::NativeRdb::E_OK;
 }
 
-void TaiheRdbObserversData::OffDataChange(OHOS::DistributedRdb::SubscribeMode subscribeMode,
-    std::optional<uintptr_t> opq, TaiheRdbStoreObserver::UnSubscribeFuncType unSubscribeFunc)
+int32_t TaiheRdbObserversData::OffDataChange(OHOS::DistributedRdb::SubscribeMode subscribeMode,
+    std::optional<uintptr_t> opq, RdbStoreObserverUnSubscribeFuncType unSubscribeFunc)
 {
+    if (unSubscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, unsubscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     std::unique_lock<std::mutex> locker(rdbObserversMutex_);
     auto &observers = observers_[subscribeMode];
     if (!opq.has_value()) {
         for (auto &observer : observers) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
         }
         observers.clear();
-        return;
+        return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
         LOG_ERROR("Failed to register, env is nullptr");
-        return;
+        return OHOS::NativeRdb::E_ERROR;
     }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq.value());
-    bool isFound = false;
     for (auto it = observers.begin(); it != observers.end(); ++it) {
         auto &observer = *it;
         if (observer->IsEquals(callbackObj)) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
-            isFound = true;
             observers.erase(it);
-            break;
+            return OHOS::NativeRdb::E_OK;
         }
     }
-    if (!isFound) {
-        LOG_ERROR("This callback has not been registered yet.");
-    }
+    LOG_INFO("This callback has not been registered yet.");
+    return OHOS::NativeRdb::E_OK;
 }
 
 int32_t TaiheRdbObserversData::OnCommon(std::string event, OHOS::DistributedRdb::SubscribeMode subscribeMode,
-    RdbStoreVarCallbackType callbackFunc, uintptr_t opq, TaiheRdbStoreObserver::SubscribeFuncType subscribeFunc)
+    RdbStoreVarCallbackType callbackFunc, uintptr_t opq, RdbStoreObserverSubscribeFuncType subscribeFunc)
 {
+    if (subscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, subscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq);
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
@@ -104,55 +118,65 @@ int32_t TaiheRdbObserversData::OnCommon(std::string event, OHOS::DistributedRdb:
     }
     auto callbackPtr = std::make_shared<RdbStoreVarCallbackType>(callbackFunc);
     auto observer = std::make_shared<TaiheRdbStoreObserver>(env, callbackObj, callbackPtr, subscribeMode);
-    if (subscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+    auto errCode = subscribeFunc(observer);
+    if (errCode != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("Failed to register, call subscribe failed.");
-        return OHOS::NativeRdb::E_ERROR;
+        return errCode;
     }
     observers.push_back(observer);
     return OHOS::NativeRdb::E_OK;
 }
 
-void TaiheRdbObserversData::OffCommon(std::string event, OHOS::DistributedRdb::SubscribeMode subscribeMode,
-    std::optional<uintptr_t> opq, TaiheRdbStoreObserver::UnSubscribeFuncType unSubscribeFunc)
+int32_t TaiheRdbObserversData::OffCommon(std::string event, OHOS::DistributedRdb::SubscribeMode subscribeMode,
+    std::optional<uintptr_t> opq, RdbStoreObserverUnSubscribeFuncType unSubscribeFunc)
 {
+    if (unSubscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, unsubscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     std::unique_lock<std::mutex> locker(rdbObserversMutex_);
     auto &observers = subscribeMode == OHOS::DistributedRdb::SubscribeMode::LOCAL ?
         localObservers_[event] : localSharedObservers_[event];
     if (!opq.has_value()) {
         for (auto &observer : observers) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
         }
         observers.clear();
-        return;
+        return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
         LOG_ERROR("Failed to register, env is nullptr");
-        return;
+        return OHOS::NativeRdb::E_ERROR;
     }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq.value());
-    bool isFound = false;
     for (auto it = observers.begin(); it != observers.end(); ++it) {
         auto &observer = *it;
         if (observer->IsEquals(callbackObj)) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
-            isFound = true;
             observers.erase(it);
-            break;
+            return OHOS::NativeRdb::E_OK;
         }
     }
-    if (!isFound) {
-        LOG_ERROR("This callback has not been registered yet.");
-    }
+    LOG_INFO("This callback has not been registered yet.");
+    return OHOS::NativeRdb::E_OK;
 }
 
 int32_t TaiheRdbObserversData::OnAutoSyncProgress(JsProgressDetailsCallbackType callbackFunc,
-    uintptr_t opq, TaiheSyncObserver::SubscribeFuncType subscribeFunc)
+    uintptr_t opq, SyncObserverSubscribeFuncType subscribeFunc)
 {
+    if (subscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, subscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq);
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
@@ -169,54 +193,64 @@ int32_t TaiheRdbObserversData::OnAutoSyncProgress(JsProgressDetailsCallbackType 
     }
     auto callbackPtr = std::make_shared<JsProgressDetailsCallbackType>(callbackFunc);
     auto observer = std::make_shared<TaiheSyncObserver>(env, callbackObj, callbackPtr);
-    if (subscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+    auto errCode = subscribeFunc(observer);
+    if (errCode != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("Failed to register, call subscribe failed.");
-        return OHOS::NativeRdb::E_ERROR;
+        return errCode;
     }
     observers.push_back(observer);
     return OHOS::NativeRdb::E_OK;
 }
 
-void TaiheRdbObserversData::OffAutoSyncProgress(std::optional<uintptr_t> opq,
-    TaiheSyncObserver::UnSubscribeFuncType unSubscribeFunc)
+int32_t TaiheRdbObserversData::OffAutoSyncProgress(std::optional<uintptr_t> opq,
+    SyncObserverUnSubscribeFuncType unSubscribeFunc)
 {
+    if (unSubscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, unsubscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     std::unique_lock<std::mutex> locker(rdbObserversMutex_);
     auto &observers = syncObservers_;
     if (!opq.has_value()) {
         for (auto &observer : observers) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
         }
         observers.clear();
-        return;
+        return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
         LOG_ERROR("Failed to register, env is nullptr");
-        return;
+        return OHOS::NativeRdb::E_ERROR;
     }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq.value());
-    bool isFound = false;
     for (auto it = observers.begin(); it != observers.end(); ++it) {
         auto &observer = *it;
         if (observer->IsEquals(callbackObj)) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
-            isFound = true;
             observers.erase(it);
-            break;
+            return OHOS::NativeRdb::E_OK;
         }
     }
-    if (!isFound) {
-        LOG_ERROR("This callback has not been registered yet.");
-    }
+    LOG_INFO("This callback has not been registered yet.");
+    return OHOS::NativeRdb::E_OK;
 }
 
 int32_t TaiheRdbObserversData::OnStatistics(JsSqlExecutionCallbackType callbackFunc,
-    uintptr_t opq, TaiheSqlObserver::SubscribeFuncType subscribeFunc)
+    uintptr_t opq, SqlObserverSubscribeFuncType subscribeFunc)
 {
+    if (subscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, subscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq);
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
@@ -233,54 +267,64 @@ int32_t TaiheRdbObserversData::OnStatistics(JsSqlExecutionCallbackType callbackF
     }
     auto callbackPtr = std::make_shared<JsSqlExecutionCallbackType>(callbackFunc);
     auto observer = std::make_shared<TaiheSqlObserver>(env, callbackObj, callbackPtr);
-    if (subscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+    auto errCode = subscribeFunc(observer);
+    if (errCode != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("Failed to register, call subscribe failed.");
-        return OHOS::NativeRdb::E_ERROR;
+        return errCode;
     }
     observers.push_back(observer);
     return OHOS::NativeRdb::E_OK;
 }
 
-void TaiheRdbObserversData::OffStatistics(std::optional<uintptr_t> opq,
-    TaiheSqlObserver::UnSubscribeFuncType unSubscribeFunc)
+int32_t TaiheRdbObserversData::OffStatistics(std::optional<uintptr_t> opq,
+    SqlObserverUnSubscribeFuncType unSubscribeFunc)
 {
+    if (unSubscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, unsubscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     std::unique_lock<std::mutex> locker(rdbObserversMutex_);
     auto &observers = statisticses_;
     if (!opq.has_value()) {
         for (auto &observer : observers) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
         }
         observers.clear();
-        return;
+        return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
         LOG_ERROR("Failed to register, env is nullptr");
-        return;
+        return OHOS::NativeRdb::E_ERROR;
     }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq.value());
-    bool isFound = false;
     for (auto it = observers.begin(); it != observers.end(); ++it) {
         auto &observer = *it;
         if (observer->IsEquals(callbackObj)) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
-            isFound = true;
             observers.erase(it);
-            break;
+            return OHOS::NativeRdb::E_OK;
         }
     }
-    if (!isFound) {
-        LOG_ERROR("This callback has not been registered yet.");
-    }
+    LOG_INFO("This callback has not been registered yet.");
+    return OHOS::NativeRdb::E_OK;
 }
 
 int32_t TaiheRdbObserversData::OnPerfStat(JsSqlExecutionCallbackType callbackFunc,
-    uintptr_t opq, TaiheSqlObserver::SubscribeFuncType subscribeFunc)
+    uintptr_t opq, SqlObserverSubscribeFuncType subscribeFunc)
 {
+    if (subscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, subscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq);
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
@@ -297,54 +341,64 @@ int32_t TaiheRdbObserversData::OnPerfStat(JsSqlExecutionCallbackType callbackFun
     }
     auto callbackPtr = std::make_shared<JsSqlExecutionCallbackType>(callbackFunc);
     auto observer = std::make_shared<TaiheSqlObserver>(env, callbackObj, callbackPtr);
-    if (subscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+    auto errCode = subscribeFunc(observer);
+    if (errCode != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("Failed to register, call subscribe failed.");
-        return OHOS::NativeRdb::E_ERROR;
+        return errCode;
     }
     observers.push_back(observer);
     return OHOS::NativeRdb::E_OK;
 }
 
-void TaiheRdbObserversData::OffPerfStat(std::optional<uintptr_t> opq,
-    TaiheSqlObserver::UnSubscribeFuncType unSubscribeFunc)
+int32_t TaiheRdbObserversData::OffPerfStat(std::optional<uintptr_t> opq,
+    SqlObserverUnSubscribeFuncType unSubscribeFunc)
 {
+    if (unSubscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, unsubscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     std::unique_lock<std::mutex> locker(rdbObserversMutex_);
     auto &observers = perfStats_;
     if (!opq.has_value()) {
         for (auto &observer : observers) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
         }
         observers.clear();
-        return;
+        return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
         LOG_ERROR("Failed to register, env is nullptr");
-        return;
+        return OHOS::NativeRdb::E_ERROR;
     }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq.value());
-    bool isFound = false;
     for (auto it = observers.begin(); it != observers.end(); ++it) {
         auto &observer = *it;
         if (observer->IsEquals(callbackObj)) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
-            isFound = true;
             observers.erase(it);
-            break;
+            return OHOS::NativeRdb::E_OK;
         }
     }
-    if (!isFound) {
-        LOG_ERROR("This callback has not been registered yet.");
-    }
+    LOG_INFO("This callback has not been registered yet.");
+    return OHOS::NativeRdb::E_OK;
 }
 
 int32_t TaiheRdbObserversData::OnSqliteErrorOccurred(JsExceptionMessageCallbackType callbackFunc,
-    uintptr_t opq, TaiheLogObserver::SubscribeFuncType subscribeFunc)
+    uintptr_t opq, LogObserverSubscribeFuncType subscribeFunc)
 {
+    if (subscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, subscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq);
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
@@ -361,48 +415,54 @@ int32_t TaiheRdbObserversData::OnSqliteErrorOccurred(JsExceptionMessageCallbackT
     }
     auto callbackPtr = std::make_shared<JsExceptionMessageCallbackType>(callbackFunc);
     auto observer = std::make_shared<TaiheLogObserver>(env, callbackObj, callbackPtr);
-    if (subscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+    auto errCode = subscribeFunc(observer);
+    if (errCode != OHOS::NativeRdb::E_OK) {
         LOG_ERROR("Failed to register, call subscribe failed.");
-        return OHOS::NativeRdb::E_ERROR;
+        return errCode;
     }
     observers.push_back(observer);
     return OHOS::NativeRdb::E_OK;
 }
 
-void TaiheRdbObserversData::OffSqliteErrorOccurred(std::optional<uintptr_t> opq,
-    TaiheLogObserver::UnSubscribeFuncType unSubscribeFunc)
+int32_t TaiheRdbObserversData::OffSqliteErrorOccurred(std::optional<uintptr_t> opq,
+    LogObserverUnSubscribeFuncType unSubscribeFunc)
 {
+    if (unSubscribeFunc == nullptr) {
+        LOG_ERROR("Failed to register, unsubscribe function is nullptr.");
+        return OHOS::NativeRdb::E_ERROR;
+    }
     std::unique_lock<std::mutex> locker(rdbObserversMutex_);
     auto &observers = logObservers_;
     if (!opq.has_value()) {
         for (auto &observer : observers) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
         }
         observers.clear();
-        return;
+        return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
     if (env == nullptr) {
         LOG_ERROR("Failed to register, env is nullptr");
-        return;
+        return OHOS::NativeRdb::E_ERROR;
     }
     ani_object callbackObj = reinterpret_cast<ani_object>(opq.value());
-    bool isFound = false;
     for (auto it = observers.begin(); it != observers.end(); ++it) {
         auto &observer = *it;
         if (observer->IsEquals(callbackObj)) {
-            if (unSubscribeFunc(observer) != OHOS::NativeRdb::E_OK) {
+            auto errCode = unSubscribeFunc(observer);
+            if (errCode != OHOS::NativeRdb::E_OK) {
                 LOG_ERROR("Call unregister failed.");
+                return errCode;
             }
-            isFound = true;
             observers.erase(it);
-            break;
+            return OHOS::NativeRdb::E_OK;
         }
     }
-    if (!isFound) {
-        LOG_ERROR("This callback has not been registered yet.");
-    }
+    LOG_INFO("This callback has not been registered yet.");
+    return OHOS::NativeRdb::E_OK;
 }
 } // namespace ani_rdbutils

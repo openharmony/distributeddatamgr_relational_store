@@ -24,9 +24,6 @@ using namespace taihe;
 class TaiheSyncObserver : public OHOS::DistributedRdb::DetailProgressObserver,
     public std::enable_shared_from_this<TaiheSyncObserver> {
 public:
-    using SubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheSyncObserver> observer)>;
-    using UnSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheSyncObserver> observer)>;
-
     explicit TaiheSyncObserver(
         ani_env *env,
         ani_object callbackObj,
