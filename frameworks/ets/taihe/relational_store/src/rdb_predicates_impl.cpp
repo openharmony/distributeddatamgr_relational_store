@@ -14,6 +14,7 @@
  */
 
 #define LOG_TAG "RdbPredicatesImpl"
+#include "ohos.data.relationalStore.impl.h"
 #include "ohos.data.relationalStore.proj.hpp"
 #include "rdb_predicates_impl.h"
 
@@ -274,6 +275,28 @@ void RdbPredicatesImpl::InnerNotLike(string_view field, string_view value)
     if (nativeRdbPredicates_ != nullptr) {
         nativeRdbPredicates_->NotLike(std::string(field), std::string(value));
     }
+}
+
+void RdbPredicatesImpl::InnerHaving(string_view conditions, optional_view<array<ValueType>> args)
+{
+    if (nativeRdbPredicates_ == nullptr) {
+        ThrowError(std::make_shared<ParamError>("predicates", "null"));
+        return;
+    }
+    if (conditions.empty()) {
+        ThrowError(std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "conditions cannot be empty"));
+        return;
+    }
+    std::vector<OHOS::NativeRdb::ValueObject> para;
+    if (args.has_value()) {
+        std::transform(args.value().begin(), args.value().end(), std::back_inserter(para),
+            [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
+    }
+    if (nativeRdbPredicates_->GetGroup().empty()) {
+        ThrowError(std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Missing GROUP BY clause."));
+        return;
+    }
+    nativeRdbPredicates_->Having(std::string(conditions), para);
 }
 
 std::shared_ptr<OHOS::NativeRdb::RdbPredicates> RdbPredicatesImpl::GetNativePtr()

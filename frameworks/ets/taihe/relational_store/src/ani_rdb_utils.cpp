@@ -42,219 +42,6 @@ static constexpr int ERR = -1;
 static const int E_OK = 0;
 static const int REALPATH_MAX_LEN = 1024;
 static const int INIT_POSITION = -1;
-#define API_VERSION_MOD 100
-
-std::mutex DataObserver::mainHandlerMutex_;
-std::shared_ptr<OHOS::AppExecFwk::EventHandler> DataObserver::mainHandler_;
-
-DataObserver::DataObserver(VarCallbackType cb, ani_ref jsCallbackRef) : jsCallback_(cb), jsCallbackRef_(jsCallbackRef)
-{
-    LOG_INFO("DataObserver");
-}
-
-DataObserver::~DataObserver()
-{
-    LOG_INFO("~DataObserver");
-    Release();
-}
-
-std::shared_ptr<DataObserver> DataObserver::Create(VarCallbackType cb, ani_ref jsCallbackRef)
-{
-    return std::make_shared<DataObserver>(cb, jsCallbackRef);
-}
-
-void DataObserver::SetNotifyDataChangeInfoFunc(
-    std::function<void(DataObserver *, const OHOS::DistributedRdb::Origin &,
-        const OHOS::DistributedRdb::RdbStoreObserver::PrimaryFields &,
-        const OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &)> func)
-{
-    notifyDataChangeInfoFunc_ = func;
-}
-void DataObserver::SetNotifyDataChangeArrFunc(
-    std::function<void(DataObserver *, const std::vector<std::string> &)> func)
-{
-    notifyDataChangeArrFunc_ = func;
-}
-
-void DataObserver::SetNotifyProcessFunc(std::function<void(DataObserver *,
-    const OHOS::DistributedRdb::Details &)> func)
-{
-    notifyProgressDetailsFunc_ = func;
-}
-
-void DataObserver::SetNotifySqlExecutionFunc(std::function<void(DataObserver *, const SqlExecutionInfo &)> func)
-{
-    notifySqlExecutionInfoFunc_ = func;
-}
-
-void DataObserver::SetNotifyCommonEventFunc(std::function<void(DataObserver *)> func)
-{
-    notifyCommonEventFunc_ = func;
-}
-
-bool DataObserver::SendEventToMainThread(const std::function<void()> func)
-{
-    if (func == nullptr) {
-        return false;
-    }
-    std::lock_guard<std::mutex> locker(mainHandlerMutex_);
-    if (mainHandler_) {
-        mainHandler_->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
-        return true;
-    }
-    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
-    if (!runner) {
-        LOG_ERROR("GetMainEventRunner failed");
-        return false;
-    }
-    mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-    mainHandler_->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
-    return true;
-}
-
-void DataObserver::OnChange()
-{
-    if (notifyCommonEventFunc_ == nullptr) {
-        return;
-    }
-    auto weakSelf = weak_from_this();
-    SendEventToMainThread([weakSelf] {
-        auto self = weakSelf.lock();
-        if (self != nullptr) {
-            self->OnChangeInMainThread();
-        } else {
-            LOG_ERROR("Weak self lock failed");
-        }
-    });
-}
-
-void DataObserver::OnChangeInMainThread()
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (jsCallbackRef_ == nullptr || notifyCommonEventFunc_ == nullptr) {
-        return;
-    }
-    notifyCommonEventFunc_(this);
-}
-void DataObserver::OnChange(const std::vector<std::string> &devices)
-{
-    if (notifyDataChangeArrFunc_ == nullptr) {
-        return;
-    }
-    auto weakSelf = weak_from_this();
-    SendEventToMainThread([devices, weakSelf] {
-        auto self = weakSelf.lock();
-        if (self != nullptr) {
-            self->OnChangeArrInMainThread(devices);
-        } else {
-            LOG_ERROR("Weak self lock failed");
-        }
-    });
-}
-
-void DataObserver::OnChangeArrInMainThread(const std::vector<std::string> &devices)
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (!jsCallbackRef_ || !notifyDataChangeArrFunc_) {
-        return;
-    }
-    notifyDataChangeArrFunc_(this, devices);
-}
-
-void DataObserver::OnChange(const OHOS::DistributedRdb::Origin &origin,
-    const OHOS::DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
-    OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo)
-{
-    if (notifyDataChangeInfoFunc_ == nullptr) {
-        return;
-    }
-    auto weakSelf = weak_from_this();
-    SendEventToMainThread(
-        [origin, fields, changeInfo, weakSelf] {
-            auto self = weakSelf.lock();
-            if (self != nullptr) {
-                self->OnChangeInfoInMainThread(origin, fields, changeInfo);
-            } else {
-                LOG_ERROR("Weak self lock failed");
-            }
-        });
-};
-void DataObserver::OnChangeInfoInMainThread(const OHOS::DistributedRdb::Origin &origin,
-    const OHOS::DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
-    const OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &changeInfo)
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (jsCallbackRef_ == nullptr || notifyDataChangeInfoFunc_ == nullptr) {
-        return;
-    }
-    notifyDataChangeInfoFunc_(this, origin, fields, changeInfo);
-};
-
-void DataObserver::OnStatistic(const SqlExecutionInfo &info)
-{
-    if (notifySqlExecutionInfoFunc_ == nullptr) {
-        return;
-    }
-    auto weakSelf = weak_from_this();
-    SendEventToMainThread([info, weakSelf] {
-        auto self = weakSelf.lock();
-        if (self != nullptr) {
-            self->OnStatisticInMainThread(info);
-        } else {
-            LOG_ERROR("Weak self lock failed");
-        }
-    });
-}
-void DataObserver::OnStatisticInMainThread(const SqlExecutionInfo &info)
-{
-    LOG_INFO("DataObserver::OnStatisticInMainThread");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (jsCallbackRef_ == nullptr || notifySqlExecutionInfoFunc_ == nullptr) {
-        return;
-    }
-    notifySqlExecutionInfoFunc_(this, info);
-}
-
-void DataObserver::ProgressNotification(const OHOS::DistributedRdb::Details &details)
-{
-    if (notifyProgressDetailsFunc_ == nullptr) {
-        return;
-    }
-    auto weakSelf = weak_from_this();
-    SendEventToMainThread([details, weakSelf] {
-        auto self = weakSelf.lock();
-        if (self != nullptr) {
-            self->ProgressNotificationInMainThread(details);
-        } else {
-            LOG_ERROR("Weak self lock failed");
-        }
-    });
-}
-
-void DataObserver::ProgressNotificationInMainThread(const OHOS::DistributedRdb::Details &details)
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (jsCallbackRef_ == nullptr || notifyProgressDetailsFunc_ == nullptr) {
-        return;
-    }
-    notifyProgressDetailsFunc_(this, details);
-}
-
-void DataObserver::Release()
-{
-    LOG_INFO("DataObserver::Release");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    taihe::env_guard guard;
-    if (auto *env = guard.get_env()) {
-        env->GlobalReference_Delete(jsCallbackRef_);
-        jsCallbackRef_ = nullptr;
-    }
-    notifyDataChangeInfoFunc_ = nullptr;
-    notifyDataChangeArrFunc_ = nullptr;
-    notifySqlExecutionInfoFunc_ = nullptr;
-    notifyProgressDetailsFunc_ = nullptr;
-    notifyCommonEventFunc_ = nullptr;
-}
 
 OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset const &asset)
 {
@@ -523,6 +310,9 @@ void AniGetRdbConfigAppend(const ohos::data::relationalStore::StoreConfig &store
     }
     if (storeConfig.tokenizer.has_value()) {
         storeConfigNative.tokenizer = TokenizerToNative(storeConfig.tokenizer.value());
+    }
+    if (storeConfig.enableSemanticIndex.has_value()) {
+        storeConfigNative.enableSemanticIndex = storeConfig.enableSemanticIndex.value();
     }
 }
 
@@ -1011,6 +801,28 @@ OHOS::NativeRdb::Tokenizer TokenizerToNative(ohos::data::relationalStore::Tokeni
             LOG_ERROR("Invalid Tokenizer value.");
             return OHOS::NativeRdb::Tokenizer::NONE_TOKENIZER;
     }
+}
+
+ohos::data::relationalStore::SqlInfo SqlInfoToTaihe(const OHOS::NativeRdb::SqlInfo &sqlInfo)
+{
+    std::vector<ohos::data::relationalStore::ValueType> argsTaihe;
+    for (const auto &value : sqlInfo.args) {
+        argsTaihe.push_back(ValueObjectToAni(value));
+    }
+    return ohos::data::relationalStore::SqlInfo {
+        taihe::string(sqlInfo.sql),
+        taihe::array<ohos::data::relationalStore::ValueType>(argsTaihe)
+    };
+}
+
+ohos::data::relationalStore::ExceptionMessage ExceptionMessageToTaihe(
+    const OHOS::DistributedRdb::SqlErrorObserver::ExceptionMessage &exceptionMessage)
+{
+    return ohos::data::relationalStore::ExceptionMessage {
+        exceptionMessage.code,
+        taihe::string(exceptionMessage.message),
+        taihe::string(exceptionMessage.sql)
+    };
 }
 
 bool HasDuplicateAssets(const OHOS::NativeRdb::ValueObject &value)

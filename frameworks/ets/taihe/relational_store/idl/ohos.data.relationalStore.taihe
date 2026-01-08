@@ -88,6 +88,7 @@ struct StoreConfig {
     cryptoParam: Optional<CryptoParam>;
     tokenizer: Optional<Tokenizer>;
     persist: Optional<bool>;
+    enableSemanticIndex: Optional<bool>;
 }
 
 enum HAMode: i32 {
@@ -106,7 +107,8 @@ struct CryptoParam {
 
 enum EncryptionAlgo: i32 {
     AES_256_GCM = 0,
-    AES_256_CBC
+    AES_256_CBC,
+    PLAIN_TEXT
 }
 
 enum HmacAlgo: i32 {
@@ -266,6 +268,12 @@ struct Result {
 
 struct TransactionOptions {
     transactionType: Optional<TransactionType>;
+}
+
+struct ExceptionMessage {
+    code: i32;
+    message: String;
+    sql: String;
 }
 
 struct SqlInfo {
@@ -436,6 +444,7 @@ interface RdbPredicates {
     InnerNotInValues(field: String, value: Array<ValueType>): void;
     InnerNotContains(field: String, value: String): void;
     InnerNotLike(field: String, value: String): void;
+    InnerHaving(conditions: String, args: Optional<Array<ValueType>>): void;
     @!sts_inject_into_class("""
     
     inDevices(devices: Array<String>): RdbPredicates {
@@ -564,6 +573,10 @@ interface RdbPredicates {
     }
     notLike(field: String, value: String): RdbPredicates {
         this.innerNotLike(field, value);
+        return this;
+    }
+    having(conditions: String, args?: Array<ValueType>): RdbPredicates {
+        this.innerHaving(conditions, args);
         return this;
     }
     """)
@@ -851,10 +864,14 @@ interface RdbStore {
         onAutoSyncProgress(callback: (info: ProgressDetails) => void): void;
         onStatistics(callback: (info: SqlExecutionInfo) => void): void;
         on(event: string, interProcess: boolean, callback: (arg: undefined) => void): void;
+        onSqliteErrorOccurred(observer: (info: ExceptionMessage) => void): void;
+        onPerfStat(observer: (info: SqlExecutionInfo) => void): void;
         offDataChange(type: SubscribeType, callback?: (info: Array<String> | Array<ChangeInfo>) => void): void;
         offAutoSyncProgress(callback?: (info: ProgressDetails) => void): void;
         offStatistics(callback?: (info: SqlExecutionInfo) => void): void;
         off(event: string, interProcess: boolean, callback?: (arg: undefined) => void): void;
+        offSqliteErrorOccurred(observer?: (info: ExceptionMessage) => void): void;
+        offPerfStat(observer?: (info: SqlExecutionInfo) => void): void;
     """)
 
     @!sts_inject_into_class("""
@@ -924,6 +941,20 @@ interface RdbStore {
           return this.offCommon(event, interProcess, cb);
         }
 
+        onSqliteErrorOccurred(observer: Object): void {
+            this.onSqliteErrorOccurredInner(observer as (info: ExceptionMessage) => void, observer);
+        }
+        offSqliteErrorOccurred(observer?: Object): void {
+            return this.offSqliteErrorOccurredInner(observer);
+        }
+
+        onPerfStat(observer: Object): void {
+            this.onPerfStatInner(observer as (info: SqlExecutionInfo) => void, observer);
+        }
+        offPerfStat(observer?: Object): void {
+            return this.offPerfStatInner(observer);
+        }
+
         BatchInsertWithReturningSync(table: String, values: Array<ValuesBucket>, config: ReturningConfig): Result
         {
             return this.batchInsertWithReturningSync(table, values, config, undefined);
@@ -947,6 +978,12 @@ interface RdbStore {
 
     OnCommon(event: String, interProcess: bool, f: () => void, opq: Opaque) : void;
     OffCommon(event: String, interProcess: bool, opq: Optional<Opaque>) : void;
+
+    OnSqliteErrorOccurredInner(observer: (info: ExceptionMessage) => void, opq: Opaque): void;
+    OffSqliteErrorOccurredInner(opq: Optional<Opaque>): void;
+
+    OnPerfStatInner(observer: (info: SqlExecutionInfo) => void, opq: Opaque): void;
+    OffPerfStatInner(opq: Optional<Opaque>): void;
 
     Emit(event: String): void;
 
@@ -982,6 +1019,15 @@ interface RdbStore {
 
     @gen_promise("batchInsertWithConflictResolution")
     BatchInsertWithConflictResolutionSync(table: String, values: Array<ValuesBucket>, conflict: ConflictResolution): i64;
+
+    @gen_promise("rekey")
+    RekeySync(cryptoParam: Optional<CryptoParam>): void;
+
+    @gen_promise("rekeyEx")
+    RekeyExSync(cryptoParam: CryptoParam): void;
+
+    @gen_promise("setLocale")
+    SetLocaleSync(locale: String) : void;
 }
 
 @gen_async("getRdbStore")
@@ -999,3 +1045,11 @@ function DeleteRdbStoreWithConfig(context: @sts_type("BaseContext") Opaque, conf
 function IsVectorSupported(): bool;
 
 function IsTokenizerSupported(tokenizer: Tokenizer): bool;
+
+function GetInsertSqlInfo(table: String, values: ValuesBucket, conflict: Optional<ConflictResolution>): SqlInfo;
+
+function GetUpdateSqlInfo(predicates: RdbPredicates, values: ValuesBucket, conflict: Optional<ConflictResolution>): SqlInfo;
+
+function GetDeleteSqlInfo(predicates: RdbPredicates): SqlInfo;
+
+function GetQuerySqlInfo(predicates: RdbPredicates, columns: Optional<Array<String>>): SqlInfo;
