@@ -24,9 +24,6 @@ using namespace taihe;
 class TaiheRdbStoreObserver : public OHOS::DistributedRdb::RdbStoreObserver,
     public std::enable_shared_from_this<TaiheRdbStoreObserver> {
 public:
-    using SubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheRdbStoreObserver> observer)>;
-    using UnSubscribeFuncType = std::function<int32_t(std::shared_ptr<TaiheRdbStoreObserver> observer)>;
-
     explicit TaiheRdbStoreObserver(
         ani_env *env,
         ani_object callbackObj,
