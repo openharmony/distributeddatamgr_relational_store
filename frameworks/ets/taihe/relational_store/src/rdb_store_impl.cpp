@@ -38,6 +38,10 @@
 #include "rdb_store_config.h"
 #include "rdb_utils.h"
 #include "result_set_impl.h"
+#include "taihe_log_observer.h"
+#include "taihe_rdb_store_observer.h"
+#include "taihe_sql_observer.h"
+#include "taihe_sync_observer.h"
 #include "transaction_impl.h"
 
 namespace OHOS {
@@ -1037,39 +1041,20 @@ void RdbStoreImpl::OnDataChangeWithChangeInfo(ohos::data::relationalStore::Subsc
     taihe::callback_view<void(taihe::array_view<::ohos::data::relationalStore::ChangeInfo> info)> callback,
     uintptr_t opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
-    auto rdbSubscribeType = ani_rdbutils::SubscribeTypeToMode(type);
-    ani_rdbutils::VarCallbackType varcb = callback;
-    RegisterListener(std::string(ani_rdbutils::EVENT_DATA_CHANGE), rdbSubscribeType, varcb, opq);
+    OnDataChangeCommon(ani_rdbutils::SubscribeTypeToMode(type), callback, opq);
 }
 
 void RdbStoreImpl::OnDataChangeWithDevices(ohos::data::relationalStore::SubscribeType type,
     taihe::callback_view<void(taihe::array_view<::taihe::string> info)> callback,
     uintptr_t opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
-    auto rdbSubscribeType = ani_rdbutils::SubscribeTypeToMode(type);
-    ani_rdbutils::VarCallbackType varcb = callback;
-    RegisterListener(std::string(ani_rdbutils::EVENT_DATA_CHANGE), rdbSubscribeType, varcb, opq);
+    OnDataChangeCommon(ani_rdbutils::SubscribeTypeToMode(type), callback, opq);
 }
-
 
 void RdbStoreImpl::OffDataChangeInner(ohos::data::relationalStore::SubscribeType type,
     taihe::optional_view<uintptr_t> opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
-    auto rdbSubscribeType = ani_rdbutils::SubscribeTypeToMode(type);
-    bool isUpdated = false;
-    UnregisterListener(std::string(ani_rdbutils::EVENT_DATA_CHANGE), rdbSubscribeType, opq, isUpdated);
+    OffDataChangeCommon(ani_rdbutils::SubscribeTypeToMode(type), opq);
 }
 
 void RdbStoreImpl::OnAutoSyncProgressInner(
@@ -1079,9 +1064,20 @@ void RdbStoreImpl::OnAutoSyncProgressInner(
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    auto mode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
-    ani_rdbutils::VarCallbackType varcb = callback;
-    RegisterListener(std::string(ani_rdbutils::EVENT_SYNC_PROGRESS), mode, varcb, opq);
+    auto subscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSyncObserver> observer)->int32_t {
+        auto errCode = nativeRdbStore_->RegisterAutoSyncCallback(observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("RegisterAutoSyncCallback success.");
+        } else {
+            LOG_ERROR("RegisterAutoSyncCallback failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    auto result = rdbObserversData_.OnAutoSyncProgress(callback, opq, subscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OnAutoSyncProgress failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
 }
 
 void RdbStoreImpl::OffAutoSyncProgressInner(optional_view<uintptr_t> opq)
@@ -1090,9 +1086,24 @@ void RdbStoreImpl::OffAutoSyncProgressInner(optional_view<uintptr_t> opq)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    auto mode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
-    bool isUpdated = false;
-    UnregisterListener(std::string(ani_rdbutils::EVENT_SYNC_PROGRESS), mode, opq, isUpdated);
+    auto unSubscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSyncObserver> observer)->int32_t {
+        auto errCode = nativeRdbStore_->UnregisterAutoSyncCallback(observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("UnregisterAutoSyncCallback success.");
+        } else {
+            LOG_ERROR("UnregisterAutoSyncCallback failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    std::optional<uintptr_t> opqNative;
+    if (opq.has_value()) {
+        opqNative = opq.value();
+    }
+    auto result = rdbObserversData_.OffAutoSyncProgress(opqNative, unSubscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OffAutoSyncProgress failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
 }
 
 void RdbStoreImpl::OnStatisticsInner(
@@ -1102,10 +1113,20 @@ void RdbStoreImpl::OnStatisticsInner(
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    // assume mode is LOCAL_SHARED
-    OHOS::DistributedRdb::SubscribeMode mode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
-    ani_rdbutils::VarCallbackType varcb = callback;
-    RegisterListener(std::string(ani_rdbutils::EVENT_STATISTICS), mode, varcb, opq);
+    auto subscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSqlObserver> observer)->int32_t {
+        auto errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("Subscribe success.");
+        } else {
+            LOG_ERROR("Subscribe failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    auto result = rdbObserversData_.OnStatistics(callback, opq, subscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OnStatistics failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
 }
 
 void RdbStoreImpl::OffStatisticsInner(optional_view<uintptr_t> opq)
@@ -1114,11 +1135,24 @@ void RdbStoreImpl::OffStatisticsInner(optional_view<uintptr_t> opq)
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    // assume mode is LOCAL_SHARED
-    OHOS::DistributedRdb::SubscribeMode mode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
-    bool isUpdated = false;
-    // define SUBSCRIBE_MODE_MAX when no input SubscribeType
-    UnregisterListener(std::string(ani_rdbutils::EVENT_STATISTICS), mode, opq, isUpdated);
+    auto unSubscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSqlObserver> observer)->int32_t {
+        auto errCode = DistributedRdb::SqlStatistic::Unsubscribe(observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("Unsubscribe success.");
+        } else {
+            LOG_ERROR("Unsubscribe failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    std::optional<uintptr_t> opqNative;
+    if (opq.has_value()) {
+        opqNative = opq.value();
+    }
+    auto result = rdbObserversData_.OffStatistics(opqNative, unSubscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OffStatistics failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
 }
 
 void RdbStoreImpl::OnCommon(taihe::string_view event, bool interProcess,
@@ -1128,12 +1162,33 @@ void RdbStoreImpl::OnCommon(taihe::string_view event, bool interProcess,
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    OHOS::DistributedRdb::SubscribeMode mode = OHOS::DistributedRdb::SubscribeMode::LOCAL;
-    if (interProcess) {
-        mode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
+    auto eventNative = std::string(event);
+    if (event.empty()) {
+        ThrowError(std::make_shared<ParamError>("event", "a not empty string."));
+        return;
     }
-    ani_rdbutils::VarCallbackType varcb = callback;
-    RegisterListener(std::string(event), mode, varcb, opq);
+    auto subscribeMode = OHOS::DistributedRdb::SubscribeMode::LOCAL;
+    if (interProcess) {
+        subscribeMode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
+    }
+    auto subscribeFunc = [subscribeMode, &eventNative, this](
+        std::shared_ptr<ani_rdbutils::TaiheRdbStoreObserver> observer)->int32_t {
+        OHOS::DistributedRdb::SubscribeOption option;
+        option.mode = subscribeMode;
+        option.event = eventNative;
+        auto errCode = nativeRdbStore_->Subscribe(option, observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("Subscribe success.");
+        } else {
+            LOG_ERROR("Subscribe failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    auto result = rdbObserversData_.OnCommon(eventNative, subscribeMode, callback, opq, subscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OnCommon failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
 }
 
 void RdbStoreImpl::OffCommon(taihe::string_view event, bool interProcess, optional_view<uintptr_t> opq)
@@ -1142,12 +1197,151 @@ void RdbStoreImpl::OffCommon(taihe::string_view event, bool interProcess, option
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    OHOS::DistributedRdb::SubscribeMode mode = OHOS::DistributedRdb::SubscribeMode::LOCAL;
-    if (interProcess) {
-        mode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
+    auto eventNative = std::string(event);
+    if (event.empty()) {
+        ThrowError(std::make_shared<ParamError>("event", "a not empty string."));
+        return;
     }
-    bool isUpdated = false;
-    UnregisterListener(std::string(event), mode, opq, isUpdated);
+    auto subscribeMode = OHOS::DistributedRdb::SubscribeMode::LOCAL;
+    if (interProcess) {
+        subscribeMode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
+    }
+    auto unSubscribeFunc = [subscribeMode, &eventNative, this](
+        std::shared_ptr<ani_rdbutils::TaiheRdbStoreObserver> observer)->int32_t {
+        OHOS::DistributedRdb::SubscribeOption option;
+        option.mode = subscribeMode;
+        option.event = eventNative;
+        auto errCode = nativeRdbStore_->UnsubscribeObserver(option, observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("UnsubscribeObserver success.");
+        } else {
+            LOG_ERROR("UnsubscribeObserver failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    std::optional<uintptr_t> opqNative;
+    if (opq.has_value()) {
+        opqNative = opq.value();
+    }
+    auto result = rdbObserversData_.OffCommon(eventNative, subscribeMode, opqNative, unSubscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OffCommon failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
+}
+
+void RdbStoreImpl::OnSqliteErrorOccurredInner(
+    taihe::callback_view<void(ohos::data::relationalStore::ExceptionMessage const& info)> observer, uintptr_t opq)
+{
+    if (nativeRdbStore_ == nullptr) {
+        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    if (nativeRdbStore_->GetDbType() != NativeRdb::DB_SQLITE) {
+        ThrowInnerError(OHOS::NativeRdb::E_NOT_SUPPORT);
+        return;
+    }
+    auto subscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheLogObserver> observer)->int32_t {
+        auto errCode = NativeRdb::SqlLog::Subscribe(nativeRdbStore_->GetPath(), observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("Subscribe success.");
+        } else {
+            LOG_ERROR("Subscribe failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    auto result = rdbObserversData_.OnSqliteErrorOccurred(observer, opq, subscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OnSqliteErrorOccurred failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
+}
+
+void RdbStoreImpl::OffSqliteErrorOccurredInner(taihe::optional_view<uintptr_t> opq)
+{
+    if (nativeRdbStore_ == nullptr) {
+        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    if (nativeRdbStore_->GetDbType() != NativeRdb::DB_SQLITE) {
+        ThrowInnerError(OHOS::NativeRdb::E_NOT_SUPPORT);
+        return;
+    }
+    auto unSubscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheLogObserver> observer)->int32_t {
+        auto errCode = NativeRdb::SqlLog::Unsubscribe(nativeRdbStore_->GetPath(), observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("Unsubscribe success.");
+        } else {
+            LOG_ERROR("Unsubscribe failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    std::optional<uintptr_t> opqNative;
+    if (opq.has_value()) {
+        opqNative = opq.value();
+    }
+    auto result = rdbObserversData_.OffSqliteErrorOccurred(opqNative, unSubscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OffSqliteErrorOccurred failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
+}
+
+void RdbStoreImpl::OnPerfStatInner(
+    taihe::callback_view<void(ohos::data::relationalStore::SqlExecutionInfo const& info)> observer, uintptr_t opq)
+{
+    if (nativeRdbStore_ == nullptr) {
+        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    if (nativeRdbStore_->GetDbType() != NativeRdb::DB_SQLITE) {
+        ThrowInnerError(OHOS::NativeRdb::E_NOT_SUPPORT);
+        return;
+    }
+    auto subscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSqlObserver> observer)->int32_t {
+        auto errCode = DistributedRdb::PerfStat::Subscribe(nativeRdbStore_->GetPath(), observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("Subscribe success.");
+        } else {
+            LOG_ERROR("Subscribe failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    auto result = rdbObserversData_.OnPerfStat(observer, opq, subscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OnPerfStat failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
+}
+
+void RdbStoreImpl::OffPerfStatInner(::taihe::optional_view<uintptr_t> opq)
+{
+    if (nativeRdbStore_ == nullptr) {
+        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    if (nativeRdbStore_->GetDbType() != NativeRdb::DB_SQLITE) {
+        ThrowInnerError(OHOS::NativeRdb::E_NOT_SUPPORT);
+        return;
+    }
+    auto unSubscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSqlObserver> observer)->int32_t {
+        auto errCode = DistributedRdb::PerfStat::Unsubscribe(nativeRdbStore_->GetPath(), observer);
+        if (errCode == OHOS::NativeRdb::E_OK) {
+            LOG_INFO("Unsubscribe success.");
+        } else {
+            LOG_ERROR("Unsubscribe failed, %{public}d.", errCode);
+        }
+        return errCode;
+    };
+    std::optional<uintptr_t> opqNative;
+    if (opq.has_value()) {
+        opqNative = opq.value();
+    }
+    auto result = rdbObserversData_.OffPerfStat(opqNative, unSubscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OffPerfStat failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
 }
 
 void RdbStoreImpl::Emit(string_view event)
@@ -1416,342 +1610,208 @@ int64_t RdbStoreImpl::BatchInsertWithConflictResolutionSync(taihe::string_view t
     return output;
 }
 
-void RdbStoreImpl::RegisterListener(std::string const &event, OHOS::DistributedRdb::SubscribeMode &mode,
-    ani_rdbutils::VarCallbackType &cb, uintptr_t opq)
+void RdbStoreImpl::RekeySync(taihe::optional_view<ohos::data::relationalStore::CryptoParam> cryptoParam)
 {
-    std::lock_guard<std::recursive_mutex> lock(cbMapMutex_);
-    ani_object callbackObj = reinterpret_cast<ani_object>(opq);
-    ani_ref callbackRef;
-    ani_env *env = taihe::get_env();
-    if (env == nullptr || ANI_OK != env->GlobalReference_Create(callbackObj, &callbackRef)) {
-        LOG_ERROR("Failed to register %{public}s", event.c_str());
+    if (nativeRdbStore_ == nullptr) {
+        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    auto &cbVec = jsCbMap_[event];
-    bool isDuplicate = std::any_of(
-        cbVec.begin(), cbVec.end(), [env, callbackRef](std::shared_ptr<ani_rdbutils::DataObserver> &obj) {
-            ani_boolean isEqual = false;
-            return (ANI_OK == env->Reference_StrictEquals(callbackRef, obj->jsCallbackRef_, &isEqual)) && isEqual;
-        });
-    if (isDuplicate) {
-        env->GlobalReference_Delete(callbackRef);
-        LOG_WARN("%{public}s is already registered", event.c_str());
+    NativeRdb::RdbStoreConfig::CryptoParam cryptoParamNative;
+    if (cryptoParam.has_value()) {
+        cryptoParamNative = ani_rdbutils::CryptoParamToNative(cryptoParam.value());
+    }
+    if (!cryptoParamNative.IsValid()) {
+        ThrowInnerError(NativeRdb::E_INVALID_ARGS_NEW);
         return;
     }
-    // start to execute different register function
-    int status = OHOS::NativeRdb::E_OK;
-    if (event == std::string(ani_rdbutils::EVENT_DATA_CHANGE)) {
-        status = RegisterDataChangeObserver(mode, cb, callbackRef);
-    } else if (event == std::string(ani_rdbutils::EVENT_SYNC_PROGRESS)) {
-        status = RegisterSyncProgressObserver(cb, callbackRef);
-    } else if (event == std::string(ani_rdbutils::EVENT_STATISTICS)) {
-        status = RegisterStatisticObserver(cb, callbackRef);
-    } else {
-        // call back function would has not input parameter
-        status = RegisterCommonEventObserver(event, mode, cb, callbackRef);
+    auto errCode = nativeRdbStore_->Rekey(cryptoParamNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
     }
-    if (status != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("RegisterListener, SubscribeObserver failed, %{public}d", status);
-        ThrowInnerError(status);
-        return;
-    }
-    LOG_INFO("RegisterListener success type: %{public}s", event.c_str());
 }
-// for dataChange event register
-int RdbStoreImpl::RegisterDataChangeObserver(
-    OHOS::DistributedRdb::SubscribeMode &type, ani_rdbutils::VarCallbackType &cb, ani_ref callbackRef)
-{
-    std::lock_guard<std::recursive_mutex> lock(cbMapMutex_);
-    auto &cbVec = jsCbMap_[std::string(ani_rdbutils::EVENT_DATA_CHANGE)];
-    auto observer = ani_rdbutils::DataObserver::Create(cb, callbackRef);
-    // the 'observer' object would be used to get jsCallback pointer
-    if ((type == OHOS::DistributedRdb::SubscribeMode::CLOUD_DETAIL) ||
-        (type == OHOS::DistributedRdb::SubscribeMode::LOCAL_DETAIL)) {
-        observer->SetNotifyDataChangeInfoFunc(
-            [](ani_rdbutils::DataObserver *observer, const OHOS::DistributedRdb::Origin &origin,
-                const OHOS::DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
-                const OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &changeInfo) {
-                // need two input parameters, return value will be one array
-                auto jsChangeInfo = ani_rdbutils::RdbChangeInfoToTaihe(origin, changeInfo);
-                if (std::holds_alternative<ani_rdbutils::JsChangeInfoCallbackType>(observer->jsCallback_)) {
-                    auto &jsfunc = std::get<ani_rdbutils::JsChangeInfoCallbackType>(observer->jsCallback_);
-                    jsfunc(jsChangeInfo);
-                } else {
-                    LOG_ERROR("Js function type error.");
-                }
-            });
-    } else {
-        observer->SetNotifyDataChangeArrFunc(
-            [](ani_rdbutils::DataObserver *observer, const std::vector<std::string> &devices) {
-                // js function will convert input parameters
-                auto jsDevices = ani_rdbutils::VectorToTaiheArray(devices);
-                auto &jsfunc = std::get<ani_rdbutils::JsDevicesCallbackType>(observer->jsCallback_);
-                jsfunc(jsDevices);
-            });
-    }
-    OHOS::DistributedRdb::SubscribeOption option;
-    option.mode = type;
-    option.event = std::string(ani_rdbutils::EVENT_DATA_CHANGE);
-    int status = OHOS::NativeRdb::E_OK;
-    if (option.mode == OHOS::DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
-        status = nativeRdbStore_->SubscribeObserver(option, observer);
-    } else {
-        status = nativeRdbStore_->Subscribe(option, observer);
-    }
-    if (status != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("RegisterDataChangeObserver, SubscribeObserver failed, %{public}d", status);
-        return status;
-    }
-    cbVec.emplace_back(std::move(observer));
-    LOG_INFO("RegisterDataChangeObserver success");
-    return OHOS::NativeRdb::E_OK;
-}
-// for autoSyncProgress event register
-int RdbStoreImpl::RegisterSyncProgressObserver(ani_rdbutils::VarCallbackType &cb, ani_ref callbackRef)
-{
-    std::lock_guard<std::recursive_mutex> lock(cbMapMutex_);
-    auto &cbVec = jsCbMap_[std::string(ani_rdbutils::EVENT_SYNC_PROGRESS)];
-    auto observer = ani_rdbutils::DataObserver::Create(cb, callbackRef);
-    observer->SetNotifyProcessFunc(
-        [](ani_rdbutils::DataObserver *observer, const OHOS::DistributedRdb::Details &details) {
-            if (std::holds_alternative<ani_rdbutils::JsProgressDetailsCallbackType>(observer->jsCallback_)) {
-                auto &jsfunc = std::get<ani_rdbutils::JsProgressDetailsCallbackType>(observer->jsCallback_);
-                for (auto it = details.begin(); it != details.end(); ++it) {
-                    auto jspara = ani_rdbutils::ProgressDetailToTaihe(it->second);
-                    jsfunc(jspara);
-                }
-            } else {
-                LOG_ERROR("Js function type error.");
-            }
-        });
-    int status = nativeRdbStore_->RegisterAutoSyncCallback(observer);
-    if (status != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("RegisterSyncProgressObserver, RegisterAutoSyncCallback failed, %{public}d", status);
-        return status;
-    }
-    cbVec.emplace_back(std::move(observer));
-    LOG_INFO("RegisterSyncProgressObserver success");
-    return OHOS::NativeRdb::E_OK;
-}
-// for statistics event
-int RdbStoreImpl::RegisterStatisticObserver(ani_rdbutils::VarCallbackType &cb, ani_ref callbackRef)
-{
-    std::lock_guard<std::recursive_mutex> lock(cbMapMutex_);
-    auto &cbVec = jsCbMap_[std::string(ani_rdbutils::EVENT_STATISTICS)];
-    auto observer = ani_rdbutils::DataObserver::Create(cb, callbackRef);
-    // the 'observer' object would be used to get jsCallback pointer
-    observer->SetNotifySqlExecutionFunc([](ani_rdbutils::DataObserver *observer,
-                                            const OHOS::DistributedRdb::SqlObserver::SqlExecutionInfo &sqlInfo) {
-        // js function will convert input parameters
 
-        auto jsSqlInfo = ani_rdbutils::SqlExecutionToTaihe(sqlInfo);
-        if (std::holds_alternative<ani_rdbutils::JsSqlExecutionCallbackType>(observer->jsCallback_)) {
-            auto &jsfunc = std::get<ani_rdbutils::JsSqlExecutionCallbackType>(observer->jsCallback_);
-            LOG_ERROR("Js function type success3.");
-            jsfunc(jsSqlInfo);
+void RdbStoreImpl::RekeyExSync(ohos::data::relationalStore::CryptoParam const& cryptoParam)
+{
+    if (nativeRdbStore_ == nullptr) {
+        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    auto cryptoParamNative = ani_rdbutils::CryptoParamToNative(cryptoParam);
+    if (!cryptoParamNative.IsValid()) {
+        ThrowInnerError(NativeRdb::E_INVALID_ARGS_NEW);
+        return;
+    }
+    auto errCode = nativeRdbStore_->RekeyEx(cryptoParamNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
+    }
+}
+
+void RdbStoreImpl::SetLocaleSync(taihe::string_view locale)
+{
+    if (nativeRdbStore_ == nullptr) {
+        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    auto localeNative = std::string(locale);
+    if (localeNative.empty()) {
+        ThrowInnerError(NativeRdb::E_INVALID_ARGS_NEW);
+        return;
+    }
+    auto errCode = nativeRdbStore_->ConfigLocale(localeNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
+    }
+}
+
+template<class FuncType>
+void RdbStoreImpl::OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode,
+    FuncType callback, uintptr_t opq)
+{
+    if (nativeRdbStore_ == nullptr) {
+        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    if (subscribeMode < 0 || subscribeMode >= DistributedRdb::SubscribeMode::SUBSCRIBE_MODE_MAX) {
+        ThrowError(std::make_shared<ParamError>("type", "SubscribeType"));
+        return;
+    }
+    auto subscribeFunc = [subscribeMode, this](
+        std::shared_ptr<ani_rdbutils::TaiheRdbStoreObserver> observer)->int32_t {
+        OHOS::DistributedRdb::SubscribeOption option;
+        option.mode = subscribeMode;
+        option.event = ani_rdbutils::EVENT_DATA_CHANGE;
+        if (option.mode == OHOS::DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
+            auto errCode = nativeRdbStore_->SubscribeObserver(option, observer);
+            if (errCode == OHOS::NativeRdb::E_OK) {
+                LOG_INFO("SubscribeObserver success.");
+            } else {
+                LOG_ERROR("SubscribeObserver failed, %{public}d.", errCode);
+            }
+            return errCode;
         } else {
-            LOG_ERROR("Js function type error.");
-        }
-    });
-    int status = DistributedRdb::SqlStatistic::Subscribe(observer);
-    if (status != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("RegisterStatisticObserver, SubscribeObserver failed, %{public}d", status);
-        return status;
-    }
-    cbVec.emplace_back(std::move(observer));
-    LOG_INFO("RegisterStatisticObserver success");
-    return OHOS::NativeRdb::E_OK;
-}
-// for common event
-int RdbStoreImpl::RegisterCommonEventObserver(std::string const &event, OHOS::DistributedRdb::SubscribeMode &mode,
-    ani_rdbutils::VarCallbackType &cb, ani_ref callbackRef)
-{
-    std::lock_guard<std::recursive_mutex> lock(cbMapMutex_);
-    auto &cbVec = jsCbMap_[event];
-    auto observer = ani_rdbutils::DataObserver::Create(cb, callbackRef);
-    // the 'observer' object would be used to get jsCallback pointer
-    observer->SetNotifyCommonEventFunc([](ani_rdbutils::DataObserver *observer) {
-        // js function will convert input parameters
-        auto &jsfunc = std::get<ani_rdbutils::JsVoidCallbackType>(observer->jsCallback_);
-        jsfunc();
-    });
-    OHOS::DistributedRdb::SubscribeOption option;
-    option.mode = mode;
-    option.event = event;
-    int status = nativeRdbStore_->Subscribe(option, observer);
-    if (status != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("RegisterCommonEventObserver, SubscribeObserver failed, %{public}d", status);
-        return status;
-    }
-    cbVec.emplace_back(std::move(observer));
-    LOG_INFO("RegisterCommonEventObserver success.");
-    return OHOS::NativeRdb::E_OK;
-}
-// *********************************************************************
-// start unregister function
-// *********************************************************************
-// for dataChange and autoSyncProgress
-// the mode is DistributedRdb::SubscribeMode::SUBSCRIBE_MODE_MAX, need to unregister for mode type.
-void RdbStoreImpl::UnregisterListener(std::string const &event, OHOS::DistributedRdb::SubscribeMode &mode,
-    ::taihe::optional_view<uintptr_t> opq, bool &isUpdateFlag)
-{
-    std::lock_guard<std::recursive_mutex> lock(cbMapMutex_);
-    const auto iter = jsCbMap_.find(event);
-    if (iter == jsCbMap_.end()) {
-        LOG_ERROR("%{public}s is not registered", event.c_str());
-        return;
-    }
-    OHOS::DistributedRdb::SubscribeOption option;
-    option.event = event;
-    int status = OHOS::NativeRdb::E_OK;
-    ::taihe::optional<uintptr_t> empty;
-    // no input type, need to unregister all type
-    if (mode == OHOS::DistributedRdb::SubscribeMode::SUBSCRIBE_MODE_MAX) {
-        // will execute several times
-        for (uint8_t type = ani_rdbutils::SUBSCRIBE_REMOTE; type < ani_rdbutils::SUBSCRIBE_COUNT; type++) {
-            bool updated = false;
-            option.mode = static_cast<OHOS::DistributedRdb::SubscribeMode>(type);
-            status = UnRegisterObserver(option, opq, updated);
-            isUpdateFlag |= updated;
-            if (status != OHOS::NativeRdb::E_OK) {
-                LOG_ERROR("UnregisterListener failed, type = %{public}d, status%{public}d", type, status);
-                return;
-            }
-        }
-    } else {
-        bool updated = false;
-        option.mode = mode;
-        status = UnRegisterObserver(option, opq, updated);
-        isUpdateFlag |= updated;
-        if (status != OHOS::NativeRdb::E_OK) {
-            LOG_ERROR("UnregisterListener failed, type = %{public}d, status%{public}d", mode, status);
-            return;
-        }
-    }
-
-    LOG_INFO("UnregisterListener success type: %{public}s", event.c_str());
-}
-
-int RdbStoreImpl::UnRegisterObserver(
-    OHOS::DistributedRdb::SubscribeOption &option, ::taihe::optional_view<uintptr_t> opq, bool &isUpdateFlag)
-{
-    int result = OHOS::NativeRdb::E_OK;
-    auto &callbackList = jsCbMap_[option.event];
-    // two conditions, opq not exist or opq exist
-    if (!opq.has_value()) {
-        // oqp not exist
-        LOG_INFO("UnRegisterObserver for all item, size %{public}zu, type %{public}d",
-            callbackList.size(), option.mode);
-        for (auto iter = callbackList.begin(); iter != callbackList.end();) {
-            int status = OHOS::NativeRdb::E_OK;
-            if ((option.event == std::string(ani_rdbutils::EVENT_DATA_CHANGE)) &&
-                (option.mode == OHOS::DistributedRdb::SubscribeMode::LOCAL_DETAIL)) {
-                status = nativeRdbStore_->UnsubscribeObserver(option, *iter);
-            } else if (option.event == std::string(ani_rdbutils::EVENT_SYNC_PROGRESS)) {
-                status = nativeRdbStore_->UnregisterAutoSyncCallback(*iter);
-            } else if (option.event == std::string(ani_rdbutils::EVENT_STATISTICS)) {
-                status = DistributedRdb::SqlStatistic::Unsubscribe(*iter);
+            auto errCode = nativeRdbStore_->Subscribe(option, observer);
+            if (errCode == OHOS::NativeRdb::E_OK) {
+                LOG_INFO("Subscribe success.");
             } else {
-                // other dataChange, common event use the same unsubscribe
-                status = nativeRdbStore_->UnSubscribe(option, *iter);
+                LOG_ERROR("Subscribe failed, %{public}d.", errCode);
             }
-            LOG_INFO("UnRegisterObserver status %{public}d", status);
-            if (status == OHOS::NativeRdb::E_OK || status == OHOS::NativeRdb::E_ALREADY_CLOSED) {
-                isUpdateFlag = true;
-                (*iter)->Release();
-                iter = callbackList.erase(iter);
-            } else {
-                LOG_ERROR("RdbStoreImpl UnRegisterObserver failed, status %{public}d", status);
-                result = status;
-                ++iter;
-            }
+            return errCode;
         }
-        if (callbackList.empty()) {
-            jsCbMap_.erase(option.event);
-        }
-        return result;
-    }
-    ani_env *env = taihe::get_env();
-    if (env == nullptr) {
-        LOG_ERROR("Failed to UnRegisterObserver, env is nullptr");
-        return result;
-    }
-    ani_rdbutils::GlobalRefGuard guard(env, reinterpret_cast<ani_object>(opq.value()));
-    if (!guard) {
-        LOG_ERROR("Failed to UnRegisterObserver, GlobalRefGuard is false!");
-        return result;
-    }
-    return UnRegisterObserverExistOpq(option, guard.get(), isUpdateFlag);
-}
-
-int RdbStoreImpl::UnRegisterObserverExistOpq(
-    OHOS::DistributedRdb::SubscribeOption &option, ani_ref jsCallbackRef, bool &isUpdateFlag)
-{
-    ani_env *env = taihe::get_env();
-    if (env == nullptr) {
-        LOG_ERROR("Failed to UnRegisterObserver, env is nullptr");
-        return OHOS::NativeRdb::E_OK;
-    }
-    auto &callbackList = jsCbMap_[option.event];
-    const auto pred = [env, jsCallbackRef](std::shared_ptr<ani_rdbutils::DataObserver> &obj) {
-        ani_boolean is_equal = false;
-        return (ANI_OK == env->Reference_StrictEquals(jsCallbackRef, obj->jsCallbackRef_, &is_equal)) && is_equal;
     };
-    const auto it = std::find_if(callbackList.begin(), callbackList.end(), pred);
-    if (it != callbackList.end()) {
-        int status = OHOS::NativeRdb::E_OK;
-        if ((option.event == std::string(ani_rdbutils::EVENT_DATA_CHANGE)) &&
-            (option.mode == OHOS::DistributedRdb::SubscribeMode::LOCAL_DETAIL)) {
-            status = nativeRdbStore_->UnsubscribeObserver(option, *it);
-        } else if  (option.event == std::string(ani_rdbutils::EVENT_SYNC_PROGRESS)) {
-            status = nativeRdbStore_->UnregisterAutoSyncCallback(*it);
-        } else {
-            // other dataChange, statistics, common event use the same unsubscribe
-            status = nativeRdbStore_->UnSubscribe(option, *it);
-        }
-        LOG_INFO("UnRegisterObserver, status %{public}d", status);
-        if (status == OHOS::NativeRdb::E_OK || status == OHOS::NativeRdb::E_ALREADY_CLOSED) {
-            isUpdateFlag = true;
-            (*it)->Release();
-            callbackList.erase(it);
-        } else {
-            return status;
-        }
+    auto result = rdbObserversData_.OnDataChange(subscribeMode, callback, opq, subscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OnDataChange failed, %{public}d.", result);
+        ThrowInnerError(result);
     }
-    if (callbackList.empty()) {
-        jsCbMap_.erase(option.event);
+}
+
+void RdbStoreImpl::OffDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode,
+    taihe::optional_view<uintptr_t> opq)
+{
+    if (nativeRdbStore_ == nullptr) {
+        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
     }
-    return OHOS::NativeRdb::E_OK;
+    if (subscribeMode < 0 || subscribeMode >= DistributedRdb::SubscribeMode::SUBSCRIBE_MODE_MAX) {
+        ThrowError(std::make_shared<ParamError>("type", "SubscribeType"));
+        return;
+    }
+    auto unSubscribeFunc = [subscribeMode, this](
+        std::shared_ptr<ani_rdbutils::TaiheRdbStoreObserver> observer)->int32_t {
+        OHOS::DistributedRdb::SubscribeOption option;
+        option.mode = subscribeMode;
+        option.event = ani_rdbutils::EVENT_DATA_CHANGE;
+        if (option.mode == OHOS::DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
+            auto errCode = nativeRdbStore_->UnsubscribeObserver(option, observer);
+            if (errCode == OHOS::NativeRdb::E_OK) {
+                LOG_INFO("UnsubscribeObserver success.");
+            } else {
+                LOG_ERROR("UnsubscribeObserver failed, %{public}d.", errCode);
+            }
+            return errCode;
+        } else {
+            auto errCode = nativeRdbStore_->UnSubscribe(option, observer);
+            if (errCode == OHOS::NativeRdb::E_OK) {
+                LOG_INFO("UnSubscribe success.");
+            } else {
+                LOG_ERROR("UnSubscribe failed, %{public}d.", errCode);
+            }
+            return errCode;
+        }
+    };
+    std::optional<uintptr_t> opqNative;
+    if (opq.has_value()) {
+        opqNative = opq.value();
+    }
+    auto result = rdbObserversData_.OffDataChange(subscribeMode, opqNative, unSubscribeFunc);
+    if (result != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("OffDataChange failed, %{public}d.", result);
+        ThrowInnerError(result);
+    }
 }
 
 void RdbStoreImpl::UnRegisterAll()
 {
-    LOG_INFO("RdbStoreImpl UnRegisterAll");
-    std::lock_guard<std::recursive_mutex> lock(cbMapMutex_);
-    bool isUpdated = false;
-    // empty is nullptr
-    ::taihe::optional<uintptr_t> empty;
-    OHOS::DistributedRdb::SubscribeOption option;
-    option.event = std::string(ani_rdbutils::EVENT_DATA_CHANGE);
-    for (uint8_t type = ani_rdbutils::SUBSCRIBE_REMOTE; type < ani_rdbutils::SUBSCRIBE_COUNT; type++) {
-        option.mode = static_cast<OHOS::DistributedRdb::SubscribeMode>(type);
-        UnRegisterObserver(option, empty, isUpdated);
+    std::unique_lock<std::mutex> locker(rdbObserversData_.rdbObserversMutex_);
+    UnRegisterDataChange();
+    for (auto &obs : rdbObserversData_.syncObservers_) {
+        nativeRdbStore_->UnregisterAutoSyncCallback(obs);
     }
-    option.event = std::string(ani_rdbutils::EVENT_SYNC_PROGRESS);
-    option.mode = OHOS::DistributedRdb::SubscribeMode::SUBSCRIBE_MODE_MAX;
-    UnRegisterObserver(option, empty, isUpdated);
-    // statistics
-    option.event = std::string(ani_rdbutils::EVENT_STATISTICS);
-    UnRegisterObserver(option, empty, isUpdated);
-    // common event
-    auto map = jsCbMap_;
-    for (auto &[event, queue]: map) {
-        option.event = event;
-        option.mode = OHOS::DistributedRdb::SubscribeMode::LOCAL_SHARED;
-        UnRegisterObserver(option, empty, isUpdated);
-        LOG_INFO("RdbStoreImpl UnRegisterAll");
+    rdbObserversData_.syncObservers_.clear();
+    for (auto &obs : rdbObserversData_.statisticses_) {
+        DistributedRdb::SqlStatistic::Unsubscribe(obs);
     }
-    LOG_INFO("RdbStoreImpl UnRegisterAll end");
+    rdbObserversData_.statisticses_.clear();
+    for (auto &obs : rdbObserversData_.perfStats_) {
+        DistributedRdb::PerfStat::Unsubscribe(nativeRdbStore_->GetPath(), obs);
+    }
+    rdbObserversData_.perfStats_.clear();
+    for (auto &obs : rdbObserversData_.logObservers_) {
+        NativeRdb::SqlLog::Unsubscribe(nativeRdbStore_->GetPath(), obs);
+    }
+    rdbObserversData_.logObservers_.clear();
+}
+
+void RdbStoreImpl::UnRegisterDataChange()
+{
+    for (int32_t mode = DistributedRdb::SubscribeMode::REMOTE;
+        mode < DistributedRdb::SubscribeMode::LOCAL; mode++) {
+        for (auto &obs : rdbObserversData_.observers_[mode]) {
+            if (obs == nullptr) {
+                continue;
+            }
+            nativeRdbStore_->UnSubscribe({ static_cast<DistributedRdb::SubscribeMode>(mode) }, obs);
+        }
+        rdbObserversData_.observers_[mode].clear();
+    }
+    for (auto &obs : rdbObserversData_.observers_[DistributedRdb::SubscribeMode::LOCAL_DETAIL]) {
+        if (obs == nullptr) {
+            continue;
+        }
+        nativeRdbStore_->UnsubscribeObserver({ DistributedRdb::SubscribeMode::LOCAL_DETAIL }, obs);
+    }
+    rdbObserversData_.observers_[DistributedRdb::SubscribeMode::LOCAL_DETAIL].clear();
+    for (const auto &[event, observers] : rdbObserversData_.localObservers_) {
+        for (const auto &obs : observers) {
+            if (obs == nullptr) {
+                continue;
+            }
+            nativeRdbStore_->UnSubscribe(
+                { static_cast<DistributedRdb::SubscribeMode>(DistributedRdb::LOCAL), event }, obs);
+        }
+    }
+    rdbObserversData_.localObservers_.clear();
+    for (const auto &[event, observers] : rdbObserversData_.localSharedObservers_) {
+        for (const auto &obs : observers) {
+            if (obs == nullptr) {
+                continue;
+            }
+            nativeRdbStore_->UnSubscribe(
+                { static_cast<DistributedRdb::SubscribeMode>(DistributedRdb::LOCAL_SHARED), event }, obs);
+        }
+    }
+    rdbObserversData_.localSharedObservers_.clear();
 }
 }
 }
