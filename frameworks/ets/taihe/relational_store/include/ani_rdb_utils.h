@@ -40,6 +40,8 @@ using RdbStoreVarCallbackType = std::variant<JsDevicesCallbackType, JsChangeInfo
 
 constexpr std::string_view EVENT_DATA_CHANGE = "dataChange";
 
+OHOS::NativeRdb::AssetValue::Status AssetStatusToNative(ohos::data::relationalStore::AssetStatus const &assetStatus);
+ohos::data::relationalStore::AssetStatus AssetStatusToAni(OHOS::NativeRdb::AssetValue::Status const &status);
 OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset const &asset);
 ::ohos::data::relationalStore::Asset AssetToAni(OHOS::NativeRdb::AssetValue const &value);
 OHOS::NativeRdb::ValueObject ValueTypeToNative(::ohos::data::relationalStore::ValueType const &value);
