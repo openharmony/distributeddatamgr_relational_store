@@ -43,6 +43,48 @@ static const int E_OK = 0;
 static const int REALPATH_MAX_LEN = 1024;
 static const int INIT_POSITION = -1;
 
+OHOS::NativeRdb::AssetValue::Status AssetStatusToNative(ohos::data::relationalStore::AssetStatus const &assetStatus)
+{
+    switch (assetStatus.get_key()) {
+        case ohos::data::relationalStore::AssetStatus::key_t::ASSET_NORMAL:
+            return OHOS::NativeRdb::AssetValue::Status::STATUS_NORMAL;
+        case ohos::data::relationalStore::AssetStatus::key_t::ASSET_INSERT:
+            return OHOS::NativeRdb::AssetValue::Status::STATUS_INSERT;
+        case ohos::data::relationalStore::AssetStatus::key_t::ASSET_UPDATE:
+            return OHOS::NativeRdb::AssetValue::Status::STATUS_UPDATE;
+        case ohos::data::relationalStore::AssetStatus::key_t::ASSET_DELETE:
+            return OHOS::NativeRdb::AssetValue::Status::STATUS_DELETE;
+        case ohos::data::relationalStore::AssetStatus::key_t::ASSET_ABNORMAL:
+            return OHOS::NativeRdb::AssetValue::Status::STATUS_ABNORMAL;
+        case ohos::data::relationalStore::AssetStatus::key_t::ASSET_DOWNLOADING:
+            return OHOS::NativeRdb::AssetValue::Status::STATUS_DOWNLOADING;
+        default:
+            LOG_ERROR("Invalid AssetStatus value.");
+            return OHOS::NativeRdb::AssetValue::Status::STATUS_UNKNOWN;
+    }
+}
+
+ohos::data::relationalStore::AssetStatus AssetStatusToAni(OHOS::NativeRdb::AssetValue::Status const &status)
+{
+    switch (status) {
+        case OHOS::NativeRdb::AssetValue::Status::STATUS_NORMAL:
+            return ohos::data::relationalStore::AssetStatus::key_t::ASSET_NORMAL;
+        case OHOS::NativeRdb::AssetValue::Status::STATUS_INSERT:
+            return ohos::data::relationalStore::AssetStatus::key_t::ASSET_INSERT;
+        case OHOS::NativeRdb::AssetValue::Status::STATUS_UPDATE:
+            return ohos::data::relationalStore::AssetStatus::key_t::ASSET_UPDATE;
+        case OHOS::NativeRdb::AssetValue::Status::STATUS_DELETE:
+            return ohos::data::relationalStore::AssetStatus::key_t::ASSET_DELETE;
+        case OHOS::NativeRdb::AssetValue::Status::STATUS_ABNORMAL:
+            return ohos::data::relationalStore::AssetStatus::key_t::ASSET_ABNORMAL;
+        case OHOS::NativeRdb::AssetValue::Status::STATUS_DOWNLOADING:
+            return ohos::data::relationalStore::AssetStatus::key_t::ASSET_DOWNLOADING;
+        default:
+            LOG_ERROR("Invalid AssetStatus value.");
+            return ohos::data::relationalStore::AssetStatus::key_t::ASSET_NORMAL;
+    }
+}
+
 OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset const &asset)
 {
     OHOS::NativeRdb::AssetValue value;
@@ -53,8 +95,12 @@ OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset c
     value.size = std::string(asset.size);
     value.path = std::string(asset.path);
     if (asset.status.has_value()) {
-        value.status = (OHOS::NativeRdb::AssetValue::Status)((int32_t)(asset.status.value()));
+        value.status = AssetStatusToNative(asset.status.value());
     }
+    if (value.status != AssetValue::STATUS_DELETE) {
+        value.status = AssetValue::STATUS_UNKNOWN;
+    }
+    value.hash = value.modifyTime + "_" + value.size;
     return value;
 }
 
@@ -76,8 +122,8 @@ std::vector<OHOS::NativeRdb::AssetValue> AssetsToNative(
     asset.modifyTime = value.modifyTime;
     asset.size = value.size;
     asset.path = value.path;
-    TaiheAssetStatus aniStatus((TaiheAssetStatus::key_t)(value.status));
-    asset.status = ::taihe::optional<TaiheAssetStatus>::make(aniStatus);
+    auto status = static_cast<OHOS::NativeRdb::AssetValue::Status>(value.status & ~0xF0000000);
+    asset.status = taihe::optional<TaiheAssetStatus>::make(AssetStatusToAni(status));
     return asset;
 }
 
