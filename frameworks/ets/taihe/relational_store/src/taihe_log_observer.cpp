@@ -24,7 +24,7 @@ TaiheLogObserver::TaiheLogObserver(
     ani_env *env,
     ani_object callbackObj,
     std::shared_ptr<JsExceptionMessageCallbackType> callbackPtr
-) : env_(env), callbackPtr_(callbackPtr)
+) : callbackPtr_(callbackPtr)
 {
     if (ANI_OK != env->GlobalReference_Create(callbackObj, &callbackRef_)) {
         LOG_ERROR("Call GlobalReference_Create failed");
@@ -33,32 +33,35 @@ TaiheLogObserver::TaiheLogObserver(
 
 TaiheLogObserver::~TaiheLogObserver()
 {
-    if (env_ != nullptr && callbackRef_ != nullptr) {
-        if (ANI_OK != env_->GlobalReference_Delete(callbackRef_)) {
+    taihe::env_guard gurd;
+    auto env = gurd.get_env();
+    if (env != nullptr && callbackRef_ != nullptr) {
+        if (ANI_OK != env->GlobalReference_Delete(callbackRef_)) {
             LOG_ERROR("Call GlobalReference_Delete failed");
         }
     }
-    env_ = nullptr;
     callbackRef_ = nullptr;
     callbackPtr_ = nullptr;
 }
 
 bool TaiheLogObserver::IsEquals(ani_object callbackObj)
 {
-    if (env_ == nullptr) {
+    taihe::env_guard gurd;
+    auto env = gurd.get_env();
+    if (env == nullptr) {
         LOG_ERROR("ANI env is nullptr.");
         return false;
     }
     ani_ref callbackRef;
-    if (env_->GlobalReference_Create(callbackObj, &callbackRef) != ANI_OK) {
+    if (env->GlobalReference_Create(callbackObj, &callbackRef) != ANI_OK) {
         LOG_ERROR("Call GlobalReference_Create failed");
         return false;
     }
     ani_boolean isEqual = false;
-    if (env_->Reference_StrictEquals(callbackRef_, callbackRef, &isEqual) != ANI_OK) {
+    if (env->Reference_StrictEquals(callbackRef_, callbackRef, &isEqual) != ANI_OK) {
         LOG_ERROR("Call Reference_StrictEquals failed.");
     }
-    if (env_->GlobalReference_Delete(callbackRef) != ANI_OK) {
+    if (env->GlobalReference_Delete(callbackRef) != ANI_OK) {
         LOG_ERROR("Call GlobalReference_Delete failed");
     }
     return isEqual;
