@@ -1832,6 +1832,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
             if (access(binlogFolder.c_str(), F_OK) == 0) {
                 SqliteUtils::SetSlaveInvalid(config.GetPath());
                 size_t num = SqliteUtils::DeleteFolder(binlogFolder);
+                Delete(slaveCfg.GetPath());
                 LOG_INFO("binlog files found, %{public}zu deleted", num);
             }
         }
