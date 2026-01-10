@@ -26,7 +26,7 @@ static { loadLibraryWithPermissionCheck("relationalstore_ani.z", "@ohos.data.rel
 """)
 
 enum AssetStatus: i32 {
-    ASSET_NORMAL,
+    ASSET_NORMAL = 1,
     ASSET_INSERT,
     ASSET_UPDATE,
     ASSET_DELETE,

@@ -1763,10 +1763,6 @@ void RdbStoreImpl::UnRegisterAll()
         DistributedRdb::SqlStatistic::Unsubscribe(obs);
     }
     rdbObserversData_.statisticses_.clear();
-    for (auto &obs : rdbObserversData_.perfStats_) {
-        DistributedRdb::PerfStat::Unsubscribe(nativeRdbStore_->GetPath(), obs);
-    }
-    rdbObserversData_.perfStats_.clear();
     for (auto &obs : rdbObserversData_.logObservers_) {
         NativeRdb::SqlLog::Unsubscribe(nativeRdbStore_->GetPath(), obs);
     }
