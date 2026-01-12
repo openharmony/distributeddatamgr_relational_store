@@ -2038,7 +2038,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_001, TestSize.Level0)
     ASSERT_NE(status, E_OK);
 
     if (!RdbHelper::IsSupportedTokenizer(Tokenizer::CUSTOM_TOKENIZER)) {
-        return;
+        GTEST_SKIP() << "The current testcase is not supported by the tokenizer.";
     }
     ASSERT_EQ(store->SetTokenizer(Tokenizer::CUSTOM_TOKENIZER), E_OK);
     std::tie(status, val) = store->Execute(createSql);
