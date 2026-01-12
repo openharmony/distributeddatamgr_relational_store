@@ -31,6 +31,11 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 void RowEntity::Put(const std::string &name, int32_t index, ValueObject &&value)
 {
+    Put(std::string(name), index, std::move(value));
+}
+
+void RowEntity::Put(std::string &&name, int32_t index, ValueObject &&value)
+{
     if (index < 0 || index >= static_cast<int>(indexs_.size())) {
         return;
     }
@@ -83,6 +88,9 @@ AbsResultSet::AbsResultSet(bool safe) : globalMtx_(safe)
 
 AbsResultSet::~AbsResultSet()
 {
+    // free memory, the lifetime of wholeColumnNames must be longer than that of columnMap.
+    columnMap_.clear();
+    wholeColumnNames_.clear();
     rowPos_ = INIT_POS;
     isClosed_ = true;
 }
@@ -143,11 +151,11 @@ int AbsResultSet::InitColumnNames()
         return E_OK;
     }
 
-    for (size_t i = 0; i < names.size(); ++i) {
-        columnMap_.insert(std::pair{ names[i], i });
-    }
-    columnCount_ = static_cast<int>(names.size());
     wholeColumnNames_ = std::move(names);
+    for (size_t i = 0; i < wholeColumnNames_.size(); ++i) {
+        columnMap_.emplace(wholeColumnNames_[i], i);
+    }
+    columnCount_ = static_cast<int>(wholeColumnNames_.size());
     return E_OK;
 }
 
@@ -275,10 +283,11 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
         ValueObject value;
         auto ret = Get(index, value);
         if (ret != E_OK) {
-            LOG_ERROR("Get(%{public}d, %{public}s)->ret %{public}d", index, SqliteUtils::Anonymous(name).c_str(), ret);
+            LOG_ERROR("Get(%{public}d, %{public}s)->ret %{public}d",
+                index, SqliteUtils::Anonymous(std::string(name)).c_str(), ret);
             return ret;
         }
-        rowEntity.Put(name, index, std::move(value));
+        rowEntity.Put(std::string(name), index, std::move(value));
     }
     return E_OK;
 }
@@ -503,8 +512,8 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
     }
     std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
     for (const auto &[name, index] : columnMap_) {
-        std::string temp = name;
-        std::transform(name.begin(), name.end(), temp.begin(), ::tolower);
+        std::string temp(name);
+        std::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
         if (lowerName == temp) {
             columnIndex = index;
             return E_OK;

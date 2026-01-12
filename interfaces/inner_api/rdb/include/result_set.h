@@ -28,6 +28,7 @@ namespace NativeRdb {
 struct API_EXPORT RowEntity {
 public:
     API_EXPORT void Put(const std::string &name, int32_t index, ValueObject &&value);
+    API_EXPORT void Put(std::string &&name, int32_t index, ValueObject &&value);
     API_EXPORT ValueObject Get(const std::string &name) const;
     API_EXPORT ValueObject Get(int index) const;
     API_EXPORT const std::map<std::string, ValueObject> &Get() const;
