@@ -34,7 +34,6 @@ public:
     void ProgressNotification(const OHOS::DistributedRdb::Details &details) override;
 
 private:
-    ani_env *env_;
     ani_ref callbackRef_;
     std::shared_ptr<JsProgressDetailsCallbackType> callbackPtr_;
 };
