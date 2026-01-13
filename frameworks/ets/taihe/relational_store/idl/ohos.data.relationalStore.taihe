@@ -176,7 +176,7 @@ enum SecurityLevel: i32 {
 enum SyncMode : i32 {
     SYNC_MODE_PUSH = 0,
     SYNC_MODE_PULL = 1,
-    SYNC_MODE_TIME_FIRST,
+    SYNC_MODE_TIME_FIRST = 4,
     SYNC_MODE_NATIVE_FIRST,
     SYNC_MODE_CLOUD_FIRST
 }
