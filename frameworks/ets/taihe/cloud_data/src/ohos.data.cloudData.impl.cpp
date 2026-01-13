@@ -18,6 +18,7 @@
 #include "ani_error_code.h"
 #include "ani_cloud_data_utils.h"
 #include "cloud_types.h"
+#include "ani_rdb_utils.h"
 
 namespace AniCloudData {
 using namespace OHOS::Rdb;
@@ -327,7 +328,7 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
             progress(ConvertProgressDetail(details.begin()->second));
         };
         CloudService::Option option;
-        option.syncMode = mode.get_value();
+        option.syncMode = ani_rdbutils::SyncModeToNative(mode);
         option.seqNum = GetSeqNum();
         auto status = proxy->CloudSync(std::string(bundleName), std::string(storeId), option, async);
         if (status == CloudService::Status::INVALID_ARGUMENT) {
