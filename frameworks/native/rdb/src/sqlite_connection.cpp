@@ -1906,7 +1906,8 @@ bool SqliteConnection::IsDbVersionBelowSlave()
     }
 
     std::tie(cRet, cObj) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
-    if (cVal == nullptr || (cVal != nullptr && static_cast<int64_t>(*cVal) == 0L)) {
+    cVal = std::get_if<int64_t>(&cObj.value);
+    if (cVal == nullptr || static_cast<int64_t>(*cVal) == 0L) {
         std::tie(cRet, cObj) = slaveConnection_->ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
         cVal = std::get_if<int64_t>(&cObj.value);
         if (cVal != nullptr && static_cast<int64_t>(*cVal) > 0L) {

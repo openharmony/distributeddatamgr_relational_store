@@ -1386,6 +1386,20 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_037, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_DoubleWrite_038
+ * @tc.desc: test restore when the db version below slave
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_038, TestSize.Level1)
+{
+    InitDb();
+    EXPECT_EQ(store->ExecuteSql("pragma user_version=0;"), E_OK);
+    EXPECT_EQ(slaveStore->ExecuteSql("pragma user_version=1;"), E_OK);
+    SqliteUtils::SetSlaveInvalid(DATABASE_NAME);
+    EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
+}
+
+/**
  * @tc.name: RdbStore_DoubleWrite_Manual_Trigger_Not_Verify_Db
  * @tc.desc: open MANUAL_TRIGGER db, write, corrupt db, check backup with verify and no verify
  * @tc.type: FUNC
