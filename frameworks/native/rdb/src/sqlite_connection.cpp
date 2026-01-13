@@ -1699,7 +1699,6 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
 int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
 {
     DistributedDB::DBStatus status = DistributedDB::DBStatus::OK;
-    std::string processSequence = "processSequence";
     for (const auto &table : schema.tables) {
         DistributedDB::KnowledgeSourceSchema sourceSchema;
         sourceSchema.tableName = table.tableName;
@@ -1708,7 +1707,22 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         }
         sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
             table.referenceFields.end());
-        sourceSchema.columnsToVerify = {{processSequence, {table.processSequence.columnName}}};
+
+        std::set<std::string> fieldsNeedExist = {table.commonAttribute.timeAttribute.baseTimeField};
+        fieldsNeedExist.insert(table.commonAttribute.timeAttribute.sourceFields.begin(),
+            table.commonAttribute.timeAttribute.sourceFields.end());
+        fieldsNeedExist.insert(table.commonAttribute.timeAttribute.extendFields.begin(),
+            table.commonAttribute.timeAttribute.extendFields.end());
+
+        fieldsNeedExist.insert(table.customKeyword.sourceFields.begin(), table.customKeyword.sourceFields.end());
+        fieldsNeedExist.insert(table.customKeyword.extendFields.begin(), table.customKeyword.extendFields.end());
+        fieldsNeedExist.erase("");
+
+        sourceSchema.columnsToVerify = {
+            {"processSequence", {table.processSequence.columnName}},
+            {"fieldsNeedExist", fieldsNeedExist},
+        };
+
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
         if (status != DistributedDB::DBStatus::OK) {
             return E_ERROR;
