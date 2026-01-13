@@ -745,6 +745,9 @@ HWTEST_F(RdbSqliteSharedResultSetTest, Sqlite_Shared_Result_Set_009, TestSize.Le
     EXPECT_NE(rstSet, nullptr);
 
     int colIndex = 0;
+    rstSet->GetColumnIndex("DATA1", colIndex);
+    EXPECT_EQ(colIndex, 1);
+
     rstSet->GetColumnIndex("data1", colIndex);
     EXPECT_EQ(colIndex, 1);
 
