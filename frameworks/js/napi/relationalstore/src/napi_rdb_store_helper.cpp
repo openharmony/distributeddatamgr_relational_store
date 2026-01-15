@@ -44,7 +44,6 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 constexpr int32_t PARAM_LENGTH_MAX = 256;
 constexpr int32_t VALUESBUCKET_LENGTH_MAX = 1000;
-constexpr uint32_t GET_RDB_STORE_SYNC_VERSION = 24;
 using ContextParam = AppDataMgrJsKit::JSUtils::ContextParam;
 
 const std::map<int, std::string> ERR_STRING_MAP = {
@@ -128,7 +127,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<GetRdbStoreContext>();
-    context->config.version = GET_RDB_STORE_SYNC_VERSION;
+    context->config.version = ConfigVersion::GET_RDB_STORE_SYNC_VERSION;
     return GetRdbStoreCommon(env, info, context);
 }
 

@@ -202,6 +202,8 @@ enum EncryptAlgo : int32_t {
 
 enum RegisterType : uint8_t { STORE_OBSERVER = 0, CLIENT_OBSERVER, OBSERVER_END };
 
+enum ConfigVersion : uint8_t { DEFAULT_VERSION = 0, GET_RDB_STORE_SYNC_VERSION };
+
 struct RegisterInfo {
 public:
     RegisterInfo()
@@ -910,7 +912,7 @@ private:
     bool allowRebuilt_ = false;
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
-    uint32_t version_ = 0;
+    ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;
 };
 } // namespace OHOS::NativeRdb
 #endif
