@@ -383,8 +383,8 @@ public:
     bool IsEqualRegisterInfo(const RdbStoreConfig& config) const;
     void SetEnableSemanticIndex(bool enableSemanticIndex);
     bool GetEnableSemanticIndex() const;
-    void SetVersion(uint32_t version);
-    uint32_t GetVersion() const;
+    void SetVersion(ConfigVersion version);
+    ConfigVersion GetVersion() const;
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
