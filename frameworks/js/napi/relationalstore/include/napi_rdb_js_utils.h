@@ -54,7 +54,7 @@ using HmacAlgo = NativeRdb::HmacAlgo;
 using KdfAlgo = NativeRdb::KdfAlgo;
 using EncryptAlgo = NativeRdb::EncryptAlgo;
 using CryptoParam = NativeRdb::RdbStoreConfig::CryptoParam;
-using ConfigVersion = NativeRdb::RdbStoreConfig::ConfigVersion;
+using ConfigVersion = NativeRdb::ConfigVersion;
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
