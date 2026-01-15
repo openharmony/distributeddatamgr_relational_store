@@ -220,7 +220,7 @@ napi_value ResultSetProxy::GetWholeColumnNames(napi_env env, napi_callback_info 
     if (errCode == E_INVALID_ARGS) {
         errCode = E_INVALID_ARGS_NEW;
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
     return JSUtils::Convert2JSValue(env, std::move(colNames));
 }
 
@@ -642,10 +642,7 @@ napi_value ResultSetProxy::GetRowData(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         std::tie(errCode, rowData) = resultSet->GetRowData();
     }
-    if (errCode == E_INVALID_ARGS) {
-        errCode = E_INVALID_ARGS_NEW;
-    }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, std::move(rowData));
 }
@@ -739,21 +736,25 @@ napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
         int32_t position = INIT_POSITION;
         std::weak_ptr<ResultSet> resultSet;
         std::vector<std::vector<ValueObject>> rowsData;
+        void SetError(std::shared_ptr<Error> err) override
+        {
+            error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
+        }
     };
     std::shared_ptr<RowsContextBase> context = std::make_shared<RowsContextBase>();
     auto resultSet = GetInnerResultSet(env, info);
-    RDB_NAPI_ASSERT(env, resultSet != nullptr, std::make_shared<InnerError>(E_ALREADY_CLOSED));
+    RDB_NAPI_ASSERT_INT(env, resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ALREADY_CLOSED));
     context->resultSet = resultSet;
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc > 0, std::make_shared<ParamNumError>("1 or 2"));
         auto errCode = JSUtils::Convert2ValueExt(env, argv[0], context->maxCount);
         CHECK_RETURN_SET_E(OK == errCode && context->maxCount > 0,
-            std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid maxCount"));
+            std::make_shared<InnerErrorExt>(E_INVALID_ARGS_NEW, "Invalid maxCount"));
         // parameter number is 2
         if (argc == 2 && !JSUtils::IsNull(env, argv[1])) {
             errCode = JSUtils::Convert2ValueExt(env, argv[1], context->position);
             CHECK_RETURN_SET_E(OK == errCode && context->position >= 0,
-                std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid position"));
+                std::make_shared<InnerErrorExt>(E_INVALID_ARGS_NEW, "Invalid position"));
         }
     };
     auto exec = [context]() -> int {
@@ -763,15 +764,12 @@ napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
         }
         int errCode = E_OK;
         std::tie(errCode, context->rowsData) = result->GetRowsData(context->maxCount, context->position);
-        if (errCode == E_INVALID_ARGS) {
-            errCode = E_INVALID_ARGS_NEW;
-        }
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = JSUtils::Convert2JSValue(env, std::move(context->rowsData));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }

@@ -262,7 +262,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryCurrentRowData_003 failed message:${err.message} code:${err.code}`);
-        expect('14800014').assertEqual(err.code);
+        expect(14800014).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryCurrentRowData_003 end *************');
@@ -284,7 +284,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryCurrentRowData_004 failed message:${err.message} code:${err.code}`);
-        expect('14800021').assertEqual(err.code);
+        expect(14800021).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryCurrentRowData_004 end *************');
@@ -306,7 +306,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryCurrentRowData_005 failed message:${err.message} code:${err.code}`);
-        expect('14800019').assertEqual(err.code);
+        expect(14800019).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryCurrentRowData_005 end *************');
@@ -328,7 +328,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryCurrentRowData_006 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryCurrentRowData_006 end *************');
@@ -350,7 +350,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryCurrentRowData_007 failed message:${err.message} code:${err.code}`);
-        expect('14800012').assertEqual(err.code);
+        expect(14800012).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryCurrentRowData_007 end *************');
@@ -521,7 +521,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryGetRowsData_003 failed message:${err.message} code:${err.code}`);
-        expect('14800014').assertEqual(err.code);
+        expect(14800014).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryGetRowsData_003 end *************');
@@ -681,7 +681,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryGetRowsData_009 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryGetRowsData_009 end *************');
@@ -744,7 +744,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryGetRowsData_011 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryGetRowsData_011 end *************');
@@ -764,7 +764,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryGetRowsData_012 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryGetRowsData_012 end *************');
@@ -821,7 +821,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryGetRowsData_014 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryGetRowsData_014 end *************');
@@ -875,7 +875,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryGetColumnNames_002 failed message:${err.message} code:${err.code}`);
-        expect('14800014').assertEqual(err.code);
+        expect(14800014).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryGetColumnNames_002 end *************');
@@ -897,7 +897,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryGetColumnNames_003 failed message:${err.message} code:${err.code}`);
-        expect('14800021').assertEqual(err.code);
+        expect(14800021).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryGetColumnNames_003 end *************');
@@ -919,7 +919,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryGetColumnNames_004 failed message:${err.message} code:${err.code}`);
-        expect('14800019').assertEqual(err.code);
+        expect(14800019).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryGetColumnNames_004 end *************');
@@ -941,7 +941,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`queryGetColumnNames_005 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       resultSet?.close();
       console.log(TAG + '************* queryGetColumnNames_005 end *************');
@@ -1108,7 +1108,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryCurrentRowData_003 failed message:${err.message} code:${err.code}`);
-        expect('14800014').assertEqual(err.code);
+        expect(14800014).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryCurrentRowData_003 end *************');
@@ -1130,7 +1130,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryCurrentRowData_004 failed message:${err.message} code:${err.code}`);
-        expect('14800021').assertEqual(err.code);
+        expect(14800021).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryCurrentRowData_004 end *************');
@@ -1152,7 +1152,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryCurrentRowData_005 failed message:${err.message} code:${err.code}`);
-        expect('14800019').assertEqual(err.code);
+        expect(14800019).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryCurrentRowData_005 end *************');
@@ -1174,7 +1174,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryCurrentRowData_006 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryCurrentRowData_006 end *************');
@@ -1196,7 +1196,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryCurrentRowData_007 failed message:${err.message} code:${err.code}`);
-        expect('14800012').assertEqual(err.code);
+        expect(14800012).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryCurrentRowData_007 end *************');
@@ -1376,7 +1376,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryGetRowsData_003 failed message:${err.message} code:${err.code}`);
-        expect('14800014').assertEqual(err.code);
+        expect(14800014).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryGetRowsData_003 end *************');
@@ -1536,7 +1536,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryGetRowsData_009 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryGetRowsData_009 end *************');
@@ -1599,7 +1599,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryGetRowsData_011 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryGetRowsData_011 end *************');
@@ -1619,7 +1619,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryGetRowsData_012 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryGetRowsData_012 end *************');
@@ -1676,7 +1676,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryGetRowsData_014 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryGetRowsData_014 end *************');
@@ -1732,7 +1732,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryGetColumnNames_002 failed message:${err.message} code:${err.code}`);
-        expect('14800014').assertEqual(err.code);
+        expect(14800014).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryGetColumnNames_002 end *************');
@@ -1754,7 +1754,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryGetColumnNames_003 failed message:${err.message} code:${err.code}`);
-        expect('14800021').assertEqual(err.code);
+        expect(14800021).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryGetColumnNames_003 end *************');
@@ -1776,7 +1776,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryGetColumnNames_004 failed message:${err.message} code:${err.code}`);
-        expect('14800019').assertEqual(err.code);
+        expect(14800019).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryGetColumnNames_004 end *************');
@@ -1798,7 +1798,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect().assertFail();
       } catch(err) {
         console.error(`lite_queryGetColumnNames_005 failed message:${err.message} code:${err.code}`);
-        expect('14800001').assertEqual(err.code);
+        expect(14800001).assertEqual(err.code);
       }
       liteResultSet?.close();
       console.log(TAG + '************* lite_queryGetColumnNames_005 end *************');

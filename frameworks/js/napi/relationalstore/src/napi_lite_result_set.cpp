@@ -133,7 +133,7 @@ static LiteResultSetProxy *GetLiteResultSetProxy(napi_env env, napi_callback_inf
 
     LiteResultSetProxy *proxy = nullptr;
     napi_status status = napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, status == napi_ok && proxy != nullptr, std::make_shared<InnerError>("napi_unwrap failed."));
+    RDB_NAPI_ASSERT_INT(env, status == napi_ok && proxy != nullptr, std::make_shared<InnerErrorExt>("napi_unwrap failed."));
     return proxy;
 }
 
@@ -150,14 +150,14 @@ static std::shared_ptr<ResultSet> ParseInt32FieldByName(
     size_t argc = 1;
     napi_value args[1] = {0};
     napi_get_cb_info(env, info, &argc, args, &self, nullptr);
-    RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
+    RDB_NAPI_ASSERT_INT(env, argc == 1, std::make_shared<ParamNumError>("1"));
 
     napi_status status = napi_get_value_int32(env, args[0], &field);
-    RDB_NAPI_ASSERT(env, status == napi_ok, std::make_shared<ParamError>(name, "a number."));
+    RDB_NAPI_ASSERT_INT(env, status == napi_ok, std::make_shared<ParamError>(name, "a number."));
 
     LiteResultSetProxy *proxy = nullptr;
     status = napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, status == napi_ok && proxy != nullptr, std::make_shared<InnerError>("napi_unwrap failed."));
+    RDB_NAPI_ASSERT_INT(env, status == napi_ok && proxy != nullptr, std::make_shared<InnerErrorExt>("napi_unwrap failed."));
     return proxy->GetInstance();
 }
 
@@ -167,29 +167,34 @@ static std::shared_ptr<ResultSet> ParseFieldByName(napi_env env, napi_callback_i
     size_t argc = 1;
     napi_value args[1] = {0};
     napi_get_cb_info(env, info, &argc, args, &self, nullptr);
-    RDB_NAPI_ASSERT(env, argc == 1, std::make_shared<ParamNumError>("1"));
-    RDB_NAPI_ASSERT(env, JSUtils::Convert2Value(env, args[0], field) == napi_ok,
+    RDB_NAPI_ASSERT_INT(env, argc == 1, std::make_shared<ParamNumError>("1"));
+    RDB_NAPI_ASSERT_INT(env, JSUtils::Convert2Value(env, args[0], field) == napi_ok,
         std::make_shared<ParamError>("columnName", "not null"));
-    RDB_NAPI_ASSERT(
-        env, !field.empty(), std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "columnName cannot be empty"));
+    RDB_NAPI_ASSERT_INT(env, !field.empty(),
+        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "columnName cannot be empty"));
     LiteResultSetProxy *proxy = nullptr;
     napi_status status = napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT(env, status == napi_ok && proxy != nullptr, std::make_shared<InnerError>("napi_unwrap failed."));
+    RDB_NAPI_ASSERT_INT(env, status == napi_ok && proxy != nullptr, std::make_shared<InnerErrorExt>("napi_unwrap failed."));
     return proxy->GetInstance();
 }
 
+struct TypeContextBase : public ContextBase {
+public:
+    int32_t columnIndex = 0;
+    std::string columnName;
+    ColumnType columnType = ColumnType::TYPE_NULL;
+    std::weak_ptr<ResultSet> resultSet;
+    void SetError(const std::shared_ptr<Error> err) override
+    {
+        error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
+    }
+};
+
 napi_value LiteResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 {
-    struct TypeContextBase : public ContextBase {
-    public:
-        int32_t columnIndex = 0;
-        std::string columnName;
-        ColumnType columnType = ColumnType::TYPE_NULL;
-        std::weak_ptr<ResultSet> resultSet;
-    };
     std::shared_ptr<TypeContextBase> context = std::make_shared<TypeContextBase>();
     auto resultSet = GetInnerResultSet(env, info);
-    RDB_NAPI_ASSERT(env, resultSet != nullptr, std::make_shared<InnerError>(E_ALREADY_CLOSED));
+    RDB_NAPI_ASSERT_INT(env, resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ALREADY_CLOSED));
     context->resultSet = resultSet;
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc > 0, std::make_shared<ParamNumError>("1"));
@@ -198,11 +203,11 @@ napi_value LiteResultSetProxy::GetColumnType(napi_env env, napi_callback_info in
         if (type == napi_number) {
             auto errCode = JSUtils::Convert2ValueExt(env, argv[0], context->columnIndex);
             CHECK_RETURN_SET_E(OK == errCode && context->columnIndex >= 0,
-                std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Invalid columnIndex."));
+                std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Invalid columnIndex."));
         } else {
             auto errCode = JSUtils::Convert2Value(env, argv[0], context->columnName);
             CHECK_RETURN_SET_E(OK == errCode && !context->columnName.empty(),
-                std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "columnName is empty."));
+                std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "columnName is empty."));
         }
     };
     auto exec = [context]() -> int {
@@ -217,16 +222,12 @@ napi_value LiteResultSetProxy::GetColumnType(napi_env env, napi_callback_info in
         if (errCode == E_OK) {
             errCode = result->GetColumnType(context->columnIndex, context->columnType);
         }
-        // The parameter error returned during query is converted into a new parameter error code.
-        if (errCode == E_INVALID_ARGS) {
-            errCode = E_INVALID_ARGS_NEW;
-        }
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = JSUtils::Convert2JSValue(env, static_cast<int32_t>(context->columnType));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }
@@ -263,7 +264,7 @@ napi_value LiteResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info
         }
     }
     // If the line exceeds the threshold, no exception is thrown and false is returned.
-    RDB_NAPI_ASSERT(env, errCode == E_ROW_OUT_RANGE || errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_ROW_OUT_RANGE || errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 
@@ -277,7 +278,7 @@ napi_value LiteResultSetProxy::GetLong(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->GetLong(columnIndex, result);
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -292,7 +293,7 @@ napi_value LiteResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->GetBlob(columnIndex, result);
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -311,7 +312,7 @@ napi_value LiteResultSetProxy::GetAsset(napi_env env, napi_callback_info info)
         LOG_DEBUG("GetAsset col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -330,7 +331,7 @@ napi_value LiteResultSetProxy::GetAssets(napi_env env, napi_callback_info info)
         LOG_DEBUG("GetAssets col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -349,7 +350,7 @@ napi_value LiteResultSetProxy::GetFloat32Array(napi_env env, napi_callback_info 
         LOG_DEBUG("GetFloat32Array col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -363,7 +364,7 @@ napi_value LiteResultSetProxy::GetString(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->GetString(columnIndex, result);
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -378,7 +379,7 @@ napi_value LiteResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->GetDouble(columnIndex, result);
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -392,12 +393,8 @@ napi_value LiteResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info i
     int errCode = E_ALREADY_CLOSED;
     if (resultSet != nullptr) {
         errCode = resultSet->GetColumnIndex(input, result);
-        // The parameter error returned during query is converted into a new parameter error code.
-        if (errCode == E_INVALID_ARGS) {
-            errCode = E_INVALID_ARGS_NEW;
-        }
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -410,12 +407,8 @@ napi_value LiteResultSetProxy::GetColumnName(napi_env env, napi_callback_info in
     int errCode = E_ALREADY_CLOSED;
     if (resultSet != nullptr) {
         errCode = resultSet->GetColumnName(columnIndex, result);
-        // The parameter error returned during query is converted into a new parameter error code.
-        if (errCode == E_INVALID_ARGS) {
-            errCode = E_INVALID_ARGS_NEW;
-        }
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -428,10 +421,7 @@ napi_value LiteResultSetProxy::GetWholeColumnNames(napi_env env, napi_callback_i
     if (resultSet != nullptr) {
         std::tie(errCode, colNames) = resultSet->GetWholeColumnNames();
     }
-    if (errCode == E_INVALID_ARGS) {
-        errCode = E_INVALID_ARGS_NEW;
-    }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
     return JSUtils::Convert2JSValue(env, std::move(colNames));
 }
 
@@ -444,12 +434,8 @@ napi_value LiteResultSetProxy::IsColumnNull(napi_env env, napi_callback_info inf
     int errCode = E_ALREADY_CLOSED;
     if (resultSet != nullptr) {
         errCode = resultSet->IsColumnNull(columnIndex, result);
-        // The parameter error returned during query is converted into a new parameter error code.
-        if (errCode == E_INVALID_ARGS) {
-            errCode = E_INVALID_ARGS_NEW;
-        }
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -462,12 +448,8 @@ napi_value LiteResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     int errCode = E_ALREADY_CLOSED;
     if (resultSet != nullptr) {
         errCode = resultSet->GetRow(rowEntity);
-        // The parameter error returned during query is converted into a new parameter error code.
-        if (errCode == E_INVALID_ARGS) {
-            errCode = E_INVALID_ARGS_NEW;
-        }
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, rowEntity);
 }
@@ -481,10 +463,7 @@ napi_value LiteResultSetProxy::GetRowData(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         std::tie(errCode, rowData) = resultSet->GetRowData();
     }
-    if (errCode == E_INVALID_ARGS) {
-        errCode = E_INVALID_ARGS_NEW;
-    }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
 
     return JSUtils::Convert2JSValue(env, std::move(rowData));
 }
@@ -531,28 +510,33 @@ std::pair<int, std::vector<RowEntity>> LiteResultSetProxy::GetRows(
     return {E_OK, rowEntities};
 }
 
+struct RowsContextBase : public ContextBase {
+public:
+    int32_t maxCount = 0;
+    int32_t position = INIT_POSITION;
+    std::weak_ptr<ResultSet> resultSet;
+    std::vector<RowEntity> rowEntities;
+    void SetError(std::shared_ptr<Error> err) override
+    {
+        error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
+    }
+};
+
 napi_value LiteResultSetProxy::GetRows(napi_env env, napi_callback_info info)
 {
-    struct RowsContextBase : public ContextBase {
-    public:
-        int32_t maxCount = 0;
-        int32_t position = INIT_POSITION;
-        std::weak_ptr<ResultSet> resultSet;
-        std::vector<RowEntity> rowEntities;
-    };
     std::shared_ptr<RowsContextBase> context = std::make_shared<RowsContextBase>();
     auto resultSet = GetInnerResultSet(env, info);
-    RDB_NAPI_ASSERT(env, resultSet != nullptr, std::make_shared<InnerError>(E_ALREADY_CLOSED));
+    RDB_NAPI_ASSERT_INT(env, resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ALREADY_CLOSED));
     context->resultSet = resultSet;
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc > 0, std::make_shared<ParamNumError>("1 or 2"));
         auto errCode = JSUtils::Convert2ValueExt(env, argv[0], context->maxCount);
         CHECK_RETURN_SET_E(OK == errCode && context->maxCount > 0,
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Invalid maxCount."));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Invalid maxCount."));
         if (argc == 2) {
             errCode = JSUtils::Convert2ValueExt(env, argv[1], context->position);
             CHECK_RETURN_SET_E(OK == errCode && context->position >= 0,
-                std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Invalid position."));
+                std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Invalid position."));
         }
     };
     auto exec = [context]() -> int {
@@ -562,16 +546,12 @@ napi_value LiteResultSetProxy::GetRows(napi_env env, napi_callback_info info)
         }
         int errCode = E_OK;
         std::tie(errCode, context->rowEntities) = GetRows(*result, context->maxCount, context->position);
-        // The parameter error returned during query is converted into a new parameter error code.
-        if (errCode == E_INVALID_ARGS) {
-            errCode = E_INVALID_ARGS_NEW;
-        }
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = JSUtils::Convert2JSValue(env, context->rowEntities);
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(!(context->error) || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }
@@ -584,21 +564,25 @@ napi_value LiteResultSetProxy::GetRowsData(napi_env env, napi_callback_info info
         int32_t position = INIT_POSITION;
         std::weak_ptr<ResultSet> resultSet;
         std::vector<std::vector<ValueObject>> rowsData;
+        void SetError(const std::shared_ptr<Error> err) override
+        {
+            error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
+        }
     };
     std::shared_ptr<RowsContextBase> context = std::make_shared<RowsContextBase>();
     auto resultSet = GetInnerResultSet(env, info);
-    RDB_NAPI_ASSERT(env, resultSet != nullptr, std::make_shared<InnerError>(E_ALREADY_CLOSED));
+    RDB_NAPI_ASSERT_INT(env, resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ALREADY_CLOSED));
     context->resultSet = resultSet;
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc > 0, std::make_shared<ParamNumError>("1 or 2"));
         auto errCode = JSUtils::Convert2ValueExt(env, argv[0], context->maxCount);
         CHECK_RETURN_SET_E(OK == errCode && context->maxCount > 0,
-            std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid maxCount"));
+            std::make_shared<InnerErrorExt>(E_INVALID_ARGS_NEW, "Invalid maxCount"));
         // parameter number is 2
         if (argc == 2 && !JSUtils::IsNull(env, argv[1])) {
             errCode = JSUtils::Convert2ValueExt(env, argv[1], context->position);
             CHECK_RETURN_SET_E(OK == errCode && context->position >= 0,
-                std::make_shared<InnerError>(E_INVALID_ARGS_NEW, "Invalid position"));
+                std::make_shared<InnerErrorExt>(E_INVALID_ARGS_NEW, "Invalid position"));
         }
     };
     auto exec = [context]() -> int {
@@ -608,15 +592,12 @@ napi_value LiteResultSetProxy::GetRowsData(napi_env env, napi_callback_info info
         }
         int errCode = E_OK;
         std::tie(errCode, context->rowsData) = result->GetRowsData(context->maxCount, context->position);
-        if (errCode == E_INVALID_ARGS) {
-            errCode = E_INVALID_ARGS_NEW;
-        }
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = JSUtils::Convert2JSValue(env, std::move(context->rowsData));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }
@@ -631,7 +612,7 @@ napi_value LiteResultSetProxy::GetValue(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->Get(columnIndex, object);
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
     return JSUtils::Convert2JSValue(env, object);
 }
 

@@ -103,17 +103,17 @@ export default function RdbStoreBatchInsertWithReturning() {
      * @tc.desc 1. empty table name.
      */
     it('batchInsertWithReturning001', 0, async (done: Function) => {
-      await callAndCodeCheck("14800001", "batchInsertWithReturning001", async ()=>{
+      await callAndCodeCheck(14800001, "batchInsertWithReturning001", async ()=>{
         await rdbStore?.batchInsertWithReturning("", [{'name': 'zhangsan'}], defaultReturningConfig);
       })
-      await callAndCodeCheck("14800001", "batchInsertWithReturningSync001", async ()=>{
+      await callAndCodeCheck(14800001, "batchInsertWithReturningSync001", async ()=>{
         rdbStore?.batchInsertWithReturningSync("", [{'name': 'zhangsan'}], defaultReturningConfig);
       })
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck("14800001", "transBatchInsertWithReturning001", async ()=>{
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturning001", async ()=>{
         await trans?.batchInsertWithReturning("", [{'name': 'zhangsan'}], defaultReturningConfig);
       })
-      await callAndCodeCheck("14800001", "transBatchInsertWithReturningSync001", async ()=>{
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturningSync001", async ()=>{
         trans?.batchInsertWithReturningSync("", [{'name': 'zhangsan'}], defaultReturningConfig);
       })
       await trans?.rollback();
@@ -149,17 +149,17 @@ export default function RdbStoreBatchInsertWithReturning() {
      * @tc.desc 1. There are spaces in the table name.
      */
     it('batchInsertWithReturning003', 0, async (done: Function) => {
-      await callAndCodeCheck("14800001", "batchInsertWithReturning003", async ()=>{
+      await callAndCodeCheck(14800001, "batchInsertWithReturning003", async ()=>{
         await rdbStore?.batchInsertWithReturning("test test1", [defaultVb], defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "batchInsertWithReturningSync003", async ()=>{
+      await callAndCodeCheck(14800001, "batchInsertWithReturningSync003", async ()=>{
         rdbStore?.batchInsertWithReturningSync("test test1", [defaultVb], defaultReturningConfig);
       });
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck("14800001", "transBatchInsertWithReturning003", async ()=>{
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturning003", async ()=>{
         await trans?.batchInsertWithReturning("test test1", [defaultVb], defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "transBatchInsertWithReturningSync003", async ()=>{
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturningSync003", async ()=>{
         trans?.batchInsertWithReturningSync("test test1", [defaultVb], defaultReturningConfig);
       });
       await trans?.rollback();
@@ -172,17 +172,17 @@ export default function RdbStoreBatchInsertWithReturning() {
      * @tc.desc 1. The values is an empty array.
      */
     it('batchInsertWithReturning004', 0, async (done: Function) => {
-      await callAndCodeCheck("14800001", "batchInsertWithReturning004", async ()=>{
+      await callAndCodeCheck(14800001, "batchInsertWithReturning004", async ()=>{
         await rdbStore?.batchInsertWithReturning("test", [], defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "batchInsertWithReturningSync004", async ()=>{
+      await callAndCodeCheck(14800001, "batchInsertWithReturningSync004", async ()=>{
         rdbStore?.batchInsertWithReturningSync("test", [], defaultReturningConfig);
       });
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck("14800001", "transBatchInsertWithReturning004", async ()=>{
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturning004", async ()=>{
         await trans?.batchInsertWithReturning("test", [], defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "transBatchInsertWithReturningSync004", async ()=>{
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturningSync004", async ()=>{
         trans?.batchInsertWithReturningSync("test", [], defaultReturningConfig);
       });
       await trans?.rollback();
@@ -243,17 +243,17 @@ export default function RdbStoreBatchInsertWithReturning() {
       }
       let assets: relationalStore.Assets = [asset, asset];
       const valueBucket: relationalStore.ValuesBucket = { 'data1': assets };
-      await callAndCodeCheck("14800001", "batchInsertWithReturning006", async ()=>{
+      await callAndCodeCheck(14800001, "batchInsertWithReturning006", async ()=>{
         await rdbStore?.batchInsertWithReturning("test", [valueBucket], defaultReturningConfig);
       })
-      await callAndCodeCheck("14800001", "batchInsertWithReturningSync006", async ()=>{
+      await callAndCodeCheck(14800001, "batchInsertWithReturningSync006", async ()=>{
         rdbStore?.batchInsertWithReturningSync("test", [valueBucket], defaultReturningConfig);
       })
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck("14800001", "transBatchInsertWithReturning006", async ()=>{
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturning006", async ()=>{
         await trans?.batchInsertWithReturning("test", [valueBucket], defaultReturningConfig);
       })
-      await callAndCodeCheck("14800001", "transBatchInsertWithReturningSync006", async ()=>{
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturningSync006", async ()=>{
         trans?.batchInsertWithReturningSync("test", [valueBucket], defaultReturningConfig);
       })
       await trans?.rollback();
@@ -382,17 +382,17 @@ export default function RdbStoreBatchInsertWithReturning() {
      */
     it('batchInsertWithReturning010', 0, async (done: Function) => {
       const config: relationalStore.ReturningConfig = { columns: [] };
-      await callAndCodeCheck('14800001', "batchInsertWithReturning010", async () => {
+      await callAndCodeCheck(14800001, "batchInsertWithReturning010", async () => {
         await rdbStore?.batchInsertWithReturning("test", [defaultVb], config);
       });
-      await callAndCodeCheck('14800001', "batchInsertWithReturningSync010", async () => {
+      await callAndCodeCheck(14800001, "batchInsertWithReturningSync010", async () => {
         rdbStore?.batchInsertWithReturningSync("test", [defaultVb], config);
       });
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck('14800001', "transBatchInsertWithReturning010", async () => {
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturning010", async () => {
         await trans?.batchInsertWithReturning("test", [defaultVb], config);
       });
-      await callAndCodeCheck('14800001', "transBatchInsertWithReturningSync010", async () => {
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturningSync010", async () => {
         trans?.batchInsertWithReturningSync("test", [defaultVb], config);
       });
       await trans?.rollback();
@@ -406,17 +406,17 @@ export default function RdbStoreBatchInsertWithReturning() {
      */
     it('batchInsertWithReturning011', 0, async (done: Function) => {
       const config: relationalStore.ReturningConfig = { columns: ['name', 'age', 'salary', 'data', 'blobType'] };
-      await callAndCodeCheck('14800001', "batchInsertWithReturning011", async () => {
+      await callAndCodeCheck(14800001, "batchInsertWithReturning011", async () => {
         await rdbStore?.batchInsertWithReturning("test", [defaultVb], config);
       });
-      await callAndCodeCheck('14800001', "batchInsertWithReturningSync011", async () => {
+      await callAndCodeCheck(14800001, "batchInsertWithReturningSync011", async () => {
         rdbStore?.batchInsertWithReturningSync("test", [defaultVb], config);
       });
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck('14800001', "transBatchInsertWithReturning011", async () => {
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturning011", async () => {
         await trans?.batchInsertWithReturning("test", [defaultVb], config);
       });
-      await callAndCodeCheck('14800001', "transBatchInsertWithReturningSync011", async () => {
+      await callAndCodeCheck(14800001, "transBatchInsertWithReturningSync011", async () => {
         trans?.batchInsertWithReturningSync("test", [defaultVb], config);
       });
       await trans?.rollback();
@@ -432,17 +432,17 @@ export default function RdbStoreBatchInsertWithReturning() {
       let columnsCase = [['ab*'], ["a b"], ["a,b"] ];
       for (let i = 0; i < columnsCase.length; ++i) {
         const config: relationalStore.ReturningConfig = { columns: columnsCase[i] };
-        await callAndCodeCheck('14800001', "batchInsertWithReturning012-" + i, async () => {
+        await callAndCodeCheck(14800001, "batchInsertWithReturning012-" + i, async () => {
           await rdbStore?.batchInsertWithReturning("test", [defaultVb], config);
         });
-        await callAndCodeCheck('14800001', "batchInsertWithReturningSync012-" + i, async () => {
+        await callAndCodeCheck(14800001, "batchInsertWithReturningSync012-" + i, async () => {
           rdbStore?.batchInsertWithReturningSync("test", [defaultVb], config);
         });
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('14800001', "transBatchInsertWithReturning012-" + i, async () => {
+        await callAndCodeCheck(14800001, "transBatchInsertWithReturning012-" + i, async () => {
           await trans?.batchInsertWithReturning("test", [defaultVb], config);
         });
-        await callAndCodeCheck('14800001', "transBatchInsertWithReturningSync012-" + i, async () => {
+        await callAndCodeCheck(14800001, "transBatchInsertWithReturningSync012-" + i, async () => {
           trans?.batchInsertWithReturningSync("test", [defaultVb], config);
         });
         await trans?.rollback();
@@ -592,10 +592,10 @@ export default function RdbStoreBatchInsertWithReturning() {
      */
     it('batchInsertWithReturning017', 0, async (done: Function) => {
       await rdbStore?.close();
-      await callAndCodeCheck('14800014', "batchInsertWithReturning017", async () => {
+      await callAndCodeCheck(14800014, "batchInsertWithReturning017", async () => {
         await rdbStore?.batchInsertWithReturning("test", [defaultVb], defaultReturningConfig);
       });
-      await callAndCodeCheck('14800014', "batchInsertWithReturningSync017", async () => {
+      await callAndCodeCheck(14800014, "batchInsertWithReturningSync017", async () => {
         rdbStore?.batchInsertWithReturningSync("test", [defaultVb], defaultReturningConfig);
       });
       await resetRdbStore();
@@ -618,10 +618,10 @@ export default function RdbStoreBatchInsertWithReturning() {
     it('batchInsertWithReturning018', 0, async (done: Function) => {
       const config: relationalStore.ReturningConfig = { columns: ['name?', 'age'] };
       await rdbStore?.close();
-      await callAndCodeCheck('14800014', "batchInsertWithReturning018", async () => {
+      await callAndCodeCheck(14800014, "batchInsertWithReturning018", async () => {
         await rdbStore?.batchInsertWithReturning("test", [defaultVb], config);
       });
-      await callAndCodeCheck('14800014', "batchInsertWithReturningSync018", async () => {
+      await callAndCodeCheck(14800014, "batchInsertWithReturningSync018", async () => {
         rdbStore?.batchInsertWithReturningSync("test", [defaultVb], config);
       });
       await resetRdbStore();
@@ -864,17 +864,17 @@ export default function RdbStoreBatchInsertWithReturning() {
     it('batchInsertWithReturning026', 0, async (done: Function) => {
       let illegalTableNames:Array<string> = ["123test", "te.s.t", ".test", "test.."];
       for (let i = 0; i < illegalTableNames.length; ++i) {
-        await callAndCodeCheck('14800001', "batchInsertWithReturning026-" + i, async () => {
+        await callAndCodeCheck(14800001, "batchInsertWithReturning026-" + i, async () => {
           await rdbStore?.batchInsertWithReturning(illegalTableNames[i], [defaultVb], defaultReturningConfig);
         });
-        await callAndCodeCheck('14800001', "batchInsertWithReturningSync026-" + i, async () => {
+        await callAndCodeCheck(14800001, "batchInsertWithReturningSync026-" + i, async () => {
           rdbStore?.batchInsertWithReturningSync(illegalTableNames[i], [defaultVb], defaultReturningConfig);
         });
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('14800001', "transBatchInsertWithReturning026-" + i, async () => {
+        await callAndCodeCheck(14800001, "transBatchInsertWithReturning026-" + i, async () => {
           await trans?.batchInsertWithReturning(illegalTableNames[i], [defaultVb], defaultReturningConfig);
         });
-        await callAndCodeCheck('14800001', "transBatchInsertWithReturningSync026-" + i, async () => {
+        await callAndCodeCheck(14800001, "transBatchInsertWithReturningSync026-" + i, async () => {
           trans?.batchInsertWithReturningSync(illegalTableNames[i], [defaultVb], defaultReturningConfig);
         });
         await trans?.rollback();
@@ -895,17 +895,17 @@ export default function RdbStoreBatchInsertWithReturning() {
           columns: ['name', 'age'],
           maxReturningCount: maxReturningCounts[i]
         };
-        await callAndCodeCheck('14800001', "batchInsertWithReturning027-" + i, async () => {
+        await callAndCodeCheck(14800001, "batchInsertWithReturning027-" + i, async () => {
           await rdbStore?.batchInsertWithReturning("test", [defaultVb], config);
         });
-        await callAndCodeCheck('14800001', "batchInsertWithReturningSync027-" + i, async () => {
+        await callAndCodeCheck(14800001, "batchInsertWithReturningSync027-" + i, async () => {
           rdbStore?.batchInsertWithReturningSync("test", [defaultVb], config);
         });
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('14800001', "transBatchInsertWithReturning027-" + i, async () => {
+        await callAndCodeCheck(14800001, "transBatchInsertWithReturning027-" + i, async () => {
           await trans?.batchInsertWithReturning("test", [defaultVb], config);
         });
-        await callAndCodeCheck('14800001', "transBatchInsertWithReturningSync027-" + i, async () => {
+        await callAndCodeCheck(14800001, "transBatchInsertWithReturningSync027-" + i, async () => {
           trans?.batchInsertWithReturningSync("test", [defaultVb], config);
         });
         await trans?.rollback();
@@ -1022,20 +1022,20 @@ export default function RdbStoreBatchInsertWithReturning() {
         let code = await callAndReturnCode("batchInsertWithReturning031-" + i, async () => {
           await rdbStore?.batchInsertWithReturning(tables[i], values[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         code = await callAndReturnCode("batchInsertWithReturningSync031-" + i, async () => {
           rdbStore?.batchInsertWithReturningSync(tables[i], values[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         let trans = await rdbStore?.createTransaction(options);
         code = await callAndReturnCode("transBatchInsertWithReturning031-" + i, async () => {
           await trans?.batchInsertWithReturning(tables[i], values[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         code = await callAndReturnCode("transBatchInsertWithReturningSync031-" + i, async () => {
           trans?.batchInsertWithReturningSync(tables[i], values[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         await trans?.rollback();
       }
       done();

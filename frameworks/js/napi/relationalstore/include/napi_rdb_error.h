@@ -63,6 +63,29 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
 
 #define RDB_NAPI_ASSERT(env, assertion, error) RDB_NAPI_ASSERT_BASE(env, assertion, error, nullptr)
 
+#define RDB_NAPI_ASSERT_INT_BASE(env, assertion, error, retVal)                                                 \
+    do {                                                                                                        \
+        if (!(assertion)) {                                                                                     \
+            if ((error) == nullptr) {                                                                           \
+                LOG_ERROR("throw error: error message is empty");                                               \
+                napi_throw_error((env), nullptr, "error message is empty");                                     \
+                return retVal;                                                                                  \
+            }                                                                                                   \
+            LOG_ERROR("throw error: code = %{public}d , message = %{public}s", (error)->GetCode(),              \
+                (error)->GetMessage().c_str());                                                                 \
+            napi_value code = nullptr;                                                                          \
+            napi_value msg = nullptr;                                                                           \
+            napi_create_int32(env, (error)->GetCode(), &code);                                                  \
+            napi_create_string_utf8(env, (error)->GetMessage().c_str(), NAPI_AUTO_LENGTH, &msg);                \
+            napi_value businessError;                                                                           \
+            napi_create_error(env, code, msg, &businessError);                                                  \
+            napi_throw(env, businessError);                                                                     \
+            return retVal;                                                                                      \
+        }                                                                                                       \
+    } while (0)
+
+#define RDB_NAPI_ASSERT_INT(env, assertion, error) RDB_NAPI_ASSERT_INT_BASE(env, assertion, error, nullptr)
+
 #define CHECK_RETURN_CORE(assertion, theCall, revt) \
     do {                                            \
         if (!(assertion)) {                         \
@@ -71,7 +94,7 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
         }                                           \
     } while (0)
 
-#define CHECK_RETURN_SET_E(assertion, paramError) \
+#define CHECK_RETURN_SET_E(assertion, paramError)   \
     CHECK_RETURN_CORE(assertion, context->SetError(paramError), RDB_REVT_NOTHING)
 
 #define CHECK_RETURN_SET(assertion, paramError) CHECK_RETURN_CORE(assertion, context->SetError(paramError), ERR)
@@ -140,6 +163,7 @@ class InnerErrorExt : public Error {
 public:
     InnerErrorExt(int code, const std::string &msg = "")
     {
+        nativeCode_ = code;
         auto errorMsgExt = GetJsErrorCodeExt(code);
         if (errorMsgExt.has_value()) {
             auto napiError = errorMsgExt.value();
@@ -149,6 +173,14 @@ public:
             code_ = E_INNER_ERROR;
             msg_ = "Inner error.";
         }
+    }
+
+    InnerErrorExt(const std::string &msg)
+    {
+        errCodeType_ = true;
+        code_ = E_INNER_ERROR;
+        msg_ = std::string("Inner error. ") + msg;
+        nativeCode_ = NativeRdb::E_ERROR;
     }
 
     std::string GetMessage() override
@@ -161,8 +193,14 @@ public:
         return code_;
     }
 
+    int GetNativeCode() override
+    {
+        return nativeCode_;
+    }
+
 private:
     int code_;
+    int nativeCode_;
     std::string msg_;
 };
 
