@@ -54,6 +54,7 @@ using HmacAlgo = NativeRdb::HmacAlgo;
 using KdfAlgo = NativeRdb::KdfAlgo;
 using EncryptAlgo = NativeRdb::EncryptAlgo;
 using CryptoParam = NativeRdb::RdbStoreConfig::CryptoParam;
+using ConfigVersion = NativeRdb::RdbStoreConfig::ConfigVersion;
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
@@ -74,7 +75,7 @@ struct RdbConfig {
     std::vector<std::string> pluginLibs = {};
     int32_t haMode = HAMode::SINGLE;
     CryptoParam cryptoParam;
-    uint32_t version = 0;
+    ConfigVersion version = ConfigVersion::DEFAULT_VERSION;
 };
 
 struct ContextParam {

@@ -441,7 +441,7 @@ private:
     bool allowRebuilt_ = false;
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
-    uint32_t version_ = 0;
+    ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;
 };
 } // namespace OHOS::NativeRdb
 #endif
