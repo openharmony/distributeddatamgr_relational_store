@@ -74,6 +74,7 @@ struct RdbConfig {
     std::vector<std::string> pluginLibs = {};
     int32_t haMode = HAMode::SINGLE;
     CryptoParam cryptoParam;
+    unsigned int apiVersion;
 };
 
 struct ContextParam {
