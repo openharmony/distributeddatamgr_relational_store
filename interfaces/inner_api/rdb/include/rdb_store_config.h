@@ -853,9 +853,9 @@ public:
 
     bool GetEnableSemanticIndex() const;
 
-    void SetVersion(uint32_t version);
+    void SetVersion(ConfigVersion version);
 
-    uint32_t GetVersion() const;
+    ConfigVersion GetVersion() const;
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
