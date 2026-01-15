@@ -650,12 +650,12 @@ bool RdbStoreConfig::GetEnableSemanticIndex() const
     return enableSemanticIndex_;
 }
 
-void RdbStoreConfig::SetVersion(unsigned int version)
+void RdbStoreConfig::SetVersion(uint32_t version)
 {
     version_ = version;
 }
 
-unsigned int RdbStoreConfig::GetVersion() const
+uint32_t RdbStoreConfig::GetVersion() const
 {
     return version_;
 }

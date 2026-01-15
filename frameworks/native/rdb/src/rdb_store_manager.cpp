@@ -90,7 +90,8 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
             config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
             log.c_str());
         Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
-        if (rdbStore->GetConfig().IsMemoryRdb() || config.IsMemoryRdb() || config.GetVersion() >= 24) {
+        if (rdbStore->GetConfig().IsMemoryRdb() || config.IsMemoryRdb() ||
+            config.GetVersion() >= GET_RDB_STORE_SYNC_VERSION) {
             errCode = E_CONFIG_INVALID_CHANGE;
             rdbStore = nullptr;
             return rdbStore;
