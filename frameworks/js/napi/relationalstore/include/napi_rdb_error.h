@@ -177,7 +177,6 @@ public:
 
     InnerErrorExt(const std::string &msg)
     {
-        errCodeType_ = true;
         code_ = E_INNER_ERROR;
         msg_ = std::string("Inner error. ") + msg;
         nativeCode_ = NativeRdb::E_ERROR;
