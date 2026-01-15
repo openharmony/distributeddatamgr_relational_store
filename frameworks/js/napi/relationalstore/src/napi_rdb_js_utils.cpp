@@ -610,7 +610,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
 
     rdbStoreConfig.SetEnableSemanticIndex(rdbConfig.enableSemanticIndex);
-    rdbStoreConfig.SetApiVersion(rdbConfig.apiVersion);
+    rdbStoreConfig.SetVersion(rdbConfig.version);
     return rdbStoreConfig;
 }
 }; // namespace JSUtils

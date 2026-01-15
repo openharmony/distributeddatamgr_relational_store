@@ -650,14 +650,14 @@ bool RdbStoreConfig::GetEnableSemanticIndex() const
     return enableSemanticIndex_;
 }
 
-void RdbStoreConfig::SetApiVersion(unsigned int apiVersion)
+void RdbStoreConfig::SetVersion(unsigned int version)
 {
-    apiVersion_ = apiVersion;
+    version_ = version;
 }
 
-unsigned int RdbStoreConfig::GetApiVersion() const
+unsigned int RdbStoreConfig::GetVersion() const
 {
-    return apiVersion_;
+    return version_;
 }
 
 void RdbStoreConfig::SetWalLimitSize(ssize_t size)

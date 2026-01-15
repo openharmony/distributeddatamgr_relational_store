@@ -850,6 +850,10 @@ public:
     void SetEnableSemanticIndex(bool enableSemanticIndex);
 
     bool GetEnableSemanticIndex() const;
+
+    void SetVersion(unsigned int version);
+
+    unsigned int GetVersion() const; 
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
@@ -906,7 +910,7 @@ private:
     bool allowRebuilt_ = false;
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
-    unsigned int apiVersion_;
+    unsigned int apiVersion_ = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif
