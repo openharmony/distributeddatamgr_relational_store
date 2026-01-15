@@ -215,6 +215,7 @@ LiteResultSet TransactionImpl::QuerySqlWithoutRowCountSync(string_view sql, opti
     if (sql.empty()) {
         LOG_ERROR("sql is empty");
         ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+        return make_holder<LiteResultSetImpl, LiteResultSet>();
     }
     std::vector<OHOS::NativeRdb::ValueObject> para;
     if (args.has_value()) {
@@ -222,7 +223,8 @@ LiteResultSet TransactionImpl::QuerySqlWithoutRowCountSync(string_view sql, opti
         std::transform(args.value().begin(), args.value().end(), para.begin(),
             [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
     }
-    auto nativeResultSet = nativeTransaction_->QueryByStep(std::string(sql), para);
+    DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+    auto nativeResultSet = nativeTransaction_->QueryByStep(std::string(sql), para, options);
     return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
 }
 
