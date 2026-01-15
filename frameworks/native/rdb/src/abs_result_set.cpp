@@ -39,7 +39,7 @@ void RowEntity::Put(std::string &&name, int32_t index, ValueObject &&value)
     if (index < 0 || index >= static_cast<int>(indexs_.size())) {
         return;
     }
-    auto it = values_.emplace(name, std::move(value));
+    auto it = values_.emplace(std::move(name), std::move(value));
     indexs_[index] = it.first;
 }
 
