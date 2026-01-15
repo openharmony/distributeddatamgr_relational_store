@@ -112,7 +112,7 @@ napi_value GetRdbStoreCommon(napi_env env, napi_callback_info info, std::shared_
     return ASYNC_CALL(env, context);
 }
 
-napi_value GetRdbStore(napi_env env, napi_callback_info info) 
+napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
     struct DeleteContext : public ContextBase {
         ContextParam param;
