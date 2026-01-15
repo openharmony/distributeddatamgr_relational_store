@@ -152,7 +152,9 @@ napi_value AsyncCall::Async(napi_env env, std::shared_ptr<ContextBase> context)
     auto status = napi_queue_async_work_with_qos(env, context->work_, napi_qos_user_initiated);
     if (status != napi_ok) {
         napi_get_undefined(env, &promise);
-        napi_reject_deferred(env, context->defer_, promise);
+        if (context->defer_ != nullptr) {
+            napi_reject_deferred(env, context->defer_, promise);
+        }
     }
     auto report = (record_.total_.times_.load() - record_.completed_.times_.load()) / EXCEPT_DELTA;
     if (report > record_.reportTimes_ && record_.executed_ != nullptr) {

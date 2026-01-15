@@ -1611,6 +1611,7 @@ describe('rdbResultSetTest', function () {
         console.log(TAG + "************* testIsColumnNull0003 end *************");
 
     })
+
     /**
      * @tc.name resultSet isColumnNull test
      * @tc.number SUB_DDM_AppDataFWK_JSRDB_ResultSet_0193

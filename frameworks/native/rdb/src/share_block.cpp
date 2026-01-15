@@ -90,7 +90,7 @@ int SeriPutOther(void *pCtx, int addedRows, int column)
     return serializer->PutOther(addedRows, column);
 }
 
-int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTimes)
+int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retryTime)
 {
     SharedBlockSerializerInfo serializer(info->sharedBlock, stmt, info->columnNum, info->startPos);
     Sqlite3SharedBlockMethods sqliteBlock =
@@ -114,7 +114,7 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTimes
         if (errCode == SQLITE_LOCKED || errCode == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying errCode=%{public}d, errno=%{public}d retryCount=%{public}d", errCode,
                 errno, retryCount);
-            if (retryCount < retiyTimes) {
+            if (retryCount < retryTime) {
                 usleep(SLEEP_TIME);
                 retryCount++;
                 continue;
