@@ -853,7 +853,7 @@ public:
 
     void SetVersion(unsigned int version);
 
-    unsigned int GetVersion() const; 
+    unsigned int GetVersion() const;
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
