@@ -906,6 +906,7 @@ private:
     bool allowRebuilt_ = false;
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
+    unsigned int apiVersion_;
 };
 } // namespace OHOS::NativeRdb
 #endif

@@ -65,14 +65,8 @@ public:
     }
 };
 
-napi_value GetRdbStore(napi_env env, napi_callback_info info)
+napi_value GetRdbStoreCommon(napi_env env, napi_callback_info info, std::shared_ptr<DeleteContext> context)
 {
-    struct DeleteContext : public ContextBase {
-        ContextParam param;
-        RdbConfig config;
-        std::shared_ptr<RdbStore> proxy;
-    };
-    auto context = std::make_shared<DeleteContext>();
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         int errCode = Convert2Value(env, argv[0], context->param);
@@ -116,6 +110,30 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
+}
+
+napi_value GetRdbStore(napi_env env, napi_callback_info info) 
+{
+    struct DeleteContext : public ContextBase {
+        ContextParam param;
+        RdbConfig config;
+        std::shared_ptr<RdbStore> proxy;
+    };
+    auto context = std::make_shared<DeleteContext>();
+    context.config.apiVersion = 23;
+    return GetRdbStoreCommon(env, info, context);
+}
+
+napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
+{
+    struct DeleteContext : public ContextBase {
+        ContextParam param;
+        RdbConfig config;
+        std::shared_ptr<RdbStore> proxy;
+    };
+    auto context = std::make_shared<DeleteContext>();
+    context.config.apiVersion = 24;
+    return GetRdbStoreCommon(env, info, context);
 }
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
@@ -397,7 +415,7 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
 {
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStore", GetRdbStore, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStoreSync", GetRdbStore, SYNC),
+        DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStoreSync", GetRdbStoreSync, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStore", DeleteRdbStore, ASYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStoreSync", DeleteRdbStore, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("isVectorSupported", IsVectorSupported, SYNC),

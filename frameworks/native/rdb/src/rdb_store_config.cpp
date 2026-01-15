@@ -650,6 +650,16 @@ bool RdbStoreConfig::GetEnableSemanticIndex() const
     return enableSemanticIndex_;
 }
 
+void RdbStoreConfig::SetApiVersion(unsigned int apiVersion)
+{
+    apiVersion_ = apiVersion;
+}
+
+unsigned int RdbStoreConfig::GetApiVersion() const
+{
+    return apiVersion_;
+}
+
 void RdbStoreConfig::SetWalLimitSize(ssize_t size)
 {
     if (size < GlobalExpr::DB_WAL_DEFAULT_SIZE) {
