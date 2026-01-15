@@ -376,6 +376,7 @@ LiteResultSet RdbStoreImpl::QuerySqlWithoutRowCountSync(string_view sql, optiona
     if (sql.empty()) {
         LOG_ERROR("sql is empty");
         ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+        return make_holder<LiteResultSetImpl, LiteResultSet>();
     }
     std::vector<OHOS::NativeRdb::ValueObject> para;
     if (bindArgs.has_value()) {
