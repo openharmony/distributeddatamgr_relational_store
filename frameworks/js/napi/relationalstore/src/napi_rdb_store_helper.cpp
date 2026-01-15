@@ -65,6 +65,12 @@ public:
     }
 };
 
+struct DeleteContext : public ContextBase {
+    ContextParam param;
+    RdbConfig config;
+    std::shared_ptr<RdbStore> proxy;
+};
+
 napi_value GetRdbStoreCommon(napi_env env, napi_callback_info info, std::shared_ptr<DeleteContext> context)
 {
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
@@ -114,25 +120,15 @@ napi_value GetRdbStoreCommon(napi_env env, napi_callback_info info, std::shared_
 
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
-    struct DeleteContext : public ContextBase {
-        ContextParam param;
-        RdbConfig config;
-        std::shared_ptr<RdbStore> proxy;
-    };
     auto context = std::make_shared<DeleteContext>();
-    context.config.version = 23;
+    context->config.version = 23;
     return GetRdbStoreCommon(env, info, context);
 }
 
 napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
 {
-    struct DeleteContext : public ContextBase {
-        ContextParam param;
-        RdbConfig config;
-        std::shared_ptr<RdbStore> proxy;
-    };
     auto context = std::make_shared<DeleteContext>();
-    context.config.version = 24;
+    context->config.version = 24;
     return GetRdbStoreCommon(env, info, context);
 }
 
