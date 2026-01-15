@@ -383,8 +383,8 @@ public:
     bool IsEqualRegisterInfo(const RdbStoreConfig& config) const;
     void SetEnableSemanticIndex(bool enableSemanticIndex);
     bool GetEnableSemanticIndex() const;
-    void SetVersion(unsigned int version);
-    unsigned int GetVersion() const;
+    void SetVersion(uint32_t version);
+    uint32_t GetVersion() const;
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
@@ -441,7 +441,7 @@ private:
     bool allowRebuilt_ = false;
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
-    unsigned int version_ = 0;
+    uint32_t version_ = 0;
 };
 } // namespace OHOS::NativeRdb
 #endif
