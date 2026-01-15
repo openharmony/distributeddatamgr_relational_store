@@ -285,6 +285,9 @@ int RelationalCursor::GoToNextRow()
     if (resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
+    if (!isSupportRowCount_) {
+        return ConvertorErrorCode::NativeToNdkExt(resultSet_->GoToNextRow());
+    }
     return ConvertorErrorCode::NativeToNdk(resultSet_->GoToNextRow());
 }
 

@@ -1019,9 +1019,9 @@ napi_value RdbStoreProxy::QueryWithoutRowCount(napi_env env, napi_callback_info 
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }
@@ -1033,11 +1033,11 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
-        CHECK_RETURN_SET_E(
-            napi_ok == Convert2Value(env, argv[0], context->sql), std::make_shared<ParamError>("sql", "not null"));
+        CHECK_RETURN_SET_E(napi_ok == Convert2Value(env, argv[0], context->sql),
+            std::make_shared<ParamError>("sql", "not null"));
         // 401 is reported only when the parameter type is incorrect.
-        CHECK_RETURN_SET_E(
-            !context->sql.empty(), std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "sql cannot be empty"));
+        CHECK_RETURN_SET_E(!context->sql.empty(),
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "sql cannot be empty"));
         if (argc == 2) {
             CHECK_RETURN(OK == ParseBindArgs(env, argv[1], context));
         }
@@ -1051,9 +1051,9 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }
@@ -2109,7 +2109,7 @@ struct RdbContext : public RdbStoreContextBase {
         ASSERT_RETURN_SET_ERROR(status == napi_ok && boundObj != nullptr,
             std::make_shared<ParamError>("RdbStore", "not nullptr."));
         rdbStore = reinterpret_cast<RdbStoreProxy *>(boundObj)->GetInstance();
-        ASSERT_RETURN_SET_ERROR(rdbStore != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        ASSERT_RETURN_SET_ERROR(rdbStore != nullptr, std::make_shared<InnerErrorExt>(NativeRdb::E_ALREADY_CLOSED));
         return OK;
     }
 };
@@ -2120,22 +2120,22 @@ struct RdbBatchInsertWithReturningContext : public RdbContext {
         // the parameters are either 3 or 4.
         ASSERT_RETURN_SET_ERROR(argc == 3 || argc == 4, std::make_shared<ParamNumError>("3 or 4"));
         CHECK_RETURN_ERR(OK == ParsedInstance(self));
-        ASSERT_RETURN_SET_ERROR(
-            JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
+        ASSERT_RETURN_SET_ERROR(JSUtils::Convert2Value(env, argv[0], tableName) == OK,
+            std::make_shared<ParamError>("table", "a string."));
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(tableName),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto err = ParseValuesBuckets(env, argv[1], valuesBuckets);
         ASSERT_RETURN_SET_ERROR(!err, err);
         ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBuckets),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
         auto errCode = JSUtils::Convert2Value(env, argv[2], config);
         ASSERT_RETURN_SET_ERROR(errCode == E_OK,
             std::make_shared<ParamError>("Illegal ReturningConfig."));
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount),
-            std::make_shared<InnerError>(
+            std::make_shared<InnerErrorExt>(
                 NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."));
         // 4 is the number of parameters, 3 is the index.
         if (argc == 4 && !JSUtils::IsNull(env, argv[3])) {
@@ -2176,12 +2176,12 @@ napi_value RdbStoreProxy::BatchInsertWithReturning(napi_env env, napi_callback_i
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
-        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
         JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }
@@ -2195,19 +2195,19 @@ struct RdbUpdateWithReturningContext : public RdbContext {
         std::shared_ptr<Error> err = ParseValuesBucket(env, argv[0], valuesBucket);
         ASSERT_RETURN_SET_ERROR(!err, err);
         ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBucket),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
         err = ParseRdbPredicatesProxy(env, argv[1], rdbPredicates);
         ASSERT_RETURN_SET_ERROR(!err, err);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto errCode = JSUtils::Convert2Value(env, argv[2], config);
         ASSERT_RETURN_SET_ERROR(errCode == E_OK,
             std::make_shared<ParamError>("Illegal ReturningConfig."));
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount),
-            std::make_shared<InnerError>(
+            std::make_shared<InnerErrorExt>(
                 NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."));
         // 4 is the number of parameters, 3 is the index.
         if (argc == 4 && !JSUtils::IsNull(env, argv[3])) {
@@ -2248,12 +2248,12 @@ napi_value RdbStoreProxy::UpdateWithReturning(napi_env env, napi_callback_info i
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
-        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
         JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -2268,15 +2268,15 @@ struct RdbDeleteWithReturningContext : public RdbContext {
         std::shared_ptr<Error> err = ParseRdbPredicatesProxy(env, argv[0], rdbPredicates);
         ASSERT_RETURN_SET_ERROR(!err, err);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto errCode = JSUtils::Convert2Value(env, argv[1], config);
         ASSERT_RETURN_SET_ERROR(errCode == E_OK,
             std::make_shared<ParamError>("Illegal ReturningConfig."));
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount),
-            std::make_shared<InnerError>(
+            std::make_shared<InnerErrorExt>(
                 NativeRdb::E_INVALID_ARGS_NEW, "MaxReturningcount is not within the valid range."));
         return OK;
     }
@@ -2306,12 +2306,12 @@ napi_value RdbStoreProxy::DeleteWithReturning(napi_env env, napi_callback_info i
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
-        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
         JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
