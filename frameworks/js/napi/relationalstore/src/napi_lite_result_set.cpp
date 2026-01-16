@@ -133,7 +133,8 @@ static LiteResultSetProxy *GetLiteResultSetProxy(napi_env env, napi_callback_inf
 
     LiteResultSetProxy *proxy = nullptr;
     napi_status status = napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT_INT(env, status == napi_ok && proxy != nullptr, std::make_shared<InnerErrorExt>("napi_unwrap failed."));
+    RDB_NAPI_ASSERT_INT(env, status == napi_ok && proxy != nullptr,
+        std::make_shared<InnerErrorExt>("napi_unwrap failed."));
     return proxy;
 }
 
@@ -157,7 +158,8 @@ static std::shared_ptr<ResultSet> ParseInt32FieldByName(
 
     LiteResultSetProxy *proxy = nullptr;
     status = napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT_INT(env, status == napi_ok && proxy != nullptr, std::make_shared<InnerErrorExt>("napi_unwrap failed."));
+    RDB_NAPI_ASSERT_INT(env, status == napi_ok && proxy != nullptr,
+        std::make_shared<InnerErrorExt>("napi_unwrap failed."));
     return proxy->GetInstance();
 }
 
@@ -174,7 +176,8 @@ static std::shared_ptr<ResultSet> ParseFieldByName(napi_env env, napi_callback_i
         std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "columnName cannot be empty"));
     LiteResultSetProxy *proxy = nullptr;
     napi_status status = napi_unwrap(env, self, reinterpret_cast<void **>(&proxy));
-    RDB_NAPI_ASSERT_INT(env, status == napi_ok && proxy != nullptr, std::make_shared<InnerErrorExt>("napi_unwrap failed."));
+    RDB_NAPI_ASSERT_INT(env, status == napi_ok && proxy != nullptr,
+        std::make_shared<InnerErrorExt>("napi_unwrap failed."));
     return proxy->GetInstance();
 }
 

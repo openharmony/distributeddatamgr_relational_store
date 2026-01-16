@@ -46,6 +46,7 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
 #define RDB_REVT_NOTHING
 #define RDB_DO_NOTHING
 
+// Before API23, when using this macro, the type of error code thrown was a string
 #define RDB_NAPI_ASSERT_BASE(env, assertion, error, retVal)                                                     \
     do {                                                                                                        \
         if (!(assertion)) {                                                                                     \
@@ -63,6 +64,7 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
 
 #define RDB_NAPI_ASSERT(env, assertion, error) RDB_NAPI_ASSERT_BASE(env, assertion, error, nullptr)
 
+// After API23, when using this macro, the type of error code thrown is a int
 #define RDB_NAPI_ASSERT_INT_BASE(env, assertion, error, retVal)                                                 \
     do {                                                                                                        \
         if (!(assertion)) {                                                                                     \
