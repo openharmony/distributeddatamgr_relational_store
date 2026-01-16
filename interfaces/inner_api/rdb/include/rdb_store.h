@@ -843,12 +843,6 @@ public:
      */
     virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func);
 
-    /**
-     * @brief Stop sync cloud data
-
-     */
-    virtual int32_t StopCloudSync();
-
 protected:
     virtual std::string GetLogTableName(const std::string &tableName);
 };
