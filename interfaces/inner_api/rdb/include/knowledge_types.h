@@ -45,6 +45,25 @@ struct RdbProcessRatio {
     int32_t vectorCount = 0;
 };
 
+struct RdbKnowledgeKeyword {
+    bool hasKeyword = false;
+    std::string wordTablePath;
+    std::vector<std::string> sourceFields;
+    std::vector<std::string> extendFields;
+};
+
+struct KnowledgeTimeAttribute {
+    bool hasTimeAttribute = false;
+    std::string baseTimeField;
+    std::vector<std::string> sourceFields;
+    std::vector<std::string> extendFields;
+};
+
+struct RdbKnowledgeAttribute {
+    bool hasKnowledgeAttribute = false;
+    KnowledgeTimeAttribute timeAttribute;
+};
+
 struct RdbKnowledgeField {
     std::string columnName;
     std::vector<std::string> type;
@@ -56,13 +75,14 @@ struct RdbKnowledgeField {
 struct RdbKnowledgeTable {
     std::string tableName;
     std::string tokenizer;
-    bool processInvertedFirst;
+    bool processInvertedFirst = false;
     std::vector<std::string> referenceFields;
     std::vector<RdbKnowledgeField> knowledgeFields;
     std::unordered_map<std::string, std::vector<std::string>> pipelineHandlers;
     RdbProcessSequence processSequence;
     RdbProcessRatio processRatio;
-    bool isSaveChunkRowId;
+    RdbKnowledgeKeyword customKeyword;
+    RdbKnowledgeAttribute commonAttribute;
 };
 
 struct RdbKnowledgeProcess {
