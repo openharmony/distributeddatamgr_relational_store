@@ -140,6 +140,7 @@ class InnerErrorExt : public Error {
 public:
     InnerErrorExt(int code, const std::string &msg = "")
     {
+        nativeCode_ = code;
         auto errorMsgExt = GetJsErrorCodeExt(code);
         if (errorMsgExt.has_value()) {
             auto napiError = errorMsgExt.value();
@@ -161,8 +162,14 @@ public:
         return code_;
     }
 
+    int GetNativeCode() override
+    {
+        return nativeCode_;
+    }
+
 private:
     int code_;
+    int nativeCode_;
     std::string msg_;
 };
 

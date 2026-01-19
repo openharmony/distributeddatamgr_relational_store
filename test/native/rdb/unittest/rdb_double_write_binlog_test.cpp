@@ -1176,7 +1176,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_020, TestSize.Level0)
     int64_t id = 1;
     int count = 10;
     Insert(id, count);
-    
+
     LOG_INFO("---- let binlog clean return ERROR");
     auto originalApi = sqlite3_export_extra_symbols;
     struct sqlite3_api_routines_extra mockApi = *sqlite3_export_extra_symbols;
@@ -1204,7 +1204,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_021, TestSize.Level0)
     Insert(id, count);
     store = nullptr;
     slaveStore = nullptr;
-    
+
     LOG_INFO("---- let support binlog becomes off");
     struct sqlite3_api_routines_relational mockApi = *sqlite3_export_relational_symbols;
     mockApi.is_support_binlog = MockSupportBinlogOff;
@@ -1607,7 +1607,7 @@ static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, si
 {
     size_t bigSize = dataSize;
     std::string data(bigSize, 'a');
-    
+
     LOG_INFO("---- start insert ----");
     int64_t totalCost = 0;
     for (int64_t id = 0; id < repeat; id++) {
@@ -1706,7 +1706,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_001, TestSize.Lev
     InitDb(HAMode::SINGLE);
     EXPECT_NE(store, nullptr);
     ASSERT_TRUE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
- 
+
     int totalCount = 20000;
     int dataSize = 1024;
     int batchSize = 10;

@@ -1044,7 +1044,7 @@ export default function RdbStoreBatchInsertWithReturning() {
     /**
      * @tc.name batchInsertWithReturning test.
      * @tc.number batchInsertWithReturning032
-     * @tc.desc 1. getColumnType with index.
+     * @tc.desc 1. Result type test.
      */
     it('batchInsertWithReturning032', 0, async (done: Function) => {
       await rdbStore?.execute(CREATE_TABLE_TEST1);
@@ -1106,7 +1106,7 @@ export default function RdbStoreBatchInsertWithReturning() {
     /**
      * @tc.name batchInsertWithReturning test.
      * @tc.number batchInsertWithReturning033
-     * @tc.desc 1. getColumnType with key.
+     * @tc.desc 1. Result type test.
      */
     it('batchInsertWithReturning033', 0, async (done: Function) => {
       await rdbStore?.execute(CREATE_TABLE_TEST1);

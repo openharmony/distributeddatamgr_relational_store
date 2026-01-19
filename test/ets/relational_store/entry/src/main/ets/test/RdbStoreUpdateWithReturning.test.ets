@@ -1008,7 +1008,7 @@ export default function RdbStoreUpdateWithReturning() {
     /**
      * @tc.name updateWithReturning test.
      * @tc.number updateWithReturning029
-     * @tc.desc 1. getColumnType with index.
+     * @tc.desc 1. Result type test.
      */
     it('updateWithReturning029', 0, async (done: Function) => {
       await rdbStore?.execute(CREATE_TABLE_TEST1);
@@ -1076,7 +1076,7 @@ export default function RdbStoreUpdateWithReturning() {
     /**
      * @tc.name updateWithReturning test.
      * @tc.number updateWithReturning030
-     * @tc.desc 1. getColumnType with key.
+     * @tc.desc 1. Result type test.
      */
     it('updateWithReturning030', 0, async (done: Function) => {
       await rdbStore?.execute(CREATE_TABLE_TEST1);
