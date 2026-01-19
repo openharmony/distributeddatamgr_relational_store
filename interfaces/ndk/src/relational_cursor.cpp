@@ -186,7 +186,7 @@ int RelationalCursor::Destroy(OH_Cursor *cursor)
     return errCode;
 }
 
-bool RelationalCursor::IsNeedTerminator()
+bool RelationalCursor::IsNeedTerminator() const
 {
     return isNeedTerminator_;
 }

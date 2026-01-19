@@ -609,6 +609,8 @@ bool RdbRegisterAlgoFuzz(FuzzedDataProvider &provider)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
+    (void) argc;
+    (void) argv;
     OHOS::RdbStoreFuzzTest::SetUpTestCase();
     return 0;
 }
