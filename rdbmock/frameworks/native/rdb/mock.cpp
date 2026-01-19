@@ -48,6 +48,7 @@ __attribute__((visibility("default"))) int FillSharedBlockOpt(SharedBlockInfo *i
 
 __attribute__((visibility("default"))) int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retryTime)
 {
+    (void) retryTime;
     int retryCount = 0;
     info->totalRows = info->addedRows = 0;
     bool isFull = false;

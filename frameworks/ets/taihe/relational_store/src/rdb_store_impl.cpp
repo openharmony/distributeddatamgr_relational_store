@@ -58,6 +58,8 @@ public:
     }
     int OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override
     {
+        (void) oldVersion;
+        (void) newVersion;
         return OHOS::NativeRdb::E_OK;
     }
 };

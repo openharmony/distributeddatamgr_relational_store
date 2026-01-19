@@ -41,8 +41,8 @@ public:
     void SetUp();
     void TearDown();
 
-    void GenerateData1();
-    void GenerateData2();
+    void GenerateData1() const;
+    void GenerateData2() const;
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -76,6 +76,8 @@ int DuplicateColumnDataOpenCallback::OnCreate(RdbStore &rdbStore)
 
 int DuplicateColumnDataOpenCallback::OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion)
 {
+    (void) oldVersion;
+    (void) newVersion;
     return E_OK;
 }
 
@@ -104,7 +106,7 @@ void DuplicateColumnDataTest::TearDown()
 {
 }
 
-void DuplicateColumnDataTest::GenerateData1()
+void DuplicateColumnDataTest::GenerateData1() const
 {
     int64_t id;
     ValuesBucket values;
@@ -138,7 +140,7 @@ void DuplicateColumnDataTest::GenerateData1()
     store->Insert(id, "test1", values);
 }
 
-void DuplicateColumnDataTest::GenerateData2()
+void DuplicateColumnDataTest::GenerateData2() const
 {
     int64_t id;
     ValuesBucket values;
