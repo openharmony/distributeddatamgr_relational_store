@@ -973,7 +973,7 @@ std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t max
         if (errCode != E_OK) {
             return {errCode, std::vector<RowEntity>()};
         }
-        rowEntities.push_back(rowEntity);
+        rowEntities.push_back(std::move(rowEntity));
         errCode = resultSet.GoToNextRow();
         if (errCode == E_ROW_OUT_RANGE) {
             break;
