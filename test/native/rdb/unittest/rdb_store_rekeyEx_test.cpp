@@ -90,6 +90,8 @@ int RekeyTestOpenCallback::OnCreate(RdbStore &store)
 
 int RekeyTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
+    (void) oldVersion;
+    (void) newVersion;
     return E_OK;
 }
 
