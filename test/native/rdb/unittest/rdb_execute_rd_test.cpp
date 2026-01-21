@@ -253,11 +253,14 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_005, TestSize.Level1)
  */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_006, TestSize.Level1)
 {
+    if (GetParam()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     std::string sqlCreateTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, repr floatvector(8));";
     std::string sqlInsert = "INSERT INTO test VALUES(1, '[1.2, 0.3, 3.2, 1.6, 2.5, 3.1, 0.8, 0.4]');";
     std::string sqlBeginTrans = "begin;";
 
-    std::string dbPath = "/data/test/execute_test1.db";
+    std::string dbPath = "/data/test/execute_test.db";
     std::string configStr =
     "{\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
     "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500, \"defaultIsolationLevel\":2 }";

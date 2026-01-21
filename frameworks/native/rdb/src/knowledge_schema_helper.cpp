@@ -138,7 +138,7 @@ void KnowledgeSchemaHelper::LoadKnowledgeLib()
     if (dlHandle_ != nullptr) {
         return;
     }
-    auto handle = dlopen("libaip_knowledge_process.z.so", RTLD_LAZY);
+    auto handle = dlopen("libaip_knowledge_processor.z.so", RTLD_LAZY);
     if (handle != nullptr) {
         LoadKnowledgeSchemaManager(handle);
         dlHandle_ = handle;
