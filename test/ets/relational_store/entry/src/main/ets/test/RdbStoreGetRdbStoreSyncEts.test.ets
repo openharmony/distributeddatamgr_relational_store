@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-import { hilog } from '@kit.PerformanceAnalysisKit';
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from '@ohos/hypium';
 import relationalStore from '@ohos.data.relationalStore'
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
@@ -44,7 +43,8 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     })
     afterEach(async () => {
       console.info(TAG + 'afterEach');
-      await relationalStore.deleteRdbStore(context, "RdbTest.db");
+      await relationalStore.deleteRdbStore(context, "rdbstore.db");
+      await relationalStore.deleteRdbStore(context, "rdbstore1.db");
     })
     afterAll(async () => {
       console.info(TAG + 'afterAll');
@@ -190,13 +190,13 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStore0007', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStore0007 start *************");
       let config: relationalStore.StoreConfig = {
-        name: "secure.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S3
       }
       try {
         let store: relationalStore.RdbStore = relationalStore.getRdbStoreSync(context, config);
         await store.executeSql(CREATE_TABLE_TEST);
-        await relationalStore.deleteRdbStore(context, "secure.db");
+        await relationalStore.deleteRdbStore(context, "rdbstore.db");
       } catch (e) {
         expect().assertFail();
       }
@@ -213,7 +213,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStore0008', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStore0008 start *************");
       let config: relationalStore.StoreConfig = {
-        name: "secure.db",
+        name: "rdbstore.db",
         securityLevel: 8
       }
       try {
@@ -234,12 +234,12 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStore0009', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStore0009 start *************");
       let config1: relationalStore.StoreConfig = {
-        name: "rdbstore9.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S1,
       }
 
       let config2: relationalStore.StoreConfig = {
-        name: "rdbstore9.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S2,
       }
 
@@ -263,12 +263,12 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStore0010', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStore0010 start *************");
       let config1: relationalStore.StoreConfig = {
-        name: "rdbstore10.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S1,
       }
 
       let config2: relationalStore.StoreConfig = {
-        name: "rdbstore10.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S2,
       }
 
@@ -292,7 +292,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStore0011', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStore0011 start *************");
       let config: relationalStore.StoreConfig = {
-        name: "search.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S1,
         // isSearchable: true
       }
@@ -317,7 +317,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       try {
         const rowCount = 18;
         const rdbStore = relationalStore.getRdbStoreSync(context, {
-          name: "walTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           encrypt: true,
         });
@@ -980,7 +980,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0037 start *************");
       try {
         relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "invalidPath",
           customDir: "entry/rdb"
@@ -1002,7 +1002,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0038 start *************");
       try {
         relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "invalidPath",
           customDir: "entry/rdb"
@@ -1025,7 +1025,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0039 start *************");
       try {
         relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database",
           customDir: "entry/rdb"
@@ -1047,7 +1047,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0040 start *************");
       try {
         relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database",
           customDir: "entry/rdb"
@@ -1070,7 +1070,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       try {
         const rowCount = 18;
         const rdbStore = relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
         })
 
@@ -1089,7 +1089,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
         rdbStore.close();
 
         const rdbStore1 = relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database",
           customDir: "entry/rdb"
@@ -1102,7 +1102,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
         expect("14800010").assertEqual(e.code);
         console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
       }
-      await relationalStore.deleteRdbStore(context, "rootDirTest");
+      await relationalStore.deleteRdbStore(context, "rdbstore.db");
       console.log(TAG + "************* testRdbStore0041 end *************");
       done();
     })
@@ -1116,7 +1116,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0042 start *************");
       const rowCount = 18;
       const rdbStore = relationalStore.getRdbStoreSync(context, {
-        name: "rootDirTest",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S3,
       })
 
@@ -1137,7 +1137,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
 
       try {
         relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database",
           customDir: "entry/rdb"
@@ -1150,7 +1150,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
           const predicates = new relationalStore.RdbPredicates('test');
           const resultSet = rdbStore.querySync(predicates);
           expect(resultSet.rowCount).assertEqual(rowCount);
-          relationalStore.deleteRdbStore(context, "rootDirTest");
+          relationalStore.deleteRdbStore(context, "rdbstore.db");
           console.log(TAG + "************* testRdbStore0042 end *************");
           done();
         }
@@ -1167,7 +1167,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0043 start *************");
       try {
         const rdbStore = relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
         })
 
@@ -1175,7 +1175,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
         rdbStore.close();
 
         const rdbStore1 = relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database",
           customDir: "entry/rdb"
@@ -1192,7 +1192,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
         console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
         expect("14800010").assertEqual(e.code);
       }
-      await relationalStore.deleteRdbStore(context, "rootDirTest");
+      await relationalStore.deleteRdbStore(context, "rdbstore.db");
       console.log(TAG + "************* testRdbStore0043 end *************");
       done();
     })
@@ -1205,7 +1205,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStore0044', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStore0044 start *************");
       const rdbStore = relationalStore.getRdbStoreSync(context, {
-        name: "rootDirTest",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S3,
       })
 
@@ -1214,7 +1214,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
 
       try {
         relationalStore.getRdbStoreSync(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database",
           customDir: "entry/rdb"
@@ -1230,7 +1230,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
         console.log("catch err: failed, err: code=" + e.code + " message=" + e.message)
         expect("14800010").assertEqual(e.code);
       }
-      relationalStore.deleteRdbStore(context, "rootDirTest");
+      relationalStore.deleteRdbStore(context, "rdbstore.db");
       console.log(TAG + "************* testRdbStore0044 end *************");
       done();
     })
@@ -1244,7 +1244,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0045 start *************");
       try {
         const rdbStore = relationalStore.getRdbStoreSync(context, {
-          name: "RdbTest.db",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
         })
 
@@ -1252,7 +1252,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
         rdbStore.close();
 
         await relationalStore.deleteRdbStore(context, {
-          name: "RdbTest.db",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database",
           customDir: "entry/rdb"
@@ -1273,7 +1273,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStore0046', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStore0046 start *************");
       const rdbStore = relationalStore.getRdbStoreSync(context, {
-        name: "rootDirTest",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S3,
       })
 
@@ -1282,7 +1282,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
 
       try {
         relationalStore.deleteRdbStore(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database",
           customDir: "entry/rdb"
@@ -1310,7 +1310,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0047 start *************");
       try {
         await relationalStore.deleteRdbStore(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "invalidPath",
           customDir: "entry/rdb"
@@ -1333,7 +1333,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0048 start *************");
       try {
         relationalStore.deleteRdbStore(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "invalidPath",
           customDir: "entry/rdb"
@@ -1357,7 +1357,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0049 start *************");
       try {
         await relationalStore.deleteRdbStore(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database/entry/rdb",
         })
@@ -1379,7 +1379,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
       console.log(TAG + "************* testRdbStore0050 start *************");
       try {
         relationalStore.deleteRdbStore(context, {
-          name: "rootDirTest",
+          name: "rdbstore.db",
           securityLevel: relationalStore.SecurityLevel.S3,
           rootDir: "/data/storage/el2/database/entry/rdb",
         }, () => {
@@ -1474,7 +1474,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStore0055', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStore0055 start *************");
       let storeConfig: relationalStore.StoreConfig = {
-        name: "testSupportTokenizer.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S1,
         tokenizer: relationalStore.Tokenizer.CUSTOM_TOKENIZER,
       }
@@ -1500,7 +1500,7 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
         encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
       }
       let storeConfig: relationalStore.StoreConfig = {
-        name: "RdbTest.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S2,
         cryptoParam: cryptoParam
       }
@@ -1533,12 +1533,12 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStoreConfigChange001', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStoreConfigChange001 start *************");
       let config1: relationalStore.StoreConfig = {
-        name: "RdbTest.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S1,
       }
 
       let config2: relationalStore.StoreConfig = {
-        name: "RdbTest.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S2,
       }
 
@@ -1562,12 +1562,12 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStoreConfigChange002', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStoreConfigChange002 start *************");
       let config1: relationalStore.StoreConfig = {
-        name: "RdbTest.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S1,
       }
 
       let config2: relationalStore.StoreConfig = {
-        name: "RdbTest.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S2,
       }
 
@@ -1591,12 +1591,12 @@ export default function RdbStoregetRdbStoreSyncSyncEtsTest() {
     it('testRdbStoreConfigChange003', 0, async (done: Function) => {
       console.log(TAG + "************* testRdbStoreConfigChange003 start *************");
       let config1: relationalStore.StoreConfig = {
-        name: "rdbstore9.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S1,
       }
 
       let config2: relationalStore.StoreConfig = {
-        name: "rdbstore9.db",
+        name: "rdbstore.db",
         securityLevel: relationalStore.SecurityLevel.S2,
       }
 
