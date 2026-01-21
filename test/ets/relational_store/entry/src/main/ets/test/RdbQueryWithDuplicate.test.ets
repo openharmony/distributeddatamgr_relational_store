@@ -150,7 +150,7 @@ export default function RdbQueryWithDuplicateColumns() {
       let resultSet: relationalStore.ResultSet | undefined;
       try {
         resultSet = await rdbStore.querySql('SELECT * FROM test INNER JOIN test1 ON test.id = test1.id');
-        expect(true).assertEqual(resultSet.goToFirstRow());
+        expect(resultSet.goToFirstRow()).assertTrue();
         let u8 = new Uint8Array([1, 2, 3]);
         const assets2 = [asset1, asset2];
 
@@ -204,7 +204,7 @@ export default function RdbQueryWithDuplicateColumns() {
           'test.data1, test.data2, test1.id AS test1_id, test1.name AS test1_name, test1.age AS test1_age, ' +
           'test1.data3, test1.data4 FROM test INNER JOIN test1 ON test.id = test1.id;'
         resultSet = await rdbStore.querySql(querySQL);
-        expect(true).assertEqual(resultSet.goToFirstRow());
+        expect(resultSet.goToFirstRow()).assertTrue();
         let u8 = new Uint8Array([1, 2, 3]);
         const assets2 = [asset1, asset2];
 
@@ -373,7 +373,7 @@ export default function RdbQueryWithDuplicateColumns() {
         resultSet = await rdbStoreAttach.querySql('SELECT * FROM test INNER JOIN test1 ON test.id = test1.id');
         let u8 = new Uint8Array([1, 2, 3])
         const assets2 = [asset1, asset2];
-        expect(true).assertEqual(resultSet.goToFirstRow());
+        expect(resultSet.goToFirstRow()).assertTrue();
 
         let rowData = resultSet.getCurrentRowData();
         expect(10).assertEqual(rowData.length);
@@ -998,7 +998,7 @@ export default function RdbQueryWithDuplicateColumns() {
           rdbStore.querySqlWithoutRowCount('SELECT * FROM test INNER JOIN test1 ON test.id = test1.id');
         let u8 = new Uint8Array([1, 2, 3]);
         const assets2 = [asset1, asset2];
-        liteResultSet.goToNextRow();
+        expect(liteResultSet.goToNextRow()).assertTrue();
 
         let liteRow = liteResultSet.getRow();
         expect('zhangsan').assertEqual(liteRow.name);
@@ -1551,7 +1551,7 @@ export default function RdbQueryWithDuplicateColumns() {
       console.log(TAG + '************* lite_queryGetRowsData_010 start *************');
       let rdbStoreAttach = await relationalStore.getRdbStore(context, STORE_CONFIG1);
       let count = await rdbStoreAttach.attach('/data/storage/el2/database/rdb/rdbQueryResultSet.db', 'attachDB5');
-      expect(count == 1).assertTrue();
+      expect(1).assertEqual(count);
       let liteResultSet: relationalStore.LiteResultSet | undefined;
       try {
         liteResultSet =
@@ -1577,7 +1577,7 @@ export default function RdbQueryWithDuplicateColumns() {
       } catch(err) {
         console.error(`lite_queryGetRowsData_010 failed message:${err.message} code:${err.code}`);
         await rdbStoreAttach.detach('attachDB5');
-        expect().assertFalse();
+        expect(false).assertTrue();
       }
       liteResultSet?.close();
       await rdbStoreAttach.detach('attachDB5');
@@ -1832,7 +1832,7 @@ export default function RdbQueryWithDuplicateColumns() {
         expect('data4').assertEqual(columnNames[9]);
       } catch(e) {
         console.error(`lite_queryGetColumnNames_006 failed message:${e.message} code:${e.code}`);
-        expect().assertFalse();
+        expect(false).assertTrue();
       }
       liteResultSet?.close();
       await rdbStoreAttach.detach('attachDB6');
