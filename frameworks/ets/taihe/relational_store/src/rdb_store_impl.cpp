@@ -537,6 +537,10 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithOptionColumn(weak::RdbPredicates
         ThrowInnerError(errCode);
         return make_holder<ResultSetImpl, ResultSet>();
     }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return make_holder<ResultSetImpl, ResultSet>();
+    }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     if (rdbPredicateNative == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
@@ -564,6 +568,10 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithPredicate(weak::RdbPredicates pr
         ThrowInnerError(errCode);
         return make_holder<ResultSetImpl, ResultSet>();
     }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return make_holder<ResultSetImpl, ResultSet>();
+    }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     if (rdbPredicateNative == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
@@ -584,6 +592,10 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithColumn(weak::RdbPredicates predi
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(errCode);
+        return make_holder<ResultSetImpl, ResultSet>();
+    }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
         return make_holder<ResultSetImpl, ResultSet>();
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
@@ -791,6 +803,10 @@ void RdbStoreImpl::RestoreWithVoid()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return;
+    }
     int errCode = nativeRdbStore_->Restore("");
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -990,6 +1006,10 @@ void RdbStoreImpl::CloudSyncWithPredicates(
 {
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
         return;
     }
     OHOS::DistributedRdb::SyncOption option {
@@ -1526,11 +1546,15 @@ ResultSet RdbStoreImpl::QueryLockedRowSync(weak::RdbPredicates predicates, optio
     return make_holder<ResultSetImpl, ResultSet>(resultSetNative);
 }
 
-uint32_t RdbStoreImpl::LockCloudContainerSync()
+int32_t RdbStoreImpl::LockCloudContainerSync()
 {
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
+        return 0;
+    }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return 0;
     }
     auto [errCode, output] = nativeRdbStore_->LockCloudContainer();
     if (errCode != OHOS::NativeRdb::E_OK) {
@@ -1544,6 +1568,10 @@ void RdbStoreImpl::UnlockCloudContainerSync()
 {
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
         return;
     }
     int errCode = nativeRdbStore_->UnlockCloudContainer();

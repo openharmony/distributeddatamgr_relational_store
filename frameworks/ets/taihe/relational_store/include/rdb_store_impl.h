@@ -131,7 +131,7 @@ public:
     void LockRowSync(weak::RdbPredicates predicates);
     void UnlockRowSync(weak::RdbPredicates predicates);
     ResultSet QueryLockedRowSync(weak::RdbPredicates predicates, optional_view<array<string>> columns);
-    uint32_t LockCloudContainerSync();
+    int32_t LockCloudContainerSync();
     void UnlockCloudContainerSync();
     Transaction CreateTransactionSync(optional_view<::ohos::data::relationalStore::TransactionOptions> options);
     Result BatchInsertWithReturningSync(string_view table, array_view<ValuesBucket> values,

@@ -1011,7 +1011,7 @@ interface RdbStore {
     QueryLockedRowSync(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
 
     @gen_promise("lockCloudContainer")
-    LockCloudContainerSync(): u32;
+    LockCloudContainerSync(): i32;
 
     @gen_promise("unlockCloudContainer")
     UnlockCloudContainerSync(): void;
