@@ -100,8 +100,6 @@ public:
 
     virtual int32_t ReportStatistic(const RdbSyncerParam &param, const RdbStatEvent &statEvent) = 0;
 
-    virtual int32_t StopCloudSync(const RdbSyncerParam &param) = 0;
-
     virtual ~RdbService() = default;
 };
 } // namespace DistributedRdb

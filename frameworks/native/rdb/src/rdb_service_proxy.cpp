@@ -82,9 +82,6 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
         },
         [this](const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo) {
             OnDataChange(origin, primaries, std::move(changeInfo));
-        },
-        [this](const std::string &storeId, int32_t triggerMode) {
-            OnSyncTrigger(storeId, triggerMode);
         });
     if (notifier_ == nullptr) {
         LOG_ERROR("create notifier failed.");
@@ -535,26 +532,6 @@ void RdbServiceProxy::OnDataChange(
     });
 }
 
-void RdbServiceProxy::OnSyncTrigger(const std::string &storeId, int32_t triggerMode)
-{
-    LOG_DEBUG("storeId:%{public}s, triggerMode:%{public}d", SqliteUtils::Anonymous(storeId).c_str(), triggerMode);
-    auto name = SqliteUtils::RemoveSuffix(storeId);
-    std::vector<std::shared_ptr<RdbStoreObserver>> observersNotify;
-    observers_.ComputeIfPresent(name, [&observersNotify, triggerMode](
-        const auto &key, const std::list<ObserverParam> &value) {
-        for (const auto &params : value) {
-            auto obs = params.observer.lock();
-            if (obs != nullptr) {
-                observersNotify.push_back(obs);
-            }
-        }
-        return !value.empty();
-    });
-    for (const auto &obs : observersNotify) {
-        obs->OnChange(triggerMode);
-    }
-}
-
 void RdbServiceProxy::OnRemoteDeadSyncComplete()
 {
     std::map<std::string, ProgressDetail> result;
@@ -726,17 +703,6 @@ int32_t RdbServiceProxy::VerifyPromiseInfo(const RdbSyncerParam &param)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_VERIFY_PROMISE_INFO), reply, param);
-    if (status != RDB_OK) {
-        LOG_ERROR("fail, status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status,
-            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
-    }
-    return status;
-}
-
-int32_t RdbServiceProxy::StopCloudSync(const RdbSyncerParam &param)
-{
-    MessageParcel reply;
-    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_STOP_CLOUD_SYNC), reply, param);
     if (status != RDB_OK) {
         LOG_ERROR("fail, status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status,
             param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());

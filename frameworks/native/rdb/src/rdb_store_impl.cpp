@@ -442,9 +442,7 @@ int RdbStoreImpl::SetDistributedTables(
     }
     syncerParam_.asyncDownloadAsset_ = distributedConfig.asyncDownloadAsset;
     syncerParam_.enableCloud_ = distributedConfig.enableCloud;
-    syncerParam_.autoSyncSwitch_ = distributedConfig.autoSyncSwitch;
     syncerParam_.distributedTableMode_ = distributedConfig.tableType;
-    syncerParam_.isAsyncCreatedistTable_ = distributedConfig.isAsyncCreatedistTable;
     int32_t errorCode = service->SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
     if (errorCode != E_OK) {
@@ -581,7 +579,7 @@ int RdbStoreImpl::HandleCloudSyncAfterSetDistributedTables(
     }
     {
         std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-        if (distributedConfig.autoSyncSwitch && distributedConfig.enableCloud && distributedConfig.autoSync) {
+        if (distributedConfig.enableCloud && distributedConfig.autoSync) {
             cloudInfo_->AddTables(tables);
         } else {
             cloudInfo_->RmvTables(tables);
@@ -1113,21 +1111,6 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
         LOG_ERROR("UnlockCloudContainer failed, err is %{public}d.", errCode);
     }
     return errCode;
-}
-
-int32_t RdbStoreImpl::StopCloudSync()
-{
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if ((config_.GetDBType() == DB_VECTOR) || isMemoryRdb_ || isReadOnly_) {
-        return E_NOT_SUPPORT;
-    }
-    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
-    if (errCode != E_OK || service == nullptr) {
-        LOG_ERROR("GetRdbService is failed, err is %{public}d, bundleName is %{public}s.", errCode,
-            syncerParam_.bundleName_.c_str());
-        return errCode;
-    }
-    return service->StopCloudSync(syncerParam_);
 }
 #endif
 
