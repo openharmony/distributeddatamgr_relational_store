@@ -498,7 +498,19 @@ int OH_Rdb_DeleteStore(const OH_Rdb_Config *config)
     if (errCode != OHOS::NativeRdb::E_OK) {
         return ConvertorErrorCode::NativeToNdk(errCode);
     }
-    return ConvertorErrorCode::NativeToNdk(OHOS::NativeRdb::RdbHelper::DeleteRdbStore(realPath));
+
+    OHOS::NativeRdb::RdbStoreConfig rdbStoreConfig(realPath);
+    rdbStoreConfig.SetSecurityLevel(OHOS::NativeRdb::SecurityLevel(config->securityLevel));
+    rdbStoreConfig.SetEncryptStatus(config->isEncrypt);
+    if (config->selfSize > RDB_CONFIG_SIZE_V0) {
+        rdbStoreConfig.SetArea(config->area - 1);
+    }
+    if (config->bundleName != nullptr) {
+        rdbStoreConfig.SetBundleName(config->bundleName);
+    }
+    rdbStoreConfig.SetName(config->storeName);
+
+    return ConvertorErrorCode::NativeToNdk(OHOS::NativeRdb::RdbHelper::DeleteRdbStore(rdbStoreConfig));
 }
 
 int OH_Rdb_DeleteStoreV2(const OH_Rdb_ConfigV2 *config)
@@ -514,7 +526,13 @@ int OH_Rdb_DeleteStoreV2(const OH_Rdb_ConfigV2 *config)
     if (errCode != OHOS::NativeRdb::E_OK) {
         return ConvertorErrorCode::NativeToNdk(errCode);
     }
-    return ConvertorErrorCode::NativeToNdk(OHOS::NativeRdb::RdbHelper::DeleteRdbStore(realPath));
+
+    auto [ret, rdbStoreConfig] = RdbNdkUtils::GetRdbStoreConfig(config);
+
+    if (ret != OHOS::NativeRdb::E_OK) {
+        return ConvertorErrorCode::NativeToNdk(OHOS::NativeRdb::RdbHelper::DeleteRdbStore(realPath));
+    }
+    return ConvertorErrorCode::NativeToNdk(OHOS::NativeRdb::RdbHelper::DeleteRdbStore(rdbStoreConfig));
 }
 
 int OH_Rdb_Insert(OH_Rdb_Store *store, const char *table, OH_VBucket *valuesBucket)
