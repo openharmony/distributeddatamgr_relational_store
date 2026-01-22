@@ -188,7 +188,6 @@ public:
     ColumnType columnType = ColumnType::TYPE_NULL;
     std::weak_ptr<ResultSet> resultSet;
 };
-
 napi_value LiteResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
 {
     std::shared_ptr<TypeContextBase> context = std::make_shared<TypeContextBase>();
@@ -257,10 +256,6 @@ napi_value LiteResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info
     int errCode = E_ALREADY_CLOSED;
     if (resultSet != nullptr) {
         errCode = resultSet->GoToNextRow();
-        // The parameter error returned during query is converted into a new parameter error code.
-        if (errCode == E_INVALID_ARGS) {
-            errCode = E_INVALID_ARGS_NEW;
-        }
     }
     // If the line exceeds the threshold, no exception is thrown and false is returned.
     RDB_NAPI_ASSERT_INT(env, errCode == E_ROW_OUT_RANGE || errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
@@ -497,7 +492,7 @@ std::pair<int, std::vector<RowEntity>> LiteResultSetProxy::GetRows(
         if (errCode != E_OK) {
             return {errCode, std::vector<RowEntity>()};
         }
-        rowEntities.push_back(rowEntity);
+        rowEntities.push_back(std::move(rowEntity));
         errCode = resultSet.GoToNextRow();
         if (errCode == E_ROW_OUT_RANGE) {
             break;

@@ -1942,6 +1942,75 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_044, TestSize.Level0)
     auto ret = OH_Value_GetAsset(dataValue, nullptr);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
 }
+
+/**
+ * @tc.name: RDB_Native_store_test_045
+ * @tc.desc: OH_Rdb_DeleteStore test with invalid OH_Rdb_Config
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_045, TestSize.Level0)
+{
+    int configSizeV0 = 41;
+
+    OH_Rdb_Config config;
+    config.selfSize = configSizeV0;
+    config.dataBaseDir = RDB_TEST_PATH;
+    config.storeName = "rdb_invalid_config_test.db";
+    config.bundleName = nullptr;
+    config.moduleName = nullptr;
+    config.isEncrypt = false;
+    config.securityLevel = OH_Rdb_SecurityLevel::S1;
+    config.area = RDB_SECURITY_AREA_EL1;
+
+    int ret = OH_Rdb_DeleteStore(&config);
+    EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
+}
+
+/**
+ * @tc.name: RDB_Native_store_test_046
+ * @tc.desc: OH_Rdb_DeleteStore test with invalid OH_Rdb_ConfigV2
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_046, TestSize.Level0)
+{
+    mkdir(RDB_TEST_PATH, 0770);
+
+    struct InvalidConfig {
+        int magicNum = 1;
+        std::string dataBaseDir = "";
+        std::string storeName = "";
+        std::string bundleName = "";
+        std::string moduleName = "";
+        bool isEncrypt = false;
+        bool persist = true;
+        int securityLevel = 0;
+        int area = 0;
+        int dbType = RDB_SQLITE;
+        int token = RDB_NONE_TOKENIZER;
+        std::string customDir = "";
+        bool readOnly = false;
+        std::vector<std::string> pluginLibs{};
+        OHOS::NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
+        bool enableSemanticIndex = false;
+    };
+
+    OH_Rdb_ConfigV2 *config = OH_Rdb_CreateConfig();
+    EXPECT_NE(config, nullptr);
+    
+    EXPECT_EQ(OH_Rdb_SetDatabaseDir(config, RDB_TEST_PATH), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetStoreName(config, "rdb_invalid_config_test.db"), RDB_OK);
+    EXPECT_EQ(OH_Rdb_SetBundleName(config, "com.ohos.example.distributedndk"), RDB_OK);
+
+    // make RdbNdkUtils::GetRdbStoreConfig return error by setting invalid area
+    auto* invalidConfig = reinterpret_cast<InvalidConfig*>(config);
+    invalidConfig->area = -1;
+
+    int ret = OH_Rdb_DeleteStoreV2(config);
+    EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
+
+    OH_Rdb_DestroyConfig(config);
+}
+
 /**
  * @tc.name: RDB_SubscribeAutoSyncProgress_test_001
  * @tc.desc: Abnormal testCase for SubscribeAutoSyncProgress.
