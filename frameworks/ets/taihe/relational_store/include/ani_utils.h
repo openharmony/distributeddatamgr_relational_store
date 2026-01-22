@@ -209,6 +209,12 @@ constexpr const char *GetTypeName<ani_enum_item>()
     return "ani_enum_item";
 }
 
+inline ani_status HandlePropertyError(
+    ani_status status, const char *property, ErrorHandling handling, const char *type_name)
+{
+    return PropertyErrorHandler::HandleError(status, property, handling, type_name);
+}
+
 template<typename AniType>
 using PropertyGetter = ani_status (ani_env::*)(ani_object, const char *, AniType *);
 
@@ -216,7 +222,8 @@ template<typename NativeType, typename AniType>
 ani_status AniGetPropertyImpl(ani_env *env, ani_object ani_obj, const char *property, NativeType &result,
     ErrorHandling handling, PropertyGetter<AniType> getter)
 {
-    if (getter == nullptr) {
+    static const PropertyGetter<AniType> NULL_GETTER = nullptr;
+    if (getter == NULL_GETTER) {
         return ANI_INVALID_ARGS;
     }
     if (env == nullptr) {
