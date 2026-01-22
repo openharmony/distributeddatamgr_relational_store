@@ -74,7 +74,6 @@ struct GetRdbStoreContext : public ContextBase {
 napi_value GetRdbStoreCommon(napi_env env, napi_callback_info info, std::shared_ptr<GetRdbStoreContext> context)
 {
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        bool isNewApi = (context->config.version >= ConfigVersion::GET_RDB_STORE_SYNC_VERSION);
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         int errCode = Convert2Value(env, argv[0], context->param);
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal context."));
@@ -82,12 +81,18 @@ napi_value GetRdbStoreCommon(napi_env env, napi_callback_info info, std::shared_
         errCode = Convert2Value(env, argv[1], context->config);
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
 
-        CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(),
-            isNewApi ? std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam.")
-                     : std::make_shared<ParamError>("Illegal CryptoParam."));
-        CHECK_RETURN_SET_E(context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
-            isNewApi ? std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal tokenizer.")
-                     : std::make_shared<ParamError>("Illegal tokenizer."));
+        bool isNewApi = (context->config.version >= ConfigVersion::GET_RDB_STORE_SYNC_VERSION);
+        if (isNewApi) {
+            CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(),
+                std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."));
+            CHECK_RETURN_SET_E(context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
+                std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal tokenizer."));
+        } else {
+            CHECK_RETURN_SET_E(
+                context->config.cryptoParam.IsValid(), std::make_shared<ParamError>("Illegal CryptoParam."));
+            CHECK_RETURN_SET_E(context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
+                std::make_shared<ParamError>("Illegal tokenizer."));
+        }
         CHECK_RETURN_SET_E(RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
             std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
         if (!context->config.persist) {
