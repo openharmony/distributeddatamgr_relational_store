@@ -71,7 +71,7 @@ private:
     static int GetAssetsCount(OH_Cursor *cursor, int32_t columnIndex, uint32_t *count);
     static int Destroy(OH_Cursor *cursor);
     std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet_;
-    bool isNeedTerminator_;
+    bool isNeedTerminator_ = true;
     bool isSupportRowCount_ = true;
 };
 } // namespace RdbNdk

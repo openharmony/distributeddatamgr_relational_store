@@ -187,17 +187,17 @@ export default function RdbStoreDeleteWithReturning() {
      */
     it('deleteWithReturning003', 0, async (done: Function) => {
       let predicates = new relationalStore.RdbPredicates("test test1");
-      await callAndCodeCheck("14800001", "deleteWithReturning003", async () => {
+      await callAndCodeCheck(14800001, "deleteWithReturning003", async () => {
         await rdbStore?.deleteWithReturning(predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "deleteWithReturningSync003", async () => {
+      await callAndCodeCheck(14800001, "deleteWithReturningSync003", async () => {
         rdbStore?.deleteWithReturningSync(predicates, defaultReturningConfig);
       });
       let trans = await getTrans();
-      await callAndCodeCheck("14800001", "transDeleteWithReturning003", async () => {
+      await callAndCodeCheck(14800001, "transDeleteWithReturning003", async () => {
         await trans?.deleteWithReturning(predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "transDeleteWithReturningSync003", async () => {
+      await callAndCodeCheck(14800001, "transDeleteWithReturningSync003", async () => {
         trans?.deleteWithReturningSync(predicates, defaultReturningConfig);
       });
       await trans?.rollback();
@@ -351,17 +351,17 @@ export default function RdbStoreDeleteWithReturning() {
     it('deleteWithReturning007', 0, async (done: Function) => {
       let predicates = new relationalStore.RdbPredicates("test");
       const config: relationalStore.ReturningConfig = { columns: [] };
-      await callAndCodeCheck("14800001", "deleteWithReturning007", async () => {
+      await callAndCodeCheck(14800001, "deleteWithReturning007", async () => {
         await rdbStore?.deleteWithReturning(predicates, config);
       });
-      await callAndCodeCheck("14800001", "deleteWithReturningSync007", async () => {
+      await callAndCodeCheck(14800001, "deleteWithReturningSync007", async () => {
         rdbStore?.deleteWithReturningSync(predicates, config);
       });
       let trans = await getTrans();
-      await callAndCodeCheck("14800001", "transDeleteWithReturning007", async () => {
+      await callAndCodeCheck(14800001, "transDeleteWithReturning007", async () => {
         await trans?.deleteWithReturning(predicates, config);
       });
-      await callAndCodeCheck("14800001", "transDeleteWithReturningSync007", async () => {
+      await callAndCodeCheck(14800001, "transDeleteWithReturningSync007", async () => {
         trans?.deleteWithReturningSync(predicates, config);
       });
       await trans?.rollback();
@@ -376,17 +376,17 @@ export default function RdbStoreDeleteWithReturning() {
     it('deleteWithReturning008', 0, async (done: Function) => {
       let predicates = new relationalStore.RdbPredicates("test");
       const config: relationalStore.ReturningConfig = { columns: ['name', 'age', 'salary', 'data', 'blobType'] };
-      await callAndCodeCheck("14800001", "deleteWithReturning008", async () => {
+      await callAndCodeCheck(14800001, "deleteWithReturning008", async () => {
         await rdbStore?.deleteWithReturning(predicates, config);
       });
-      await callAndCodeCheck("14800001", "deleteWithReturningSync008", async () => {
+      await callAndCodeCheck(14800001, "deleteWithReturningSync008", async () => {
         rdbStore?.deleteWithReturningSync(predicates, config);
       });
       let trans = await getTrans();
-      await callAndCodeCheck("14800001", "transDeleteWithReturning008", async () => {
+      await callAndCodeCheck(14800001, "transDeleteWithReturning008", async () => {
         await trans?.deleteWithReturning(predicates, config);
       });
-      await callAndCodeCheck("14800001", "transDeleteWithReturningSync008", async () => {
+      await callAndCodeCheck(14800001, "transDeleteWithReturningSync008", async () => {
         trans?.deleteWithReturningSync(predicates, config);
       });
       await trans.rollback();
@@ -403,17 +403,17 @@ export default function RdbStoreDeleteWithReturning() {
       let columnsCase = [['ab*'], ["a b"], ["a,b"] ];
       for (let i = 0; i < columnsCase.length; ++i) {
         const config: relationalStore.ReturningConfig = { columns: columnsCase[i] };
-        await callAndCodeCheck('14800001', "deleteWithReturning009-" + i, async () => {
+        await callAndCodeCheck(14800001, "deleteWithReturning009-" + i, async () => {
           await rdbStore?.deleteWithReturning(predicates, config);
         });
-        await callAndCodeCheck('14800001', "deleteWithReturningSync009-" + i, async () => {
+        await callAndCodeCheck(14800001, "deleteWithReturningSync009-" + i, async () => {
           rdbStore?.deleteWithReturningSync(predicates, config);
         });
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('14800001', "transDeleteWithReturning009-" + i, async () => {
+        await callAndCodeCheck(14800001, "transDeleteWithReturning009-" + i, async () => {
           await trans?.deleteWithReturning(predicates, config);
         });
-        await callAndCodeCheck('14800001', "transDeleteWithReturningSync009-" + i, async () => {
+        await callAndCodeCheck(14800001, "transDeleteWithReturningSync009-" + i, async () => {
           trans?.deleteWithReturningSync(predicates, config);
         });
         await trans?.rollback();
@@ -449,10 +449,10 @@ export default function RdbStoreDeleteWithReturning() {
     it('deleteWithReturning011', 0, async (done: Function) => {
       let predicates = new relationalStore.RdbPredicates("test");
       await rdbStore?.close();
-      await callAndCodeCheck("14800014", "deleteWithReturning011", async () => {
+      await callAndCodeCheck(14800014, "deleteWithReturning011", async () => {
         await rdbStore?.deleteWithReturning(predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800014", "deleteWithReturningSync011", async () => {
+      await callAndCodeCheck(14800014, "deleteWithReturningSync011", async () => {
         rdbStore?.deleteWithReturningSync(predicates, defaultReturningConfig);
       });
       let trans = await getTrans();
@@ -475,10 +475,10 @@ export default function RdbStoreDeleteWithReturning() {
       let predicates = new relationalStore.RdbPredicates("test");
       const config: relationalStore.ReturningConfig = { columns: ['name?', 'age'] };
       await rdbStore?.close();
-      await callAndCodeCheck("14800014", "deleteWithReturning012", async () => {
+      await callAndCodeCheck(14800014, "deleteWithReturning012", async () => {
         await rdbStore?.deleteWithReturning(predicates, config);
       });
-      await callAndCodeCheck("14800014", "deleteWithReturningSync012", async () => {
+      await callAndCodeCheck(14800014, "deleteWithReturningSync012", async () => {
         rdbStore?.deleteWithReturningSync(predicates, config);
       });
       let trans = await getTrans();
@@ -557,17 +557,17 @@ export default function RdbStoreDeleteWithReturning() {
       let illegalTableNames:Array<string> = ["123test", "te.s.t", ".test", "test.."];
       for (let i = 0; i < illegalTableNames.length; ++i) {
         let predicates = new relationalStore.RdbPredicates(illegalTableNames[i]);
-        await callAndCodeCheck('14800001', "deleteWithReturning015-" + i, async () => {
+        await callAndCodeCheck(14800001, "deleteWithReturning015-" + i, async () => {
           await rdbStore?.deleteWithReturning(predicates, defaultReturningConfig);
         });
-        await callAndCodeCheck('14800001', "deleteWithReturningSync015-" + i, async () => {
+        await callAndCodeCheck(14800001, "deleteWithReturningSync015-" + i, async () => {
           rdbStore?.deleteWithReturningSync(predicates, defaultReturningConfig);
         });
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('14800001', "transDeleteWithReturning015-" + i, async () => {
+        await callAndCodeCheck(14800001, "transDeleteWithReturning015-" + i, async () => {
           await trans?.deleteWithReturning(predicates, defaultReturningConfig);
         });
-        await callAndCodeCheck('14800001', "transDeleteWithReturningSync015-" + i, async () => {
+        await callAndCodeCheck(14800001, "transDeleteWithReturningSync015-" + i, async () => {
           trans?.deleteWithReturningSync(predicates, defaultReturningConfig);
         });
         await trans?.rollback();
@@ -589,17 +589,17 @@ export default function RdbStoreDeleteWithReturning() {
           columns: ['name', 'age'],
           maxReturningCount: maxReturningCounts[i]
         };
-        await callAndCodeCheck('14800001', "deleteWithReturning016-" + i, async () => {
+        await callAndCodeCheck(14800001, "deleteWithReturning016-" + i, async () => {
           await rdbStore?.deleteWithReturning(predicates, config);
         });
-        await callAndCodeCheck('14800001', "deleteWithReturningSync016-" + i, async () => {
+        await callAndCodeCheck(14800001, "deleteWithReturningSync016-" + i, async () => {
           rdbStore?.deleteWithReturningSync(predicates, config);
         });
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('14800001', "transDeleteWithReturning016-" + i, async () => {
+        await callAndCodeCheck(14800001, "transDeleteWithReturning016-" + i, async () => {
           await trans?.deleteWithReturning(predicates, config);
         });
-        await callAndCodeCheck('14800001', "transDeleteWithReturningSync016-" + i, async () => {
+        await callAndCodeCheck(14800001, "transDeleteWithReturningSync016-" + i, async () => {
           trans?.deleteWithReturningSync(predicates, config);
         });
         await trans?.rollback();
@@ -759,20 +759,20 @@ export default function RdbStoreDeleteWithReturning() {
         let code = await callAndReturnCode("deleteWithReturning021-" + i, async () => {
           await rdbStore?.deleteWithReturning(predicates[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         code = await callAndReturnCode("deleteWithReturningSync021-" + i, async () => {
           rdbStore?.deleteWithReturningSync(predicates[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         let trans = await rdbStore?.createTransaction(options);
         code = await callAndReturnCode("transDeleteWithReturning021-" + i, async () => {
           await trans?.deleteWithReturning(predicates[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         code = await callAndReturnCode("transDeleteWithReturningSync021-" + i, async () => {
           trans?.deleteWithReturningSync(predicates[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         await trans?.rollback();
       }
       done();

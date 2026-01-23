@@ -622,8 +622,10 @@ OH_Cursor *OH_Rdb_QueryWithoutRowCount(
             columns.push_back(columnNames[i]);
         }
     }
+
+    QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
     std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet =
-        rdbStore->GetStore()->QueryByStep(predicate->Get(), columns, false);
+        rdbStore->GetStore()->QueryByStep(predicate->Get(), columns, options);
     if (resultSet == nullptr) {
         return nullptr;
     }
@@ -651,7 +653,9 @@ OH_Cursor *OH_Rdb_QuerySqlWithoutRowCount(OH_Rdb_Store *store, const char *sql, 
         LOG_ERROR("store is nullptr");
         return nullptr;
     }
-    auto resultSet = innerStore->QueryByStep(sql, datas, false);
+    
+    QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+    auto resultSet = innerStore->QueryByStep(sql, datas, options);
     if (resultSet == nullptr) {
         return nullptr;
     }

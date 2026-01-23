@@ -58,6 +58,7 @@ public:
         }
     };
     void SetAction(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
+    void InitAction(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
     void SetAll(napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output);
     virtual void SetError(std::shared_ptr<Error> error);
     virtual ~ContextBase();
@@ -79,6 +80,11 @@ public:
     ExecuteAction exec_ = nullptr;
     napi_value result_ = nullptr;
     std::shared_ptr<ContextBase> keep_;
+};
+
+class ResultSetContext : public ContextBase {
+public:
+    void SetError(std::shared_ptr<Error> err) override;
 };
 
 class AsyncCall final {
