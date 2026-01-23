@@ -18,14 +18,14 @@ group("build_module") {
   if (relational_store_config) {
     deps = [ 
       ":silent_conf",
-      ":trustlist_conf"
+      ":trusts_conf"
     ]
   }
 }
 
-ohos_prebuilt_etc("trustlist_conf") {
-  source = "trustlist_config.json"
-  relative_install_dir = "trustlist/conf"
+ohos_prebuilt_etc("trusts_conf") {
+  source = "trusts_config.json"
+  relative_install_dir = "trusts/conf"
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"
 }

@@ -50,6 +50,8 @@ int GetOpenCallback::OnCreate(RdbStore &store)
 
 int GetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
+    (void) oldVersion;
+    (void) newVersion;
     return E_OK;
 }
 

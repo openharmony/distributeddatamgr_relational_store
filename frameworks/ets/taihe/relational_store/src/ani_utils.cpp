@@ -33,12 +33,6 @@ using namespace OHOS::NativeRdb;
 using namespace arkts::ani_signature;
 
 namespace ani_utils {
-inline ani_status HandlePropertyError(
-    ani_status status, const char *property, ErrorHandling handling, const char *type_name)
-{
-    return PropertyErrorHandler::HandleError(status, property, handling, type_name);
-}
-
 ani_status AniGetProperty(
     ani_env *env, ani_object ani_obj, const char *property, std::string &result, ErrorHandling handling)
 {
@@ -578,7 +572,7 @@ bool UnionAccessor::TryConvert<std::vector<ani_ref>>(std::vector<ani_ref> &value
 ani_ref UnionAccessor::AniIteratorNext(ani_ref interator, bool &isSuccess)
 {
     ani_ref next;
-    ani_boolean done;
+    ani_boolean done = false;
     if (ANI_OK != env_->Object_CallMethodByName_Ref(static_cast<ani_object>(interator), "next", nullptr, &next)) {
         LOG_ERROR("Failed to get next key");
         isSuccess = false;

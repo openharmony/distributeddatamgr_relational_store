@@ -93,8 +93,6 @@ struct RdbSyncerParam {
     std::vector<std::string> permissionNames_ = {};
     bool asyncDownloadAsset_ = false;
     bool enableCloud_ = true;
-    bool autoSyncSwitch_ = true;
-    bool isAsyncCreatedistTable_ = false;
     int32_t subUser_ = 0;
     RdbDfxInfo dfxInfo_;
     int32_t distributedTableMode_ = DEVICE_COLLABORATION;
@@ -116,8 +114,6 @@ enum SyncMode {
     TIME_FIRST = 4,
     NATIVE_FIRST,
     CLOUD_FIRST,
-    CLOUD_CUSTOM_PUSH, //only upload
-    CLOUD_CUSTOM_PULL, //only download
 };
 
 struct SyncOption {
@@ -174,9 +170,7 @@ struct DistributedConfig {
     bool isRebuild = false;
     bool asyncDownloadAsset = false;
     bool enableCloud = true;
-    bool autoSyncSwitch = true;
     int32_t tableType = DEVICE_COLLABORATION;
-    bool isAsyncCreatedistTable = false;
 };
 
 enum Progress {
@@ -194,7 +188,6 @@ enum ProgressCode {
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
     BLOCKED_BY_NETWORK_STRATEGY,
-    CLOUD_TASK_INTERRUPTED,
 };
 
 struct Statistic {
@@ -301,7 +294,6 @@ enum SubscribeMode {
     REMOTE,
     CLOUD,
     CLOUD_DETAIL,
-    CLOUD_SYNC_TRIGGER,
     LOCAL,
     LOCAL_SHARED,
     LOCAL_DETAIL,
@@ -379,8 +371,6 @@ public:
         OnChange(origin.id);
     };
     virtual void OnChange() {};
-
-    virtual void OnChange(const int32_t triggerMode) {};
 };
 
 struct DropOption {};

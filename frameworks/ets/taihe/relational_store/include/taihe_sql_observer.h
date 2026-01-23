@@ -34,7 +34,6 @@ public:
     void OnStatistic(const SqlExecutionInfo &info) override;
 
 private:
-    ani_env *env_;
     ani_ref callbackRef_;
     std::shared_ptr<JsSqlExecutionCallbackType> callbackPtr_;
 };

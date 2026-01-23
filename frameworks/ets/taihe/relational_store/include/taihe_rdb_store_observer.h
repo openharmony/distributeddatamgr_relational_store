@@ -38,7 +38,6 @@ public:
     void OnChange() override;
 
 private:
-    ani_env *env_;
     ani_ref callbackRef_;
     std::shared_ptr<RdbStoreVarCallbackType> callbackPtr_;
     OHOS::DistributedRdb::SubscribeMode subscribeMode_;
