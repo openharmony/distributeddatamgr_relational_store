@@ -33,7 +33,7 @@ public:
     virtual int GetFloatVectorCount(int32_t columnIndex, size_t *length);
     virtual int GetFloatVector(int32_t columnIndex, float *val, size_t inLen, size_t *outLen);
     static RelationalCursor *GetSelf(OH_Cursor *cursor);
-    bool IsNeedTerminator();
+    bool IsNeedTerminator() const;
 
 protected:
     virtual int GetColumnCount(int *count);

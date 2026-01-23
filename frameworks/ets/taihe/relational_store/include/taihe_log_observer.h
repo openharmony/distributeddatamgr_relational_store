@@ -34,7 +34,6 @@ public:
     void OnErrorLog(const ExceptionMessage &message) override;
 
 private:
-    ani_env *env_;
     ani_ref callbackRef_;
     std::shared_ptr<JsExceptionMessageCallbackType> callbackPtr_;
 };

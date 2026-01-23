@@ -1699,7 +1699,6 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
 int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
 {
     DistributedDB::DBStatus status = DistributedDB::DBStatus::OK;
-    std::string processSequence = "processSequence";
     for (const auto &table : schema.tables) {
         DistributedDB::KnowledgeSourceSchema sourceSchema;
         sourceSchema.tableName = table.tableName;
@@ -1708,7 +1707,22 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         }
         sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
             table.referenceFields.end());
-        sourceSchema.columnsToVerify = {{processSequence, {table.processSequence.columnName}}};
+
+        std::set<std::string> fieldsNeedExist = {table.commonAttribute.timeAttribute.baseTimeField};
+        fieldsNeedExist.insert(table.commonAttribute.timeAttribute.sourceFields.begin(),
+            table.commonAttribute.timeAttribute.sourceFields.end());
+        fieldsNeedExist.insert(table.commonAttribute.timeAttribute.extendFields.begin(),
+            table.commonAttribute.timeAttribute.extendFields.end());
+
+        fieldsNeedExist.insert(table.customKeyword.sourceFields.begin(), table.customKeyword.sourceFields.end());
+        fieldsNeedExist.insert(table.customKeyword.extendFields.begin(), table.customKeyword.extendFields.end());
+        fieldsNeedExist.erase("");
+
+        sourceSchema.columnsToVerify = {
+            {"processSequence", {table.processSequence.columnName}},
+            {"fieldsNeedExist", fieldsNeedExist},
+        };
+
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
         if (status != DistributedDB::DBStatus::OK) {
             return E_ERROR;
@@ -1832,6 +1846,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
             if (access(binlogFolder.c_str(), F_OK) == 0) {
                 SqliteUtils::SetSlaveInvalid(config.GetPath());
                 size_t num = SqliteUtils::DeleteFolder(binlogFolder);
+                Delete(slaveCfg.GetPath());
                 LOG_INFO("binlog files found, %{public}zu deleted", num);
             }
         }
@@ -1905,7 +1920,8 @@ bool SqliteConnection::IsDbVersionBelowSlave()
     }
 
     std::tie(cRet, cObj) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
-    if (cVal == nullptr || (cVal != nullptr && static_cast<int64_t>(*cVal) == 0L)) {
+    cVal = std::get_if<int64_t>(&cObj.value);
+    if (cVal == nullptr || static_cast<int64_t>(*cVal) == 0L) {
         std::tie(cRet, cObj) = slaveConnection_->ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
         cVal = std::get_if<int64_t>(&cObj.value);
         if (cVal != nullptr && static_cast<int64_t>(*cVal) > 0L) {

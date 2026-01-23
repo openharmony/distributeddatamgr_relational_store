@@ -781,7 +781,7 @@ export default function RdbStoreDeleteWithReturning() {
     /**
      * @tc.name deleteWithReturning test.
      * @tc.number deleteWithReturning022
-     * @tc.desc 1. getColumnType with index.
+     * @tc.desc 1. Result type test.
      */
     it('deleteWithReturning022', 0, async (done: Function) => {
       await rdbStore?.execute(CREATE_TABLE_TEST2);
@@ -852,7 +852,7 @@ export default function RdbStoreDeleteWithReturning() {
     /**
      * @tc.name deleteWithReturning test.
      * @tc.number deleteWithReturning023
-     * @tc.desc 1. getColumnType with key.
+     * @tc.desc 1. Result type test.
      */
     it('deleteWithReturning023', 0, async (done: Function) => {
       await rdbStore?.execute(CREATE_TABLE_TEST2);

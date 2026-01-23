@@ -149,7 +149,6 @@ public:
     int InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
     int ConfigLocale(const std::string &localeStr) override;
-    int32_t StopCloudSync() override;
 
     // not virtual functions /
     const RdbStoreConfig &GetConfig();

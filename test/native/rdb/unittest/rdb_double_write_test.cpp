@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1383,6 +1383,20 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_037, TestSize.Level1)
     LOG_INFO("RdbStore_DoubleWrite_037 reopen slave db finish");
     RdbDoubleWriteTest::CheckNumber(slaveStore, count);
     RdbDoubleWriteTest::CheckAccess();
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_038
+ * @tc.desc: test restore when the db version below slave
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_038, TestSize.Level1)
+{
+    InitDb();
+    EXPECT_EQ(store->ExecuteSql("pragma user_version=0;"), E_OK);
+    EXPECT_EQ(slaveStore->ExecuteSql("pragma user_version=1;"), E_OK);
+    SqliteUtils::SetSlaveInvalid(DATABASE_NAME);
+    EXPECT_EQ(store->Restore(std::string(""), {}), E_OK);
 }
 
 /**

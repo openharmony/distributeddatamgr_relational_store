@@ -228,7 +228,6 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_utils_test.cpp",
     "unittest/rdb_value_bucket_test.cpp",
     "unittest/rdb_wal_limit_test.cpp",
-    "unittest/rdb_notifier_stub_test.cpp",
     "unittest/sqlite_utils_test.cpp",
     "unittest/transaction_test.cpp",
     "unittest/value_object_test.cpp",

@@ -1291,7 +1291,7 @@ void NDKCorruptHandler::OnCorruptHandler(const OHOS::NativeRdb::RdbStoreConfig &
     OH_Rdb_Store *store = nullptr;
     auto storePtr = NativeRdb::RdbHelper::GetRdb(config);
     if (storePtr != nullptr) {
-        store = new (std::nothrow) RelationalStore(storePtr);
+        store = new RelationalStore(storePtr);
     }
     OH_Rdb_ConfigV2 *rdbConfig = GetOHRdbConfig(config);
     if (rdbConfig != nullptr) {

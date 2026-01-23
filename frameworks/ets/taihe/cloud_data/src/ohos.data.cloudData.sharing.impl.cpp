@@ -43,9 +43,7 @@ ResultSet AllocResourceAndSharePromise(string_view storeId, const TaiHeRdbPredic
         Participants info = ConvertParticipant(participants);
         std::vector<std::string> realColumns;
         if (columns.has_value()) {
-            for (auto it = columns.value().begin(); it != columns.value().end(); ++it) {
-                realColumns.push_back(it->c_str());
-            }
+            realColumns = std::vector<std::string>(columns.value().begin(), columns.value().end());
         }
         OHOS::RdbTaihe::RdbPredicatesImpl* impl = reinterpret_cast<OHOS::RdbTaihe::RdbPredicatesImpl*>(
             predicates->GetSpecificImplPtr());
@@ -82,7 +80,10 @@ ResultSet AllocResourceAndShareImpl(string_view storeId, TaiHeRdbPredicates pred
 ResultSet AllocResourceAndShareImplWithColumns(string_view storeId, TaiHeRdbPredicates predicates,
     array_view<TaiHeParticipant> participants, array_view<string> columns)
 {
-    optional_view<array<string>> realColumns = optional<array<string>>(std::in_place, columns);
+    optional<array<string>> realColumns;
+    if (!columns.empty()) {
+        realColumns = optional<array<string>>(std::in_place, columns);
+    }
     return AllocResourceAndSharePromise(storeId, predicates, participants, realColumns);
 }
 
