@@ -34,6 +34,10 @@ using JsDevicesCallbackType = taihe::callback<void(taihe::array_view<taihe::stri
 using JsSqlExecutionCallbackType = taihe::callback<void(ohos::data::relationalStore::SqlExecutionInfo const& info)>;
 using JsVoidCallbackType = taihe::callback<void()>;
 using JsProgressDetailsCallbackType = taihe::callback<void(ohos::data::relationalStore::ProgressDetails const& info)>;
+using TaiheDistributedConfig = ohos::data::relationalStore::DistributedConfig;
+using NativeDistributedConfig = OHOS::DistributedRdb::DistributedConfig;
+using NativeDistributedTableType = OHOS::DistributedRdb::DistributedTableType;
+using TaiheDistributedType = ohos::data::relationalStore::DistributedType;
 using VarCallbackType = std::variant<
     JsDevicesCallbackType,
     JsChangeInfoCallbackType,
@@ -171,9 +175,9 @@ OHOS::NativeRdb::ReturningConfig ReturningConfigToNative(
     ::ohos::data::relationalStore::ReturningConfig returningConfig);
 
 OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalStore::SubscribeType type);
-OHOS::DistributedRdb::DistributedConfig DistributedConfigToNative(
-    const ohos::data::relationalStore::DistributedConfig &config,
-    const OHOS::DistributedRdb::DistributedTableType &nativeType);
+NativeDistributedTableType DistributedTableTypeToNative(TaiheDistributedType &type);
+NativeDistributedConfig DistributedConfigToNative(
+    const TaiheDistributedConfig &config, NativeDistributedTableType &nativeType);
 OHOS::DistributedRdb::Reference ReferenceToNative(
     const ohos::data::relationalStore::Reference &reference);
 ohos::data::relationalStore::ProgressDetails ProgressDetailToTaihe(

@@ -34,6 +34,8 @@ using namespace taihe;
 using namespace OHOS::Rdb;
 using TaiheAssetStatus = ::ohos::data::relationalStore::AssetStatus;
 using TaiheValueType = ::ohos::data::relationalStore::ValueType;
+using TaiheDistributedTableType = ohos::data::relationalStore::DistributedTableType;
+using NativeDistributedTableMode = ohos::data::relationalStore::DistributedTableMode;
 
 #ifndef PATH_SPLIT
 #define PATH_SPLIT '/'
@@ -719,14 +721,25 @@ OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalSt
     }
 }
 
-OHOS::DistributedRdb::DistributedConfig DistributedConfigToNative(
-    const ohos::data::relationalStore::DistributedConfig &config,
-    const OHOS::DistributedRdb::DistributedTableType &nativeType)
+NativeDistributedTableType DistributedTableTypeToNative(TaiheDistributedType &type)
 {
-    OHOS::DistributedRdb::DistributedConfig nativeConfig;
-    nativeConfig.tableType = nativeType == OHOS::DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE
-                                 ? OHOS::DistributedRdb::DistributedTableMode::DEVICE_COLLABORATION
-                                 : OHOS::DistributedRdb::DistributedTableMode::SINGLE_VERSION;
+    NativeDistributedTableType nativeType;
+    if (type.get_key() == TaiheDistributedType::key_t::DISTRIBUTED_DEVICE) {
+        nativeType = NativeDistributedTableType::DISTRIBUTED_DEVICE;
+    }
+    if (type.get_key() == TaiheDistributedType::key_t::DISTRIBUTED_CLOUD) {
+        nativeType = NativeDistributedTableType::DISTRIBUTED_CLOUD;
+    }
+    return nativeType;
+}
+
+NativeDistributedConfig DistributedConfigToNative(
+    const TaiheDistributedConfig &config, NativeDistributedTableType &nativeType)
+{
+    NativeDistributedConfig nativeConfig;
+    nativeConfig.tableType = nativeType == NativeDistributedTableType::DISTRIBUTED_DEVICE
+                                 ? NativeDistributedTableMode::DEVICE_COLLABORATION
+                                 : NativeDistributedTableMode::SINGLE_VERSION;
     nativeConfig.autoSync = config.autoSync;
     if (config.references.has_value()) {
         auto values = config.references.value();
@@ -742,8 +755,14 @@ OHOS::DistributedRdb::DistributedConfig DistributedConfigToNative(
     if (config.enableCloud.has_value()) {
         nativeConfig.enableCloud = config.enableCloud.value();
     }
-    if (config.tableType.has_value()) {
-        nativeConfig.tableType = config.tableType.value();
+    if (!config.tableType.has_value()) {
+        return nativeConfig;
+    }
+    if (config.tableType->get_key() == TaiheDistributedTableType::key_t::SINGLE_VERSION) {
+        nativeConfig.tableType = NativeDistributedTableMode::SINGLE_VERSION;
+    }
+    if (config.tableType->get_key() == TaiheDistributedTableType::key_t::DEVICE_COLLABORATION) {
+        nativeConfig.tableType = NativeDistributedTableMode::DEVICE_COLLABORATION;
     }
     return nativeConfig;
 }

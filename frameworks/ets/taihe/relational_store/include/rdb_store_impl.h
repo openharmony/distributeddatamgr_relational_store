@@ -27,6 +27,9 @@ using namespace OHOS::Rdb;
 using namespace OHOS::RdbTaihe;
 using ValueType = ohos::data::relationalStore::ValueType;
 using ValueObject = OHOS::NativeRdb::ValueObject;
+using NativeDistributedTableMode = ohos::data::relationalStore::DistributedTableMode;
+using NativeDistributedConfig = OHOS::DistributedRdb::DistributedConfig;
+using NativeDistributedTableType = OHOS::DistributedRdb::DistributedTableType;
 
 class RdbStoreImpl {
 public:
