@@ -181,16 +181,12 @@ static std::shared_ptr<ResultSet> ParseFieldByName(napi_env env, napi_callback_i
     return proxy->GetInstance();
 }
 
-struct TypeContextBase : public ContextBase {
+struct TypeContextBase : public ResultSetContext {
 public:
     int32_t columnIndex = 0;
     std::string columnName;
     ColumnType columnType = ColumnType::TYPE_NULL;
     std::weak_ptr<ResultSet> resultSet;
-    void SetError(const std::shared_ptr<Error> err) override
-    {
-        error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
-    }
 };
 
 napi_value LiteResultSetProxy::GetColumnType(napi_env env, napi_callback_info info)
@@ -513,16 +509,12 @@ std::pair<int, std::vector<RowEntity>> LiteResultSetProxy::GetRows(
     return {E_OK, rowEntities};
 }
 
-struct RowsContextBase : public ContextBase {
+struct RowsContextBase : public ResultSetContext {
 public:
     int32_t maxCount = 0;
     int32_t position = INIT_POSITION;
     std::weak_ptr<ResultSet> resultSet;
     std::vector<RowEntity> rowEntities;
-    void SetError(std::shared_ptr<Error> err) override
-    {
-        error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
-    }
 };
 
 napi_value LiteResultSetProxy::GetRows(napi_env env, napi_callback_info info)
@@ -561,16 +553,12 @@ napi_value LiteResultSetProxy::GetRows(napi_env env, napi_callback_info info)
 
 napi_value LiteResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
 {
-    struct RowsContextBase : public ContextBase {
+    struct RowsContextBase : public ResultSetContext {
     public:
         int32_t maxCount = 0;
         int32_t position = INIT_POSITION;
         std::weak_ptr<ResultSet> resultSet;
         std::vector<std::vector<ValueObject>> rowsData;
-        void SetError(const std::shared_ptr<Error> err) override
-        {
-            error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
-        }
     };
     std::shared_ptr<RowsContextBase> context = std::make_shared<RowsContextBase>();
     auto resultSet = GetInnerResultSet(env, info);

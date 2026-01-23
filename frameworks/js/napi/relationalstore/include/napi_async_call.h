@@ -82,6 +82,11 @@ public:
     std::shared_ptr<ContextBase> keep_;
 };
 
+class ResultSetContext : public ContextBase {
+public:
+    void SetError(std::shared_ptr<Error> err) override;
+};
+
 class AsyncCall final {
 public:
     static napi_value Call(napi_env env, std::shared_ptr<ContextBase> context, const char *fun);

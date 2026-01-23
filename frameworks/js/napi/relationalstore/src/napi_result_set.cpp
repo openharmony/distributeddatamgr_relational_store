@@ -730,16 +730,12 @@ napi_value ResultSetProxy::GetRows(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
 {
-    struct RowsContextBase : public ContextBase {
+    struct RowsContextBase : public ResultSetContext {
     public:
         int32_t maxCount = 0;
         int32_t position = INIT_POSITION;
         std::weak_ptr<ResultSet> resultSet;
         std::vector<std::vector<ValueObject>> rowsData;
-        void SetError(std::shared_ptr<Error> err) override
-        {
-            error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
-        }
     };
     std::shared_ptr<RowsContextBase> context = std::make_shared<RowsContextBase>();
     auto resultSet = GetInnerResultSet(env, info);
