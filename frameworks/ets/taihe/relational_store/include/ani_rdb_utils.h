@@ -174,7 +174,8 @@ OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalSt
 OHOS::DistributedRdb::DistributedConfig DistributedConfigToNative(
     const ohos::data::relationalStore::DistributedConfig &config,
     const OHOS::DistributedRdb::DistributedTableType &nativeType);
-OHOS::DistributedRdb::Reference ReferenceToNative(const ohos::data::relationalStore::Reference &reference);
+OHOS::DistributedRdb::Reference ReferenceToNative(
+    const ohos::data::relationalStore::Reference &reference);
 ohos::data::relationalStore::ProgressDetails ProgressDetailToTaihe(
     const OHOS::DistributedRdb::ProgressDetail &OrgDetails);
 OHOS::DistributedRdb::RdbStoreObserver::PrimaryKey PRIKeyToNative(
