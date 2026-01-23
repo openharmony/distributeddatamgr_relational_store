@@ -797,8 +797,7 @@ void RdbStoreImpl::SetDistributedTablesWithTables(array_view<string> tables)
     }
 }
 
-void RdbStoreImpl::SetDistributedTablesWithType(
-    array_view<string> tables, ohos::data::relationalStore::DistributedType type)
+void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, DistributedType type)
 {
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
@@ -814,7 +813,7 @@ void RdbStoreImpl::SetDistributedTablesWithType(
 }
 
 void RdbStoreImpl::SetDistributedTablesWithConfig(
-    array_view<string> tables, ohos::data::relationalStore::DistributedType type, DistributedConfig const &config)
+    array_view<string> tables, DistributedType type, DistributedConfig const &config)
 {
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
@@ -837,8 +836,8 @@ void RdbStoreImpl::SetDistributedTablesWithConfig(
     }
 }
 
-void RdbStoreImpl::SetDistributedTablesWithOptionConfig(array_view<string> tables,
-    optional_view<ohos::data::relationalStore::DistributedType> type, optional_view<DistributedConfig> config)
+void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
+    array_view<string> tables, optional_view<DistributedType> type, optional_view<DistributedConfig> config)
 {
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
@@ -849,7 +848,7 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(array_view<string> table
         OHOS::DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE;
     OHOS::DistributedRdb::DistributedConfig nativeConfig = {true};
     if (type.has_value()) {
-        nativeType = static_cast<OHOS::DistributedRdb::DistributedTableType>(static_cast<int>(type.value()));
+        nativeType = (OHOS::DistributedRdb::DistributedTableType)(type.value().get_value());
     }
     if (config.has_value()) {
         nativeConfig = ani_rdbutils::DistributedConfigToNative(config.value(), nativeType);
