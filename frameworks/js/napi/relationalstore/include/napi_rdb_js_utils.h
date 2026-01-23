@@ -160,8 +160,7 @@ napi_value Convert2JSValue(napi_env env, const SqlInfo &sqlinfo);
 bool IsNapiString(napi_env env, napi_value value);
 template<>
 napi_value Convert2JSValue(napi_env env, const ReturningResult &value);
-std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
-    napi_env env, napi_value jsValue, RdbConfig &rdbConfig, ContextParam &param);
+std::shared_ptr<Error> GetRealPath(napi_env env, napi_value jsValue, const ContextParam &param, RdbConfig &rdbConfig);
 RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam &param);
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
