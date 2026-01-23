@@ -136,6 +136,14 @@ ContextBase::~ContextBase()
     env_ = nullptr;
 }
 
+void ResultSetContext::SetError(std::shared_ptr<Error> err)
+{
+    if (err == nullptr) {
+        return;
+    }
+    error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
+}
+
 void AsyncCall::SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError)
 {
     LOG_DEBUG("SetBusinessError enter");
