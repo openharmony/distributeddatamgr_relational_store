@@ -27,7 +27,6 @@ private:
 
 public:
     static int NativeToNdk(int nativeErrCode);
-    static int NativeToNdkExt(int nativeErrCode);
     static int GetInterfaceCode(int nativeErrCode);
     static int GetInterfaceCodeExtend(int nativeErrCode);
 private:
