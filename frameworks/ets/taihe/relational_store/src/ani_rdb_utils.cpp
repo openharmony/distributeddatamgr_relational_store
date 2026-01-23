@@ -35,7 +35,7 @@ using namespace OHOS::Rdb;
 using TaiheAssetStatus = ::ohos::data::relationalStore::AssetStatus;
 using TaiheValueType = ::ohos::data::relationalStore::ValueType;
 using TaiheDistributedTableType = ohos::data::relationalStore::DistributedTableType;
-using NativeDistributedTableMode = ohos::data::relationalStore::DistributedTableMode;
+using NativeDistributedTableMode = OHOS::DistributedRdb::DistributedTableMode;
 
 #ifndef PATH_SPLIT
 #define PATH_SPLIT '/'
@@ -721,7 +721,7 @@ OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalSt
     }
 }
 
-NativeDistributedTableType DistributedTableTypeToNative(TaiheDistributedType &type)
+NativeDistributedTableType DistributedTableTypeToNative(TaiheDistributedType type)
 {
     NativeDistributedTableType nativeType;
     if (type.get_key() == TaiheDistributedType::key_t::DISTRIBUTED_DEVICE) {

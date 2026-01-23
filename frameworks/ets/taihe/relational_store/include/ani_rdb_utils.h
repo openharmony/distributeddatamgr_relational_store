@@ -34,16 +34,13 @@ using JsDevicesCallbackType = taihe::callback<void(taihe::array_view<taihe::stri
 using JsSqlExecutionCallbackType = taihe::callback<void(ohos::data::relationalStore::SqlExecutionInfo const& info)>;
 using JsVoidCallbackType = taihe::callback<void()>;
 using JsProgressDetailsCallbackType = taihe::callback<void(ohos::data::relationalStore::ProgressDetails const& info)>;
+using JsExceptionMessageCallbackType =
+    taihe::callback<void(ohos::data::relationalStore::ExceptionMessage const& info)>;
+using RdbStoreVarCallbackType = std::variant<JsDevicesCallbackType, JsChangeInfoCallbackType, JsVoidCallbackType>;
 using TaiheDistributedConfig = ohos::data::relationalStore::DistributedConfig;
 using NativeDistributedConfig = OHOS::DistributedRdb::DistributedConfig;
 using NativeDistributedTableType = OHOS::DistributedRdb::DistributedTableType;
 using TaiheDistributedType = ohos::data::relationalStore::DistributedType;
-using VarCallbackType = std::variant<
-    JsDevicesCallbackType,
-    JsChangeInfoCallbackType,
-    JsSqlExecutionCallbackType,
-    JsVoidCallbackType,
-    JsProgressDetailsCallbackType>;
 
 constexpr std::string_view EVENT_DATA_CHANGE = "dataChange";
 constexpr std::string_view EVENT_SYNC_PROGRESS = "autoSyncProgress";
@@ -175,7 +172,7 @@ OHOS::NativeRdb::ReturningConfig ReturningConfigToNative(
     ::ohos::data::relationalStore::ReturningConfig returningConfig);
 
 OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalStore::SubscribeType type);
-NativeDistributedTableType DistributedTableTypeToNative(TaiheDistributedType &type);
+NativeDistributedTableType DistributedTableTypeToNative(TaiheDistributedType type);
 NativeDistributedConfig DistributedConfigToNative(
     const TaiheDistributedConfig &config, NativeDistributedTableType &nativeType);
 OHOS::DistributedRdb::Reference ReferenceToNative(
