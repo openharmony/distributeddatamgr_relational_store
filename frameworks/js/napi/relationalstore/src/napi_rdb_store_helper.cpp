@@ -92,7 +92,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
                 std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
             return;
         }
-        auto err = GetRealPath(env, argv[0], context->config, context->param);
+        auto err = GetRealPath(env, argv[0], context->param, context->config);
         if (!context->config.rootDir.empty()) {
             context->config.isReadOnly = true;
         }
@@ -133,9 +133,9 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
 
         CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS, "Illegal CryptoParam."));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal CryptoParam."));
         CHECK_RETURN_SET_E(context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS, "Illegal tokenizer."));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal tokenizer."));
 
         CHECK_RETURN_SET_E(RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
             std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
@@ -144,12 +144,12 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
                 std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
             return;
         }
-        auto err = GetRealPath(env, argv[0], context->config, context->param);
+        auto err = GetRealPath(env, argv[0], context->param, context->config);
         if (!context->config.rootDir.empty()) {
             context->config.isReadOnly = true;
         }
         CHECK_RETURN_SET_E(err == nullptr,
-            std::make_shared<InnerError>(
+            std::make_shared<InnerErrorExt>(
                 err->GetCode() == E_PARAM_ERROR ? NativeRdb::E_INVALID_ARGS : err->GetCode(), err->GetMessage()));
     };
     auto exec = [context]() -> int {
@@ -194,7 +194,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
             CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
         }
 
-        auto err = GetRealPath(env, argv[0], context->config, context->param);
+        auto err = GetRealPath(env, argv[0], context->param, context->config);
         if (!context->config.rootDir.empty()) {
             context->config.isReadOnly = true;
         }
