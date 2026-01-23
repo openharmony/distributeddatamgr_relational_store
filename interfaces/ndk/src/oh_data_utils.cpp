@@ -73,8 +73,8 @@ bool Utils::IsContainTerminator()
     }
     std::ifstream fin(std::string(TRUSTS_CONF_PATH) + std::string(TRUSTS_CONFIG_JSON_PATH));
     if (!fin.good()) {
-        isInited_ = true;
         LOG_ERROR("Failed to open silent json file");
+        isInited_ = true;
         return flag_;
     }
     std::string jsonStr;
