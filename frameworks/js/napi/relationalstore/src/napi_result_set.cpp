@@ -730,7 +730,7 @@ napi_value ResultSetProxy::GetRows(napi_env env, napi_callback_info info)
 
 napi_value ResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
 {
-    struct RowsContextBase : public ResultSetContext {
+    struct RowsContextBase : public EnhancedContext {
     public:
         int32_t maxCount = 0;
         int32_t position = INIT_POSITION;

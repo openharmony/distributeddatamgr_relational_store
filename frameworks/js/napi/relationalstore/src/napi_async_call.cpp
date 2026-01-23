@@ -136,7 +136,7 @@ ContextBase::~ContextBase()
     env_ = nullptr;
 }
 
-void ResultSetContext::SetError(std::shared_ptr<Error> err)
+void EnhancedContext::SetError(std::shared_ptr<Error> err)
 {
     if (err == nullptr) {
         return;
