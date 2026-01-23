@@ -68,6 +68,33 @@ void ContextBase::SetAction(
     napi_create_reference(env, self, 1, &self_);
 }
 
+void ContextBase::InitAction(
+    napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output)
+{
+    env_ = env;
+    size_t argc = MAX_INPUT_COUNT;
+    napi_value self = nullptr;
+    napi_value argv[MAX_INPUT_COUNT] = { nullptr };
+    void *data = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, &data);
+    if (data) {
+        isAsync_ = *reinterpret_cast<bool *>(data);
+    }
+
+    // int -->input_(env, argc, argv, self)
+    if (status == napi_ok) {
+        input(env, argc, argv, self);
+    } else {
+        error = std::make_shared<InnerErrorExt>("Failed to init action.");
+    }
+
+    // if input return is not ok, then napi_throw_error context error
+    RDB_NAPI_ASSERT_INT_BASE(env, error == nullptr, error, NAPI_RETVAL_NOTHING);
+    output_ = std::move(output);
+    exec_ = std::move(exec);
+    napi_create_reference(env, self, 1, &self_);
+}
+
 void ContextBase::SetAll(
     napi_env env, napi_callback_info info, InputAction input, ExecuteAction exec, OutputAction output)
 {
@@ -107,6 +134,14 @@ ContextBase::~ContextBase()
     }
     napi_delete_reference(env_, self_);
     env_ = nullptr;
+}
+
+void ResultSetContext::SetError(std::shared_ptr<Error> err)
+{
+    if (err == nullptr) {
+        return;
+    }
+    error = std::make_shared<InnerErrorExt>(err->GetNativeCode());
 }
 
 void AsyncCall::SetBusinessError(napi_env env, std::shared_ptr<Error> error, napi_value *businessError)
