@@ -181,7 +181,7 @@ static std::shared_ptr<ResultSet> ParseFieldByName(napi_env env, napi_callback_i
     return proxy->GetInstance();
 }
 
-struct TypeContextBase : public ResultSetContext {
+struct TypeContextBase : public EnhancedContext {
 public:
     int32_t columnIndex = 0;
     std::string columnName;
@@ -509,7 +509,7 @@ std::pair<int, std::vector<RowEntity>> LiteResultSetProxy::GetRows(
     return {E_OK, rowEntities};
 }
 
-struct RowsContextBase : public ResultSetContext {
+struct RowsContextBase : public EnhancedContext {
 public:
     int32_t maxCount = 0;
     int32_t position = INIT_POSITION;
@@ -553,7 +553,7 @@ napi_value LiteResultSetProxy::GetRows(napi_env env, napi_callback_info info)
 
 napi_value LiteResultSetProxy::GetRowsData(napi_env env, napi_callback_info info)
 {
-    struct RowsContextBase : public ResultSetContext {
+    struct RowsContextBase : public EnhancedContext {
     public:
         int32_t maxCount = 0;
         int32_t position = INIT_POSITION;
