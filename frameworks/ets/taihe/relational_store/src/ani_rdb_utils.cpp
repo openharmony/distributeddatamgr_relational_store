@@ -721,19 +721,21 @@ OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalSt
     }
 }
 
-NativeDistributedTableType DistributedTableTypeToNative(TaiheDistributedType type)
+std::pair<bool, NativeDistributedTableType> DistributedTableTypeToNative(TaiheDistributedType type)
 {
     NativeDistributedTableType nativeType;
     if (type.get_key() == TaiheDistributedType::key_t::DISTRIBUTED_DEVICE) {
         nativeType = NativeDistributedTableType::DISTRIBUTED_DEVICE;
+        return std::make_pair(true, nativeType);
     }
     if (type.get_key() == TaiheDistributedType::key_t::DISTRIBUTED_CLOUD) {
         nativeType = NativeDistributedTableType::DISTRIBUTED_CLOUD;
+        return std::make_pair(true, nativeType);
     }
-    return nativeType;
+    return std::make_pair(false, nativeType);
 }
-
-NativeDistributedConfig DistributedConfigToNative(
+ 
+std::pair<bool, NativeDistributedConfig> DistributedConfigToNative(
     const TaiheDistributedConfig &config, NativeDistributedTableType &nativeType)
 {
     NativeDistributedConfig nativeConfig;
@@ -756,15 +758,17 @@ NativeDistributedConfig DistributedConfigToNative(
         nativeConfig.enableCloud = config.enableCloud.value();
     }
     if (!config.tableType.has_value()) {
-        return nativeConfig;
+        return std::make_pair(true, nativeConfig);
     }
     if (config.tableType->get_key() == TaiheDistributedTableType::key_t::SINGLE_VERSION) {
         nativeConfig.tableType = NativeDistributedTableMode::SINGLE_VERSION;
+        return std::make_pair(true, nativeConfig);
     }
     if (config.tableType->get_key() == TaiheDistributedTableType::key_t::DEVICE_COLLABORATION) {
         nativeConfig.tableType = NativeDistributedTableMode::DEVICE_COLLABORATION;
+        return std::make_pair(true, nativeConfig);
     }
-    return nativeConfig;
+    return std::make_pair(false, nativeConfig);
 }
 
 OHOS::DistributedRdb::Reference ReferenceToNative(const ohos::data::relationalStore::Reference &reference)

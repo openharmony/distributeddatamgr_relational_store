@@ -803,7 +803,11 @@ void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, Distr
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    NativeDistributedTableType nativeType = ani_rdbutils::DistributedTableTypeToNative(type);
+    auto [result, nativeType] = ani_rdbutils::DistributedTableTypeToNative(type);
+    if (!result) {
+        ThrowParamError("type must be a DistributedTableType.");
+        return;
+    }
     int errCode =
         nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()), nativeType);
     if (errCode != OHOS::NativeRdb::E_OK) {
@@ -818,8 +822,16 @@ void RdbStoreImpl::SetDistributedTablesWithConfig(
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    NativeDistributedTableType nativeType = ani_rdbutils::DistributedTableTypeToNative(type);
-    NativeDistributedConfig nativeConfig = ani_rdbutils::DistributedConfigToNative(config, nativeType);
+    auto [resultType, nativeType] = ani_rdbutils::DistributedTableTypeToNative(type);
+    if (!resultType) {
+        ThrowParamError("type must be a DistributedTableType.");
+        return;
+    }
+    auto [resultConfig, nativeConfig] = ani_rdbutils::DistributedConfigToNative(config, nativeType);
+    if (!resultConfig) {
+        ThrowParamError("config must be a DistributedConfig.");
+        return;
+    }
     if (nativeType == NativeDistributedTableType::DISTRIBUTED_CLOUD &&
         nativeConfig.tableType == NativeDistributedTableMode::DEVICE_COLLABORATION) {
         ThrowError(std::make_shared<InnerError>(
@@ -845,10 +857,24 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
     NativeDistributedTableType nativeType = NativeDistributedTableType::DISTRIBUTED_DEVICE;
     NativeDistributedConfig nativeConfig = {true};
     if (type.has_value()) {
-        nativeType = ani_rdbutils::DistributedTableTypeToNative(type.value());
+        auto [resultType, nativeTypeTemp] = ani_rdbutils::DistributedTableTypeToNative(type.value());
+        if (!resultType) {
+            ThrowParamError("type must be a DistributedTableType.");
+            return;
+        }
+        nativeType = nativeTypeTemp;
     }
     if (config.has_value()) {
-        nativeConfig = ani_rdbutils::DistributedConfigToNative(config.value(), nativeType);
+        auto [resultConfig, nativeConfigTemp] = ani_rdbutils::DistributedConfigToNative(config.value(), nativeType);
+        if (!resultConfig) {
+            ThrowParamError("config must be a DistributedConfig.");
+            return;
+        }
+        nativeConfig = std::move(nativeConfigTemp);
+    } else {
+        nativeConfig.tableType = nativeType == NativeDistributedTableType::DISTRIBUTED_DEVICE
+                                     ? NativeDistributedTableMode::DEVICE_COLLABORATION
+                                     : NativeDistributedTableMode::SINGLE_VERSION;
     }
     if (nativeType == NativeDistributedTableType::DISTRIBUTED_CLOUD &&
         nativeConfig.tableType == NativeDistributedTableMode::DEVICE_COLLABORATION) {
