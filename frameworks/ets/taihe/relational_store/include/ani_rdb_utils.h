@@ -172,8 +172,8 @@ OHOS::NativeRdb::ReturningConfig ReturningConfigToNative(
     ::ohos::data::relationalStore::ReturningConfig returningConfig);
 
 OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalStore::SubscribeType type);
-NativeDistributedTableType DistributedTableTypeToNative(TaiheDistributedType type);
-NativeDistributedConfig DistributedConfigToNative(
+std::pair<bool, NativeDistributedTableType> DistributedTableTypeToNative(TaiheDistributedType type);
+std::pair<bool, NativeDistributedConfig> DistributedConfigToNative(
     const TaiheDistributedConfig &config, NativeDistributedTableType &nativeType);
 OHOS::DistributedRdb::Reference ReferenceToNative(
     const ohos::data::relationalStore::Reference &reference);
