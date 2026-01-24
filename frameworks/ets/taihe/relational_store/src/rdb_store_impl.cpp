@@ -822,13 +822,13 @@ void RdbStoreImpl::SetDistributedTablesWithConfig(
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    auto [resultType, nativeType] = ani_rdbutils::DistributedTableTypeToNative(type);
-    if (!resultType) {
+    auto [res, nativeType] = ani_rdbutils::DistributedTableTypeToNative(type);
+    if (!res) {
         ThrowParamError("type must be a DistributedTableType.");
         return;
     }
-    auto [resultConfig, nativeConfig] = ani_rdbutils::DistributedConfigToNative(config, nativeType);
-    if (!resultConfig) {
+    auto [ret, nativeConfig] = ani_rdbutils::DistributedConfigToNative(config, nativeType);
+    if (!ret) {
         ThrowParamError("config must be a DistributedConfig.");
         return;
     }
@@ -857,16 +857,16 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
     NativeDistributedTableType nativeType = NativeDistributedTableType::DISTRIBUTED_DEVICE;
     NativeDistributedConfig nativeConfig = {true};
     if (type.has_value()) {
-        auto [resultType, nativeTypeTemp] = ani_rdbutils::DistributedTableTypeToNative(type.value());
-        if (!resultType) {
+        auto [res, nativeTypeTemp] = ani_rdbutils::DistributedTableTypeToNative(type.value());
+        if (!res) {
             ThrowParamError("type must be a DistributedTableType.");
             return;
         }
         nativeType = nativeTypeTemp;
     }
     if (config.has_value()) {
-        auto [resultConfig, nativeConfigTemp] = ani_rdbutils::DistributedConfigToNative(config.value(), nativeType);
-        if (!resultConfig) {
+        auto [ret, nativeConfigTemp] = ani_rdbutils::DistributedConfigToNative(config.value(), nativeType);
+        if (!ret) {
             ThrowParamError("config must be a DistributedConfig.");
             return;
         }
