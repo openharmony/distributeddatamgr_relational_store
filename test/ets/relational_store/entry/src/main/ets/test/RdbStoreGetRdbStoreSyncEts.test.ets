@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,10 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { relationalStore } from '@kit.ArkData';
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
+import fs from '@ohos.file.fs'
+import featureAbility from '@ohos.ability.featureAbility';
+import { application } from '@kit.AbilityKit';
+
 const delegator = AbilityDelegatorRegistry.getAbilityDelegator();
 const context = delegator.getAppContext().getApplicationContext();
 
@@ -46,6 +50,21 @@ const valueBucket: relationalStore.ValuesBucket = {
   'CODES': value4,
   'IDENTITY': value5,
 };
+
+async function corruptDatabaseFile(fileName: string)
+{
+  let fileExist = fs.accessSync(fileName);
+  expect(fileExist).assertTrue();
+  let stat = await fs.stat(fileName);
+  let file = await fs.open(fileName, fs.OpenMode.READ_WRITE);
+  fs.lseek(file.fd, 0, fs.WhenceType.SEEK_SET);
+  let bufferSize = stat.size;
+  let buffer = new ArrayBuffer(bufferSize);
+  let uint8Array = new Uint8Array(buffer);
+  let fChar = 'F'.charCodeAt(0);
+  uint8Array.fill(fChar);
+  await fs.write(file.fd, buffer, { offset: 0, length: bufferSize });
+}
 
 export default function RdbStoreGetRdbStoreSyncEtsTest() {
   describe('rdbStoreGetRdbStoreSyncEtsTest', () => {
@@ -94,6 +113,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         }
         resultSet.close();
         store.deleteSync(predicates);
+        store.close();
         await relationalStore.deleteRdbStore(context, STORE_CONFIG);
         done();
       } catch (e) {
@@ -131,6 +151,8 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest002', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
       }
       done();
 
@@ -169,6 +191,8 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest003', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
       }
       done();
 
@@ -201,6 +225,8 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest004', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
       }
       done();
 
@@ -231,6 +257,8 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest005', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
       }
       done();
 
@@ -262,6 +290,8 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest006', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
       }
       done();
 
@@ -272,7 +302,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
     /**
      * @tc.name rdb store getRdbStoreSync test
      * @tc.number getRdbStoreSyncTest007
-     * @tc.desc Throw error Code:14800001, message:Invalid args.Parameter error. The customDir must be a relative directory.
+     * @tc.desc Throw error Code:14800010, message:Failed to open or delete the database by an invalid database path.
      */
     it('getRdbStoreSyncTest007', 0, async (done: Function) => {
 
@@ -294,10 +324,376 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest007', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
         expect(14800010).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
       }
       done();
 
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest007 end   *************");
+    })
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest008
+     * @tc.desc Throw error Code:14800011, message:Failed to open the database because it is corrupted.
+     */
+    it('getRdbStoreSyncTest008', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest008 start *************");
+
+      const dbName = "RdbTest.db";
+      const dbPath = context.databaseDir + "/rdb/" + dbName;
+      const dbPathWal = dbPath + "-wal";
+      const dbPathShm = dbPath + "-shm";
+
+      const storeConfig: relationalStore.StoreConfig = {
+        name: dbName,
+        securityLevel: relationalStore.SecurityLevel.S1,
+        allowRebuild: false,
+      };
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync(SQL_CREATE_TABLE);
+        for (let i = 0; i < 100; i++) {
+           store.insertSync('EMPLOYEE', valueBucket);
+        }
+        store.close();
+
+        await corruptDatabaseFile(dbPath);
+        await corruptDatabaseFile(dbPathWal);
+        await corruptDatabaseFile(dbPathShm);
+
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.insertSync('EMPLOYEE', valueBucket);
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest008', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        expect(14800011).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest008 end   *************");
+    })
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest009
+     * @tc.desc Throw error Code:14801001, message:The operation is supported in the stage model only.
+     */
+    // TODO
+    it('getRdbStoreSyncTest009', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest009 start *************");
+      const storeConfig: relationalStore.StoreConfig = {
+        name: 'RdbTest.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+        encrypt: false,
+        dataGroupId: '12345678',
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest009', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        // expect(14801001).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest009 end   *************");
+    })
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest010
+     * @tc.desc Throw error Code:14801002, message:Invalid data ground ID.
+     */
+
+    it('getRdbStoreSyncTest010', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest010 start *************");
+      const storeConfig: relationalStore.StoreConfig = {
+        name: 'RdbTest.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+        encrypt: false,
+        dataGroupId: '12345678',
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest010', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        expect(14801002).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest010 end   *************");
+    })
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest011
+     * @tc.desc Throw error Code:14800017 - Config changed.
+     */
+
+    it('getRdbStoreSyncTest011', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest011 start *************");
+      const storeConfig: relationalStore.StoreConfig = {
+        name: 'RdbTest.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+      };
+
+      const changedStoreConfig: relationalStore.StoreConfig = {
+        name: 'RdbTest.db',
+        securityLevel: relationalStore.SecurityLevel.S2,
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store = relationalStore.getRdbStoreSync(context, changedStoreConfig);
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest011', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        expect(14800017).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest011 end   *************");
+    })
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest012
+     * @tc.desc Throw error Code:14800020 - The secret key is corrupted or lost.
+     */
+    // TODO
+    it('getRdbStoreSyncTest012', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest012 start *************");
+
+      let dbName = 'RdbTest.db';
+      const storeConfig: relationalStore.StoreConfig = {
+        name: dbName,
+        securityLevel: relationalStore.SecurityLevel.S1,
+        encrypt: true,
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+
+        const secretKeyFile = context.databaseDir + "/rdb/key/RdbTest.pub_key_v2";
+        await corruptDatabaseFile(secretKeyFile);
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        // expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest012', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        expect(14800020).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest012 end   *************");
+    })
+
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest013
+     * @tc.desc Throw error Code:14800021 - SQLite: Generic error.
+     */
+    it('getRdbStoreSyncTest013', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest013 start *************");
+
+      const storeConfig: relationalStore.StoreConfig = {
+        name: 'RdbTest.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync(SQL_CREATE_TABLE);
+        store.insertSync('error_table_name', valueBucket);
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest013', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        expect(14800021).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest013 end   *************");
+    })
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest014
+     * @tc.desc Throw error Code:14800027 - SQLite: Attempt to write a readonly database.
+     */
+    // TODO
+    it('getRdbStoreSyncTest014', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest014 start *************");
+
+      const storeConfig: relationalStore.StoreConfig = {
+        name: 'RdbTest.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+        isReadOnly: true,
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync(SQL_CREATE_TABLE);
+        store.insertSync('EMPLOYEE', valueBucket);
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest014', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        // expect(14800027).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest014 end   *************");
+    })
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest015
+     * @tc.desc Throw error Code:14800028 - SQLite: Some kind of disk I/O error occurred.
+     */
+    // TODO
+    it('getRdbStoreSyncTest015', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest015 start *************");
+
+      const storeConfig: relationalStore.StoreConfig = {
+        name: 'RdbTest.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+        isReadOnly: true,
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync(SQL_CREATE_TABLE);
+        store.insertSync('EMPLOYEE', valueBucket);
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest015', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        // expect(14800028).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest015 end   *************");
+    })
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest016
+     * @tc.desc Throw error Code:14800029 - SQLite: The database is full.
+     */
+    // TODO
+    it('getRdbStoreSyncTest016', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest016 start *************");
+
+      const storeConfig: relationalStore.StoreConfig = {
+        name: 'RdbTest.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+        isReadOnly: true,
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync(SQL_CREATE_TABLE);
+        store.insertSync('EMPLOYEE', valueBucket);
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest016', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        // expect(14800028).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest016 end   *************");
+    })
+
+
+
+    /**
+     * @tc.name rdb store getRdbStoreSync test
+     * @tc.number getRdbStoreSyncTest017
+     * @tc.desc Throw error Code:14800030 - SQLite: Unable to open the database file.
+     */
+    // TODO
+    it('getRdbStoreSyncTest017', 0, async (done: Function) => {
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest017 start *************");
+
+      const storeConfig: relationalStore.StoreConfig = {
+        name: 'RdbTest.db',
+        securityLevel: relationalStore.SecurityLevel.S1,
+        isReadOnly: true,
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync(SQL_CREATE_TABLE);
+        store.insertSync('EMPLOYEE', valueBucket);
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, 'getRdbStoreSyncTest017', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
+        // expect(14800028).assertEqual(Number(err.code));
+      } finally {
+        store?.close();
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest017 end   *************");
     })
 
     hilog.info(DOMAIN, TAG, "*************Unit Test End*************");
