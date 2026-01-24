@@ -123,7 +123,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<GetRdbStoreContext>();
-    context->config.version = ConfigVersion::GET_RDB_STORE_SYNC_VERSION;
+    context->config.version = ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED;
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         int errCode = Convert2Value(env, argv[0], context->param);
