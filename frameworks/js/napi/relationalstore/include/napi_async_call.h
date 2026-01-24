@@ -82,7 +82,7 @@ public:
     std::shared_ptr<ContextBase> keep_;
 };
 
-class ResultSetContext : public ContextBase {
+class EnhancedContext : public ContextBase {
 public:
     void SetError(std::shared_ptr<Error> err) override;
 };
