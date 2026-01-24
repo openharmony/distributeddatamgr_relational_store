@@ -148,9 +148,12 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
         if (!context->config.rootDir.empty()) {
             context->config.isReadOnly = true;
         }
-        CHECK_RETURN_SET_E(err == nullptr,
-            std::make_shared<InnerErrorExt>(
-                err->GetCode() == E_PARAM_ERROR ? NativeRdb::E_INVALID_ARGS : err->GetCode(), err->GetMessage()));
+        
+        if (err != nullptr && err->GetCode() == E_PARAM_ERROR) {
+            CHECK_RETURN_SET_E(err == nullptr, std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+        } else {
+            CHECK_RETURN_SET_E(err == nullptr, err);
+        }
     };
     auto exec = [context]() -> int {
         int errCode = OK;
