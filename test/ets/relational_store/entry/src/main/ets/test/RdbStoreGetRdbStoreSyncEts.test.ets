@@ -18,7 +18,8 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { relationalStore } from '@kit.ArkData';
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
-import fs from '@ohos.file.fs'
+import fs from '@ohos.file.fs';
+import { fileShare } from '@kit.CoreFileKit';
 import featureAbility from '@ohos.ability.featureAbility';
 import { application } from '@kit.AbilityKit';
 
@@ -64,6 +65,13 @@ async function corruptDatabaseFile(fileName: string)
   let fChar = 'F'.charCodeAt(0);
   uint8Array.fill(fChar);
   await fs.write(file.fd, buffer, { offset: 0, length: bufferSize });
+}
+
+async function moveDatabaseFile(filePath: string)
+{
+  let fileExist = fs.accessSync(filePath);
+  expect(fileExist).assertTrue();
+  fs.unlinkSync(filePath);
 }
 
 export default function RdbStoreGetRdbStoreSyncEtsTest() {
@@ -404,7 +412,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       } catch (e) {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest009', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
-        // expect(14801001).assertEqual(Number(err.code));
+        expect(14801001).assertEqual(Number(err.code));
       } finally {
         store?.close();
       }
@@ -508,7 +516,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         const secretKeyFile = context.databaseDir + "/rdb/key/RdbTest.pub_key_v2";
         await corruptDatabaseFile(secretKeyFile);
         store = relationalStore.getRdbStoreSync(context, storeConfig);
-        // expect().assertFail();
+        expect().assertFail();
       } catch (e) {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest012', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
@@ -581,7 +589,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       } catch (e) {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest014', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
-        // expect(14800027).assertEqual(Number(err.code));
+        expect(14800027).assertEqual(Number(err.code));
       } finally {
         store?.close();
       }
@@ -601,14 +609,19 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
 
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest015 start *************");
 
+      const dbName = "RdbTest.db";
+      const dbPath = context.databaseDir + "/rdb/" + dbName;
       const storeConfig: relationalStore.StoreConfig = {
-        name: 'RdbTest.db',
+        name: dbName,
         securityLevel: relationalStore.SecurityLevel.S1,
-        isReadOnly: true,
+        encrypt: true,
       };
 
       let store: relationalStore.RdbStore | undefined = undefined;
       try {
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        moveDatabaseFile(dbPath);
+        store.close();
         store = relationalStore.getRdbStoreSync(context, storeConfig);
         store.executeSync(SQL_CREATE_TABLE);
         store.insertSync('EMPLOYEE', valueBucket);
@@ -616,7 +629,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       } catch (e) {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest015', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
-        // expect(14800028).assertEqual(Number(err.code));
+        expect(14800028).assertEqual(Number(err.code));
       } finally {
         store?.close();
       }
@@ -631,7 +644,6 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
      * @tc.number getRdbStoreSyncTest016
      * @tc.desc Throw error Code:14800029 - SQLite: The database is full.
      */
-    // TODO
     it('getRdbStoreSyncTest016', 0, async (done: Function) => {
 
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest016 start *************");
@@ -639,19 +651,19 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       const storeConfig: relationalStore.StoreConfig = {
         name: 'RdbTest.db',
         securityLevel: relationalStore.SecurityLevel.S1,
-        isReadOnly: true,
       };
 
       let store: relationalStore.RdbStore | undefined = undefined;
       try {
         store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync(`PRAGMA max_page_count = 1`);
         store.executeSync(SQL_CREATE_TABLE);
         store.insertSync('EMPLOYEE', valueBucket);
         expect().assertFail();
       } catch (e) {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest016', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
-        // expect(14800028).assertEqual(Number(err.code));
+        expect(14800029).assertEqual(Number(err.code));
       } finally {
         store?.close();
       }
@@ -667,7 +679,6 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
      * @tc.number getRdbStoreSyncTest017
      * @tc.desc Throw error Code:14800030 - SQLite: Unable to open the database file.
      */
-    // TODO
     it('getRdbStoreSyncTest017', 0, async (done: Function) => {
 
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest017 start *************");
@@ -687,7 +698,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       } catch (e) {
         const err = e as BusinessError;
         hilog.error(DOMAIN, 'getRdbStoreSyncTest017', `Failed to get RdbStore. Code:${err.code}, message:${err.message}`);
-        // expect(14800028).assertEqual(Number(err.code));
+        expect(14800030).assertEqual(Number(err.code));
       } finally {
         store?.close();
       }
