@@ -48,6 +48,7 @@ ohos_shared_library("sendablerelationalstore") {
   external_deps = [
     "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
+    "ability_runtime:napi_common",
     "bounds_checking_function:libsec_shared",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
