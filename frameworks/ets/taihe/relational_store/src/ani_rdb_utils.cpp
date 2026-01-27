@@ -723,16 +723,15 @@ OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalSt
 
 std::pair<bool, NativeDistributedTableType> DistributedTableTypeToNative(TaiheDistributedType type)
 {
-    NativeDistributedTableType nativeType;
-    if (type.get_key() == TaiheDistributedType::key_t::DISTRIBUTED_DEVICE) {
-        nativeType = NativeDistributedTableType::DISTRIBUTED_DEVICE;
-        return std::make_pair(true, nativeType);
+    switch (type.get_key()) {
+        case TaiheDistributedType::key_t::DISTRIBUTED_DEVICE:
+            return { true, NativeDistributedTableType::DISTRIBUTED_DEVICE };
+        case TaiheDistributedType::key_t::DISTRIBUTED_CLOUD:
+            return { true, NativeDistributedTableType::DISTRIBUTED_CLOUD };
+        default:
+            LOG_ERROR("Invalid distributed type.");
+            return { false, {} };
     }
-    if (type.get_key() == TaiheDistributedType::key_t::DISTRIBUTED_CLOUD) {
-        nativeType = NativeDistributedTableType::DISTRIBUTED_CLOUD;
-        return std::make_pair(true, nativeType);
-    }
-    return std::make_pair(false, nativeType);
 }
  
 std::pair<bool, NativeDistributedConfig> DistributedConfigToNative(
@@ -758,17 +757,19 @@ std::pair<bool, NativeDistributedConfig> DistributedConfigToNative(
         nativeConfig.enableCloud = config.enableCloud.value();
     }
     if (!config.tableType.has_value()) {
-        return std::make_pair(true, nativeConfig);
+        return { true, nativeConfig };
     }
-    if (config.tableType->get_key() == TaiheDistributedTableType::key_t::SINGLE_VERSION) {
-        nativeConfig.tableType = NativeDistributedTableMode::SINGLE_VERSION;
-        return std::make_pair(true, nativeConfig);
+    switch (config.tableType->get_key()) {
+        case TaiheDistributedTableType::key_t::SINGLE_VERSION:
+            nativeConfig.tableType = NativeDistributedTableMode::SINGLE_VERSION;
+            return { true, nativeConfig };
+        case TaiheDistributedTableType::key_t::DEVICE_COLLABORATION:
+            nativeConfig.tableType = NativeDistributedTableMode::DEVICE_COLLABORATION;
+            return { true, nativeConfig };
+        default:
+            LOG_ERROR("Invalid distributed table type.");
+            return { false, {} };
     }
-    if (config.tableType->get_key() == TaiheDistributedTableType::key_t::DEVICE_COLLABORATION) {
-        nativeConfig.tableType = NativeDistributedTableMode::DEVICE_COLLABORATION;
-        return std::make_pair(true, nativeConfig);
-    }
-    return std::make_pair(false, nativeConfig);
 }
 
 OHOS::DistributedRdb::Reference ReferenceToNative(const ohos::data::relationalStore::Reference &reference)
