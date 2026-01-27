@@ -37,8 +37,8 @@ using JsProgressDetailsCallbackType = taihe::callback<void(ohos::data::relationa
 using JsExceptionMessageCallbackType =
     taihe::callback<void(ohos::data::relationalStore::ExceptionMessage const& info)>;
 using RdbStoreVarCallbackType = std::variant<JsDevicesCallbackType, JsChangeInfoCallbackType, JsVoidCallbackType>;
-using TaiheDistributedConfig = ohos::data::relationalStore::DistributedConfig;
 using NativeDistributedConfig = OHOS::DistributedRdb::DistributedConfig;
+using TaiheDistributedConfig = ohos::data::relationalStore::DistributedConfig;
 using NativeDistributedTableType = OHOS::DistributedRdb::DistributedTableType;
 using TaiheDistributedType = ohos::data::relationalStore::DistributedType;
 

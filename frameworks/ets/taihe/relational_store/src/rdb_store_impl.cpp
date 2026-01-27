@@ -803,13 +803,13 @@ void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, Distr
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    auto [result, nativeType] = ani_rdbutils::DistributedTableTypeToNative(type);
-    if (!result) {
+    auto [isValidType, nativeTableType] = ani_rdbutils::DistributedTableTypeToNative(type);
+    if (!isValidType) {
         ThrowParamError("type must be a DistributedTableType.");
         return;
     }
     int errCode =
-        nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()), nativeType);
+        nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()), nativeTableType);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }
@@ -822,17 +822,17 @@ void RdbStoreImpl::SetDistributedTablesWithConfig(
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    auto [res, nativeType] = ani_rdbutils::DistributedTableTypeToNative(type);
-    if (!res) {
+    auto [isValidType, nativeTableType] = ani_rdbutils::DistributedTableTypeToNative(type);
+    if (!isValidType) {
         ThrowParamError("type must be a DistributedTableType.");
         return;
     }
-    auto [ret, nativeConfig] = ani_rdbutils::DistributedConfigToNative(config, nativeType);
-    if (!ret) {
+    auto [isValidConfig, nativeConfig] = ani_rdbutils::DistributedConfigToNative(config, nativeTableType);
+    if (!isValidConfig) {
         ThrowParamError("config must be a DistributedConfig.");
         return;
     }
-    if (nativeType == NativeDistributedTableType::DISTRIBUTED_CLOUD &&
+    if (nativeTableType == NativeDistributedTableType::DISTRIBUTED_CLOUD &&
         nativeConfig.tableType == NativeDistributedTableMode::DEVICE_COLLABORATION) {
         ThrowError(std::make_shared<InnerError>(
             OHOS::NativeRdb::E_NOT_SUPPORT, "The CloudDistributedTable is not support DEVICE_COLLABORATION."));
@@ -840,7 +840,7 @@ void RdbStoreImpl::SetDistributedTablesWithConfig(
     }
 
     int errCode = nativeRdbStore_->SetDistributedTables(
-        std::vector<std::string>(tables.begin(), tables.end()), nativeType, nativeConfig);
+        std::vector<std::string>(tables.begin(), tables.end()), nativeTableType, nativeConfig);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }
@@ -854,35 +854,36 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
         return;
     }
     std::vector<std::string> tableList(tables.begin(), tables.end());
-    NativeDistributedTableType nativeType = NativeDistributedTableType::DISTRIBUTED_DEVICE;
+    NativeDistributedTableType nativeTableType = NativeDistributedTableType::DISTRIBUTED_DEVICE;
     NativeDistributedConfig nativeConfig = {true};
     if (type.has_value()) {
-        auto [res, nativeTypeTemp] = ani_rdbutils::DistributedTableTypeToNative(type.value());
-        if (!res) {
+        auto [isValidType, nativeTableTypeTemp] = ani_rdbutils::DistributedTableTypeToNative(type.value());
+        if (!isValidType) {
             ThrowParamError("type must be a DistributedTableType.");
             return;
         }
-        nativeType = nativeTypeTemp;
+        nativeTableType = nativeTableTypeTemp;
     }
     if (config.has_value()) {
-        auto [ret, nativeConfigTemp] = ani_rdbutils::DistributedConfigToNative(config.value(), nativeType);
-        if (!ret) {
+        auto [isValidConfig, nativeConfigTemp] =
+            ani_rdbutils::DistributedConfigToNative(config.value(), nativeTableType);
+        if (!isValidConfig) {
             ThrowParamError("config must be a DistributedConfig.");
             return;
         }
         nativeConfig = std::move(nativeConfigTemp);
     } else {
-        nativeConfig.tableType = nativeType == NativeDistributedTableType::DISTRIBUTED_DEVICE
+        nativeConfig.tableType = nativeTableType == NativeDistributedTableType::DISTRIBUTED_DEVICE
                                      ? NativeDistributedTableMode::DEVICE_COLLABORATION
                                      : NativeDistributedTableMode::SINGLE_VERSION;
     }
-    if (nativeType == NativeDistributedTableType::DISTRIBUTED_CLOUD &&
+    if (nativeTableType == NativeDistributedTableType::DISTRIBUTED_CLOUD &&
         nativeConfig.tableType == NativeDistributedTableMode::DEVICE_COLLABORATION) {
         ThrowError(std::make_shared<InnerError>(
             OHOS::NativeRdb::E_NOT_SUPPORT, "The CloudDistributedTable is not support DEVICE_COLLABORATION."));
         return;
     }
-    int errCode = nativeRdbStore_->SetDistributedTables(tableList, nativeType, nativeConfig);
+    int errCode = nativeRdbStore_->SetDistributedTables(tableList, nativeTableType, nativeConfig);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }
