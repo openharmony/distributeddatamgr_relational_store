@@ -14,20 +14,21 @@
  */
 #ifndef OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H
 #define OHOS_RELATION_STORE_ANI_CLOUD_DATA_UTILS_H
-#include "ani_cloud_data.h"
+#include <utility>
+#include "ani_cloud_data_config.h"
 #include "cloud_types.h"
 
 namespace AniCloudData {
 uint32_t GetSeqNum();
 void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work);
-OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(::ohos::data::cloudData::DBSwitchInfo dbSwitchInfo);
-OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(::ohos::data::cloudData::ClearConfig clearConfig);
-OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(::ohos::data::cloudData::DBActionInfo actionInfo);
-void StatisticInfoConvert(std::map<std::string, StatisticInfos> &in, map<string, array<StatisticInfo_TH>> &out);
-void SyncInfoConvert(QueryLastResults &in, map<string, SyncInfo> &out);
-ProgressDetails ProgressDetailConvert(const OHOS::DistributedRdb::ProgressDetail &in);
-void ParticipantConvert(const array_view<Participant_TH> &in, Participants &out);
-void ResultsConvert(const Results &in, Result_TH &out);
-void QueryResultsConvert(const QueryResults &in, Result_TH &out);
+OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(const ::ohos::data::cloudData::DBSwitchInfo &in);
+OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(const ::ohos::data::cloudData::ClearConfig &in);
+OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(const ::ohos::data::cloudData::DBActionInfo &in);
+map<string, array<TaiHeStatisticInfo>> ConvertStatisticInfo(const std::map<std::string, StatisticInfos> &in);
+std::pair<bool, map<string, SyncInfo>> ConvertSyncInfo(const QueryLastResults &in);
+ProgressDetails ConvertProgressDetail(const OHOS::DistributedRdb::ProgressDetail &in);
+Participants ConvertParticipant(const array_view<TaiHeParticipant> &in);
+TaiHeResult ConvertResults(const Results &in);
+TaiHeResult ConvertQueryResults(const QueryResults &in);
 } // namespace AniCloudData
 #endif

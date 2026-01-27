@@ -16,7 +16,13 @@
 #include "ani_utils.h"
 
 #include <ani_signature_builder.h>
+#include <cstdarg>
 
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+
+#include "ani.h"
 #include "asset_value.h"
 #include "big_integer.h"
 #include "logger.h"
@@ -27,12 +33,6 @@ using namespace OHOS::NativeRdb;
 using namespace arkts::ani_signature;
 
 namespace ani_utils {
-inline ani_status HandlePropertyError(
-    ani_status status, const char *property, ErrorHandling handling, const char *type_name)
-{
-    return PropertyErrorHandler::HandleError(status, property, handling, type_name);
-}
-
 ani_status AniGetProperty(
     ani_env *env, ani_object ani_obj, const char *property, std::string &result, ErrorHandling handling)
 {
@@ -176,7 +176,7 @@ bool UnionAccessor::TryConvertArray<bool>(std::vector<bool> &value)
             return false;
         }
         ani_boolean val = false;
-        if (ANI_OK != env_->Object_CallMethodByName_Boolean(static_cast<ani_object>(ref), "unboxed", nullptr, &val)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Boolean(static_cast<ani_object>(ref), "toBoolean", nullptr, &val)) {
             LOG_ERROR("Object_CallMethodByName_Boolean unbox failed");
             return false;
         }
@@ -201,7 +201,7 @@ bool UnionAccessor::TryConvertArray<int>(std::vector<int> &value)
             return false;
         }
         ani_int intValue = 0;
-        if (ANI_OK != env_->Object_CallMethodByName_Int(static_cast<ani_object>(ref), "unboxed", nullptr, &intValue)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Int(static_cast<ani_object>(ref), "toInt", nullptr, &intValue)) {
             LOG_ERROR("Object_CallMethodByName_Int unbox failed");
             return false;
         }
@@ -226,7 +226,7 @@ bool UnionAccessor::TryConvertArray<double>(std::vector<double> &value)
             return false;
         }
         ani_double val = 0;
-        if (ANI_OK != env_->Object_CallMethodByName_Double(static_cast<ani_object>(ref), "unboxed", nullptr, &val)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Double(static_cast<ani_object>(ref), "toDouble", nullptr, &val)) {
             LOG_ERROR("Object_CallMethodByName_Double unbox failed");
             return false;
         }
@@ -318,7 +318,7 @@ bool UnionAccessor::TryConvert<int>(int &value)
         return false;
     }
     ani_int aniValue = 0;
-    auto ret = env_->Object_CallMethodByName_Int(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Int(obj_, "toInt", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -353,7 +353,7 @@ bool UnionAccessor::TryConvert<double>(double &value)
         return false;
     }
     ani_double aniValue = 0;
-    auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Double(obj_, "toDouble", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -378,7 +378,7 @@ bool UnionAccessor::TryConvert<bool>(bool &value)
         return false;
     }
     ani_boolean aniValue = false;
-    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "toBoolean", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -572,7 +572,7 @@ bool UnionAccessor::TryConvert<std::vector<ani_ref>>(std::vector<ani_ref> &value
 ani_ref UnionAccessor::AniIteratorNext(ani_ref interator, bool &isSuccess)
 {
     ani_ref next;
-    ani_boolean done;
+    ani_boolean done = false;
     if (ANI_OK != env_->Object_CallMethodByName_Ref(static_cast<ani_object>(interator), "next", nullptr, &next)) {
         LOG_ERROR("Failed to get next key");
         isSuccess = false;
@@ -596,7 +596,7 @@ bool UnionAccessor::TryConvert<ValuesBucket>(ValuesBucket &value)
         return false;
     }
     ani_ref keys;
-    auto status = env_->Object_CallMethodByName_Ref(obj_, "keys", ":ableIterator", &keys);
+    auto status = env_->Object_CallMethodByName_Ref(obj_, "keys", ":C{std.core.IterableIterator}", &keys);
     if (status != ANI_OK) {
         LOG_ERROR("Object_CallMethodByName_Ref failed");
     }
@@ -637,7 +637,7 @@ std::optional<double> OptionalAccessor::Convert<double>()
         return std::nullopt;
     }
     ani_double aniValue = 0;
-    auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Double(obj_, "toDouble", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return std::nullopt;
     }
@@ -697,4 +697,114 @@ ani_string AniStringUtils::ToAni(ani_env *env, const std::string &str)
     return aniStr;
 }
 
+ani_status CreateAniObj(ani_env *env, const std::string &className, const std::string &methodName,
+    const std::string &signature, ani_object *obj, ...)
+{
+    va_list args;
+    va_start(args, obj);
+    if (className.empty() || methodName.empty() || signature.empty()) {
+        return ANI_ERROR;
+    }
+    ani_class cls;
+    if (env->FindClass(className.c_str(), &cls) != ANI_OK) {
+        LOG_ERROR("[ANI] FindClass failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
+            className.c_str(), methodName.c_str(), signature.c_str());
+        return ANI_ERROR;
+    }
+    ani_method method;
+    if (env->Class_FindMethod(cls, methodName.c_str(), signature.c_str(), &method) != ANI_OK) {
+        LOG_ERROR("[ANI] Class_FindMethod failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
+            className.c_str(), methodName.c_str(), signature.c_str());
+        return ANI_ERROR;
+    }
+    
+    if (env->Object_New_V(cls, method, obj, args) != ANI_OK) {
+        va_end(args);
+        LOG_ERROR("[ANI] Object_New failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
+            className.c_str(), methodName.c_str(), signature.c_str());
+        return ANI_ERROR;
+    }
+    va_end(args);
+
+    return ANI_OK;
+}
+
+ani_method FindClassMethod(
+    ani_env *env, const std::string &className, const std::string &methodName, const std::string &signature)
+{
+    if (className.empty() || methodName.empty() || signature.empty()) {
+        return nullptr;
+    }
+    ani_class cls;
+    if (env->FindClass(className.c_str(), &cls) != ANI_OK) {
+        LOG_ERROR("[ANI] FindClass failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
+            className.c_str(), methodName.c_str(), signature.c_str());
+        return nullptr;
+    }
+    ani_method method;
+    if (env->Class_FindMethod(cls, methodName.c_str(), signature.c_str(), &method) != ANI_OK) {
+        LOG_ERROR("[ANI] Class_FindMethod failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
+            className.c_str(), methodName.c_str(), signature.c_str());
+        return nullptr;
+    }
+    return method;
+}
+
+ani_status Convert2AniValue(ani_env *env, const std::map<std::string, int> &value, ani_object &result)
+{
+    if (env == nullptr) {
+        LOG_ERROR("[ANI] env is nullptr.");
+        return ANI_ERROR;
+    }
+    size_t mapSize = value.size();
+    ani_array res = {};
+    ani_ref element = {};
+    env->GetUndefined(&element);
+    env->Array_New(mapSize, element, &res);
+    int i = 0;
+    for (const auto &[key, val] : value) {
+        ani_array arr = {};
+        env->Array_New(SYNC_RESULT_ELEMENT_NUM, element, &arr);
+        ani_string aniKey = {};
+        env->String_NewUTF8(key.c_str(), key.size(), &aniKey);
+        env->Array_Set(arr, 0, aniKey);
+        ani_object aniVal = {};
+        if (CreateAniObj(env, "std.core.Int", "<ctor>", "i:", &aniVal, static_cast<ani_int>(val)) != ANI_OK) {
+            return ANI_ERROR;
+        }
+        env->Array_Set(arr, 1, aniVal);
+        env->Array_Set(res, i++, arr);
+    }
+    result = res;
+    return ANI_OK;
+}
+
+ani_status CreateBusinessError(ani_env *env, int32_t code, const std::string &message, ani_ref &result)
+{
+    ani_object object = {};
+    if (CreateAniObj(env, "@ohos.base.BusinessError", "<ctor>", ":", &object) != ANI_OK) {
+        return ANI_ERROR;
+    }
+    ani_string aniMsg = {};
+    ani_status status = env->String_NewUTF8(message.c_str(), message.size(), &aniMsg);
+    if (status != ANI_OK) {
+        LOG_ERROR("[ANI] String_NewUTF8 failed. code:%{public}d message:%{public}s status:%{public}d", code,
+            message.c_str(), status);
+        return ANI_ERROR;
+    }
+    status = env->Object_SetPropertyByName_Int(object, "code", static_cast<ani_int>(code));
+    if (status != ANI_OK) {
+        LOG_ERROR("[ANI] Object_SetPropertyByName_Int failed. code:%{public}d message:%{public}s status:%{public}d",
+            code, message.c_str(), status);
+        return ANI_ERROR;
+    }
+    status = env->Object_SetPropertyByName_Ref(object, "message", aniMsg);
+    if (status != ANI_OK) {
+        LOG_ERROR("[ANI] Object_SetPropertyByName_Ref failed. code:%{public}d message:%{public}s status:%{public}d",
+            code, message.c_str(), status);
+        return ANI_ERROR;
+    }
+    result = static_cast<ani_ref>(object);
+    return ANI_OK;
+}
 } //namespace ani_utils

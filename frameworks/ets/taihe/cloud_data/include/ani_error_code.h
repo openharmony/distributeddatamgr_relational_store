@@ -15,6 +15,7 @@
 #ifndef OHOS_RELATION_STORE_ANI_ERROR_CODE_H
 #define OHOS_RELATION_STORE_ANI_ERROR_CODE_H
 #include <optional>
+#include <string>
 
 namespace AniCloudData {
 struct AniErrorCode {
@@ -23,7 +24,7 @@ struct AniErrorCode {
     const char *message = nullptr;
 };
 
-void ThrowAniError(int32_t errorCode);
+void ThrowAniError(int32_t errorCode, std::string errorMsg = "");
 const std::optional<AniErrorCode> GetAniErrorCode(int32_t errorCode);
 }
 #endif

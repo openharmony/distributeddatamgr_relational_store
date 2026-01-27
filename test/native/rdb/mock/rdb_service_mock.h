@@ -87,8 +87,6 @@ public:
     MOCK_METHOD(int32_t, VerifyPromiseInfo, (const RdbSyncerParam &param), (override));
 
     MOCK_METHOD(int32_t, ReportStatistic, (const RdbSyncerParam &param, const RdbStatEvent &statEvent), (override));
-
-    MOCK_METHOD(int32_t, StopCloudSync, (const RdbSyncerParam &param), (override));
 };
 } // namespace DistributedRdb
 } // namespace OHOS

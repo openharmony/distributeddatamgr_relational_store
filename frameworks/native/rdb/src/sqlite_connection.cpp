@@ -217,7 +217,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSl
         (!isSlaveExist || isSlaveLockExist || hasFailure || walOverLimit))) {
         if (walOverLimit) {
             SqliteUtils::SetSlaveInvalid(config_.GetPath());
-            Reportor::ReportFault(RdbFaultEvent(FT_WAL_OVER_LIMIT, E_SQLITE_ERROR,
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_WAL_OVER_LIMIT, E_SQLITE_ERROR,
                 config.GetBundleName(), "ErrorType: slaveWalOverLimit"));
         }
         return result;
@@ -293,7 +293,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist && (!config.IsCreateNecessary())) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_EX_FILE, E_DB_NOT_EXIST, config, "db not exist"));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_EX_FILE, E_DB_NOT_EXIST, config, "db not exist"));
         LOG_ERROR("db not exist errno is %{public}d", errno);
         return E_DB_NOT_EXIST;
     }
@@ -306,7 +306,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
     errCode = OpenDatabase(dbPath, static_cast<int>(openFileFlags));
     if (errCode != E_OK) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, errCode, config, "", true));
         return errCode;
     }
 
@@ -335,6 +335,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
             }
         }
     }
+
     return E_OK;
 }
 
@@ -356,7 +357,7 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
                 LOG_ERROR("The stat error, errno=%{public}d, parent dir modes: %{public}s", errno,
                     SqliteUtils::GetParentModes(dbPath).c_str());
             }
-            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_CANTOPEN, config_,
+            Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_SQLITE_CANTOPEN, config_,
                 "failed to openDB errno[ " + std::to_string(errno) + "]," +
                     SqliteUtils::GetFileStatInfo(fileInfo.second) +
                     "parent dir modes:" + SqliteUtils::GetParentModes(dbPath),
@@ -373,7 +374,7 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
         }
 #endif
         if (errCode == SQLITE_NOTADB) {
-            Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SQLITE_NOT_DB, config_, "", true));
+            Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_SQLITE_NOT_DB, config_, "", true));
         }
         return SQLiteError::ErrNo(errCode);
     }
@@ -978,7 +979,7 @@ void SqliteConnection::SetDwrEnable(const RdbStoreConfig &config)
     }
     auto errCode = ExecuteSql(GlobalExpr::PRAGMA_META_DOUBLE_WRITE);
     if (errCode == E_SQLITE_META_RECOVERED) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config, "", true));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, errCode, config, "", true));
     } else if (errCode != E_OK) {
         LOG_ERROR("meta double failed %{public}d", errCode);
     }
@@ -998,14 +999,15 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
     auto errCode = SetEncryptKey(key, config);
     key.assign(key.size(), 0);
     if (errCode != E_OK) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_ENCRYPT_FAIL, config, "LOG:SetEncryptKey errcode=" +
-            std::to_string(errCode) + ",iter=" + std::to_string(config.GetIter()), true));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_SET_ENCRYPT_FAIL, config,
+            "LOG:SetEncryptKey errcode=" + std::to_string(errCode) +
+            ",iter=" + std::to_string(config.GetIter()), true));
         if (!newKey.empty()) {
             LOG_INFO("use new key, iter=%{public}d err=%{public}d errno=%{public}d name=%{public}s", config.GetIter(),
                 errCode, errno, SqliteUtils::Anonymous(config.GetName()).c_str());
             errCode = SetEncryptKey(newKey, config);
             if (errCode != E_OK) {
-                Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_NEW_ENCRYPT_FAIL, config,
+                Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_SET_NEW_ENCRYPT_FAIL, config,
                     "LOG:new key SetEncryptKey errcode= "+ std::to_string(errCode) +
                     ",iter=" + std::to_string(config.GetIter()), true));
             }
@@ -1017,7 +1019,7 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
                 errCode, errno, SqliteUtils::Anonymous(config.GetName()).c_str());
             if (errCode != E_OK) {
                 bool sameKey = (key == config.GetEncryptKey()) || (newKey == config.GetEncryptKey());
-                Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_SET_SERVICE_ENCRYPT_FAIL, config,
+                Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_SET_SERVICE_ENCRYPT_FAIL, config,
                     "LOG:service key SetEncryptKey errcode=" + std::to_string(errCode) +
                     ",iter=" + std::to_string(config.GetIter()) + ",samekey=" + std::to_string(sameKey), true));
             }
@@ -1115,7 +1117,7 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
     auto [errCode, object] = ExecuteForValue("PRAGMA journal_mode");
     if (errCode != E_OK) {
         LOG_ERROR("SetJournalMode fail to get journal mode : %{public}d, errno %{public}d", errCode, errno);
-        Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_DFX_GET_JOURNAL_FAIL, config_.GetBundleName(),
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_OPEN, E_DFX_GET_JOURNAL_FAIL, config_.GetBundleName(),
             "PRAGMA journal_mode get fail: " + std::to_string(errCode) + "," + std::to_string(errno)));
         // errno: 28 No space left on device
         return (errCode == E_SQLITE_IOERR && sqlite3_system_errno(dbHandle_) == 28) ? E_SQLITE_IOERR_FULL : errCode;
@@ -1130,7 +1132,7 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
         auto [errorCode, journalMode] = ExecuteForValue("PRAGMA journal_mode=" + config.GetJournalMode());
         if (errorCode != E_OK) {
             LOG_ERROR("SqliteConnection SetJournalMode: fail to set journal mode err=%{public}d", errorCode);
-            Reportor::ReportFault(RdbFaultEvent(FT_OPEN, E_DFX_SET_JOURNAL_FAIL, config_.GetBundleName(),
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_OPEN, E_DFX_SET_JOURNAL_FAIL, config_.GetBundleName(),
                 "PRAGMA journal_mode set fail: " +  std::to_string(errCode) + "," + std::to_string(errno) + "," +
                 config.GetJournalMode()));
             return errorCode;
@@ -1372,7 +1374,7 @@ int SqliteConnection::TryCheckPoint(bool timeout)
     int errCode = sqlite3_wal_checkpoint_v2(dbHandle_, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
     (void)sqlite3_busy_timeout(dbHandle_, DEFAULT_BUSY_TIMEOUT_MS);
     if (errCode != SQLITE_OK) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_CP, E_CHECK_POINT_FAIL, config_,
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_CP, E_CHECK_POINT_FAIL, config_,
             "LOG:cp fail, errcode=" + std::to_string(errCode), true));
         LOG_WARN("sqlite3_wal_checkpoint_v2 failed err:%{public}d,size:%{public}zd,wal:%{public}s.", errCode, size,
             SqliteUtils::Anonymous(walName).c_str());
@@ -1395,7 +1397,7 @@ int SqliteConnection::LimitWalSize()
             << ",file size=" << fileSize
             << ",limit size=" << config_.GetWalLimitSize();
         LOG_ERROR("%{public}s", ss.str().c_str());
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_WAL_SIZE_OVER_LIMIT, config_, ss.str()));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_WAL_SIZE_OVER_LIMIT, config_, ss.str()));
         return E_WAL_SIZE_OVER_LIMIT;
     }
     return E_OK;
@@ -1697,7 +1699,6 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
 int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
 {
     DistributedDB::DBStatus status = DistributedDB::DBStatus::OK;
-    std::string processSequence = "processSequence";
     for (const auto &table : schema.tables) {
         DistributedDB::KnowledgeSourceSchema sourceSchema;
         sourceSchema.tableName = table.tableName;
@@ -1706,7 +1707,22 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         }
         sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
             table.referenceFields.end());
-        sourceSchema.columnsToVerify = {{processSequence, {table.processSequence.columnName}}};
+
+        std::set<std::string> fieldsNeedExist = {table.commonAttribute.timeAttribute.baseTimeField};
+        fieldsNeedExist.insert(table.commonAttribute.timeAttribute.sourceFields.begin(),
+            table.commonAttribute.timeAttribute.sourceFields.end());
+        fieldsNeedExist.insert(table.commonAttribute.timeAttribute.extendFields.begin(),
+            table.commonAttribute.timeAttribute.extendFields.end());
+
+        fieldsNeedExist.insert(table.customKeyword.sourceFields.begin(), table.customKeyword.sourceFields.end());
+        fieldsNeedExist.insert(table.customKeyword.extendFields.begin(), table.customKeyword.extendFields.end());
+        fieldsNeedExist.erase("");
+
+        sourceSchema.columnsToVerify = {
+            {"processSequence", {table.processSequence.columnName}},
+            {"fieldsNeedExist", fieldsNeedExist},
+        };
+
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
         if (status != DistributedDB::DBStatus::OK) {
             return E_ERROR;
@@ -1830,6 +1846,7 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
             if (access(binlogFolder.c_str(), F_OK) == 0) {
                 SqliteUtils::SetSlaveInvalid(config.GetPath());
                 size_t num = SqliteUtils::DeleteFolder(binlogFolder);
+                Delete(slaveCfg.GetPath());
                 LOG_INFO("binlog files found, %{public}zu deleted", num);
             }
         }
@@ -1903,7 +1920,8 @@ bool SqliteConnection::IsDbVersionBelowSlave()
     }
 
     std::tie(cRet, cObj) = ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
-    if (cVal == nullptr || (cVal != nullptr && static_cast<int64_t>(*cVal) == 0L)) {
+    cVal = std::get_if<int64_t>(&cObj.value);
+    if (cVal == nullptr || static_cast<int64_t>(*cVal) == 0L) {
         std::tie(cRet, cObj) = slaveConnection_->ExecuteForValue(GlobalExpr::PRAGMA_VERSION);
         cVal = std::get_if<int64_t>(&cObj.value);
         if (cVal != nullptr && static_cast<int64_t>(*cVal) > 0L) {
@@ -2073,7 +2091,7 @@ int SqliteConnection::ReplayBinlogSqlite(sqlite3 *dbFrom, sqlite3 *slaveDb, cons
     int64_t replayTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
     if (replayTime >= BINLOG_REPLAY_REPORT_TIME) {
         Reportor::ReportFault(
-            RdbFaultDbFileEvent(FT_SQLITE, E_DFX_REPLAY_TIMEOUT_FAIL, config, "binlog replay timeout"));
+            RdbFaultDbFileEvent(RdbFaultType::FT_SQLITE, E_DFX_REPLAY_TIMEOUT_FAIL, config, "binlog replay timeout"));
         LOG_WARN("binlog replay timeout, time=%{public}" PRId64 "ms, %{public}s", replayTime,
             SqliteUtils::Anonymous(config.GetPath()).c_str());
     }

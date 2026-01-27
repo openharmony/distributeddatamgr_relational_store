@@ -58,7 +58,7 @@ enum StrategyType: i32 {
     NETWORK = 0
 }
 
-enum NetWorkStrategy: i32 {
+enum NetWorkStrategy: i64 {
     WIFI = 1,
     CELLULAR = 2
 }
@@ -103,7 +103,7 @@ function ChangeAppCloudSwitchImpl(accountId: String, bundleName: String, status:
 
 @static("Config")
 @gen_promise("notifyDataChange")
-function NotifyDataChangeVarargs(extInfo: ExtraData, userId: Optional<i32>): void;
+function NotifyDataChangeOptional(extInfo: ExtraData, userId: Optional<i32>): void;
 
 @static("Config")
 @gen_async("notifyDataChange")

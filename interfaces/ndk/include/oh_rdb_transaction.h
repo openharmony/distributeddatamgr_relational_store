@@ -443,10 +443,8 @@ int OH_RdbTrans_Destroy(OH_Rdb_Transaction *trans);
  *         Returns {@link RDB_E_ALREADY_CLOSED} database already closed.
  *         Returns {@link RDB_E_SQLITE_FULL} SQLite: The database is full.
  *         Returns {@link RDB_E_SQLITE_CORRUPT} database corrupted.
- *         Returns {@link RDB_E_SQLITE_PERM} SQLite: Access permission denied.
  *         Returns {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
  *         Returns {@link RDB_E_SQLITE_LOCKED} SQLite: A table in the database is locked.
- *         Returns {@link RDB_E_SQLITE_READONLY} SQLite: Attempt to write a readonly database.
  *         Returns {@link RDB_E_SQLITE_IOERR} SQLite: Some kind of disk I/O error occurred.
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
@@ -478,10 +476,8 @@ int OH_RdbTrans_BatchInsertWithReturning(OH_Rdb_Transaction *trans, const char *
  *         Returns {@link RDB_E_ALREADY_CLOSED} database already closed.
  *         Returns {@link RDB_E_SQLITE_FULL} SQLite: The database is full.
  *         Returns {@link RDB_E_SQLITE_CORRUPT} database corrupted.
- *         Returns {@link RDB_E_SQLITE_PERM} SQLite: Access permission denied.
  *         Returns {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
  *         Returns {@link RDB_E_SQLITE_LOCKED} SQLite: A table in the database is locked.
- *         Returns {@link RDB_E_SQLITE_READONLY} SQLite: Attempt to write a readonly database.
  *         Returns {@link RDB_E_SQLITE_IOERR} SQLite: Some kind of disk I/O error occurred.
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.
@@ -510,10 +506,8 @@ int OH_RdbTrans_UpdateWithReturning(OH_Rdb_Transaction *trans, OH_VBucket *row, 
  *         Returns {@link RDB_E_ALREADY_CLOSED} database already closed.
  *         Returns {@link RDB_E_SQLITE_FULL} SQLite: The database is full.
  *         Returns {@link RDB_E_SQLITE_CORRUPT} database corrupted.
- *         Returns {@link RDB_E_SQLITE_PERM} SQLite: Access permission denied.
  *         Returns {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
  *         Returns {@link RDB_E_SQLITE_LOCKED} SQLite: A table in the database is locked.
- *         Returns {@link RDB_E_SQLITE_READONLY} SQLite: Attempt to write a readonly database.
  *         Returns {@link RDB_E_SQLITE_IOERR} SQLite: Some kind of disk I/O error occurred.
  *         Returns {@link RDB_E_SQLITE_TOO_BIG} SQLite: TEXT or BLOB exceeds size limit.
  *         Returns {@link RDB_E_SQLITE_MISMATCH} SQLite: Data type mismatch.

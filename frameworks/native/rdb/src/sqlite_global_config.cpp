@@ -127,7 +127,8 @@ void SqliteGlobalConfig::SqliteErrReport(int err, const char *msg)
     if (it != end && *it == lowErr) {
         std::string log(msg == nullptr ? "" : SqliteUtils::Anonymous(msg).c_str());
         log.append(", errcode=").append(std::to_string(err)).append(", errno=").append(std::to_string(errno));
-        RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_SQLITE, E_DFX_SQLITE_LOG, BUNDLE_NAME_COMMON, log));
+        RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(RdbFaultType::FT_SQLITE,
+            E_DFX_SQLITE_LOG, RdbFaultType::BUNDLE_NAME_COMMON, log));
     }
 }
 

@@ -22,14 +22,11 @@
 
 namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
-constexpr const int32_t TRIGGER_MODE_MAX = 5;
 
 RdbNotifierStub::RdbNotifierStub(const SyncCompleteHandler &completeNotifier,
-    const AutoSyncCompleteHandler &autoSyncCompleteHandler, const DataChangeHandler &changeNotifier,
-    const AutoSyncTriggerHandler &triggerNotifier)
+    const AutoSyncCompleteHandler &autoSyncCompleteHandler, const DataChangeHandler &changeNotifier)
     : IRemoteStub<RdbNotifierStubBroker>(), completeNotifier_(completeNotifier),
-      autoSyncCompleteHandler_(autoSyncCompleteHandler), changeNotifier_(changeNotifier),
-      triggerNotifier_(triggerNotifier)
+      autoSyncCompleteHandler_(autoSyncCompleteHandler), changeNotifier_(changeNotifier)
 {
 }
 
@@ -118,29 +115,5 @@ int32_t RdbNotifierStub::OnAutoSyncCompleteInner(MessageParcel &data, MessagePar
         return RDB_ERROR;
     }
     return OnComplete(storeName, std::move(result));
-}
-
-int32_t RdbNotifierStub::OnAutoSyncTriggerInner(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t triggerMode = 0;
-    std::string storeId;
-    if (!ITypesUtil::Unmarshal(data, storeId, triggerMode)) {
-        LOG_ERROR("read sync result failed.");
-        return RDB_ERROR;
-    }
-    
-    if (triggerMode <= 0 || triggerMode >= TRIGGER_MODE_MAX) {
-        LOG_ERROR("invalid trigger mode %{public}d", triggerMode);
-        return RDB_ERROR;
-    }
-    return OnChange(storeId, triggerMode);
-}
-
-int32_t RdbNotifierStub::OnChange(const std::string &storeId, int32_t triggerMode)
-{
-    if (triggerNotifier_) {
-        triggerNotifier_(storeId, triggerMode);
-    }
-    return RDB_OK;
 }
 } // namespace OHOS::DistributedRdb

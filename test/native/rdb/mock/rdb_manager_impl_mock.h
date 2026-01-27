@@ -25,6 +25,7 @@ public:
     BRdbManagerImpl() = default;
     virtual ~BRdbManagerImpl() = default;
     virtual std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param) = 0;
+    virtual std::string GetSelfBundleName() = 0;
 
 public:
     static inline std::shared_ptr<BRdbManagerImpl> rdbManagerImpl = nullptr;
@@ -33,6 +34,7 @@ class MockRdbManagerImpl : public BRdbManagerImpl {
 public:
     MOCK_METHOD(
         (std::pair<int32_t, std::shared_ptr<RdbService>>), GetRdbService, (const RdbSyncerParam &param), (override));
+    MOCK_METHOD((std::string), GetSelfBundleName, (), (override));
 };
 } // namespace OHOS::DistributedRdb
 #endif

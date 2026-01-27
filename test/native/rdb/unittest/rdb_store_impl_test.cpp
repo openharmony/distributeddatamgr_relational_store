@@ -2038,7 +2038,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_001, TestSize.Level0)
     ASSERT_NE(status, E_OK);
 
     if (!RdbHelper::IsSupportedTokenizer(Tokenizer::CUSTOM_TOKENIZER)) {
-        return;
+        GTEST_SKIP() << "The current testcase is not supported by the tokenizer.";
     }
     ASSERT_EQ(store->SetTokenizer(Tokenizer::CUSTOM_TOKENIZER), E_OK);
     std::tie(status, val) = store->Execute(createSql);
@@ -2103,8 +2103,8 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_003, TestSize.Level0)
         "tokenize = 'customtokenizer cut_mode short_words')";
     auto [status, val] = store->Execute(createSql);
     ASSERT_NE(status, E_OK);
-
     ASSERT_EQ(store->SetTokenizer(Tokenizer::ICU_TOKENIZER), E_NOT_SUPPORT);
+
     RdbHelper::DeleteRdbStore(config);
     ASSERT_EQ(store->SetTokenizer(Tokenizer::NONE_TOKENIZER), E_ALREADY_CLOSED);
 }

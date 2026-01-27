@@ -90,7 +90,7 @@ int SeriPutOther(void *pCtx, int addedRows, int column)
     return serializer->PutOther(addedRows, column);
 }
 
-int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTimes)
+int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retryTime)
 {
     SharedBlockSerializerInfo serializer(info->sharedBlock, stmt, info->columnNum, info->startPos);
     Sqlite3SharedBlockMethods sqliteBlock =
@@ -114,7 +114,7 @@ int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retiyTimes
         if (errCode == SQLITE_LOCKED || errCode == SQLITE_BUSY) {
             LOG_WARN("Database locked, retrying errCode=%{public}d, errno=%{public}d retryCount=%{public}d", errCode,
                 errno, retryCount);
-            if (retryCount < retiyTimes) {
+            if (retryCount < retryTime) {
                 usleep(SLEEP_TIME);
                 retryCount++;
                 continue;
@@ -269,6 +269,7 @@ FillOneRowResult FillOneRowOfString(
 FillOneRowResult FillOneRowOfLong(
     AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
+    (void) startPos;
     int64_t value = sqlite3_column_int64(statement, pos);
     int status = sharedBlock->PutLong(addedRows, pos, value);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
@@ -282,6 +283,7 @@ FillOneRowResult FillOneRowOfLong(
 FillOneRowResult FillOneRowOfFloat(
     AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
+    (void) startPos;
     double value = sqlite3_column_double(statement, pos);
     int status = sharedBlock->PutDouble(addedRows, pos, value);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
@@ -321,6 +323,7 @@ FillOneRowResult FillOneRowOfBlob(
 FillOneRowResult FillOneRowOfNull(
     AppDataFwk::AbsSharedBlock *sharedBlock, sqlite3_stmt *statement, int startPos, int addedRows, int pos)
 {
+    (void) startPos;
     int status = sharedBlock->PutNull(addedRows, pos);
     if (status != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         LOG_ERROR("Failed allocating space for a null in column %{public}d, error=%{public}d", pos, status);

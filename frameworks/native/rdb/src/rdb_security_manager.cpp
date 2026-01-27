@@ -181,8 +181,8 @@ bool RdbSecurityManager::SaveSecretKeyToFile(const std::string &keyFile, const s
         std::shared_ptr<const char>("autoClean", [&key](const char *) mutable { key.assign(key.size(), 0); });
     auto [res, secretContent] = EncryptWorkKey(key);
     if (!res || secretContent.encrypt_.empty()) {
-        Reportor::ReportFault(
-            RdbFaultEvent(FT_OPEN, E_WORK_KEY_FAIL, GetBundleName() + "res:" + std::to_string(res), "key is empty"));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_OPEN, E_WORK_KEY_FAIL,
+            GetBundleName() + "res:" + std::to_string(res), "key is empty"));
         LOG_ERROR("EncryptWorkKey failed, keyFile%{public}s", SqliteUtils::Anonymous(keyFile).c_str());
         return false;
     }
@@ -203,8 +203,8 @@ std::vector<char> RdbSecurityManager::GenerateHMAC(std::vector<char> &data)
          hmacResult, &hmacLen);
     if (hmacLen == 0) {
         LOG_ERROR("hmac generate failed");
-        Reportor::ReportFault(RdbFaultEvent(
-            FT_HMAC_FILE, E_DFX_HMAC_KEY_FAIL, GetBundleName(), "hmac generate failed" + std::to_string(hmacLen)));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_HMAC_FILE, E_DFX_HMAC_KEY_FAIL,
+            GetBundleName(), "hmac generate failed" + std::to_string(hmacLen)));
         return result;
     }
     for (unsigned int i = 0; i < HMAC_SIZE && i < hmacLen; ++i) {
@@ -232,8 +232,8 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, const R
         }
     }
     if (!ret) {
-        Reportor::ReportFault(
-            RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL, GetBundleName(), "save fail errno=" + std::to_string(errno)));
+        Reportor::ReportFault(RdbFaultEvent(
+            RdbFaultType::FT_EX_FILE, E_WORK_KEY_FAIL, GetBundleName(), "save fail errno=" + std::to_string(errno)));
         LOG_ERROR("Save key to file fail errno:%{public}d", errno);
     }
     return ret;
@@ -244,7 +244,7 @@ void RdbSecurityManager::ReportCryptFault(int32_t code, const std::string &messa
     if (message.empty()) {
         return;
     }
-    Reportor::ReportFault(RdbFaultEvent(FT_EX_HUKS, code, GetBundleName(), message));
+    Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_EX_HUKS, code, GetBundleName(), message));
 }
 
 std::shared_ptr<RDBCrypto> RdbSecurityManager::GetDelegate()
@@ -343,7 +343,7 @@ bool RdbSecurityManager::CreateDir(const std::string &fileDir)
     umask(DEFAULT_UMASK);
     auto ret = MkDir(fileDir, (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH));
     if (ret != 0 && errno != EEXIST) {
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_FAIL,
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_EX_FILE, E_WORK_KEY_FAIL,
             RdbSecurityManager::GetInstance().GetBundleName(),
             "mkdir err, ret=" + std::to_string(ret) + ",errno=" + std::to_string(errno) +
             ",fileDir=" + SqliteUtils::Anonymous(fileDir)));
@@ -364,7 +364,7 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV0(co
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (!LoadBufferFromFile(keyPath, content)) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
                 "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
             LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
             return { false, keyData };
@@ -391,7 +391,7 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDiskV1(co
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (!LoadBufferFromFile(keyPath, content)) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
                 "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
             LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
             return { false, keyData };
@@ -437,7 +437,7 @@ void RdbSecurityManager::UpgradeKey(const std::string &keyPath, const std::strin
             return;
         }
         LOG_WARN("upgrade key failed path:%{public}s", SqliteUtils::Anonymous(oldKeyPaths[type]).c_str());
-        Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_DFX_UPGRADE_KEY_FAIL, GetBundleName(),
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_EX_FILE, E_DFX_UPGRADE_KEY_FAIL, GetBundleName(),
             "version:" + std::to_string(type) + "upgrade key failed" + std::to_string(errno)));
         keyData.secretKey.assign(keyData.secretKey.size(), 0);
     }
@@ -463,7 +463,7 @@ std::pair<bool, RdbSecretKeyData> RdbSecurityManager::LoadSecretKeyFromDisk(cons
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (!LoadBufferFromFile(keyPath, content)) {
-            Reportor::ReportFault(RdbFaultEvent(FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_EX_FILE, E_WORK_KEY_DECRYPT_FAIL, GetBundleName(),
                 "LoadBufferFromFile fail, errno=" + std::to_string(errno)));
             LOG_ERROR("LoadBufferFromFile failed:%{public}s.", SqliteUtils::Anonymous(keyPath).c_str());
             return { false, keyData };
@@ -634,8 +634,8 @@ std::pair<bool, RdbSecretContent> RdbSecurityManager::Unpack(const std::vector<c
     std::vector<char> storedHMAC(content.begin() + dataLength, content.end());
     auto calculatedHMAC = GenerateHMAC(originalData);
     if (calculatedHMAC != storedHMAC) {
-        Reportor::ReportFault(RdbFaultEvent(
-            FT_EX_FILE, E_DFX_HMAC_KEY_FAIL, GetBundleName(), "hmac key file failed" + std::to_string(errno)));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_EX_FILE, E_DFX_HMAC_KEY_FAIL, GetBundleName(),
+            "hmac key file failed" + std::to_string(errno)));
         LOG_ERROR("hmac check failed, bundlename:%{public}s", GetBundleName().c_str());
     }
     if (originalData.size() <= (sizeof(rdbSecretContent.version) + RdbSecretContent::NONCE_VALUE_SIZE)) {
