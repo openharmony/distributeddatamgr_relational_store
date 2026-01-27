@@ -25,6 +25,7 @@
 #include "rdb_radar_reporter.h"
 #include "rdb_store_impl.h"
 #include "rdb_trace.h"
+#include "restricted_db_manager.h"
 #include "sqlite_global_config.h"
 #include "task_executor.h"
 
@@ -88,7 +89,7 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
         LOG_WARN("Diff config! app[%{public}s:%{public}s] path[%{public}s] cfg[%{public}s]",
             config.GetBundleName().c_str(), config.GetModuleName().c_str(), SqliteUtils::Anonymous(path).c_str(),
             log.c_str());
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
         if (rdbStore->GetConfig().IsMemoryRdb() || config.IsMemoryRdb()) {
             errCode = E_CONFIG_INVALID_CHANGE;
             rdbStore = nullptr;
@@ -143,7 +144,33 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     if (!rdbStore->GetConfig().IsMemoryRdb()) {
         configCache_.Set(path, GetSyncParam(rdbStore->GetConfig()));
     }
+    CheckDBVisitor(config.GetName());
     return rdbStore;
+}
+
+void RdbStoreManager::CheckDBVisitor(const std::string &storeName)
+{
+    auto task = [storeName]() {
+        if (!RestrictedDBManager::GetInstance().IsTargetDB(storeName)) {
+            return;
+        }
+#if !defined(CROSS_PLATFORM)
+        std::string caller = DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
+        bool isIllegalAccess = RestrictedDBManager::GetInstance().IsDbAccessOutOfBounds(caller);
+        if (isIllegalAccess) {
+            LOG_ERROR("database visitor:%{public}s.", caller.c_str());
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
+                E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));
+        }
+#endif
+    };
+
+    auto poolTask = TaskExecutor::GetInstance().GetExecutor();
+    if (poolTask != nullptr) {
+        poolTask->Execute(task);
+    } else {
+        task();
+    }
 }
 
 std::shared_ptr<RdbStore> RdbStoreManager::GetRdb(const RdbStoreConfig &config)
@@ -312,16 +339,17 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         lastParam.area_ != config.GetArea()) {
         std::stringstream ss;
         ss << "Diff db with the same name! customDir:" << SqliteUtils::Anonymous(lastParam.customDir_).c_str() << "->"
-            << SqliteUtils::Anonymous(config.GetCustomDir()).c_str() << ", hapName:"
-            << lastParam.hapName_.c_str() << "->" << config.GetModuleName().c_str() << ", area:"
-            << lastParam.area_ << "->" << config.GetArea();
+            << SqliteUtils::Anonymous(config.GetCustomDir()).c_str()
+            << ", hapName:" << SqliteUtils::Anonymous(lastParam.hapName_).c_str() << "->"
+            << SqliteUtils::Anonymous(config.GetModuleName()).c_str()
+            << ", area:" << lastParam.area_ << "->" << config.GetArea();
         LOG_WARN("%{public}s", ss.str().c_str());
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, E_CONFIG_INVALID_CHANGE, config, ss.str()));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_CONFIG_INVALID_CHANGE, config, ss.str()));
         return false;
     }
     if (config.GetSecurityLevel() != SecurityLevel::LAST &&
         static_cast<int32_t>(config.GetSecurityLevel()) < lastParam.level_) {
-        LOG_WARN("Illegal change, storePath %{public}s, securityLevel: %{public}d -> %{public}d",
+        LOG_WARN("Illegal change, storePath:%{public}s, securityLevel: %{public}d -> %{public}d",
             SqliteUtils::Anonymous(path).c_str(), lastParam.level_, static_cast<int32_t>(config.GetSecurityLevel()));
     }
 
@@ -412,7 +440,7 @@ void RdbStoreManager::Clear()
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
         auto rdbStore = iter->second.lock();
-        if (rdbStore.use_count() > 1) {
+        if (rdbStore != nullptr && rdbStore.use_count() > 1) {
             LOG_WARN("store[%{public}s] in use by %{public}ld holders",
                 SqliteUtils::Anonymous(rdbStore->GetPath()).c_str(), rdbStore.use_count());
         }

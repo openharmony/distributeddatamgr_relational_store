@@ -14,19 +14,28 @@
  */
 #define LOG_TAG "AniCloudDataImpl"
 #include "logger.h"
-#include "ani_cloud_data.h"
+#include "ani_cloud_data_config.h"
 #include "ani_error_code.h"
 #include "ani_cloud_data_utils.h"
 #include "cloud_types.h"
+#include "ani_rdb_utils.h"
 
 namespace AniCloudData {
 using namespace OHOS::Rdb;
+static constexpr size_t MAX_ACTIONS = 1000;
+
+bool VerifyExtraData(const ExtraData &data)
+{
+    return (!data.eventId.empty()) && (!data.extraData.empty());
+}
 
 void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> switches)
 {
-    LOG_INFO("EnableCloudImpl start");
+    if (accountId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return;
+    }
     auto work = [&accountId, &switches](std::shared_ptr<CloudService> proxy) {
-        LOG_INFO("EnableCloudImpl work start");
         std::map<std::string, int32_t> realSwitches;
         for (auto &item : switches) {
             realSwitches[std::string(item.first)] = item.second ? CloudService::Switch::SWITCH_ON
@@ -36,16 +45,18 @@ void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> s
         int32_t code = proxy->EnableCloud(std::string(accountId), realSwitches);
         LOG_INFO("EnableCloudImpl work code(%{public}d)", code);
         if (code != CloudService::Status::SUCCESS) {
-            LOG_ERROR("c = %{public}d", code);
             ThrowAniError(code);
         }
     };
-    LOG_INFO("EnableCloudImpl RequestIPC");
     RequestIPC(work);
 }
 
 void ConfigImpl::DisableCloudImpl(string_view accountId)
 {
+    if (accountId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return;
+    }
     auto work = [&accountId](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->DisableCloud(std::string(accountId));
         if (code != CloudService::Status::SUCCESS) {
@@ -58,31 +69,42 @@ void ConfigImpl::DisableCloudImpl(string_view accountId)
 
 void ConfigImpl::ChangeAppCloudSwitchImpl(string_view accountId, string_view bundleName, bool status)
 {
+    if (accountId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return;
+    }
+    if (bundleName.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of bundleName must be string and not empty.");
+        return;
+    }
     auto work = [&accountId, &bundleName, &status](std::shared_ptr<CloudService> proxy) {
         OHOS::CloudData::SwitchConfig config;
         int32_t code = proxy->ChangeAppSwitch(std::string(accountId), std::string(bundleName), status, config);
         if (code != CloudService::Status::SUCCESS) {
-            LOG_ERROR("request, errCode = %{public}d", code);
             ThrowAniError(code);
         }
     };
     RequestIPC(work);
 }
 
-void ConfigImpl::NotifyDataChangeVarargs(
-    ExtraData const& extInfo, optional_view<int32_t> userId)
+void ConfigImpl::NotifyDataChangeOptional(
+    const ExtraData &extInfo, optional_view<int32_t> userId)
 {
     int32_t id = userId.has_value() ? userId.value() : CloudService::INVALID_USER_ID;
     NotifyDataChangeWithId(extInfo, id);
 }
 
-void ConfigImpl::NotifyDataChangeImpl(ExtraData const& extInfo)
+void ConfigImpl::NotifyDataChangeImpl(const ExtraData &extInfo)
 {
     NotifyDataChangeWithId(extInfo, CloudService::INVALID_USER_ID);
 }
 
-void ConfigImpl::NotifyDataChangeWithId(ExtraData const& extInfo, int32_t userId)
+void ConfigImpl::NotifyDataChangeWithId(const ExtraData &extInfo, int32_t userId)
 {
+    if (!VerifyExtraData(extInfo)) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of extInfo must be Extradata and not empty.");
+        return;
+    }
     auto work = [&extInfo, &userId](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->NotifyDataChange(std::string(extInfo.eventId), std::string(extInfo.extraData), userId);
         if (code != CloudService::Status::SUCCESS) {
@@ -95,6 +117,14 @@ void ConfigImpl::NotifyDataChangeWithId(ExtraData const& extInfo, int32_t userId
 
 void ConfigImpl::NotifyDataChangeBoth(string_view accountId, string_view bundleName)
 {
+    if (accountId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return;
+    }
+    if (bundleName.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of bundleName must be string and not empty.");
+        return;
+    }
     auto work = [&accountId, &bundleName](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->NotifyDataChange(std::string(accountId), std::string(bundleName));
         if (code != CloudService::Status::SUCCESS) {
@@ -105,11 +135,19 @@ void ConfigImpl::NotifyDataChangeBoth(string_view accountId, string_view bundleN
     RequestIPC(work);
 }
 
-map<string, array<StatisticInfo_TH>> ConfigImpl::QueryStatisticsImpl(
+map<string, array<TaiHeStatisticInfo>> ConfigImpl::QueryStatisticsImpl(
     string_view accountId, string_view bundleName, optional_view<string> storeId)
 {
     std::optional<std::pair<int32_t, std::map<std::string, StatisticInfos>>> result;
-    map<string, array<StatisticInfo_TH>> ret;
+    map<string, array<TaiHeStatisticInfo>> ret;
+    if (accountId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return ret;
+    }
+    if (bundleName.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of bundleName must be string and not empty.");
+        return ret;
+    }
     auto work = [&accountId, &bundleName, &storeId, &result](std::shared_ptr<CloudService> proxy) {
         result = proxy->QueryStatistics(std::string(accountId), std::string(bundleName),
             std::string(storeId.has_value() ? storeId.value() : ""));
@@ -118,7 +156,7 @@ map<string, array<StatisticInfo_TH>> ConfigImpl::QueryStatisticsImpl(
     int errCode = CloudService::Status::ERROR;
     if (result.has_value()) {
         errCode = result.value().first;
-        StatisticInfoConvert(result.value().second, ret);
+        ret = ConvertStatisticInfo(result.value().second);
     }
     if (errCode != CloudService::Status::SUCCESS) {
         ThrowAniError(errCode);
@@ -139,7 +177,12 @@ map<string, SyncInfo> ConfigImpl::QueryLastSyncInfoImpl(
     int errCode = CloudService::Status::ERROR;
     if (result.has_value()) {
         errCode = result.value().first;
-        SyncInfoConvert(result.value().second, ret);
+        auto syncInfo = ConvertSyncInfo(result.value().second);
+        if (!syncInfo.first) {
+            ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "query last sync info failed.");
+            return ret;
+        }
+        ret = syncInfo.second;
     }
     if (errCode != CloudService::Status::SUCCESS) {
         ThrowAniError(errCode);
@@ -149,21 +192,22 @@ map<string, SyncInfo> ConfigImpl::QueryLastSyncInfoImpl(
 
 void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> appActions)
 {
-    constexpr size_t MAX_ACTIONS = 1000;
+    if (accountId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return;
+    }
+    if (appActions.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of appActions not empty.");
+        return;
+    }
     if (appActions.size() > MAX_ACTIONS) {
-        LOG_ERROR("Too many app actions: %{public}zu", appActions.size());
-        ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Too many app actions");
         return;
     }
     auto work = [&accountId, &appActions](std::shared_ptr<CloudService> proxy) {
         std::map<std::string, int32_t> actions;
         std::map<std::string, OHOS::CloudData::ClearConfig> configs;
         for (auto const &item : appActions) {
-            if (item.first.empty()) {
-                LOG_ERROR("Invalid bundle name length");
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
-                return;
-            }
             actions[std::string(item.first)] = item.second.get_value();
         }
 
@@ -179,6 +223,14 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
 void ConfigImpl::ChangeAppCloudSwitchImplWithConfig(string_view accountId, string_view bundleName, bool status,
     optional_view<::ohos::data::cloudData::SwitchConfig> config)
 {
+    if (accountId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return;
+    }
+    if (bundleName.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of bundleName must be string and not empty.");
+        return;
+    }
     std::map<std::string, OHOS::CloudData::DBSwitchInfo> dbInfo;
     if (config.has_value()) {
         auto switchConfig = config.value();
@@ -202,10 +254,16 @@ void ConfigImpl::ChangeAppCloudSwitchImplWithConfig(string_view accountId, strin
 void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, ClearAction> appActions,
     optional_view<map<::taihe::string, ::ohos::data::cloudData::ClearConfig>> config)
 {
-    constexpr size_t MAX_ACTIONS = 1000;
+    if (accountId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of accountId must be string and not empty.");
+        return;
+    }
+    if (appActions.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of appActions not empty.");
+        return;
+    }
     if (appActions.size() > MAX_ACTIONS) {
-        LOG_ERROR("Too many app actions: %{public}zu", appActions.size());
-        ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Too many app actions");
         return;
     }
     std::map<std::string, OHOS::CloudData::ClearConfig> clearConfig;
@@ -218,11 +276,6 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
     auto work = [&accountId, &appActions, &clearConfig](std::shared_ptr<CloudService> proxy) {
         std::map<std::string, int32_t> actions;
         for (auto const &item : appActions) {
-            if (item.first.empty()) {
-                LOG_ERROR("Invalid bundle name length");
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
-                return;
-            }
             actions[std::string(item.first)] = item.second.get_value();
         }
 
@@ -238,19 +291,25 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
 void ConfigImpl::SetGlobalCloudStrategyImpl(
     StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
 {
+    if (strategy.get_key() != StrategyType::key_t::NETWORK) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of strategy must be StrategyType.");
+        return;
+    }
     std::vector<OHOS::CommonType::Value> values;
     if (param.has_value()) {
         for (auto it = param.value().begin(); it != param.value().end(); ++it) {
-            if (!it->holds_F64()) {
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+            if (!it->holds_INT64()) {
+                ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+                    "member of param must be of type NetWorkStrategy");
                 return;
             }
-            auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
+            int64_t val = it->get_INT64_ref();
             if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+                    "member of param must be of type NetWorkStrategy");
                 return;
             }
-            values.push_back(it->get_F64_ref());
+            values.push_back(it->get_INT64_ref());
         }
     }
     auto work = [&strategy, &param, &values](std::shared_ptr<CloudService> proxy) {
@@ -264,7 +323,7 @@ void ConfigImpl::SetGlobalCloudStrategyImpl(
 }
 
 void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, SyncMode mode,
-    callback_view<void(ProgressDetails const& data)> progress)
+    callback_view<void(const ProgressDetails &data)> progress)
 {
     auto work = [&bundleName, &storeId, &mode, progress](std::shared_ptr<CloudService> proxy) {
         auto async = [progress](const OHOS::DistributedRdb::Details &details) {
@@ -272,10 +331,10 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
                 LOG_ERROR("details is nullptr");
                 return;
             }
-            progress(ProgressDetailConvert(details.begin()->second));
+            progress(ConvertProgressDetail(details.begin()->second));
         };
         CloudService::Option option;
-        option.syncMode = mode.get_value();
+        option.syncMode = ani_rdbutils::SyncModeToNative(mode);
         option.seqNum = GetSeqNum();
         auto status = proxy->CloudSync(std::string(bundleName), std::string(storeId), option, async);
         if (status == CloudService::Status::INVALID_ARGUMENT) {
@@ -291,19 +350,25 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
 
 void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
 {
+    if (strategy.get_key() != StrategyType::key_t::NETWORK) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "The type of strategy must be StrategyType.");
+        return;
+    }
     std::vector<OHOS::CommonType::Value> values;
     if (param.has_value()) {
         for (auto it = param.value().begin(); it != param.value().end(); ++it) {
-            if (!it->holds_F64()) {
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+            if (!it->holds_INT64()) {
+                ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+                    "member of param must be of type NetWorkStrategy");
                 return;
             }
-            auto val = static_cast<int64_t>(std::round(it->get_F64_ref()));
+            int64_t val = it->get_INT64_ref();
             if (val < 0 || val > OHOS::CloudData::NetWorkStrategy::NETWORK_STRATEGY_BUTT) {
-                ThrowAniError(CloudService::Status::INVALID_ARGUMENT);
+                ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+                    "member of param must be of type NetWorkStrategy");
                 return;
             }
-            values.push_back(it->get_F64_ref());
+            values.push_back(it->get_INT64_ref());
         }
     }
     auto work = [&strategy, &param, &values](std::shared_ptr<CloudService> proxy) {
@@ -322,7 +387,7 @@ void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::dat
 TH_EXPORT_CPP_API_EnableCloudImpl(AniCloudData::ConfigImpl::EnableCloudImpl);
 TH_EXPORT_CPP_API_DisableCloudImpl(AniCloudData::ConfigImpl::DisableCloudImpl);
 TH_EXPORT_CPP_API_ChangeAppCloudSwitchImpl(AniCloudData::ConfigImpl::ChangeAppCloudSwitchImpl);
-TH_EXPORT_CPP_API_NotifyDataChangeVarargs(AniCloudData::ConfigImpl::NotifyDataChangeVarargs);
+TH_EXPORT_CPP_API_NotifyDataChangeOptional(AniCloudData::ConfigImpl::NotifyDataChangeOptional);
 TH_EXPORT_CPP_API_NotifyDataChangeImpl(AniCloudData::ConfigImpl::NotifyDataChangeImpl);
 TH_EXPORT_CPP_API_NotifyDataChangeWithId(AniCloudData::ConfigImpl::NotifyDataChangeWithId);
 TH_EXPORT_CPP_API_NotifyDataChangeBoth(AniCloudData::ConfigImpl::NotifyDataChangeBoth);

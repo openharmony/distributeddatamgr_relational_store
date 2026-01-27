@@ -82,16 +82,16 @@ void SqliteStatement::TableReport(const std::string &errMsg, const std::string &
     std::string custLog;
     if (!state.isCreated) {
         custLog = "table is not created " + errMsg;
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_CREATE, bundleName, custLog));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_IS_NOT_CREATE, bundleName, custLog));
     } else if (state.isDeleted) {
         custLog = "table is deleted " + errMsg;
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_DELETE, bundleName, custLog));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_IS_DELETE, bundleName, custLog));
     } else if (state.isRenamed) {
         custLog = "table is renamed " + errMsg;
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_RENAME, bundleName, custLog));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_IS_RENAME, bundleName, custLog));
     } else {
         custLog = errMsg;
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_EXIST, bundleName, custLog));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_IS_NOT_EXIST, bundleName, custLog));
     }
 }
 
@@ -100,16 +100,16 @@ void SqliteStatement::ColumnReport(const std::string &errMsg, const std::string 
     std::string custLog;
     if (!state.isCreated) {
         custLog = "column is not created " + errMsg;
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_CREATE, bundleName, custLog));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_IS_NOT_CREATE, bundleName, custLog));
     } else if (state.isDeleted) {
         custLog = "column is deleted " + errMsg;
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_DELETE, bundleName, custLog));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_IS_DELETE, bundleName, custLog));
     } else if (state.isRenamed) {
         custLog = "column is renamed " + errMsg;
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_RENAME, bundleName, custLog));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_IS_RENAME, bundleName, custLog));
     } else {
         custLog = errMsg;
-        Reportor::ReportFault(RdbFaultEvent(FT_CURD, E_DFX_IS_NOT_EXIST, bundleName, custLog));
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_IS_NOT_EXIST, bundleName, custLog));
     }
 }
 
@@ -175,7 +175,7 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
             CorruptedHandleManager::GetInstance().HandleCorrupt(*config_);
         }
         if (config_ != nullptr) {
-            Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD,
+            Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_CURD,
                 (errCode == SQLITE_NOTADB ? E_SQLITE_NOT_DB : ret), *config_, "sqlite3_prepare_v2", true));
         }
         PrintInfoForDbError(ret, newSql);
@@ -393,7 +393,7 @@ int SqliteStatement::InnerStep()
         CorruptedHandleManager::GetInstance().HandleCorrupt(*config_);
     }
     if (config_ != nullptr && ret != E_OK && !config_->GetBundleName().empty()) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD, ret, *config_, "sqlite3_step", true));
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_CURD, ret, *config_, "sqlite3_step", true));
     }
     PrintInfoForDbError(ret, sql_);
     return ret;
@@ -759,7 +759,7 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info, int retryTime) con
     }
     if (errCode != E_OK) {
         if (config_ != nullptr) {
-            Reportor::ReportFault(RdbFaultDbFileEvent(FT_CURD, errCode, *config_,
+            Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_CURD, errCode, *config_,
                 "FillBlockInfo", true));
         }
         auto ret = (config_ != nullptr && errCode == E_SQLITE_CORRUPT);

@@ -18,7 +18,7 @@
 #include <optional>
 #include <vector>
 #include <cmath>
-#include <mutex>
+#include <atomic>
 #include "ani_cloud_data_utils.h"
 #include "logger.h"
 #include "ani_error_code.h"
@@ -26,14 +26,46 @@
 namespace AniCloudData {
 using namespace OHOS::Rdb;
 using Participant_INNER = OHOS::CloudData::Participant;
-const uint32_t INDEX_TWO = 2;
+
+bool WarpDate(double time, ani_object &outObj)
+{
+    ani_env *env = ::taihe::get_env();
+    if (env == nullptr || time < 0) {
+        LOG_ERROR("get_env failed");
+        return false;
+    }
+    ani_class cls;
+    ani_status status;
+    if (ANI_OK != (status = env->FindClass("std.core.Date", &cls))) {
+        LOG_ERROR("FindClass failed, status:%{public}d", status);
+        return false;
+    }
+    ani_method ctor;
+    if ((status = env->Class_FindMethod(cls, "<ctor>", ":", &ctor)) != ANI_OK) {
+        LOG_ERROR("Class_FindMethod failed, status:%{public}d", status);
+        return false;
+    }
+    if ((status = env->Object_New(cls, ctor, &outObj)) != ANI_OK) {
+        LOG_ERROR("Object_New failed, status:%{public}d", status);
+        return false;
+    }
+    ani_double msObj = 0;
+    if ((status = env->Object_CallMethodByName_Double(outObj, "setTime", "d:d", &msObj, time)) != ANI_OK) {
+        LOG_ERROR("Object_CallMethodByName_Double failed, status:%{public}d", status);
+        return false;
+    }
+    LOG_INFO("Object_CallMethodByName_Double success, double:%{public}lf", msObj);
+    return true;
+}
 
 uint32_t GetSeqNum()
 {
-    static std::mutex mutex;
-    static uint32_t seqNum = 0;
-    std::lock_guard<std::mutex> lock(mutex);
-    return ++seqNum == 0 ? ++seqNum : seqNum;
+    static std::atomic<uint32_t> seqNum = 0;
+    uint32_t value = ++seqNum;
+    if (value == 0) {
+        value = ++seqNum;
+    }
+    return value;
 }
 
 void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work)
@@ -50,26 +82,26 @@ void RequestIPC(std::function<void(std::shared_ptr<CloudService>)> work)
     work(proxy);
 }
 
-OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(::ohos::data::cloudData::DBSwitchInfo dbSwitchInfo)
+OHOS::CloudData::DBSwitchInfo ConvertTaiheDbSwitchInfo(const ::ohos::data::cloudData::DBSwitchInfo &in)
 {
     OHOS::CloudData::DBSwitchInfo dbInfo;
     std::map<std::string, bool> info;
-    auto tableInfo = dbSwitchInfo.tableInfo;
+    auto tableInfo = in.tableInfo;
     if (tableInfo.has_value()) {
         for (auto &item : tableInfo.value()) {
             info.emplace(std::string(item.first), item.second);
         }
         dbInfo.tableInfo = info;
     }
-    dbInfo.enable = dbSwitchInfo.enable;
+    dbInfo.enable = in.enable;
     return dbInfo;
 }
 
-OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(::ohos::data::cloudData::ClearConfig clearConfig)
+OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(const ::ohos::data::cloudData::ClearConfig &in)
 {
     OHOS::CloudData::ClearConfig config;
     std::map<std::string, OHOS::CloudData::DBActionInfo> dbInfo;
-    for (auto &item : clearConfig.dbInfo) {
+    for (auto &item : in.dbInfo) {
         auto actionInfo = ConvertTaiheDbActionInfo(item.second);
         dbInfo.emplace(std::string(item.first), std::move(actionInfo));
     }
@@ -77,46 +109,60 @@ OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(::ohos::data::cloudData::Cl
     return config;
 }
 
-OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(::ohos::data::cloudData::DBActionInfo actionInfo)
+OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(const ::ohos::data::cloudData::DBActionInfo &in)
 {
     OHOS::CloudData::DBActionInfo dbActionInfo;
     std::map<std::string, int32_t> info;
-    auto tableInfo = actionInfo.tableInfo;
+    auto tableInfo = in.tableInfo;
     if (tableInfo.has_value()) {
         for (auto &item : tableInfo.value()) {
             info.emplace(std::string(item.first), item.second.get_value());
         }
         dbActionInfo.tableInfo = info;
     }
-    dbActionInfo.action = actionInfo.action.get_value();
+    dbActionInfo.action = in.action.get_value();
     return dbActionInfo;
 }
 
-void StatisticInfoConvert(std::map<std::string, StatisticInfos> &in, map<string, array<StatisticInfo_TH>> &out)
+map<string, array<TaiHeStatisticInfo>> ConvertStatisticInfo(const std::map<std::string, StatisticInfos> &in)
 {
+    map<string, array<TaiHeStatisticInfo>> out;
     for (auto &item : in) {
-        std::vector<StatisticInfo_TH> arrayInfo;
+        std::vector<TaiHeStatisticInfo> arrayInfo;
         for (auto &vIt : item.second) {
             arrayInfo.push_back({vIt.table, vIt.inserted, vIt.updated, vIt.normal});
         }
         out.emplace(string(item.first), arrayInfo);
     }
+    return out;
 }
 
-void SyncInfoConvert(QueryLastResults &in, map<string, SyncInfo> &out)
+std::pair<bool, map<string, SyncInfo>> ConvertSyncInfo(const QueryLastResults &in)
 {
-    using SyncStatus_T = ::ohos::data::cloudData::SyncStatus;
+    map<string, SyncInfo> out;
+    using TaiheSyncStatus = ::ohos::data::cloudData::SyncStatus;
     for (auto &it : in) {
         SyncInfo info = {0, 0, ProgressCode::key_t::UNKNOWN_ERROR};
         info.code = ProgressCode::from_value(it.second.code);
-        info.startTime = it.second.startTime;
-        info.finishTime = it.second.finishTime;
-        info.syncStatus = optional<SyncStatus_T>(std::in_place, SyncStatus_T::from_value(it.second.syncStatus));
+        ani_object aniStartTime{};
+        ani_object aniFinishTime{};
+        if (!WarpDate(static_cast<double>(it.second.startTime), aniStartTime)) {
+            out.clear();
+            return std::make_pair(false, out);
+        }
+        if (!WarpDate(static_cast<double>(it.second.finishTime), aniFinishTime)) {
+            out.clear();
+            return std::make_pair(false, out);
+        }
+        info.startTime = reinterpret_cast<uintptr_t>(aniStartTime);
+        info.finishTime = reinterpret_cast<uintptr_t>(aniFinishTime);
+        info.syncStatus = optional<TaiheSyncStatus>(std::in_place, TaiheSyncStatus::from_value(it.second.syncStatus));
         out.emplace(it.first, info);
     }
+    return std::make_pair(true, out);
 }
 
-ProgressDetails ProgressDetailConvert(const OHOS::DistributedRdb::ProgressDetail &in)
+ProgressDetails ConvertProgressDetail(const OHOS::DistributedRdb::ProgressDetail &in)
 {
     map<string, ::ohos::data::relationalStore::TableDetails> tdMap;
     for (auto &it : in.details) {
@@ -134,8 +180,9 @@ ProgressDetails ProgressDetailConvert(const OHOS::DistributedRdb::ProgressDetail
     return {Progress::from_value(in.progress), ProgressCode::from_value(in.code), tdMap};
 }
 
-void ParticipantConvert(const array_view<Participant_TH> &in, Participants &out)
+Participants ConvertParticipant(const array_view<TaiHeParticipant> &in)
 {
+    Participants out;
     Participant_INNER inner;
     for (auto it = in.begin(); it != in.end(); ++it) {
         inner.identity = std::string(it->identity);
@@ -167,46 +214,51 @@ void ParticipantConvert(const array_view<Participant_TH> &in, Participants &out)
         }
         out.push_back(inner);
     }
+    return out;
 }
 
-void ResultsConvert(const Results &in, Result_TH &out)
+TaiHeResult ConvertResults(const Results &in)
 {
+    TaiHeResult out;
     out.code = std::get<0>(in);
     out.description = optional<string>(std::in_place, std::get<1>(in));
-    std::vector<Result_TH> subResult;
-    for (auto &it : std::get<INDEX_TWO>(in)) {
+    std::vector<TaiHeResult> subResult;
+    for (auto &it : std::get<2>(in)) { // 2 is of std::vector<std::pair<int32_t, std::string>> type
         subResult.push_back({it.first, optional<string>(std::in_place, it.second)});
     }
     out.value =  optional<ResultValue>(std::in_place, ResultValue::make_resultParticipantsValue(subResult));
+    return out;
 }
 
-void QueryResultsConvert(const QueryResults &in, Result_TH &out)
+TaiHeResult ConvertQueryResults(const QueryResults &in)
 {
-    using Role_TH = ::ohos::data::cloudData::sharing::Role;
-    using State_TH = ::ohos::data::cloudData::sharing::State;
-    using Privilege_TH = ::ohos::data::cloudData::sharing::Privilege;
+    using TaiHeRole = ::ohos::data::cloudData::sharing::Role;
+    using TaiheState = ::ohos::data::cloudData::sharing::State;
+    using TaiHePrivilege = ::ohos::data::cloudData::sharing::Privilege;
+    TaiHeResult out;
     out.code = std::get<0>(in);
     out.description = optional<string>(std::in_place, std::get<1>(in));
-    std::vector<Participant_TH> thVec;
-    for (auto &it : std::get<INDEX_TWO>(in)) {
-        Participant_TH th = {""};
+    std::vector<TaiHeParticipant> thVec;
+    for (auto &it : std::get<2>(in)) { // 2 is of std::vector<Participant> type
+        TaiHeParticipant th = {""};
         th.identity = it.identity;
         if (it.role != OHOS::CloudData::Role::ROLE_NIL) {
-            th.role = optional<Role_TH>(std::in_place, Role_TH::from_value(it.role));
+            th.role = optional<TaiHeRole>(std::in_place, TaiHeRole::from_value(it.role));
         }
         if (it.state != OHOS::CloudData::Confirmation::CFM_NIL) {
-            th.state = optional<State_TH>(std::in_place, State_TH::from_value(it.state));
+            th.state = optional<TaiheState>(std::in_place, TaiheState::from_value(it.state));
         }
         th.attachInfo = optional<string>(std::in_place, it.attachInfo);
-        Privilege_TH pri;
+        TaiHePrivilege pri;
         pri.writable = optional<bool>(std::in_place, it.privilege.writable);
         pri.readable = optional<bool>(std::in_place, it.privilege.readable);
         pri.creatable = optional<bool>(std::in_place, it.privilege.creatable);
         pri.deletable = optional<bool>(std::in_place, it.privilege.deletable);
         pri.shareable = optional<bool>(std::in_place, it.privilege.shareable);
-        th.privilege = optional<Privilege_TH>(std::in_place, pri);
+        th.privilege = optional<TaiHePrivilege>(std::in_place, pri);
         thVec.push_back(th);
     }
     out.value =  optional<ResultValue>(std::in_place, ResultValue::make_participantsValue(thVec));
+    return out;
 }
 }  // namespace

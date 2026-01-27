@@ -371,8 +371,8 @@ private:
 
     // Indicates whether the result set is closed
     int columnCount_ = -1;
-    std::map<std::string, int> columnMap_;
     std::vector<std::string> wholeColumnNames_;
+    std::map<std::string_view, int> columnMap_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

@@ -408,7 +408,7 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0017, TestSize.Level1)
 HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0018, TestSize.Level1)
 {
     if (!OHOS::NativeRdb::IsUsingArkData()) {
-        return;
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     }
     int errCode = E_ERROR;
     RdbStoreConfig config(RdbReadOnlyTest::READONLY_DATABASE_NAME_18);

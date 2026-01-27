@@ -158,6 +158,10 @@ uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnId
     int errCode = OHOS::NativeRdb::E_OK;
     if (columnIdentifier.holds_columnIndex()) {
         columnIndex = columnIdentifier.get_columnIndex_ref();
+        if (columnIndex < 0) {
+            ThrowParamError("Invalid columnIndex");
+            return ani_rdbutils::ColumnTypeToTaihe(columnType);
+        }
     } else {
         std::string columnName(columnIdentifier.get_columnName_ref());
         errCode = nativeResultSet_->GetColumnIndex(columnName, columnIndex);
@@ -362,68 +366,44 @@ map<string, ValueType> ResultSetImpl::GetRow()
     return aniMap;
 }
 
-void ResultSetImpl::GetRowsResult(int32_t maxCount, std::vector<ohos::data::relationalStore::ValuesBucket> &result)
-{
-    std::vector<OHOS::NativeRdb::RowEntity> rowEntities;
-    for (int32_t i = 0; i < maxCount; ++i) {
-        OHOS::NativeRdb::RowEntity rowEntity;
-        int errCode = nativeResultSet_->GetRow(rowEntity);
-        if (errCode == OHOS::NativeRdb::E_ROW_OUT_RANGE) {
-            break;
-        }
-        if (errCode != OHOS::NativeRdb::E_OK) {
-            return;
-        }
-        map<string, ValueType> aniMap;
-        const std::map<std::string, OHOS::NativeRdb::ValueObject> &rowMap = rowEntity.Get();
-        for (auto const &[key, value] : rowMap) {
-            aniMap.emplace(string(key), ani_rdbutils::ValueObjectToAni(value));
-        }
-        OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(aniMap);
-        result.push_back(ani_rdbutils::ValuesBucketToAni(bucket));
-        errCode = nativeResultSet_->GoToNextRow();
-        if (errCode == OHOS::NativeRdb::E_ROW_OUT_RANGE) {
-            break;
-        }
-        if (errCode != OHOS::NativeRdb::E_OK) {
-            return;
-        }
-    }
-}
-
 taihe::array<ohos::data::relationalStore::ValuesBucket> ResultSetImpl::GetRowsSync(int32_t maxCount,
     taihe::optional_view<int32_t> position)
 {
-    std::vector<ohos::data::relationalStore::ValuesBucket> result;
-    if (maxCount <= 0 || (position.has_value() && position.value() < 0)) {
-        ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS);
-        return taihe::array<ohos::data::relationalStore::ValuesBucket>(result);
+    if (maxCount < 0) {
+        ThrowParamError("Invalid maxCount");
+        return {};
+    }
+    int positionNative = INIT_POSITION;
+    if (position.has_value()) {
+        if (position.value() < 0) {
+            ThrowParamError("invalid position");
+            return {};
+        }
+        positionNative = position.value();
     }
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeResultSet_ == nullptr) {
-        ThrowInnerError(errCode);
-        return taihe::array<ohos::data::relationalStore::ValuesBucket>(result);
-    }
-    int rowPos = 0;
-    errCode = nativeResultSet_->GetRowIndex(rowPos);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
-        return taihe::array<ohos::data::relationalStore::ValuesBucket>(result);
-    }
-    if (position.has_value() && position.value() != INIT_POSITION && position.value() != rowPos) {
-        errCode = nativeResultSet_->GoToRow(position.value());
-    } else if (rowPos == INIT_POSITION) {
-        errCode = nativeResultSet_->GoToFirstRow();
-        if (errCode == OHOS::NativeRdb::E_ROW_OUT_RANGE) {
-            return taihe::array<ohos::data::relationalStore::ValuesBucket>(result);
+    std::vector<OHOS::NativeRdb::RowEntity> rowEntities;
+    
+    if (nativeResultSet_ != nullptr) {
+        std::weak_ptr<OHOS::NativeRdb::ResultSet> resultSet = nativeResultSet_;
+        auto result = resultSet.lock();
+        if (result == nullptr) {
+            ThrowInnerError(errCode);
+            return {};
         }
+        std::tie(errCode, rowEntities) = ani_rdbutils::GetRows(*result, maxCount, positionNative);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        LOG_ERROR("Failed code:%{public}d. [%{public}d, %{public}d]", errCode, maxCount, position.value());
-        return taihe::array<ohos::data::relationalStore::ValuesBucket>(result);
+        ThrowInnerError(errCode);
+        return {};
     }
-    GetRowsResult(maxCount, result);
-    return taihe::array<ohos::data::relationalStore::ValuesBucket>(result);
+    std::vector<ohos::data::relationalStore::ValuesBucket> res;
+    for (size_t  i = 0; i < rowEntities.size(); ++i) {
+        OHOS::NativeRdb::ValuesBucket bucket(rowEntities[i].Get());
+        res.push_back(ani_rdbutils::ValuesBucketToAni(bucket));
+    }
+
+    return taihe::array<ohos::data::relationalStore::ValuesBucket>(res);
 }
 
 array<ohos::data::relationalStore::ValueType> ResultSetImpl::GetCurrentRowData()

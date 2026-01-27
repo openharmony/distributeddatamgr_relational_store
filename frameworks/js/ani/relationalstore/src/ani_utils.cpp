@@ -58,7 +58,7 @@ bool UnionAccessor::TryConvertArray<ani_ref>(std::vector<ani_ref> &value)
     }
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:Y", &ref, (ani_int)i)) {
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
@@ -78,12 +78,12 @@ bool UnionAccessor::TryConvertArray<bool>(std::vector<bool> &value)
     }
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:Y", &ref, (ani_int)i)) {
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
         ani_boolean val;
-        if (ANI_OK != env_->Object_CallMethodByName_Boolean(static_cast<ani_object>(ref), "unboxed", nullptr, &val)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Boolean(static_cast<ani_object>(ref), "toBoolean", nullptr, &val)) {
             LOG_ERROR("Object_CallMethodByName_Boolean unbox failed");
             return false;
         }
@@ -103,12 +103,12 @@ bool UnionAccessor::TryConvertArray<int>(std::vector<int> &value)
     }
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:Y", &ref, (ani_int)i)) {
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
         ani_int intValue;
-        if (ANI_OK != env_->Object_CallMethodByName_Int(static_cast<ani_object>(ref), "unboxed", nullptr, &intValue)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Int(static_cast<ani_object>(ref), "toInt", nullptr, &intValue)) {
             LOG_ERROR("Object_CallMethodByName_Int unbox failed");
             return false;
         }
@@ -128,12 +128,12 @@ bool UnionAccessor::TryConvertArray<double>(std::vector<double> &value)
     }
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:Y", &ref, (ani_int)i)) {
             LOG_ERROR("Object_GetPropertyByName_Ref failed");
             return false;
         }
         ani_double val;
-        if (ANI_OK != env_->Object_CallMethodByName_Double(static_cast<ani_object>(ref), "unboxed", nullptr, &val)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Double(static_cast<ani_object>(ref), "toDouble", nullptr, &val)) {
             LOG_ERROR("Object_CallMethodByName_Double unbox failed");
             return false;
         }
@@ -197,7 +197,7 @@ bool UnionAccessor::TryConvertArray<std::string>(std::vector<std::string> &value
 
     for (int i = 0; i < int(length); i++) {
         ani_ref ref;
-        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:C{std.core.Object}", &ref, (ani_int)i)) {
+        if (ANI_OK != env_->Object_CallMethodByName_Ref(obj_, "$_get", "i:Y", &ref, (ani_int)i)) {
             LOG_ERROR("Object_CallMethodByName_Ref failed");
             return false;
         }
@@ -215,7 +215,7 @@ bool UnionAccessor::TryConvert<int>(int &value)
     }
 
     ani_int aniValue;
-    auto ret = env_->Object_CallMethodByName_Int(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Int(obj_, "toInt", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -253,7 +253,7 @@ bool UnionAccessor::TryConvert<double>(double &value)
     }
 
     ani_double aniValue;
-    auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Double(obj_, "toDouble", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -282,7 +282,7 @@ bool UnionAccessor::TryConvert<bool>(bool &value)
     }
 
     ani_boolean aniValue;
-    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "toBoolean", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }

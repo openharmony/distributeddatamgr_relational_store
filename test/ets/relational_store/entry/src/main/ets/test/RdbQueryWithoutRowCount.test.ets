@@ -205,7 +205,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch(e) {
         console.error(`queryWithoutRowCount_003_Abnormal_columns failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 401).assertTrue();
+        expect(e.code === 401).assertTrue();
       }
 
       try {
@@ -214,7 +214,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch(e) {
         console.error(`queryWithoutRowCount_003_Abnormal_columns failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 401).assertTrue();
+        expect(e.code === 401).assertTrue();
       }
       console.log(TAG + "************* queryWithoutRowCount_003_Abnormal_columns end *************");
     })
@@ -246,7 +246,7 @@ export default function rdbQueryWithoutRowCount() {
         let data1 = resultSet?.getString(0);
       } catch(e) {
         console.error(`queryWithoutRowCount_004_Abnormal_columns failed message:${e.message} code:${e.code}`);
-        expect(e.code == 14800021).assertTrue();
+        expect(e.code === 14800021).assertTrue();
       }
 
       try {
@@ -277,7 +277,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch(e) {
         console.error(`queryWithoutRowCount_005_abnormal_predicates failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 401).assertTrue();
+        expect(e.code === 401).assertTrue();
       }
 
       try {
@@ -286,7 +286,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch(e) {
         console.error(`queryWithoutRowCount_005_abnormal_predicates failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 401).assertTrue();
+        expect(e.code === 401).assertTrue();
       }
       console.log(TAG + "************* queryWithoutRowCount_005_abnormal_predicates end *************");
     })
@@ -308,7 +308,7 @@ export default function rdbQueryWithoutRowCount() {
         console.error(`queryWithoutRowCount_006_abnormal_rdbStoreIsClose failed message:${e.message} code:${e.code}`);
         resultSet?.close();
         rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
-        expect(e.code == 14800014).assertTrue();
+        expect(e.code === 14800014).assertTrue();
       }
       console.log(TAG + "************* queryWithoutRowCount_006_abnormal_rdbStoreIsClose end *************");
     })
@@ -386,7 +386,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch (e) {
         console.error(`querySqlWithoutRowCount_002 failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 14800012).assertTrue();
+        expect(e.code === 14800012).assertTrue();
       }
 
       try {
@@ -395,7 +395,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch (e) {
         console.error(`querySqlWithoutRowCount_002 failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 401).assertTrue();
+        expect(e.code === 401).assertTrue();
       }
 
       try {
@@ -406,7 +406,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch (e) {
         console.error(`querySqlWithoutRowCount_002 failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 14800012).assertTrue();
+        expect(e.code === 14800012).assertTrue();
       }
 
       console.log(TAG + "************* querySqlWithoutRowCount_002_Abnormal_bindArgs end *************");
@@ -428,7 +428,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch(e) {
         console.error(`querySqlWithoutRowCount_003 failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 401).assertTrue()
+        expect(e.code === 401).assertTrue()
       }
 
       try {
@@ -437,7 +437,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch(e) {
         console.error(`querySqlWithoutRowCount_003 failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 401).assertTrue()
+        expect(e.code === 401).assertTrue()
       }
 
       try {
@@ -446,7 +446,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch(e) {
         console.error(`querySqlWithoutRowCount_003 failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 14800001).assertTrue()
+        expect(e.code === 14800001).assertTrue()
       }
       console.log(TAG + "************* querySqlWithoutRowCount_003_Abnormal_sql end *************");
     })
@@ -467,7 +467,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch(e) {
         console.error(`querySqlWithoutRowCount_004 failed message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 14800014).assertTrue();
+        expect(e.code === 14800014).assertTrue();
       }
       console.log(TAG + "************* querySqlWithoutRowCount_004_abnormal_rdbStoreIsClose end *************");
     })

@@ -48,7 +48,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
         CorruptedHandleManager::GetInstance().HandleCorrupt(config);
     }
     if (errCode != E_OK) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(FT_OPEN, errCode, config,
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, errCode, config,
             SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config), SqliteUtils::Anonymous(config.GetName())),
             true));
     }

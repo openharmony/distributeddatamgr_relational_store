@@ -32,16 +32,18 @@ import RdbStoreDataChangeTestEts from './RdbstoreDataChangeEts.test.ets'
 import RelationalStoreCloseTest from './RelationalStoreCloseTest.test.ets'
 import RdbQueryWithoutRowCount from './RdbQueryWithoutRowCount.test';
 import TransQueryWithoutRowCount from './TransQueryWithoutRowCount.test';
-import RdbStoreDeleteWithReturning from './RdbStoreDeleteWithReturning.test';
 import RdbSetDistributedTable from './RdbSetDistributedTable.test';
+import RdbStoreDeleteWithReturning from './RdbStoreDeleteWithReturning.test';
 import RdbStoreBatchInsertWithReturning from './RdbStoreBatchInsertWithReturning.test';
 import RdbStoreUpdateWithReturning from './RdbStoreUpdateWithReturning.test';
 import ReturningMultiThreaded from './ReturningMultiThreaded.test';
+import RdbStoreUndefinedTest from './RdbStoreUndefined.test';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
   RelationalStoreDataGroupId();
   PerfStatEtsTest();
+  RdbQueryWithDuplicate();
   RdbRekeyEtsTest();
   RdbStoreErrorlogTest();
   RDBstoreGetSqlInfoTest();
@@ -55,12 +57,12 @@ export default function testsuite() {
   RelationalStoreEtsTest();
   RdbStoreDataChangeTestEts();
   RelationalStoreCloseTest();
-  RdbQueryWithDuplicate();
   RdbQueryWithoutRowCount();
+  RdbSetDistributedTable();
   TransQueryWithoutRowCount();
   RdbStoreDeleteWithReturning();
-  RdbSetDistributedTable();
   RdbStoreBatchInsertWithReturning();
   RdbStoreUpdateWithReturning();
   ReturningMultiThreaded();
+  RdbStoreUndefinedTest();
 }

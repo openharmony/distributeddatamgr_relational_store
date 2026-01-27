@@ -1711,7 +1711,6 @@ int OH_Rdb_RekeyEx(OH_Rdb_Store *store, OH_Rdb_CryptoParam *param);
  *         Returns {@link RDB_E_DATABASE_BUSY} The error code for database busy.
  *         Returns {@link RDB_E_SQLITE_FULL} SQLite: The database is full.
  *         Returns {@link RDB_E_SQLITE_CORRUPT} database corrupted.
- *         Returns {@link RDB_E_SQLITE_PERM} SQLite: Access permission denied.
  *         Returns {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
  *         Returns {@link RDB_E_SQLITE_LOCKED} SQLite: A table in the database is locked.
  *         Returns {@link RDB_E_SQLITE_READONLY} SQLite: Attempt to write a readonly database.
@@ -1745,7 +1744,6 @@ int OH_Rdb_BatchInsertWithReturning(OH_Rdb_Store *store, const char *table, cons
  *         Returns {@link RDB_E_DATABASE_BUSY} The error code for database busy.
  *         Returns {@link RDB_E_SQLITE_FULL} SQLite: The database is full.
  *         Returns {@link RDB_E_SQLITE_CORRUPT} database corrupted.
- *         Returns {@link RDB_E_SQLITE_PERM} SQLite: Access permission denied.
  *         Returns {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
  *         Returns {@link RDB_E_SQLITE_LOCKED} SQLite: A table in the database is locked.
  *         Returns {@link RDB_E_SQLITE_READONLY} SQLite: Attempt to write a readonly database.
@@ -1776,7 +1774,6 @@ int OH_Rdb_UpdateWithReturning(OH_Rdb_Store *store, OH_VBucket *row, OH_Predicat
  *         Returns {@link RDB_E_DATABASE_BUSY} The error code for database busy.
  *         Returns {@link RDB_E_SQLITE_FULL} SQLite: The database is full.
  *         Returns {@link RDB_E_SQLITE_CORRUPT} database corrupted.
- *         Returns {@link RDB_E_SQLITE_PERM} SQLite: Access permission denied.
  *         Returns {@link RDB_E_SQLITE_BUSY} SQLite: The database file is locked.
  *         Returns {@link RDB_E_SQLITE_LOCKED} SQLite: A table in the database is locked.
  *         Returns {@link RDB_E_SQLITE_READONLY} SQLite: Attempt to write a readonly database.

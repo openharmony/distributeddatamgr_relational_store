@@ -17,6 +17,7 @@
 #define OHOS_RELATION_STORE_RDBSTORE_IMPL_H
 
 #include "ani_rdb_utils.h"
+#include "taihe_rdb_observers_data.h"
 
 namespace OHOS {
 namespace RdbTaihe {
@@ -94,7 +95,8 @@ public:
     void SetDistributedTablesWithOptionConfig(
         array_view<string> tables, optional_view<DistributedType> type, optional_view<DistributedConfig> config);
     string ObtainDistributedTableNameSync(string_view device, string_view table);
-    array<map<string, int32_t>> SyncSync(SyncMode mode, weak::RdbPredicates predicates);
+    void SyncAsync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback);
+    uintptr_t SyncPromise(SyncMode mode, weak::RdbPredicates predicates);
     void CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const &)> progress);
     void CloudSyncWithTable(
         SyncMode mode, array_view<string> tables, callback_view<void(ProgressDetails const &)> progress);
@@ -117,6 +119,12 @@ public:
     void OffStatisticsInner(optional_view<uintptr_t> opq);
     void OnCommon(taihe::string_view event, bool interProcess, callback_view<void()> callback, uintptr_t opq);
     void OffCommon(taihe::string_view event, bool interProcess, optional_view<uintptr_t> opq);
+    void OnSqliteErrorOccurredInner(
+        taihe::callback_view<void(ohos::data::relationalStore::ExceptionMessage const& info)> observer, uintptr_t opq);
+    void OffSqliteErrorOccurredInner(taihe::optional_view<uintptr_t> opq);
+    void OnPerfStatInner(
+        taihe::callback_view<void(ohos::data::relationalStore::SqlExecutionInfo const& info)> observer, uintptr_t opq);
+    void OffPerfStatInner(::taihe::optional_view<uintptr_t> opq);
     void Emit(string_view event);
     void CloseSync();
     int32_t AttachWithWaitTime(string_view fullPath, string_view attachName, taihe::optional_view<int32_t> waitTime);
@@ -126,7 +134,7 @@ public:
     void LockRowSync(weak::RdbPredicates predicates);
     void UnlockRowSync(weak::RdbPredicates predicates);
     ResultSet QueryLockedRowSync(weak::RdbPredicates predicates, optional_view<array<string>> columns);
-    uint32_t LockCloudContainerSync();
+    int32_t LockCloudContainerSync();
     void UnlockCloudContainerSync();
     Transaction CreateTransactionSync(optional_view<::ohos::data::relationalStore::TransactionOptions> options);
     Result BatchInsertWithReturningSync(string_view table, array_view<ValuesBucket> values,
@@ -137,29 +145,24 @@ public:
     int64_t BatchInsertWithConflictResolutionSync(taihe::string_view table,
         taihe::array_view<ohos::data::relationalStore::ValuesBucket> values,
         ohos::data::relationalStore::ConflictResolution conflict);
-
-protected:
-    void RegisterListener(std::string const &event, OHOS::DistributedRdb::SubscribeMode &mode,
-        ani_rdbutils::VarCallbackType &cb, uintptr_t opq);
-    int RegisterDataChangeObserver(
-        OHOS::DistributedRdb::SubscribeMode &type, ani_rdbutils::VarCallbackType &cb, ani_ref callbackRef);
-    int RegisterSyncProgressObserver(ani_rdbutils::VarCallbackType &cb, ani_ref callbackRef);
-    int RegisterStatisticObserver(ani_rdbutils::VarCallbackType &cb, ani_ref callbackRef);
-    int RegisterCommonEventObserver(std::string const &event, OHOS::DistributedRdb::SubscribeMode &mode,
-        ani_rdbutils::VarCallbackType &cb, ani_ref callbackRef);
-    void UnregisterListener(std::string const &event, OHOS::DistributedRdb::SubscribeMode &mode,
-        ::taihe::optional_view<uintptr_t> opq, bool &isUpdateFlag);
-    int UnRegisterObserver(
-        OHOS::DistributedRdb::SubscribeOption &option, ::taihe::optional_view<uintptr_t> opq, bool &isUpdateFlag);
-    int UnRegisterObserverExistOpq(
-        OHOS::DistributedRdb::SubscribeOption &option, ani_ref jsCallbackRef, bool &isUpdateFlag);
-    void UnRegisterAll();
+    void RekeySync(taihe::optional_view<ohos::data::relationalStore::CryptoParam> cryptoParam);
+    void RekeyExSync(ohos::data::relationalStore::CryptoParam const& cryptoParam);
+    void SetLocaleSync(taihe::string_view locale);
 
 private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> nativeRdbStore_;
     bool isSystemApp_ = false;
-    std::recursive_mutex cbMapMutex_;
-    std::map<std::string, std::vector<std::shared_ptr<ani_rdbutils::DataObserver>>> jsCbMap_;
+
+private:
+    void Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise);
+    template<class FuncType>
+    void OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode, FuncType callback, uintptr_t opq);
+    void OffDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode, taihe::optional_view<uintptr_t> opq);
+    void UnRegisterAll();
+    void UnRegisterDataChange();
+
+private:
+    ani_rdbutils::TaiheRdbObserversData rdbObserversData_;
 };
 } // namespace RdbTaihe
 } // namespace OHOS

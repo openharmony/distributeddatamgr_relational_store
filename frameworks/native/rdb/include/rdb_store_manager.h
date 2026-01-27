@@ -72,6 +72,7 @@ private:
     std::pair<int32_t, bool> IsSupportSilentFromProxy(const RdbStoreConfig &config);
     std::pair<int32_t, bool> IsSupportSilentFromService(const RdbStoreConfig &config);
     std::pair<int32_t, bool> IsSupportSilent(const RdbStoreConfig &config);
+    void CheckDBVisitor(const std::string &storeName);
 
     static constexpr uint32_t BUCKET_MAX_SIZE = 4;
     static constexpr uint32_t PROMISEINFO_CACHE_SIZE = 32;
