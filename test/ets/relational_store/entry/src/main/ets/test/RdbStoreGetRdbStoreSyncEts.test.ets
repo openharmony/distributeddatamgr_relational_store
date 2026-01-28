@@ -18,10 +18,8 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { relationalStore } from '@kit.ArkData';
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
-import fs from '@ohos.file.fs';
-import { fileShare } from '@kit.CoreFileKit';
-import featureAbility from '@ohos.ability.featureAbility';
-import { application } from '@kit.AbilityKit';
+// import fs from '@ohos.file.fs';
+import { fileIo as fs } from '@kit.CoreFileKit';
 
 const delegator = AbilityDelegatorRegistry.getAbilityDelegator();
 const context = delegator.getAppContext().getApplicationContext();
@@ -72,6 +70,13 @@ async function moveDatabaseFile(filePath: string)
   let fileExist = fs.accessSync(filePath);
   expect(fileExist).assertTrue();
   fs.unlinkSync(filePath);
+}
+
+async function changeFileModeOnlyRead(filePath: string)
+{
+  let fileExist = fs.accessSync(filePath);
+  expect(fileExist).assertTrue();
+  await fs.open(filePath, fs.OpenMode.READ_ONLY);
 }
 
 export default function RdbStoreGetRdbStoreSyncEtsTest() {
@@ -502,20 +507,39 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
 
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest012 start *************");
 
-      let dbName = 'RdbTest.db';
+      const dbName = "RdbTest.db";
       const storeConfig: relationalStore.StoreConfig = {
         name: dbName,
         securityLevel: relationalStore.SecurityLevel.S1,
-        encrypt: true,
+        encrypt: true
       };
+      const dbPath = context.databaseDir + "/rdb/" + dbName;
+      const dbPathWal = dbPath + "-wal";
+      const dbPathShm = dbPath + "-shm";
+      const dbPathKey = context.databaseDir + "/rdb/key/RdbTest.pub_key_v2";
+
 
       let store: relationalStore.RdbStore | undefined = undefined;
       try {
         store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync(SQL_CREATE_TABLE);
+        store.insertSync('EMPLOYEE', valueBucket);
+        store.close();
+        store = undefined;
 
-        const secretKeyFile = context.databaseDir + "/rdb/key/RdbTest.pub_key_v2";
-        await corruptDatabaseFile(secretKeyFile);
+        const newDbName = "NewRdbTest.db";
+        const newDbPath = context.databaseDir + "/rdb/" + newDbName;
+        const newDbPathWal = newDbPath + "-wal";
+        const newDbPathShm = newDbPath + "-shm";
+
+        await fs.renameSync(dbPath, newDbPath);
+        await fs.renameSync(dbPathWal, newDbPathWal);
+        await fs.renameSync(dbPathShm, newDbPathShm);
+        corruptDatabaseFile(dbPathKey);
+        storeConfig.name = newDbName;
         store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync(SQL_CREATE_TABLE);
+        store.insertSync('EMPLOYEE', valueBucket);
         expect().assertFail();
       } catch (e) {
         const err = e as BusinessError;
@@ -569,15 +593,19 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
      * @tc.number getRdbStoreSyncTest014
      * @tc.desc Throw error Code:14800027 - SQLite: Attempt to write a readonly database.
      */
-    // TODO
     it('getRdbStoreSyncTest014', 0, async (done: Function) => {
 
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest014 start *************");
 
+      const dbName = "RdbTest.db";
+      const dbPath = context.databaseDir + "/rdb/" + dbName;
+      const dbPathWal = dbPath + "-wal";
+      const dbPathShm = dbPath + "-shm";
+
       const storeConfig: relationalStore.StoreConfig = {
-        name: 'RdbTest.db',
+        name: dbName,
         securityLevel: relationalStore.SecurityLevel.S1,
-        isReadOnly: true,
+        isReadOnly: false,
       };
 
       let store: relationalStore.RdbStore | undefined = undefined;
@@ -585,6 +613,15 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         store = relationalStore.getRdbStoreSync(context, storeConfig);
         store.executeSync(SQL_CREATE_TABLE);
         store.insertSync('EMPLOYEE', valueBucket);
+        store.close();
+        store = undefined;
+        changeFileModeOnlyRead(dbPath);
+        changeFileModeOnlyRead(dbPathWal);
+        changeFileModeOnlyRead(dbPathShm);
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store.executeSync("PRAGMA journal_mode")
+        store.insertSync('EMPLOYEE', valueBucket);
+        store.executeSync("pragma integrity_check");
         expect().assertFail();
       } catch (e) {
         const err = e as BusinessError;
@@ -604,7 +641,6 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
      * @tc.number getRdbStoreSyncTest015
      * @tc.desc Throw error Code:14800028 - SQLite: Some kind of disk I/O error occurred.
      */
-    // TODO
     it('getRdbStoreSyncTest015', 0, async (done: Function) => {
 
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest015 start *************");
@@ -692,8 +728,6 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       let store: relationalStore.RdbStore | undefined = undefined;
       try {
         store = relationalStore.getRdbStoreSync(context, storeConfig);
-        store.executeSync(SQL_CREATE_TABLE);
-        store.insertSync('EMPLOYEE', valueBucket);
         expect().assertFail();
       } catch (e) {
         const err = e as BusinessError;
