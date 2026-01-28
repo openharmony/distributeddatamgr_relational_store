@@ -703,16 +703,19 @@ ani_status CreateAniObj(ani_env *env, const std::string &className, const std::s
     va_list args;
     va_start(args, obj);
     if (className.empty() || methodName.empty() || signature.empty()) {
+        va_end(args);
         return ANI_ERROR;
     }
     ani_class cls;
     if (env->FindClass(className.c_str(), &cls) != ANI_OK) {
+        va_end(args);
         LOG_ERROR("[ANI] FindClass failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
             className.c_str(), methodName.c_str(), signature.c_str());
         return ANI_ERROR;
     }
     ani_method method;
     if (env->Class_FindMethod(cls, methodName.c_str(), signature.c_str(), &method) != ANI_OK) {
+        va_end(args);
         LOG_ERROR("[ANI] Class_FindMethod failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
             className.c_str(), methodName.c_str(), signature.c_str());
         return ANI_ERROR;
