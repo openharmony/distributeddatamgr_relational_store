@@ -179,7 +179,7 @@ static OH_Rdb_ConfigV2 *config_ = OH_Rdb_CreateConfig();
 OH_VBucket *RdbStoreReturningTest::CreateOneVBucket()
 {
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    ASSERT_NE(valueBucket, nullptr);
+    EXPECT_NE(valueBucket, nullptr);
 
     valueBucket->putText(valueBucket, "NAME", DEFAULT_NAME);
     valueBucket->putInt64(valueBucket, "AGE", DEFAULT_AGE);
@@ -192,7 +192,7 @@ OH_VBucket *RdbStoreReturningTest::CreateOneVBucket()
     valueBucket->putText(valueBucket, "SEX", DEFAULT_SEX);
 
     Data_Asset **assets = OH_Data_Asset_CreateMultiple(ASSETS_COUNT);
-    ASSERT_NE(assets, nullptr);
+    EXPECT_NE(assets, nullptr);
     for (int i = 0; i < ASSETS_COUNT; ++i) {
         OH_Data_Asset_SetName(assets[i], DEFAULT_ASSET_NAMES[i]);
     }
@@ -207,7 +207,7 @@ OH_VBucket *RdbStoreReturningTest::CreateOneVBucket()
 OH_VBucket *RdbStoreReturningTest::CreateOneUpdateVBucket()
 {
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    ASSERT_NE(valueBucket, nullptr);
+    EXPECT_NE(valueBucket, nullptr);
 
     valueBucket->putText(valueBucket, "NAME", UPDATE_NAME);
     valueBucket->putInt64(valueBucket, "AGE", UPDATE_AGE);
@@ -220,7 +220,7 @@ OH_VBucket *RdbStoreReturningTest::CreateOneUpdateVBucket()
     valueBucket->putText(valueBucket, "SEX", UPDATE_SEX);
 
     Data_Asset **assets = OH_Data_Asset_CreateMultiple(ASSETS_COUNT);
-    ASSERT_NE(assets, nullptr);
+    EXPECT_NE(assets, nullptr);
     for (int i = 0; i < ASSETS_COUNT; ++i) {
         OH_Data_Asset_SetName(assets[i], UPDATE_ASSET_NAMES[i]);
     }
