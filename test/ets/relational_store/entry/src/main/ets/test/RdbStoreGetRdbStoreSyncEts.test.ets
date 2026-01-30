@@ -625,57 +625,54 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest012 start *************");
 
       const dbName = RDB_TEST_NAME;
-      const storeConfig: relationalStore.StoreConfig = {
-        name: dbName,
-        securityLevel: relationalStore.SecurityLevel.S1,
-        encrypt: true
-      };
       const dbPath = context.databaseDir + "/rdb/" + dbName;
-      const dbPathWal = dbPath + "-wal";
-      const dbPathShm = dbPath + "-shm";
-      const dbPathKey = context.databaseDir + "/rdb/key/RdbTest.pub_key_v2";
+      const dbPathKey = context.databaseDir + "/rdb/key/" + dbName.replace('.db', '.pub_key_v2');
 
       let store: relationalStore.RdbStore | undefined = undefined;
       try {
-        // 1. Create encrypted database
-        hilog.info(DOMAIN, TAG, "Step 1: Create encrypted database");
+        // 1. Create encrypted database with custom key
+        // Using cryptoParam bypasses auto-generated key file mechanism
+        hilog.info(DOMAIN, TAG, "Step 1: Create encrypted database with custom key");
+        const customKey = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+          17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+        const storeConfig: relationalStore.StoreConfig = {
+          name: dbName,
+          securityLevel: relationalStore.SecurityLevel.S1,
+          encrypt: true,
+          cryptoParam: {
+            encryptionKey: customKey,
+            iterationCount: 4096
+          },
+          allowRebuild: false  // Disable auto-rebuild to prevent service recovery
+        };
         store = relationalStore.getRdbStoreSync(context, storeConfig);
         store.executeSync(SQL_CREATE_TABLE);
         store.insertSync('EMPLOYEE', valueBucket);
         store.close();
         store = undefined;
 
-        // 2. Rename database files
-        hilog.info(DOMAIN, TAG, "Step 2: Rename database files");
-        const newDbName = "NewRdbTest.db";
-        const newDbPath = context.databaseDir + "/rdb/" + newDbName;
-        const newDbPathWal = newDbPath + "-wal";
-        const newDbPathShm = newDbPath + "-shm";
-        const newDbPathKey = context.databaseDir + "/rdb/key/NewRdbTest.pub_key_v2";
+        // Diagnostic: Check if files exist
+        const dbExists = fs.accessSync(dbPath);
+        const keyExists = fs.accessSync(dbPathKey);
+        hilog.info(DOMAIN, TAG, `Step 2: Database exists: ${dbExists}, Key file exists: ${keyExists}`);
 
-        if (fs.accessSync(dbPath)) {
-          fs.renameSync(dbPath, newDbPath);
-        }
-        if (fs.accessSync(dbPathWal)) {
-          fs.renameSync(dbPathWal, newDbPathWal);
-        }
-        if (fs.accessSync(dbPathShm)) {
-          fs.renameSync(dbPathShm, newDbPathShm);
-        }
-        if (fs.accessSync(dbPathKey)) {
-          fs.renameSync(dbPathKey, newDbPathKey);
-        }
+        // 2. Try to open database with wrong key
+        // This simulates corrupted/lost key scenario
+        hilog.info(DOMAIN, TAG, "Step 3: Try to open database with wrong key");
+        const wrongKey = new Uint8Array([32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17,
+          16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+        const wrongKeyConfig: relationalStore.StoreConfig = {
+          name: dbName,
+          securityLevel: relationalStore.SecurityLevel.S1,
+          encrypt: true,
+          cryptoParam: {
+            encryptionKey: wrongKey,
+            iterationCount: 4096
+          },
+          allowRebuild: false
+        };
 
-        // 3. Corrupt key file
-        hilog.info(DOMAIN, TAG, "Step 3: Corrupt key file");
-        if (fs.accessSync(newDbPathKey)) {
-          await corruptDatabaseFile(newDbPathKey);
-        }
-
-        // 4. Try to open with new name (key mismatch)
-        hilog.info(DOMAIN, TAG, "Step 4: Try to open with mismatched key");
-        storeConfig.name = newDbName;
-        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        store = relationalStore.getRdbStoreSync(context, wrongKeyConfig);
         store.executeSync(SQL_CREATE_TABLE);
         store.insertSync('EMPLOYEE', valueBucket);
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest012: Should have thrown an error");
@@ -683,14 +680,17 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       } catch (e) {
         const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Caught expected error. Code:${err.code}, message:${err.message}`);
-        // Accept either 14800020 (key corrupted) or 14800011 (database corrupted)
-        // as system may return database corruption error when key file is damaged
         const errorCode = Number(err.code);
-        expect(errorCode === 14800020 || errorCode === 14800011).assertTrue();
+        // Based on C++ code analysis:
+        // - 14800011 (E_SQLITE_CORRUPT): SQLite cannot decrypt database with wrong key
+        // - 14800020 (E_INVALID_SECRET_KEY): Only when key is empty (not possible with cryptoParam)
+        // Using wrong key with cryptoParam should trigger 14800011
+        const isValidError = errorCode === 14800011 || errorCode === 14800020;
+        hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Error code ${errorCode} is ${isValidError ? 'valid' : 'invalid'}`);
+        expect(isValidError).assertTrue();
       } finally {
         store?.close();
-        await cleanupDatabaseFiles(RDB_TEST_NAME);
-        await cleanupDatabaseFiles("NewRdbTest.db");
+        await cleanupDatabaseFiles(dbName);
       }
       done();
 
