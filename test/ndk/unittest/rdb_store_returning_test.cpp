@@ -92,120 +92,6 @@ private:
     static void VerifyCursorData(OH_Cursor *cursor, const std::string& expectedValue);
     static void VerifyCursorRowCount(OH_Cursor *cursor, int expectedRowCount);
     static void VerifyCursorColumnCount(OH_Cursor *cursor, int expectedColumnCount);
-
-    // RAII wrappers for resource management
-    struct ReturningContextGuard
-    {
-        OH_RDB_ReturningContext* context;
-        explicit ReturningContextGuard(OH_RDB_ReturningContext* ctx) : context(ctx) {}
-        ~ReturningContextGuard()
-        {
-            if (context) {
-                OH_RDB_DestroyReturningContext(context);
-            }
-        }
-        OH_RDB_ReturningContext* get() const
-        {
-            return context;
-        }
-    };
-
-    struct VBucketGuard
-    {
-        OH_VBucket* bucket;
-        explicit VBucketGuard(OH_VBucket* b) : bucket(b) {}
-        ~VBucketGuard()
-        {
-            if (bucket) {
-                bucket->destroy(bucket);
-            }
-        }
-        OH_VBucket* get() const
-        {
-            return bucket;
-        }
-    };
-
-    struct PredicatesGuard
-    {
-        OH_Predicates* predicates;
-        explicit PredicatesGuard(OH_Predicates* p) : predicates(p) {}
-        ~PredicatesGuard()
-        {
-            if (predicates) {
-                predicates->destroy(predicates);
-            }
-        }
-        OH_Predicates* get() const
-        {
-            return predicates;
-        }
-    };
-
-    struct VObjectGuard
-    {
-        OH_VObject* object;
-        explicit VObjectGuard(OH_VObject* o) : object(o) {}
-        ~VObjectGuard()
-        {
-            if (object) {
-                object->destroy(object);
-            }
-        }
-        OH_VObject* get() const
-        {
-            return object;
-        }
-    };
-
-    struct TransactionGuard
-    {
-        OH_Rdb_Transaction* trans;
-        explicit TransactionGuard(OH_Rdb_Transaction* t) : trans(t) {}
-        ~TransactionGuard()
-        {
-            if (trans) {
-                OH_RdbTrans_Destroy(trans);
-            }
-        }
-        OH_Rdb_Transaction* get() const
-        {
-            return trans;
-        }
-    };
-
-    struct AssetsGuard
-    {
-        Data_Asset** assets;
-        int count;
-        AssetsGuard(Data_Asset** a, int c) : assets(a), count(c) {}
-        ~AssetsGuard()
-        {
-            if (assets) {
-                OH_Data_Asset_DestroyMultiple(assets, count);
-            }
-        }
-        Data_Asset** get() const
-        {
-            return assets;
-        }
-    };
-
-    struct VBucketsGuard
-    {
-        OH_Data_VBuckets* buckets;
-        explicit VBucketsGuard(OH_Data_VBuckets* b) : buckets(b) {}
-        ~VBucketsGuard()
-        {
-            if (buckets) {
-                OH_VBuckets_Destroy(buckets);
-            }
-        }
-        OH_Data_VBuckets* get() const
-        {
-            return buckets;
-        }
-    };
 };
 
 static OH_Rdb_Store *store_ = nullptr;
@@ -397,7 +283,7 @@ struct BaseTestData
     OH_RDB_ReturningContext *context = nullptr;
     OH_Rdb_Transaction *trans = nullptr;
 
-    BaseTestData(std::vector<const char *> fields)
+    explicit BaseTestData(std::vector<const char *> fields)
     {
         context = RdbStoreReturningTest::CreateReturningContext(fields);
     }
@@ -432,7 +318,7 @@ struct BatchInsertInputData : public BaseTestData
     OH_Data_VBuckets *rows = nullptr;
     Data_Asset **assets = nullptr;
 
-    BatchInsertInputData(std::vector<const char *> fields)
+    explicit BatchInsertInputData(std::vector<const char *> fields)
         : BaseTestData(fields)
     {
         Initialize();
