@@ -35,42 +35,42 @@ using namespace OHOS::RdbNdk;
 
 // ==================== Test Constants ====================
 namespace {
-    // Database constants
-    constexpr const char* TEST_TABLE_NAME = "EMPLOYEE";
-    constexpr const char* TEST_DB_NAME = "rdb_store_test.db";
-    constexpr const char* TEST_BUNDLE_NAME = "com.ohos.example.distributedndk";
+// Database constants
+constexpr const char *TEST_TABLE_NAME = "EMPLOYEE";
+constexpr const char *TEST_DB_NAME = "rdb_store_test.db";
+constexpr const char *TEST_BUNDLE_NAME = "com.ohos.example.distributedndk";
 
-    // Test data constants
-    constexpr const char* DEFAULT_NAME = "Lisa";
-    constexpr const char* UPDATE_NAME = "Lucy";
-    constexpr const char* DEFAULT_SEX = "MALE";
-    constexpr const char* UPDATE_SEX = "FEMALE";
-    constexpr int DEFAULT_AGE = 18;
-    constexpr int UPDATE_AGE = 19;
-    constexpr float DEFAULT_SALARY = 100.5f;
-    constexpr float UPDATE_SALARY = 101.5f;
-    constexpr float DEFAULT_HEIGHT = 172.0f;
-    constexpr float UPDATE_HEIGHT = 173.0f;
-    constexpr int ASSETS_COUNT = 2;
-    constexpr int FLOATS_SIZE = 3;
+// Test data constants
+constexpr const char *DEFAULT_NAME = "Lisa";
+constexpr const char *UPDATE_NAME = "Lucy";
+constexpr const char *DEFAULT_SEX = "MALE";
+constexpr const char *UPDATE_SEX = "FEMALE";
+constexpr int DEFAULT_AGE = 18;
+constexpr int UPDATE_AGE = 19;
+constexpr float DEFAULT_SALARY = 100.5f;
+constexpr float UPDATE_SALARY = 101.5f;
+constexpr float DEFAULT_HEIGHT = 172.0f;
+constexpr float UPDATE_HEIGHT = 173.0f;
+constexpr int ASSETS_COUNT = 2;
+constexpr int FLOATS_SIZE = 3;
 
-    // Expected values
-    constexpr int EXPECTED_SINGLE_ROW = 1;
-    constexpr int EXPECTED_SINGLE_COLUMN = 1;
-    constexpr int EXPECTED_NAME_SIZE = 5;  // "Lisa" or "Lucy"
+// Expected values
+constexpr int EXPECTED_SINGLE_ROW = 1;
+constexpr int EXPECTED_SINGLE_COLUMN = 1;
+constexpr int EXPECTED_NAME_SIZE = 5; // "Lisa" or "Lucy"
 
-    // Asset names
-    constexpr const char* DEFAULT_ASSET_NAMES[] = {"asset1", "asset2"};
-    constexpr const char* UPDATE_ASSET_NAMES[] = {"asset3", "asset4"};
-    constexpr const char* REPEAT_ASSET_NAME = "data";
+// Asset names
+constexpr const char *DEFAULT_ASSET_NAMES[] = { "asset1", "asset2" };
+constexpr const char *UPDATE_ASSET_NAMES[] = { "asset3", "asset4" };
+constexpr const char *REPEAT_ASSET_NAME = "data";
 
-    // Float vectors
-    constexpr float DEFAULT_FLOATS[] = {1.0f, 2.0f, 3.0f};
-    constexpr float UPDATE_FLOATS[] = {4.0f, 5.0f, 6.0f};
+// Float vectors
+constexpr float DEFAULT_FLOATS[] = { 1.0f, 2.0f, 3.0f };
+constexpr float UPDATE_FLOATS[] = { 4.0f, 5.0f, 6.0f };
 
-    // Blob data
-    constexpr uint8_t DEFAULT_BLOB[] = {1, 2, 3, 4, 5};
-    constexpr uint8_t UPDATE_BLOB[] = {1, 2, 3, 4, 5, 6};
+// Blob data
+constexpr uint8_t DEFAULT_BLOB[] = { 1, 2, 3, 4, 5 };
+constexpr uint8_t UPDATE_BLOB[] = { 1, 2, 3, 4, 5, 6 };
 } // namespace
 
 class RdbStoreReturningTest : public testing::Test {
@@ -89,7 +89,7 @@ private:
     static OH_Rdb_Transaction *CreateTransaction(OH_Rdb_Store *store);
 
     // Verification helpers
-    static void VerifyCursorData(OH_Cursor *cursor, const std::string& expectedValue);
+    static void VerifyCursorData(OH_Cursor *cursor, const std::string &expectedValue);
     static void VerifyCursorRowCount(OH_Cursor *cursor, int expectedRowCount);
     static void VerifyCursorColumnCount(OH_Cursor *cursor, int expectedColumnCount);
 };
@@ -255,10 +255,9 @@ void RdbStoreReturningTest::TearDownTestCase(void)
 
 void RdbStoreReturningTest::SetUp(void)
 {
-    std::string createTableSql =
-        "CREATE TABLE IF NOT EXISTS " + std::string(TEST_TABLE_NAME) +
-        " (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, AGE INTEGER, "
-        "SALARY REAL, CODES BLOB, HEIGHT REAL, SEX TEXT, DATAS ASSETS, FLOATS FLOATVECTOR)";
+    std::string createTableSql = "CREATE TABLE IF NOT EXISTS " + std::string(TEST_TABLE_NAME) +
+                                 " (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, AGE INTEGER, "
+                                 "SALARY REAL, CODES BLOB, HEIGHT REAL, SEX TEXT, DATAS ASSETS, FLOATS FLOATVECTOR)";
     int errCode = OH_Rdb_Execute(store_, createTableSql.c_str());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
 
@@ -278,8 +277,7 @@ void RdbStoreReturningTest::TearDown(void)
 // ==================== Test Data Helper Structures ====================
 
 // Base structure for common test data management
-struct BaseTestData
-{
+struct BaseTestData {
     OH_RDB_ReturningContext *context = nullptr;
     OH_Rdb_Transaction *trans = nullptr;
 
@@ -288,8 +286,7 @@ struct BaseTestData
         context = RdbStoreReturningTest::CreateReturningContext(fields);
     }
 
-    BaseTestData(OH_Rdb_Store *store, std::vector<const char *> fields)
-        : BaseTestData(fields)
+    BaseTestData(OH_Rdb_Store *store, std::vector<const char *> fields) : BaseTestData(fields)
     {
         trans = RdbStoreReturningTest::CreateTransaction(store);
     }
@@ -307,25 +304,22 @@ struct BaseTestData
     }
 
     // Prevent copying
-    BaseTestData(const BaseTestData&) = delete;
-    BaseTestData& operator=(const BaseTestData&) = delete;
+    BaseTestData(const BaseTestData &) = delete;
+    BaseTestData &operator=(const BaseTestData &) = delete;
 };
 
 // Batch insert test data structure
-struct BatchInsertInputData : public BaseTestData
-{
+struct BatchInsertInputData : public BaseTestData {
     OH_VBucket *valueBucket = nullptr;
     OH_Data_VBuckets *rows = nullptr;
     Data_Asset **assets = nullptr;
 
-    explicit BatchInsertInputData(std::vector<const char *> fields)
-        : BaseTestData(fields)
+    explicit BatchInsertInputData(std::vector<const char *> fields) : BaseTestData(fields)
     {
         Initialize();
     }
 
-    BatchInsertInputData(OH_Rdb_Store *store, std::vector<const char *> fields)
-        : BaseTestData(store, fields)
+    BatchInsertInputData(OH_Rdb_Store *store, std::vector<const char *> fields) : BaseTestData(store, fields)
     {
         Initialize();
     }
@@ -375,13 +369,11 @@ private:
 };
 
 // Delete operation test data structure
-struct DeleteInputData : public BaseTestData
-{
+struct DeleteInputData : public BaseTestData {
     OH_VObject *valueObject = nullptr;
     OH_Predicates *predicates = nullptr;
 
-    DeleteInputData(const char *table, std::vector<const char *> fields)
-        : BaseTestData(fields)
+    DeleteInputData(const char *table, std::vector<const char *> fields) : BaseTestData(fields)
     {
         Initialize(table);
     }
@@ -484,8 +476,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_001, TestSi
     data.PutRows();
 
     int ret = OH_Rdb_BatchInsertWithReturning(
-        store_, TEST_TABLE_NAME, data.rows,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, TEST_TABLE_NAME, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(data.context);
@@ -508,38 +499,32 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_002, TestSi
 
     // Test null store
     int ret = OH_Rdb_BatchInsertWithReturning(
-        nullptr, TEST_TABLE_NAME, data.rows,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        nullptr, TEST_TABLE_NAME, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test null table name
     ret = OH_Rdb_BatchInsertWithReturning(
-        store_, nullptr, data.rows,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, nullptr, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test null rows
     ret = OH_Rdb_BatchInsertWithReturning(
-        store_, TEST_TABLE_NAME, nullptr,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, TEST_TABLE_NAME, nullptr, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test invalid conflict resolution (-1)
     ret = OH_Rdb_BatchInsertWithReturning(
-        store_, TEST_TABLE_NAME, data.rows,
-        static_cast<Rdb_ConflictResolution>(-1), data.context);
+        store_, TEST_TABLE_NAME, data.rows, static_cast<Rdb_ConflictResolution>(-1), data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test invalid conflict resolution (1024)
     ret = OH_Rdb_BatchInsertWithReturning(
-        store_, TEST_TABLE_NAME, data.rows,
-        static_cast<Rdb_ConflictResolution>(1024), data.context);
+        store_, TEST_TABLE_NAME, data.rows, static_cast<Rdb_ConflictResolution>(1024), data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test null context
     ret = OH_Rdb_BatchInsertWithReturning(
-        store_, TEST_TABLE_NAME, data.rows,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, nullptr);
+        store_, TEST_TABLE_NAME, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, nullptr);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 }
 
@@ -555,20 +540,17 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_003, TestSi
 
     // Test empty table name
     int ret = OH_Rdb_BatchInsertWithReturning(
-        store_, "", data.rows,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, "", data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test non-existent table
     ret = OH_Rdb_BatchInsertWithReturning(
-        store_, "abc", data.rows,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, "abc", data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_SQLITE_ERROR);
 
     // Test table name with spaces
     ret = OH_Rdb_BatchInsertWithReturning(
-        store_, "E M PLOYEE", data.rows,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, "E M PLOYEE", data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 }
 
@@ -584,8 +566,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_004, TestSi
         BatchInsertInputData data({});
         data.PutRows();
         int ret = OH_Rdb_BatchInsertWithReturning(
-            store_, TEST_TABLE_NAME, data.rows,
-            Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+            store_, TEST_TABLE_NAME, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
         EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     }
 
@@ -594,8 +575,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_004, TestSi
         BatchInsertInputData data({ "NAME", "AGE", "SALARY", "CODES", "HEIGHT", "SEX" });
         data.PutRows();
         int ret = OH_Rdb_BatchInsertWithReturning(
-            store_, TEST_TABLE_NAME, data.rows,
-            Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+            store_, TEST_TABLE_NAME, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
         EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     }
 
@@ -604,8 +584,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_004, TestSi
         BatchInsertInputData data({ "NAME", "*" });
         data.PutRows();
         int ret = OH_Rdb_BatchInsertWithReturning(
-            store_, TEST_TABLE_NAME, data.rows,
-            Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+            store_, TEST_TABLE_NAME, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
         EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     }
 
@@ -614,8 +593,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_004, TestSi
         BatchInsertInputData data({ "NAME", nullptr });
         data.PutRows();
         int ret = OH_Rdb_BatchInsertWithReturning(
-            store_, TEST_TABLE_NAME, data.rows,
-            Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+            store_, TEST_TABLE_NAME, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
         EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     }
 }
@@ -632,8 +610,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_test_005, TestSi
     data.PutRows();
 
     int ret = OH_Rdb_BatchInsertWithReturning(
-        store_, TEST_TABLE_NAME, data.rows,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, TEST_TABLE_NAME, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 }
 
@@ -752,8 +729,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_UpdateWithReturning_test_001, TestSize.Le
 {
     UpdateInputData data(TEST_TABLE_NAME, { "NAME" });
     int ret = OH_Rdb_UpdateWithReturning(
-        store_, data.valueBucketUpdate, data.predicates,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, data.valueBucketUpdate, data.predicates, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(data.context);
@@ -775,45 +751,38 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_UpdateWithReturning_test_002, TestSize.Le
 
     // Test null store
     int ret = OH_Rdb_UpdateWithReturning(
-        nullptr, data.valueBucketUpdate, data.predicates,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        nullptr, data.valueBucketUpdate, data.predicates, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test null value bucket
     ret = OH_Rdb_UpdateWithReturning(
-        store_, nullptr, data.predicates,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, nullptr, data.predicates, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test null predicates
     ret = OH_Rdb_UpdateWithReturning(
-        store_, data.valueBucketUpdate, nullptr,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, data.valueBucketUpdate, nullptr, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test invalid conflict resolution (-1)
     ret = OH_Rdb_UpdateWithReturning(
-        store_, data.valueBucketUpdate, data.predicates,
-        static_cast<Rdb_ConflictResolution>(-1), data.context);
+        store_, data.valueBucketUpdate, data.predicates, static_cast<Rdb_ConflictResolution>(-1), data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test invalid conflict resolution (1024)
     ret = OH_Rdb_UpdateWithReturning(
-        store_, data.valueBucketUpdate, data.predicates,
-        static_cast<Rdb_ConflictResolution>(1024), data.context);
+        store_, data.valueBucketUpdate, data.predicates, static_cast<Rdb_ConflictResolution>(1024), data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test null context
     ret = OH_Rdb_UpdateWithReturning(
-        store_, data.valueBucketUpdate, data.predicates,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, nullptr);
+        store_, data.valueBucketUpdate, data.predicates, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, nullptr);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     // Test empty value bucket
     data.EmptyValueBucketUpdate();
     ret = OH_Rdb_UpdateWithReturning(
-        store_, data.valueBucketUpdate, data.predicates,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, data.valueBucketUpdate, data.predicates, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_ERROR);
 }
 
@@ -827,8 +796,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_UpdateWithReturning_test_003, TestSize.Le
     // Test non-existent table
     {
         UpdateInputData data("abc", { "NAME" });
-        int ret = OH_Rdb_UpdateWithReturning(
-            store_, data.valueBucketUpdate, data.predicates,
+        int ret = OH_Rdb_UpdateWithReturning(store_, data.valueBucketUpdate, data.predicates,
             Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
         EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_SQLITE_ERROR);
     }
@@ -860,8 +828,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_UpdateWithReturning_test_004, TestSize.Le
     // Test empty fields
     {
         UpdateInputData data(TEST_TABLE_NAME, {});
-        int ret = OH_Rdb_UpdateWithReturning(
-            store_, data.valueBucketUpdate, data.predicates,
+        int ret = OH_Rdb_UpdateWithReturning(store_, data.valueBucketUpdate, data.predicates,
             Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
         EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     }
@@ -1295,8 +1262,7 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_GetFloat32Array_
     data.PutRows();
 
     int ret = OH_Rdb_BatchInsertWithReturning(
-        store_, TEST_TABLE_NAME, data.rows,
-        Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
+        store_, TEST_TABLE_NAME, data.rows, Rdb_ConflictResolution::RDB_CONFLICT_REPLACE, data.context);
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
 
     OH_Cursor *cursor = OH_RDB_GetReturningValues(data.context);
