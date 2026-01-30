@@ -419,14 +419,12 @@ private:
 };
 
 // Update operation test data structure
-struct UpdateInputData : public BaseTestData
-{
+struct UpdateInputData : public BaseTestData {
     OH_VBucket *valueBucketUpdate = nullptr;
     OH_VObject *valueObject = nullptr;
     OH_Predicates *predicates = nullptr;
 
-    UpdateInputData(const char *table, std::vector<const char *> fields)
-        : BaseTestData(fields)
+    UpdateInputData(const char *table, std::vector<const char *> fields) : BaseTestData(fields)
     {
         Initialize(table);
     }
