@@ -94,82 +94,117 @@ private:
     static void VerifyCursorColumnCount(OH_Cursor *cursor, int expectedColumnCount);
 
     // RAII wrappers for resource management
-    struct ReturningContextGuard {
+    struct ReturningContextGuard
+    {
         OH_RDB_ReturningContext* context;
         explicit ReturningContextGuard(OH_RDB_ReturningContext* ctx) : context(ctx) {}
-        ~ReturningContextGuard() {
+        ~ReturningContextGuard()
+        {
             if (context) {
                 OH_RDB_DestroyReturningContext(context);
             }
         }
-        OH_RDB_ReturningContext* get() const { return context; }
+        OH_RDB_ReturningContext* get() const
+        {
+            return context;
+        }
     };
 
-    struct VBucketGuard {
+    struct VBucketGuard
+    {
         OH_VBucket* bucket;
         explicit VBucketGuard(OH_VBucket* b) : bucket(b) {}
-        ~VBucketGuard() {
+        ~VBucketGuard()
+        {
             if (bucket) {
                 bucket->destroy(bucket);
             }
         }
-        OH_VBucket* get() const { return bucket; }
+        OH_VBucket* get() const
+        {
+            return bucket;
+        }
     };
 
-    struct PredicatesGuard {
+    struct PredicatesGuard
+    {
         OH_Predicates* predicates;
         explicit PredicatesGuard(OH_Predicates* p) : predicates(p) {}
-        ~PredicatesGuard() {
+        ~PredicatesGuard()
+        {
             if (predicates) {
                 predicates->destroy(predicates);
             }
         }
-        OH_Predicates* get() const { return predicates; }
+        OH_Predicates* get() const
+        {
+            return predicates;
+        }
     };
 
-    struct VObjectGuard {
+    struct VObjectGuard
+    {
         OH_VObject* object;
         explicit VObjectGuard(OH_VObject* o) : object(o) {}
-        ~VObjectGuard() {
+        ~VObjectGuard()
+        {
             if (object) {
                 object->destroy(object);
             }
         }
-        OH_VObject* get() const { return object; }
+        OH_VObject* get() const
+        {
+            return object;
+        }
     };
 
-    struct TransactionGuard {
+    struct TransactionGuard
+    {
         OH_Rdb_Transaction* trans;
         explicit TransactionGuard(OH_Rdb_Transaction* t) : trans(t) {}
-        ~TransactionGuard() {
+        ~TransactionGuard()
+        {
             if (trans) {
                 OH_RdbTrans_Destroy(trans);
             }
         }
-        OH_Rdb_Transaction* get() const { return trans; }
+        OH_Rdb_Transaction* get() const
+        {
+            return trans;
+        }
     };
 
-    struct AssetsGuard {
+    struct AssetsGuard
+    {
         Data_Asset** assets;
         int count;
         AssetsGuard(Data_Asset** a, int c) : assets(a), count(c) {}
-        ~AssetsGuard() {
+        ~AssetsGuard()
+        {
             if (assets) {
                 OH_Data_Asset_DestroyMultiple(assets, count);
             }
         }
-        Data_Asset** get() const { return assets; }
+        Data_Asset** get() const
+        {
+            return assets;
+        }
     };
 
-    struct VBucketsGuard {
+    struct VBucketsGuard
+    {
         OH_Data_VBuckets* buckets;
         explicit VBucketsGuard(OH_Data_VBuckets* b) : buckets(b) {}
-        ~VBucketsGuard() {
+        ~VBucketsGuard()
+        {
             if (buckets) {
                 OH_VBuckets_Destroy(buckets);
             }
         }
-        OH_Data_VBuckets* get() const { return buckets; }
+        OH_Data_VBuckets* get() const
+        {
+            return buckets;
+        }
     };
 };
 
@@ -357,20 +392,24 @@ void RdbStoreReturningTest::TearDown(void)
 // ==================== Test Data Helper Structures ====================
 
 // Base structure for common test data management
-struct BaseTestData {
+struct BaseTestData
+{
     OH_RDB_ReturningContext *context = nullptr;
     OH_Rdb_Transaction *trans = nullptr;
 
-    BaseTestData(std::vector<const char *> fields) {
+    BaseTestData(std::vector<const char *> fields)
+    {
         context = RdbStoreReturningTest::CreateReturningContext(fields);
     }
 
     BaseTestData(OH_Rdb_Store *store, std::vector<const char *> fields)
-        : BaseTestData(fields) {
+        : BaseTestData(fields)
+    {
         trans = RdbStoreReturningTest::CreateTransaction(store);
     }
 
-    virtual ~BaseTestData() {
+    virtual ~BaseTestData()
+    {
         if (context) {
             OH_RDB_DestroyReturningContext(context);
             context = nullptr;
@@ -387,51 +426,60 @@ struct BaseTestData {
 };
 
 // Batch insert test data structure
-struct BatchInsertInputData : public BaseTestData {
+struct BatchInsertInputData : public BaseTestData
+{
     OH_VBucket *valueBucket = nullptr;
     OH_Data_VBuckets *rows = nullptr;
     Data_Asset **assets = nullptr;
 
     BatchInsertInputData(std::vector<const char *> fields)
-        : BaseTestData(fields) {
+        : BaseTestData(fields)
+    {
         Initialize();
     }
 
     BatchInsertInputData(OH_Rdb_Store *store, std::vector<const char *> fields)
-        : BaseTestData(store, fields) {
+        : BaseTestData(store, fields)
+    {
         Initialize();
     }
 
-    ~BatchInsertInputData() override {
+    ~BatchInsertInputData() override
+    {
         Cleanup();
     }
 
-    void PutRows() {
+    void PutRows()
+    {
         int ret = OH_VBuckets_PutRow(rows, valueBucket);
         EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
     }
 
-    void PutRepeatAsset() {
+    void PutRepeatAsset()
+    {
         for (int i = 0; i < ASSETS_COUNT; ++i) {
             OH_Data_Asset_SetName(assets[i], REPEAT_ASSET_NAME);
         }
         OH_VBucket_PutAssets(valueBucket, "DATAS", assets, ASSETS_COUNT);
     }
 
-    void EmptyRows() {
+    void EmptyRows()
+    {
         OH_VBuckets_Destroy(rows);
         rows = OH_VBuckets_Create();
         ASSERT_NE(rows, nullptr);
     }
 
 private:
-    void Initialize() {
+    void Initialize()
+    {
         valueBucket = RdbStoreReturningTest::CreateOneVBucket();
         rows = RdbStoreReturningTest::CreateOneVBuckets();
         assets = OH_Data_Asset_CreateMultiple(ASSETS_COUNT);
     }
 
-    void Cleanup() {
+    void Cleanup()
+    {
         OH_VBuckets_Destroy(rows);
         if (valueBucket) {
             valueBucket->destroy(valueBucket);
@@ -441,26 +489,31 @@ private:
 };
 
 // Delete operation test data structure
-struct DeleteInputData : public BaseTestData {
+struct DeleteInputData : public BaseTestData
+{
     OH_VObject *valueObject = nullptr;
     OH_Predicates *predicates = nullptr;
 
     DeleteInputData(const char *table, std::vector<const char *> fields)
-        : BaseTestData(fields) {
+        : BaseTestData(fields)
+    {
         Initialize(table);
     }
 
     DeleteInputData(OH_Rdb_Store *store, const char *table, std::vector<const char *> fields)
-        : BaseTestData(store, fields) {
+        : BaseTestData(store, fields)
+    {
         Initialize(table);
     }
 
-    ~DeleteInputData() override {
+    ~DeleteInputData() override
+    {
         Cleanup();
     }
 
 private:
-    void Initialize(const char *table) {
+    void Initialize(const char *table)
+    {
         valueObject = OH_Rdb_CreateValueObject();
         valueObject->putText(valueObject, DEFAULT_NAME);
         predicates = OH_Rdb_CreatePredicates(table);
@@ -468,7 +521,8 @@ private:
         predicates->equalTo(predicates, "NAME", valueObject);
     }
 
-    void Cleanup() {
+    void Cleanup()
+    {
         if (predicates) {
             predicates->destroy(predicates);
         }
@@ -479,26 +533,31 @@ private:
 };
 
 // Update operation test data structure
-struct UpdateInputData : public BaseTestData {
+struct UpdateInputData : public BaseTestData
+{
     OH_VBucket *valueBucketUpdate = nullptr;
     OH_VObject *valueObject = nullptr;
     OH_Predicates *predicates = nullptr;
 
     UpdateInputData(const char *table, std::vector<const char *> fields)
-        : BaseTestData(fields) {
+        : BaseTestData(fields)
+    {
         Initialize(table);
     }
 
     UpdateInputData(OH_Rdb_Store *store, const char *table, std::vector<const char *> fields)
-        : BaseTestData(store, fields) {
+        : BaseTestData(store, fields)
+    {
         Initialize(table);
     }
 
-    ~UpdateInputData() override {
+    ~UpdateInputData() override
+    {
         Cleanup();
     }
 
-    void EmptyValueBucketUpdate() {
+    void EmptyValueBucketUpdate()
+    {
         if (valueBucketUpdate) {
             valueBucketUpdate->destroy(valueBucketUpdate);
         }
@@ -507,7 +566,8 @@ struct UpdateInputData : public BaseTestData {
     }
 
 private:
-    void Initialize(const char *table) {
+    void Initialize(const char *table)
+    {
         valueBucketUpdate = RdbStoreReturningTest::CreateOneUpdateVBucket();
         valueObject = OH_Rdb_CreateValueObject();
         valueObject->putText(valueObject, DEFAULT_NAME);
@@ -516,7 +576,8 @@ private:
         predicates->equalTo(predicates, "NAME", valueObject);
     }
 
-    void Cleanup() {
+    void Cleanup()
+    {
         if (predicates) {
             predicates->destroy(predicates);
         }
