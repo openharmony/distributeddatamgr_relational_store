@@ -630,20 +630,14 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
 
       let store: relationalStore.RdbStore | undefined = undefined;
       try {
-        // 1. Create encrypted database with custom key
-        // Using cryptoParam bypasses auto-generated key file mechanism
-        hilog.info(DOMAIN, TAG, "Step 1: Create encrypted database with custom key");
-        const customKey = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-          17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+        // 1. Create encrypted database without cryptoParam
+        // System will auto-generate key and save to key file
+        hilog.info(DOMAIN, TAG, "Step 1: Create encrypted database (system auto-generates key)");
         const storeConfig: relationalStore.StoreConfig = {
           name: dbName,
           securityLevel: relationalStore.SecurityLevel.S1,
           encrypt: true,
-          cryptoParam: {
-            encryptionKey: customKey,
-            iterationCount: 4096
-          },
-          allowRebuild: false  // Disable auto-rebuild to prevent service recovery
+          allowRebuild: false  // Disable auto-rebuild
         };
         store = relationalStore.getRdbStoreSync(context, storeConfig);
         store.executeSync(SQL_CREATE_TABLE);
@@ -656,23 +650,32 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         const keyExists = fs.accessSync(dbPathKey);
         hilog.info(DOMAIN, TAG, `Step 2: Database exists: ${dbExists}, Key file exists: ${keyExists}`);
 
-        // 2. Try to open database with wrong key
-        // This simulates corrupted/lost key scenario
-        hilog.info(DOMAIN, TAG, "Step 3: Try to open database with wrong key");
-        const wrongKey = new Uint8Array([32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17,
-          16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
-        const wrongKeyConfig: relationalStore.StoreConfig = {
+        // 2. Delete key file to prevent system from reading it
+        hilog.info(DOMAIN, TAG, "Step 3: Delete key file");
+        if (fs.accessSync(dbPathKey)) {
+          fs.unlinkSync(dbPathKey);
+          hilog.info(DOMAIN, TAG, `Deleted key file: ${dbPathKey}`);
+        }
+
+        // 3. Try to open database with empty cryptoParam
+        // This should trigger E_INVALID_SECRET_KEY (14800020) because:
+        // - Key file was deleted
+        // - Empty cryptoParam means no key provided
+        // - System cannot recover key
+        // - SetEncryptKey checks key.empty() and returns E_INVALID_SECRET_KEY
+        hilog.info(DOMAIN, TAG, "Step 4: Try to open database with empty cryptoParam");
+        const emptyKeyConfig: relationalStore.StoreConfig = {
           name: dbName,
           securityLevel: relationalStore.SecurityLevel.S1,
           encrypt: true,
           cryptoParam: {
-            encryptionKey: wrongKey,
+            encryptionKey: new Uint8Array(),  // Empty key - should trigger 14800020
             iterationCount: 4096
           },
           allowRebuild: false
         };
 
-        store = relationalStore.getRdbStoreSync(context, wrongKeyConfig);
+        store = relationalStore.getRdbStoreSync(context, emptyKeyConfig);
         store.executeSync(SQL_CREATE_TABLE);
         store.insertSync('EMPLOYEE', valueBucket);
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest012: Should have thrown an error");
@@ -682,12 +685,10 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Caught expected error. Code:${err.code}, message:${err.message}`);
         const errorCode = Number(err.code);
         // Based on C++ code analysis:
-        // - 14800011 (E_SQLITE_CORRUPT): SQLite cannot decrypt database with wrong key
-        // - 14800020 (E_INVALID_SECRET_KEY): Only when key is empty (not possible with cryptoParam)
-        // Using wrong key with cryptoParam should trigger 14800011
-        const isValidError = errorCode === 14800011 || errorCode === 14800020;
-        hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Error code ${errorCode} is ${isValidError ? 'valid' : 'invalid'}`);
-        expect(isValidError).assertTrue();
+        // - SetEncryptKey checks if (key.empty()) and returns E_INVALID_SECRET_KEY (14800020)
+        // - After your fix to GetRdbStoreSync, this error code should reach TS layer
+        hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Error code: ${errorCode}, Expected: 14800020`);
+        expect(errorCode).assertEqual(14800020);
       } finally {
         store?.close();
         await cleanupDatabaseFiles(dbName);

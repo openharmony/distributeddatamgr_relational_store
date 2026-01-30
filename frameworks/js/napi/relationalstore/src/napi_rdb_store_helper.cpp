@@ -160,7 +160,8 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
         DefaultOpenCallback callback;
         context->proxy =
             RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
-        if (errCode == E_INVALID_SECRET_KEY) {
+        // If the API version is less than 14, throw E_INVALID_ARGS.
+        if (errCode == E_INVALID_SECRET_KEY && JSUtils::GetHapVersion() < 14) {
             errCode = E_INVALID_ARGS;
         }
         return errCode;
