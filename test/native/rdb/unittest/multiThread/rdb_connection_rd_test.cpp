@@ -87,6 +87,9 @@ RdbMultiThreadConnectionRdTest::RdbMultiThreadConnectionRdTest()
 
 void RdbMultiThreadConnectionRdTest::SetUpTestCase(void)
 {
+    if (!RdbHelper::IsSupportArkDataDb()) {
+        GTEST_SKIP() << "VectorDb is not supported, skipping the test suite.";
+    }
 }
 
 void RdbMultiThreadConnectionRdTest::TearDownTestCase(void)
@@ -105,7 +108,7 @@ void RdbMultiThreadConnectionRdTest::TearDown(void)
 }
 
 /**
- * @tc.name: MultiThread_Connection_0001
+ * @tc.name: MultiThread_BeginTransTest_0001
  *           test if two threads can begin trans and commit in order without conflicting
  * @tc.desc: 1.thread 1: begin trans and commit
  *           2.thread 2: begin trans and commit
@@ -141,7 +144,7 @@ HWTEST_F(RdbMultiThreadConnectionRdTest, MultiThread_BeginTransTest_0001, TestSi
 }
 
 /**
- * @tc.name: MultiThread_Connection_0002
+ * @tc.name: MultiThread_BeginTransTest_0002
  *           test if two threads can begin trans and rollback in order without conflicting
  * @tc.desc: 1.thread 1: begin trans and rollback
  *           2.thread 2: begin trans and rollback
