@@ -381,8 +381,8 @@ namespace cloudExtension {
     }
 
     marshallingAppBriefInfo(reply: rpc.MessageSequence, appBriefInfo: Record<string, AppBriefInfo>): void {
-      let keys = Object.keys(appBriefInfo);
-      reply.writeInt(keys.length);
+      let keys = appBriefInfo.keySet();
+      reply.writeInt(keys.size);
       keys.forEach(key => {
         reply.writeString(key);
         let appInfo: AppBriefInfo | undefined = appBriefInfo[key];
@@ -476,8 +476,8 @@ namespace cloudExtension {
       subscribeInfo: cloudExtension.SubscribeInfo | undefined): void {
       if (subscribeInfo !== undefined) {
         reply.writeLong((subscribeInfo as cloudExtension.SubscribeInfo)?.expirationTime as long);
-        let keys: string[] = Object.keys(subscribeInfo.subscribe);
-        reply.writeInt(keys.length);
+        let keys = subscribeInfo.subscribe.keySet();
+        reply.writeInt(keys.size);
         keys.forEach(key => {
           reply.writeString(key);
           let subscribeDatabase: cloudExtension.SubscribeId[] =
@@ -649,8 +649,8 @@ namespace cloudExtension {
     marshallingValueBucket(reply: rpc.MessageSequence,
       valueBucket: Record<string, cloudExtension.CloudType> | undefined): void {
       if (valueBucket !== undefined) {
-        let keys = Object.keys(valueBucket);
-        reply.writeInt(keys.length as int);
+        let keys = valueBucket.keySet();
+        reply.writeInt(keys.size as int);
         keys.forEach(key => {
           reply.writeString(key);
           let value: cloudExtension.CloudType = valueBucket[key] as cloudExtension.CloudType;
