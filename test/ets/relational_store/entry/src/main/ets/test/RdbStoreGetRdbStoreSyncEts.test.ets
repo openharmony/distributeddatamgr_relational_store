@@ -657,25 +657,22 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
           hilog.info(DOMAIN, TAG, `Deleted key file: ${dbPathKey}`);
         }
 
-        // 3. Try to open database with empty cryptoParam
-        // This should trigger E_INVALID_SECRET_KEY (14800020) because:
-        // - Key file was deleted
-        // - Empty cryptoParam means no key provided
-        // - System cannot recover key
-        // - SetEncryptKey checks key.empty() and returns E_INVALID_SECRET_KEY
-        hilog.info(DOMAIN, TAG, "Step 4: Try to open database with empty cryptoParam");
-        const emptyKeyConfig: relationalStore.StoreConfig = {
+        // 3. Try to open database WITHOUT cryptoParam
+        // Key logic:
+        // - Without cryptoParam, GenerateEncryptedKey() returns E_OK early (Line 397)
+        // - cryptoParam_.encryptKey_ remains empty (default empty vector)
+        // - config.GetEncryptKey() returns empty vector
+        // - SetEncryptKey checks key.empty() → returns E_INVALID_SECRET_KEY (14800020)
+        hilog.info(DOMAIN, TAG, "Step 4: Try to open database without cryptoParam after key file deletion");
+        const reopenConfig: relationalStore.StoreConfig = {
           name: dbName,
           securityLevel: relationalStore.SecurityLevel.S1,
           encrypt: true,
-          cryptoParam: {
-            encryptionKey: new Uint8Array(),  // Empty key - should trigger 14800020
-            iterationCount: 4096
-          },
           allowRebuild: false
+          // 🔑 No cryptoParam - this is the key to trigger 14800020!
         };
 
-        store = relationalStore.getRdbStoreSync(context, emptyKeyConfig);
+        store = relationalStore.getRdbStoreSync(context, reopenConfig);
         store.executeSync(SQL_CREATE_TABLE);
         store.insertSync('EMPLOYEE', valueBucket);
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest012: Should have thrown an error");
@@ -685,8 +682,11 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Caught expected error. Code:${err.code}, message:${err.message}`);
         const errorCode = Number(err.code);
         // Based on C++ code analysis:
-        // - SetEncryptKey checks if (key.empty()) and returns E_INVALID_SECRET_KEY (14800020)
-        // - After your fix to GetRdbStoreSync, this error code should reach TS layer
+        // - Without cryptoParam: GenerateEncryptedKey() returns E_OK early (Line 397)
+        // - cryptoParam_.encryptKey_ remains empty (default empty vector)
+        // - config.GetEncryptKey() returns empty vector
+        // - SetEncryptKey checks key.empty() → returns E_INVALID_SECRET_KEY (14800020)
+        // - After your GetRdbStoreSync fix, this error code reaches TS layer (not converted to 14800001)
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Error code: ${errorCode}, Expected: 14800020`);
         expect(errorCode).assertEqual(14800020);
       } finally {
