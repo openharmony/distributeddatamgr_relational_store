@@ -1467,20 +1467,35 @@ describe('rdbStoreTest', function () {
      */
     it('testRdbStore0055', 0, async (done) => {
         console.log(TAG + "************* testRdbStore0055 start *************");
+        let customType = data_relationalStore.Tokenizer.CUSTOM_TOKENIZER;
+        let customTypeSupported = data_relationalStore.isTokenizerSupported(customType);
+        console.info(TAG + "custom tokenizer supported on current platform: " + customTypeSupported);
         let storeConfig = {
             name: "testSupportTokenizer.db",
             securityLevel: data_relationalStore.SecurityLevel.S1,
             tokenizer: data_relationalStore.Tokenizer.CUSTOM_TOKENIZER,
         }
-        try {
-            await data_relationalStore.getRdbStore(context, storeConfig);
-            expect().assertFail();
-        } catch (e) {
-            console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
-            expect(String(e.code)).assertEqual(String(801));
-            console.info(TAG + "************* testRdbStore0055 end   *************");
-            done();
+        if (customTypeSupported == false){
+            console.info(TAG + "custom tokenizer not supported ");
+            try {
+                await data_relationalStore.getRdbStore(context, storeConfig);
+                expect().assertFail();
+            } catch (e) {
+                console.log("catch err: failed, err: code=" + e.code + " message=" + e.message);
+                expect(String(e.code)).assertEqual(String(801));
+            }
+        } else {
+            try {
+                let store = await data_relationalStore.getRdbStore(context, storeConfig);
+                console.log(TAG + "getRdbStore done");
+                await store.close();
+                store = null;
+            } catch (e) {
+                expect().assertFail();
+            }
         }
+        done();
+        console.info(TAG + "************* testRdbStore0055 end   *************");
     })
 
     /**
