@@ -17,7 +17,8 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 import hilog from '@ohos.hilog';
 import relationalStore from '@ohos.data.relationalStore';
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
-import fileio from '@ohos.fileio';
+import fs from '@ohos.file.fs';
+import { BusinessError } from '@ohos.base';
 
 const delegator = AbilityDelegatorRegistry.getAbilityDelegator();
 const context = delegator.getAppContext().getApplicationContext();
@@ -48,45 +49,17 @@ const valueBucket: relationalStore.ValuesBucket = {
  * Corrupt database file to simulate database corruption
  * @param fileName Database file path
  */
-async function corruptDatabaseFile(fileName: string): Promise<void> {
-  // fileio.accessSync throws if file doesn't exist
-  fileio.accessSync(fileName);
-  expect(true).assertTrue();
-  let stat = await new Promise<fileio.Stat>((resolve, reject) => {
-    fileio.stat(fileName, (err, stat) => {
-      if (err) reject(err);
-      else resolve(stat);
-    });
-  });
-  let file = await new Promise<fileio.File>((resolve, reject) => {
-    fileio.open(fileName, fileio.OpenMode.READ_WRITE, (err, file) => {
-      if (err) reject(err);
-      else resolve(file);
-    });
-  });
-  await new Promise<void>((resolve, reject) => {
-    fileio.lseek(file.fd, 0, fileio.WhenceType.SEEK_SET, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+async function corruptDatabaseFile(fileName: string)
+{
+  let stat = await fs.stat(fileName);
+  let file = await fs.open(fileName, fs.OpenMode.READ_WRITE);
+  fs.lseek(file.fd, 0, fs.WhenceType.SEEK_SET);
   let bufferSize = stat.size;
   let buffer = new ArrayBuffer(bufferSize);
   let uint8Array = new Uint8Array(buffer);
   let fChar = 'F'.charCodeAt(0);
   uint8Array.fill(fChar);
-  await new Promise<void>((resolve, reject) => {
-    fileio.write(file.fd, buffer, { offset: 0, length: bufferSize }, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
-  await new Promise<void>((resolve, reject) => {
-    fileio.close(file.fd, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+  await fs.write(file.fd, buffer, { offset: 0, length: bufferSize });
 }
 
 /**
@@ -94,10 +67,10 @@ async function corruptDatabaseFile(fileName: string): Promise<void> {
  * @param filePath Database file path
  */
 async function moveDatabaseFile(filePath: string): Promise<void> {
-  // fileio.accessSync throws if file doesn't exist
-  fileio.accessSync(filePath);
+  // fs.accessSync throws if file doesn't exist
+  fs.accessSync(filePath);
   expect(true).assertTrue();
-  fileio.unlinkSync(filePath);
+  fs.unlinkSync(filePath);
 }
 
 /**
@@ -105,21 +78,11 @@ async function moveDatabaseFile(filePath: string): Promise<void> {
  * @param filePath File path
  */
 async function changeFileModeOnlyRead(filePath: string): Promise<void> {
-  // fileio.accessSync throws if file doesn't exist
-  fileio.accessSync(filePath);
+  // fs.accessSync throws if file doesn't exist
+  fs.accessSync(filePath);
   expect(true).assertTrue();
-  let file = await new Promise<fileio.File>((resolve, reject) => {
-    fileio.open(filePath, fileio.OpenMode.READ_ONLY, (err, file) => {
-      if (err) reject(err);
-      else resolve(file);
-    });
-  });
-  await new Promise<void>((resolve, reject) => {
-    fileio.close(file.fd, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+  let file = await fs.open(filePath, fs.OpenMode.READ_ONLY);
+  await fs.close(file.fd);
 }
 
 /**
@@ -133,23 +96,23 @@ async function cleanupDatabaseFiles(dbName: string): Promise<void> {
   const dbPathKey = context.databaseDir + "/rdb/key/" + dbName.replace('.db', '.pub_key_v2');
 
   try {
-    fileio.accessSync(dbPath);
-    fileio.unlinkSync(dbPath);
+    fs.accessSync(dbPath);
+    fs.unlinkSync(dbPath);
   } catch (e) {
   }
   try {
-    fileio.accessSync(dbPathWal);
-    fileio.unlinkSync(dbPathWal);
+    fs.accessSync(dbPathWal);
+    fs.unlinkSync(dbPathWal);
   } catch (e) {
   }
   try {
-    fileio.accessSync(dbPathShm);
-    fileio.unlinkSync(dbPathShm);
+    fs.accessSync(dbPathShm);
+    fs.unlinkSync(dbPathShm);
   } catch (e) {
   }
   try {
-    fileio.accessSync(dbPathKey);
-    fileio.unlinkSync(dbPathKey);
+    fs.accessSync(dbPathKey);
+    fs.unlinkSync(dbPathKey);
   } catch (e) {
   }
 }
@@ -247,7 +210,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.info(DOMAIN, TAG, "getRdbStoreSyncTest001: All steps passed");
         done();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.error(DOMAIN, TAG, `getRdbStoreSyncTest001 failed. Code:${err.code}, message:${err.message}`);
         expect().assertFail();
       } finally {
@@ -282,7 +245,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest002: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest002: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
       } finally {
@@ -322,7 +285,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest003: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest003: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
       } finally {
@@ -358,7 +321,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest004: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest004: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
       } finally {
@@ -396,7 +359,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest005: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest005: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
       } finally {
@@ -430,7 +393,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest006: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest006: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14800001).assertEqual(Number(err.code));
       } finally {
@@ -465,7 +428,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest007: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest007: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14800010).assertEqual(Number(err.code));
       } finally {
@@ -521,7 +484,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest008: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest008: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14800011).assertEqual(Number(err.code));
       } finally {
@@ -558,7 +521,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.warn(DOMAIN, TAG, "getRdbStoreSyncTest009: Test may pass in Stage mode");
         // Don't force failure as it might be running in Stage mode
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest009: Caught expected error. Code:${err.code}, message:${err.message}`);
         // Expect 14801001 in non-Stage mode
         if (Number(err.code) === 14801001) {
@@ -594,7 +557,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest010: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest010: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14801002).assertEqual(Number(err.code));
       } finally {
@@ -635,7 +598,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest011: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest011: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14800017).assertEqual(Number(err.code));
       } finally {
@@ -682,12 +645,12 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         let dbExists = false;
         let keyExists = false;
         try {
-          fileio.accessSync(dbPath);
+          fs.accessSync(dbPath);
           dbExists = true;
         } catch (e) {
         }
         try {
-          fileio.accessSync(dbPathKey);
+          fs.accessSync(dbPathKey);
           keyExists = true;
         } catch (e) {
         }
@@ -696,8 +659,8 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         // 2. Delete key file to prevent system from reading it
         hilog.info(DOMAIN, TAG, "Step 3: Delete key file");
         try {
-          fileio.accessSync(dbPathKey);
-          fileio.unlinkSync(dbPathKey);
+          fs.accessSync(dbPathKey);
+          fs.unlinkSync(dbPathKey);
           hilog.info(DOMAIN, TAG, `Deleted key file: ${dbPathKey}`);
         } catch (e) {
         }
@@ -723,7 +686,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest012: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Caught expected error. Code:${err.code}, message:${err.message}`);
         const errorCode = Number(err.code);
         // Based on C++ code analysis:
@@ -768,7 +731,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest013: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest013: Caught expected error. Code:${err.code}, message:${err.message}`);
         expect(14800021).assertEqual(Number(err.code));
       } finally {
@@ -834,7 +797,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         // If we reach here, the test condition couldn't be simulated
         hilog.warn(DOMAIN, TAG, "getRdbStoreSyncTest014: Could not simulate readonly condition, skipping test");
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest014: Caught expected error. Code:${err.code}, message:${err.message}`);
         const errorCode = Number(err.code);
         if (!isNaN(errorCode)) {
@@ -888,7 +851,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         // If we reach here, I/O error couldn't be simulated
         hilog.warn(DOMAIN, TAG, "getRdbStoreSyncTest015: Could not simulate I/O error, skipping test");
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest015: Caught expected error. Code:${err.code}, message:${err.message}`);
         const errorCode = Number(err.code);
         if (!isNaN(errorCode)) {
@@ -934,7 +897,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         // If we reach here, database full error couldn't be simulated
         hilog.warn(DOMAIN, TAG, "getRdbStoreSyncTest016: Could not simulate database full condition, skipping test");
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest016: Caught expected error. Code:${err.code}, message:${err.message}`);
         const errorCode = Number(err.code);
         if (!isNaN(errorCode)) {
@@ -971,7 +934,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest017: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
-        const err = e as { code: number, message: string };
+        const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest017: Caught expected error. Code:${err.code}, message:${err.message}`);
         const errorCode = Number(err.code);
         if (!isNaN(errorCode)) {
