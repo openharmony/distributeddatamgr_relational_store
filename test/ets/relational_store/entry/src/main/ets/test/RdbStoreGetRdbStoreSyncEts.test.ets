@@ -442,51 +442,52 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
     /**
      * @tc.name rdb store getRdbStoreSync with corrupted database
      * @tc.number getRdbStoreSyncTest008
-     * @tc.desc Abnormal parameter, database corruption (database file corrupted)
+     * @tc.desc Abnormal parameter, database corruption (wrong encryption key causes decryption failure)
      * @tc.expect Throw exception, 14800011 Database is corrupted
      */
     it('getRdbStoreSyncTest008', 0, async (done: Function) => {
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest008 start *************");
 
-      const dbName = RDB_TEST_NAME;
-      const dbPath = context.databaseDir + "/rdb/" + dbName;
-      const dbPathWal = dbPath + "-wal";
-      const dbPathShm = dbPath + "-shm";
+      // Define custom encryption key
+      let cryptoParam: relationalStore.CryptoParam = {
+        encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
+      };
 
       const storeConfig: relationalStore.StoreConfig = {
-        name: dbName,
-        securityLevel: relationalStore.SecurityLevel.S1,
-        allowRebuild: false,
+        name: RDB_TEST_NAME,
+        securityLevel: relationalStore.SecurityLevel.S2,
+        cryptoParam: cryptoParam
       };
 
       let store: relationalStore.RdbStore | undefined = undefined;
       try {
-        // 1. Create database and insert data
-        hilog.info(DOMAIN, TAG, "Step 1: Create database and insert data");
+        // 1. Create encrypted database with custom key [1, 2, 3, 4, 5, 6]
+        hilog.info(DOMAIN, TAG, "Step 1: Create encrypted database with key [1,2,3,4,5,6]");
         store = relationalStore.getRdbStoreSync(context, storeConfig);
         store.executeSync(SQL_CREATE_TABLE);
-        for (let i = 0; i < 100; i++) {
-          store.insertSync('EMPLOYEE', valueBucket);
-        }
+        store.insertSync('EMPLOYEE', valueBucket);
         store.close();
         store = undefined;
+        hilog.info(DOMAIN, TAG, "getRdbStoreSyncTest008: Database created and closed successfully");
 
-        // 2. Corrupt database files
-        hilog.info(DOMAIN, TAG, "Step 2: Corrupt database files");
-        await corruptDatabaseFile(dbPath);
-        await corruptDatabaseFile(dbPathWal);
-        await corruptDatabaseFile(dbPathShm);
+        // 2. Modify encryption key to a different value [6, 5, 4, 3, 2, 1]
+        hilog.info(DOMAIN, TAG, "Step 2: Change encryption key to [6,5,4,3,2,1]");
+        cryptoParam.encryptionKey = new Uint8Array([6, 5, 4, 3, 2, 1]);
 
-        // 3. Try to open corrupted database
-        hilog.info(DOMAIN, TAG, "Step 3: Try to open corrupted database");
+        // 3. Try to open database with wrong key
+        // This will cause SQLite decryption to fail with E_SQLITE_CORRUPT
+        hilog.info(DOMAIN, TAG, "Step 3: Try to open database with wrong key");
         store = relationalStore.getRdbStoreSync(context, storeConfig);
-        store.insertSync('EMPLOYEE', valueBucket);
+        store.close();
         hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest008: Should have thrown an error");
         expect().assertFail();
       } catch (e) {
         const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest008: Caught expected error. Code:${err.code}, message:${err.message}`);
+        // Using wrong encryption key causes SQLite to fail decryption
+        // Result: E_SQLITE_CORRUPT (14800011)
         expect(14800011).assertEqual(Number(err.code));
+        hilog.info(DOMAIN, TAG, "getRdbStoreSyncTest008: Successfully caught 14800011 error");
       } finally {
         store?.close();
         await relationalStore.deleteRdbStore(context, storeConfig);
