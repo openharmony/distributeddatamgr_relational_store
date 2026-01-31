@@ -624,60 +624,54 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       const dbPath = context.databaseDir + "/rdb/" + dbName;
       const dbPathKey = context.databaseDir + "/rdb/key/" + dbName.replace('.db', '.pub_key_v2');
 
+      // New file names after rename
+      const newDbName = 'RdbTestCorrupted.db';
+      const newDbPath = context.databaseDir + "/rdb/" + newDbName;
+      const newDbPathKey = context.databaseDir + "/rdb/key/" + newDbName.replace('.db', '.pub_key_v2');
+
       let store: relationalStore.RdbStore | undefined = undefined;
       try {
-        // 1. Create encrypted database without cryptoParam
-        // System will auto-generate key and save to key file
-        hilog.info(DOMAIN, TAG, "Step 1: Create encrypted database (system auto-generates key)");
+        // Step 1: Create encrypted database
+        hilog.info(DOMAIN, TAG, "Step 1: Create encrypted database");
         const storeConfig: relationalStore.StoreConfig = {
           name: dbName,
           securityLevel: relationalStore.SecurityLevel.S1,
           encrypt: true,
-          allowRebuild: false  // Disable auto-rebuild
         };
         store = relationalStore.getRdbStoreSync(context, storeConfig);
         store.executeSync(SQL_CREATE_TABLE);
         store.insertSync('EMPLOYEE', valueBucket);
         store.close();
         store = undefined;
+        hilog.info(DOMAIN, TAG, "Step 1: Encrypted database created successfully");
 
-        // Diagnostic: Check if files exist
-        let dbExists = false;
-        let keyExists = false;
-        try {
-          fs.accessSync(dbPath);
-          dbExists = true;
-        } catch (e) {
-        }
-        try {
-          fs.accessSync(dbPathKey);
-          keyExists = true;
-        } catch (e) {
-        }
-        hilog.info(DOMAIN, TAG, `Step 2: Database exists: ${dbExists}, Key file exists: ${keyExists}`);
+        // Step 2: Rename database and key files, then corrupt the key file
+        hilog.info(DOMAIN, TAG, "Step 2: Rename database and key files");
+        fs.renameSync(dbPath, newDbPath);
+        hilog.info(DOMAIN, TAG, `Renamed database: ${dbPath} -> ${newDbPath}`);
 
-        // 2. Delete key file to prevent system from reading it
-        hilog.info(DOMAIN, TAG, "Step 3: Delete key file");
+        // Rename key file if it exists
         try {
           fs.accessSync(dbPathKey);
-          fs.unlinkSync(dbPathKey);
-          hilog.info(DOMAIN, TAG, `Deleted key file: ${dbPathKey}`);
+          fs.renameSync(dbPathKey, newDbPathKey);
+          hilog.info(DOMAIN, TAG, `Renamed key file: ${dbPathKey} -> ${newDbPathKey}`);
         } catch (e) {
+          hilog.warn(DOMAIN, TAG, "Key file does not exist, skipping rename");
         }
 
-        // 3. Try to open database WITHOUT cryptoParam
-        // Key logic:
-        // - Without cryptoParam, GenerateEncryptedKey() returns E_OK early (Line 397)
-        // - cryptoParam_.encryptKey_ remains empty (default empty vector)
-        // - config.GetEncryptKey() returns empty vector
-        // - SetEncryptKey checks key.empty() → returns E_INVALID_SECRET_KEY (14800020)
-        hilog.info(DOMAIN, TAG, "Step 4: Try to open database without cryptoParam after key file deletion");
+        // Corrupt the renamed key file
+        hilog.info(DOMAIN, TAG, "Step 3: Corrupt the renamed key file");
+        await corruptDatabaseFile(newDbPathKey);
+        hilog.info(DOMAIN, TAG, `Corrupted key file: ${newDbPathKey}`);
+
+        // Step 4: Try to open the renamed database with corrupted key
+        // This should trigger E_INVALID_SECRET_KEY (14800020)
+        hilog.info(DOMAIN, TAG, "Step 4: Try to open database with corrupted key");
         const reopenConfig: relationalStore.StoreConfig = {
-          name: dbName,
+          name: newDbName,
           securityLevel: relationalStore.SecurityLevel.S1,
           encrypt: true,
-          allowRebuild: false
-          // 🔑 No cryptoParam - this is the key to trigger 14800020!
+          allowRebuild: false  // Disable auto-rebuild to ensure error is thrown
         };
 
         store = relationalStore.getRdbStoreSync(context, reopenConfig);
@@ -689,17 +683,13 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
         const err = e as BusinessError;
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Caught expected error. Code:${err.code}, message:${err.message}`);
         const errorCode = Number(err.code);
-        // Based on C++ code analysis:
-        // - Without cryptoParam: GenerateEncryptedKey() returns E_OK early (Line 397)
-        // - cryptoParam_.encryptKey_ remains empty (default empty vector)
-        // - config.GetEncryptKey() returns empty vector
-        // - SetEncryptKey checks key.empty() → returns E_INVALID_SECRET_KEY (14800020)
-        // - After your GetRdbStoreSync fix, this error code reaches TS layer (not converted to 14800001)
         hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest012: Error code: ${errorCode}, Expected: 14800020`);
         expect(errorCode).assertEqual(14800020);
       } finally {
         store?.close();
+        // Clean up both original and renamed database files
         await cleanupDatabaseFiles(dbName);
+        await cleanupDatabaseFiles(newDbName);
       }
       done();
 
