@@ -308,6 +308,8 @@ void ValuesBucketFuzz(FuzzedDataProvider &provider)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 {
+    (void) argc;
+    (void) argv;
     OHOS::ReturningFuzzTest::SetUpTestCase();
     return 0;
 }

@@ -60,6 +60,7 @@ void CreateAndSetCryptoParam(FuzzedDataProvider &provider, OH_Rdb_ConfigV2 *conf
 
 void TestCorruptedHandler(void *context, OH_Rdb_ConfigV2 *config, OH_Rdb_Store *store)
 {
+    (void) context;
     OH_Rdb_DeleteStoreV2(config);
 }
 

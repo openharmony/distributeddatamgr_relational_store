@@ -28,6 +28,9 @@ using namespace OHOS::Rdb;
 using namespace OHOS::RdbTaihe;
 using ValueType = ohos::data::relationalStore::ValueType;
 using ValueObject = OHOS::NativeRdb::ValueObject;
+using NativeDistributedTableType = OHOS::DistributedRdb::DistributedTableType;
+using NativeDistributedTableMode = OHOS::DistributedRdb::DistributedTableMode;
+using NativeDistributedConfig = OHOS::DistributedRdb::DistributedConfig;
 using ConfigVersion =  OHOS::NativeRdb::ConfigVersion;
 
 class RdbStoreImpl {
@@ -132,7 +135,7 @@ public:
     void LockRowSync(weak::RdbPredicates predicates);
     void UnlockRowSync(weak::RdbPredicates predicates);
     ResultSet QueryLockedRowSync(weak::RdbPredicates predicates, optional_view<array<string>> columns);
-    uint32_t LockCloudContainerSync();
+    int32_t LockCloudContainerSync();
     void UnlockCloudContainerSync();
     Transaction CreateTransactionSync(optional_view<::ohos::data::relationalStore::TransactionOptions> options);
     Result BatchInsertWithReturningSync(string_view table, array_view<ValuesBucket> values,

@@ -60,6 +60,7 @@ void ConfigImpl::DisableCloudImpl(string_view accountId)
     auto work = [&accountId](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->DisableCloud(std::string(accountId));
         if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -107,6 +108,7 @@ void ConfigImpl::NotifyDataChangeWithId(const ExtraData &extInfo, int32_t userId
     auto work = [&extInfo, &userId](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->NotifyDataChange(std::string(extInfo.eventId), std::string(extInfo.extraData), userId);
         if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -126,6 +128,7 @@ void ConfigImpl::NotifyDataChangeBoth(string_view accountId, string_view bundleN
     auto work = [&accountId, &bundleName](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->NotifyDataChange(std::string(accountId), std::string(bundleName));
         if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -201,7 +204,6 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
         ThrowAniError(CloudService::Status::INVALID_ARGUMENT, "Too many app actions");
         return;
     }
-
     auto work = [&accountId, &appActions](std::shared_ptr<CloudService> proxy) {
         std::map<std::string, int32_t> actions;
         std::map<std::string, OHOS::CloudData::ClearConfig> configs;
@@ -211,6 +213,7 @@ void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> 
 
         int32_t code = proxy->Clean(std::string(accountId), actions, configs);
         if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errCode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -241,6 +244,7 @@ void ConfigImpl::ChangeAppCloudSwitchImplWithConfig(string_view accountId, strin
     auto work = [&accountId, &bundleName, &status, &switchConfig](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->ChangeAppSwitch(std::string(accountId), std::string(bundleName), status, switchConfig);
         if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errCode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -277,6 +281,7 @@ void ConfigImpl::ClearImplWithConfig(string_view accountId, map_view<string, Cle
 
         int32_t code = proxy->Clean(std::string(accountId), actions, clearConfig);
         if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errCode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -310,6 +315,7 @@ void ConfigImpl::SetGlobalCloudStrategyImpl(
     auto work = [&strategy, &param, &values](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->SetGlobalCloudStrategy(static_cast<Strategy>(strategy.get_value()), values);
         if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
             ThrowAniError(code);
         }
     };
@@ -335,6 +341,7 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
             status = CloudService::Status::INVALID_ARGUMENT_V20;
         }
         if (status != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", status);
             ThrowAniError(status);
         }
     };
@@ -367,6 +374,7 @@ void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::dat
     auto work = [&strategy, &param, &values](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->SetCloudStrategy(static_cast<Strategy>(strategy.get_value()), values);
         if (code != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", code);
             ThrowAniError(code);
         }
     };

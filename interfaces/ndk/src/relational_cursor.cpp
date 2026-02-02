@@ -186,7 +186,7 @@ int RelationalCursor::Destroy(OH_Cursor *cursor)
     return errCode;
 }
 
-bool RelationalCursor::IsNeedTerminator()
+bool RelationalCursor::IsNeedTerminator() const
 {
     return isNeedTerminator_;
 }
@@ -284,6 +284,9 @@ int RelationalCursor::GoToNextRow()
 {
     if (resultSet_ == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
+    }
+    if (!isSupportRowCount_) {
+        return ConvertorErrorCode::GetInterfaceCodeExtend(resultSet_->GoToNextRow());
     }
     return ConvertorErrorCode::NativeToNdk(resultSet_->GoToNextRow());
 }

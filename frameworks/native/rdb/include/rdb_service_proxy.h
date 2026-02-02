@@ -105,8 +105,6 @@ public:
     int32_t GetDfxInfo(const RdbSyncerParam &param, DistributedRdb::RdbDfxInfo &dfxInfo) override;
 
     int32_t VerifyPromiseInfo(const RdbSyncerParam &param) override;
-
-    int32_t StopCloudSync(const RdbSyncerParam &param) override;
     SyncObservers ExportSyncObservers();
     void ImportSyncObservers(SyncObservers &SyncObservers);
     void OnRemoteDeadSyncComplete();
@@ -141,8 +139,6 @@ private:
     void OnSyncComplete(const std::string &storeName, Details &&result);
 
     void OnDataChange(const Origin &origin, const PrimaryFields &primaries, ChangeInfo &&changeInfo);
-
-    void OnSyncTrigger(const std::string &storeId, int32_t triggerMode);
 
     std::atomic<uint32_t> seqNum_{};
     Observers observers_;

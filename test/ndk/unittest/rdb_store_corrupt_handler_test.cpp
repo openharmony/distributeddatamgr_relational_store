@@ -76,6 +76,7 @@ public:
 
 void RdbStoreCorruptHandlerTest::TestCorruptedHandler(void *context, OH_Rdb_ConfigV2 *config, OH_Rdb_Store *store)
 {
+    (void) context;
     std::string restorePath1 = "/data/storage/el2/database/com.ohos.example.distributedndk/entry/rdb/back_test.db";
     if (store == nullptr) {
         int ret = OH_Rdb_DeleteStoreV2(config);
@@ -88,6 +89,7 @@ void RdbStoreCorruptHandlerTest::TestCorruptedHandler(void *context, OH_Rdb_Conf
 
 void RdbStoreCorruptHandlerTest::TestCorruptedHandler1(void *context, OH_Rdb_ConfigV2 *config, OH_Rdb_Store *store)
 {
+    (void) context;
     std::string restorePath1 = "/data/storage/el2/database/com.ohos.example.distributedndk/entry/rdb/back_test.db";
     if (store == nullptr) {
         return;
