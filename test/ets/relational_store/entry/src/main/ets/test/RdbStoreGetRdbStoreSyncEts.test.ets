@@ -969,8 +969,6 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
 
         // Close database
         hilog.info(DOMAIN, TAG, "Step 3: Close database");
-        store.close();
-        store = undefined;
 
         // Step 4: Open database again with sync getRdbStoreSync interface using same config
         hilog.info(DOMAIN, TAG, "Step 4: Reopen database with getRdbStoreSync (sync)");
@@ -1024,8 +1022,6 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
 
         // Close database
         hilog.info(DOMAIN, TAG, "Step 2: Close database");
-        store.close();
-        store = undefined;
 
         // Step 3: Try to open database with sync getRdbStoreSync interface using changed config
         hilog.info(DOMAIN, TAG, "Step 3: Try to reopen with getRdbStoreSync using changed config");
@@ -1076,8 +1072,6 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
 
         // Close database
         hilog.info(DOMAIN, TAG, "Step 2: Close database");
-        store.close();
-        store = undefined;
 
         // Step 3: Try to open database with async getRdbStore interface using changed config
         hilog.info(DOMAIN, TAG, "Step 3: Try to reopen with getRdbStore (async) using changed config");
