@@ -54,6 +54,7 @@ using namespace OHOS::Rdb;
 using namespace OHOS::RdbTaihe;
 using ValueType = ohos::data::relationalStore::ValueType;
 using ValueObject = OHOS::NativeRdb::ValueObject;
+using ConfigVersion =  OHOS::NativeRdb::ConfigVersion;
 
 constexpr int32_t PARAM_LENGTH_MAX = 256;
 constexpr int32_t VALUESBUCKET_LENGTH_MAX = 1000;
@@ -117,9 +118,14 @@ RdbPredicates CreateRdbPredicates(string_view name)
     return make_holder<RdbPredicatesImpl, RdbPredicates>(std::string(name));
 }
 
+RdbStore GetRdbStoreInner(uintptr_t context, StoreConfig const &config)
+{
+    return make_holder<RdbStoreImpl, RdbStore>(reinterpret_cast<ani_object>(context), config, ConfigVersion::DEFAULT_VERSION);
+}
+
 RdbStore GetRdbStoreSync(uintptr_t context, StoreConfig const &config)
 {
-    return make_holder<RdbStoreImpl, RdbStore>(reinterpret_cast<ani_object>(context), config);
+    return make_holder<RdbStoreImpl, RdbStore>(reinterpret_cast<ani_object>(context), config, ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
 }
 
 void DeleteRdbStoreWithName(uintptr_t context, string_view name)
@@ -333,6 +339,7 @@ SqlInfo GetQuerySqlInfo(weak::RdbPredicates predicates, optional_view<array<stri
 // Since these macros are auto-generate, lint will cause false positive.
 // NOLINTBEGIN
 TH_EXPORT_CPP_API_CreateRdbPredicates(OHOS::RdbTaihe::CreateRdbPredicates);
+TH_EXPORT_CPP_API_GetRdbStoreInner(OHOS::RdbTaihe::GetRdbStoreInner);
 TH_EXPORT_CPP_API_GetRdbStoreSync(OHOS::RdbTaihe::GetRdbStoreSync);
 TH_EXPORT_CPP_API_DeleteRdbStoreWithName(OHOS::RdbTaihe::DeleteRdbStoreWithName);
 TH_EXPORT_CPP_API_DeleteRdbStoreWithConfig(OHOS::RdbTaihe::DeleteRdbStoreWithConfig);

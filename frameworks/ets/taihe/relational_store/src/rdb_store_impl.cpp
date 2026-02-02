@@ -66,10 +66,11 @@ RdbStoreImpl::RdbStoreImpl()
 {
 }
 
-RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config)
+RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config, ConfigVersion version)
 {
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
+    rdbConfig.version = version;
     auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
     isSystemApp_ = rdbConfig.isSystemApp;
     DefaultOpenCallback callback;
@@ -79,9 +80,11 @@ RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config)
         std::string dir = "/data/storage/el2/database/rdb";
         std::string path = dir + "/" + std::string(config.name);
         OHOS::NativeRdb::RdbStoreConfig storeConfig(path);
+        storeConfig.SetVersion(version);
         OHOS::NativeRdb::RdbSqlUtils::CreateDirectory(dir);
         nativeRdbStore_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(storeConfig, -1, callback, errCode);
     } else {
+        configRet.second.SetVersion(version);
         nativeRdbStore_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(configRet.second, -1, callback, errCode);
     }
     if (errCode != OHOS::AppDataMgrJsKit::JSUtils::OK) {

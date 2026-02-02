@@ -28,11 +28,12 @@ using namespace OHOS::Rdb;
 using namespace OHOS::RdbTaihe;
 using ValueType = ohos::data::relationalStore::ValueType;
 using ValueObject = OHOS::NativeRdb::ValueObject;
+using ConfigVersion =  OHOS::NativeRdb::ConfigVersion;
 
 class RdbStoreImpl {
 public:
     RdbStoreImpl();
-    explicit RdbStoreImpl(ani_object context, StoreConfig const &config);
+    explicit RdbStoreImpl(ani_object context, StoreConfig const &config, ConfigVersion version);
     int32_t GetVersion();
     void SetVersion(int32_t veriosn);
     RebuildType GetRebuilt();
