@@ -501,20 +501,13 @@ std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
     using namespace OHOS::NativeRdb;
 
     OHOS::NativeRdb::RdbStoreConfig empty("");
+    bool isConfigNew = (rdbConfig.version == ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
     if (!rdbConfig.cryptoParam.IsValid()) {
-        if (rdbConfig.version == ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED) {
-            taihe::set_business_error(E_INVALID_ARGS, "Illegal CryptoParam.");
-        } else {
-            taihe::set_business_error(E_PARAM_ERROR, "Illegal CryptoParam.");
-        }
+        taihe::set_business_error(isConfigNew ? E_INVALID_ARGS : E_PARAM_ERROR, "Illegal CryptoParam.");
         return std::make_pair(false, empty);
     }
     if (rdbConfig.tokenizer < NONE_TOKENIZER || rdbConfig.tokenizer >= TOKENIZER_END) {
-        if (rdbConfig.version == ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED) {
-            taihe::set_business_error(E_INVALID_ARGS, "Illegal tokenizer.");
-        } else {
-            taihe::set_business_error(E_PARAM_ERROR, "Illegal tokenizer.");
-        }
+        taihe::set_business_error(isConfigNew ? E_INVALID_ARGS : E_PARAM_ERROR, "Illegal tokenizer.");
         return std::make_pair(false, empty);
     }
     if (!RdbHelper::IsSupportedTokenizer(rdbConfig.tokenizer)) {
