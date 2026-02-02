@@ -92,8 +92,7 @@ std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::stri
         Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_CONFIG_INVALID_CHANGE, config, log));
         if (rdbStore->GetConfig().IsMemoryRdb() || config.IsMemoryRdb() ||
             config.GetVersion() >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED ||
-            (rdbStore->GetConfig().GetVersion() >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED &&
-                config.GetVersion() == ConfigVersion::DEFAULT_VERSION)) {
+            rdbStore->GetConfig().GetVersion() >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED) {
             errCode = E_CONFIG_INVALID_CHANGE;
             rdbStore = nullptr;
             return rdbStore;
