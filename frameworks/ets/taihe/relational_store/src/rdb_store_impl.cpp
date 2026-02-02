@@ -97,10 +97,8 @@ RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config)
 
 int32_t RdbStoreImpl::GetVersion()
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     int32_t version = 0;
     int errCode = nativeRdbStore_->GetVersion(version);
     if (errCode != OHOS::NativeRdb::E_OK) {
@@ -111,10 +109,8 @@ int32_t RdbStoreImpl::GetVersion()
 
 void RdbStoreImpl::SetVersion(int32_t veriosn)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->SetVersion(veriosn);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -124,10 +120,8 @@ void RdbStoreImpl::SetVersion(int32_t veriosn)
 RebuildType RdbStoreImpl::GetRebuilt()
 {
     OHOS::NativeRdb::RebuiltType rebuilt = OHOS::NativeRdb::RebuiltType::NONE;
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return (RebuildType::key_t)rebuilt;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), (RebuildType::key_t)rebuilt);
     int errCode = nativeRdbStore_->GetRebuilt(rebuilt);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -143,11 +137,8 @@ void RdbStoreImpl::SetRebuilt(RebuildType type)
 int64_t RdbStoreImpl::InsertWithConflict(string_view table, map_view<string, ValueType> values,
     ConflictResolution conflict)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
-
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     int64_t int64Output = 0;
     OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
     if (ani_rdbutils::HasDuplicateAssets(bucket)) {
@@ -181,10 +172,8 @@ int64_t RdbStoreImpl::InsertSync(
 
 int64_t RdbStoreImpl::BatchInsertSync(string_view table, array_view<map<string, ValueType>> values)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     OHOS::NativeRdb::ValuesBuckets buckets = ani_rdbutils::BucketValuesToNative(values);
     if (ani_rdbutils::HasDuplicateAssets(buckets)) {
         ThrowParamError("Duplicate assets are not allowed");
@@ -207,10 +196,8 @@ int64_t RdbStoreImpl::UpdateWithPredicate(map_view<string, ValueType> values, we
 int64_t RdbStoreImpl::UpdateSync(
     map_view<string, ValueType> values, weak::RdbPredicates predicates, optional_view<ConflictResolution> conflict)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     ConflictResolution conflictResolution = ConflictResolution::key_t::ON_CONFLICT_NONE;
     if (conflict.has_value()) {
         conflictResolution = conflict.value().get_key();
@@ -235,10 +222,8 @@ int64_t RdbStoreImpl::UpdateSync(
 int64_t RdbStoreImpl::UpdateDataShareSync(
     ::taihe::string_view table, ::ohos::data::relationalStore::ValuesBucket const &values, uintptr_t predicates)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return ERR_NULL;
@@ -247,10 +232,8 @@ int64_t RdbStoreImpl::UpdateDataShareSync(
     ani_object object = reinterpret_cast<ani_object>(predicates);
     OHOS::DataShare::DataShareAbsPredicates *holder =
         ani_utils::AniObjectUtils::Unwrap<OHOS::DataShare::DataShareAbsPredicates>(env, object);
-    if (holder == nullptr) {
-        LOG_ERROR("UpdateDataShareSync, holder is nullptr");
-        return 0;
-    }
+    ASSERT_RETURN_THROW_ERROR(
+        holder != nullptr, std::make_shared<ParamError>("predicates", "an DataShare Predicates."), ERR_NULL);
     auto rdbPredicates = OHOS::RdbDataShareAdapter::RdbUtils::ToPredicates(*holder, std::string(table));
     OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values.get_VALUESBUCKET_ref());
 
@@ -267,10 +250,8 @@ int64_t RdbStoreImpl::UpdateDataShareSync(
 
 int64_t RdbStoreImpl::DeleteSync(weak::RdbPredicates predicates)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     if (rdbPredicateNative == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
@@ -287,10 +268,8 @@ int64_t RdbStoreImpl::DeleteSync(weak::RdbPredicates predicates)
 
 int64_t RdbStoreImpl::DeleteDataShareSync(::taihe::string_view table, uintptr_t predicates)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return ERR_NULL;
@@ -299,10 +278,8 @@ int64_t RdbStoreImpl::DeleteDataShareSync(::taihe::string_view table, uintptr_t 
     ani_object object = reinterpret_cast<ani_object>(predicates);
     OHOS::DataShare::DataShareAbsPredicates *holder =
         ani_utils::AniObjectUtils::Unwrap<OHOS::DataShare::DataShareAbsPredicates>(env, object);
-    if (holder == nullptr) {
-        LOG_ERROR("DeleteDataShareSync, holder is nullptr");
-        return 0;
-    }
+    ASSERT_RETURN_THROW_ERROR(
+        holder != nullptr, std::make_shared<ParamError>("predicates", "an DataShare Predicates."), ERR_NULL);
     auto rdbPredicates = OHOS::RdbDataShareAdapter::RdbUtils::ToPredicates(*holder, std::string(table));
     int output = 0;
     int errCode = nativeRdbStore_->Delete(output, rdbPredicates);
@@ -331,50 +308,47 @@ ResultSet RdbStoreImpl::QueryWithOptionalColumn(weak::RdbPredicates predicates, 
 
 ResultSet RdbStoreImpl::QuerySync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), (make_holder<ResultSetImpl, ResultSet>()));
     std::vector<std::string> stdcolumns;
     if (columns.has_value()) {
         stdcolumns = std::vector<std::string>(columns.value().begin(), columns.value().end());
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
     auto nativeResultSet = nativeRdbStore_->Query(*rdbPredicateNative, stdcolumns);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
+        (make_holder<ResultSetImpl, ResultSet>()));
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
 LiteResultSet RdbStoreImpl::QueryWithoutRowCountSync(weak::RdbPredicates predicates,
     optional_view<array<string>> columns)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<LiteResultSetImpl, LiteResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED),
+        (make_holder<LiteResultSetImpl, LiteResultSet>()));
     std::vector<std::string> columnNames;
     if (columns.has_value()) {
         columnNames = std::vector<std::string>(columns.value().begin(), columns.value().end());
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return make_holder<LiteResultSetImpl, LiteResultSet>();
-    }
-    DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."),
+        (make_holder<LiteResultSetImpl, LiteResultSet>()));
+    DistributedRdb::QueryOptions options{ .preCount = false, .isGotoNextRowReturnLastError = true };
     auto nativeResultSet = nativeRdbStore_->QueryByStep(*rdbPredicateNative, columnNames, options);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
+        (make_holder<LiteResultSetImpl, LiteResultSet>()));
     return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
 }
 
 LiteResultSet RdbStoreImpl::QuerySqlWithoutRowCountSync(string_view sql, optional_view<array<ValueType>> bindArgs)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return taihe::make_holder<LiteResultSetImpl, LiteResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED),
+        (make_holder<LiteResultSetImpl, LiteResultSet>()));
     if (sql.empty()) {
         LOG_ERROR("sql is empty");
         ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
@@ -387,8 +361,10 @@ LiteResultSet RdbStoreImpl::QuerySqlWithoutRowCountSync(string_view sql, optiona
             [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
     }
     std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet = nullptr;
-    DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+    DistributedRdb::QueryOptions options{ .preCount = false, .isGotoNextRowReturnLastError = true };
     nativeResultSet = nativeRdbStore_->QueryByStep(std::string(sql), para, options);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
+        (make_holder<LiteResultSetImpl, LiteResultSet>()));
     return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
 }
 
@@ -405,10 +381,8 @@ ResultSet RdbStoreImpl::QueryDataShareSync(::taihe::string_view table, uintptr_t
 ResultSet RdbStoreImpl::QueryDataShareWithColumnSync(
     string_view table, uintptr_t predicates, optional_view<array<::taihe::string>> columns)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return taihe::make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), (make_holder<ResultSetImpl, ResultSet>()));
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return taihe::make_holder<ResultSetImpl, ResultSet>();
@@ -417,16 +391,16 @@ ResultSet RdbStoreImpl::QueryDataShareWithColumnSync(
     ani_object object = reinterpret_cast<ani_object>(predicates);
     OHOS::DataShare::DataShareAbsPredicates *holder =
         ani_utils::AniObjectUtils::Unwrap<OHOS::DataShare::DataShareAbsPredicates>(env, object);
-    if (holder == nullptr) {
-        LOG_ERROR("QueryDataShareSync, holder is nullptr");
-        return taihe::make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(holder != nullptr, std::make_shared<ParamError>("predicates", "an DataShare Predicates."),
+        (make_holder<ResultSetImpl, ResultSet>()));
     std::vector<std::string> stdcolumns;
     if (columns.has_value()) {
         stdcolumns = std::vector<std::string>(columns.value().begin(), columns.value().end());
     }
     auto rdbPredicates = OHOS::RdbDataShareAdapter::RdbUtils::ToPredicates(*holder, std::string(table));
     auto nativeResultSet = nativeRdbStore_->Query(rdbPredicates, stdcolumns);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
+        (make_holder<ResultSetImpl, ResultSet>()));
     return taihe::make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
@@ -443,10 +417,8 @@ ResultSet RdbStoreImpl::QuerySqlWithArgs(string_view sql, array_view<ValueType> 
 
 ResultSet RdbStoreImpl::QuerySqlSync(string_view sql, optional_view<array<ValueType>> bindArgs)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return taihe::make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), (make_holder<ResultSetImpl, ResultSet>()));
     std::vector<OHOS::NativeRdb::ValueObject> para;
     if (bindArgs.has_value()) {
         std::transform(bindArgs.value().begin(), bindArgs.value().end(), std::back_inserter(para),
@@ -462,6 +434,8 @@ ResultSet RdbStoreImpl::QuerySqlSync(string_view sql, optional_view<array<ValueT
         nativeResultSet = nativeRdbStore_->QuerySql(std::string(sql), para);
 #endif
     }
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
+        (make_holder<ResultSetImpl, ResultSet>()));
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
@@ -469,10 +443,8 @@ ModifyTime RdbStoreImpl::GetModifyTimeSync(
     string_view table, string_view columnName, array_view<PRIKeyType> primaryKeys)
 {
     ModifyTime result = ModifyTime::make_MODIFYTIME();
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return result;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), result);
     // Convert parameters to the types required by nativeRdbStore_
     std::string nativeTable(table);
     std::string nativeColumnName(columnName);
@@ -496,10 +468,8 @@ ModifyTime RdbStoreImpl::GetModifyTimeSync(
 
 void RdbStoreImpl::CleanDirtyDataWithCursor(string_view table, uint64_t cursor)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     std::string nativeTable(table);
     int32_t errCode = nativeRdbStore_->CleanDirtyData(nativeTable, cursor);
     if (errCode != OHOS::NativeRdb::E_OK) {
@@ -509,10 +479,8 @@ void RdbStoreImpl::CleanDirtyDataWithCursor(string_view table, uint64_t cursor)
 
 void RdbStoreImpl::CleanDirtyDataWithTable(string_view table)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     std::string nativeTable(table);
     int32_t errCode = nativeRdbStore_->CleanDirtyData(nativeTable, 0);
     if (errCode != OHOS::NativeRdb::E_OK) {
@@ -533,19 +501,15 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithOptionColumn(weak::RdbPredicates
     optional_view<array<string>> columns)
 {
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(errCode);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(errCode), (make_holder<ResultSetImpl, ResultSet>()));
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return make_holder<ResultSetImpl, ResultSet>();
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
     OHOS::NativeRdb::RdbStore::Fields fields;
     if (columns.has_value()) {
         for (const auto &column : columns.value()) {
@@ -564,19 +528,15 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithOptionColumn(weak::RdbPredicates
 ResultSet RdbStoreImpl::QuerySharingResourceWithPredicate(weak::RdbPredicates predicates)
 {
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(errCode);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(errCode), (make_holder<ResultSetImpl, ResultSet>()));
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return make_holder<ResultSetImpl, ResultSet>();
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
     OHOS::NativeRdb::RdbStore::Fields fields;
     auto status = OHOS::NativeRdb::E_ERROR;
     std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSetNative;
@@ -590,19 +550,15 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithPredicate(weak::RdbPredicates pr
 ResultSet RdbStoreImpl::QuerySharingResourceWithColumn(weak::RdbPredicates predicates, array_view<string> columns)
 {
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(errCode);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(errCode), (make_holder<ResultSetImpl, ResultSet>()));
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return make_holder<ResultSetImpl, ResultSet>();
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
     OHOS::NativeRdb::RdbStore::Fields fields;
     for (const auto &column : columns) {
         fields.push_back(std::string(column));
@@ -618,10 +574,8 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithColumn(weak::RdbPredicates predi
 
 void RdbStoreImpl::ExecuteSqlWithSql(string_view sql)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->ExecuteSql(std::string(sql));
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -635,10 +589,8 @@ void RdbStoreImpl::ExecuteSqlWithArgs(string_view sql, array_view<ValueType> bin
 
 void RdbStoreImpl::ExecuteSqlWithOptionArgs(string_view sql, optional_view<array<ValueType>> bindArgs)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (!bindArgs.has_value()) {
         int errCode = nativeRdbStore_->ExecuteSql(std::string(sql));
         if (errCode != OHOS::NativeRdb::E_OK) {
@@ -663,20 +615,16 @@ void RdbStoreImpl::ExecuteSqlWithOptionArgs(string_view sql, optional_view<array
 ValueType RdbStoreImpl::ExecuteWithOptionArgs(string_view sql, optional_view<array<ValueType>> args)
 {
     ValueType aniValue = ::ohos::data::relationalStore::ValueType::make_EMPTY();
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return aniValue;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), aniValue);
     return ExecuteWithTxId(sql, 0, args);
 }
 
 ValueType RdbStoreImpl::ExecuteWithTxId(string_view sql, int64_t txId, optional_view<array<ValueType>> args)
 {
     ValueType aniValue = ::ohos::data::relationalStore::ValueType::make_EMPTY();
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return aniValue;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), aniValue);
     std::vector<OHOS::NativeRdb::ValueObject> nativeValues;
     if (args.has_value()) {
         array_view<ValueType> const &arrayView = args.value();
@@ -701,10 +649,8 @@ ValueType RdbStoreImpl::ExecuteSync(string_view sql, optional_view<array<ValueTy
 
 void RdbStoreImpl::BeginTransaction()
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->BeginTransaction();
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -713,10 +659,8 @@ void RdbStoreImpl::BeginTransaction()
 
 int64_t RdbStoreImpl::BeginTransSync()
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     auto [errCode, rxid] = nativeRdbStore_->BeginTrans();
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -727,10 +671,8 @@ int64_t RdbStoreImpl::BeginTransSync()
 
 void RdbStoreImpl::Commit()
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->Commit();
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -739,10 +681,8 @@ void RdbStoreImpl::Commit()
 
 void RdbStoreImpl::CommitWithTxId(int64_t txId)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->Commit(txId);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -751,10 +691,8 @@ void RdbStoreImpl::CommitWithTxId(int64_t txId)
 
 void RdbStoreImpl::RollBack()
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->RollBack();
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -763,10 +701,8 @@ void RdbStoreImpl::RollBack()
 
 void RdbStoreImpl::RollbackSync(int64_t txId)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->RollBack(txId);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -775,10 +711,8 @@ void RdbStoreImpl::RollbackSync(int64_t txId)
 
 void RdbStoreImpl::BackupSync(string_view destName)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->Backup(std::string(destName));
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -787,10 +721,8 @@ void RdbStoreImpl::BackupSync(string_view destName)
 
 void RdbStoreImpl::RestoreWithSrcName(string_view srcName)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->Restore(std::string(srcName));
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -799,10 +731,8 @@ void RdbStoreImpl::RestoreWithSrcName(string_view srcName)
 
 void RdbStoreImpl::RestoreWithVoid()
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return;
@@ -815,10 +745,8 @@ void RdbStoreImpl::RestoreWithVoid()
 
 void RdbStoreImpl::SetDistributedTablesWithTables(array_view<string> tables)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()));
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -827,10 +755,8 @@ void RdbStoreImpl::SetDistributedTablesWithTables(array_view<string> tables)
 
 void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, DistributedType type)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto [isValidType, nativeTableType] = ani_rdbutils::DistributedTableTypeToNative(type);
     if (!isValidType) {
         ThrowParamError("type must be a DistributedTableType.");
@@ -846,10 +772,8 @@ void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, Distr
 void RdbStoreImpl::SetDistributedTablesWithConfig(
     array_view<string> tables, DistributedType type, DistributedConfig const &config)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto [isValidType, nativeTableType] = ani_rdbutils::DistributedTableTypeToNative(type);
     if (!isValidType) {
         ThrowParamError("type must be a DistributedTableType.");
@@ -877,10 +801,8 @@ void RdbStoreImpl::SetDistributedTablesWithConfig(
 void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
     array_view<string> tables, optional_view<DistributedType> type, optional_view<DistributedConfig> config)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     std::vector<std::string> tableList(tables.begin(), tables.end());
     NativeDistributedTableType nativeTableType = NativeDistributedTableType::DISTRIBUTED_DEVICE;
     NativeDistributedConfig nativeConfig = {true};
@@ -919,10 +841,8 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
 
 string RdbStoreImpl::ObtainDistributedTableNameSync(string_view device, string_view table)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return "";
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), "");
     std::string deviceStr(device);
     std::string tableStr(table);
     int errCode;
@@ -937,15 +857,11 @@ string RdbStoreImpl::ObtainDistributedTableNameSync(string_view device, string_v
 void RdbStoreImpl::Sync(
     SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
     auto nativeMode = ani_rdbutils::SyncModeToNative(mode);
     if (nativeMode != OHOS::DistributedRdb::SyncMode::PUSH && nativeMode != OHOS::DistributedRdb::SyncMode::PULL) {
         ThrowParamError("mode must be a SyncMode of device.");
@@ -993,10 +909,8 @@ uintptr_t RdbStoreImpl::SyncPromise(SyncMode mode, weak::RdbPredicates predicate
 
 void RdbStoreImpl::CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const &)> progress)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     OHOS::DistributedRdb::SyncOption option {
         .mode = ani_rdbutils::SyncModeToNative(mode),
         .isBlock = false
@@ -1019,10 +933,8 @@ void RdbStoreImpl::CloudSyncWithProgress(SyncMode mode, callback_view<void(Progr
 void RdbStoreImpl::CloudSyncWithTable(
     SyncMode mode, array_view<string> tables, callback_view<void(ProgressDetails const &)> progress)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     OHOS::DistributedRdb::SyncOption option {
         .mode = ani_rdbutils::SyncModeToNative(mode),
         .isBlock = false
@@ -1045,10 +957,8 @@ void RdbStoreImpl::CloudSyncWithTable(
 void RdbStoreImpl::CloudSyncWithPredicates(
     SyncMode mode, weak::RdbPredicates predicates, callback_view<void(ProgressDetails const &)> progress)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return;
@@ -1058,10 +968,8 @@ void RdbStoreImpl::CloudSyncWithPredicates(
         .isBlock = false
     };
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
     callback<void(ProgressDetails const &)> holder = progress;
     auto nativeProgressCallback =
         [holder](std::map<std::string, OHOS::DistributedRdb::ProgressDetail> &&nativeProgressMap) {
@@ -1080,15 +988,11 @@ ResultSet RdbStoreImpl::RemoteQuerySync(
     string_view device, string_view table, weak::RdbPredicates predicates, array_view<string> columns)
 {
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(errCode);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(errCode), (make_holder<ResultSetImpl, ResultSet>()));
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
     OHOS::NativeRdb::RdbStore::Fields fields;
     for (const auto &column : columns) {
         fields.push_back(std::string(column));
@@ -1124,10 +1028,8 @@ void RdbStoreImpl::OffDataChangeInner(ohos::data::relationalStore::SubscribeType
 void RdbStoreImpl::OnAutoSyncProgressInner(
     taihe::callback_view<void(ohos::data::relationalStore::ProgressDetails const& info)> callback, uintptr_t opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto subscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSyncObserver> observer)->int32_t {
         auto errCode = nativeRdbStore_->RegisterAutoSyncCallback(observer);
         if (errCode == OHOS::NativeRdb::E_OK) {
@@ -1146,10 +1048,8 @@ void RdbStoreImpl::OnAutoSyncProgressInner(
 
 void RdbStoreImpl::OffAutoSyncProgressInner(optional_view<uintptr_t> opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto unSubscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSyncObserver> observer)->int32_t {
         auto errCode = nativeRdbStore_->UnregisterAutoSyncCallback(observer);
         if (errCode == OHOS::NativeRdb::E_OK) {
@@ -1173,10 +1073,8 @@ void RdbStoreImpl::OffAutoSyncProgressInner(optional_view<uintptr_t> opq)
 void RdbStoreImpl::OnStatisticsInner(
     taihe::callback_view<void(ohos::data::relationalStore::SqlExecutionInfo const& info)> callback, uintptr_t opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto subscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSqlObserver> observer)->int32_t {
         auto errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
         if (errCode == OHOS::NativeRdb::E_OK) {
@@ -1195,10 +1093,8 @@ void RdbStoreImpl::OnStatisticsInner(
 
 void RdbStoreImpl::OffStatisticsInner(optional_view<uintptr_t> opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto unSubscribeFunc = [this](std::shared_ptr<ani_rdbutils::TaiheSqlObserver> observer)->int32_t {
         auto errCode = DistributedRdb::SqlStatistic::Unsubscribe(observer);
         if (errCode == OHOS::NativeRdb::E_OK) {
@@ -1222,10 +1118,8 @@ void RdbStoreImpl::OffStatisticsInner(optional_view<uintptr_t> opq)
 void RdbStoreImpl::OnCommon(taihe::string_view event, bool interProcess,
     taihe::callback_view<void()> callback, uintptr_t opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto eventNative = std::string(event);
     if (event.empty()) {
         ThrowError(std::make_shared<ParamError>("event", "a not empty string."));
@@ -1257,10 +1151,8 @@ void RdbStoreImpl::OnCommon(taihe::string_view event, bool interProcess,
 
 void RdbStoreImpl::OffCommon(taihe::string_view event, bool interProcess, optional_view<uintptr_t> opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto eventNative = std::string(event);
     if (event.empty()) {
         ThrowError(std::make_shared<ParamError>("event", "a not empty string."));
@@ -1297,10 +1189,8 @@ void RdbStoreImpl::OffCommon(taihe::string_view event, bool interProcess, option
 void RdbStoreImpl::OnSqliteErrorOccurredInner(
     taihe::callback_view<void(ohos::data::relationalStore::ExceptionMessage const& info)> observer, uintptr_t opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (nativeRdbStore_->GetDbType() != NativeRdb::DB_SQLITE) {
         ThrowInnerError(OHOS::NativeRdb::E_NOT_SUPPORT);
         return;
@@ -1323,10 +1213,8 @@ void RdbStoreImpl::OnSqliteErrorOccurredInner(
 
 void RdbStoreImpl::OffSqliteErrorOccurredInner(taihe::optional_view<uintptr_t> opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (nativeRdbStore_->GetDbType() != NativeRdb::DB_SQLITE) {
         ThrowInnerError(OHOS::NativeRdb::E_NOT_SUPPORT);
         return;
@@ -1354,10 +1242,8 @@ void RdbStoreImpl::OffSqliteErrorOccurredInner(taihe::optional_view<uintptr_t> o
 void RdbStoreImpl::OnPerfStatInner(
     taihe::callback_view<void(ohos::data::relationalStore::SqlExecutionInfo const& info)> observer, uintptr_t opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (nativeRdbStore_->GetDbType() != NativeRdb::DB_SQLITE) {
         ThrowInnerError(OHOS::NativeRdb::E_NOT_SUPPORT);
         return;
@@ -1380,10 +1266,8 @@ void RdbStoreImpl::OnPerfStatInner(
 
 void RdbStoreImpl::OffPerfStatInner(::taihe::optional_view<uintptr_t> opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (nativeRdbStore_->GetDbType() != NativeRdb::DB_SQLITE) {
         ThrowInnerError(OHOS::NativeRdb::E_NOT_SUPPORT);
         return;
@@ -1410,10 +1294,8 @@ void RdbStoreImpl::OffPerfStatInner(::taihe::optional_view<uintptr_t> opq)
 
 void RdbStoreImpl::Emit(string_view event)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     int errCode = nativeRdbStore_->Notify(std::string(event));
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -1423,10 +1305,8 @@ void RdbStoreImpl::Emit(string_view event)
 void RdbStoreImpl::CloseSync()
 {
     LOG_INFO("closeSync");
-    if (nativeRdbStore_ == nullptr) {
-        LOG_ERROR("nativeRdbStore_ is nullptr");
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     UnRegisterAll();
     nativeRdbStore_ = nullptr;
 }
@@ -1434,17 +1314,15 @@ void RdbStoreImpl::CloseSync()
 int32_t RdbStoreImpl::AttachWithWaitTime(string_view fullPath, string_view attachName,
     taihe::optional_view<int32_t> waitTime)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return 0;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
     std::string fullPathStr(fullPath);
     std::string attachNameStr(attachName);
     int32_t waitTimeNative = WAIT_TIME_DEFAULT;
     if (waitTime.has_value()) {
         waitTimeNative = waitTime.value();
         if (waitTimeNative < WAIT_TIME_MIN || waitTimeNative > WAIT_TIME_MAX) {
-            ThrowInnerError(OHOS::NativeRdb::E_ERROR);
+            ThrowParamError("waitTime cannot exceed 300s.");
             return 0;
         }
     }
@@ -1460,10 +1338,8 @@ int32_t RdbStoreImpl::AttachWithWaitTime(string_view fullPath, string_view attac
 int32_t RdbStoreImpl::AttachWithContext(
     uintptr_t context, StoreConfig const &config, string_view attachName, optional_view<int32_t> waitTime)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return 0;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
 
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
@@ -1479,7 +1355,7 @@ int32_t RdbStoreImpl::AttachWithContext(
     if (waitTime.has_value()) {
         waitTimeValue = waitTime.value();
         if (waitTimeValue < WAIT_TIME_MIN || waitTimeValue > WAIT_TIME_MAX) {
-            ThrowInnerError(OHOS::NativeRdb::E_ERROR);
+            ThrowParamError("waitTime cannot exceed 300s.");
             return 0;
         }
     }
@@ -1494,10 +1370,8 @@ int32_t RdbStoreImpl::AttachWithContext(
 
 int32_t RdbStoreImpl::DetachSync(string_view attachName, optional_view<int32_t> waitTime)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     if (waitTime.has_value()) {
         int32_t waitTimeValue = waitTime.value();
         auto [errCode, output] = nativeRdbStore_->Detach(std::string(attachName), waitTimeValue);
@@ -1518,15 +1392,11 @@ int32_t RdbStoreImpl::DetachSync(string_view attachName, optional_view<int32_t> 
 
 void RdbStoreImpl::LockRowSync(weak::RdbPredicates predicates)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
     if (rdbPredicateNative.get() != nullptr) {
         int errCode = nativeRdbStore_->ModifyLockStatus(*rdbPredicateNative, true);
         if (errCode != OHOS::NativeRdb::E_OK) {
@@ -1539,15 +1409,11 @@ void RdbStoreImpl::LockRowSync(weak::RdbPredicates predicates)
 
 void RdbStoreImpl::UnlockRowSync(weak::RdbPredicates predicates)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
     if (rdbPredicateNative.get() != nullptr) {
         int errCode = nativeRdbStore_->ModifyLockStatus(*rdbPredicateNative, false);
         if (errCode != OHOS::NativeRdb::E_OK) {
@@ -1561,15 +1427,11 @@ void RdbStoreImpl::UnlockRowSync(weak::RdbPredicates predicates)
 ResultSet RdbStoreImpl::QueryLockedRowSync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
 {
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(errCode);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(errCode), (make_holder<ResultSetImpl, ResultSet>()));
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    if (rdbPredicateNative == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
     rdbPredicateNative->BeginWrap()->EqualTo(OHOS::NativeRdb::AbsRdbPredicates::LOCK_STATUS,
         OHOS::NativeRdb::AbsRdbPredicates::LOCKED)->Or();
     rdbPredicateNative->EqualTo(OHOS::NativeRdb::AbsRdbPredicates::LOCK_STATUS,
@@ -1589,10 +1451,8 @@ ResultSet RdbStoreImpl::QueryLockedRowSync(weak::RdbPredicates predicates, optio
 
 int32_t RdbStoreImpl::LockCloudContainerSync()
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return 0;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return 0;
@@ -1607,10 +1467,8 @@ int32_t RdbStoreImpl::LockCloudContainerSync()
 
 void RdbStoreImpl::UnlockCloudContainerSync()
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (!isSystemApp_) {
         ThrowNonSystemError();
         return;
@@ -1624,10 +1482,9 @@ void RdbStoreImpl::UnlockCloudContainerSync()
 Transaction RdbStoreImpl::CreateTransactionSync(
     optional_view<::ohos::data::relationalStore::TransactionOptions> options)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<TransactionImpl, Transaction>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED),
+        (make_holder<TransactionImpl, Transaction>()));
     int32_t transactionType = 0;
     if (options.has_value()) {
         auto optType = options.value();
@@ -1640,6 +1497,8 @@ Transaction RdbStoreImpl::CreateTransactionSync(
         ThrowInnerError(errCode);
         return make_holder<TransactionImpl, Transaction>();
     }
+    ASSERT_RETURN_THROW_ERROR(transaction != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
+        (make_holder<TransactionImpl, Transaction>()));
     return make_holder<TransactionImpl, Transaction>(transaction);
 }
 
@@ -1664,10 +1523,8 @@ int64_t RdbStoreImpl::BatchInsertWithConflictResolutionSync(taihe::string_view t
     taihe::array_view<ohos::data::relationalStore::ValuesBucket> values,
     ohos::data::relationalStore::ConflictResolution conflict)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
     OHOS::NativeRdb::ValuesBuckets buckets;
     for (const auto &valuesBucket : values) {
         buckets.Put(ani_rdbutils::MapValuesToNative(
@@ -1684,18 +1541,14 @@ int64_t RdbStoreImpl::BatchInsertWithConflictResolutionSync(taihe::string_view t
 
 void RdbStoreImpl::RekeySync(taihe::optional_view<ohos::data::relationalStore::CryptoParam> cryptoParam)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     NativeRdb::RdbStoreConfig::CryptoParam cryptoParamNative;
     if (cryptoParam.has_value()) {
         cryptoParamNative = ani_rdbutils::CryptoParamToNative(cryptoParam.value());
     }
-    if (!cryptoParamNative.IsValid()) {
-        ThrowInnerError(NativeRdb::E_INVALID_ARGS_NEW);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(cryptoParamNative.IsValid(),
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."), RDB_REVT_NOTHING);
     auto errCode = nativeRdbStore_->Rekey(cryptoParamNative);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -1704,15 +1557,11 @@ void RdbStoreImpl::RekeySync(taihe::optional_view<ohos::data::relationalStore::C
 
 void RdbStoreImpl::RekeyExSync(ohos::data::relationalStore::CryptoParam const& cryptoParam)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto cryptoParamNative = ani_rdbutils::CryptoParamToNative(cryptoParam);
-    if (!cryptoParamNative.IsValid()) {
-        ThrowInnerError(NativeRdb::E_INVALID_ARGS_NEW);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(cryptoParamNative.IsValid(),
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."), RDB_REVT_NOTHING);
     auto errCode = nativeRdbStore_->RekeyEx(cryptoParamNative);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -1721,15 +1570,11 @@ void RdbStoreImpl::RekeyExSync(ohos::data::relationalStore::CryptoParam const& c
 
 void RdbStoreImpl::SetLocaleSync(taihe::string_view locale)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto localeNative = std::string(locale);
-    if (localeNative.empty()) {
-        ThrowInnerError(NativeRdb::E_INVALID_ARGS_NEW);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(!localeNative.empty(),
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "locale cannot be empty"), RDB_REVT_NOTHING);
     auto errCode = nativeRdbStore_->ConfigLocale(localeNative);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -1740,10 +1585,8 @@ template<class FuncType>
 void RdbStoreImpl::OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode,
     FuncType callback, uintptr_t opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (subscribeMode < 0 || subscribeMode >= DistributedRdb::SubscribeMode::SUBSCRIBE_MODE_MAX) {
         ThrowError(std::make_shared<ParamError>("type", "SubscribeType"));
         return;
@@ -1781,10 +1624,8 @@ void RdbStoreImpl::OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscr
 void RdbStoreImpl::OffDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode,
     taihe::optional_view<uintptr_t> opq)
 {
-    if (nativeRdbStore_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     if (subscribeMode < 0 || subscribeMode >= DistributedRdb::SubscribeMode::SUBSCRIBE_MODE_MAX) {
         ThrowError(std::make_shared<ParamError>("type", "SubscribeType"));
         return;
