@@ -941,6 +941,165 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
       hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest017 end *************");
     })
 
+    /**
+     * @tc.name rdb store mixed async and sync interfaces with same config
+     * @tc.number getRdbStoreSyncTest018
+     * @tc.desc Normal operation, call getRdbStore then getRdbStoreSync with same config
+     * @tc.expect No exception, both interfaces should work correctly
+     */
+    it('getRdbStoreSyncTest018', 0, async (done: Function) => {
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest018 start *************");
+
+      const storeConfig: relationalStore.StoreConfig = {
+        name: RDB_TEST_NAME,
+        securityLevel: relationalStore.SecurityLevel.S1,
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        // Step 1: Open database with async getRdbStore interface
+        hilog.info(DOMAIN, TAG, "Step 1: Open database with getRdbStore (async)");
+        store = await relationalStore.getRdbStore(context, storeConfig);
+        expect(store !== undefined).assertTrue();
+
+        // Create table and insert data
+        hilog.info(DOMAIN, TAG, "Step 2: Execute SQL and insert data");
+        await store.executeSql(SQL_CREATE_TABLE);
+        store.insertSync('EMPLOYEE', valueBucket);
+
+        // Close database
+        hilog.info(DOMAIN, TAG, "Step 3: Close database");
+        store.close();
+        store = undefined;
+
+        // Step 4: Open database again with sync getRdbStoreSync interface using same config
+        hilog.info(DOMAIN, TAG, "Step 4: Reopen database with getRdbStoreSync (sync)");
+        store = relationalStore.getRdbStoreSync(context, storeConfig);
+        expect(store !== undefined).assertTrue();
+
+        // Create table and insert data again
+        hilog.info(DOMAIN, TAG, "Step 5: Execute SQL and insert data again");
+        store.executeSync(SQL_CREATE_TABLE);
+        store.insertSync('EMPLOYEE', valueBucket);
+
+        hilog.info(DOMAIN, TAG, "getRdbStoreSyncTest018: Both async and sync interfaces work correctly");
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.error(DOMAIN, TAG, `getRdbStoreSyncTest018: Unexpected error. Code:${err.code}, message:${err.message}`);
+        expect().assertFail();
+      } finally {
+        store?.close();
+        await relationalStore.deleteRdbStore(context, storeConfig);
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest018 end *************");
+    })
+
+    /**
+     * @tc.name rdb store mixed async then sync with changed config
+     * @tc.number getRdbStoreSyncTest019
+     * @tc.desc Abnormal parameter, call getRdbStore then getRdbStoreSync with changed config
+     * @tc.expect Throw exception, 14800017 Config changed
+     */
+    it('getRdbStoreSyncTest019', 0, async (done: Function) => {
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest019 start *************");
+
+      const originalConfig: relationalStore.StoreConfig = {
+        name: RDB_TEST_NAME,
+        securityLevel: relationalStore.SecurityLevel.S1,
+      };
+
+      const changedConfig: relationalStore.StoreConfig = {
+        name: RDB_TEST_NAME,
+        securityLevel: relationalStore.SecurityLevel.S2, // Different security level
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        // Step 1: Open database with async getRdbStore interface
+        hilog.info(DOMAIN, TAG, "Step 1: Open database with getRdbStore (async)");
+        store = await relationalStore.getRdbStore(context, originalConfig);
+        expect(store !== undefined).assertTrue();
+
+        // Close database
+        hilog.info(DOMAIN, TAG, "Step 2: Close database");
+        store.close();
+        store = undefined;
+
+        // Step 3: Try to open database with sync getRdbStoreSync interface using changed config
+        hilog.info(DOMAIN, TAG, "Step 3: Try to reopen with getRdbStoreSync using changed config");
+        store = relationalStore.getRdbStoreSync(context, changedConfig);
+
+        hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest019: Should have thrown an error");
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest019: Caught expected error. Code:${err.code}, message:${err.message}`);
+        const errorCode = Number(err.code);
+        expect(errorCode).assertEqual(14800017); // E_CONFIG_INVALID_CHANGE
+        hilog.info(DOMAIN, TAG, "getRdbStoreSyncTest019: Successfully caught 14800017 error");
+      } finally {
+        store?.close();
+        await relationalStore.deleteRdbStore(context, originalConfig);
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest019 end *************");
+    })
+
+    /**
+     * @tc.name rdb store mixed sync then async with changed config
+     * @tc.number getRdbStoreSyncTest020
+     * @tc.desc Abnormal parameter, call getRdbStoreSync then getRdbStore with changed config
+     * @tc.expect Throw exception, 14800017 Config changed
+     */
+    it('getRdbStoreSyncTest020', 0, async (done: Function) => {
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest020 start *************");
+
+      const originalConfig: relationalStore.StoreConfig = {
+        name: RDB_TEST_NAME,
+        securityLevel: relationalStore.SecurityLevel.S1,
+      };
+
+      const changedConfig: relationalStore.StoreConfig = {
+        name: RDB_TEST_NAME,
+        securityLevel: relationalStore.SecurityLevel.S2, // Different security level
+      };
+
+      let store: relationalStore.RdbStore | undefined = undefined;
+      try {
+        // Step 1: Open database with sync getRdbStoreSync interface
+        hilog.info(DOMAIN, TAG, "Step 1: Open database with getRdbStoreSync (sync)");
+        store = relationalStore.getRdbStoreSync(context, originalConfig);
+        expect(store !== undefined).assertTrue();
+
+        // Close database
+        hilog.info(DOMAIN, TAG, "Step 2: Close database");
+        store.close();
+        store = undefined;
+
+        // Step 3: Try to open database with async getRdbStore interface using changed config
+        hilog.info(DOMAIN, TAG, "Step 3: Try to reopen with getRdbStore (async) using changed config");
+        store = await relationalStore.getRdbStore(context, changedConfig);
+
+        hilog.error(DOMAIN, TAG, "getRdbStoreSyncTest020: Should have thrown an error");
+        expect().assertFail();
+      } catch (e) {
+        const err = e as BusinessError;
+        hilog.info(DOMAIN, TAG, `getRdbStoreSyncTest020: Caught expected error. Code:${err.code}, message:${err.message}`);
+        const errorCode = Number(err.code);
+        expect(errorCode).assertEqual(14800017); // E_CONFIG_INVALID_CHANGE
+        hilog.info(DOMAIN, TAG, "getRdbStoreSyncTest020: Successfully caught 14800017 error");
+      } finally {
+        store?.close();
+        await relationalStore.deleteRdbStore(context, originalConfig);
+      }
+      done();
+
+      hilog.info(DOMAIN, TAG, "************* getRdbStoreSyncTest020 end *************");
+    })
+
     hilog.info(DOMAIN, TAG, "*************Unit Test End*************");
   })
 }
