@@ -150,10 +150,9 @@ ResultSet TransactionImpl::QuerySync(weak::RdbPredicates predicates, optional_vi
         return make_holder<ResultSetImpl, ResultSet>();
     }
     auto nativeResultSet = nativeTransaction_->QueryByStep(*rdbPredicateNative, stdcolumns);
-    if (nativeResultSet == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeResultSet is nullptr"), (make_holder<ResultSetImpl, ResultSet>()));
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
@@ -168,10 +167,9 @@ ResultSet TransactionImpl::QuerySqlSync(string_view sql, optional_view<array<Val
             [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
     }
     auto nativeResultSet = nativeTransaction_->QueryByStep(std::string(sql), para);
-    if (nativeResultSet == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeResultSet is nullptr"), (make_holder<ResultSetImpl, ResultSet>()));
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
@@ -192,10 +190,9 @@ LiteResultSet TransactionImpl::QueryWithoutRowCountSync(weak::RdbPredicates pred
     }
     DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
     auto nativeResultSet = nativeTransaction_->QueryByStep(*rdbPredicateNative, columnNames, options);
-    if (nativeResultSet == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<LiteResultSetImpl, LiteResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeResultSet is nullptr"), (make_holder<LiteResultSetImpl, LiteResultSet>()));
     return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
 }
 
@@ -217,10 +214,9 @@ LiteResultSet TransactionImpl::QuerySqlWithoutRowCountSync(string_view sql, opti
     }
     DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
     auto nativeResultSet = nativeTransaction_->QueryByStep(std::string(sql), para, options);
-    if (nativeResultSet == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<LiteResultSetImpl, LiteResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeResultSet is nullptr"), (make_holder<LiteResultSetImpl, LiteResultSet>()));
     return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
 }
 
