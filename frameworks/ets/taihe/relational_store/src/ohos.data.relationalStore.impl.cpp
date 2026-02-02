@@ -121,12 +121,14 @@ RdbPredicates CreateRdbPredicates(string_view name)
 
 RdbStore GetRdbStoreInner(uintptr_t context, StoreConfig const &config)
 {
-    return make_holder<RdbStoreImpl, RdbStore>(reinterpret_cast<ani_object>(context), config, ConfigVersion::DEFAULT_VERSION);
+    return make_holder<RdbStoreImpl, RdbStore>(
+        reinterpret_cast<ani_object>(context), config, ConfigVersion::DEFAULT_VERSION);
 }
 
 RdbStore GetRdbStoreSync(uintptr_t context, StoreConfig const &config)
 {
-    return make_holder<RdbStoreImpl, RdbStore>(reinterpret_cast<ani_object>(context), config, ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
+    return make_holder<RdbStoreImpl, RdbStore>(
+        reinterpret_cast<ani_object>(context), config, ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
 }
 
 void DeleteRdbStoreWithName(uintptr_t context, string_view name)
