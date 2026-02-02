@@ -587,9 +587,9 @@ napi_value TransactionProxy::QueryWithoutRowCount(napi_env env, napi_callback_in
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -611,7 +611,6 @@ struct QuerySqlContext : public TransactionContext {
     }
     std::string sql;
     std::vector<ValueObject> bindArgs;
-
     std::shared_ptr<ResultSet> resultSet;
 };
 
@@ -653,7 +652,7 @@ napi_value TransactionProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback
         CHECK_RETURN(context->Parse(env, argc, argv, self) == OK);
         // ParamError is reported only when the parameter type is incorrect.
         CHECK_RETURN_SET_E(!context->sql.empty(),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "sql cannot be empty"));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "sql cannot be empty"));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
@@ -663,9 +662,9 @@ napi_value TransactionProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -777,12 +776,12 @@ napi_value TransactionProxy::BatchInsertWithReturning(napi_env env, napi_callbac
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
-        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
         JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -849,12 +848,12 @@ napi_value TransactionProxy::UpdateWithReturning(napi_env env, napi_callback_inf
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
-        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
         JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -906,12 +905,12 @@ napi_value TransactionProxy::DeleteWithReturning(napi_env env, napi_callback_inf
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
-        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
         JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
         result = JSUtils::Convert2JSValue(env, tsResults);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
+        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
-    context->SetAction(env, info, input, exec, output);
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);

@@ -148,17 +148,17 @@ export default function RdbStoreUpdateWithReturning() {
     it('updateWithReturning002', 0, async (done: Function) => {
       let predicates = new relationalStore.RdbPredicates("test");
       predicates.equalTo('name', 'zhangsan4');
-      await callAndCodeCheck("14800001", "updateWithReturning002", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturning002", async () => {
         await rdbStore?.updateWithReturning({}, predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "updateWithReturningSync002", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturningSync002", async () => {
         rdbStore?.updateWithReturningSync({}, predicates, defaultReturningConfig);
       });
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck("14800001", "transUpdateWithReturning002", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturning002", async () => {
         await trans?.updateWithReturning({}, predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "transUpdateWithReturningSync002", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturningSync002", async () => {
         trans?.updateWithReturningSync({}, predicates, defaultReturningConfig);
       });
       await trans?.rollback();
@@ -199,17 +199,17 @@ export default function RdbStoreUpdateWithReturning() {
     it('updateWithReturning004', 0, async (done: Function) => {
       const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' };
       let predicates = new relationalStore.RdbPredicates("test test1");
-      await callAndCodeCheck("14800001", "updateWithReturning004", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturning004", async () => {
         await rdbStore?.updateWithReturning(valueBucket, predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "updateWithReturningSync004", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturningSync004", async () => {
         rdbStore?.updateWithReturningSync(valueBucket, predicates, defaultReturningConfig);
       });
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck("14800001", "transUpdateWithReturning004", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturning004", async () => {
         await trans?.updateWithReturning(valueBucket, predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "transUpdateWithReturningSync004", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturningSync004", async () => {
         trans?.updateWithReturningSync(valueBucket, predicates, defaultReturningConfig);
       });
       await trans?.rollback();
@@ -333,17 +333,17 @@ export default function RdbStoreUpdateWithReturning() {
       let assets: relationalStore.Assets = [asset1, asset1];
       const valueBucket: relationalStore.ValuesBucket = { 'name': 'lisi', 'age': 30, 'data1': assets };
       let predicates = new relationalStore.RdbPredicates("test");
-      await callAndCodeCheck("14800001", "updateWithReturning007", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturning007", async () => {
         await rdbStore?.updateWithReturning(valueBucket, predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "updateWithReturningSync007", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturningSync007", async () => {
         rdbStore?.updateWithReturningSync(valueBucket, predicates, defaultReturningConfig);
       });
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck("14800001", "transUpdateWithReturning007", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturning007", async () => {
         await trans?.updateWithReturning(valueBucket, predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800001", "transUpdateWithReturningSync007", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturningSync007", async () => {
         trans?.updateWithReturningSync(valueBucket, predicates, defaultReturningConfig);
       });
       await trans?.rollback();
@@ -398,17 +398,17 @@ export default function RdbStoreUpdateWithReturning() {
       const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan', 'age': 18 };
       let predicates = new relationalStore.RdbPredicates("test");
       const config: relationalStore.ReturningConfig = { columns: [] };
-      await callAndCodeCheck("14800001", "updateWithReturning009", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturning009", async () => {
         await rdbStore?.updateWithReturning(valueBucket, predicates, config);
       });
-      await callAndCodeCheck("14800001", "updateWithReturningSync009", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturningSync009", async () => {
         rdbStore?.updateWithReturningSync(valueBucket, predicates, config);
       });
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck("14800001", "transUpdateWithReturning009", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturning009", async () => {
         await trans?.updateWithReturning(valueBucket, predicates, config);
       });
-      await callAndCodeCheck("14800001", "transUpdateWithReturningSync009", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturningSync009", async () => {
         trans?.updateWithReturningSync(valueBucket, predicates, config);
       });
       await trans?.rollback();
@@ -424,17 +424,17 @@ export default function RdbStoreUpdateWithReturning() {
       const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan', 'age': 18 };
       let predicates = new relationalStore.RdbPredicates("test");
       const config: relationalStore.ReturningConfig = { columns: ['name', 'age', 'salary', 'data', 'blobType'] };
-      await callAndCodeCheck("14800001", "updateWithReturning010", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturning010", async () => {
         await rdbStore?.updateWithReturning(valueBucket, predicates, config);
       });
-      await callAndCodeCheck("14800001", "updateWithReturningSync010", async () => {
+      await callAndCodeCheck(14800001, "updateWithReturningSync010", async () => {
         rdbStore?.updateWithReturningSync(valueBucket, predicates, config);
       });
       let trans = await rdbStore?.createTransaction(options);
-      await callAndCodeCheck("14800001", "transUpdateWithReturning010", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturning010", async () => {
         await trans?.updateWithReturning(valueBucket, predicates, config);
       });
-      await callAndCodeCheck("14800001", "transUpdateWithReturningSync010", async () => {
+      await callAndCodeCheck(14800001, "transUpdateWithReturningSync010", async () => {
         trans?.updateWithReturningSync(valueBucket, predicates, config);
       });
       await trans?.rollback();
@@ -452,17 +452,17 @@ export default function RdbStoreUpdateWithReturning() {
       let columnsCase = [['ab*'], ["a b"], ["a,b"] ];
       for (let i = 0; i < columnsCase.length; ++i) {
         const config: relationalStore.ReturningConfig = { columns: columnsCase[i] };
-        await callAndCodeCheck('14800001', "updateWithReturning011-" + i, async () => {
+        await callAndCodeCheck(14800001, "updateWithReturning011-" + i, async () => {
           await rdbStore?.updateWithReturning(valueBucket, predicates, config);
         });
-        await callAndCodeCheck('14800001', "updateWithReturningSync011-" + i, async () => {
+        await callAndCodeCheck(14800001, "updateWithReturningSync011-" + i, async () => {
           rdbStore?.updateWithReturningSync(valueBucket, predicates, config);
         });
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('14800001', "transUpdateWithReturning011-" + i, async () => {
+        await callAndCodeCheck(14800001, "transUpdateWithReturning011-" + i, async () => {
           await trans?.updateWithReturning(valueBucket, predicates, config);
         });
-        await callAndCodeCheck('14800001', "transUpdateWithReturningSync011-" + i, async () => {
+        await callAndCodeCheck(14800001, "transUpdateWithReturningSync011-" + i, async () => {
           trans?.updateWithReturningSync(valueBucket, predicates, config);
         });
         await trans?.rollback();
@@ -607,10 +607,10 @@ export default function RdbStoreUpdateWithReturning() {
       const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' };
       await rdbStore?.close();
       let predicates = new relationalStore.RdbPredicates("test");
-      await callAndCodeCheck("14800014", "updateWithReturning016", async () => {
+      await callAndCodeCheck(14800014, "updateWithReturning016", async () => {
         await rdbStore?.updateWithReturning(valueBucket, predicates, defaultReturningConfig);
       });
-      await callAndCodeCheck("14800014", "updateWithReturningSync016", async () => {
+      await callAndCodeCheck(14800014, "updateWithReturningSync016", async () => {
         rdbStore?.updateWithReturningSync(valueBucket, predicates, defaultReturningConfig);
       });
       let trans = await getTrans();
@@ -634,10 +634,10 @@ export default function RdbStoreUpdateWithReturning() {
       await rdbStore?.close();
       let predicates = new relationalStore.RdbPredicates("test");
       const config: relationalStore.ReturningConfig = { columns: ['name?', 'age' ] };
-      await callAndCodeCheck("14800014", "updateWithReturning017", async () => {
+      await callAndCodeCheck(14800014, "updateWithReturning017", async () => {
         await rdbStore?.updateWithReturning(valueBucket, predicates, config);
       });
-      await callAndCodeCheck("14800014", "updateWithReturningSync017", async () => {
+      await callAndCodeCheck(14800014, "updateWithReturningSync017", async () => {
         rdbStore?.updateWithReturningSync(valueBucket, predicates, config);
       });
       let trans = await getTrans();
@@ -775,17 +775,17 @@ export default function RdbStoreUpdateWithReturning() {
       const valueBucket: relationalStore.ValuesBucket = { 'name': 'zhangsan' };
       for (let i = 0; i < illegalTableNames.length; ++i) {
         let predicates = new relationalStore.RdbPredicates(illegalTableNames[i]);
-        await callAndCodeCheck('14800001', "updateWithReturning022-" + i, async () => {
+        await callAndCodeCheck(14800001, "updateWithReturning022-" + i, async () => {
           await rdbStore?.updateWithReturning(valueBucket, predicates, defaultReturningConfig);
         });
-        await callAndCodeCheck('14800001', "updateWithReturningSync022-" + i, async () => {
+        await callAndCodeCheck(14800001, "updateWithReturningSync022-" + i, async () => {
           rdbStore?.updateWithReturningSync(valueBucket, predicates, defaultReturningConfig);
         });
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('14800001', "transUpdateWithReturning022-" + i, async () => {
+        await callAndCodeCheck(14800001, "transUpdateWithReturning022-" + i, async () => {
           await trans?.updateWithReturning(valueBucket, predicates, defaultReturningConfig);
         });
-        await callAndCodeCheck('14800001', "transUpdateWithReturningSync022-" + i, async () => {
+        await callAndCodeCheck(14800001, "transUpdateWithReturningSync022-" + i, async () => {
           trans?.updateWithReturningSync(valueBucket, predicates, defaultReturningConfig);
         });
         await trans?.rollback();
@@ -808,17 +808,17 @@ export default function RdbStoreUpdateWithReturning() {
           columns: ['name', 'age'],
           maxReturningCount: maxReturningCounts[i]
         };
-        await callAndCodeCheck('14800001', "updateWithReturning023-" + i, async () => {
+        await callAndCodeCheck(14800001, "updateWithReturning023-" + i, async () => {
           await rdbStore?.updateWithReturning(valueBucket, predicates, config);
         });
-        await callAndCodeCheck('14800001', "updateWithReturningSync023-" + i, async () => {
+        await callAndCodeCheck(14800001, "updateWithReturningSync023-" + i, async () => {
           rdbStore?.updateWithReturningSync(valueBucket, predicates, config);
         });
         let trans = await rdbStore?.createTransaction(options);
-        await callAndCodeCheck('14800001', "transUpdateWithReturning023-" + i, async () => {
+        await callAndCodeCheck(14800001, "transUpdateWithReturning023-" + i, async () => {
           await trans?.updateWithReturning(valueBucket, predicates, config);
         });
-        await callAndCodeCheck('14800001', "transUpdateWithReturningSync023-" + i, async () => {
+        await callAndCodeCheck(14800001, "transUpdateWithReturningSync023-" + i, async () => {
           trans?.updateWithReturningSync(valueBucket, predicates, config);
         });
         await trans?.rollback();
@@ -986,20 +986,20 @@ export default function RdbStoreUpdateWithReturning() {
         let code = await callAndReturnCode("updateWithReturning028-" + i, async () => {
           await rdbStore?.updateWithReturning(values[i], predicates[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         code = await callAndReturnCode("updateWithReturningSync028-" + i, async () => {
           rdbStore?.updateWithReturningSync(values[i], predicates[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         let trans = await rdbStore?.createTransaction(options);
         code = await callAndReturnCode("transUpdateWithReturning028-" + i, async () => {
           await trans?.updateWithReturning(values[i], predicates[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         code = await callAndReturnCode("transUpdateWithReturningSync028-" + i, async () => {
           trans?.updateWithReturningSync(values[i], predicates[i], configs[i]);
         });
-        expect(code).assertEqual('401');
+        expect(code).assertEqual(401);
         await trans?.rollback();
       }
       done();
@@ -1008,7 +1008,7 @@ export default function RdbStoreUpdateWithReturning() {
     /**
      * @tc.name updateWithReturning test.
      * @tc.number updateWithReturning029
-     * @tc.desc 1. getColumnType with index.
+     * @tc.desc 1. Result type test.
      */
     it('updateWithReturning029', 0, async (done: Function) => {
       await rdbStore?.execute(CREATE_TABLE_TEST1);
@@ -1076,7 +1076,7 @@ export default function RdbStoreUpdateWithReturning() {
     /**
      * @tc.name updateWithReturning test.
      * @tc.number updateWithReturning030
-     * @tc.desc 1. getColumnType with key.
+     * @tc.desc 1. Result type test.
      */
     it('updateWithReturning030', 0, async (done: Function) => {
       await rdbStore?.execute(CREATE_TABLE_TEST1);

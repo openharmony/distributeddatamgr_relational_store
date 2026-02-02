@@ -58,6 +58,8 @@ public:
     }
     int OnUpgrade(OHOS::NativeRdb::RdbStore &rdbStore, int oldVersion, int newVersion) override
     {
+        (void) oldVersion;
+        (void) newVersion;
         return OHOS::NativeRdb::E_OK;
     }
 };
@@ -379,6 +381,7 @@ LiteResultSet RdbStoreImpl::QuerySqlWithoutRowCountSync(string_view sql, optiona
     if (sql.empty()) {
         LOG_ERROR("sql is empty");
         ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+        return make_holder<LiteResultSetImpl, LiteResultSet>();
     }
     std::vector<OHOS::NativeRdb::ValueObject> para;
     if (bindArgs.has_value()) {
@@ -537,6 +540,10 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithOptionColumn(weak::RdbPredicates
         ThrowInnerError(errCode);
         return make_holder<ResultSetImpl, ResultSet>();
     }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return make_holder<ResultSetImpl, ResultSet>();
+    }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     if (rdbPredicateNative == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
@@ -564,6 +571,10 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithPredicate(weak::RdbPredicates pr
         ThrowInnerError(errCode);
         return make_holder<ResultSetImpl, ResultSet>();
     }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return make_holder<ResultSetImpl, ResultSet>();
+    }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     if (rdbPredicateNative == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
@@ -584,6 +595,10 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithColumn(weak::RdbPredicates predi
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(errCode);
+        return make_holder<ResultSetImpl, ResultSet>();
+    }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
         return make_holder<ResultSetImpl, ResultSet>();
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
@@ -791,6 +806,10 @@ void RdbStoreImpl::RestoreWithVoid()
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return;
+    }
     int errCode = nativeRdbStore_->Restore("");
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -815,8 +834,13 @@ void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, Distr
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    int errCode = nativeRdbStore_->SetDistributedTables(
-        std::vector<std::string>(tables.begin(), tables.end()), (OHOS::NativeRdb::DistributedType)type.get_key());
+    auto [isValidType, nativeTableType] = ani_rdbutils::DistributedTableTypeToNative(type);
+    if (!isValidType) {
+        ThrowParamError("type must be a DistributedTableType.");
+        return;
+    }
+    int errCode =
+        nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()), nativeTableType);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }
@@ -829,9 +853,25 @@ void RdbStoreImpl::SetDistributedTablesWithConfig(
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
         return;
     }
-    auto nativeConfig = ani_rdbutils::DistributedConfigToNative(config);
-    int errCode = nativeRdbStore_->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()),
-        (OHOS::NativeRdb::DistributedType)type.get_key(), nativeConfig);
+    auto [isValidType, nativeTableType] = ani_rdbutils::DistributedTableTypeToNative(type);
+    if (!isValidType) {
+        ThrowParamError("type must be a DistributedTableType.");
+        return;
+    }
+    auto [isValidConfig, nativeConfig] = ani_rdbutils::DistributedConfigToNative(config, nativeTableType);
+    if (!isValidConfig) {
+        ThrowParamError("config must be a DistributedConfig.");
+        return;
+    }
+    if (nativeTableType == NativeDistributedTableType::DISTRIBUTED_CLOUD &&
+        nativeConfig.tableType == NativeDistributedTableMode::DEVICE_COLLABORATION) {
+        ThrowError(std::make_shared<InnerError>(
+            OHOS::NativeRdb::E_NOT_SUPPORT, "The CloudDistributedTable is not support DEVICE_COLLABORATION."));
+        return;
+    }
+
+    int errCode = nativeRdbStore_->SetDistributedTables(
+        std::vector<std::string>(tables.begin(), tables.end()), nativeTableType, nativeConfig);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }
@@ -845,16 +885,36 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
         return;
     }
     std::vector<std::string> tableList(tables.begin(), tables.end());
-    OHOS::NativeRdb::DistributedType nativeType = OHOS::NativeRdb::DistributedType::RDB_DEVICE_COLLABORATION;
-    OHOS::DistributedRdb::DistributedConfig nativeConfig = { true };
-    
+    NativeDistributedTableType nativeTableType = NativeDistributedTableType::DISTRIBUTED_DEVICE;
+    NativeDistributedConfig nativeConfig = {true};
     if (type.has_value()) {
-        nativeType = static_cast<OHOS::NativeRdb::DistributedType>(type.value().get_key());
+        auto [isValidType, nativeTableTypeTemp] = ani_rdbutils::DistributedTableTypeToNative(type.value());
+        if (!isValidType) {
+            ThrowParamError("type must be a DistributedTableType.");
+            return;
+        }
+        nativeTableType = nativeTableTypeTemp;
     }
     if (config.has_value()) {
-        nativeConfig = ani_rdbutils::DistributedConfigToNative(config.value());
+        auto [isValidConfig, nativeConfigTemp] =
+            ani_rdbutils::DistributedConfigToNative(config.value(), nativeTableType);
+        if (!isValidConfig) {
+            ThrowParamError("config must be a DistributedConfig.");
+            return;
+        }
+        nativeConfig = std::move(nativeConfigTemp);
+    } else {
+        nativeConfig.tableType = nativeTableType == NativeDistributedTableType::DISTRIBUTED_DEVICE
+                                     ? NativeDistributedTableMode::DEVICE_COLLABORATION
+                                     : NativeDistributedTableMode::SINGLE_VERSION;
     }
-    int errCode = nativeRdbStore_->SetDistributedTables(tableList, nativeType, nativeConfig);
+    if (nativeTableType == NativeDistributedTableType::DISTRIBUTED_CLOUD &&
+        nativeConfig.tableType == NativeDistributedTableMode::DEVICE_COLLABORATION) {
+        ThrowError(std::make_shared<InnerError>(
+            OHOS::NativeRdb::E_NOT_SUPPORT, "The CloudDistributedTable is not support DEVICE_COLLABORATION."));
+        return;
+    }
+    int errCode = nativeRdbStore_->SetDistributedTables(tableList, nativeTableType, nativeConfig);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }
@@ -990,6 +1050,10 @@ void RdbStoreImpl::CloudSyncWithPredicates(
 {
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
         return;
     }
     OHOS::DistributedRdb::SyncOption option {
@@ -1526,11 +1590,15 @@ ResultSet RdbStoreImpl::QueryLockedRowSync(weak::RdbPredicates predicates, optio
     return make_holder<ResultSetImpl, ResultSet>(resultSetNative);
 }
 
-uint32_t RdbStoreImpl::LockCloudContainerSync()
+int32_t RdbStoreImpl::LockCloudContainerSync()
 {
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
+        return 0;
+    }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return 0;
     }
     auto [errCode, output] = nativeRdbStore_->LockCloudContainer();
     if (errCode != OHOS::NativeRdb::E_OK) {
@@ -1544,6 +1612,10 @@ void RdbStoreImpl::UnlockCloudContainerSync()
 {
     if (nativeRdbStore_ == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
+        return;
+    }
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
         return;
     }
     int errCode = nativeRdbStore_->UnlockCloudContainer();

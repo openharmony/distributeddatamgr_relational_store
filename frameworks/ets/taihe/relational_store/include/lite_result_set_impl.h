@@ -34,7 +34,8 @@ public:
     LiteResultSetImpl();
     LiteResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet);
     intptr_t GetProxy();
-    array<map<string, ValueType>> GetRowsSync(int32_t maxCount, optional_view<int32_t> position);
+    array<ohos::data::relationalStore::ValuesBucket> GetRowsSync(int32_t maxCount, optional_view<int32_t> position);
+    uintptr_t GetColumnTypeSync(ohos::data::relationalStore::ColumnIdentifier const& columnIdentifier);
     int32_t GetColumnIndex(string_view columnName);
     string GetColumnName(int32_t columnIndex);
     bool GoToNextRow();
@@ -46,7 +47,7 @@ public:
     array<ohos::data::relationalStore::Asset> GetAssets(int32_t columnIndex);
     ValueType GetValue(int32_t columnIndex);
     array<float> GetFloat32Array(int32_t columnIndex);
-    map<string, ValueType> GetRow();
+    ohos::data::relationalStore::ValuesBucket GetRow();
     bool IsColumnNull(int32_t columnIndex);
     void Close();
     array<string> GetColumnNames();
