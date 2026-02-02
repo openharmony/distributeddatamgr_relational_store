@@ -239,7 +239,8 @@ OH_Cursor *OH_RdbTrans_QueryWithoutRowCount(
             fields.emplace_back(columns[i]);
         }
     }
-    auto resultSet = trans->trans_->QueryByStep(rdbPredicate->Get(), fields);
+    OHOS::DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+    auto resultSet = trans->trans_->QueryByStep(rdbPredicate->Get(), fields, options);
     if (resultSet == nullptr) {
         LOG_ERROR("resultSet is null.");
         return nullptr;
@@ -262,7 +263,8 @@ OH_Cursor *OH_RdbTrans_QuerySqlWithoutRowCount(OH_Rdb_Transaction *trans, const 
             datas.push_back(arg.value_);
         }
     }
-    auto resultSet = trans->trans_->QueryByStep(sql, datas);
+    OHOS::DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+    auto resultSet = trans->trans_->QueryByStep(sql, datas, options);
     if (resultSet == nullptr) {
         LOG_ERROR("resultSet is null.");
         return nullptr;

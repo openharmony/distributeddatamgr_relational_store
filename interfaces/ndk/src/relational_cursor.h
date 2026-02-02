@@ -33,7 +33,7 @@ public:
     virtual int GetFloatVectorCount(int32_t columnIndex, size_t *length);
     virtual int GetFloatVector(int32_t columnIndex, float *val, size_t inLen, size_t *outLen);
     static RelationalCursor *GetSelf(OH_Cursor *cursor);
-    bool IsNeedTerminator();
+    bool IsNeedTerminator() const;
 
 protected:
     virtual int GetColumnCount(int *count);
@@ -71,7 +71,7 @@ private:
     static int GetAssetsCount(OH_Cursor *cursor, int32_t columnIndex, uint32_t *count);
     static int Destroy(OH_Cursor *cursor);
     std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet_;
-    bool isNeedTerminator_;
+    bool isNeedTerminator_ = true;
     bool isSupportRowCount_ = true;
 };
 } // namespace RdbNdk

@@ -114,6 +114,7 @@ int ConvertorErrorCode::ConvertCode(const NdkErrorCode *codeMap, int count, int 
     }
     return RDB_E_ERROR;
 }
+
 int ConvertorErrorCode::NativeToNdk(int nativeErrCode)
 {
     int count = static_cast<int>(sizeof(ERROR_CODE_MAP) / sizeof(ERROR_CODE_MAP[0]));
