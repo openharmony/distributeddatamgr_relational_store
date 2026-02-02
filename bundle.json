@@ -216,6 +216,16 @@
                 },
                 {
                     "name": "//foundation/distributeddatamgr/relational_store/frameworks/ets/taihe/relational_store:copy_taihe"
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb_type_utils",
+                    "visibility": [ "datamgr_service" ],
+                    "header": {
+                        "header_files": [
+                            "rdb_types_util.h"
+                        ],
+                        "header_base": "//foundation/distributeddatamgr/relational_store/frameworks/native/rdb/include"
+                    }
                 }
             ],
             "test": [

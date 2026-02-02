@@ -247,6 +247,35 @@ if (is_ohos && !build_ohos_sdk) {
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
   }
+
+  ohos_static_library("native_rdb_type_utils") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      boundary_sanitize = true
+      ubsan = true
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+
+    sources = [
+      "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
+    ]
+
+    configs = [ ":native_rdb_config" ]
+
+    external_deps = [
+      "c_utils:utils",
+      "hilog:libhilog",
+      "ipc:ipc_core",
+      "kv_store:datamgr_common",
+    ]
+
+    public_configs = [ ":native_rdb_public_config" ]
+
+    subsystem_name = "distributeddatamgr"
+    part_name = "relational_store"
+  }
 } else if (is_mingw) {
   config("native_rdb_config") {
     visibility = [ ":*" ]
