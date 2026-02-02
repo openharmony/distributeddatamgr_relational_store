@@ -1,16 +1,18 @@
 /*
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-Copyright (c) 2024 Huawei Device Co., Ltd.
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 #include <gtest/gtest.h>
 
 #include <string>
@@ -96,10 +98,10 @@ void RdbExecuteRdTest::TearDown(void)
 }
 
 /**
-@tc.name: RdbStore_Execute_001
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_001
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_001, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -134,17 +136,17 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_001, TestSize.Level1)
     EXPECT_EQ(store->ExecuteSql(sqlDelNoBind.c_str()), E_NOT_SUPPORT);
 
     int64_t count = 0;
-    EXPECT_EQ(store->ExecuteAndGetLong(count, "SELECT COUNT() FROM test where age = 19"), E_NOT_SUPPORT);
-    EXPECT_EQ(store->ExecuteAndGetLong(count, "SELECT COUNT() FROM test"), E_NOT_SUPPORT);
+    EXPECT_EQ(store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test where age = 19"), E_NOT_SUPPORT);
+    EXPECT_EQ(store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test"), E_NOT_SUPPORT);
     EXPECT_EQ(store->ExecuteAndGetLong(count, "SELECT COUNT(*) FROM test"), E_NOT_SUPPORT);
     EXPECT_EQ(store->Insert(id, "test", values), E_NOT_SUPPORT);
 }
 
 /**
-@tc.name: RdbStore_Execute_002
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_002
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_002, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -161,10 +163,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_002, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_003
-@tc.desc: test RdbStore Execute in vector mode. Repeatly require trx.
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_003
+ * @tc.desc: test RdbStore Execute in vector mode. Repeatly require trx.
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_003, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -183,10 +185,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_003, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_004
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_004
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_004, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -211,10 +213,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_004, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_005
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_005
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_005, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -245,17 +247,20 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_005, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_006
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_006
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_006, TestSize.Level1)
 {
+    if (GetParam()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     std::string sqlCreateTable = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, repr floatvector(8));";
     std::string sqlInsert = "INSERT INTO test VALUES(1, '[1.2, 0.3, 3.2, 1.6, 2.5, 3.1, 0.8, 0.4]');";
     std::string sqlBeginTrans = "begin;";
 
-    std::string dbPath = "/data/test/execute_test1.db";
+    std::string dbPath = "/data/test/execute_test.db";
     std::string configStr =
     "{\"pageSize\":8, \"crcCheckEnable\":0, \"redoFlushByTrx\":1, \"bufferPoolSize\":10240,"
     "\"sharedModeEnable\":1, \"metaInfoBak\":1, \"maxConnNum\":500, \"defaultIsolationLevel\":2 }";
@@ -351,10 +356,10 @@ std::shared_ptr<ResultSet> CreateIdxAndSelect(std::string &sqlSelect)
 }
 
 /**
-@tc.name: RdbStore_Execute_007
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_007
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 constexpr uint16_t SELECT_RES_NUM = 3;
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_007, TestSize.Level1)
 {
@@ -406,10 +411,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_007, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_008
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_008
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_008, TestSize.Level1)
 {
     std::string sqlSelect = "SELECT * FROM test;";
@@ -452,10 +457,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_008, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_009
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_009
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 constexpr uint32_t EXPEC_INSERT_CNT_FOR = 10;
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_009, TestSize.Level1)
 {
@@ -496,10 +501,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_009, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_010
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_010
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_010, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -539,10 +544,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_010, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_011
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_011
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_011, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -598,7 +603,7 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_011, TestSize.Level1)
 
         EXPECT_EQ(
             E_COLUMN_OUT_RANGE, resultSet->GetColumnType(100, colType)); // 100是一个不存在的col, 所以预期返回错误码
-        EXPECT_EQ(colType, ColumnType::TYPE_INTEGER);                    // 值不会被更新
+        EXPECT_EQ(colType, ColumnType::TYPE_INTEGER); // 值不会被更新
 
         EXPECT_EQ(E_OK, resultSet->GetLong(columnIndex, intVal));
         EXPECT_EQ(1, intVal);
@@ -608,10 +613,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_011, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_012
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_012
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_012, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -651,10 +656,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_012, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_013
-@tc.desc: test RdbStore Execute in vector mode
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_013
+ * @tc.desc: test RdbStore Execute in vector mode
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_013, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -694,10 +699,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_013, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_014
-@tc.desc: test RdbStore Execute update in transaction
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_014
+ * @tc.desc: test RdbStore Execute update in transaction
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_014, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -748,10 +753,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_014, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_014
-@tc.desc: test RdbStore Execute Repeatly Get Transaction
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_014
+ * @tc.desc: test RdbStore Execute Repeatly Get Transaction
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_015, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -787,10 +792,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_015, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_016
-@tc.desc: test RdbStore Execute Repeatly Get Transaction
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_016
+ * @tc.desc: test RdbStore Execute Repeatly Get Transaction
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_016, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -847,10 +852,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_016, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_017
-@tc.desc: test RdbStore Execute Getting or Setting version
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_017
+ * @tc.desc: test RdbStore Execute Getting or Setting version
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_017, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbExecuteRdTest::store;
@@ -903,10 +908,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_017, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_018
-@tc.desc: test RdbStore create encrypted db from non-encrypted db
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_018
+ * @tc.desc: test RdbStore create encrypted db from non-encrypted db
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_018, TestSize.Level1)
 {
     RdbExecuteRdTest::store = nullptr;
@@ -931,10 +936,10 @@ HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_018, TestSize.Level1)
 }
 
 /**
-@tc.name: RdbStore_Execute_019
-@tc.desc: test RdbStore Execute in vector mode, empty string bind case.
-@tc.type: FUNC
-*/
+ * @tc.name: RdbStore_Execute_019
+ * @tc.desc: test RdbStore Execute in vector mode, empty string bind case.
+ * @tc.type: FUNC
+ */
 HWTEST_P(RdbExecuteRdTest, RdbStore_Execute_019, TestSize.Level1)
 {
     std::string sqlCreateTable

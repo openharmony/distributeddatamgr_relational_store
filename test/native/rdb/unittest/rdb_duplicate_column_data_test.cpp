@@ -41,8 +41,8 @@ public:
     void SetUp();
     void TearDown();
 
-    void GenerateData1();
-    void GenerateData2();
+    void GenerateData1() const;
+    void GenerateData2() const;
 
     static const std::string DATABASE_NAME;
     static std::shared_ptr<RdbStore> store;
@@ -76,6 +76,8 @@ int DuplicateColumnDataOpenCallback::OnCreate(RdbStore &rdbStore)
 
 int DuplicateColumnDataOpenCallback::OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion)
 {
+    (void) oldVersion;
+    (void) newVersion;
     return E_OK;
 }
 
@@ -104,9 +106,9 @@ void DuplicateColumnDataTest::TearDown()
 {
 }
 
-void DuplicateColumnDataTest::GenerateData1()
+void DuplicateColumnDataTest::GenerateData1() const
 {
-    int64_t id;
+    int64_t id = 0;
     ValuesBucket values;
     AssetValue asset {
         .version = 0,
@@ -138,7 +140,7 @@ void DuplicateColumnDataTest::GenerateData1()
     store->Insert(id, "test1", values);
 }
 
-void DuplicateColumnDataTest::GenerateData2()
+void DuplicateColumnDataTest::GenerateData2() const
 {
     int64_t id;
     ValuesBucket values;
@@ -370,7 +372,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_001, TestS
     EXPECT_EQ(rowData[2], ValueObject(10));    // index is 2, age is 10
     EXPECT_EQ(rowData[11], ValueObject(10));   // index is 11, age is 10
 
-    EXPECT_EQ(rowData[3], ValueObject(2000.56));    // index is 2, salary is 2000.56
+    EXPECT_EQ(rowData[3], ValueObject(2000.56));    // index is 3, salary is 2000.56
     EXPECT_EQ(rowData[12], ValueObject(2001.56));   // index is 12, salary is 2001.56
 
     EXPECT_EQ(rowData[4], ValueObject(std::vector<uint8_t>{1, 2, 3}));   // index is 4, blobType is [1, 2, 3]
@@ -829,7 +831,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_009, Test
 
     auto [ret, rowsData] = resultSet->GetRowsData(0, 0);  // maxCount is 0, position is 0
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowsData.size(), 0);       // rowsData size is 2
+    EXPECT_EQ(rowsData.size(), 0);       // rowsData size is 0
     resultSet->Close();
 }
 
@@ -1052,7 +1054,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_001, TestSize.Level
     EXPECT_EQ(rowData[2], ValueObject(10));    // index is 2, age is 10
     EXPECT_EQ(rowData[11], ValueObject(10));   // index is 11, age is 10
 
-    EXPECT_EQ(rowData[3], ValueObject(2000.56));    // index is 2, salary is 2000.56
+    EXPECT_EQ(rowData[3], ValueObject(2000.56));    // index is 3, salary is 2000.56
     EXPECT_EQ(rowData[12], ValueObject(2001.56));   // index is 12, salary is 2001.56
 
     EXPECT_EQ(rowData[4], ValueObject(std::vector<uint8_t>{1, 2, 3}));   // index is 4, blobType is [1, 2, 3]
@@ -1517,7 +1519,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_009, TestSize.Leve
 
     auto [ret, rowsData] = resultSet->GetRowsData(0, 0);  // maxCount is 0, position is 0
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowsData.size(), 0);       // rowsData size is 2
+    EXPECT_EQ(rowsData.size(), 0);       // rowsData size is 0
     resultSet->Close();
 }
 

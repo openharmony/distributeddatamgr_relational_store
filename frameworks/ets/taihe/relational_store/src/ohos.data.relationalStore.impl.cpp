@@ -13,40 +13,41 @@
  * limitations under the License.
  */
 #define LOG_TAG "AniRelationalStoreImpl"
-#include "ohos.data.relationalStore.impl.hpp"
+#include "ohos.data.relationalStore.impl.h"
 
 #include "abs_rdb_predicates.h"
 #include "ani_rdb_utils.h"
 #include "ani_utils.h"
 #include "datashare_abs_predicates.h"
 #include "js_proxy.h"
+#include "lite_result_set_impl.h"
+#include "lite_result_set_proxy.h"
 #include "logger.h"
 #include "napi_rdb_js_utils.h"
+#include "ohos.data.relationalStore.impl.hpp"
 #include "ohos.data.relationalStore.proj.hpp"
+#include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_predicates.h"
+#include "rdb_predicates_impl.h"
 #include "rdb_result_set_bridge.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store_config.h"
+#include "rdb_store_impl.h"
 #include "rdb_types.h"
 #include "rdb_utils.h"
 #include "result_set_bridge.h"
-#include "stdexcept"
-#include "taihe/runtime.hpp"
-#include "ohos.data.relationalStore.impl.h"
-#include "lite_result_set_impl.h"
-#include "lite_result_set_proxy.h"
-#include "rdb_predicates_impl.h"
-#include "rdb_store_impl.h"
 #include "result_set_impl.h"
 #include "result_set_proxy.h"
+#include "stdexcept"
+#include "taihe/runtime.hpp"
 #include "transaction_impl.h"
 
 using namespace taihe;
 using namespace ohos::data::relationalStore;
 using namespace OHOS::RelationalStoreJsKit;
-using RdbSqlUtils =  OHOS::NativeRdb::RdbSqlUtils;
+using RdbSqlUtils = OHOS::NativeRdb::RdbSqlUtils;
 namespace OHOS {
 namespace RdbTaihe {
 using namespace OHOS;
@@ -131,6 +132,10 @@ RdbStore GetRdbStoreSync(uintptr_t context, StoreConfig const &config)
 void DeleteRdbStoreWithName(uintptr_t context, string_view name)
 {
     ani_env *env = get_env();
+    if (env == nullptr) {
+        LOG_ERROR("get_env failed");
+        return;
+    }
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig;
     rdbConfig.name = std::string(name);
     auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
@@ -145,11 +150,19 @@ void DeleteRdbStoreWithName(uintptr_t context, string_view name)
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_VECTOR);
     int errCodeVector = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     LOG_INFO("deleteRdbStoreWithName sqlite %{public}d, vector %{public}d", errCodeSqlite, errCodeVector);
+    if (errCodeSqlite != NativeRdb::E_OK || errCodeVector != NativeRdb::E_OK) {
+        ThrowInnerError(NativeRdb::E_REMOVE_FILE);
+        return;
+    }
 }
 
 void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
 {
     ani_env *env = get_env();
+    if (env == nullptr) {
+        LOG_ERROR("get_env failed");
+        return;
+    }
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
     auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
     if (!configRet.first) {
@@ -159,6 +172,9 @@ void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
     OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
 
     int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
+    }
     LOG_INFO("deleteRdbStoreWithConfig errCode %{public}d", errCode);
 }
 
@@ -172,7 +188,7 @@ bool IsTokenizerSupported(ohos::data::relationalStore::Tokenizer tokenizer)
     return OHOS::NativeRdb::RdbHelper::IsSupportedTokenizer(ani_rdbutils::TokenizerToNative(tokenizer));
 }
 
-SqlInfo GetInsertSqlInfo(string_view table, ValuesBucket const& values, optional_view<ConflictResolution> conflict)
+SqlInfo GetInsertSqlInfo(string_view table, ValuesBucket const &values, optional_view<ConflictResolution> conflict)
 {
     auto tableNative = std::string(table);
     if (tableNative.size() == 0) {
@@ -209,8 +225,8 @@ SqlInfo GetInsertSqlInfo(string_view table, ValuesBucket const& values, optional
     return ani_rdbutils::SqlInfoToTaihe(sqlInfo);
 }
 
-SqlInfo GetUpdateSqlInfo(weak::RdbPredicates predicates, ValuesBucket const& values,
-    optional_view<ConflictResolution> conflict)
+SqlInfo GetUpdateSqlInfo(
+    weak::RdbPredicates predicates, ValuesBucket const &values, optional_view<ConflictResolution> conflict)
 {
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     if (rdbPredicateNative == nullptr) {
@@ -333,8 +349,8 @@ SqlInfo GetQuerySqlInfo(weak::RdbPredicates predicates, optional_view<array<stri
     }
     return ani_rdbutils::SqlInfoToTaihe(sqlInfo);
 }
-}
-} // namespace
+} // namespace RdbTaihe
+} // namespace OHOS
 
 // Since these macros are auto-generate, lint will cause false positive.
 // NOLINTBEGIN

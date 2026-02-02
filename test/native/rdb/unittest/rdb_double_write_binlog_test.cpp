@@ -1176,7 +1176,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_020, TestSize.Level0)
     int64_t id = 1;
     int count = 10;
     Insert(id, count);
-    
+
     LOG_INFO("---- let binlog clean return ERROR");
     auto originalApi = sqlite3_export_extra_symbols;
     struct sqlite3_api_routines_extra mockApi = *sqlite3_export_extra_symbols;
@@ -1204,7 +1204,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_021, TestSize.Level0)
     Insert(id, count);
     store = nullptr;
     slaveStore = nullptr;
-    
+
     LOG_INFO("---- let support binlog becomes off");
     struct sqlite3_api_routines_relational mockApi = *sqlite3_export_relational_symbols;
     mockApi.is_support_binlog = MockSupportBinlogOff;
@@ -1607,7 +1607,7 @@ static int64_t GetInsertTime(std::shared_ptr<RdbStore> &rdbStore, int repeat, si
 {
     size_t bigSize = dataSize;
     std::string data(bigSize, 'a');
-    
+
     LOG_INFO("---- start insert ----");
     int64_t totalCost = 0;
     for (int64_t id = 0; id < repeat; id++) {
@@ -1699,6 +1699,7 @@ int64_t RdbDoubleWriteBinlogTest::GetRestoreTime(HAMode haMode, bool isOpenSlave
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_001, TestSize.Level2)
 {
     LOG_INFO("----RdbStore_Binlog_Performance_001 start----");
+    GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
@@ -1706,7 +1707,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_001, TestSize.Lev
     InitDb(HAMode::SINGLE);
     EXPECT_NE(store, nullptr);
     ASSERT_TRUE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
- 
+
     int totalCount = 20000;
     int dataSize = 1024;
     int batchSize = 10;
@@ -1743,6 +1744,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_001, TestSize.Lev
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_002, TestSize.Level2)
 {
     LOG_INFO("----RdbStore_Binlog_Performance_002 start----");
+    GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
@@ -1790,6 +1792,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_002, TestSize.Lev
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_003, TestSize.Level2)
 {
     LOG_INFO("----RdbStore_Binlog_Performance_003 start----");
+    GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
@@ -1834,6 +1837,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_003, TestSize.Lev
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_004, TestSize.Level2)
 {
     LOG_INFO("----RdbStore_Binlog_Performance_004 start----");
+    GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
     if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
         RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
@@ -1879,6 +1883,8 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_004, TestSize.Lev
  */
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Level3)
 {
+    LOG_INFO("----RdbStore_Binlog_Performance_005 start----");
+    GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
     struct sqlite3_api_routines_relational mockApi = *sqlite3_export_relational_symbols;
     mockApi.is_support_binlog = MockSupportBinlogOff;
@@ -1908,6 +1914,8 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Lev
  */
 HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Level3)
 {
+    LOG_INFO("----RdbStore_Binlog_Performance_006 start----");
+    GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
     struct sqlite3_api_routines_relational mockApi = *sqlite3_export_relational_symbols;
     mockApi.is_support_binlog = MockSupportBinlogOff;

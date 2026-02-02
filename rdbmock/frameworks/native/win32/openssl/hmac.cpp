@@ -19,6 +19,12 @@
 unsigned char *HMAC(const EVP_MD *evp_md, const void *key, int key_len, const unsigned char *d, size_t n,
     unsigned char *md, unsigned int *md_len)
 {
+    (void) evp_md;
+    (void) key;
+    (void) key_len;
+    (void) d;
+    (void) n;
+    (void) md;
     *md_len = 0;
     return nullptr;
 };
