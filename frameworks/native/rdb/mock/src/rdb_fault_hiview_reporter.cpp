@@ -102,6 +102,8 @@ void RdbFaultEvent::Report() const
 {
 }
 
+RdbFaultEvent::~RdbFaultEvent() = default;
+
 RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
     const std::string &custLog, bool printDbInfo) : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config)
 {
@@ -111,4 +113,6 @@ RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t e
 void RdbFaultDbFileEvent::Report() const
 {
 }
+
+RdbFaultDbFileEvent::~RdbFaultDbFileEvent() = default;
 } // namespace OHOS::NativeRdb
