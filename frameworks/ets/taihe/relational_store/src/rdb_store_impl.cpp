@@ -354,6 +354,7 @@ LiteResultSet RdbStoreImpl::QueryWithoutRowCountSync(weak::RdbPredicates predica
     auto nativeResultSet = store->QueryByStep(*rdbPredicateNative, columnNames, options);
     ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
         (make_holder<LiteResultSetImpl, LiteResultSet>()));
+    return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
 }
 
 LiteResultSet RdbStoreImpl::QuerySqlWithoutRowCountSync(string_view sql, optional_view<array<ValueType>> bindArgs)
@@ -378,6 +379,7 @@ LiteResultSet RdbStoreImpl::QuerySqlWithoutRowCountSync(string_view sql, optiona
     nativeResultSet = store->QueryByStep(std::string(sql), para, options);
     ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
         (make_holder<LiteResultSetImpl, LiteResultSet>()));
+    return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
 }
 
 ResultSet RdbStoreImpl::QueryDataShareSync(::taihe::string_view table, uintptr_t predicates)
@@ -414,6 +416,7 @@ ResultSet RdbStoreImpl::QueryDataShareWithColumnSync(
     auto nativeResultSet = store->Query(rdbPredicates, stdcolumns);
     ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
         (make_holder<ResultSetImpl, ResultSet>()));
+    return taihe::make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
 ResultSet RdbStoreImpl::QuerySqlWithSql(string_view sql)
