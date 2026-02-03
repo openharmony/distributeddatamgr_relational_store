@@ -19,7 +19,7 @@
 namespace OHOS {
 namespace RdbTaihe {
 
-static std::string GetErrorString(int errcode)
+std::string GetErrorString(int errcode)
 {
     if (ERR_STRING_MAP.find(errcode) != ERR_STRING_MAP.end()) {
         return ERR_STRING_MAP.at(errcode);
