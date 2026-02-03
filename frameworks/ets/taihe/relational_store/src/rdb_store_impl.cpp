@@ -1362,8 +1362,10 @@ void RdbStoreImpl::Emit(string_view event)
 void RdbStoreImpl::CloseSync()
 {
     auto store = ResetResource();
-    ASSERT_RETURN_THROW_ERROR(store != nullptr,
-        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    if (store == nullptr) {	 
+        LOG_ERROR("store is nullptr");	 
+        return; 
+    }
     UnRegisterAll(store);
 }
 
