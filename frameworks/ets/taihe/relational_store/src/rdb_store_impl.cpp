@@ -1096,7 +1096,7 @@ void RdbStoreImpl::OffAutoSyncProgressInner(optional_view<uintptr_t> opq)
 {
     auto store = GetResource();
     ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
-            std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto unSubscribeFunc = [this, store](std::shared_ptr<ani_rdbutils::TaiheSyncObserver> observer)->int32_t {
         auto errCode = store->UnregisterAutoSyncCallback(observer);
         if (errCode == OHOS::NativeRdb::E_OK) {
@@ -1363,7 +1363,7 @@ void RdbStoreImpl::CloseSync()
 {
     auto store = ResetResource();
     ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
-            std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     UnRegisterAll(store);
 }
 
