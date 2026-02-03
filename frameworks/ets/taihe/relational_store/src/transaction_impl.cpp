@@ -34,11 +34,9 @@ TransactionImpl::TransactionImpl(std::shared_ptr<OHOS::NativeRdb::Transaction> t
 
 void TransactionImpl::CommitSync()
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), RDB_DO_NOTHING);
     auto errCode = nativeTransaction_->Commit();
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -47,11 +45,9 @@ void TransactionImpl::CommitSync()
 
 void TransactionImpl::RollbackSync()
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), RDB_DO_NOTHING);
     auto errCode = nativeTransaction_->Rollback();
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -61,11 +57,9 @@ void TransactionImpl::RollbackSync()
 int64_t TransactionImpl::InsertSync(
     string_view table, map_view<::taihe::string, ValueType> values, optional_view<ConflictResolution> conflict)
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), ERR_NULL);
     ConflictResolution conflictResolution = ConflictResolution::key_t::ON_CONFLICT_NONE;
     if (conflict.has_value()) {
         conflictResolution = conflict.value().get_key();
@@ -82,11 +76,9 @@ int64_t TransactionImpl::InsertSync(
 
 int64_t TransactionImpl::BatchInsertSync(string_view table, array_view<map<string, ValueType>> values)
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), ERR_NULL);
     OHOS::NativeRdb::ValuesBuckets buckets = ani_rdbutils::BucketValuesToNative(values);
     if (ani_rdbutils::HasDuplicateAssets(buckets)) {
         ThrowParamError("Duplicate assets are not allowed");
@@ -103,11 +95,9 @@ int64_t TransactionImpl::BatchInsertSync(string_view table, array_view<map<strin
 int64_t TransactionImpl::UpdateSync(
     map_view<string, ValueType> values, weak::RdbPredicates predicates, optional_view<ConflictResolution> conflict)
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), ERR_NULL);
     ConflictResolution conflictResolution = ConflictResolution::key_t::ON_CONFLICT_NONE;
     if (conflict.has_value()) {
         conflictResolution = conflict.value().get_key();
@@ -129,11 +119,9 @@ int64_t TransactionImpl::UpdateSync(
 
 int64_t TransactionImpl::DeleteSync(weak::RdbPredicates predicates)
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), ERR_NULL);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     if (rdbPredicateNative == nullptr) {
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
@@ -149,11 +137,9 @@ int64_t TransactionImpl::DeleteSync(weak::RdbPredicates predicates)
 
 ResultSet TransactionImpl::QuerySync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), (make_holder<ResultSetImpl, ResultSet>()));
     std::vector<std::string> stdcolumns;
     if (columns.has_value()) {
         stdcolumns = std::vector<std::string>(columns.value().begin(), columns.value().end());
@@ -164,33 +150,35 @@ ResultSet TransactionImpl::QuerySync(weak::RdbPredicates predicates, optional_vi
         return make_holder<ResultSetImpl, ResultSet>();
     }
     auto nativeResultSet = nativeTransaction_->QueryByStep(*rdbPredicateNative, stdcolumns);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeResultSet is nullptr"), (make_holder<ResultSetImpl, ResultSet>()));
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
 ResultSet TransactionImpl::QuerySqlSync(string_view sql, optional_view<array<ValueType>> args)
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<ResultSetImpl, ResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), (make_holder<ResultSetImpl, ResultSet>()));
     std::vector<OHOS::NativeRdb::ValueObject> para;
     if (args.has_value()) {
         std::transform(args.value().begin(), args.value().end(), std::back_inserter(para),
             [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
     }
     auto nativeResultSet = nativeTransaction_->QueryByStep(std::string(sql), para);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeResultSet is nullptr"), (make_holder<ResultSetImpl, ResultSet>()));
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
 LiteResultSet TransactionImpl::QueryWithoutRowCountSync(weak::RdbPredicates predicates,
     optional_view<array<string>> columns)
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<LiteResultSetImpl, LiteResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), (make_holder<LiteResultSetImpl, LiteResultSet>()));
     std::vector<std::string> columnNames;
     if (columns.has_value()) {
         columnNames = std::vector<std::string>(columns.value().begin(), columns.value().end());
@@ -202,16 +190,17 @@ LiteResultSet TransactionImpl::QueryWithoutRowCountSync(weak::RdbPredicates pred
     }
     DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
     auto nativeResultSet = nativeTransaction_->QueryByStep(*rdbPredicateNative, columnNames, options);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeResultSet is nullptr"), (make_holder<LiteResultSetImpl, LiteResultSet>()));
     return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
 }
 
 LiteResultSet TransactionImpl::QuerySqlWithoutRowCountSync(string_view sql, optional_view<array<ValueType>> args)
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return make_holder<LiteResultSetImpl, LiteResultSet>();
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), (make_holder<LiteResultSetImpl, LiteResultSet>()));
     if (sql.empty()) {
         LOG_ERROR("sql is empty");
         ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
@@ -225,17 +214,18 @@ LiteResultSet TransactionImpl::QuerySqlWithoutRowCountSync(string_view sql, opti
     }
     DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
     auto nativeResultSet = nativeTransaction_->QueryByStep(std::string(sql), para, options);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeResultSet is nullptr"), (make_holder<LiteResultSetImpl, LiteResultSet>()));
     return make_holder<LiteResultSetImpl, LiteResultSet>(nativeResultSet);
 }
 
 ValueType TransactionImpl::ExecuteSync(string_view sql, optional_view<array<ValueType>> args)
 {
     ValueType aniValue = ::ohos::data::relationalStore::ValueType::make_EMPTY();
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return aniValue;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), aniValue);
     std::vector<OHOS::NativeRdb::ValueObject> para;
     if (args.has_value()) {
         para.resize(args.value().size());
@@ -271,15 +261,17 @@ int64_t TransactionImpl::BatchInsertWithConflictResolutionSync(taihe::string_vie
     taihe::array_view<ohos::data::relationalStore::ValuesBucket> values,
     ohos::data::relationalStore::ConflictResolution conflict)
 {
-    if (nativeTransaction_ == nullptr) {
-        LOG_ERROR("nativeTransaction_ is nullptr");
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ERR_NULL;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeTransaction_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED,
+            "nativeTransaction_ is nullptr"), ERR_NULL);
     OHOS::NativeRdb::ValuesBuckets buckets;
     for (const auto &valuesBucket : values) {
         buckets.Put(ani_rdbutils::MapValuesToNative(
             valuesBucket.get_ref<ohos::data::relationalStore::ValuesBucket::tag_t::VALUESBUCKET>()));
+    }
+    if (ani_rdbutils::HasDuplicateAssets(buckets)) {
+        ThrowParamError("Duplicate assets are not allowed");
+        return ERR_NULL;
     }
     ConflictResolution conflictResolution = ConflictResolution::key_t::ON_CONFLICT_NONE;
     conflictResolution = conflict.get_key();
