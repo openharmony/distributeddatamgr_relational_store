@@ -53,14 +53,6 @@ API_EXPORT bool Marshalling(const SyncerParam &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(SyncerParam &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const NotifyConfig &input, MessageParcel &data);
-template<>
-API_EXPORT bool Unmarshalling(NotifyConfig &output, MessageParcel &data);
-template<>
-API_EXPORT bool Marshalling(const Option &input, MessageParcel &data);
-template<>
-API_EXPORT bool Unmarshalling(Option &output, MessageParcel &data);
-template<>
 API_EXPORT bool Marshalling(const RdbPredicates &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(RdbPredicates &output, MessageParcel &data);
@@ -68,10 +60,6 @@ template<>
 API_EXPORT bool Marshalling(const RdbOperation &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(RdbOperation &output, MessageParcel &data);
-template<>
-API_EXPORT bool Marshalling(const SubOption &input, MessageParcel &data);
-template<>
-API_EXPORT bool Unmarshalling(SubOption &output, MessageParcel &data);
 template<>
 API_EXPORT bool Marshalling(const ValueObject &input, MessageParcel &data);
 template<>
@@ -84,10 +72,6 @@ template<>
 API_EXPORT bool Marshalling(const Asset &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(Asset &output, MessageParcel &data);
-template<>
-API_EXPORT bool Marshalling(const SubOption &input, MessageParcel &data);
-template<>
-API_EXPORT bool Unmarshalling(SubOption &output, MessageParcel &data);
 template<>
 API_EXPORT bool Marshalling(const ProgressDetail &input, MessageParcel &data);
 template<>
@@ -109,18 +93,6 @@ API_EXPORT bool Marshalling(const Origin &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(Origin &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const RdbChangedData &input, MessageParcel &data);
-template<>
-API_EXPORT bool Unmarshalling(RdbChangedData &output, MessageParcel &data);
-template<>
-API_EXPORT bool Marshalling(const RdbProperties &input, MessageParcel &data);
-template<>
-API_EXPORT bool Unmarshalling(RdbProperties &output, MessageParcel &data);
-template<>
-API_EXPORT bool Marshalling(const Reference &input, MessageParcel &data);
-template<>
-API_EXPORT bool Unmarshalling(Reference &output, MessageParcel &data);
-template<>
 API_EXPORT bool Marshalling(const BigInt &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(BigInt &output, MessageParcel &data);
@@ -129,12 +101,23 @@ API_EXPORT bool Marshalling(const DebugInfo &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(DebugInfo &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const StatReporter &input, MessageParcel &data);
-template<>
-API_EXPORT bool Unmarshalling(StatReporter &output, MessageParcel &data);
-template<>
 API_EXPORT bool Marshalling(const RdbDfxInfo &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(RdbDfxInfo &output, MessageParcel &data);
+
+template<>
+bool Marshalling(const NotifyConfig &input, MessageParcel &data);
+template<>
+bool Marshalling(const Option &input, MessageParcel &data);
+template<>
+bool Marshalling(const SubOption &input, MessageParcel &data);
+template<>
+bool Marshalling(const RdbChangedData &input, MessageParcel &data);
+template<>
+bool Marshalling(const RdbProperties &input, MessageParcel &data);
+template<>
+bool Marshalling(const Reference &input, MessageParcel &data);
+template<>
+bool Marshalling(const StatReporter &input, MessageParcel &data);
 } // namespace OHOS::ITypesUtil
 #endif // DISTRIBUTED_RDB_RDB_TYPES_UTIL_H
