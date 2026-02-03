@@ -22,6 +22,7 @@ namespace OHOS {
 namespace RdbTaihe {
 using namespace OHOS;
 using namespace OHOS::Rdb;
+using namespace OHOS::RelationalStoreJsKit;
 
 void ThrowError(std::shared_ptr<Error> err);
 #define ASSERT_RETURN_THROW_ERROR(assertion, error, retVal) CHECK_RETURN_CORE(assertion, ThrowError(error), retVal)
