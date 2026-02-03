@@ -1071,7 +1071,7 @@ void RdbStoreImpl::OnAutoSyncProgressInner(
     taihe::callback_view<void(ohos::data::relationalStore::ProgressDetails const& info)> callback, uintptr_t opq)
 {
     auto store = GetResource();
-    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
         std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto subscribeFunc = [this, store](std::shared_ptr<ani_rdbutils::TaiheSyncObserver> observer)->int32_t {
         auto errCode = store->RegisterAutoSyncCallback(observer);
