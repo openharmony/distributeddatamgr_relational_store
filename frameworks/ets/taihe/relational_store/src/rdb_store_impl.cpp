@@ -43,6 +43,7 @@
 #include "taihe_sql_observer.h"
 #include "taihe_sync_observer.h"
 #include "transaction_impl.h"
+#include "error_throw_utils.h"
 
 namespace OHOS {
 namespace RdbTaihe {

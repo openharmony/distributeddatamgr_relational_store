@@ -28,10 +28,11 @@
 #include "rdb_predicates_impl.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store_config.h"
-
+#include "error_throw_utils.h"
 namespace ani_rdbutils {
 using namespace taihe;
 using namespace OHOS::Rdb;
+using namespace OHOS::RdbTaihe;
 using TaiheAssetStatus = ::ohos::data::relationalStore::AssetStatus;
 using TaiheValueType = ::ohos::data::relationalStore::ValueType;
 using TaiheDistributedTableType = ohos::data::relationalStore::DistributedTableType;
@@ -502,25 +503,19 @@ std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
     OHOS::NativeRdb::RdbStoreConfig empty("");
     bool isConfigNew = (rdbConfig.version == ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
     if (!rdbConfig.cryptoParam.IsValid()) {
-        taihe::set_business_error(isConfigNew ? E_INVALID_ARGS : E_PARAM_ERROR, "Illegal CryptoParam.");
+        ThrowInnerErrorExt(isConfigNew ? E_INVALID_ARGS : E_PARAM_ERROR);
         return std::make_pair(false, empty);
     }
     if (rdbConfig.tokenizer < NONE_TOKENIZER || rdbConfig.tokenizer >= TOKENIZER_END) {
-        taihe::set_business_error(isConfigNew ? E_INVALID_ARGS : E_PARAM_ERROR, "Illegal tokenizer.");
+        ThrowInnerErrorExt(isConfigNew ? E_INVALID_ARGS : E_PARAM_ERROR);
         return std::make_pair(false, empty);
     }
     if (!RdbHelper::IsSupportedTokenizer(rdbConfig.tokenizer)) {
-        const std::optional<JsErrorCode> err = OHOS::RelationalStoreJsKit::GetJsErrorCode(E_NOT_SUPPORT);
-        if (err.has_value()) {
-            taihe::set_business_error(E_NOT_SUPPORT, err.value().message);
-        }
+        ThrowInnerErrorExt(E_NOT_SUPPORT);
         return std::make_pair(false, empty);
     }
     if (!rdbConfig.persist && !rdbConfig.rootDir.empty()) {
-        const std::optional<JsErrorCode> err = OHOS::RelationalStoreJsKit::GetJsErrorCode(E_NOT_SUPPORT);
-        if (err.has_value()) {
-            taihe::set_business_error(E_NOT_SUPPORT, err.value().message);
-        }
+        ThrowInnerErrorExt(E_NOT_SUPPORT);
         return std::make_pair(false, empty);
     }
     OHOS::AppDataMgrJsKit::JSUtils::ContextParam contextParam;
@@ -534,8 +529,11 @@ std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
         rdbConfig.isReadOnly = true;
     }
     if (err != nullptr) {
-        taihe::set_business_error(err->GetCode() == E_PARAM_ERROR ? E_INVALID_ARGS : err->GetCode(),
-            err->GetMessage());
+        if (rdbConfig.version == ConfigVersion::DEFAULT_VERSION) {
+            ThrowInnerErrorExt(err->GetCode());
+        } else {
+            ThrowInnerErrorExt(err->GetCode() == E_PARAM_ERROR ? E_INVALID_ARGS : err->GetCode());
+        }
         return std::make_pair(false, empty);
     }
 

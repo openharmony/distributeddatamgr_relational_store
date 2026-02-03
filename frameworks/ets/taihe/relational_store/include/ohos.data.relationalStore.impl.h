@@ -44,6 +44,7 @@
 #include "result_set_impl.h"
 #include "result_set_proxy.h"
 #include "transaction_impl.h"
+#include "error_throw_utils.h"
 
 namespace OHOS {
 namespace RdbTaihe {
@@ -59,13 +60,6 @@ using ValueObject = OHOS::NativeRdb::ValueObject;
 
 static constexpr int ERR_NULL = -1;
 static constexpr int INIT_POSITION = -1;
-
-void ThrowError(std::shared_ptr<Error> err);
-#define ASSERT_RETURN_THROW_ERROR(assertion, error, retVal) CHECK_RETURN_CORE(assertion, ThrowError(error), retVal)
-void ThrowInnerError(int errCode);
-void ThrowInnerErrorExt(int errCode);
-void ThrowNonSystemError();
-void ThrowParamError(const char *message);
 
 template <class T>
 Result BatchInsertWithReturning(std::shared_ptr<T> store, string_view table,
