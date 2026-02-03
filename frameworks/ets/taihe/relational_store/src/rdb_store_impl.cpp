@@ -1362,10 +1362,8 @@ void RdbStoreImpl::Emit(string_view event)
 void RdbStoreImpl::CloseSync()
 {
     auto store = ResetResource();
-    if (store == nullptr) {
-        LOG_WARN("RdbStore already closed");
-        return;
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeRdbStore_ != nullptr,
+            std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     UnRegisterAll(store);
 }
 
@@ -1612,7 +1610,6 @@ int64_t RdbStoreImpl::BatchInsertWithConflictResolutionSync(taihe::string_view t
 
 void RdbStoreImpl::RekeySync(taihe::optional_view<ohos::data::relationalStore::CryptoParam> cryptoParam)
 {
-
     auto store = GetResource();
     ASSERT_RETURN_THROW_ERROR(store != nullptr,
         std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
