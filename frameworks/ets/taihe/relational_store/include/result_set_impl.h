@@ -18,6 +18,7 @@
 
 #include "ani_rdb_utils.h"
 #include "result_set_proxy.h"
+#include "thread_safe_base.h"
 
 namespace OHOS {
 namespace RdbTaihe {
@@ -29,7 +30,7 @@ using namespace OHOS::RdbTaihe;
 using ValueType = ohos::data::relationalStore::ValueType;
 using ValueObject = OHOS::NativeRdb::ValueObject;
 
-class ResultSetImpl {
+class ResultSetImpl : public ThreadSafeBase<OHOS::NativeRdb::ResultSet> {
 public:
     ResultSetImpl();
     explicit ResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet);
