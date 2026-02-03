@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "napi_rdb_js_utils.h"
-#include "ohos.data.relationalStore.impl.hpp"
 #include "ohos.data.relationalStore.proj.hpp"
 #include "rdb_store.h"
 #include "rdb_types.h"

@@ -16,8 +16,6 @@
 #ifndef OHOS_RELATION_STORE_RELATION_STORE_IMPL_H
 #define OHOS_RELATION_STORE_RELATION_STORE_IMPL_H
 
-#include "ohos.data.relationalStore.impl.hpp"
-
 #include "abs_rdb_predicates.h"
 #include "ani_rdb_utils.h"
 #include "ani_utils.h"
