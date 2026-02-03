@@ -31,8 +31,10 @@
 #include "error_throw_utils.h"
 namespace ani_rdbutils {
 using namespace taihe;
+using namespace OHOS;
 using namespace OHOS::Rdb;
 using namespace OHOS::RdbTaihe;
+using namespace OHOS::NativeRdb;
 using TaiheAssetStatus = ::ohos::data::relationalStore::AssetStatus;
 using TaiheValueType = ::ohos::data::relationalStore::ValueType;
 using TaiheDistributedTableType = ohos::data::relationalStore::DistributedTableType;
@@ -976,7 +978,7 @@ std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePredicatesFromTaihe(
     return rdbPredicateNative;
 }
 
-std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position)
+std::pair<int, std::vector<RowEntity>> GetRows(OHOS::NativeRdb::ResultSet &resultSet, int32_t maxCount, int32_t position)
 {
     int rowPos = 0;
     resultSet.GetRowIndex(rowPos);

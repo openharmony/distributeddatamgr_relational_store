@@ -27,6 +27,8 @@
 #include "value_object.h"
 
 namespace ani_rdbutils {
+using namespace OHOS;
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using JsChangeInfoCallbackType = taihe::callback<void(taihe::array_view<ohos::data::relationalStore::ChangeInfo>)>;
 using JsDevicesCallbackType = taihe::callback<void(taihe::array_view<taihe::string>)>;
@@ -117,7 +119,7 @@ std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePredicatesFromTaihe(
     ohos::data::relationalStore::weak::RdbPredicates predicates);
 
 std::pair<int, std::vector<RowEntity>> GetRows(
-    ResultSet &resultSet, int32_t maxCount, int32_t position);
+    OHOS::NativeRdb::ResultSet &resultSet, int32_t maxCount, int32_t position);
 bool WarpDate(double time, ani_object &outObj);
 } // namespace ani_rdbutils
 
