@@ -1362,9 +1362,9 @@ void RdbStoreImpl::Emit(string_view event)
 void RdbStoreImpl::CloseSync()
 {
     auto store = ResetResource();
-    if (store == nullptr) {	 
-        LOG_ERROR("store is nullptr");	 
-        return; 
+    if (store == nullptr) {
+        LOG_ERROR("store is nullptr");
+        return;
     }
     UnRegisterAll(store);
 }
