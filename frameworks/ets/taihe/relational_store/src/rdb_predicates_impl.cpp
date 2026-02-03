@@ -17,6 +17,7 @@
 #include "ohos.data.relationalStore.impl.h"
 #include "ohos.data.relationalStore.proj.hpp"
 #include "rdb_predicates_impl.h"
+#include "error_throw_utils.h"
 
 namespace OHOS {
 namespace RdbTaihe {
