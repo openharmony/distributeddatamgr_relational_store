@@ -112,7 +112,7 @@ Result UpdateWithReturning(std::shared_ptr<T> store, ValuesBucket values,
     ASSERT_RETURN_THROW_ERROR(
         rdbPredicateNative != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."), returnVal);
     ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicateNative->GetTableName()),
-            std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"), returnVal);
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"), returnVal);
     auto nativeConfig = ani_rdbutils::ReturningConfigToNative(config);
     nativeConfig.columns = RdbSqlUtils::BatchTrim(nativeConfig.columns);
     ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidFields(nativeConfig.columns),

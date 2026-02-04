@@ -12,21 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "napi_rdb_js_utils.h"
-
 #ifndef ERROR_THROW_H
 #define ERROR_THROW_H
 
+#include "napi_rdb_js_utils.h"
 namespace OHOS {
 namespace RdbTaihe {
 using namespace OHOS;
 using namespace OHOS::Rdb;
 using namespace OHOS::RelationalStoreJsKit;
 
+#define ASSERT_RETURN_THROW_ERROR(assertion, error, retVal) CHECK_RETURN_CORE(assertion, ThrowError(error), retVal)
+
 std::string GetErrorString(int errcode);
 void ThrowError(std::shared_ptr<Error> err);
-#define ASSERT_RETURN_THROW_ERROR(assertion, error, retVal) CHECK_RETURN_CORE(assertion, ThrowError(error), retVal)
 void ThrowInnerError(int errCode);
 void ThrowInnerErrorExt(int errCode);
 void ThrowNonSystemError();
