@@ -471,6 +471,7 @@ bool ResultSetImpl::IsColumnNull(int32_t columnIndex)
 void ResultSetImpl::Close()
 {
     ResetResource();
+    nativeResultSet_ = nullptr;
     proxy_ = nullptr;
 }
 }
