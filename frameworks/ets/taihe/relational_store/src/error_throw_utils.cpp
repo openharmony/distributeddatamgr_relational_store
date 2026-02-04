@@ -13,11 +13,27 @@
  * limitations under the License.
  */
 
- #define LOG_TAG "ErrorThrowUtils"
+#define LOG_TAG "ErrorThrowUtils"
 #include "error_throw_utils.h"
+
+#include <string>
+
+#include "ani_ability_utils.h"
+#include "ani_base_context.h"
+#include "ani_utils.h"
+#include "js_ability.h"
+#include "js_utils.h"
 
 namespace OHOS {
 namespace RdbTaihe {
+using namespace taihe;
+
+const std::map<int, std::string> ERR_STRING_MAP = {
+    { NativeRdb::E_EMPTY_TABLE_NAME, "The table must be not empty string." },
+    { NativeRdb::E_EMPTY_VALUES_BUCKET, "Bucket must not be empty." },
+    { NativeRdb::E_INVALID_CONFLICT_FLAG, "Conflict flag is not correct." },
+    { NativeRdb::E_INVALID_ARGS, "The ValueBucket contains Assets and conflictResolution is REPLACE." },
+};
 
 std::string GetErrorString(int errcode)
 {

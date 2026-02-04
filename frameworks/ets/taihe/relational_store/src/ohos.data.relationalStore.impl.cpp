@@ -60,13 +60,6 @@ using ConfigVersion =  OHOS::NativeRdb::ConfigVersion;
 constexpr int32_t PARAM_LENGTH_MAX = 256;
 constexpr int32_t VALUESBUCKET_LENGTH_MAX = 1000;
 
-const std::map<int, std::string> ERR_STRING_MAP = {
-    { NativeRdb::E_EMPTY_TABLE_NAME, "The table must be not empty string." },
-    { NativeRdb::E_EMPTY_VALUES_BUCKET, "Bucket must not be empty." },
-    { NativeRdb::E_INVALID_CONFLICT_FLAG, "Conflict flag is not correct." },
-    { NativeRdb::E_INVALID_ARGS, "The ValueBucket contains Assets and conflictResolution is REPLACE." },
-};
-
 RdbPredicates CreateRdbPredicates(string_view name)
 {
     return make_holder<RdbPredicatesImpl, RdbPredicates>(std::string(name));
