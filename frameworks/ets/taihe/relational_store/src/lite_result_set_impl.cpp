@@ -299,6 +299,7 @@ bool LiteResultSetImpl::IsColumnNull(int32_t columnIndex)
 void LiteResultSetImpl::Close()
 {
     ResetResource();
+    nativeResultSet_ = nullptr;
     proxy_ = nullptr;
 }
 
