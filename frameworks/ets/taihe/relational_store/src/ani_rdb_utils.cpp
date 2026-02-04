@@ -978,7 +978,8 @@ std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePredicatesFromTaihe(
     return rdbPredicateNative;
 }
 
-std::pair<int, std::vector<RowEntity>> GetRows(OHOS::NativeRdb::ResultSet &resultSet, int32_t maxCount, int32_t position)
+std::pair<int, std::vector<RowEntity>> GetRows(
+    OHOS::NativeRdb::ResultSet &resultSet, int32_t maxCount, int32_t position)
 {
     int rowPos = 0;
     resultSet.GetRowIndex(rowPos);
