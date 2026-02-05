@@ -80,7 +80,7 @@ RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config, Config
     int errCode = OHOS::AppDataMgrJsKit::JSUtils::OK;
     if (configRet.first != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed, use default config");
-        ThrowInnerErrorExt(errorCode);
+        ThrowInnerErrorExt(configRet.first);
     }
     auto nativeRdbStore = OHOS::NativeRdb::RdbHelper::GetRdbStore(configRet.second, -1, callback, errCode);
     SetResource(nativeRdbStore);
@@ -1401,7 +1401,7 @@ int32_t RdbStoreImpl::AttachWithContext(
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
     auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context));
     if (configRet.first != OK) {
-        ThrowInnerErrorExt(errorCode);
+        ThrowInnerErrorExt(configRet.first);
         return 0;
     }
 
