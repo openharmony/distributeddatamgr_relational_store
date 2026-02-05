@@ -83,6 +83,7 @@ RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config, Config
         bool isConfigNew = (rdbConfig.version >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
         ThrowInnerErrorExt(
             (isConfigNew && (configRet.first == E_PARAM_ERROR)) ? NativeRdb::E_INVALID_ARGS : configRet.first);
+        return;
     }
     auto nativeRdbStore = OHOS::NativeRdb::RdbHelper::GetRdbStore(configRet.second, -1, callback, errCode);
     SetResource(nativeRdbStore);

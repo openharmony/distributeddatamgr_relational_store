@@ -90,6 +90,7 @@ void DeleteRdbStoreWithName(uintptr_t context, string_view name)
     if (configRet.first != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed");
         ThrowInnerErrorExt(configRet.first);
+        return;
     }
     OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
@@ -114,6 +115,7 @@ void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
     if (configRet.first != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed");
         ThrowInnerErrorExt(configRet.first);
+        return;
     }
     int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(configRet.second, false);
     if (errCode != OHOS::NativeRdb::E_OK) {
