@@ -537,7 +537,6 @@ std::pair<int, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
 
     OHOS::NativeRdb::RdbStoreConfig nativeStoreConfig(rdbConfig.path);
     InitRdbStoreConfig(nativeStoreConfig, rdbConfig, contextParam);
-    rdbStoreConfig = nativeStoreConfig;
     return std::make_pair(OK, nativeStoreConfig);
 }
 
