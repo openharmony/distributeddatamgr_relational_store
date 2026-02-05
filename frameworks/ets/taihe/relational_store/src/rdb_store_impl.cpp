@@ -74,24 +74,17 @@ RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config, Config
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
     rdbConfig.version = version;
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
+    OHOS::NativeRdb::RdbStoreConfig storeConfig;
+    int errorCode = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig, storeConfig);
     isSystemApp_ = rdbConfig.isSystemApp;
     DefaultOpenCallback callback;
     int errCode = OHOS::AppDataMgrJsKit::JSUtils::OK;
-    if (!configRet.first) {
+    if (errorCode != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed, use default config");
-        std::string dir = "/data/storage/el2/database/rdb";
-        std::string path = dir + "/" + std::string(config.name);
-        OHOS::NativeRdb::RdbStoreConfig storeConfig(path);
-        storeConfig.SetVersion(version);
-        OHOS::NativeRdb::RdbSqlUtils::CreateDirectory(dir);
-        auto nativeRdbStore = OHOS::NativeRdb::RdbHelper::GetRdbStore(storeConfig, -1, callback, errCode);
-        SetResource(nativeRdbStore);
-    } else {
-        configRet.second.SetVersion(version);
-        auto nativeRdbStore = OHOS::NativeRdb::RdbHelper::GetRdbStore(configRet.second, -1, callback, errCode);
-        SetResource(nativeRdbStore);
+        ThrowInnerErrorExt(errorCode);
     }
+    auto nativeRdbStore = OHOS::NativeRdb::RdbHelper::GetRdbStore(configRet.second, -1, callback, errCode);
+    SetResource(nativeRdbStore);
     if (errCode != OHOS::AppDataMgrJsKit::JSUtils::OK) {
         ThrowInnerError(errCode);
         ResetResource();
@@ -1407,12 +1400,12 @@ int32_t RdbStoreImpl::AttachWithContext(
 
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
-    if (!configRet.first) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
+    OHOS::NativeRdb::RdbStoreConfig nativeConfig;
+    int errorCode = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), nativeConfig);
+    if (errorCode != OK) {
+        ThrowInnerErrorExt(errorCode);
         return 0;
     }
-    OHOS::NativeRdb::RdbStoreConfig nativeConfig = configRet.second;
 
     std::string attachNameStr(attachName);
     int32_t waitTimeValue = WAIT_TIME_DEFAULT;

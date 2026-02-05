@@ -119,57 +119,49 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
-
 napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<GetRdbStoreContext>();
     context->config.version = ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED;
-    auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
-        int errCode = Convert2Value(env, argv[0], context->param);
-        CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal context."));
+    size_t argc = 2;
+    napi_value argv[2]{};
+    napi_value self = nullptr;
+    napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    RDB_NAPI_ASSERT_INT(env, argc == 2, std::make_shared<ParamNumError>("2"));
+    int errCode = Convert2Value(env, argv[0], context->param);
+    RDB_NAPI_ASSERT_INT(env, OK == errCode, std::make_shared<ParamError>("Illegal context."));
 
-        errCode = Convert2Value(env, argv[1], context->config);
-        CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
+    errCode = Convert2Value(env, argv[1], context->config);
+    RDB_NAPI_ASSERT_INT(env, OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
 
-        CHECK_RETURN_SET_E(context->config.cryptoParam.IsValid(),
-            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal CryptoParam."));
-        CHECK_RETURN_SET_E(context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
-            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal tokenizer."));
+    RDB_NAPI_ASSERT_INT(env, context->config.cryptoParam.IsValid(),
+        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal CryptoParam."));
+    RDB_NAPI_ASSERT_INT(env, context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
+        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal tokenizer."));
 
-        CHECK_RETURN_SET_E(RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
-            std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
-        if (!context->config.persist) {
-            CHECK_RETURN_SET_E(context->config.rootDir.empty(),
-                std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
-            return;
-        }
-        auto err = GetRealPath(env, argv[0], context->param, context->config);
-        if (!context->config.rootDir.empty()) {
-            context->config.isReadOnly = true;
-        }
-        
-        if (err != nullptr && err->GetCode() == E_PARAM_ERROR) {
-            CHECK_RETURN_SET_E(err == nullptr, std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
-        } else {
-            CHECK_RETURN_SET_E(err == nullptr, err);
-        }
-    };
-    auto exec = [context]() -> int {
-        int errCode = OK;
-        DefaultOpenCallback callback;
-        context->proxy =
-            RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
-        return errCode;
-    };
-    auto output = [context](napi_env env, napi_value &result) {
-        result = RdbStoreProxy::NewInstance(env, context->proxy, context->param.isSystemApp);
-        CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
-    };
-    context->SetAction(env, info, input, exec, output);
+    RDB_NAPI_ASSERT_INT(env, RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
+        std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
+    if (!context->config.persist) {
+        RDB_NAPI_ASSERT_INT(env, context->config.rootDir.empty(), std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
+    }
 
-    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return ASYNC_CALL(env, context);
+    auto err = GetRealPath(env, argv[0], context->param, context->config);
+    if (!context->config.rootDir.empty()) {
+        context->config.isReadOnly = true;
+    }
+
+    if (err != nullptr && err->GetCode() == E_PARAM_ERROR) {
+        RDB_NAPI_ASSERT_INT(env, err == nullptr, std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+    } else {
+        RDB_NAPI_ASSERT_INT(env, err == nullptr, err);
+    }
+
+    DefaultOpenCallback callback;
+    context->proxy = RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
+
+    napi_value result = RdbStoreProxy::NewInstance(env, context->proxy, context->param.isSystemApp);
+    RDB_NAPI_ASSERT_INT(env, result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    return result;
 }
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
