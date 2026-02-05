@@ -103,18 +103,15 @@ uintptr_t LiteResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::Colu
     if (columnIdentifier.holds_columnIndex()) {
         columnIndex = columnIdentifier.get_columnIndex_ref();
         ASSERT_RETURN_THROW_ERROR(columnIndex >= 0,
-            std::make_shared<ParamError>("Invalid columnIndex"), 0);
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Invalid columnIndex."), 0);
     } else {
         std::string columnName(columnIdentifier.get_columnName_ref());
         ASSERT_RETURN_THROW_ERROR(!columnName.empty(),
-            std::make_shared<ParamError>("columnName", "a non empty string."), 0);
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "columnName is empty."), 0);
         errCode = resultSet->GetColumnIndex(columnName, columnIndex);
     }
     if (errCode == OHOS::NativeRdb::E_OK) {
         errCode = resultSet->GetColumnType(columnIndex, columnType);
-    }
-    if (errCode == NativeRdb::E_INVALID_ARGS) {
-        errCode = E_PARAM_ERROR;
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerErrorExt(errCode);
