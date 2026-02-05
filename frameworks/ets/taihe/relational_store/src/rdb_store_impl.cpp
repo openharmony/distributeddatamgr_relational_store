@@ -74,12 +74,11 @@ RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config, Config
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
     rdbConfig.version = version;
-    OHOS::NativeRdb::RdbStoreConfig storeConfig;
-    int errorCode = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig, storeConfig);
+    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
     isSystemApp_ = rdbConfig.isSystemApp;
     DefaultOpenCallback callback;
     int errCode = OHOS::AppDataMgrJsKit::JSUtils::OK;
-    if (errorCode != OK) {
+    if (configRet.first != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed, use default config");
         ThrowInnerErrorExt(errorCode);
     }
@@ -1400,9 +1399,8 @@ int32_t RdbStoreImpl::AttachWithContext(
 
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
-    OHOS::NativeRdb::RdbStoreConfig nativeConfig;
-    int errorCode = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), nativeConfig);
-    if (errorCode != OK) {
+    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context));
+    if (configRet.first != OK) {
         ThrowInnerErrorExt(errorCode);
         return 0;
     }
@@ -1417,7 +1415,7 @@ int32_t RdbStoreImpl::AttachWithContext(
         }
     }
 
-    auto [errCode, output] = store->Attach(nativeConfig, attachNameStr, waitTimeValue);
+    auto [errCode, output] = store->Attach(configRet.second, attachNameStr, waitTimeValue);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
         return 0;
