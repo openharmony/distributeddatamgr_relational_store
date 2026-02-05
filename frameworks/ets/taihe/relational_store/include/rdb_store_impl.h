@@ -18,6 +18,7 @@
 
 #include "ani_rdb_utils.h"
 #include "taihe_rdb_observers_data.h"
+#include "thread_safe_base.h"
 
 namespace OHOS {
 namespace RdbTaihe {
@@ -33,7 +34,7 @@ using NativeDistributedTableMode = OHOS::DistributedRdb::DistributedTableMode;
 using NativeDistributedConfig = OHOS::DistributedRdb::DistributedConfig;
 using ConfigVersion =  OHOS::NativeRdb::ConfigVersion;
 
-class RdbStoreImpl {
+class RdbStoreImpl : public ThreadSafeBase<OHOS::NativeRdb::RdbStore> {
 public:
     RdbStoreImpl();
     explicit RdbStoreImpl(ani_object context, StoreConfig const &config, ConfigVersion version);
@@ -151,19 +152,15 @@ public:
     void SetLocaleSync(taihe::string_view locale);
 
 private:
-    std::shared_ptr<OHOS::NativeRdb::RdbStore> nativeRdbStore_;
-    bool isSystemApp_ = false;
-
-private:
     void Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise);
     template<class FuncType>
     void OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode, FuncType callback, uintptr_t opq);
     void OffDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode, taihe::optional_view<uintptr_t> opq);
-    void UnRegisterAll();
-    void UnRegisterDataChange();
+    void UnRegisterAll(std::shared_ptr<NativeRdb::RdbStore> store);
+    void UnRegisterDataChange(std::shared_ptr<NativeRdb::RdbStore> store);
 
-private:
     ani_rdbutils::TaiheRdbObserversData rdbObserversData_;
+    bool isSystemApp_ = false;
 };
 } // namespace RdbTaihe
 } // namespace OHOS

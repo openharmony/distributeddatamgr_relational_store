@@ -27,6 +27,7 @@
 #include "rdb_store_config.h"
 #include "rdb_types.h"
 #include "rdb_dfx_errno.h"
+#include "rdb_visibility.h"
 namespace OHOS::NativeRdb {
 using DebugInfo = OHOS::DistributedRdb::RdbDebugInfo;
 using DfxInfo = OHOS::DistributedRdb::RdbDfxInfo;
@@ -69,7 +70,7 @@ struct RdbFaultType {
 
 class RdbFaultEvent {
 public:
-    RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
+    API_EXPORT RdbFaultEvent(const std::string &faultType, int32_t errorCode, const std::string &bundleName,
         const std::string &custLog);
 
     std::string GetBundleName() const { return bundleName_; };
@@ -77,7 +78,7 @@ public:
     int32_t GetErrCode() const { return errorCode_; }
     std::string GetLogInfo() const { return custLog_; };
     virtual void Report() const;
-    virtual ~RdbFaultEvent() = default;
+    API_EXPORT virtual ~RdbFaultEvent();
 
 protected:
     void SetBundleName(const std::string &name) { bundleName_ = name; };
@@ -91,10 +92,11 @@ private:
 
 class RdbFaultDbFileEvent : public RdbFaultEvent {
 public:
-    RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
+    API_EXPORT RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
         const std::string &custLog = "", bool printDbInfo = false);
 
     virtual void Report() const override;
+    API_EXPORT virtual ~RdbFaultDbFileEvent();
 
 private:
     std::string BuildLogInfo() const;
@@ -113,7 +115,7 @@ public:
     static bool RegCollector(Collector collector);
     static void ReportCorrupted(const RdbCorruptedEvent &eventInfo);
     static void ReportCorruptedOnce(const RdbCorruptedEvent &eventInfo);
-    static void ReportFault(const RdbFaultEvent &faultEvent);
+    API_EXPORT static void ReportFault(const RdbFaultEvent &faultEvent);
     static void ReportRestore(const RdbCorruptedEvent &eventInfo, bool repair = true);
     static bool IsReportCorruptedFault(const std::string &dbPath);
     static std::string GetBundleName(const std::string &bundleName);
