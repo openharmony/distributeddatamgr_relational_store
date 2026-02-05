@@ -85,14 +85,14 @@ void DeleteRdbStoreWithName(uintptr_t context, string_view name)
         return;
     }
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig;
+    OHOS::NativeRdb::RdbStoreConfig storeConfig
     rdbConfig.name = std::string(name);
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
-    if (!configRet.first) {
+    int errorCode =
+        ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig, storeConfig);
+    if (errorCode != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed");
-        return;
+        ThrowInnerErrorExt(errorCode);
     }
-    OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
-
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
     int errCodeSqlite = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_VECTOR);
@@ -100,7 +100,6 @@ void DeleteRdbStoreWithName(uintptr_t context, string_view name)
     LOG_INFO("deleteRdbStoreWithName sqlite %{public}d, vector %{public}d", errCodeSqlite, errCodeVector);
     if (errCodeSqlite != NativeRdb::E_OK || errCodeVector != NativeRdb::E_OK) {
         ThrowInnerError(NativeRdb::E_REMOVE_FILE);
-        return;
     }
 }
 
@@ -112,12 +111,13 @@ void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
         return;
     }
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
-    if (!configRet.first) {
+    OHOS::NativeRdb::RdbStoreConfig storeConfig;
+    int errorCode =
+        ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig, storeConfig);
+    if (errorCode != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed");
-        return;
+        ThrowInnerErrorExt(errorCode);
     }
-    OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
 
     int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     if (errCode != OHOS::NativeRdb::E_OK) {
