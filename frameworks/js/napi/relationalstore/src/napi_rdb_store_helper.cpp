@@ -160,6 +160,7 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
 
     DefaultOpenCallback callback;
     context->proxy = RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
+    RDB_NAPI_ASSERT_INT(env, errCode == OK, std::make_shared<InnerErrorExt>(errCode));
 
     napi_value result = RdbStoreProxy::NewInstance(env, context->proxy, context->param.isSystemApp);
     RDB_NAPI_ASSERT_INT(env, result != nullptr, std::make_shared<InnerError>(E_ERROR));
