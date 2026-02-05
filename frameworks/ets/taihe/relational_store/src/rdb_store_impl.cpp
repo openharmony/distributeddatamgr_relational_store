@@ -81,7 +81,8 @@ RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config, Config
     if (configRet.first != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed, use default config");
         bool isConfigNew = (rdbConfig.version >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
-        ThrowInnerErrorExt((isConfigNew && (configRet.first == E_PARAM_ERROR)) ? E_INVALID_ARGS : configRet.first);
+        ThrowInnerErrorExt(
+            (isConfigNew && (configRet.first == E_PARAM_ERROR)) ? NativeRdb::E_INVALID_ARGS : configRet.first);
     }
     auto nativeRdbStore = OHOS::NativeRdb::RdbHelper::GetRdbStore(configRet.second, -1, callback, errCode);
     SetResource(nativeRdbStore);
