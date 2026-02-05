@@ -459,6 +459,34 @@ int RdbStoreImpl::SetDistributedTables(
     return HandleCloudSyncAfterSetDistributedTables(tables, distributedConfig);
 }
 
+int RdbStoreImpl::RemoveExceptDeviceData(
+    const std::map<std::string, std::vector<std::string>> &removeDataExceptDevicesMap)
+{
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+        return E_NOT_SUPPORT_NEW;
+    }
+    isNeedSetAcl_ = true;
+    SetFileGid(config_, SERVICE_GID);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    if (removeDataExceptDevicesMap.empty()) {
+        return E_INVALID_ARGS_NEW;
+    }
+    for (auto it = removeDataExceptDevicesMap.begin(); it != removeDataExceptDevicesMap.end(); ++it) {
+        if (it->first.empty() || it->second.empty()) {
+            return E_INVALID_ARGS_NEW;
+        }
+    }
+    syncerParam_.removeDataExceptDevicesMap_ = std::move(removeDataExceptDevicesMap);
+    int32_t errorCode = service->RemoveExceptDeviceData(syncerParam_);
+    if (errorCode != E_OK) {
+        LOG_ERROR("Fail to remove except device data, error=%{public}d.", errorCode);
+    }
+    return errorCode;
+}
+
 int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));

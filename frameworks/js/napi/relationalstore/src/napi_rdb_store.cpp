@@ -1506,6 +1506,7 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
 {
     properties.push_back(DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery));
     properties.push_back(DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables));
+    properties.push_back(DECLARE_NAPI_FUNCTION("removeExceptDeviceData", RemoveExceptDeviceData));
     properties.push_back(DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName));
     properties.push_back(DECLARE_NAPI_FUNCTION("sync", Sync));
     properties.push_back(DECLARE_NAPI_FUNCTION("cloudSync", CloudSync));
@@ -1540,6 +1541,35 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value RdbStoreProxy::RemoveExceptDeviceData(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreEnhanceContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 1, std::make_shared<ParamNumError>("1"));
+        RdbStoreProxy *obj = GetNativeInstance(env, self);
+        CHECK_RETURN_SET_E(obj != nullptr, std::make_shared<ParamError>("RdbStore", "not nullptr."));
+        CHECK_RETURN_SET_E(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
+        CHECK_RETURN_SET_E(obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        context->rdbStore = obj->GetInstance();
+        std::shared_ptr<Error> err = ParseExceptDeviceMap(env, argv[0], context);
+        CHECK_RETURN_SET_E(err == nullptr, err);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        CHECK_RETURN_ERR(!context->removeDataExceptDevicesMap.empty());
+        auto result = context->rdbStore->RemoveExceptDeviceData(context->removeDataExceptDevicesMap);
+        return result;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerErrorExt>(E_ERROR));
+    };
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
