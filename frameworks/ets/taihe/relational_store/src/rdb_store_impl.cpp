@@ -806,6 +806,29 @@ void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, Distr
     }
 }
 
+void RdbStoreImpl::RemoveExceptDeviceDataAsync(map_view<string, array<string>> removeDataExceptDevicesMap)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    if (removeDataExceptDevicesMap.empty()) {
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+    }
+    std::map<std::string, std::vector<std::string>> devicesMap;
+    for (const auto &[key, value] : removeDataExceptDevicesMap) {
+        if (value.empty()) {
+            ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+            return;
+        }
+        std::vector<std::string> vec(value.begin(), value.end());
+        devicesMap.emplace(key, std::move(vec));
+    }
+    int errCode = store->RemoveExceptDeviceData(devicesMap);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerErrorExt(errCode);
+    }
+}
+
 void RdbStoreImpl::SetDistributedTablesWithConfig(
     array_view<string> tables, DistributedType type, DistributedConfig const &config)
 {

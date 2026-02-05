@@ -740,6 +740,110 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_007, TestSize.Leve
 }
 
 /**
+ * @tc.name: RemoveExceptDeviceData_Test_001
+ * @tc.desc: Abnormal testCase of RemoveExceptDeviceData
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_001, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::map<std::string, std::vector<std::string>> map;
+    errCode = store->RemoveExceptDeviceData(map);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+    std::vector<std::string> vec;
+    map["employee"] = vec;
+    errCode = store->RemoveExceptDeviceData(map);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+    vec.push_back("localDeviceId");
+    map["employee"] = vec;
+    errCode = store->RemoveExceptDeviceData(map);
+    EXPECT_EQ(E_OK, errCode);
+}
+
+/**
+ * @tc.name: RemoveExceptDeviceData_Test_002
+ * @tc.desc: Abnormal testCase of RemoveExceptDeviceData remove fial due to vector db.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_VECTOR);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::map<std::string, std::vector<std::string>> map;
+    std::vector<std::string> vec;
+    vec.push_back("localDeviceId");
+    errCode = store->RemoveExceptDeviceData(map);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
+}
+
+/**
+ * @tc.name: RemoveExceptDeviceData_Test_003
+ * @tc.desc: Abnormal testCase of RemoveExceptDeviceData  remove fial due to mem db.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::map<std::string, std::vector<std::string>> map;
+    std::vector<std::string> vec;
+    vec.push_back("localDeviceId");
+    errCode = store->RemoveExceptDeviceData(map);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
+}
+
+/**
+ * @tc.name: RemoveExceptDeviceData_Test_004
+ * @tc.desc: Abnormal testCase of RemoveExceptDeviceData  remove fial due to service return error.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_004, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_SQLITE_ERROR, mockRdbService)));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::map<std::string, std::vector<std::string>> map;
+    std::vector<std::string> vec;
+    vec.push_back("localDeviceId");
+    map["employee"] = vec;
+    errCode = store->RemoveExceptDeviceData(map);
+    EXPECT_EQ(E_SQLITE_ERROR, errCode);
+}
+
+/**
  * @tc.name: Notify_Test_001
  * @tc.desc: Abnormal testCase of Notify
  * @tc.type: FUNC

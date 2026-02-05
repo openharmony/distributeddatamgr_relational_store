@@ -199,6 +199,17 @@ int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam &param, const
     return status;
 }
 
+int32_t RdbServiceProxy::RemoveExceptDeviceData(const RdbSyncerParam &param)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REMOVE_REMOTE_DATA), reply, param);
+    if (status != RDB_OK) {
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status,
+            param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
+}
+
 int32_t RdbServiceProxy::Sync(
     const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates, const AsyncDetail &async)
 {

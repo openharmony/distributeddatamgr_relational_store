@@ -95,6 +95,7 @@ struct RdbSyncerParam {
     bool enableCloud_ = true;
     int32_t subUser_ = 0;
     RdbDfxInfo dfxInfo_;
+    std::map<std::string, std::vector<std::string>> removeDataExceptDevicesMap_;
     int32_t distributedTableMode_ = DEVICE_COLLABORATION;
     ~RdbSyncerParam()
     {

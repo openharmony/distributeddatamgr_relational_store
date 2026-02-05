@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "napi_rdb_error.h"
 
 #include <algorithm>
@@ -63,13 +62,21 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS_EXT[] = {
     { NativeRdb::E_INVALID_ARGS, 14800001, "Invalid args." },
     { NativeRdb::E_INVALID_OBJECT_TYPE, 14800041, "Type conversion failed." },
+    { NativeRdb::E_DB_NOT_EXIST, 14800042, "Database does not exist." },
+    { NativeRdb::E_NOT_SUPPORT_NEW, 14800043, "Capability not support this scenario." },
+    { NativeRdb::E_NON_SYSTEM_APP, 202,
+        "Permission verification failed, application which is not a system application uses system API." },
 };
-
 
 static constexpr bool IsIncreasing()
 {
     for (size_t i = 1; i < sizeof(JS_ERROR_CODE_MSGS) / sizeof(JsErrorCode); i++) {
         if (JS_ERROR_CODE_MSGS[i].status <= JS_ERROR_CODE_MSGS[i - 1].status) {
+            return false;
+        }
+    }
+    for (size_t i = 1; i < sizeof(JS_ERROR_CODE_MSGS_EXT) / sizeof(JsErrorCode); i++) {
+        if (JS_ERROR_CODE_MSGS_EXT[i].status <= JS_ERROR_CODE_MSGS_EXT[i - 1].status) {
             return false;
         }
     }
