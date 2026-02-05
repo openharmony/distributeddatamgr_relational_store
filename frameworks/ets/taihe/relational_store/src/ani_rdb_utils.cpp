@@ -503,13 +503,11 @@ std::pair<int, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
     using namespace OHOS::RelationalStoreJsKit;
     using namespace OHOS::NativeRdb;
     OHOS::NativeRdb::RdbStoreConfig defaultConfig("");
-
-    bool isConfigNew = (rdbConfig.version >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
     if (!rdbConfig.cryptoParam.IsValid()) {
-        return std::make_pair(isConfigNew ? E_INVALID_ARGS : E_PARAM_ERROR, defaultConfig);
+        return std::make_pair(E_PARAM_ERROR, defaultConfig);
     }
     if (rdbConfig.tokenizer < NONE_TOKENIZER || rdbConfig.tokenizer >= TOKENIZER_END) {
-        return std::make_pair(isConfigNew ? E_INVALID_ARGS : E_PARAM_ERROR, defaultConfig);
+        return std::make_pair(E_PARAM_ERROR, defaultConfig);
     }
     if (!RdbHelper::IsSupportedTokenizer(rdbConfig.tokenizer)) {
         return std::make_pair(E_NOT_SUPPORT, defaultConfig);
@@ -528,11 +526,7 @@ std::pair<int, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
         rdbConfig.isReadOnly = true;
     }
     if (err != nullptr) {
-        if (isConfigNew) {
-            return std::make_pair(err->GetCode() == E_PARAM_ERROR ? E_INVALID_ARGS : err->GetCode(), defaultConfig);
-        } else {
-            return std::make_pair(err->GetCode(), defaultConfig);
-        }
+        return std::make_pair(err->GetCode(), defaultConfig);
     }
 
     OHOS::NativeRdb::RdbStoreConfig nativeStoreConfig(rdbConfig.path);

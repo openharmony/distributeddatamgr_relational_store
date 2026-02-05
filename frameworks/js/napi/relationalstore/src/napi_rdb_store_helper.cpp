@@ -124,10 +124,11 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
     auto context = std::make_shared<GetRdbStoreContext>();
     context->config.version = ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED;
     size_t argc = 2;
+    const size_t argcMax = 2;
     napi_value argv[2]{};
     napi_value self = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
-    RDB_NAPI_ASSERT_INT(env, argc == 2, std::make_shared<ParamNumError>("2"));
+    RDB_NAPI_ASSERT_INT(env, argc == argcMax, std::make_shared<ParamNumError>("2"));
     int errCode = Convert2Value(env, argv[0], context->param);
     RDB_NAPI_ASSERT_INT(env, OK == errCode, std::make_shared<ParamError>("Illegal context."));
 
@@ -142,7 +143,8 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT_INT(env, RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
         std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
     if (!context->config.persist) {
-        RDB_NAPI_ASSERT_INT(env, context->config.rootDir.empty(), std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
+        RDB_NAPI_ASSERT_INT(
+            env, context->config.rootDir.empty(), std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
     }
 
     auto err = GetRealPath(env, argv[0], context->param, context->config);
