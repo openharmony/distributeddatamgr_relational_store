@@ -213,6 +213,9 @@
                 },
                 {
                     "name": "//foundation/distributeddatamgr/relational_store/frameworks/ets/taihe/cloud_data:common_type_taihe_idl"
+                },
+                {
+                    "name": "//foundation/distributeddatamgr/relational_store/frameworks/ets/taihe/relational_store:copy_taihe"
                 }
             ],
             "test": [
