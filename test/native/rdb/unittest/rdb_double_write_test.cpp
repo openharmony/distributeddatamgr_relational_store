@@ -1923,3 +1923,411 @@ HWTEST_F(RdbDoubleWriteTest, CreateReplicaStatement_Test_003, TestSize.Level2)
     EXPECT_EQ(err, SQLITE_OK);
     EXPECT_NE(statement, nullptr);
 }
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_Returning_001
+ * @tc.desc: test updateWithReturning in MAIN_REPLICA mode, verify main and slave consistency
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_001, TestSize.Level1)
+{
+    InitDb();
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 25);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    // Update with returning
+    values.Clear();
+    values.PutInt("age", 18);
+    values.PutString("name", std::string("lisi"));
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", "1");
+    ReturningConfig config({ "name", "age" });
+    auto [updateRet, result] = store->Update(values, predicates, config, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(updateRet, E_OK);
+    EXPECT_EQ(1, result.changed);
+
+    // Verify both main and slave have the same data
+    RdbDoubleWriteTest::CheckNumber(store, 1);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 1);
+
+    // Verify updated data in slave
+    std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test WHERE id = 1");
+    EXPECT_NE(resultSet, nullptr);
+    int retGoTo = resultSet->GoToFirstRow();
+    EXPECT_EQ(retGoTo, E_OK);
+
+    RowEntity rowEntity;
+    ret = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, ret);
+    std::string name = rowEntity.Get("name");
+    int age = rowEntity.Get("age");
+    EXPECT_EQ("lisi", name);
+    EXPECT_EQ(18, age);
+
+    resultSet->Close();
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_Returning_002
+ * @tc.desc: test batchInsertWithReturning in MAIN_REPLICA mode, verify main and slave consistency
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_002, TestSize.Level1)
+{
+    InitDb();
+
+    // Batch insert with returning
+    std::vector<ValuesBucket> valuesVector;
+    ValuesBucket values1;
+    values1.PutInt("id", 1);
+    values1.PutString("name", std::string("zhangsan"));
+    values1.PutInt("age", 18);
+    values1.PutDouble("salary", 100.5);
+    values1.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    valuesVector.push_back(values1);
+
+    ValuesBucket values2;
+    values2.PutInt("id", 2);
+    values2.PutString("name", std::string("lisi"));
+    values2.PutInt("age", 20);
+    values2.PutDouble("salary", 200.5);
+    values2.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    valuesVector.push_back(values2);
+
+    ValuesBuckets valuesBatch(valuesVector);
+    ReturningConfig config({ "name", "age" });
+    auto [insertRet, result] = store->BatchInsert("test", valuesBatch, config, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(insertRet, E_OK);
+
+    // Verify both main and slave have the same data
+    RdbDoubleWriteTest::CheckNumber(store, 2);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 2);
+
+    // Verify data in slave
+    std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test ORDER BY id");
+    EXPECT_NE(resultSet, nullptr);
+    int retGoTo = resultSet->GoToFirstRow();
+    EXPECT_EQ(retGoTo, E_OK);
+
+    RowEntity rowEntity;
+    int getRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, getRet);
+    std::string name = rowEntity.Get("name");
+    int age = rowEntity.Get("age");
+    EXPECT_EQ("zhangsan", name);
+    EXPECT_EQ(18, age);
+
+    // Check second row
+    retGoTo = resultSet->GoToNextRow();
+    EXPECT_EQ(retGoTo, E_OK);
+
+    getRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, getRet);
+    std::string name2 = rowEntity.Get("name");
+    int age2 = rowEntity.Get("age");
+    EXPECT_EQ("lisi", name2);
+    EXPECT_EQ(20, age2);
+
+    resultSet->Close();
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_Returning_003
+ * @tc.desc: test deleteWithReturning in MAIN_REPLICA mode, verify main and slave consistency
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_003, TestSize.Level1)
+{
+    InitDb();
+
+    // Insert test data first
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 3);
+    values.PutString("name", std::string("wangwu"));
+    values.PutInt("age", 22);
+    values.PutDouble("salary", 300.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    // Verify initial count
+    RdbDoubleWriteTest::CheckNumber(store, 3);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 3);
+
+    // Delete with returning
+    AbsRdbPredicates predicates("test");
+    predicates.GreaterThan("id", "1");
+    ReturningConfig config({ "name", "age" });
+    auto [deleteRet, result] = store->Delete(predicates, config);
+    EXPECT_EQ(deleteRet, E_OK);
+
+    // Verify both main and slave have the same data after delete
+    RdbDoubleWriteTest::CheckNumber(store, 1);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 1);
+
+    // Verify remaining data in slave
+    std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test WHERE id = 1");
+    EXPECT_NE(resultSet, nullptr);
+    int retGoTo = resultSet->GoToFirstRow();
+    EXPECT_EQ(retGoTo, E_OK);
+
+    RowEntity rowEntity;
+    int getRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, getRet);
+    std::string name = rowEntity.Get("name");
+    EXPECT_EQ("zhangsan", name);
+
+    resultSet->Close();
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_Returning_Transaction_001
+ * @tc.desc: test updateWithReturning in transaction, verify main and slave consistency
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_Transaction_001, TestSize.Level1)
+{
+    InitDb();
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 25);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    // Begin transaction
+    int err = store->BeginTransaction();
+    EXPECT_EQ(err, E_OK);
+
+    // Update with returning in transaction
+    values.Clear();
+    values.PutInt("age", 18);
+    values.PutString("name", std::string("lisi"));
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("id", "1");
+    ReturningConfig config({ "name", "age" });
+    auto [updateRet, result] = store->Update(values, predicates, config, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(updateRet, E_OK);
+    EXPECT_EQ(1, result.changed);
+
+    // Commit transaction
+    err = store->Commit();
+    EXPECT_EQ(err, E_OK);
+
+    // Verify both main and slave have the same data
+    RdbDoubleWriteTest::CheckNumber(store, 1);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 1);
+
+    // Verify updated data in slave
+    std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test WHERE id = 1");
+    EXPECT_NE(resultSet, nullptr);
+    int retGoTo = resultSet->GoToFirstRow();
+    EXPECT_EQ(retGoTo, E_OK);
+
+    RowEntity rowEntity;
+    int getRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, getRet);
+    std::string name = rowEntity.Get("name");
+    int age = rowEntity.Get("age");
+    EXPECT_EQ("lisi", name);
+    EXPECT_EQ(18, age);
+
+    resultSet->Close();
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_Returning_Transaction_002
+ * @tc.desc: test batchInsertWithReturning in transaction, verify main and slave consistency
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_Transaction_002, TestSize.Level1)
+{
+    InitDb();
+
+    // Begin transaction
+    int err = store->BeginTransaction();
+    EXPECT_EQ(err, E_OK);
+
+    // Batch insert with returning in transaction
+    std::vector<ValuesBucket> valuesVector;
+    ValuesBucket values1;
+    values1.PutInt("id", 1);
+    values1.PutString("name", std::string("zhangsan"));
+    values1.PutInt("age", 18);
+    values1.PutDouble("salary", 100.5);
+    values1.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    valuesVector.push_back(values1);
+
+    ValuesBucket values2;
+    values2.PutInt("id", 2);
+    values2.PutString("name", std::string("lisi"));
+    values2.PutInt("age", 20);
+    values2.PutDouble("salary", 200.5);
+    values2.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    valuesVector.push_back(values2);
+
+    ValuesBucket values3;
+    values3.PutInt("id", 3);
+    values3.PutString("name", std::string("wangwu"));
+    values3.PutInt("age", 22);
+    values3.PutDouble("salary", 300.5);
+    values3.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    valuesVector.push_back(values3);
+
+    ValuesBuckets valuesBatch(valuesVector);
+    ReturningConfig config({ "name", "age" });
+    auto [insertRet, result] = store->BatchInsert("test", valuesBatch, config, ConflictResolution::ON_CONFLICT_NONE);
+    EXPECT_EQ(insertRet, E_OK);
+
+    // Commit transaction
+    err = store->Commit();
+    EXPECT_EQ(err, E_OK);
+
+    // Verify both main and slave have the same data
+    RdbDoubleWriteTest::CheckNumber(store, 3);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 3);
+
+    // Verify data in slave
+    std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test ORDER BY id");
+    EXPECT_NE(resultSet, nullptr);
+    int retGoTo = resultSet->GoToFirstRow();
+    EXPECT_EQ(retGoTo, E_OK);
+
+    RowEntity rowEntity;
+    int getRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, getRet);
+    std::string name = rowEntity.Get("name");
+    int age = rowEntity.Get("age");
+    EXPECT_EQ("zhangsan", name);
+    EXPECT_EQ(18, age);
+
+    // Check second row
+    retGoTo = resultSet->GoToNextRow();
+    EXPECT_EQ(retGoTo, E_OK);
+    getRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, getRet);
+    std::string name2 = rowEntity.Get("name");
+    int age2 = rowEntity.Get("age");
+    EXPECT_EQ("lisi", name2);
+    EXPECT_EQ(20, age2);
+
+    // Check third row
+    retGoTo = resultSet->GoToNextRow();
+    EXPECT_EQ(retGoTo, E_OK);
+    getRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, getRet);
+    std::string name3 = rowEntity.Get("name");
+    int age3 = rowEntity.Get("age");
+    EXPECT_EQ("wangwu", name3);
+    EXPECT_EQ(22, age3);
+
+    resultSet->Close();
+}
+
+/**
+ * @tc.name: RdbStore_DoubleWrite_Returning_Transaction_003
+ * @tc.desc: test deleteWithReturning in transaction, verify main and slave consistency
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_Transaction_003, TestSize.Level1)
+{
+    InitDb();
+
+    // Insert test data first
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    values.PutDouble("salary", 100.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 20);
+    values.PutDouble("salary", 200.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 3);
+    values.PutString("name", std::string("wangwu"));
+    values.PutInt("age", 22);
+    values.PutDouble("salary", 300.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    // Verify initial count
+    RdbDoubleWriteTest::CheckNumber(store, 3);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 3);
+
+    // Begin transaction
+    int err = store->BeginTransaction();
+    EXPECT_EQ(err, E_OK);
+
+    // Delete with returning in transaction
+    AbsRdbPredicates predicates("test");
+    predicates.LessThan("id", "3");
+    ReturningConfig config({ "name", "age" });
+    auto [deleteRet, result] = store->Delete(predicates, config);
+    EXPECT_EQ(deleteRet, E_OK);
+
+    // Commit transaction
+    err = store->Commit();
+    EXPECT_EQ(err, E_OK);
+
+    // Verify both main and slave have the same data after delete
+    RdbDoubleWriteTest::CheckNumber(store, 1);
+    RdbDoubleWriteTest::CheckNumber(slaveStore, 1);
+
+    // Verify remaining data in slave
+    std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test WHERE id = 3");
+    EXPECT_NE(resultSet, nullptr);
+    int retGoTo = resultSet->GoToFirstRow();
+    EXPECT_EQ(retGoTo, E_OK);
+
+    RowEntity rowEntity;
+    int getRet = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(E_OK, getRet);
+    std::string name = rowEntity.Get("name");
+    EXPECT_EQ("wangwu", name);
+
+    resultSet->Close();
+}
