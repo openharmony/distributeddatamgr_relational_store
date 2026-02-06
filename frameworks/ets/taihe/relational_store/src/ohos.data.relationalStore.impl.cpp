@@ -86,13 +86,12 @@ void DeleteRdbStoreWithName(uintptr_t context, string_view name)
     }
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig;
     rdbConfig.name = std::string(name);
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
-    if (configRet.first != OK) {
+    auto [code, storeConfig] = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
+    if (code != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed");
-        ThrowInnerErrorExt(configRet.first);
+        ThrowInnerErrorExt(code);
         return;
     }
-    OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
     int errCodeSqlite = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_VECTOR);
@@ -111,13 +110,13 @@ void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
         return;
     }
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
-    if (configRet.first != OK) {
+    auto [code, storeConfig] = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
+    if (code != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed");
-        ThrowInnerErrorExt(configRet.first);
+        ThrowInnerErrorExt(code);
         return;
     }
-    int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(configRet.second, false);
+    int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }
