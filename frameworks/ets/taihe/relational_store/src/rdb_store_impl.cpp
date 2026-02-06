@@ -74,18 +74,19 @@ RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config, Config
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
     rdbConfig.version = version;
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
+    auto [code, storeConfig] = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
     isSystemApp_ = rdbConfig.isSystemApp;
     DefaultOpenCallback callback;
     int errCode = OHOS::AppDataMgrJsKit::JSUtils::OK;
-    if (configRet.first != OK) {
+    if (code != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed, use default config");
-        bool isConfigNew = (rdbConfig.version >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
         ThrowInnerErrorExt(
-            (isConfigNew && (configRet.first == E_PARAM_ERROR)) ? NativeRdb::E_INVALID_ARGS : configRet.first);
+            ((rdbConfig.version >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED) && (code == E_PARAM_ERROR))
+                ? NativeRdb::E_INVALID_ARGS
+                : code);
         return;
     }
-    auto nativeRdbStore = OHOS::NativeRdb::RdbHelper::GetRdbStore(configRet.second, -1, callback, errCode);
+    auto nativeRdbStore = OHOS::NativeRdb::RdbHelper::GetRdbStore(storeConfig, -1, callback, errCode);
     SetResource(nativeRdbStore);
     if (errCode != OHOS::AppDataMgrJsKit::JSUtils::OK) {
         ThrowInnerError(errCode);
@@ -1402,9 +1403,9 @@ int32_t RdbStoreImpl::AttachWithContext(
 
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
-    if (configRet.first != OK) {
-        ThrowInnerErrorExt(configRet.first);
+    auto [code, storeConfig] = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
+    if (code != OK) {
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_ERROR);
         return 0;
     }
 
@@ -1418,7 +1419,7 @@ int32_t RdbStoreImpl::AttachWithContext(
         }
     }
 
-    auto [errCode, output] = store->Attach(configRet.second, attachNameStr, waitTimeValue);
+    auto [errCode, output] = store->Attach(storeConfig, attachNameStr, waitTimeValue);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
         return 0;
