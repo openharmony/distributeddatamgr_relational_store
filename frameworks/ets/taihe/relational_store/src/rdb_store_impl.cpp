@@ -1403,7 +1403,8 @@ int32_t RdbStoreImpl::AttachWithContext(
 
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
-    auto [code, storeConfig] = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
+    auto [code, storeConfig] =
+        ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
     if (code != OK) {
         ThrowInnerErrorExt(OHOS::NativeRdb::E_ERROR);
         return 0;
