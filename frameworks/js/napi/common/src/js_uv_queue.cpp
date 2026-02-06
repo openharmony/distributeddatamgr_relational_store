@@ -27,7 +27,7 @@ UvQueue::UvQueue(napi_env env) : env_(env), isValid_(nullptr)
 {
     if (env != nullptr) {
         napi_get_uv_event_loop(env, &loop_);
-        isValid_ = new bool(true);
+        isValid_ = new(std::nothrow) bool(true);
         napi_status status = napi_add_env_cleanup_hook(env, CleanupHook, isValid_);
         if (status != napi_ok) {
             LOG_ERROR("Failed to add cleanup hook, status:%{public}d", status);
@@ -45,9 +45,12 @@ UvQueue::~UvQueue()
             LOG_ERROR("Failed to remove cleanup hook, status:%{public}d", status);
         }
     }
+    if (isValid_ != nullptr) {
+        delete isValid_;
+        isValid_ = nullptr;
+    }
     env_ = nullptr;
     handler_ = nullptr;
-    isValid_ = nullptr;
 }
 
 void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
@@ -200,7 +203,7 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
         if (entry == nullptr) {
             return;
         }
-        if (entry->isValid_ != nullptr && !*entry->isValid_) {
+        if (entry->isValid_ != nullptr && !(*entry->isValid_)) {
             LOG_DEBUG("Environment is being destroyed, skipping callback execution.");
             return;
         }
@@ -231,7 +234,7 @@ UvQueue::Task UvQueue::GenPromiseTask(std::shared_ptr<UvEntry> entry)
         if (entry == nullptr) {
             return;
         }
-        if (entry->isValid_ != nullptr && !*entry->isValid_) {
+        if (entry->isValid_ != nullptr && !(*entry->isValid_)) {
             LOG_DEBUG("Environment is being destroyed, skipping promise execution.");
             return;
         }
