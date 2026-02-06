@@ -150,29 +150,29 @@ string ResultSetImpl::GetColumnName(int32_t columnIndex)
 uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnIdentifier const& columnIdentifier)
 {
     OHOS::DistributedRdb::ColumnType columnType = OHOS::DistributedRdb::ColumnType::TYPE_NULL;
-    if (nativeResultSet_ == nullptr) {
-        ThrowInnerError(OHOS::NativeRdb::E_ALREADY_CLOSED);
-        return ani_rdbutils::ColumnTypeToTaihe(columnType);
-    }
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet_ != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
     int32_t columnIndex = 0;
     int errCode = OHOS::NativeRdb::E_OK;
     if (columnIdentifier.holds_columnIndex()) {
         columnIndex = columnIdentifier.get_columnIndex_ref();
-        if (columnIndex < 0) {
-            ThrowParamError("Invalid columnIndex");
-            return ani_rdbutils::ColumnTypeToTaihe(columnType);
-        }
+        ASSERT_RETURN_THROW_ERROR(columnIndex >= 0,
+            std::make_shared<ParamError>("Invalid columnIndex"), 0);
     } else {
         std::string columnName(columnIdentifier.get_columnName_ref());
+        ASSERT_RETURN_THROW_ERROR(!columnName.empty(),
+            std::make_shared<ParamError>("columnName", "a non empty string."), 0);
         errCode = nativeResultSet_->GetColumnIndex(columnName, columnIndex);
     }
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
-        return ani_rdbutils::ColumnTypeToTaihe(columnType);
+    if (errCode == OHOS::NativeRdb::E_OK) {
+        errCode = nativeResultSet_->GetColumnType(columnIndex, columnType);
     }
-    errCode = nativeResultSet_->GetColumnType(columnIndex, columnType);
+    if (errCode == NativeRdb::E_INVALID_ARGS) {
+        errCode = E_PARAM_ERROR;
+    }
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
+        return 0;
     }
     return ani_rdbutils::ColumnTypeToTaihe(columnType);
 }
