@@ -72,6 +72,7 @@ private:
     static napi_value Rejected(napi_env env, napi_callback_info info);
     static napi_value Future(napi_env env, napi_callback_info info, bool exception);
     static void DoExecute(uv_work_t *work);
+    static void CleanupHook(void *data);
 
     struct UvEntry {
         napi_env env_ = nullptr;
@@ -82,6 +83,7 @@ private:
         Callbacker getter_;
         Args args_;
         Result result_;
+        std::shared_ptr<bool> envValidFlag_; 
         ~UvEntry();
         napi_value GetCallback();
         napi_value GetObject();
@@ -95,6 +97,7 @@ private:
     napi_env env_ = nullptr;
     uv_loop_s *loop_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
+    std::shared_ptr<bool> envValidFlag_; 
 };
 } // namespace OHOS::AppDataMgrJsKit
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H

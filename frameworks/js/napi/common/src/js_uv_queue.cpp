@@ -25,8 +25,13 @@ using namespace OHOS::Rdb;
 constexpr size_t ARGC_MAX = 6;
 UvQueue::UvQueue(napi_env env) : env_(env)
 {
+    envValidFlag_ = std::make_shared<bool>(false);
     if (env != nullptr) {
         napi_get_uv_event_loop(env, &loop_);
+        napi_status status = napi_add_env_cleanup_hook(env, CleanupHook, envValidFlag_.get());
+        if (status != napi_ok) {
+            LOG_ERROR("Failed to add cleanup hook, status:%{public}d", status);
+        }
     }
     handler_ = AppExecFwk::EventHandler::Current();
 }
@@ -34,6 +39,12 @@ UvQueue::UvQueue(napi_env env) : env_(env)
 UvQueue::~UvQueue()
 {
     LOG_DEBUG("No memory leak for queue-callback.");
+    if (env_ != nullptr && envValidFlag_ && !*envValidFlag_) {
+        napi_status status = napi_remove_env_cleanup_hook(env_, CleanupHook, envValidFlag_.get());
+        if (status != napi_ok) {
+            LOG_ERROR("Failed to remove cleanup hook, status:%{public}d", status);
+        }
+    }
     env_ = nullptr;
     handler_ = nullptr;
 }
@@ -52,6 +63,7 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
     entry->getter_ = std::move(callback.getter_);
     entry->args_ = std::move(args);
     entry->result_ = std::move(result);
+    entry->envValidFlag_ = envValidFlag_;
     auto status = napi_send_event(env_, GenCallbackTask(entry), napi_eprio_immediate);
     if (status != napi_ok) {
         LOG_ERROR("Failed to SendEvent, status:%{public}d", status);
@@ -76,6 +88,7 @@ void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
     entry->callback_ = callback.callback_;
     entry->repeat_ = callback.repeat_;
     entry->args_ = std::move(args);
+    entry->envValidFlag_ = envValidFlag_;
     if (handler_ != nullptr) {
         handler_->PostTask(GenCallbackTask(entry));
     }
@@ -91,6 +104,7 @@ void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
     entry->env_ = env_;
     entry->defer_ = promise.defer_;
     entry->args_ = std::move(args);
+    entry->envValidFlag_ = envValidFlag_;
     auto status = napi_send_event(env_, GenPromiseTask(entry), napi_eprio_immediate);
     if (status != napi_ok) {
         LOG_ERROR("Failed to SendEvent, status:%{public}d", status);
@@ -167,10 +181,26 @@ void UvQueue::DoExecute(uv_work_t *work)
     delete task;
 }
 
+void UvQueue::CleanupHook(void *data)
+{
+    if (data == nullptr) {
+        LOG_ERROR("CleanupHook: data is null");
+        return;
+    }
+ 
+    bool *envValidFlag = static_cast<bool *>(data);
+    *envValidFlag = true;
+    LOG_WARN("Environment cleanup hook triggered, envValidFlag_ set to true.");
+}
+
 UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
 {
     return [entry]() {
         if (entry == nullptr) {
+            return;
+        }
+        if (entry->envValidFlag_ && *entry->envValidFlag_) {
+            LOG_DEBUG("Environment is being destroyed, skipping callback execution.");
             return;
         }
         Scope scope(entry->env_);
@@ -198,6 +228,10 @@ UvQueue::Task UvQueue::GenPromiseTask(std::shared_ptr<UvEntry> entry)
 {
     return [entry]() {
         if (entry == nullptr) {
+            return;
+        }
+        if (entry->envValidFlag_ && *entry->envValidFlag_) {
+            LOG_DEBUG("Environment is being destroyed, skipping promise execution.");
             return;
         }
         Scope scope(entry->env_);
