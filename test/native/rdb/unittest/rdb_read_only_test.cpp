@@ -544,15 +544,15 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0023, TestSize.Level1)
 
 /**
  * @tc.name: RdbStore_ReadOnly_0024
- * @tc.desc: test RemoveExceptDeviceData
+ * @tc.desc: test RetainDeviceData
  * @tc.type: FUNC
  */
 HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0024, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
     std::map<std::string, std::vector<std::string>> map;
-    auto ret = store->RemoveExceptDeviceData(map);
-    EXPECT_EQ(E_NOT_SUPPORT_NEW, ret);
+    auto ret = store->RetainDeviceData(map);
+    EXPECT_EQ(E_NOT_SUPPORT, ret);
 }
 
 /**

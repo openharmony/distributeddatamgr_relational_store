@@ -53,8 +53,9 @@ public:
     int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
         const std::vector<Reference> &references, bool isRebuild, int32_t type = DISTRIBUTED_DEVICE) override;
 
-    int32_t RemoveExceptDeviceData(const RdbSyncerParam &param) override;
-    
+    int32_t RetainDeviceData(
+        const RdbSyncerParam &param, const std::map<std::string, std::vector<std::string>> &retainDevices) override;
+
     int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) override;
 

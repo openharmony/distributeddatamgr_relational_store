@@ -677,10 +677,10 @@ public:
     /**
      * @brief Remove distributed table remote data.
      *
-     * @param removeDataExceptDevices Indicates the tables name you want to remove and devices you want to keep.
+     * @param retainDevices Indicates the tables name you want to remove and devices you want to keep.
      */
-    virtual int RemoveExceptDeviceData(
-        const std::map<std::string, std::vector<std::string>> &removeDataExceptDevicesMap);
+    virtual int RetainDeviceData(
+        const std::map<std::string, std::vector<std::string>> &retainDevices);
 
     /**
      * @brief Obtain distributed table name of specified remote device according to local table name.

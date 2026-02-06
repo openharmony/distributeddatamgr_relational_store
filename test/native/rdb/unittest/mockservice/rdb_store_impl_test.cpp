@@ -740,11 +740,11 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_007, TestSize.Leve
 }
 
 /**
- * @tc.name: RemoveExceptDeviceData_Test_001
- * @tc.desc: Abnormal testCase of RemoveExceptDeviceData
+ * @tc.name: RetainDeviceData_Test_001
+ * @tc.desc: Abnormal testCase of RetainDeviceData
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_001, TestSize.Level2)
+HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_001, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
@@ -758,24 +758,24 @@ HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_001, TestSize.Le
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
     ASSERT_NE(store, nullptr) << "store is null";
     std::map<std::string, std::vector<std::string>> map;
-    errCode = store->RemoveExceptDeviceData(map);
+    errCode = store->RetainDeviceData(map);
     EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
     std::vector<std::string> vec;
     map["employee"] = vec;
-    errCode = store->RemoveExceptDeviceData(map);
+    errCode = store->RetainDeviceData(map);
     EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
     vec.push_back("localDeviceId");
     map["employee"] = vec;
-    errCode = store->RemoveExceptDeviceData(map);
+    errCode = store->RetainDeviceData(map);
     EXPECT_EQ(E_OK, errCode);
 }
 
 /**
- * @tc.name: RemoveExceptDeviceData_Test_002
- * @tc.desc: Abnormal testCase of RemoveExceptDeviceData remove fial due to vector db.
+ * @tc.name: RetainDeviceData_Test_002
+ * @tc.desc: Abnormal testCase of RetainDeviceData remove fial due to vector db.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_002, TestSize.Level2)
+HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_002, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
@@ -789,16 +789,16 @@ HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_002, TestSize.Le
     std::map<std::string, std::vector<std::string>> map;
     std::vector<std::string> vec;
     vec.push_back("localDeviceId");
-    errCode = store->RemoveExceptDeviceData(map);
-    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
+    errCode = store->RetainDeviceData(map);
+    EXPECT_EQ(E_NOT_SUPPORT, errCode);
 }
 
 /**
- * @tc.name: RemoveExceptDeviceData_Test_003
- * @tc.desc: Abnormal testCase of RemoveExceptDeviceData  remove fial due to mem db.
+ * @tc.name: RetainDeviceData_Test_003
+ * @tc.desc: Abnormal testCase of RetainDeviceData  remove fial due to mem db.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_003, TestSize.Level2)
+HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_003, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
@@ -812,16 +812,16 @@ HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_003, TestSize.Le
     std::map<std::string, std::vector<std::string>> map;
     std::vector<std::string> vec;
     vec.push_back("localDeviceId");
-    errCode = store->RemoveExceptDeviceData(map);
-    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
+    errCode = store->RetainDeviceData(map);
+    EXPECT_EQ(E_NOT_SUPPORT, errCode);
 }
 
 /**
- * @tc.name: RemoveExceptDeviceData_Test_004
- * @tc.desc: Abnormal testCase of RemoveExceptDeviceData  remove fial due to service return error.
+ * @tc.name: RetainDeviceData_Test_004
+ * @tc.desc: Abnormal testCase of RetainDeviceData  remove fial due to service return error.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_004, TestSize.Level2)
+HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_004, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
@@ -839,7 +839,7 @@ HWTEST_F(RdbStoreImplConditionTest, RemoveExceptDeviceData_Test_004, TestSize.Le
     std::vector<std::string> vec;
     vec.push_back("localDeviceId");
     map["employee"] = vec;
-    errCode = store->RemoveExceptDeviceData(map);
+    errCode = store->RetainDeviceData(map);
     EXPECT_EQ(E_SQLITE_ERROR, errCode);
 }
 

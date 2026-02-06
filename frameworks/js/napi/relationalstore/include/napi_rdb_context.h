@@ -53,7 +53,7 @@ struct RdbStoreContextBase : public ContextBase {
 
 struct RdbStoreEnhanceContext : public EnhancedContext {
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
-    std::map<std::string, std::vector<std::string>> removeDataExceptDevicesMap;
+    std::map<std::string, std::vector<std::string>> retainDevices;
 };
 
 struct RdbStoreContext : public RdbStoreContextBase {
@@ -158,9 +158,6 @@ int ParseTxId(const napi_env env, const napi_value arg, std::shared_ptr<RdbStore
 int ParseSendableValuesBucket(const napi_env env, const napi_value map, std::shared_ptr<RdbStoreContext> context);
 
 int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
-
-std::shared_ptr<Error> ParseExceptDeviceMap(
-    const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreEnhanceContext> context);
 
 int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 

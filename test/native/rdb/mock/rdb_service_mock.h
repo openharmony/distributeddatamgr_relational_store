@@ -31,7 +31,9 @@ public:
         (const RdbSyncerParam &param, const std::vector<std::string> &tables, const std::vector<Reference> &references,
             bool isRebuild, int32_t type),
         (override));
-    MOCK_METHOD(int32_t, RemoveExceptDeviceData, (const RdbSyncerParam &param), (override));
+    MOCK_METHOD(int32_t, RetainDeviceData,
+        (const RdbSyncerParam &param, (const std::map<std::string, std::vector<std::string>> &retainDevices)),
+        (override));
     MOCK_METHOD(int32_t, Sync,
         (const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates, const AsyncDetail &async),
         (override));
