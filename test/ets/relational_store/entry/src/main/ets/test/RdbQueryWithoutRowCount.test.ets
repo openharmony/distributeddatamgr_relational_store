@@ -904,7 +904,7 @@ export default function rdbQueryWithoutRowCount() {
       } catch(e) {
         console.error(`getColumnType failed2 message:${e.message} code:${e.code}`);
         resultSet?.close();
-        expect(e.code == 14800001).assertTrue();
+        expect(e.code === 14800001).assertTrue();
       }
 
       try {
@@ -1023,7 +1023,7 @@ export default function rdbQueryWithoutRowCount() {
       try {
         resultSet = await rdbStore?.queryWithoutRowCount(predicates);
         resultSet?.goToNextRow();
-        let type = await resultSet?.getColumnType("id")
+        let type = resultSet?.getColumnTypeSync("id")
         expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
         type = resultSet?.getColumnTypeSync("data1");
         expect(type).assertEqual(relationalStore.ColumnType.TEXT);
@@ -1367,7 +1367,7 @@ export default function rdbQueryWithoutRowCount() {
       }
 
       try {
-        resultSet = rdbStore?.querySync(predicates);
+        resultSet = await rdbStore?.queryWithoutRowCount(predicates);
         resultSet?.goToNextRow();
         let data3 = resultSet?.getValue(1);
       } catch(e) {
