@@ -29,7 +29,6 @@ const STORE_CONFIG: data_relationalStore.StoreConfig = {
 }
 
 let rdbStore: data_relationalStore.RdbStore;
-
 export default function rdbStoreSqliteErrorOccurredTest() {
   describe('rdbStoreSqliteErrorOccurredTest', () => {
     beforeAll(async () => {
@@ -37,22 +36,26 @@ export default function rdbStoreSqliteErrorOccurredTest() {
     })
     beforeEach(async (done: Function) => {
       console.info(TAG + 'beforeEach')
-      rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
-      await rdbStore.executeSql(CREATE_TABLE_TEST);
-      await rdbStore.executeSql(CREATE_TABLE_TEST4);
-      let u8 = new Uint8Array([1, 2, 3])
-      const valueBucketUser: data_relationalStore.ValuesBucket = {
-        "username": 'user1',
-        "email": 'user1@example.com',
-      };
-      await rdbStore.insert("users", valueBucketUser);
-      const valueBucket: data_relationalStore.ValuesBucket = {
-        "name": "zhangsan",
-        "age": 18,
-        "salary": 100.5,
-        "blobType": u8,
+      try {
+        rdbStore = await data_relationalStore.getRdbStore(context, STORE_CONFIG);
+        await rdbStore.executeSql(CREATE_TABLE_TEST);
+        await rdbStore.executeSql(CREATE_TABLE_TEST4);
+        let u8 = new Uint8Array([1, 2, 3])
+        const valueBucketUser: data_relationalStore.ValuesBucket = {
+          "username": 'user1',
+          "email": 'user1@example.com',
+        };
+        await rdbStore.insert("users", valueBucketUser);
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+        }
+        await rdbStore.insert("test", valueBucket);
+      } catch (err) {
+        console.log(`beforeEach error, failed code:${err.code},message:${err.message}`);
       }
-      await rdbStore.insert("test", valueBucket);
       done();
     })
 
@@ -200,10 +203,11 @@ export default function rdbStoreSqliteErrorOccurredTest() {
         }
         let endTime = new Date().getTime();
         averageTime = ((endTime - startTime) * 1000) / 2000;
-        expect(averageTime < 1000).assertTrue();
         console.info(TAG + " testRdbStoreOnsqliteErrorOccurred0004 average time is: " + averageTime + " μs");
+        expect(averageTime < 1000).assertTrue();
       } catch (err) {
-        console.error(`on err log failed, code is ${err.code},message is ${err.message}`);
+        console.error(`testRdbStoreOnsqliteErrorOccurred0004 on err log failed, code is ${err.code},message is ${err.message}`);
+        rdbStore.off('sqliteErrorOccurred');
         expect(true).assertFail();
       }
       rdbStore.off('sqliteErrorOccurred');
@@ -302,6 +306,539 @@ export default function rdbStoreSqliteErrorOccurredTest() {
         done()
       }
       console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0007 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0008
+     * @tc.name Normal test case of updateWithReturningSync with TRANSACTION and SQLITE_ERROR
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute updateWithReturningSync in TRANSACTION with SQLITE_ERROR
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0008', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0008 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0008 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "no such column: invalid_column").assertTrue();
+          expect(errSQL.includes("UPDATE")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0008 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0008 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      try {
+        let u8 = new Uint8Array([1, 2, 3]);
+        let transaction = await rdbStore?.createTransaction({
+          transactionType: data_relationalStore.TransactionType.IMMEDIATE
+        });
+        try {
+          const valueBucket: data_relationalStore.ValuesBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "salary": 100.5,
+            "blobType": u8,
+            "invalid_column": 100,
+          };
+          let predicates = new data_relationalStore.RdbPredicates("test");
+          predicates.equalTo('name', 'zhangsan');
+          const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+          let resultSet = transaction?.updateWithReturningSync(valueBucket, predicates, config);
+          console.log(TAG + "testRdbStoreOnsqliteErrorOccurred0008 updateWithReturningSync resultSet:" + resultSet);
+          expect(true).assertFail();
+          await transaction?.commit();
+        } catch (e) {
+          await transaction?.rollback();
+          console.log(TAG + e + " code: " + e.code);
+          expect(e.code == 14800021).assertTrue();
+        }
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0008 transaction failed code:${err.code},message:${err.message}`);
+        expect(true).assertFail();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0008 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0009
+     * @tc.name Normal test case of updateWithReturning with TRANSACTION and SQLITE_ERROR
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute updateWithReturning in TRANSACTION with SQLITE_ERROR
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0009', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0009 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0009 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "no such column: invalid_column").assertTrue();
+          expect(errSQL.includes("UPDATE")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0009 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0009 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      let u8 = new Uint8Array([1, 2, 3]);
+      let transaction = await rdbStore?.createTransaction({
+        transactionType: data_relationalStore.TransactionType.IMMEDIATE
+      });
+      try {
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 18,
+          "salary": 100.5,
+          "blobType": u8,
+          "invalid_column": 100,
+        };
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo('name', 'zhangsan');
+        const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        let resultSet = await transaction?.updateWithReturning(valueBucket, predicates, config);
+        console.log(TAG + "testRdbStoreOnsqliteErrorOccurred0009 updateWithReturning resultSet:" + resultSet);
+        expect(true).assertFail();
+        await transaction?.commit();
+      } catch (e) {
+        await transaction?.rollback();
+        console.log(TAG + e + " code: " + e.code);
+        expect(e.code == 14800021).assertTrue();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0009 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0010
+     * @tc.name Normal test case of batchInsertWithReturningSync with TRANSACTION and SQLITE_ERROR
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute batchInsertWithReturningSync in TRANSACTION with SQLITE_ERROR
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0010', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0010 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0010 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "table test has no column named invalid_column").assertTrue();
+          expect(errSQL.includes("INSERT")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0010 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0010 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      try {
+        let transaction = await rdbStore?.createTransaction({
+          transactionType: data_relationalStore.TransactionType.IMMEDIATE
+        });
+        try {
+          const valueBucket: data_relationalStore.ValuesBucket = {
+            "name": "zhangsan",
+            "age": 18,
+            "invalid_column": 100,
+          };
+          const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+          let resultSet = transaction?.batchInsertWithReturningSync("test", [valueBucket], config);
+          console.log(TAG + "testRdbStoreOnsqliteErrorOccurred0010 batchInsertWithReturningSync resultSet:" + resultSet);
+          expect(true).assertFail();
+          await transaction?.commit();
+        } catch (e) {
+          await transaction?.rollback();
+          console.log(TAG + e + " code: " + e.code);
+          expect(e.code == 14800021).assertTrue();
+        }
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0010 transaction failed code:${err.code},message:${err.message}`);
+        expect(true).assertFail();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0010 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0011
+     * @tc.name Normal test case of batchInsertWithReturning with TRANSACTION and SQLITE_ERROR
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute batchInsertWithReturning in TRANSACTION with SQLITE_ERROR
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0011', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0011 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0011 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "table test has no column named invalid_column").assertTrue();
+          expect(errSQL.includes("INSERT")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0011 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0011 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      let transaction = await rdbStore?.createTransaction({
+        transactionType: data_relationalStore.TransactionType.IMMEDIATE
+      });
+      try {
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 18,
+          "invalid_column": 100,
+        };
+        const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        let resultSet = await transaction?.batchInsertWithReturning("test", [valueBucket], config);
+        console.log(TAG + "testRdbStoreOnsqliteErrorOccurred0011 batchInsertWithReturning resultSet:" + resultSet);
+        expect(true).assertFail();
+        await transaction?.commit();
+      } catch (e) {
+        await transaction?.rollback();
+        console.log(TAG + e + " code: " + e.code);
+        expect(e.code == 14800021).assertTrue();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0011 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0012
+     * @tc.name Normal test case of deleteWithReturningSync with TRANSACTION and wrong table name
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute deleteWithReturningSync in TRANSACTION with wrong table
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0012', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0012 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0012 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "no such table: wrong_table").assertTrue();
+          expect(errSQL.includes("DELETE")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0012 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0012 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      try {
+        let transaction = await rdbStore?.createTransaction({
+          transactionType: data_relationalStore.TransactionType.IMMEDIATE
+        });
+        try {
+          let predicates = new data_relationalStore.RdbPredicates("wrong_table");
+          predicates.equalTo('id', 1);
+          const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+          let resultSet = transaction?.deleteWithReturningSync(predicates, config);
+          console.log(TAG + "testRdbStoreOnsqliteErrorOccurred0012 deleteWithReturningSync resultSet:" + resultSet);
+          expect(true).assertFail();
+          await transaction?.commit();
+        } catch (e) {
+          await transaction?.rollback();
+          console.log(TAG + e + " code: " + e.code);
+          expect(e.code == 14800021).assertTrue();
+        }
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0012 transaction failed code:${err.code},message:${err.message}`);
+        expect(true).assertFail();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0012 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0013
+     * @tc.name Normal test case of deleteWithReturning with TRANSACTION and wrong table name
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute deleteWithReturning in TRANSACTION with wrong table
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0013', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0013 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0013 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "no such table: wrong_table").assertTrue();
+          expect(errSQL.includes("DELETE")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0013 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0013 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      let transaction = await rdbStore?.createTransaction({
+        transactionType: data_relationalStore.TransactionType.IMMEDIATE
+      });
+      try {
+        let predicates = new data_relationalStore.RdbPredicates("wrong_table");
+        predicates.equalTo('id', 1);
+        const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        let resultSet = await transaction?.deleteWithReturning(predicates, config);
+        console.log(TAG + "testRdbStoreOnsqliteErrorOccurred0013 deleteWithReturning resultSet:" + resultSet);
+        expect(true).assertFail();
+        await transaction?.commit();
+      } catch (e) {
+        await transaction?.rollback();
+        console.log(TAG + e + " code: " + e.code);
+        expect(e.code == 14800021).assertTrue();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0013 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0014
+     * @tc.name Normal test case of updateWithReturningSync with SQLITE_ERROR
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute updateWithReturningSync with SQLITE_ERROR
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0014', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0014 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0014 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "no such column: invalid_column").assertTrue();
+          expect(errSQL.includes("UPDATE")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0014 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0014 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      try {
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 18,
+          "invalid_column": 100,
+        };
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo('name', 'zhangsan');
+        const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        rdbStore.updateWithReturningSync(valueBucket, predicates, config);
+        expect(true).assertFail();
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0014 updateWithReturningSync failed code:${err.code},message:${err.message}`);
+        expect(err.code == 14800021).assertTrue();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0014 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0015
+     * @tc.name Normal test case of updateWithReturning with SQLITE_ERROR
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute updateWithReturning with SQLITE_ERROR
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0015', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0015 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0015 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "no such column: invalid_column").assertTrue();
+          expect(errSQL.includes("UPDATE")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0015 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0015 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      try {
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 18,
+          "invalid_column": 100,
+        };
+        let predicates = new data_relationalStore.RdbPredicates("test");
+        predicates.equalTo('name', 'zhangsan');
+        const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        await rdbStore.updateWithReturning(valueBucket, predicates, config);
+        expect(true).assertFail();
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0015 updateWithReturning failed code:${err.code},message:${err.message}`);
+        expect(err.code == 14800021).assertTrue();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0015 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0016
+     * @tc.name Normal test case of batchInsertWithReturningSync with SQLITE_ERROR
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute batchInsertWithReturningSync with SQLITE_ERROR
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0016', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0016 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0016 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "table test has no column named invalid_column").assertTrue();
+          expect(errSQL.includes("INSERT")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0016 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0016 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      try {
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 18,
+          "invalid_column": 100,
+        };
+        const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        rdbStore.batchInsertWithReturningSync("test", [valueBucket], config);
+        expect(true).assertFail();
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0016 batchInsertWithReturningSync failed code:${err.code},message:${err.message}`);
+        expect(err.code == 14800021).assertTrue();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0016 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0017
+     * @tc.name Normal test case of batchInsertWithReturning with SQLITE_ERROR
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute batchInsertWithReturning with SQLITE_ERROR
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0017', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0017 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0017 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "table test has no column named invalid_column").assertTrue();
+          expect(errSQL.includes("INSERT")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0017 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0017 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      try {
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "name": "zhangsan",
+          "age": 18,
+          "invalid_column": 100,
+        };
+        const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        await rdbStore.batchInsertWithReturning("test", [valueBucket], config);
+        expect(true).assertFail();
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0017 batchInsertWithReturning failed code:${err.code},message:${err.message}`);
+        expect(err.code == 14800021).assertTrue();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0017 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0018
+     * @tc.name Normal test case of deleteWithReturningSync with wrong table name
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute deleteWithReturningSync with wrong table
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0018', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0018 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0018 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "no such table: wrong_table").assertTrue();
+          expect(errSQL.includes("DELETE")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0018 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0018 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      try {
+        let predicates = new data_relationalStore.RdbPredicates("wrong_table");
+        predicates.equalTo('id', 1);
+        const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        rdbStore.deleteWithReturningSync(predicates, config);
+        expect(true).assertFail();
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0018 deleteWithReturningSync failed code:${err.code},message:${err.message}`);
+        expect(err.code == 14800021).assertTrue();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0018 end *************");
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_JSRDB_OnsqliteErrorOccurred_0019
+     * @tc.name Normal test case of deleteWithReturning with wrong table name
+     * @tc.desc 1.OnsqliteErrorOccurred 2.execute deleteWithReturning with wrong table
+     */
+    it('testRdbStoreOnsqliteErrorOccurred0019', 0, async (done: Function) => {
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0019 start *************");
+      try {
+        let exceptionMessage: data_relationalStore.ExceptionMessage;
+        rdbStore.on('sqliteErrorOccurred', exceptionMessage => {
+          let sqliteCode = exceptionMessage.code;
+          let sqliteMessage = exceptionMessage.message;
+          let errSQL = exceptionMessage.sql;
+          console.info(`testRdbStoreOnsqliteErrorOccurred0019 error log is ${sqliteCode}, errMessage is ${sqliteMessage}, errSQL is ${errSQL}`);
+          expect(sqliteCode == 1).assertTrue();
+          expect(sqliteMessage == "no such table: wrong_table").assertTrue();
+          expect(errSQL.includes("DELETE")).assertTrue();
+          expect(errSQL.includes("returning")).assertTrue();
+          done();
+        });
+        console.log(`testRdbStoreOnsqliteErrorOccurred0019 sqliteErrorOccurred on is success`);
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0019 sqliteErrorOccurred on is failed ${err.code}`);
+      }
+      try {
+        let predicates = new data_relationalStore.RdbPredicates("wrong_table");
+        predicates.equalTo('id', 1);
+        const config: data_relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        await rdbStore.deleteWithReturning(predicates, config);
+        expect(true).assertFail();
+      } catch (err) {
+        console.error(`testRdbStoreOnsqliteErrorOccurred0019 deleteWithReturning failed code:${err.code},message:${err.message}`);
+        expect(err.code == 14800021).assertTrue();
+      }
+      console.log(TAG + "************* testRdbStoreOnsqliteErrorOccurred0019 end *************");
     })
 
     console.log(TAG + "*************Unit Test End*************");
