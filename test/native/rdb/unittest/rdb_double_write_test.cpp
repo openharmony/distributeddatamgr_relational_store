@@ -334,7 +334,7 @@ void RdbDoubleWriteTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
 
     int columnIndex;
     int intVal;
@@ -1961,7 +1961,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_001, TestSize.Level1
 
     // Verify updated data in slave
     std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test WHERE id = 1");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
     int retGoTo = resultSet->GoToFirstRow();
     EXPECT_EQ(retGoTo, E_OK);
 
@@ -2014,7 +2014,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_002, TestSize.Level1
 
     // Verify data in slave
     std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test ORDER BY id");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
     int retGoTo = resultSet->GoToFirstRow();
     EXPECT_EQ(retGoTo, E_OK);
 
@@ -2095,7 +2095,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_003, TestSize.Level1
 
     // Verify remaining data in slave
     std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test WHERE id = 1");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
     int retGoTo = resultSet->GoToFirstRow();
     EXPECT_EQ(retGoTo, E_OK);
 
@@ -2152,7 +2152,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_Transaction_001, Tes
 
     // Verify updated data in slave
     std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test WHERE id = 1");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
     int retGoTo = resultSet->GoToFirstRow();
     EXPECT_EQ(retGoTo, E_OK);
 
@@ -2221,7 +2221,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_Transaction_002, Tes
 
     // Verify data in slave
     std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test ORDER BY id");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
     int retGoTo = resultSet->GoToFirstRow();
     EXPECT_EQ(retGoTo, E_OK);
 
@@ -2319,7 +2319,7 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_Transaction_003, Tes
 
     // Verify remaining data in slave
     std::shared_ptr<ResultSet> resultSet = slaveStore->QuerySql("SELECT * FROM test WHERE id = 3");
-    EXPECT_NE(resultSet, nullptr);
+    ASSERT_NE(resultSet, nullptr);
     int retGoTo = resultSet->GoToFirstRow();
     EXPECT_EQ(retGoTo, E_OK);
 
