@@ -452,6 +452,15 @@ export default function rdbQueryWithoutRowCount() {
         expect(e.code === 14800012).assertTrue();
       }
 
+      try {
+        let predicates = new relationalStore.RdbPredicates('test');
+        predicates.equalTo('data1', 'wangwu');
+        await rdbStore?.delete(predicates);
+      } catch (e) {
+        console.error(`querySqlWithoutRowCount_002 delete failed message:${e.message} code:${e.code}`);
+        expect().assertFail();
+      }
+
       console.log(TAG + "************* querySqlWithoutRowCount_002_Abnormal_bindArgs end *************");
     })
 
@@ -511,6 +520,7 @@ export default function rdbQueryWithoutRowCount() {
         console.error(`querySqlWithoutRowCount_004 failed message:${e.message} code:${e.code}`);
         resultSet?.close();
         expect(e.code === 14800014).assertTrue();
+        rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
       }
       console.log(TAG + "************* querySqlWithoutRowCount_004_abnormal_rdbStoreIsClose end *************");
     })
@@ -850,7 +860,6 @@ export default function rdbQueryWithoutRowCount() {
         let type = await resultSet?.getColumnType("id")
         expect(type).assertEqual(relationalStore.ColumnType.INTEGER);
         type = await resultSet?.getColumnType("data1");
-        console.error(`mmy type:${type}`);
         expect(type).assertEqual(relationalStore.ColumnType.ASSET);
         type = await resultSet?.getColumnType("data2");
         expect(type).assertEqual(relationalStore.ColumnType.ASSETS);
@@ -1031,13 +1040,6 @@ export default function rdbQueryWithoutRowCount() {
       }
 
       try {
-        const valueBucket: relationalStore.ValuesBucket = {
-          'data1': null,
-          'data2': null,
-          'data3': null,
-          'data4': null,
-        };
-        await rdbStore?.insert("test", valueBucket);
         resultSet = await rdbStore?.queryWithoutRowCount(predicates);
         resultSet?.goToNextRow();
         resultSet?.goToNextRow();
