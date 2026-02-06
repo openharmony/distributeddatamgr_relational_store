@@ -281,38 +281,6 @@ int ParseValuesBucket(const napi_env env, const napi_value arg, std::shared_ptr<
     return OK;
 }
 
-std::shared_ptr<Error> ParseExceptDeviceMap(
-    const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreEnhanceContext> context)
-{
-    napi_value keys = nullptr;
-    napi_status status = napi_get_all_property_names(env, arg, napi_key_own_only,
-        static_cast<napi_key_filter>(napi_key_enumerable | napi_key_skip_symbols), napi_key_numbers_to_strings, &keys);
-    CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<ParamError>("removeDataExceptDevices is invalid."));
-    uint32_t arrLen = 0;
-    status = napi_get_array_length(env, keys, &arrLen);
-    std::shared_ptr err = std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "empty map.");
-    CHECK_RETURN_CUSTOM_ERR(status == napi_ok && arrLen > 0, err);
-
-    for (size_t i = 0; i < arrLen; ++i) {
-        napi_value key = nullptr;
-        status = napi_get_element(env, keys, i, &key);
-        CHECK_RETURN_CUSTOM_ERR(status == napi_ok, std::make_shared<InnerError>("napi_get_element key failed."));
-        std::string keyStr = JSUtils::Convert2String(env, key);
-        napi_value value = nullptr;
-        status = napi_get_property(env, arg, key, &value);
-        CHECK_RETURN_CUSTOM_ERR(
-            status == napi_ok, std::make_shared<InnerError>("Failed to get value for key: " + keyStr));
-        std::vector<std::string> devices;
-        int32_t ret = JSUtils::Convert2Value(env, value, devices);
-        CHECK_RETURN_CUSTOM_ERR(ret == napi_ok, std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW,
-                                                    "value for table '" + keyStr + "' is not an array of strings."));
-        CHECK_RETURN_CUSTOM_ERR(!devices.empty(),
-            std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "the table " + keyStr + " is empty devices."));
-        context->removeDataExceptDevicesMap.insert_or_assign(std::move(keyStr), std::move(devices));
-    }
-    return nullptr;
-}
-
 int ParseValuesBuckets(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     auto err = ParseValuesBuckets(env, arg, context->sharedValuesBuckets);

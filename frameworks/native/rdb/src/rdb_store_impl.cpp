@@ -83,6 +83,7 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
+using RdbStatus = OHOS::DistributedRdb::RdbStatus;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 using PerfStat = DistributedRdb::PerfStat;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
@@ -459,11 +460,35 @@ int RdbStoreImpl::SetDistributedTables(
     return HandleCloudSyncAfterSetDistributedTables(tables, distributedConfig);
 }
 
-int RdbStoreImpl::RemoveExceptDeviceData(
-    const std::map<std::string, std::vector<std::string>> &removeDataExceptDevicesMap)
+int RdbStoreImpl::ConvertRdbStatusNative(int32_t status)
+{
+    switch (status) {
+        case RdbStatus::RDB_OK:
+            return E_OK;
+        case RdbStatus::RDB_SQLITE_BUSY:
+            return E_SQLITE_BUSY;
+        case RdbStatus::RDB_INVALID_ARGS:
+            return E_INVALID_ARGS_NEW;
+        case RdbStatus::RDB_SQLITE_CORRUPT:
+            return E_SQLITE_CORRUPT;
+        case RdbStatus::RDB_SQLITE_ERROR:
+            return E_SQLITE_ERROR;
+        case RdbStatus::RDB_NOT_SUPPORT:
+            return E_NOT_SUPPORT;
+        case RdbStatus::RDB_DB_NOT_EXIST:
+            return E_DB_NOT_EXIST;
+        case RdbStatus::RDB_NON_SYSTEM_APP:
+            return E_NON_SYSTEM_APP;
+        default:
+            break;
+    }
+    return E_ERROR;
+}
+
+int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices)
 {
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
-        return E_NOT_SUPPORT_NEW;
+        return E_NOT_SUPPORT;
     }
     isNeedSetAcl_ = true;
     SetFileGid(config_, SERVICE_GID);
@@ -471,20 +496,19 @@ int RdbStoreImpl::RemoveExceptDeviceData(
     if (errCode != E_OK) {
         return errCode;
     }
-    if (removeDataExceptDevicesMap.empty()) {
+    if (retainDevices.empty()) {
         return E_INVALID_ARGS_NEW;
     }
-    for (auto it = removeDataExceptDevicesMap.begin(); it != removeDataExceptDevicesMap.end(); ++it) {
-        if (it->first.empty() || it->second.empty()) {
+    for (auto &[table, devices] : retainDevices) {
+        if (table.empty() || devices.empty()) {
             return E_INVALID_ARGS_NEW;
         }
     }
-    syncerParam_.removeDataExceptDevicesMap_ = std::move(removeDataExceptDevicesMap);
-    int32_t errorCode = service->RemoveExceptDeviceData(syncerParam_);
-    if (errorCode != E_OK) {
+    int32_t errorCode = service->RetainDeviceData(syncerParam_, retainDevices);
+    if (errorCode != RdbStatus::RDB_OK) {
         LOG_ERROR("Fail to remove except device data, error=%{public}d.", errorCode);
     }
-    return errorCode;
+    return ConvertRdbStatusNative(errorCode);
 }
 
 int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)

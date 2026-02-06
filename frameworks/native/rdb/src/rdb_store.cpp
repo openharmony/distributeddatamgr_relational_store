@@ -512,9 +512,9 @@ int RdbStore::SetDistributedTables(
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::RemoveExceptDeviceData(const std::map<std::string, std::vector<std::string>> &removeDataExceptDevicesMap)
+int RdbStore::RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices)
 {
-    (void)removeDataExceptDevicesMap;
+    (void)retainDevices;
     return E_NOT_SUPPORT;
 }
 

@@ -95,7 +95,7 @@ public:
         array_view<string> tables, DistributedType type, DistributedConfig const &config);
     void SetDistributedTablesWithOptionConfig(
         array_view<string> tables, optional_view<DistributedType> type, optional_view<DistributedConfig> config);
-    void RemoveExceptDeviceDataAsync(map_view<string, array<string>> removeDataExceptDevicesMap);
+    void RetainDeviceDataAsync(map_view<string, array<string>> retainDevices);
     string ObtainDistributedTableNameSync(string_view device, string_view table);
     void SyncAsync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback);
     uintptr_t SyncPromise(SyncMode mode, weak::RdbPredicates predicates);

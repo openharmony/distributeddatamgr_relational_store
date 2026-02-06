@@ -14,9 +14,9 @@
  */
 
 import CloudConfigSystemEtsTest from './CloudConfigEtsTest.test.ets';
-import RemoveExceptDeviceData from './RemoveExceptDeviceData.test';
+import RetainDeviceData from './RetainDeviceData.test';
 
 export default function testsuite() {
   CloudConfigSystemEtsTest();
-  RemoveExceptDeviceData();
+  RetainDeviceData();
 }

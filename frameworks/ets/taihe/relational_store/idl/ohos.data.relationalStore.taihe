@@ -833,8 +833,8 @@ interface RdbStore {
     @gen_promise("setDistributedTables")
     SetDistributedTablesWithOptionConfig(tables: Array<String>, type: Optional<DistributedType>, config: Optional<DistributedConfig>): void;
 
-    @gen_promise("removeExceptDeviceData")
-    RemoveExceptDeviceDataAsync(removeDataExceptDevicesMap: @record Map<String, Array<String>>): void;
+    @gen_promise("retainDeviceData")
+    RetainDeviceDataAsync(retainDevices: @record Map<String, Array<String>>): void;
     
     @gen_async("obtainDistributedTableName")
     @gen_promise("obtainDistributedTableName")
