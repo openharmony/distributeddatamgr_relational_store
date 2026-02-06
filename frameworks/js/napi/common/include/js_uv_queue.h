@@ -83,7 +83,7 @@ private:
         Callbacker getter_;
         Args args_;
         Result result_;
-        std::shared_ptr<bool> envValidFlag_; 
+        std::shared_ptr<bool> envValidFlag_;
         ~UvEntry();
         napi_value GetCallback();
         napi_value GetObject();
@@ -97,7 +97,7 @@ private:
     napi_env env_ = nullptr;
     uv_loop_s *loop_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    std::shared_ptr<bool> envValidFlag_; 
+    std::shared_ptr<bool> envValidFlag_;
 };
 } // namespace OHOS::AppDataMgrJsKit
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H
