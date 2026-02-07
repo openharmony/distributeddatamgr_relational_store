@@ -258,9 +258,14 @@ int SqliteStatement::BindArgs(const std::vector<std::reference_wrapper<ValueObje
     bound_ = true;
     int index = 1;
     for (auto &arg : bindArgs) {
-        auto action = ACTIONS[arg.get().value.index()];
+        int ret = CheckValueObjectValid(arg.get(), index, bindArgs.size());
+        if (ret != E_OK) {
+            return ret;
+        }
+        size_t typeIndex = arg.get().value.index();
+        auto action = ACTIONS[typeIndex];
         if (action == nullptr) {
-            LOG_ERROR("not support the type %{public}zu", arg.get().value.index());
+            LOG_ERROR("not support the type %{public}zu", typeIndex);
             return E_INVALID_ARGS;
         }
         auto errCode = action(stmt_, index, arg.get().value);
@@ -272,6 +277,33 @@ int SqliteStatement::BindArgs(const std::vector<std::reference_wrapper<ValueObje
         index++;
     }
 
+    return E_OK;
+}
+
+int SqliteStatement::CheckValueObjectValid(const ValueObject &obj, int paramPos, size_t totalParams) const
+{
+    std::string bundleName = (config_ != nullptr) ? config_->GetBundleName() : "";
+    if (obj.value.valueless_by_exception()) {
+        std::string custLog = "BindArgs valueless_by_exception: paramPos=" + std::to_string(paramPos) +
+                              "/" + std::to_string(totalParams) + ", sql=" + SqliteUtils::SqlAnonymous(sql_) +
+                              ", db=" + (config_ != nullptr ? config_->GetPath() : "null");
+        LOG_ERROR("%{public}s", custLog.c_str());
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_VALUELESS_BY_EXCEPTION,
+            bundleName, custLog));
+        return E_INVALID_ARGS;
+    }
+    size_t typeIndex = obj.value.index();
+    if (typeIndex >= ValueObject::TYPE_MAX) {
+        std::string custLog = "BindArgs type index out of range: typeIndex=" + std::to_string(typeIndex) +
+                              ", TYPE_MAX=" + std::to_string(ValueObject::TYPE_MAX) +
+                              ", paramPos=" + std::to_string(paramPos) + "/" + std::to_string(totalParams) +
+                              ", sql=" + SqliteUtils::SqlAnonymous(sql_) +
+                              ", db=" + (config_ != nullptr ? config_->GetPath() : "null");
+        LOG_ERROR("%{public}s", custLog.c_str());
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_TYPE_INDEX_OUT_OF_RANGE,
+            bundleName, custLog));
+        return E_INVALID_ARGS;
+    }
     return E_OK;
 }
 
