@@ -262,10 +262,9 @@ int SqliteStatement::BindArgs(const std::vector<std::reference_wrapper<ValueObje
         if (ret != E_OK) {
             return ret;
         }
-        size_t typeIndex = arg.get().value.index();
-        auto action = ACTIONS[typeIndex];
+        auto action = ACTIONS[arg.get().value.index()];
         if (action == nullptr) {
-            LOG_ERROR("not support the type %{public}zu", typeIndex);
+            LOG_ERROR("not support the type %{public}zu", arg.get().value.index());
             return E_INVALID_ARGS;
         }
         auto errCode = action(stmt_, index, arg.get().value);
@@ -286,7 +285,7 @@ int SqliteStatement::CheckValueObjectValid(const ValueObject &obj, int paramPos,
     if (obj.value.valueless_by_exception()) {
         std::string custLog = "BindArgs valueless_by_exception: paramPos=" + std::to_string(paramPos) +
                               "/" + std::to_string(totalParams) + ", sql=" + SqliteUtils::SqlAnonymous(sql_) +
-                              ", db=" + (config_ != nullptr ? config_->GetPath() : "null");
+                              ", db=" + (config_ != nullptr ? SqliteUtils::Anonymous(config_->GetPath()) : "null");
         LOG_ERROR("%{public}s", custLog.c_str());
         Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_VALUELESS_BY_EXCEPTION,
             bundleName, custLog));
@@ -298,7 +297,7 @@ int SqliteStatement::CheckValueObjectValid(const ValueObject &obj, int paramPos,
                               ", TYPE_MAX=" + std::to_string(ValueObject::TYPE_MAX) +
                               ", paramPos=" + std::to_string(paramPos) + "/" + std::to_string(totalParams) +
                               ", sql=" + SqliteUtils::SqlAnonymous(sql_) +
-                              ", db=" + (config_ != nullptr ? config_->GetPath() : "null");
+                              ", db=" + (config_ != nullptr ? SqliteUtils::Anonymous(config_->GetPath()) : "null");
         LOG_ERROR("%{public}s", custLog.c_str());
         Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_TYPE_INDEX_OUT_OF_RANGE,
             bundleName, custLog));
