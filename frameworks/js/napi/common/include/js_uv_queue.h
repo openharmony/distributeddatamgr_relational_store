@@ -15,6 +15,9 @@
 #ifndef DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H
 #define DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H
 #include <functional>
+#include <map>
+#include <memory>
+#include <mutex>
 
 #include "event_handler.h"
 #include "napi/native_api.h"
@@ -83,7 +86,7 @@ private:
         Callbacker getter_;
         Args args_;
         Result result_;
-        bool *isValid_ = nullptr;
+        std::shared_ptr<bool> isValid_; 
         ~UvEntry();
         napi_value GetCallback();
         napi_value GetObject();
@@ -97,7 +100,9 @@ private:
     napi_env env_ = nullptr;
     uv_loop_s *loop_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    bool *isValid_ = nullptr;
+    static std::map<void *, std::shared_ptr<bool>> validEnvs;
+    static std::mutex validEnvsMutex;
+    std::shared_ptr<bool> isValid_; 
 };
 } // namespace OHOS::AppDataMgrJsKit
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H
