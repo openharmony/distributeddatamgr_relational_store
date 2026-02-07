@@ -25,7 +25,7 @@ using namespace OHOS::Rdb;
 constexpr size_t ARGC_MAX = 6;
 std::map<void *, std::shared_ptr<bool>> UvQueue::validEnvs;
 std::mutex UvQueue::validEnvsMutex;
-UvQueue::UvQueue(napi_env env) : env_(env), isValid_(nullptr)
+UvQueue::UvQueue(napi_env env) : env_(env)
 {
     if (env != nullptr) {
         {
