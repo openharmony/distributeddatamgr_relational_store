@@ -765,8 +765,8 @@ napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
             int errCode = Convert2Value(env, argv[1], context->config);
             CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
 
-            auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
-            CHECK_RETURN_SET_E(OK == code, err);
+            auto err = GetRealPath(env, argv[0], context->param, context->config);
+            CHECK_RETURN_SET_E(err == nullptr, err);
         }
         // when the first parameter is string, the pos of attachName is 1; otherwise, it is 2
         size_t pos = isString ? 1 : 2;

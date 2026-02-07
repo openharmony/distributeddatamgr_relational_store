@@ -28,10 +28,13 @@
 #include "rdb_predicates_impl.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store_config.h"
-
+#include "error_throw_utils.h"
 namespace ani_rdbutils {
 using namespace taihe;
+using namespace OHOS;
 using namespace OHOS::Rdb;
+using namespace OHOS::RdbTaihe;
+using namespace OHOS::NativeRdb;
 using TaiheAssetStatus = ::ohos::data::relationalStore::AssetStatus;
 using TaiheValueType = ::ohos::data::relationalStore::ValueType;
 using TaiheDistributedTableType = ohos::data::relationalStore::DistributedTableType;
@@ -40,7 +43,6 @@ using NativeDistributedTableMode = OHOS::DistributedRdb::DistributedTableMode;
 #ifndef PATH_SPLIT
 #define PATH_SPLIT '/'
 #endif
-static constexpr int ERR = -1;
 static const int E_OK = 0;
 static const int REALPATH_MAX_LEN = 1024;
 static const int INIT_POSITION = -1;
@@ -408,7 +410,7 @@ OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(const ohos::data::rela
     return rdbConfig;
 }
 
-std::tuple<int32_t, std::shared_ptr<OHOS::RelationalStoreJsKit::Error>> AniGetRdbRealPath(ani_env *env,
+std::shared_ptr<OHOS::RelationalStoreJsKit::Error> AniGetRdbRealPath(ani_env *env,
     ani_object aniValue, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
     OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param)
 {
@@ -416,51 +418,51 @@ std::tuple<int32_t, std::shared_ptr<OHOS::RelationalStoreJsKit::Error>> AniGetRd
     using namespace OHOS::RelationalStoreJsKit;
     using namespace OHOS::NativeRdb;
     CHECK_RETURN_CORE(rdbConfig.name.find(PATH_SPLIT) == std::string::npos, RDB_DO_NOTHING,
-        std::make_tuple(ERR, std::make_shared<ParamError>("StoreConfig.name", "a file name without path.")));
+        std::make_shared<ParamError>("StoreConfig.name", "a file name without path."));
 
     if (!rdbConfig.customDir.empty()) {
         // determine if the first character of customDir is '/'
         CHECK_RETURN_CORE(rdbConfig.customDir.find_first_of(PATH_SPLIT) != 0, RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<ParamError>("customDir", "a relative directory.")));
+            std::make_shared<ParamError>("customDir", "a relative directory."));
         // customDir length is limited to 128 bytes
         CHECK_RETURN_CORE(rdbConfig.customDir.length() <= 128, RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<ParamError>("customDir length", "less than or equal to 128 "
-                                                                                  "bytes.")));
+            std::make_shared<ParamError>("customDir length", "less than or equal to 128 "
+                                                                                  "bytes."));
     }
 
     std::string baseDir = param.baseDir;
     if (!rdbConfig.dataGroupId.empty()) {
         if (!param.isStageMode) {
-            return std::make_tuple(ERR, std::make_shared<InnerError>(E_NOT_STAGE_MODE));
+            return std::make_shared<InnerError>(E_NOT_STAGE_MODE);
         }
         auto abilityContext = OHOS::AbilityRuntime::GetStageModeContext(env, aniValue);
         auto stageContext = std::make_shared<OHOS::AppDataMgrJsKit::Context>(abilityContext);
         if (stageContext == nullptr) {
-            return std::make_tuple(ERR, std::make_shared<ParamError>("Illegal context."));
+            return std::make_shared<ParamError>("Illegal context.");
         }
         std::string groupDir;
         int errCode = stageContext->GetSystemDatabaseDir(rdbConfig.dataGroupId, groupDir);
         CHECK_RETURN_CORE(errCode == E_OK && !groupDir.empty(), RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID)));
+            std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID));
         baseDir = groupDir;
     }
 
     if (!rdbConfig.rootDir.empty()) {
         // determine if the first character of rootDir is '/'
         CHECK_RETURN_CORE(rdbConfig.rootDir.find_first_of(PATH_SPLIT) == 0, RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<PathError>()));
+            std::make_shared<PathError>());
         auto [realPath, errorCode] =
             RdbSqlUtils::GetCustomDatabasePath(rdbConfig.rootDir, rdbConfig.name, rdbConfig.customDir);
-        CHECK_RETURN_CORE(errorCode == E_OK, RDB_DO_NOTHING, std::make_tuple(ERR, std::make_shared<PathError>()));
+        CHECK_RETURN_CORE(errorCode == E_OK, RDB_DO_NOTHING, std::make_shared<PathError>());
         rdbConfig.path = realPath;
-        return std::make_tuple(E_OK, nullptr);
+        return nullptr;
     }
 
     auto [realPath, errorCode] = RdbSqlUtils::GetDefaultDatabasePath(baseDir, rdbConfig.name, rdbConfig.customDir);
     CHECK_RETURN_CORE(errorCode == E_OK && realPath.length() <= REALPATH_MAX_LEN, RDB_DO_NOTHING,
-        std::make_tuple(ERR, std::make_shared<ParamError>("database path", "a valid path.")));
+        std::make_shared<ParamError>("database path", "a valid path."));
     rdbConfig.path = realPath;
-    return std::make_tuple(E_OK, nullptr);
+    return nullptr;
 }
 
 void InitRdbStoreConfig(OHOS::NativeRdb::RdbStoreConfig &nativeStoreConfig,
@@ -492,56 +494,45 @@ void InitRdbStoreConfig(OHOS::NativeRdb::RdbStoreConfig &nativeStoreConfig,
     nativeStoreConfig.SetHaMode(rdbConfig.haMode);
 
     nativeStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
+    nativeStoreConfig.SetVersion(rdbConfig.version);
 }
 
-std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
+std::pair<int, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
     ani_env *env, ani_object aniContext, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig)
 {
     using namespace OHOS::RelationalStoreJsKit;
     using namespace OHOS::NativeRdb;
-
-    OHOS::NativeRdb::RdbStoreConfig empty("");
+    OHOS::NativeRdb::RdbStoreConfig defaultConfig("");
     if (!rdbConfig.cryptoParam.IsValid()) {
-        taihe::set_business_error(E_PARAM_ERROR, "Illegal CryptoParam.");
-        return std::make_pair(false, empty);
+        return std::make_pair(E_PARAM_ERROR, defaultConfig);
     }
     if (rdbConfig.tokenizer < NONE_TOKENIZER || rdbConfig.tokenizer >= TOKENIZER_END) {
-        taihe::set_business_error(E_PARAM_ERROR, "Illegal tokenizer.");
-        return std::make_pair(false, empty);
+        return std::make_pair(E_PARAM_ERROR, defaultConfig);
     }
     if (!RdbHelper::IsSupportedTokenizer(rdbConfig.tokenizer)) {
-        const std::optional<JsErrorCode> err = OHOS::RelationalStoreJsKit::GetJsErrorCode(E_NOT_SUPPORT);
-        if (err.has_value()) {
-            taihe::set_business_error(E_NOT_SUPPORT, err.value().message);
-        }
-        return std::make_pair(false, empty);
+        return std::make_pair(E_NOT_SUPPORT, defaultConfig);
     }
     if (!rdbConfig.persist && !rdbConfig.rootDir.empty()) {
-        const std::optional<JsErrorCode> err = OHOS::RelationalStoreJsKit::GetJsErrorCode(E_NOT_SUPPORT);
-        if (err.has_value()) {
-            taihe::set_business_error(E_NOT_SUPPORT, err.value().message);
-        }
-        return std::make_pair(false, empty);
+        return std::make_pair(E_NOT_SUPPORT, defaultConfig);
     }
     OHOS::AppDataMgrJsKit::JSUtils::ContextParam contextParam;
     int32_t ret = ani_abilityutils::AniGetContext(aniContext, contextParam);
     if (ret != ANI_OK) {
-        return std::make_pair(false, empty);
+        return std::make_pair(E_INNER_ERROR, defaultConfig);
     }
     rdbConfig.isSystemApp = contextParam.isSystemApp;
-    auto [code, err] = AniGetRdbRealPath(env, aniContext, rdbConfig, contextParam);
+    auto err = AniGetRdbRealPath(env, aniContext, rdbConfig, contextParam);
     if (!rdbConfig.rootDir.empty()) {
         rdbConfig.isReadOnly = true;
     }
-    if (OK != code && err != nullptr) {
-        taihe::set_business_error(err->GetCode(), err->GetMessage());
-        return std::make_pair(false, empty);
+    if (err != nullptr) {
+        return std::make_pair(err->GetCode(), defaultConfig);
     }
 
     OHOS::NativeRdb::RdbStoreConfig nativeStoreConfig(rdbConfig.path);
     InitRdbStoreConfig(nativeStoreConfig, rdbConfig, contextParam);
-    return std::make_pair(true, nativeStoreConfig);
-};
+    return std::make_pair(OK, nativeStoreConfig);
+}
 
 OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalStore::SubscribeType type)
 {
@@ -977,7 +968,8 @@ std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePredicatesFromTaihe(
     return rdbPredicateNative;
 }
 
-std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position)
+std::pair<int, std::vector<RowEntity>> GetRows(
+    OHOS::NativeRdb::ResultSet &resultSet, int32_t maxCount, int32_t position)
 {
     int rowPos = 0;
     resultSet.GetRowIndex(rowPos);

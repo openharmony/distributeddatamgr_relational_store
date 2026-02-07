@@ -65,14 +65,15 @@ public:
     }
 };
 
+struct GetRdbStoreContext : public ContextBase {
+    ContextParam param;
+    RdbConfig config;
+    std::shared_ptr<RdbStore> proxy;
+};
+
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
-    struct DeleteContext : public ContextBase {
-        ContextParam param;
-        RdbConfig config;
-        std::shared_ptr<RdbStore> proxy;
-    };
-    auto context = std::make_shared<DeleteContext>();
+    auto context = std::make_shared<GetRdbStoreContext>();
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         int errCode = Convert2Value(env, argv[0], context->param);
@@ -91,11 +92,11 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
                 std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
             return;
         }
-        auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
+        auto err = GetRealPath(env, argv[0], context->param, context->config);
         if (!context->config.rootDir.empty()) {
             context->config.isReadOnly = true;
         }
-        CHECK_RETURN_SET_E(OK == code, err);
+        CHECK_RETURN_SET_E(err == nullptr, err);
     };
     auto exec = [context]() -> int {
         int errCode = OK;
@@ -116,6 +117,54 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
+}
+
+napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<GetRdbStoreContext>();
+    context->config.version = ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED;
+    size_t argc = 2;
+    const size_t argcMax = 2;
+    napi_value argv[2]{};
+    napi_value self = nullptr;
+    napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    RDB_NAPI_ASSERT_INT(env, argc == argcMax, std::make_shared<ParamNumError>("2"));
+    int errCode = Convert2Value(env, argv[0], context->param);
+    RDB_NAPI_ASSERT_INT(env, OK == errCode, std::make_shared<ParamError>("Illegal context."));
+
+    errCode = Convert2Value(env, argv[1], context->config);
+    RDB_NAPI_ASSERT_INT(env, OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
+
+    RDB_NAPI_ASSERT_INT(env, context->config.cryptoParam.IsValid(),
+        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal CryptoParam."));
+    RDB_NAPI_ASSERT_INT(env, context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
+        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal tokenizer."));
+
+    RDB_NAPI_ASSERT_INT(env, RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
+        std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
+    if (!context->config.persist) {
+        RDB_NAPI_ASSERT_INT(
+            env, context->config.rootDir.empty(), std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
+    }
+
+    auto err = GetRealPath(env, argv[0], context->param, context->config);
+    if (!context->config.rootDir.empty()) {
+        context->config.isReadOnly = true;
+    }
+
+    if (err != nullptr && err->GetCode() == E_PARAM_ERROR) {
+        RDB_NAPI_ASSERT_INT(env, err == nullptr, std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+    } else {
+        RDB_NAPI_ASSERT_INT(env, err == nullptr, err);
+    }
+
+    DefaultOpenCallback callback;
+    context->proxy = RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
+    RDB_NAPI_ASSERT_INT(env, errCode == OK, std::make_shared<InnerErrorExt>(errCode));
+
+    napi_value result = RdbStoreProxy::NewInstance(env, context->proxy, context->param.isSystemApp);
+    RDB_NAPI_ASSERT_INT(env, result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    return result;
 }
 
 napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
@@ -140,11 +189,11 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
             CHECK_RETURN_SET_E(OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
         }
 
-        auto [code, err] = GetRealPath(env, argv[0], context->config, context->param);
+        auto err = GetRealPath(env, argv[0], context->param, context->config);
         if (!context->config.rootDir.empty()) {
             context->config.isReadOnly = true;
         }
-        CHECK_RETURN_SET_E(OK == code, err);
+        CHECK_RETURN_SET_E(err == nullptr, err);
     };
     auto exec = [context]() -> int {
         RdbStoreConfig storeConfig = GetRdbStoreConfig(context->config, context->param);
@@ -397,7 +446,7 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
 {
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStore", GetRdbStore, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStoreSync", GetRdbStore, SYNC),
+        DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStoreSync", GetRdbStoreSync, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStore", DeleteRdbStore, ASYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStoreSync", DeleteRdbStore, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("isVectorSupported", IsVectorSupported, SYNC),

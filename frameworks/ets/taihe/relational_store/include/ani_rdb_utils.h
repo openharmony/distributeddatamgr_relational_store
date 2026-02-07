@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "napi_rdb_js_utils.h"
-#include "ohos.data.relationalStore.impl.hpp"
 #include "ohos.data.relationalStore.proj.hpp"
 #include "rdb_store.h"
 #include "rdb_types.h"
@@ -28,6 +27,8 @@
 #include "value_object.h"
 
 namespace ani_rdbutils {
+using namespace OHOS;
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using JsChangeInfoCallbackType = taihe::callback<void(taihe::array_view<ohos::data::relationalStore::ChangeInfo>)>;
 using JsDevicesCallbackType = taihe::callback<void(taihe::array_view<taihe::string>)>;
@@ -66,8 +67,8 @@ void AniGetRdbConfigAppend(const ohos::data::relationalStore::StoreConfig &store
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &storeConfigNative);
 OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(
     ::ohos::data::relationalStore::StoreConfig const &storeConfig);
-std::pair<bool, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
-    ani_env *env, ani_object aniValue, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig);
+std::pair<int, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
+    ani_env *env, ani_object aniContext, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig);
 
 OHOS::NativeRdb::ReturningConfig ReturningConfigToNative(
     ::ohos::data::relationalStore::ReturningConfig returningConfig);
@@ -118,7 +119,7 @@ std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePredicatesFromTaihe(
     ohos::data::relationalStore::weak::RdbPredicates predicates);
 
 std::pair<int, std::vector<RowEntity>> GetRows(
-    ResultSet &resultSet, int32_t maxCount, int32_t position);
+    OHOS::NativeRdb::ResultSet &resultSet, int32_t maxCount, int32_t position);
 bool WarpDate(double time, ani_object &outObj);
 } // namespace ani_rdbutils
 

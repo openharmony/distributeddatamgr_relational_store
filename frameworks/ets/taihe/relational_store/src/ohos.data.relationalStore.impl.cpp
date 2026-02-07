@@ -55,72 +55,26 @@ using namespace OHOS::Rdb;
 using namespace OHOS::RdbTaihe;
 using ValueType = ohos::data::relationalStore::ValueType;
 using ValueObject = OHOS::NativeRdb::ValueObject;
+using ConfigVersion =  OHOS::NativeRdb::ConfigVersion;
 
 constexpr int32_t PARAM_LENGTH_MAX = 256;
 constexpr int32_t VALUESBUCKET_LENGTH_MAX = 1000;
-
-const std::map<int, std::string> ERR_STRING_MAP = {
-    { NativeRdb::E_EMPTY_TABLE_NAME, "The table must be not empty string." },
-    { NativeRdb::E_EMPTY_VALUES_BUCKET, "Bucket must not be empty." },
-    { NativeRdb::E_INVALID_CONFLICT_FLAG, "Conflict flag is not correct." },
-    { NativeRdb::E_INVALID_ARGS, "The ValueBucket contains Assets and conflictResolution is REPLACE." },
-};
-
-static std::string GetErrorString(int errcode)
-{
-    if (ERR_STRING_MAP.find(errcode) != ERR_STRING_MAP.end()) {
-        return ERR_STRING_MAP.at(errcode);
-    }
-    return std::string();
-}
-
-void ThrowError(std::shared_ptr<Error> err)
-{
-    if (err != nullptr) {
-        LOG_ERROR("code[%{public}d,%{public}d][%{public}s]", err->GetNativeCode(), err->GetCode(),
-            err->GetMessage().c_str());
-        taihe::set_business_error(err->GetCode(), err->GetMessage());
-    }
-}
-
-void ThrowInnerError(int errCode)
-{
-    auto innErr = std::make_shared<InnerError>(errCode);
-    ThrowError(innErr);
-}
-
-// Error codes that cannot be thrown in some old scenarios need to be converted in new scenarios.
-void ThrowInnerErrorExt(int errCode)
-{
-    auto innErr = std::make_shared<InnerErrorExt>(errCode);
-    if (innErr != nullptr) {
-        taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
-    }
-}
-
-void ThrowNonSystemError()
-{
-    auto innErr = std::make_shared<NonSystemError>();
-    ThrowError(innErr);
-}
-
-void ThrowParamError(const char *message)
-{
-    if (message == nullptr) {
-        return;
-    }
-    auto paraErr = std::make_shared<ParamError>(message);
-    ThrowError(paraErr);
-}
 
 RdbPredicates CreateRdbPredicates(string_view name)
 {
     return make_holder<RdbPredicatesImpl, RdbPredicates>(std::string(name));
 }
 
+RdbStore GetRdbStoreInner(uintptr_t context, StoreConfig const &config)
+{
+    return make_holder<RdbStoreImpl, RdbStore>(
+        reinterpret_cast<ani_object>(context), config, ConfigVersion::DEFAULT_VERSION);
+}
+
 RdbStore GetRdbStoreSync(uintptr_t context, StoreConfig const &config)
 {
-    return make_holder<RdbStoreImpl, RdbStore>(reinterpret_cast<ani_object>(context), config);
+    return make_holder<RdbStoreImpl, RdbStore>(
+        reinterpret_cast<ani_object>(context), config, ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
 }
 
 void DeleteRdbStoreWithName(uintptr_t context, string_view name)
@@ -132,13 +86,13 @@ void DeleteRdbStoreWithName(uintptr_t context, string_view name)
     }
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig;
     rdbConfig.name = std::string(name);
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
-    if (!configRet.first) {
+    auto [code, storeConfig] =
+        ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
+    if (code != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed");
+        ThrowInnerErrorExt(code);
         return;
     }
-    OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
-
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
     int errCodeSqlite = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     storeConfig.SetDBType(OHOS::NativeRdb::DBType::DB_VECTOR);
@@ -146,7 +100,6 @@ void DeleteRdbStoreWithName(uintptr_t context, string_view name)
     LOG_INFO("deleteRdbStoreWithName sqlite %{public}d, vector %{public}d", errCodeSqlite, errCodeVector);
     if (errCodeSqlite != NativeRdb::E_OK || errCodeVector != NativeRdb::E_OK) {
         ThrowInnerError(NativeRdb::E_REMOVE_FILE);
-        return;
     }
 }
 
@@ -158,13 +111,13 @@ void DeleteRdbStoreWithConfig(uintptr_t context, StoreConfig const &config)
         return;
     }
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
-    auto configRet = ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
-    if (!configRet.first) {
+    auto [code, storeConfig] =
+        ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
+    if (code != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed");
+        ThrowInnerErrorExt(code);
         return;
     }
-    OHOS::NativeRdb::RdbStoreConfig storeConfig = configRet.second;
-
     int errCode = OHOS::NativeRdb::RdbHelper::DeleteRdbStore(storeConfig, false);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
@@ -349,6 +302,7 @@ SqlInfo GetQuerySqlInfo(weak::RdbPredicates predicates, optional_view<array<stri
 // Since these macros are auto-generate, lint will cause false positive.
 // NOLINTBEGIN
 TH_EXPORT_CPP_API_CreateRdbPredicates(OHOS::RdbTaihe::CreateRdbPredicates);
+TH_EXPORT_CPP_API_GetRdbStoreInner(OHOS::RdbTaihe::GetRdbStoreInner);
 TH_EXPORT_CPP_API_GetRdbStoreSync(OHOS::RdbTaihe::GetRdbStoreSync);
 TH_EXPORT_CPP_API_DeleteRdbStoreWithName(OHOS::RdbTaihe::DeleteRdbStoreWithName);
 TH_EXPORT_CPP_API_DeleteRdbStoreWithConfig(OHOS::RdbTaihe::DeleteRdbStoreWithConfig);
