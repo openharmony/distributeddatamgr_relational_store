@@ -500,6 +500,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
      * @tc.name rdb store getRdbStoreSync in non-FA mode with dataGroupId
      * @tc.number getRdbStoreSyncTest009
      * @tc.desc Abnormal parameter, operation only supported in stage mode (using dataGroupId)
+     * @tc.desc Therefore, automatic use cases cannot be implemented. For details, see the manual use cases
      * @tc.expect Throw exception, 14801001 The operation is supported in the stage model only
      * @tc.autoTest false (Requires Stage mode environment)
      */
@@ -737,6 +738,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
      * @tc.name rdb store getRdbStoreSync attempt to write readonly database
      * @tc.number getRdbStoreSyncTest014
      * @tc.desc Abnormal parameter, attempt to write to readonly database
+     * @tc.desc Therefore, automatic use cases cannot be implemented. For details, see the manual use cases
      * @tc.expect Throw exception, 14800027 Attempt to write a readonly database
      * @tc.autoTest false (Requires specific file system permissions)
      */
@@ -807,6 +809,7 @@ export default function RdbStoreGetRdbStoreSyncEtsTest() {
      * @tc.name rdb store getRdbStoreSync with I/O error
      * @tc.number getRdbStoreSyncTest015
      * @tc.desc Abnormal parameter, I/O error (database file deleted)
+     * @tc.desc Therefore, automatic use cases cannot be implemented. For details, see the manual use cases
      * @tc.expect Throw exception, 14800028 Disk I/O error occurred
      * @tc.autoTest false (Requires specific file system environment)
      */
