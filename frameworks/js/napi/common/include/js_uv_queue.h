@@ -70,6 +70,8 @@ private:
     static constexpr char REJECTED[] = "rejected";
     static constexpr size_t RESOLVED_SIZE = sizeof(RESOLVED);
     static constexpr size_t REJECTED_SIZE = sizeof(REJECTED);
+    static std::map<void *, std::shared_ptr<bool>> validEnvs;
+    static std::mutex validEnvsMutex;
 
     static napi_value Resolved(napi_env env, napi_callback_info info);
     static napi_value Rejected(napi_env env, napi_callback_info info);
@@ -100,8 +102,6 @@ private:
     napi_env env_ = nullptr;
     uv_loop_s *loop_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    static std::map<void *, std::shared_ptr<bool>> validEnvs;
-    static std::mutex validEnvsMutex;
     std::shared_ptr<bool> isValid_;
 };
 } // namespace OHOS::AppDataMgrJsKit
