@@ -200,7 +200,7 @@ void UvQueue::CleanupHook(void *data)
         return;
     }
     if (it->second != nullptr) {
-        LOG_WARN("Environment cleanup hook triggered, isValid_ set to false.");
+        LOG_DEBUG("Environment cleanup hook triggered, isValid_ set to false.");
         (*it->second) = false;
     }
     UvQueue::validEnvs.erase(it);
@@ -213,7 +213,7 @@ UvQueue::Task UvQueue::GenCallbackTask(std::shared_ptr<UvEntry> entry)
             return;
         }
         if (entry->isValid_ && !(*entry->isValid_)) {
-            LOG_DEBUG("Environment is being destroyed, skipping callback execution.");
+            LOG_WARN("Environment is being destroyed, skipping callback execution.");
             return;
         }
         Scope scope(entry->env_);
@@ -244,7 +244,7 @@ UvQueue::Task UvQueue::GenPromiseTask(std::shared_ptr<UvEntry> entry)
             return;
         }
         if (entry->isValid_ && !(*entry->isValid_)) {
-            LOG_DEBUG("Environment is being destroyed, skipping promise execution.");
+            LOG_WARN("Environment is being destroyed, skipping promise execution.");
             return;
         }
         Scope scope(entry->env_);
