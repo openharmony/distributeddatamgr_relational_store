@@ -32,11 +32,12 @@ using ValueObject = OHOS::NativeRdb::ValueObject;
 using NativeDistributedTableType = OHOS::DistributedRdb::DistributedTableType;
 using NativeDistributedTableMode = OHOS::DistributedRdb::DistributedTableMode;
 using NativeDistributedConfig = OHOS::DistributedRdb::DistributedConfig;
+using ConfigVersion =  OHOS::NativeRdb::ConfigVersion;
 
 class RdbStoreImpl : public ThreadSafeBase<OHOS::NativeRdb::RdbStore> {
 public:
     RdbStoreImpl();
-    explicit RdbStoreImpl(ani_object context, StoreConfig const &config);
+    explicit RdbStoreImpl(ani_object context, StoreConfig const &config, ConfigVersion version);
     int32_t GetVersion();
     void SetVersion(int32_t veriosn);
     RebuildType GetRebuilt();

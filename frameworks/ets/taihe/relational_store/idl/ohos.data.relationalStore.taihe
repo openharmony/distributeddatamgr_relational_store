@@ -1040,6 +1040,8 @@ interface RdbStore {
 
 @gen_async("getRdbStore")
 @gen_promise("getRdbStore")
+function GetRdbStoreInner(context: @sts_type("BaseContext") Opaque, config: StoreConfig): RdbStore;
+
 function GetRdbStoreSync(context: @sts_type("BaseContext") Opaque, config: StoreConfig): RdbStore;
 
 @gen_async("deleteRdbStore")

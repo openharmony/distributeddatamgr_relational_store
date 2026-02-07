@@ -112,6 +112,7 @@ enum EncryptAlgo : int32_t {
 };
 
 enum RegisterType : uint8_t { STORE_OBSERVER = 0, CLIENT_OBSERVER, OBSERVER_END };
+enum ConfigVersion : uint8_t { DEFAULT_VERSION = 0, INVALID_CONFIG_CHANGE_NOT_ALLOWED };
 
 struct RegisterInfo {
 public:
@@ -383,7 +384,8 @@ public:
     bool IsEqualRegisterInfo(const RdbStoreConfig& config) const;
     void SetEnableSemanticIndex(bool enableSemanticIndex);
     bool GetEnableSemanticIndex() const;
-
+    void SetVersion(ConfigVersion version);
+    ConfigVersion GetVersion() const;
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
@@ -440,6 +442,7 @@ private:
     bool allowRebuilt_ = false;
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
+    ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;
 };
 } // namespace OHOS::NativeRdb
 #endif

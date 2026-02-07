@@ -16,8 +16,6 @@
 #ifndef OHOS_RELATION_STORE_RELATION_STORE_IMPL_H
 #define OHOS_RELATION_STORE_RELATION_STORE_IMPL_H
 
-#include "ohos.data.relationalStore.impl.hpp"
-
 #include "abs_rdb_predicates.h"
 #include "ani_rdb_utils.h"
 #include "ani_utils.h"
@@ -44,6 +42,7 @@
 #include "result_set_impl.h"
 #include "result_set_proxy.h"
 #include "transaction_impl.h"
+#include "error_throw_utils.h"
 
 namespace OHOS {
 namespace RdbTaihe {
@@ -59,13 +58,6 @@ using ValueObject = OHOS::NativeRdb::ValueObject;
 
 static constexpr int ERR_NULL = -1;
 static constexpr int INIT_POSITION = -1;
-
-void ThrowError(std::shared_ptr<Error> err);
-#define ASSERT_RETURN_THROW_ERROR(assertion, error, retVal) CHECK_RETURN_CORE(assertion, ThrowError(error), retVal)
-void ThrowInnerError(int errCode);
-void ThrowInnerErrorExt(int errCode);
-void ThrowNonSystemError();
-void ThrowParamError(const char *message);
 
 template <class T>
 Result BatchInsertWithReturning(std::shared_ptr<T> store, string_view table,
@@ -120,7 +112,7 @@ Result UpdateWithReturning(std::shared_ptr<T> store, ValuesBucket values,
     ASSERT_RETURN_THROW_ERROR(
         rdbPredicateNative != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."), returnVal);
     ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicateNative->GetTableName()),
-            std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"), returnVal);
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"), returnVal);
     auto nativeConfig = ani_rdbutils::ReturningConfigToNative(config);
     nativeConfig.columns = RdbSqlUtils::BatchTrim(nativeConfig.columns);
     ASSERT_RETURN_THROW_ERROR(RdbSqlUtils::IsValidFields(nativeConfig.columns),
