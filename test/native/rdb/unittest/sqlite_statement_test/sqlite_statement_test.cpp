@@ -126,3 +126,42 @@ HWTEST_F(RdbSqliteStatementTest, SqliteStatement002, TestSize.Level0)
     rc = sqlite3_close(db);
     EXPECT_EQ(rc, SQLITE_OK);
 }
+
+/**
+ * @tc.name: SqliteStatement003
+ * @tc.desc: Test CheckValueObjectValid with normal bind args
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteStatementTest, SqliteStatement003, TestSize.Level0)
+{
+    const char *dbPath = "/data/test/SqliteStatement003.db";
+    RdbStoreConfig rdbConfig(dbPath);
+    sqlite3 *db = nullptr;
+    int rc = sqlite3_open(dbPath, &db);
+    ASSERT_NE(db, nullptr);
+    EXPECT_EQ(rc, SQLITE_OK);
+    const char *sqlCreate = "CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY, data TEXT)";
+    char *errMsg = nullptr;
+    rc = sqlite3_exec(db, sqlCreate, NULL, NULL, &errMsg);
+
+    sqlite3_stmt *stmt;
+    const char *sql = "INSERT INTO test(id, data) VALUES(?, ?)";
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    SqliteStatement statem(&rdbConfig);
+    statem.stmt_ = stmt;
+    statem.sql_ = sql;
+    statem.numParameters_ = 2;
+
+    std::vector<ValueObject> bindArgs;
+    bindArgs.push_back(ValueObject(1));
+    bindArgs.push_back(ValueObject(std::string("test")));
+
+    int errCode = statem.BindArgs(bindArgs);
+    EXPECT_EQ(errCode, E_OK);
+
+    statem.stmt_ = nullptr;
+    sqlite3_finalize(stmt);
+    rc = sqlite3_close(db);
+    EXPECT_EQ(rc, SQLITE_OK);
+}
