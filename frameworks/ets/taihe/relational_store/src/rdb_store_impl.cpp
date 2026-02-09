@@ -1406,7 +1406,7 @@ int32_t RdbStoreImpl::AttachWithContext(
     auto [code, storeConfig] =
         ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
     if (code != OK) {
-        ThrowInnerErrorExt(OHOS::NativeRdb::E_ERROR);
+        ThrowInnerErrorExt(code);
         return 0;
     }
 
