@@ -38,23 +38,11 @@ bool Marshalling(const NotifyConfig &input, MessageParcel &data)
 {
     return ITypesUtil::Marshal(data, input.delay_, input.isFull_);
 }
-template<>
-bool Unmarshalling(NotifyConfig &output, MessageParcel &data)
-{
-    return ITypesUtil::Unmarshal(data, output.delay_, output.isFull_);
-}
 
 template<>
 bool Marshalling(const Option &input, MessageParcel &data)
 {
     return ITypesUtil::Marshal(data, input.mode, input.seqNum, input.isAsync, input.isAutoSync, input.isCompensation);
-}
-
-template<>
-bool Unmarshalling(Option &output, MessageParcel &data)
-{
-    return ITypesUtil::Unmarshal(
-        data, output.mode, output.seqNum, output.isAsync, output.isAutoSync, output.isCompensation);
 }
 
 template<>
@@ -89,14 +77,6 @@ bool Marshalling(const SubOption &input, MessageParcel &data)
     return ITypesUtil::Marshal(data, static_cast<int32_t>(input.mode));
 }
 
-template<>
-bool Unmarshalling(SubOption &output, MessageParcel &data)
-{
-    int32_t mode = static_cast<int32_t>(output.mode);
-    auto ret = ITypesUtil::Unmarshal(data, mode);
-    output.mode = static_cast<decltype(output.mode)>(mode);
-    return ret;
-}
 template<>
 bool Marshalling(const ValueObject &input, MessageParcel &data)
 {
@@ -189,32 +169,17 @@ bool Marshalling(const RdbChangedData &input, MessageParcel &data)
 {
     return Marshal(data, input.tableData);
 }
-template<>
-bool Unmarshalling(RdbChangedData &output, MessageParcel &data)
-{
-    return Unmarshal(data, output.tableData);
-}
 
 template<>
 bool Marshalling(const RdbProperties &input, MessageParcel &data)
 {
     return Marshal(data, input.isTrackedDataChange, input.isP2pSyncDataChange);
 }
-template<>
-bool Unmarshalling(RdbProperties &output, MessageParcel &data)
-{
-    return Unmarshal(data, output.isTrackedDataChange, output.isP2pSyncDataChange);
-}
 
 template<>
 bool Marshalling(const Reference &input, MessageParcel &data)
 {
     return Marshal(data, input.sourceTable, input.targetTable, input.refFields);
-}
-template<>
-bool Unmarshalling(Reference &output, MessageParcel &data)
-{
-    return Unmarshal(data, output.sourceTable, output.targetTable, output.refFields);
 }
 
 template<>
@@ -249,11 +214,6 @@ template<>
 bool Marshalling(const StatReporter &input, MessageParcel &data)
 {
     return Marshal(data, input.statType, input.bundleName, input.storeName, input.subType, input.costTime);
-}
-template<>
-bool Unmarshalling(StatReporter &output, MessageParcel &data)
-{
-    return Unmarshal(data, output.statType, output.bundleName, output.storeName, output.subType, output.costTime);
 }
 
 template<>
