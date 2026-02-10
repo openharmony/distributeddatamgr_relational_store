@@ -29,6 +29,7 @@ LiteResultSetImpl::LiteResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet>
 {
     nativeResultSet_ = resultSet;
     proxy_ = std::make_shared<LiteResultSetProxy>(resultSet);
+    SetResource(resultSet);
 }
 
 intptr_t LiteResultSetImpl::GetProxy()
@@ -39,6 +40,7 @@ intptr_t LiteResultSetImpl::GetProxy()
 array<ohos::data::relationalStore::ValuesBucket> LiteResultSetImpl::GetRowsSync(int32_t maxCount,
     optional_view<int32_t> position)
 {
+    auto resultSet = GetResource();
     if (maxCount <= 0) {
         LOG_ERROR("invalid maxCount");
         ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
@@ -55,9 +57,9 @@ array<ohos::data::relationalStore::ValuesBucket> LiteResultSetImpl::GetRowsSync(
     }
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
     std::vector<OHOS::NativeRdb::RowEntity> rowEntities;
-    
-    if (nativeResultSet_ != nullptr) {
-        std::tie(errCode, rowEntities) = ani_rdbutils::GetRows(*nativeResultSet_, maxCount, positionNative);
+
+    if (resultSet != nullptr) {
+        std::tie(errCode, rowEntities) = ani_rdbutils::GetRows(*resultSet, maxCount, positionNative);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerErrorExt(errCode);
@@ -92,8 +94,9 @@ int32_t LiteResultSetImpl::GetColumnIndex(string_view columnName)
 
 uintptr_t LiteResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnIdentifier const& columnIdentifier)
 {
+    auto resultSet = GetResource();
     OHOS::DistributedRdb::ColumnType columnType = OHOS::DistributedRdb::ColumnType::TYPE_NULL;
-    ASSERT_RETURN_THROW_ERROR(nativeResultSet_ != nullptr,
+    ASSERT_RETURN_THROW_ERROR(resultSet != nullptr,
         std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
     int32_t columnIndex = 0;
     int errCode = OHOS::NativeRdb::E_OK;
@@ -105,10 +108,10 @@ uintptr_t LiteResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::Colu
         std::string columnName(columnIdentifier.get_columnName_ref());
         ASSERT_RETURN_THROW_ERROR(!columnName.empty(),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "columnName is empty."), 0);
-        errCode = nativeResultSet_->GetColumnIndex(columnName, columnIndex);
+        errCode = resultSet->GetColumnIndex(columnName, columnIndex);
     }
     if (errCode == OHOS::NativeRdb::E_OK) {
-        errCode = nativeResultSet_->GetColumnType(columnIndex, columnType);
+        errCode = resultSet->GetColumnType(columnIndex, columnType);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerErrorExt(errCode);
@@ -292,6 +295,7 @@ bool LiteResultSetImpl::IsColumnNull(int32_t columnIndex)
 
 void LiteResultSetImpl::Close()
 {
+    ResetResource();
     nativeResultSet_ = nullptr;
     proxy_ = nullptr;
 }
@@ -325,6 +329,7 @@ array<ohos::data::relationalStore::ValueType> LiteResultSetImpl::GetCurrentRowDa
 
 array<array<ValueType>> LiteResultSetImpl::GetRowsDataSync(int32_t maxCount, optional_view<int32_t> position)
 {
+    auto resultSet = GetResource();
     ASSERT_RETURN_THROW_ERROR(maxCount > 0,
         std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Invalid maxCount"), {});
     int32_t nativePosition = INIT_POSITION;
@@ -336,8 +341,8 @@ array<array<ValueType>> LiteResultSetImpl::GetRowsDataSync(int32_t maxCount, opt
 
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
     std::vector<std::vector<ValueObject>> rowsData;
-    if (nativeResultSet_ != nullptr) {
-        std::tie(errCode, rowsData) = nativeResultSet_->GetRowsData(maxCount, nativePosition);
+    if (resultSet != nullptr) {
+        std::tie(errCode, rowsData) = resultSet->GetRowsData(maxCount, nativePosition);
     }
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
         std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode), {});
