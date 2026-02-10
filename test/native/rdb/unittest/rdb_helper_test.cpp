@@ -834,7 +834,8 @@ HWTEST_F(RdbHelperTest, GetDatabase_007, TestSize.Level0)
 
 /**
  * @tc.name: GetDatabase_008
- * @tc.desc: Use the config of the new version to open the database, and then use the config of the old version to open the database. The error code 14800017 is expected to be reported
+ * @tc.desc: Use the config of the new version to open the database, and then use the config of the old version
+ * to open the database. The error code 14800017 is expected to be reported
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, GetDatabase_008, TestSize.Level0)
@@ -862,7 +863,8 @@ HWTEST_F(RdbHelperTest, GetDatabase_008, TestSize.Level0)
 
 /**
  * @tc.name: GetDatabase_009
- * @tc.desc: Use the config of the old version to open the database, and then use the config of the new version to open the database. The error code 14800017 is expected to be reported
+ * @tc.desc: Use the config of the old version to open the database, and then use the config of the new version
+ * to open the database. The error code 14800017 is expected to be reported
  * @tc.type: FUNC
  */
 HWTEST_F(RdbHelperTest, GetDatabase_009, TestSize.Level0)
