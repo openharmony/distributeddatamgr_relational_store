@@ -71,6 +71,8 @@ public:
     static std::pair<int, SqlInfo> GetDeleteSqlInfo(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &returningFields = {});
     static std::pair<int, SqlInfo> GetQuerySqlInfo(const AbsRdbPredicates &predicates, const Fields &columns);
+private:
+    static int CreateSingleDirectory(const std::string &databaseDirectory);
 };
 } // namespace NativeRdb
 } // namespace OHOS
