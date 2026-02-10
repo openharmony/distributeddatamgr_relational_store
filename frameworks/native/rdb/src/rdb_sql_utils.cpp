@@ -53,14 +53,9 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
     for (const std::string &directory : directories) {
         databaseDirectory = databaseDirectory + "/" + directory;
         if (access(databaseDirectory.c_str(), F_OK) != 0) {
-            if (MkDir(databaseDirectory)) {
-                LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s, parent dir modes: %{public}s", errno,
-                    SqliteUtils::Anonymous(databaseDirectory).c_str(),
-                    SqliteUtils::GetParentModes(databaseDirectory).c_str());
-                RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_CREATE_FOLDER_FAIL, BUNDLE_NAME_COMMON,
-                    "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory +
-                        "parent dir modes:" + SqliteUtils::GetParentModes(databaseDirectory)));
-                return E_CREATE_FOLDER_FAIL;
+            int ret = CreateSingleDirectory(databaseDirectory);
+            if (ret != E_OK) {
+                return ret;
             }
             // Set the default ACL attribute to the database root directory to ensure that files created by the server
             // also have permission to operate on the client side.
@@ -68,6 +63,23 @@ int RdbSqlUtils::CreateDirectory(const std::string &databaseDir)
             acl.SetDefaultUser(GetUid(), Acl::R_RIGHT | Acl::W_RIGHT);
             acl.SetDefaultGroup(SERVICE_GID, Acl::R_RIGHT | Acl::W_RIGHT);
         }
+    }
+    return E_OK;
+}
+
+int RdbSqlUtils::CreateSingleDirectory(const std::string &databaseDirectory)
+{
+    if (MkDir(databaseDirectory)) {
+        if (errno == EEXIST) {
+            return E_OK;
+        }
+        LOG_ERROR("failed to mkdir errno[%{public}d] %{public}s, parent dir modes: %{public}s", errno,
+            SqliteUtils::Anonymous(databaseDirectory).c_str(),
+            SqliteUtils::GetParentModes(databaseDirectory).c_str());
+        RdbFaultHiViewReporter::ReportFault(RdbFaultEvent(FT_EX_FILE, E_CREATE_FOLDER_FAIL, BUNDLE_NAME_COMMON,
+            "failed to mkdir errno[ " + std::to_string(errno) + "]," + databaseDirectory +
+            "parent dir modes:" + SqliteUtils::GetParentModes(databaseDirectory)));
+        return E_CREATE_FOLDER_FAIL;
     }
     return E_OK;
 }
