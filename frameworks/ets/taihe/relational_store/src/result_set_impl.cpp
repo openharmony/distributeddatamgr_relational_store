@@ -152,7 +152,7 @@ uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnId
 {
     auto resultSet = GetResource();
     OHOS::DistributedRdb::ColumnType columnType = OHOS::DistributedRdb::ColumnType::TYPE_NULL;
-    ASSERT_RETURN_THROW_ERROR(nativeResultSet_ != nullptr,
+    ASSERT_RETURN_THROW_ERROR(resultSet != nullptr,
         std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
     int32_t columnIndex = 0;
     int errCode = OHOS::NativeRdb::E_OK;
@@ -164,10 +164,10 @@ uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnId
         std::string columnName(columnIdentifier.get_columnName_ref());
         ASSERT_RETURN_THROW_ERROR(!columnName.empty(),
             std::make_shared<ParamError>("columnName", "a non empty string."), 0);
-        errCode = nativeResultSet_->GetColumnIndex(columnName, columnIndex);
+        errCode = resultSet->GetColumnIndex(columnName, columnIndex);
     }
     if (errCode == OHOS::NativeRdb::E_OK) {
-        errCode = nativeResultSet_->GetColumnType(columnIndex, columnType);
+        errCode = resultSet->GetColumnType(columnIndex, columnType);
     }
     if (errCode == NativeRdb::E_INVALID_ARGS) {
         errCode = E_PARAM_ERROR;
