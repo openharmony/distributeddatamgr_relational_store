@@ -35,7 +35,10 @@ copy_taihe_idl("cloud_data_taihe_idl") {
 
 ohos_taihe("cloud_data_generate") {
   taihe_generated_file_path = "$taihe_generated_file_path"
-  deps = [ ":cloud_data_taihe_idl" ]
+  deps = [
+    ":cloud_data_taihe_idl",
+    "${relational_store_frameworks_path}/ets/taihe/relational_store:run_taihe",
+  ]
   outputs = [
     "$taihe_generated_file_path/src/ohos.data.commonType.ani.cpp",
     "$taihe_generated_file_path/src/ohos.data.commonType.abi.c",
