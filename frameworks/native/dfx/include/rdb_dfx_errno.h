@@ -98,6 +98,16 @@ static constexpr int E_DFX_REPLAY_TIMEOUT_FAIL = (E_DFX_BASE + 0xE);
  */
 static constexpr int E_DFX_VISITOR_VERIFY_FAULT = (E_DFX_BASE + 0xF);
 
+/**
+ * @brief Only use for dfx, valueobject valueless_by_exception.
+ */
+static constexpr int E_DFX_VALUELESS_BY_EXCEPTION = (E_DFX_BASE + 0x11);
+
+/**
+ * @brief Only use for dfx, valueobject type index out of range.
+ */
+static constexpr int E_DFX_TYPE_INDEX_OUT_OF_RANGE = (E_DFX_BASE + 0x12);
+
 } // namespace NativeRdb
 } // namespace OHOS
 

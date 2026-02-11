@@ -82,7 +82,7 @@ export default function PerfStatEtsTest() {
         'age': 18,
         'salary': 25000,
       };
-      let rowId = await rdbStore?.insert('test', valueBucket);
+      let rowId:number = await rdbStore?.insert('test', valueBucket);
       expect(2).assertEqual(rowId);
 
       console.log(TAG + "************* testRdbStorePerfStat_0001 end *************");
@@ -108,7 +108,7 @@ export default function PerfStatEtsTest() {
       };
       let predicates = new relationalStore.RdbPredicates('test');
       predicates.equalTo('id', 1);
-      let rowId = await rdbStore?.update(valueBucket, predicates);
+      let rowId:number = await rdbStore?.update(valueBucket, predicates);
       expect(1).assertEqual(rowId);
       console.log(TAG + "************* testRdbStorePerfStat_0002 end *************");
     })
@@ -129,7 +129,7 @@ export default function PerfStatEtsTest() {
 
       let predicates = new relationalStore.RdbPredicates('test');
       predicates.equalTo('id', 1);
-      let rowId = await rdbStore?.delete(predicates);
+      let rowId:number = await rdbStore?.delete(predicates);
       expect(1).assertEqual(rowId);
       console.log(TAG + "************* testRdbStorePerfStat_0003 end *************");
     })
@@ -426,17 +426,17 @@ export default function PerfStatEtsTest() {
         }
         timerId = setTimeout(done, 2000);
       };
-        rdbStore?.on('perfStat',observer1)
+      rdbStore?.on('perfStat',observer1)
 
-        const valueBucket: relationalStore.ValuesBucket = {
-          'name': 'zhangsan',
-          'age': 18,
-          'salary': 25000,
-        };
-        let rowId = await rdbStore?.insert('test', valueBucket);
-        expect(2).assertEqual(rowId);
-        let rowId2 = await store2?.insert('test', valueBucket);
-        expect(1).assertEqual(rowId2);
+      const valueBucket: relationalStore.ValuesBucket = {
+        'name': 'zhangsan',
+        'age': 18,
+        'salary': 25000,
+      };
+      let rowId:number = await rdbStore?.insert('test', valueBucket);
+      expect(2).assertEqual(rowId);
+      let rowId2 = await store2?.insert('test', valueBucket);
+      expect(1).assertEqual(rowId2);
       console.log(TAG + "************* testRdbStorePerfStat_0016 end *************");
     })
 
@@ -666,6 +666,384 @@ export default function PerfStatEtsTest() {
         done()
       }
       console.log(TAG + "************* testRdbStorePerfStat_0024 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat updateWithReturningSync with TRANSACTION
+     * @tc.number testRdbStorePerfStat_0025
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call updateWithReturningSync in TRANSACTION
+     */
+    it('testRdbStorePerfStat_0025',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0025 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0025 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 3).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('UPDATE')).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      let transaction = await rdbStore?.createTransaction();
+      try {
+        const valueBucket: relationalStore.ValuesBucket = {
+          'name': 'lisi',
+          'age': 20,
+        };
+        let predicates = new relationalStore.RdbPredicates('test');
+        predicates.equalTo('id', 1);
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        transaction?.updateWithReturningSync(valueBucket, predicates, config);
+        await transaction?.commit();
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0025, failed code:${e.code},message:${e.message}`);
+        await transaction?.rollback();
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0025 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat updateWithReturning with TRANSACTION
+     * @tc.number testRdbStorePerfStat_0026
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call updateWithReturning in TRANSACTION
+     */
+    it('testRdbStorePerfStat_0026',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0026 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0026 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 3).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('UPDATE')).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      let transaction = await rdbStore?.createTransaction();
+      try {
+        const valueBucket: relationalStore.ValuesBucket = {
+          'name': 'lisi',
+          'age': 20,
+        };
+        let predicates = new relationalStore.RdbPredicates('test');
+        predicates.equalTo('id', 1);
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        await transaction?.updateWithReturning(valueBucket, predicates, config);
+        await transaction?.commit();
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0026, failed code:${e.code},message:${e.message}`);
+        await transaction?.rollback();
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0026 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat batchInsertWithReturningSync with TRANSACTION
+     * @tc.number testRdbStorePerfStat_0027
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call batchInsertWithReturningSync in TRANSACTION
+     */
+    it('testRdbStorePerfStat_0027',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0027 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0027 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 3).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('INSERT')).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      let transaction = await rdbStore?.createTransaction();
+      try {
+        const valueBucket: relationalStore.ValuesBucket = {
+          'name': 'zhangsan',
+          'age': 18,
+        };
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        transaction?.batchInsertWithReturningSync('test', [valueBucket], config);
+        await transaction?.commit();
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0027, failed code:${e.code},message:${e.message}`);
+        await transaction?.rollback();
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0027 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat batchInsertWithReturning with TRANSACTION
+     * @tc.number testRdbStorePerfStat_0028
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call batchInsertWithReturning in TRANSACTION
+     */
+    it('testRdbStorePerfStat_0028',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0028 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0028 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 3).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('INSERT')).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      let transaction = await rdbStore?.createTransaction();
+      try {
+        const valueBucket: relationalStore.ValuesBucket = {
+          'name': 'zhangsan',
+          'age': 18,
+        };
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        await transaction?.batchInsertWithReturning('test', [valueBucket], config);
+        await transaction?.commit();
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0028, failed code:${e.code},message:${e.message}`);
+        await transaction?.rollback();
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0028 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat deleteWithReturningSync with TRANSACTION
+     * @tc.number testRdbStorePerfStat_0029
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call deleteWithReturningSync in TRANSACTION
+     */
+    it('testRdbStorePerfStat_0029',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0029 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0029 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 3).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('DELETE')).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      let transaction = await rdbStore?.createTransaction();
+      try {
+        let predicates = new relationalStore.RdbPredicates('test');
+        predicates.equalTo('id', 1);
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        transaction?.deleteWithReturningSync(predicates, config);
+        await transaction?.commit();
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0029, failed code:${e.code},message:${e.message}`);
+        await transaction?.rollback();
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0029 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat deleteWithReturning with TRANSACTION
+     * @tc.number testRdbStorePerfStat_0030
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call deleteWithReturning in TRANSACTION
+     */
+    it('testRdbStorePerfStat_0030',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0030 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0030 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 3).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('DELETE')).assertTrue();
+        expect(sqlExecutionInfo.sql[1].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      let transaction = await rdbStore?.createTransaction();
+      try {
+        let predicates = new relationalStore.RdbPredicates('test');
+        predicates.equalTo('id', 1);
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        await transaction?.deleteWithReturning(predicates, config);
+        await transaction?.commit();
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0030, failed code:${e.code},message:${e.message}`);
+        await transaction?.rollback();
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0030 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat updateWithReturningSync
+     * @tc.number testRdbStorePerfStat_0031
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call updateWithReturningSync
+     */
+    it('testRdbStorePerfStat_0031',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0031 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0031 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 1).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('UPDATE')).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      try {
+        const valueBucket: relationalStore.ValuesBucket = {
+          'name': 'lisi',
+          'age': 20,
+        };
+        let predicates = new relationalStore.RdbPredicates('test');
+        predicates.equalTo('id', 1);
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        rdbStore?.updateWithReturningSync(valueBucket, predicates, config);
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0031, failed code:${e.code},message:${e.message}`);
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0031 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat updateWithReturning
+     * @tc.number testRdbStorePerfStat_0032
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call updateWithReturning
+     */
+    it('testRdbStorePerfStat_0032',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0032 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0032 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 1).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('UPDATE')).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      try {
+        const valueBucket: relationalStore.ValuesBucket = {
+          'name': 'lisi',
+          'age': 20,
+        };
+        let predicates = new relationalStore.RdbPredicates('test');
+        predicates.equalTo('id', 1);
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        await rdbStore?.updateWithReturning(valueBucket, predicates, config);
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0032, failed code:${e.code},message:${e.message}`);
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0032 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat batchInsertWithReturningSync
+     * @tc.number testRdbStorePerfStat_0033
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call batchInsertWithReturningSync
+     */
+    it('testRdbStorePerfStat_0033',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0033 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0033 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 1).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('INSERT')).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      try {
+        const valueBucket: relationalStore.ValuesBucket = {
+          'name': 'zhangsan',
+          'age': 18,
+        };
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        rdbStore?.batchInsertWithReturningSync('test', [valueBucket], config);
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0033, failed code:${e.code},message:${e.message}`);
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0033 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat batchInsertWithReturning
+     * @tc.number testRdbStorePerfStat_0034
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call batchInsertWithReturning
+     */
+    it('testRdbStorePerfStat_0034',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0034 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0034 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 1).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('INSERT')).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      try {
+        const valueBucket: relationalStore.ValuesBucket = {
+          'name': 'zhangsan',
+          'age': 18,
+        };
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        await rdbStore?.batchInsertWithReturning('test', [valueBucket], config);
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0034, failed code:${e.code},message:${e.message}`);
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0034 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat deleteWithReturningSync
+     * @tc.number testRdbStorePerfStat_0035
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call deleteWithReturningSync
+     */
+    it('testRdbStorePerfStat_0035',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0035 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0035 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 1).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('DELETE')).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      try {
+        let predicates = new relationalStore.RdbPredicates('test');
+        predicates.equalTo('id', 1);
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        rdbStore?.deleteWithReturningSync(predicates, config);
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0035, failed code:${e.code},message:${e.message}`);
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0035 end *************");
+    })
+
+    /**
+     * @tc.name Normal case for perfStat deleteWithReturning
+     * @tc.number testRdbStorePerfStat_0036
+     * @tc.desc 1. Register callback for perfStat
+     *          2. Call deleteWithReturning
+     */
+    it('testRdbStorePerfStat_0036',  0, async  (done:Function) => {
+      console.log(TAG + "************* testRdbStorePerfStat_0036 start *************");
+      let observer = (sqlExecutionInfo : relationalStore.SqlExecutionInfo) => {
+        console.info(TAG + "0036 sql: " + JSON.stringify(sqlExecutionInfo.sql));
+        expect(sqlExecutionInfo.sql.length === 1).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('DELETE')).assertTrue();
+        expect(sqlExecutionInfo.sql[0].includes('returning')).assertTrue();
+        done()
+      };
+      rdbStore?.on('perfStat', observer);
+
+      try {
+        let predicates = new relationalStore.RdbPredicates('test');
+        predicates.equalTo('id', 1);
+        const config: relationalStore.ReturningConfig = { columns: ['name', 'age'] };
+        await rdbStore?.deleteWithReturning(predicates, config);
+      } catch (e) {
+        console.error(TAG + `testRdbStorePerfStat_0036, failed code:${e.code},message:${e.message}`);
+      }
+      console.log(TAG + "************* testRdbStorePerfStat_0036 end *************");
     })
   })
 }
