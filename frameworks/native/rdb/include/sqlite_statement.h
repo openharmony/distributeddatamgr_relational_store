@@ -87,6 +87,7 @@ private:
         BindBlob, BindAsset, BindAssets, BindFloats, BindBigInt };
 
     int CheckEnvironment(int paramCount) const;
+    int CheckValueObjectValid(const ValueObject &obj, int paramPos, size_t totalParams) const;
     int Prepare(sqlite3 *dbHandle, const std::string &sql);
     int BindArgs(const std::vector<ValueObject> &bindArgs);
     int BindArgs(const std::vector<std::reference_wrapper<ValueObject>> &bindArgs);
