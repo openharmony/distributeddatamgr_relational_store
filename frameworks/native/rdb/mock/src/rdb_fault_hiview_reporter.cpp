@@ -91,11 +91,8 @@ void RdbFaultHiViewReporter::ReportFault(const RdbFaultEvent &faultEvent)
 
 RdbFaultEvent::RdbFaultEvent(const std::string &faultType, int32_t errorCode,
     const std::string &bundleName, const std::string &custLog)
+    : bundleName_(bundleName), faultType_(faultType), custLog_(custLog), errorCode_(errorCode)
 {
-    (void)faultType;
-    (void)errorCode;
-    (void)bundleName;
-    (void)custLog;
 }
 
 void RdbFaultEvent::Report() const
@@ -105,9 +102,9 @@ void RdbFaultEvent::Report() const
 RdbFaultEvent::~RdbFaultEvent() = default;
 
 RdbFaultDbFileEvent::RdbFaultDbFileEvent(const std::string &faultType, int32_t errorCode, const RdbStoreConfig &config,
-    const std::string &custLog, bool printDbInfo) : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config)
+    const std::string &custLog, bool printDbInfo)
+    : RdbFaultEvent(faultType, errorCode, "", custLog), config_(config), printDbInfo_(printDbInfo)
 {
-    (void)printDbInfo;
 }
 
 void RdbFaultDbFileEvent::Report() const
