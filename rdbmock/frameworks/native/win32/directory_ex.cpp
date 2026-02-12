@@ -18,7 +18,7 @@
 namespace OHOS {
 bool PathToRealPath(const std::string &path, std::string &realPath)
 {
-    realPath = path; 
+    realPath = path;
     return true;
 }
 }
