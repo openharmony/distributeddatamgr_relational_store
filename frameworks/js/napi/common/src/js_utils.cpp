@@ -20,8 +20,12 @@
 
 #include "js_native_api_types.h"
 #include "logger.h"
+#include "rdb_dfx_errno.h"
+#include "rdb_fault_hiview_reporter.h"
+#include "rdb_helper.h"
 #include "securec.h"
 using namespace OHOS::Rdb;
+using Reportor = OHOS::NativeRdb::RdbFaultHiViewReporter;
 
 #define CHECK_RETURN_RET(assertion, message, revt)                   \
     do {                                                             \
@@ -245,6 +249,12 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::string &ou
 
     // cut down with 0 if more than MAX_VALUE_LENGTH
     if (buffSize >= JSUtils::MAX_VALUE_LENGTH - 1) {
+        // Report fault when string size exceeds 8MB
+        std::string bundleName = OHOS::NativeRdb::RdbHelper::GetSelfBundleName();
+        std::string custLog = "String size " + std::to_string(buffSize) + " exceeds 8MB limit";
+        Reportor::ReportFault(OHOS::NativeRdb::RdbFaultEvent(
+            OHOS::NativeRdb::RdbFaultType::FT_CURD, OHOS::NativeRdb::E_DFX_STRING_SIZE_EXCEED_LIMIT, bundleName,
+            custLog));
         buffSize = JSUtils::MAX_VALUE_LENGTH - 1;
     }
     std::unique_ptr<char[]> buffer = std::make_unique<char[]>(buffSize + 1);
