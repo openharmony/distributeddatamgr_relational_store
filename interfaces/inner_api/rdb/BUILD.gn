@@ -322,6 +322,8 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "mock/include",
       "include",
+      "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/dfx/include",
       "//third_party/libuv/src/win",
       "../cloud_data/include",
       "../common_type/include",
@@ -425,6 +427,8 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "mock/include",
       "include",
+      "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/dfx/include",
       "../cloud_data/include",
       "../common_type/include",
     ]

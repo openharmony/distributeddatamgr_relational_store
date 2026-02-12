@@ -128,10 +128,10 @@ HWTEST_F(RdbSqliteStatementTest, SqliteStatement002, TestSize.Level0)
 }
 
 /**
-* @tc.name: SqliteStatement003
-* @tc.desc: Test CheckValueObjectValid with normal bind args
-* @tc.type: FUNC
-*/
+ * @tc.name: SqliteStatement003
+ * @tc.desc: Test CheckValueObjectValid with normal bind args
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbSqliteStatementTest, SqliteStatement003, TestSize.Level0)
 {
     const char *dbPath = "/data/test/SqliteStatement003.db";
