@@ -221,7 +221,6 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/win32",
-      "mock/include",
       "${relational_store_common_path}/include",
       "//commonlibrary/c_utils/base/include",
       "include",
@@ -257,7 +256,6 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
-      "mock/include",
       "include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
@@ -274,6 +272,7 @@ if (is_ohos && !build_ohos_sdk) {
     configs = [ ":native_rdb_config" ]
 
     sources += [
+      "${relational_store_mock_path}/frameworks/native/win32/directory_ex.cpp",
       "${relational_store_mock_path}/frameworks/native/win32/dlfcn.cpp",
       "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp",
     ]
@@ -328,7 +327,6 @@ if (is_ohos && !build_ohos_sdk) {
     include_dirs = [
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/win32",
-      "mock/include",
       "${relational_store_common_path}/include",
       "//commonlibrary/c_utils/base/include",
       "include",
@@ -360,7 +358,6 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
-      "mock/include",
       "include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
@@ -441,7 +438,6 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
-      "mock/include",
       "include",
       "${relational_store_native_path}/mock/rdb/include",
       "${relational_store_native_path}/rdb/include",
@@ -508,7 +504,6 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
-      "mock/include",
       "include",
       "${relational_store_native_path}/rdb/include",
       "${relational_store_native_path}/dfx/include",
