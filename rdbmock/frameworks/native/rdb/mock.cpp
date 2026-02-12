@@ -15,38 +15,38 @@
 
 #include "mock.h"
 
+#include <cstring>
+
+#include "hisysevent_c.h"
+#include "rdb_file_system.h"
+#include "rdb_visibility.h"
 #include "relational_store_client.h"
+#include "relational_store_manager.h"
 #include "share_block.h"
 #include "sqlite_errno.h"
 
-constexpr int RETRY_TIME = 50;
+int OH_HiSysEvent_Write(
+    const char *domain, const char *name, HiSysEventEventType type, HiSysEventParam params[], size_t size)
+{
+    return 0;
+}
 
 namespace OHOS {
-__attribute__((visibility("default"))) bool PathToRealPath(const std::string &path, std::string &realPath)
-{
-    realPath = path;
-    return true;
-}
-
-__attribute__((visibility("default"))) std::string ExtractFilePath(const std::string &fileFullName)
-{
-    return std::string(fileFullName).substr(0, fileFullName.rfind("/") + 1);
-}
-
 namespace NativeRdb {
-__attribute__((visibility("default"))) int gettid()
+API_EXPORT int gettid()
 {
     return 0;
 }
 #ifdef __cplusplus
 extern "C" {
 #endif
-__attribute__((visibility("default"))) int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retryTime)
+API_EXPORT int FillSharedBlockOpt(SharedBlockInfo *info, sqlite3_stmt *stmt, int retryTime)
 {
     return FillSharedBlock(info, stmt, retryTime);
 }
 
-__attribute__((visibility("default"))) int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retryTime)
+static constexpr int RETRY_TIME = 50;
+API_EXPORT int FillSharedBlock(SharedBlockInfo *info, sqlite3_stmt *stmt, int retryTime)
 {
     (void) retryTime;
     int retryCount = 0;
@@ -81,11 +81,24 @@ __attribute__((visibility("default"))) int FillSharedBlock(SharedBlockInfo *info
     return E_OK;
 }
 
-__attribute__((visibility("default"))) bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt)
+API_EXPORT bool ResetStatement(SharedBlockInfo *info, sqlite3_stmt *stmt)
 {
     (void)info;
     (void)stmt;
     return true;
+}
+std::vector<std::string> RdbFileSystem::GetEntries(const std::string &path)
+{
+    return {};
+}
+std::pair<size_t, int32_t> RdbFileSystem::RemoveAll(const std::string &path, bool removeSelf)
+{
+    return std::make_pair(0, 0);
+}
+
+std::string RdbFileSystem::RealPath(const std::string &path)
+{
+    return "";
 }
 
 #ifdef __cplusplus
@@ -95,42 +108,49 @@ __attribute__((visibility("default"))) bool ResetStatement(SharedBlockInfo *info
 } // namespace OHOS
 
 using namespace DistributedDB;
-__attribute__((visibility("default"))) DBStatus UnRegisterClientObserver(sqlite3 *db)
+API_EXPORT DBStatus UnRegisterClientObserver(sqlite3 *db)
 {
+    (void)db;
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus RegisterStoreObserver(
-    sqlite3 *db, const std::shared_ptr<StoreObserver> &storeObserver)
+API_EXPORT DBStatus RegisterStoreObserver(sqlite3 *db, const std::shared_ptr<StoreObserver> &storeObserver)
 {
+    (void)db;
+    (void)storeObserver;
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus UnregisterStoreObserver(
-    sqlite3 *db, const std::shared_ptr<StoreObserver> &storeObserver)
+API_EXPORT DBStatus UnregisterStoreObserver(sqlite3 *db, const std::shared_ptr<StoreObserver> &storeObserver)
 {
+    (void)db;
+    (void)storeObserver;
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus UnregisterStoreObserver(sqlite3 *db)
+API_EXPORT DBStatus UnregisterStoreObserver(sqlite3 *db)
 {
+    (void)db;
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus Lock(
-    const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
+API_EXPORT DBStatus Lock(const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
 {
+    (void)tableName;
+    (void)hashKey;
+    (void)db;
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus UnLock(
-    const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
+API_EXPORT DBStatus UnLock(const std::string &tableName, const std::vector<std::vector<uint8_t>> &hashKey, sqlite3 *db)
 {
+    (void)tableName;
+    (void)hashKey;
+    (void)db;
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DBStatus DropLogicDeletedData(
-    sqlite3 *db, const std::string &tableName, uint64_t cursor)
+API_EXPORT DBStatus DropLogicDeletedData(sqlite3 *db, const std::string &tableName, uint64_t cursor)
 {
     (void)db;
     (void)tableName;
@@ -138,41 +158,54 @@ __attribute__((visibility("default"))) DBStatus DropLogicDeletedData(
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) void RegisterDbHook(sqlite3 *db)
+API_EXPORT void RegisterDbHook(sqlite3 *db)
 {
     (void)db;
 }
 
-__attribute__((visibility("default"))) void UnregisterDbHook(sqlite3 *db)
+API_EXPORT void UnregisterDbHook(sqlite3 *db)
 {
     (void)db;
 }
 
-__attribute__((visibility("default"))) DBStatus CreateDataChangeTempTrigger(sqlite3 *db)
+API_EXPORT DBStatus CreateDataChangeTempTrigger(sqlite3 *db)
 {
     (void)db;
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) std::string DistributedDB::RelationalStoreManager::GetDistributedLogTableName(
-    const std::string &tableName)
+API_EXPORT std::string DistributedDB::RelationalStoreManager::GetDistributedLogTableName(const std::string &tableName)
 {
+    (void)tableName;
     return "";
 }
 
-__attribute__((visibility("default"))) DistributedDB::DBStatus SetKnowledgeSourceSchema([[gnu::unused]] sqlite3 *db,
-    [[gnu::unused]] const DistributedDB::KnowledgeSourceSchema &schema)
+API_EXPORT std::vector<uint8_t> DistributedDB::RelationalStoreManager::CalcPrimaryKeyHash(
+    const std::map<std::string, Type> &primaryKey, const std::map<std::string, CollateType> &collateTypeMap)
 {
+    (void)primaryKey;
+    (void)collateTypeMap;
+    return {};
+}
+
+API_EXPORT DistributedDB::DBStatus SetKnowledgeSourceSchema(
+    sqlite3 *db, const DistributedDB::KnowledgeSourceSchema &schema)
+{
+    (void)db;
+    (void)schema;
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) DistributedDB::DBStatus CleanDeletedData([[gnu::unused]] sqlite3 *db,
-    [[gnu::unused]] const std::string &tableName, [[gnu::unused]] uint64_t cursor)
+API_EXPORT DistributedDB::DBStatus CleanDeletedData(sqlite3 *db, const std::string &tableName, uint64_t cursor)
 {
+    (void)db;
+    (void)tableName;
+    (void)cursor;
     return DBStatus::OK;
 }
 
-__attribute__((visibility("default"))) void Clean([[gnu::unused]] bool isOpenSslClean)
+API_EXPORT void Clean(bool isOpenSslClean)
 {
+    (void)isOpenSslClean;
     return;
 }

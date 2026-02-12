@@ -1,0 +1,54 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    "rdbhelper_fuzzer:fuzztest",
+    "rdbimpl_fuzzer:fuzztest",
+    "rdbrdutils_fuzzer:fuzztest",
+    "rdbstore_fuzzer:fuzztest",
+    "rdstatement_fuzzer:fuzztest",
+    "returning_fuzzer:fuzztest",
+    "sharedblock_fuzzer:fuzztest",
+    "transdb_fuzzer:fuzztest",
+    "transaction_fuzzer:fuzztest",
+    "big_integer_test_ut2fuzz:fuzztest",
+    "cache_result_set_test_ut2fuzz:fuzztest",
+    "cloud_data_test_ut2fuzz:fuzztest",
+    "connection_test_ut2fuzz:fuzztest",
+    "rdb_attach_test_ut2fuzz:fuzztest",
+    "rdb_bigint_test_ut2fuzz:fuzztest",
+    "rdb_callback_icu_test_ut2fuzz:fuzztest",
+    "rdb_corrupt_test_ut2fuzz:fuzztest",
+    "rdb_delete_test_ut2fuzz:fuzztest",
+    "rdb_distributed_test_ut2fuzz:fuzztest",
+    "rdb_double_write_test_ut2fuzz:fuzztest",
+    "rdbsqlutils_fuzzer:fuzztest",
+    "storeconfig_fuzzer:fuzztest",
+    "absrdbpredicates_fuzzer:fuzztest",
+    "abssharedresultset_fuzzer:fuzztest",
+    "abspredicates_fuzzer:fuzztest",
+    "absresultset_fuzzer:fuzztest",
+    "rdbpredicates_fuzzer:fuzztest",
+    "valueobject_fuzzer:fuzztest",
+    "valuesbucket_fuzzer:fuzztest",
+    "valuesbuckets_fuzzer:fuzztest",
+  ]
+}
+
+###############################################################################

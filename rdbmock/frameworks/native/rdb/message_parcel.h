@@ -16,10 +16,6 @@
 #ifndef RELATIONAL_STORE_MESSAGE_PARCEL_H
 #define RELATIONAL_STORE_MESSAGE_PARCEL_H
 
-namespace OHOS {
-namespace AppDataFwk {
 class MessageParcel {};
-} // namespace AppDataFwk
-} // namespace OHOS
 
 #endif //RELATIONAL_STORE_MESSAGE_PARCEL_H

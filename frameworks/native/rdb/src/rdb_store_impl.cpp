@@ -27,7 +27,6 @@
 #include <memory>
 #include <mutex>
 #include <sstream>
-#include <sys/stat.h>
 #include <string>
 
 #include "cache_result_set.h"
@@ -36,22 +35,27 @@
 #include "directory_ex.h"
 #include "knowledge_schema_helper.h"
 #include "logger.h"
+#include "raw_data_parser.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_local_db_observer.h"
+#include "rdb_manager.h"
 #include "rdb_perfStat.h"
 #include "rdb_radar_reporter.h"
-#include "rdb_stat_reporter.h"
 #include "rdb_security_manager.h"
+#include "rdb_service.h"
 #include "rdb_sql_log.h"
-#include "rdb_sql_utils.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_sql_utils.h"
+#include "rdb_stat_reporter.h"
 #include "rdb_store.h"
 #include "rdb_time_utils.h"
 #include "rdb_trace.h"
 #include "rdb_types.h"
 #include "relational_store_client.h"
+#include "relational_store_manager.h"
+#include "security_policy.h"
 #include "sqlite_global_config.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_utils.h"
@@ -63,16 +67,9 @@
 #include "transaction.h"
 #include "values_buckets.h"
 #if !defined(CROSS_PLATFORM)
-#include "raw_data_parser.h"
-#include "rdb_manager_impl.h"
-#include "relational_store_manager.h"
-#include "security_policy.h"
 #include "sqlite_shared_result_set.h"
 #endif
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-#include "security_policy.h"
-#endif
 #ifdef WINDOWS_PLATFORM
 #define ISFILE(filePath) ((filePath.find("\\") == std::string::npos))
 #else
@@ -87,9 +84,7 @@ using SqlStatistic = DistributedRdb::SqlStatistic;
 using PerfStat = DistributedRdb::PerfStat;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
 using Reportor = RdbFaultHiViewReporter;
-#if !defined(CROSS_PLATFORM)
-using RdbMgr = DistributedRdb::RdbManagerImpl;
-#endif
+using RdbMgr = DistributedRdb::RdbManager;
 
 static constexpr const char *BEGIN_TRANSACTION_SQL = "begin;";
 static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
@@ -99,7 +94,6 @@ static constexpr const char *ASYNC_RESTORE = "-async.restore";
 constexpr char const *SUFFIX_BINLOG = "_binlog/";
 constexpr int32_t SERVICE_GID = 3012;
 constexpr int64_t TIME_OUT = 1500;
-
 
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
@@ -130,7 +124,6 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 int RdbStoreImpl::InnerOpen()
 {
     isOpen_ = true;
-#if !defined(CROSS_PLATFORM)
     // Only owner mode can store metadata information.
     if (isReadOnly_ || isMemoryRdb_ || config_.IsCustomEncryptParam() || (config_.GetRoleType() != OWNER)) {
         return E_OK;
@@ -146,13 +139,11 @@ int RdbStoreImpl::InnerOpen()
     if (errCode != E_OK) {
         LOG_ERROR("RegisterCallBackObserver is failed, err is %{public}d.", errCode);
     }
-#endif
     return E_OK;
 }
 
 void RdbStoreImpl::InitReportFunc(const RdbParam &param)
 {
-#if !defined(CROSS_PLATFORM)
     reportFunc_ = std::make_shared<ReportFunc>([reportParam = param](const DistributedRdb::RdbStatEvent &event) {
         auto [err, service] = RdbMgr::GetInstance().GetRdbService(reportParam);
         if (err != E_OK || service == nullptr) {
@@ -167,7 +158,6 @@ void RdbStoreImpl::InitReportFunc(const RdbParam &param)
         }
         return;
     });
-#endif
 }
 
 void RdbStoreImpl::Close()
@@ -246,7 +236,6 @@ bool RdbStoreImpl::SetFileGid(const RdbStoreConfig &config, int32_t gid)
     return setDir && setDbFile && setBinlog;
 }
 
-#if !defined(CROSS_PLATFORM)
 void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
 {
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
@@ -487,16 +476,14 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         return E_ALREADY_CLOSED;
     }
 
-#if !defined(CROSS_PLATFORM)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
         service->Disable(syncerParam_);
     }
-#endif
     LOG_INFO("Start rekey, name:%{public}s, IsCustomEncrypt:%{public}d. ",
         SqliteUtils::Anonymous(config_.GetName()).c_str(), config_.IsCustomEncryptParam());
     auto errCode = pool->Rekey(cryptoParam);
-#if !defined(CROSS_PLATFORM)
+
     if (service != nullptr) {
         service->Enable(syncerParam_);
         if (errCode == E_OK && !config_.IsCustomEncryptParam()) {
@@ -505,7 +492,6 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
             service->AfterOpen(syncerParam);
         }
     }
-#endif
     return errCode;
 }
 
@@ -526,12 +512,10 @@ int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
         return E_ALREADY_CLOSED;
     }
 
-#if !defined(CROSS_PLATFORM)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
         service->Disable(syncerParam_);
     }
-#endif
     pool->CloseAllConnections();
     auto rekeyCryptoParam = cryptoParam;
     if (rekeyCryptoParam.encryptAlgo != EncryptAlgo::PLAIN_TEXT && rekeyCryptoParam.iterNum == 0) {
@@ -548,7 +532,6 @@ int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
     if (isHasAcl) {
         SetFileGid(config_, SERVICE_GID);
     }
-#if !defined(CROSS_PLATFORM)
     if (service != nullptr) {
         service->Enable(syncerParam_);
         if (errCode == E_OK) {
@@ -559,7 +542,6 @@ int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
             service->AfterOpen(syncerParam);
         }
     }
-#endif
     return errCode;
 }
 
@@ -577,14 +559,11 @@ int RdbStoreImpl::HandleCloudSyncAfterSetDistributedTables(
             (void)conn->Backup({}, {}, false, slaveStatus_);
         }
     }
-    {
-        std::unique_lock<decltype(rwMutex_)> lock(rwMutex_);
-        if (distributedConfig.enableCloud && distributedConfig.autoSync) {
-            cloudInfo_->AddTables(tables);
-        } else {
-            cloudInfo_->RmvTables(tables);
-            return E_OK;
-        }
+    if (distributedConfig.enableCloud && distributedConfig.autoSync) {
+        cloudInfo_->AddTables(tables);
+    } else {
+        cloudInfo_->RmvTables(tables);
+        return E_OK;
     }
     auto isRebuilt = RebuiltType::NONE;
     GetRebuilt(isRebuilt);
@@ -1112,7 +1091,6 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
     }
     return errCode;
 }
-#endif
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : isMemoryRdb_(config.IsMemoryRdb()), configHolder_(std::make_shared<RdbStoreConfig>(config)),
@@ -1185,7 +1163,7 @@ bool RdbStoreImpl::TryAsyncRepair()
         return false;
     }
     rebuild_ = RebuiltType::REPAIRED;
-    
+
     Reportor::ReportRestore(Reportor::Create(config_, E_OK, "RestoreType:Rebuild", false), false);
     return true;
 }
@@ -1198,31 +1176,27 @@ int32_t RdbStoreImpl::CreatePool(bool &created)
         LOG_ERROR("database corrupt, errCode:0x%{public}x, %{public}s, %{public}s", errCode,
             SqliteUtils::Anonymous(name_).c_str(),
             SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str());
-#if !defined(CROSS_PLATFORM)
         InitSyncerParam(config_, false);
         auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
         if (service != nullptr) {
             service->Disable(syncerParam_);
         }
-#endif
         config_.SetIter(0);
         if (config_.IsEncrypt() && config_.GetAllowRebuild()) {
             auto key = config_.GetEncryptKey();
             RdbSecurityManager::GetInstance().RestoreKeyFile(path_, key);
             key.assign(key.size(), 0);
         }
-        
+
         if (TryAsyncRepair()) {
             errCode = E_OK;
         } else {
             std::tie(rebuild_, connectionPool_) = ConnectionPool::HandleDataCorruption(configHolder_, config_, errCode);
         }
         created = true;
-#if !defined(CROSS_PLATFORM)
         if (service != nullptr) {
             service->Enable(syncerParam_);
         }
-#endif
     }
     return errCode;
 }
@@ -1232,10 +1206,7 @@ int32_t RdbStoreImpl::SetSecurityLabel(const RdbStoreConfig &config)
     if (config.IsMemoryRdb()) {
         return E_OK;
     }
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     return SecurityPolicy::SetSecurityLabel(config);
-#endif
-    return E_OK;
 }
 
 int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl)
@@ -1830,10 +1801,10 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
     }
 
     if (ISFILE(databasePath)) {
-        backupFilePath = ExtractFilePath(path_) + databasePath;
+        backupFilePath = StringUtils::ExtractFilePath(path_) + databasePath;
     } else {
         // 2 represents two characters starting from the len - 2 position
-        if (!PathToRealPath(ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/' ||
+        if (!PathToRealPath(StringUtils::ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/' ||
             databasePath.substr(databasePath.length() - 2, 2) == "\\") {
             LOG_ERROR("Invalid databasePath.");
             return E_INVALID_FILE_PATH;
@@ -2626,7 +2597,6 @@ std::string RdbStoreImpl::GetName()
 
 void RdbStoreImpl::DoCloudSync(const std::string &table)
 {
-#if !defined(CROSS_PLATFORM)
     auto needSync = cloudInfo_->Change(table);
     if (!needSync) {
         return;
@@ -2650,7 +2620,6 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
         auto memo = AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
         InnerSync(param, option, memo, nullptr);
     });
-#endif
 }
 
 /**
@@ -2851,16 +2820,13 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
             return ret;
         }
     }
-#if !defined(CROSS_PLATFORM)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
         service->Disable(syncerParam_);
     }
-#endif
     bool corrupt = Reportor::IsReportCorruptedFault(path_);
     int errCode = RestoreInner(destPath, newKey, pool);
     keyFiles.Unlock();
-#if !defined(CROSS_PLATFORM)
     SecurityPolicy::SetSecurityLabel(config_);
     if (service != nullptr) {
         service->Enable(syncerParam_);
@@ -2871,7 +2837,6 @@ int RdbStoreImpl::Restore(const std::string &backupPath, const std::vector<uint8
             NotifyDataChange();
         }
     }
-#endif
     if (errCode == E_OK) {
         ExchangeSlaverToMaster();
         Reportor::ReportRestore(Reportor::Create(config_, E_OK, "ErrorType::RdbStoreImpl::Restore", false), corrupt);

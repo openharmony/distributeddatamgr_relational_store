@@ -34,10 +34,8 @@
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "rdb_types.h"
-#include "refbase.h"
 #include "sqlite_statement.h"
 #include "value_object.h"
-
 
 namespace OHOS {
 class ExecutorPool;
@@ -278,7 +276,6 @@ private:
     std::shared_ptr<ReportFunc> reportFunc_ = nullptr;
     std::string path_;
     std::string name_;
-    mutable std::shared_mutex rwMutex_;
     mutable std::shared_mutex poolMutex_;
     std::mutex mutex_;
     std::mutex initMutex_;

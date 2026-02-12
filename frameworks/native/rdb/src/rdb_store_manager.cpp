@@ -17,34 +17,28 @@
 
 #include <algorithm>
 #include <cinttypes>
-#include <sstream>
 #include <fstream>
+#include <sstream>
 
 #include "logger.h"
 #include "rdb_errno.h"
+#include "rdb_fault_hiview_reporter.h"
+#include "rdb_manager.h"
 #include "rdb_radar_reporter.h"
 #include "rdb_store_impl.h"
-#include "rdb_trace.h"
-#include "restricted_db_manager.h"
-#include "sqlite_global_config.h"
-#include "task_executor.h"
-
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "rdb_manager_impl.h"
-#include "rdb_security_manager.h"
-#endif
-#include "security_policy.h"
-#endif
-#include "rdb_fault_hiview_reporter.h"
 #include "rdb_time_utils.h"
+#include "restricted_db_manager.h"
+#include "security_policy.h"
+#include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "string_utils.h"
+#include "task_executor.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using Reportor = RdbFaultHiViewReporter;
+using RdbMgr = DistributedRdb::RdbManager;
 static constexpr const char *SILENT_CONF_PATH = "/system/etc/silent/conf/";
 static constexpr const char *IS_SILENT_DB_JSON_PATH = "silentproxy_config.json";
 __attribute__((used))
@@ -156,15 +150,13 @@ void RdbStoreManager::CheckDBVisitor(const std::string &storeName)
         if (!RestrictedDBManager::GetInstance().IsTargetDB(storeName)) {
             return;
         }
-#if !defined(CROSS_PLATFORM)
-        std::string caller = DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
+        std::string caller = RdbMgr::GetInstance().GetSelfBundleName();
         bool isIllegalAccess = RestrictedDBManager::GetInstance().IsDbAccessOutOfBounds(caller);
         if (isIllegalAccess) {
             LOG_ERROR("database visitor:%{public}s.", caller.c_str());
             Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
                 E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));
         }
-#endif
     };
 
     auto poolTask = TaskExecutor::GetInstance().GetExecutor();
@@ -228,7 +220,7 @@ std::pair<int32_t, bool> RdbStoreManager::IsSupportSilentFromProxy(const RdbStor
     std::ifstream fin(std::string(SILENT_CONF_PATH) + std::string(IS_SILENT_DB_JSON_PATH));
     if (!fin.good()) {
         LOG_ERROR("Failed to open silent json file");
-        return {E_ERROR, isSilent};
+        return { E_ERROR, isSilent };
     }
     std::string jsonStr;
     std::string line;
@@ -261,24 +253,23 @@ std::pair<int32_t, bool> RdbStoreManager::IsSupportSilentFromProxy(const RdbStor
         temp[dbName] = false;
     }
     isSilentCache_.Set(key, temp);
-    return {E_OK, isSilent};
+    return { E_OK, isSilent };
 }
 
 std::pair<int32_t, bool> RdbStoreManager::IsSupportSilentFromService(const RdbStoreConfig &config)
 {
-#if !defined(CROSS_PLATFORM)
     Param param = GetSyncParam(config);
-    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (err == E_NOT_SUPPORT) {
-        return {err, false};
+        return { err, false };
     }
     if (err != E_OK || service == nullptr) {
         LOG_ERROR("GetRdbService failed, err is %{public}d.", err);
-        return {err, false};
+        return { err, false };
     }
     auto [errcode, ret] = service->IsSupportSilent(param);
     if (errcode != DistributedRdb::RDB_OK) {
-        return {E_ERROR, false};
+        return { E_ERROR, false };
     }
     std::map<std::string, bool> temp;
     std::string dbName = SqliteUtils::RemoveSuffix(config.GetName());
@@ -286,9 +277,7 @@ std::pair<int32_t, bool> RdbStoreManager::IsSupportSilentFromService(const RdbSt
     isSilentCache_.Get(key, temp);
     temp[dbName] = ret;
     isSilentCache_.Set(key, temp);
-    return {E_OK, ret};
-#endif
-    return {E_ERROR, false};
+    return { E_OK, ret };
 }
 
 std::pair<int32_t, bool> RdbStoreManager::IsSupportSilent(const RdbStoreConfig &config)
@@ -299,7 +288,7 @@ std::pair<int32_t, bool> RdbStoreManager::IsSupportSilent(const RdbStoreConfig &
     if (!isSilentCache_.Get(key + "proxy", cacheConf)) {
         auto [err, flag] = IsSupportSilentFromProxy(config);
         if (err == E_OK && flag == true) {
-            return {err, flag};
+            return { err, flag };
         }
     } else {
         auto it = cacheConf.find(dbName);
@@ -308,14 +297,14 @@ std::pair<int32_t, bool> RdbStoreManager::IsSupportSilent(const RdbStoreConfig &
             isSilentCache_.Set(key + "proxy", cacheConf);
         }
         if (it != cacheConf.end() && it->second) {
-            return {E_OK, it->second};
+            return { E_OK, it->second };
         }
     }
     std::map<std::string, bool> cacheService;
     if (isSilentCache_.Get(key + "service", cacheService)) {
         auto it = cacheService.find(dbName);
         if (it != cacheService.end()) {
-            return {E_OK, it->second};
+            return { E_OK, it->second };
         }
     }
     return IsSupportSilentFromService(config);
@@ -388,8 +377,7 @@ DistributedRdb::RdbSyncerParam RdbStoreManager::GetSyncParam(const RdbStoreConfi
 
 int32_t RdbStoreManager::GetParamFromService(DistributedRdb::RdbSyncerParam &param)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (err == E_NOT_SUPPORT) {
         return E_ERROR;
     }
@@ -399,19 +387,16 @@ int32_t RdbStoreManager::GetParamFromService(DistributedRdb::RdbSyncerParam &par
     }
     err = service->BeforeOpen(param);
     return err != DistributedRdb::RDB_OK ? E_ERROR : E_OK;
-#endif
-    return E_ERROR;
 }
 
 bool RdbStoreManager::IsPermitted(const DistributedRdb::RdbSyncerParam &param, const std::string &path)
 {
-#if !defined(CROSS_PLATFORM)
     bool result = false;
     // ToDo: Scenario for handling cache refresh
     if (promiseInfoCache_.Get(path, result)) {
         return true;
     };
-    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (err == E_NOT_SUPPORT) {
         return false;
     }
@@ -426,7 +411,6 @@ bool RdbStoreManager::IsPermitted(const DistributedRdb::RdbSyncerParam &param, c
     }
     LOG_ERROR("failed, bundleName:%{public}s, store:%{public}s, err:%{public}d.", param.bundleName_.c_str(),
         SqliteUtils::Anonymous(param.storeName_).c_str(), err);
-#endif
     return false;
 }
 
@@ -483,7 +467,6 @@ bool RdbStoreManager::Remove(const std::string &path, bool shouldClose)
 bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
 {
     auto path = config.GetPath();
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     auto tokens = StringUtils::Split(path, "/");
     if (!tokens.empty()) {
         DistributedRdb::RdbSyncerParam param;
@@ -493,7 +476,7 @@ bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
         param.area_ = config.GetArea();
         param.hapName_ = config.GetModuleName();
         param.customDir_ = config.GetCustomDir();
-        auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+        auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (err != E_OK || service == nullptr) {
             LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
             return Remove(path, shouldClose);
@@ -505,23 +488,18 @@ bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
             return Remove(path, shouldClose);
         }
     }
-#endif
     return Remove(path, shouldClose);
 }
 
 std::string RdbStoreManager::GetSelfBundleName()
 {
-#if !defined(CROSS_PLATFORM)
-    return DistributedRdb::RdbManagerImpl::GetInstance().GetSelfBundleName();
-#endif
-    return "";
+    return RdbMgr::GetInstance().GetSelfBundleName();
 }
 
 int32_t RdbStoreManager::Collector(const RdbStoreConfig &config, DebugInfos &debugInfos, DfxInfo &dfxInfo)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     Param param = GetSyncParam(config);
-    auto [err, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (err != E_OK || service == nullptr) {
         LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
         return E_ERROR;
@@ -540,8 +518,6 @@ int32_t RdbStoreManager::Collector(const RdbStoreConfig &config, DebugInfos &deb
             SqliteUtils::Anonymous(param.storeName_).c_str(), err);
         return E_ERROR;
     }
-
-#endif
     return E_OK;
 }
 

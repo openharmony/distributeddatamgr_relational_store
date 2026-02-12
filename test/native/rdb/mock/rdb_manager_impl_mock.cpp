@@ -24,12 +24,6 @@ RdbManagerImpl::RdbManagerImpl()
 RdbManagerImpl::~RdbManagerImpl()
 {
 }
-
-RdbManagerImpl &RdbManagerImpl::GetInstance()
-{
-    static RdbManagerImpl manager;
-    return manager;
-}
 std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(const RdbSyncerParam &param)
 {
     if (BRdbManagerImpl::rdbManagerImpl == nullptr) {
