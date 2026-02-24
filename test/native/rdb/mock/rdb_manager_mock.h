@@ -18,23 +18,25 @@
 
 #include <gmock/gmock.h>
 
-#include "rdb_manager_impl.h"
+#include "rdb_manager.h"
 namespace OHOS::DistributedRdb {
-class BRdbManagerImpl {
+class BRdbManager {
 public:
-    BRdbManagerImpl() = default;
-    virtual ~BRdbManagerImpl() = default;
-    virtual std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param) = 0;
-    virtual std::string GetSelfBundleName() = 0;
+    BRdbManager() = default;
+    virtual ~BRdbManager() = default;
+    virtual inline std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param) = 0;
+    virtual inline std::string GetSelfBundleName() = 0;
+    virtual inline void OnRemoteDied() = 0;
 
 public:
-    static inline std::shared_ptr<BRdbManagerImpl> rdbManagerImpl = nullptr;
+    static inline std::shared_ptr<BRdbManager> rdbManager = nullptr;
 };
-class MockRdbManagerImpl : public BRdbManagerImpl {
+class MockRdbManager : public BRdbManager {
 public:
     MOCK_METHOD(
         (std::pair<int32_t, std::shared_ptr<RdbService>>), GetRdbService, (const RdbSyncerParam &param), (override));
     MOCK_METHOD((std::string), GetSelfBundleName, (), (override));
+    MOCK_METHOD((void), OnRemoteDied, (), (override));
 };
 } // namespace OHOS::DistributedRdb
 #endif

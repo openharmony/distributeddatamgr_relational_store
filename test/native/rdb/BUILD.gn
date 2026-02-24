@@ -196,6 +196,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_execute_test.cpp",
     "unittest/rdb_get_store_test.cpp",
     "unittest/rdb_helper_test.cpp",
+    "unittest/rdb_manager_test.cpp",
     "unittest/rdb_insert_test.cpp",
     "unittest/rdb_memory_db_test.cpp",
     "unittest/rdb_open_callback_test.cpp",
@@ -234,6 +235,60 @@ ohos_unittest("NativeRdbTest") {
     sources += [ "unittest/rdb_double_write_binlog_test.cpp" ]
   }
 
+  sources += [
+    "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+    "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
+    "${relational_store_native_path}/appdatafwk/src/shared_block.cpp",
+    "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
+    "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
+    "${relational_store_native_path}/dfx/src/rdb_fault_hiview_reporter.cpp",
+    "${relational_store_native_path}/rdb/src/base_transaction.cpp",
+    "${relational_store_native_path}/rdb/src/cache_block.cpp",
+    "${relational_store_native_path}/rdb/src/connection.cpp",
+    "${relational_store_native_path}/rdb/src/connection_pool.cpp",
+    "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
+    "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+    "${relational_store_native_path}/rdb/src/restricted_db_manager.cpp",
+    "${relational_store_native_path}/rdb/src/global_resource.cpp",
+    "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
+    "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
+    "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
+    "${relational_store_native_path}/rdb/src/rd_connection.cpp",
+    "${relational_store_native_path}/rdb/src/rd_statement.cpp",
+    "${relational_store_native_path}/rdb/src/rd_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_obs_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_perfStat.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_sql_log.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_sql_statistic.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
+    "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
+    "${relational_store_native_path}/rdb/src/security_policy.cpp",
+    "${relational_store_native_path}/rdb/src/share_block.cpp",
+    "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_default_function.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_sql_builder.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_statement.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+    "${relational_store_native_path}/rdb/src/step_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/string_utils.cpp",
+    "${relational_store_native_path}/rdb/src/suspender.cpp",
+    "${relational_store_native_path}/rdb/src/task_executor.cpp",
+    "${relational_store_native_path}/rdb/src/trans_db.cpp",
+  ]
+
   configs = [ ":module_private_config" ]
 
   external_deps = [
@@ -255,7 +310,7 @@ ohos_unittest("NativeRdbTest") {
     "sqlite:sqlite",
   ]
 
-  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb_src" ]
+  deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
 }
 
 ohos_unittest("NativeRdbSecurityManagerTest") {

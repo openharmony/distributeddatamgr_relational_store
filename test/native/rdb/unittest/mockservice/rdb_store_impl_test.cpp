@@ -25,7 +25,7 @@
 #include "grd_api_manager.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
-#include "rdb_manager_impl_mock.h"
+#include "rdb_manager_mock.h"
 #include "rdb_open_callback.h"
 #include "rdb_service_mock.h"
 #include "rdb_sql_statistic.h"
@@ -65,7 +65,7 @@ public:
     static const std::string DATABASE_NAME;
     static const std::string DATABASE_BACKUP_NAME;
     static const std::string DEFAULT_DATABASE_NAME;
-    static inline std::shared_ptr<MockRdbManagerImpl> mockRdbManagerImpl = nullptr;
+    static inline std::shared_ptr<MockRdbManager> mockRdbManagerImpl = nullptr;
     static inline std::shared_ptr<MockDataObsMgrClient> mockDataObsMgrClient = nullptr;
     static inline std::shared_ptr<MockStatement> mockStatement = nullptr;
     static inline std::shared_ptr<MockConnection> mockConnection = nullptr;
@@ -108,8 +108,8 @@ void RdbStoreImplConditionTest::SetUpTestCase(void)
     if (observer_ == nullptr) {
         observer_ = std::make_shared<SubObserver>();
     }
-    mockRdbManagerImpl = std::make_shared<MockRdbManagerImpl>();
-    BRdbManagerImpl::rdbManagerImpl = mockRdbManagerImpl;
+    mockRdbManagerImpl = std::make_shared<MockRdbManager>();
+    BRdbManager::rdbManager = mockRdbManagerImpl;
     mockDataObsMgrClient = std::make_shared<MockDataObsMgrClient>();
     IDataObsMgrClient::dataObsMgrClient = mockDataObsMgrClient;
     mockStatement = std::make_shared<MockStatement>();
@@ -119,7 +119,7 @@ void RdbStoreImplConditionTest::SetUpTestCase(void)
 void RdbStoreImplConditionTest::TearDownTestCase(void)
 {
     mockRdbManagerImpl = nullptr;
-    BRdbManagerImpl::rdbManagerImpl = nullptr;
+    BRdbManager::rdbManager = nullptr;
     mockDataObsMgrClient = nullptr;
     IDataObsMgrClient::dataObsMgrClient = nullptr;
     mockStatement = nullptr;

@@ -13,27 +13,34 @@
  * limitations under the License.
  */
 
-#include "rdb_manager_impl_mock.h"
+#include "rdb_manager_mock.h"
 #include "rdb_errno.h"
 namespace OHOS::DistributedRdb {
 
-RdbManagerImpl::RdbManagerImpl()
+RdbManager::RdbManager()
 {
 }
 
-RdbManagerImpl::~RdbManagerImpl()
+RdbManager &RdbManager::GetInstance()
 {
+    static RdbManager manager;
+    return manager;
 }
-std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(const RdbSyncerParam &param)
+
+std::pair<int32_t, std::shared_ptr<RdbService>> RdbManager::GetRdbService(const RdbSyncerParam &param)
 {
-    if (BRdbManagerImpl::rdbManagerImpl == nullptr) {
+    if (BRdbManager::rdbManager == nullptr) {
         return { NativeRdb::E_ERROR, nullptr };
     }
-    return BRdbManagerImpl::rdbManagerImpl->GetRdbService(param);
+    return BRdbManager::rdbManager->GetRdbService(param);
 }
 
-std::string RdbManagerImpl::GetSelfBundleName()
+std::string RdbManager::GetSelfBundleName()
 {
     return "";
+}
+
+void RdbManager::OnRemoteDied()
+{
 }
 } // namespace OHOS::DistributedRdb
