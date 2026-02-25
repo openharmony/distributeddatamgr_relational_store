@@ -142,9 +142,9 @@ ohos_unittest("NativeRdbConditionTest") {
     "sqlite:sqliteicu",
   ]
 
-  deps = [ 
-    "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk", 
-    "${relational_store_innerapi_path}/appdatafwk:relational_common_base", 
+  deps = [
+    "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+    "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
   ]
 }
 
