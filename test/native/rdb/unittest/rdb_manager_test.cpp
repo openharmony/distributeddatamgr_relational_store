@@ -134,7 +134,6 @@ HWTEST_F(RdbManagerTest, RegisterInstance_001, TestSize.Level1)
  */
 HWTEST_F(RdbManagerTest, RegisterInstance_Nullptr_002, TestSize.Level2)
 {
-    RdbManager::instance_ = nullptr;
     // Register nullptr should restore default instance
     bool result = RdbManager::RegisterInstance(nullptr);
 
