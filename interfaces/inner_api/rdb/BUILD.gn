@@ -372,7 +372,10 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    sources += [ "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp" ]
+    sources += [
+      "${relational_store_mock_path}/frameworks/native/win32/directory_ex.cpp",
+      "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp",
+    ]
 
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
