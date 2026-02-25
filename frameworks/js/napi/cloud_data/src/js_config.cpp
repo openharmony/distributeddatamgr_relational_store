@@ -594,7 +594,7 @@ napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
             queue->AsyncCallInOrder({ cb, repeate }, [details](napi_env env, int &argc, napi_value *argv) -> void {
                 argc = 1;
                 argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
-            });
+            }, {}, "CloudSync");
         };
         CloudService::Option option;
         option.syncMode = ctxt->syncMode;

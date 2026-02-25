@@ -53,7 +53,7 @@ void NapiRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
         [devices](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
             argv[0] = JSUtils::Convert2JSValue(env, devices);
-        });
+        }, {}, "OnChangeDevices");
 }
 
 void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &fields, ChangeInfo &&changeInfo)
@@ -83,7 +83,7 @@ void NapiRdbStoreObserver::OnChange(const Origin &origin, const PrimaryFields &f
         [infos = std::move(infos)](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
             argv[0] = JSUtils::Convert2JSValue(env, infos);
-        });
+        }, {}, "OnChangeDetail");
 }
 
 void NapiRdbStoreObserver::OnChange()
@@ -100,7 +100,7 @@ void NapiRdbStoreObserver::OnChange()
         napi_get_reference_value(env, observer->callback_, &callback);
         return callback;
     } },
-        [](napi_env env, int &argc, napi_value *argv) {});
+        [](napi_env env, int &argc, napi_value *argv) {}, {}, "OnChangeSimple");
 }
 
 NapiRdbStoreObserver::JSChangeInfo::JSChangeInfo(const Origin &origin, ChangeInfo::iterator info)
