@@ -29,12 +29,13 @@
 
 #include "global_resource.h"
 #include "logger.h"
-#include "raw_data_parser.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_icu_manager.h"
 #include "rdb_local_db_observer.h"
+#include "rdb_manager.h"
 #include "rdb_security_manager.h"
+#include "rdb_service.h"
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
@@ -48,8 +49,7 @@
 #include "string_utils.h"
 #include "suspender.h"
 #include "value_object.h"
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "rdb_manager_impl.h"
+#if !defined(CROSS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
 #endif
 #include "task_executor.h"
@@ -335,7 +335,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
             }
         }
     }
-
     return E_OK;
 }
 
@@ -1537,16 +1536,14 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     param.password_ = {};
     param.subUser_ = config.GetSubUser();
     std::vector<std::vector<uint8_t>> keys;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    auto [svcErr, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param);
-    if (svcErr != E_OK) {
+    auto [svcErr, service] = DistributedRdb::RdbManager::GetInstance().GetRdbService(param);
+    if (svcErr != E_OK || service == nullptr) {
         return errCode;
     }
     svcErr = service->GetPassword(param, keys);
     if (svcErr != RDB_OK) {
         return errCode;
     }
-#endif
 
     for (const auto &key : keys) {
         errCode = SetEncryptKey(key, config);

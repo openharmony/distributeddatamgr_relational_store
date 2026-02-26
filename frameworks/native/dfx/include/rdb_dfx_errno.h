@@ -89,7 +89,7 @@ static constexpr int E_DFX_UPGRADE_KEY_FAIL = (E_DFX_BASE + 0xC);
 static constexpr int E_DFX_HMAC_KEY_FAIL = (E_DFX_BASE + 0xD);
 
 /**
- * @brief Only use for dfx, print binlog relpay timeout.
+ * @brief Only use for dfx, print binlog replay timeout.
  */
 static constexpr int E_DFX_REPLAY_TIMEOUT_FAIL = (E_DFX_BASE + 0xE);
 

@@ -12,14 +12,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "securec.h"
-#include <cstring>
 
-int memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
+#include "rdb_manager_mock.h"
+#include "rdb_errno.h"
+namespace OHOS::DistributedRdb {
+
+RdbManager::RdbManager()
 {
-    if (dest == nullptr || src == nullptr || destMax < count) {
-        return -1;
-    }
-    memcpy(dest, src, count);
-    return 0;
 }
+
+RdbManager &RdbManager::GetInstance()
+{
+    static RdbManager manager;
+    return manager;
+}
+
+std::pair<int32_t, std::shared_ptr<RdbService>> RdbManager::GetRdbService(const RdbSyncerParam &param)
+{
+    if (BRdbManager::rdbManager == nullptr) {
+        return { NativeRdb::E_ERROR, nullptr };
+    }
+    return BRdbManager::rdbManager->GetRdbService(param);
+}
+
+std::string RdbManager::GetSelfBundleName()
+{
+    return "";
+}
+
+void RdbManager::OnRemoteDied()
+{
+}
+} // namespace OHOS::DistributedRdb
