@@ -45,7 +45,7 @@ struct Asset {
 }
 
 union ValueType {
-    @null EMPTY;
+    EMPTY: @null unit;
     INT64: i64;
     F64: f64;
     STRING: String;
