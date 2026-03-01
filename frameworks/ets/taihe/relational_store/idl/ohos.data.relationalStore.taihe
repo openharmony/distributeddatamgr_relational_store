@@ -45,7 +45,7 @@ struct Asset {
 }
 
 union ValueType {
-    @null EMPTY;
+    EMPTY: @null unit;
     INT64: i64;
     F64: f64;
     STRING: String;
@@ -1043,6 +1043,8 @@ interface RdbStore {
 
 @gen_async("getRdbStore")
 @gen_promise("getRdbStore")
+function GetRdbStoreInner(context: @sts_type("BaseContext") Opaque, config: StoreConfig): RdbStore;
+
 function GetRdbStoreSync(context: @sts_type("BaseContext") Opaque, config: StoreConfig): RdbStore;
 
 @gen_async("deleteRdbStore")

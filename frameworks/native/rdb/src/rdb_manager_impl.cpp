@@ -26,6 +26,7 @@
 #include "rdb_errno.h"
 #include "rdb_service_proxy.h"
 #include "system_ability_definition.h"
+#include "system_ability_load_callback_stub.h"
 
 namespace OHOS::DistributedRdb {
 using namespace OHOS::Rdb;
@@ -33,11 +34,51 @@ using RdbServiceProxy = DistributedRdb::RdbServiceProxy;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb::RelationalStore;
 constexpr int32_t MAX_RETRY = 100;
+RdbManagerImpl RdbManagerImpl::instance_;
+RdbManagerImpl::Factory RdbManagerImpl::factory_;
 class DeathStub : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedRdb.DeathStub");
 };
+
 class DeathStubImpl : public IRemoteStub<DeathStub> {};
+
+class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
+public:
+    ServiceProxyLoadCallback() = default;
+    virtual ~ServiceProxyLoadCallback() = default;
+
+    void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
+    void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
+};
+
+class ServiceDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+    explicit ServiceDeathRecipient(RdbManagerImpl* owner) : owner_(owner) {}
+    void OnRemoteDied(const wptr<IRemoteObject> &object) override
+    {
+        if (owner_ != nullptr) {
+            owner_->OnRemoteDied();
+        }
+    }
+
+private:
+    RdbManagerImpl *owner_;
+};
+
+class RdbStoreDataServiceProxy : public IRemoteProxy<DistributedRdb::IKvStoreDataService> {
+public:
+    explicit RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl);
+    ~RdbStoreDataServiceProxy() = default;
+    sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
+    int32_t RegisterDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer,
+        const std::string &featureName = DistributedRdb::RdbService::SERVICE_NAME) override;
+    int32_t Exit(const std::string &featureName = DistributedRdb::RdbService::SERVICE_NAME) override;
+    std::pair<int32_t, std::string> GetSelfBundleName() override;
+private:
+    sptr<IRemoteObject> clientDeathObserver_;
+};
+
 std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataManager(const std::string &bundleName)
 {
     auto manager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -75,7 +116,7 @@ std::shared_ptr<RdbStoreDataServiceProxy> RdbManagerImpl::GetDistributedDataMana
     return std::shared_ptr<RdbStoreDataServiceProxy>(dataService.GetRefPtr(), [dataService](const auto *) {});
 }
 
-void RdbManagerImpl::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
+void ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
     int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject)
 {
     if (systemAbilityId != DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID) {
@@ -88,16 +129,14 @@ void RdbManagerImpl::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
     }
 }
 
-void RdbManagerImpl::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
+void ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
 {
     LOG_ERROR("Load SA: %{public}d failed", systemAbilityId);
 }
 
 sptr<IRemoteObject::DeathRecipient> RdbManagerImpl::LinkToDeath(const sptr<IRemoteObject> &remote)
 {
-    auto &manager = RdbManagerImpl::GetInstance();
-    sptr<RdbManagerImpl::ServiceDeathRecipient> deathRecipient = new (std::nothrow)
-        RdbManagerImpl::ServiceDeathRecipient(&manager);
+    sptr<ServiceDeathRecipient> deathRecipient = new (std::nothrow) ServiceDeathRecipient(this);
     if (deathRecipient == nullptr) {
         LOG_ERROR("New ServiceDeathRecipient failed.");
         return nullptr;
@@ -117,10 +156,14 @@ RdbManagerImpl::~RdbManagerImpl()
     LOG_INFO("Destroy.");
 }
 
-RdbManagerImpl &RdbManagerImpl::GetInstance()
+RdbManagerImpl::Factory::Factory()
 {
-    static RdbManagerImpl manager;
-    return manager;
+    RdbManager::RegisterInstance(&instance_);
+    GlobalResource::RegisterClean(GlobalResource::IPC, RdbManagerImpl::Clean);
+}
+
+RdbManagerImpl::Factory::~Factory()
+{
 }
 
 std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(const RdbSyncerParam &param)
@@ -166,9 +209,6 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
         serviceBase->AsObject()->RemoveDeathRecipient(deathRecipient);
     });
     param_ = param;
-    GlobalResource::RegisterClean(GlobalResource::IPC, []() {
-        return RdbManagerImpl::GetInstance().CleanUp();
-    });
     return { E_OK, rdbService_ };
 }
 
@@ -252,6 +292,11 @@ int32_t RdbManagerImpl::CleanUp()
     }
     rdbService_ = nullptr;
     return E_OK;
+}
+
+int32_t RdbManagerImpl::Clean()
+{
+    return instance_.CleanUp();
 }
 
 RdbStoreDataServiceProxy::RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl)

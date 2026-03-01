@@ -31,7 +31,6 @@ config("module_private_config") {
     "${relational_store_native_path}/rdb_device_manager_adapter/include",
     "${relational_store_base_path}/test/native/rdb/unittest",
     "${relational_store_mock_test_path}/",
-    "${relational_store_mock_path}/frameworks/native/rdb/common",
   ]
 
   defines = [
@@ -51,11 +50,10 @@ ohos_unittest("NativeRdbConditionTest") {
 
   sources += [
     "${relational_store_mock_test_path}/dataobs_mgr_client_mock.cpp",
-    "${relational_store_mock_test_path}/rdb_manager_impl_mock.cpp",
+    "${relational_store_mock_test_path}/rdb_manager_mock.cpp",
     "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
     "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
-    "${relational_store_native_path}/rdb/mock/src/rdb_fault_hiview_reporter.cpp",
-    "${relational_store_native_path}/rdb/mock/src/rdb_time_utils.cpp",
+    "${relational_store_native_path}/dfx/src/rdb_fault_hiview_reporter.cpp",
     "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
     "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
     "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
@@ -93,6 +91,7 @@ ohos_unittest("NativeRdbConditionTest") {
     "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
     "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
     "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
     "${relational_store_native_path}/rdb/src/security_policy.cpp",

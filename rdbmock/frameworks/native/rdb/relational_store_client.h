@@ -22,19 +22,7 @@
 
 #include "sqlite3sym.h"
 #include "store_observer.h"
-
-namespace DistributedDB {
-enum DBStatus {
-    DB_ERROR = -1,
-    OK = 0,
-    NOT_FOUND = 2,
-    WAIT_COMPENSATED_SYNC = 57,
-};
-class RelationalStoreManager {
-public:
-    static std::string GetDistributedLogTableName(const std::string &tableName);
-};
-} // namespace DistributedDB
+#include "store_types.h"
 
 DistributedDB::DBStatus UnRegisterClientObserver(sqlite3 *db);
 

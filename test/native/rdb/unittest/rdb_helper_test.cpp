@@ -831,3 +831,89 @@ HWTEST_F(RdbHelperTest, GetDatabase_007, TestSize.Level0)
     // Ensure that two databases not equal
     EXPECT_NE(rdbStore1, rdbStore2);
 }
+
+/**
+ * @tc.name: GetDatabase_008
+ * @tc.desc: Use the config of the new version to open the database, and then use the config of the old version
+ * to open the database. The error code 14800017 is expected to be reported
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, GetDatabase_008, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase_008.db";
+    RdbStoreConfig config(dbPath);
+    config.SetVersion(ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    RdbHelper::DeleteRdbStore(config);
+
+    int errCode = E_ERROR;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore1, nullptr);
+
+    RdbStoreConfig changedConfig(dbPath);
+    changedConfig.SetVersion(ConfigVersion::DEFAULT_VERSION);
+    changedConfig.SetSecurityLevel(SecurityLevel::S2);
+
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(changedConfig, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
+}
+
+/**
+ * @tc.name: GetDatabase_009
+ * @tc.desc: Use the config of the old version to open the database, and then use the config of the new version
+ * to open the database. The error code 14800017 is expected to be reported
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, GetDatabase_009, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase_009.db";
+    RdbStoreConfig config(dbPath);
+    config.SetVersion(ConfigVersion::DEFAULT_VERSION);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    RdbHelper::DeleteRdbStore(config);
+
+    int errCode = E_ERROR;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore1, nullptr);
+
+    RdbStoreConfig changedConfig(dbPath);
+    changedConfig.SetVersion(ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED);
+    changedConfig.SetSecurityLevel(SecurityLevel::S2);
+
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(changedConfig, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
+}
+
+/**
+ * @tc.name: GetDatabase_010
+ * @tc.desc: The config configuration of the memory database is changed
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbHelperTest, GetDatabase_010, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "GetDatabase_010.db";
+    RdbStoreConfig config(dbPath);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetPageSize(1024);
+    RdbHelper::DeleteRdbStore(config);
+
+    int errCode = E_ERROR;
+
+    RdbHelperTestOpenCallback helper;
+    std::shared_ptr<RdbStore> rdbStore1 = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(rdbStore1, nullptr);
+
+    RdbStoreConfig changedConfig(dbPath);
+    changedConfig.SetStorageMode(StorageMode::MODE_MEMORY);
+    changedConfig.SetPageSize(2048);
+
+    std::shared_ptr<RdbStore> rdbStore2 = RdbHelper::GetRdbStore(changedConfig, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_CONFIG_INVALID_CHANGE);
+}

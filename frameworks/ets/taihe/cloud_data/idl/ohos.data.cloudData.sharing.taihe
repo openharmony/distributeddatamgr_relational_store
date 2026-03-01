@@ -74,7 +74,7 @@ struct Result {
 }
 
 union ResultValue {
-    @undefined undefinedValue;
+    undefinedValue: @undefined unit;
     stringValue: String;
     participantsValue: Array<Participant>;
     resultParticipantsValue: Array<Result>;

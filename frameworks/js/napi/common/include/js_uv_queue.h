@@ -15,6 +15,9 @@
 #ifndef DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H
 #define DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H
 #include <functional>
+#include <map>
+#include <memory>
+#include <mutex>
 
 #include "event_handler.h"
 #include "napi/native_api.h"
@@ -67,11 +70,14 @@ private:
     static constexpr char REJECTED[] = "rejected";
     static constexpr size_t RESOLVED_SIZE = sizeof(RESOLVED);
     static constexpr size_t REJECTED_SIZE = sizeof(REJECTED);
+    static std::map<void *, std::shared_ptr<bool>> validEnvs;
+    static std::mutex validEnvsMutex;
 
     static napi_value Resolved(napi_env env, napi_callback_info info);
     static napi_value Rejected(napi_env env, napi_callback_info info);
     static napi_value Future(napi_env env, napi_callback_info info, bool exception);
     static void DoExecute(uv_work_t *work);
+    static void CleanupHook(void *data);
 
     struct UvEntry {
         napi_env env_ = nullptr;
@@ -82,6 +88,7 @@ private:
         Callbacker getter_;
         Args args_;
         Result result_;
+        std::shared_ptr<bool> isValid_;
         ~UvEntry();
         napi_value GetCallback();
         napi_value GetObject();
@@ -95,6 +102,7 @@ private:
     napi_env env_ = nullptr;
     uv_loop_s *loop_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
+    std::shared_ptr<bool> isValid_;
 };
 } // namespace OHOS::AppDataMgrJsKit
 #endif // DISTRIBUTEDDATAMGR_APPDATAMGR_UV_QUEUE_H

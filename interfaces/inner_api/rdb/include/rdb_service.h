@@ -20,12 +20,13 @@
 #include <string>
 
 #include "distributeddata_relational_store_ipc_interface_code.h"
-#include "iremote_object.h"
 #include "rdb_notifier.h"
 #include "rdb_types.h"
+#include "refbase.h"
 #include "result_set.h"
 
 namespace OHOS {
+class IRemoteObject;
 namespace DistributedRdb {
 class RdbService {
 public:

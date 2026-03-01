@@ -23,21 +23,17 @@
 #include "concurrent_map.h"
 #include "irdb_service.h"
 #include "iremote_object.h"
-#include "iremote_proxy.h"
+#include "rdb_manager.h"
 #include "rdb_types.h"
 #include "refbase.h"
-#include "system_ability_load_callback_stub.h"
 
 namespace OHOS::DistributedRdb {
 class RdbService;
-class RdbServiceProxy;
 class RdbStoreDataServiceProxy;
-class RdbManagerImpl {
+class RdbManagerImpl : public RdbManager {
 public:
     static constexpr int RETRY_INTERVAL = 1;
     static constexpr int WAIT_TIME = 2;
-
-    static RdbManagerImpl &GetInstance();
 
     std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param);
 
@@ -45,30 +41,12 @@ public:
 
     void OnRemoteDied();
 
-    class ServiceDeathRecipient : public IRemoteObject::DeathRecipient {
-    public:
-        explicit ServiceDeathRecipient(RdbManagerImpl* owner) : owner_(owner) {}
-        void OnRemoteDied(const wptr<IRemoteObject> &object) override
-        {
-            if (owner_ != nullptr) {
-                owner_->OnRemoteDied();
-            }
-        }
-
-    private:
-        RdbManagerImpl *owner_;
-    };
-
-    class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
-    public:
-        ServiceProxyLoadCallback() = default;
-        virtual ~ServiceProxyLoadCallback() = default;
-
-        void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
-        void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
-    };
-
 private:
+    class Factory {
+    public:
+        Factory();
+        ~Factory();
+    };
     RdbManagerImpl();
 
     ~RdbManagerImpl();
@@ -77,28 +55,20 @@ private:
 
     int32_t CleanUp();
 
-    static sptr<IRemoteObject::DeathRecipient> LinkToDeath(const sptr<IRemoteObject> &remote);
+    sptr<IRemoteObject::DeathRecipient> LinkToDeath(const sptr<IRemoteObject> &remote);
 
     static std::shared_ptr<RdbStoreDataServiceProxy> GetDistributedDataManager(const std::string &bundleName);
+
+    static int32_t Clean();
+
+    static RdbManagerImpl instance_;
+    static Factory factory_;
 
     std::mutex mutex_;
     std::shared_ptr<RdbStoreDataServiceProxy> distributedDataMgr_;
     std::shared_ptr<RdbService> rdbService_;
     RdbSyncerParam param_;
     std::string bundleName_;
-};
-
-class RdbStoreDataServiceProxy : public IRemoteProxy<DistributedRdb::IKvStoreDataService> {
-public:
-    explicit RdbStoreDataServiceProxy(const sptr<IRemoteObject> &impl);
-    ~RdbStoreDataServiceProxy() = default;
-    sptr<IRemoteObject> GetFeatureInterface(const std::string &name) override;
-    int32_t RegisterDeathObserver(const std::string &bundleName, sptr<IRemoteObject> observer,
-        const std::string &featureName = DistributedRdb::RdbService::SERVICE_NAME) override;
-    int32_t Exit(const std::string &featureName = DistributedRdb::RdbService::SERVICE_NAME) override;
-    std::pair<int32_t, std::string> GetSelfBundleName() override;
-private:
-    sptr<IRemoteObject> clientDeathObserver_;
 };
 } // namespace OHOS::DistributedRdb
 #endif

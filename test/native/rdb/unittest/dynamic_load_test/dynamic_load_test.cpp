@@ -108,15 +108,15 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading001, TestSize.Level1)
     ASSERT_NE(rdbStore, nullptr);
 
     EXPECT_FALSE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_NE(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_NE(RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_NE(RdbManagerImpl::instance_.distributedDataMgr_, nullptr);
+    EXPECT_NE(RdbManagerImpl::instance_.rdbService_, nullptr);
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
     rdbStore = nullptr;
     EXPECT_TRUE(RdbHelper::Destroy());
 
     EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_EQ(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_EQ(RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::instance_.distributedDataMgr_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::instance_.rdbService_, nullptr);
     EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
     EXPECT_TRUE(RdbHelper::Init());
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
@@ -141,8 +141,8 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level1)
     ASSERT_NE(rdbStore, nullptr);
 
     EXPECT_FALSE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_NE(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_NE(RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_NE(RdbManagerImpl::instance_.distributedDataMgr_, nullptr);
+    EXPECT_NE(RdbManagerImpl::instance_.rdbService_, nullptr);
     EXPECT_NE(TaskExecutor::GetInstance().pool_, nullptr);
     OHOS::NativeRdb::RdbHelper::DestroyOption destroyOption;
     destroyOption.cleanICU = true;
@@ -150,8 +150,8 @@ HWTEST_F(RdbDynamicLoadTest, DynamicLoading002, TestSize.Level1)
     EXPECT_TRUE(RdbHelper::Destroy(destroyOption));
 
     EXPECT_TRUE(RdbStoreManager::GetInstance().storeCache_.empty());
-    EXPECT_EQ(RdbManagerImpl::GetInstance().distributedDataMgr_, nullptr);
-    EXPECT_EQ(RdbManagerImpl::GetInstance().rdbService_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::instance_.distributedDataMgr_, nullptr);
+    EXPECT_EQ(RdbManagerImpl::instance_.rdbService_, nullptr);
     EXPECT_EQ(TaskExecutor::GetInstance().pool_, nullptr);
 }
 

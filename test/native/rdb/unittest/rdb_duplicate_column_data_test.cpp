@@ -332,11 +332,13 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetWholeColumnNames_0
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
     EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(2, columnNames.size());  // columnNames size is 2
     EXPECT_EQ("data1", columnNames[0]);
     EXPECT_EQ("", columnNames[1]);
 
     std::tie(ret, columnNames) = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(2, columnNames.size());   // columnNames size is 2
     EXPECT_EQ("data1", columnNames[0]);
     EXPECT_EQ("data1", columnNames[1]);
     resultSet->Close();
@@ -361,7 +363,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_001, TestS
     resultSet->GoToFirstRow();
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowData.size(), 18); // column size is 18
+    ASSERT_EQ(rowData.size(), 18); // column size is 18
 
     EXPECT_EQ(rowData[0], ValueObject(1));   // index is 0, id is 1
     EXPECT_EQ(rowData[9], ValueObject(1));   // index is 9, id is 1
@@ -418,7 +420,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_002, TestS
     resultSet->GoToFirstRow();
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowData.size(), 6); // column size is 6
+    ASSERT_EQ(rowData.size(), 6); // column size is 6
 
     EXPECT_EQ(rowData[0], ValueObject(2000.56));   // index is 1, salary is 2000.56
     EXPECT_EQ(rowData[1], ValueObject(2001.56));   // index is 2, salary is 2001.56
@@ -436,7 +438,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_002, TestS
  * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowData.
  *           1. query some values of fields
  *           2. execute goToRow(1)
- *           2. get some values of fields
+ *           3. get some values of fields
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_003, TestSize.Level1)
@@ -451,7 +453,7 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowData_003, TestS
     resultSet->GoToRow(1);
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowData.size(), 4); // column size is 4
+    ASSERT_EQ(rowData.size(), 4); // column size is 4
 
     EXPECT_EQ(rowData[0], ValueObject("sss"));   // index is 1, name is "sss"
     EXPECT_EQ(rowData[1], ValueObject());       // index is 2, name is NULL
@@ -695,8 +697,10 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_005, Test
  * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_006
  * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
  *           1. query some fields
- *           1. execute GetRowsData(2, 0)
- *           2. get some values
+ *           2. execute GetRowsData(2, 0)
+ *           3. execute GoToFirstRow, rowPos is 0
+ *           4. execute GetRowsData(2, 0)
+ *           5. get some values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_006, TestSize.Level1)
@@ -710,9 +714,9 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_006, Test
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, 0);  // maxCount is 2
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowsData.size(), 2);   // rowsData size is 2
-    EXPECT_EQ(rowsData[0].size(), 4);   // rowsData size is 2
-    EXPECT_EQ(rowsData[1].size(), 4);   // rowsData size is 2
+    ASSERT_EQ(rowsData.size(), 2);   // rowsData size is 2
+    ASSERT_EQ(rowsData[0].size(), 4);   // rowsData size is 4
+    ASSERT_EQ(rowsData[1].size(), 4);   // rowsData size is 4
 
     int rowPos = 0;
     resultSet->GetRowIndex(rowPos);
@@ -746,8 +750,8 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_006, Test
  * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_007
  * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
  *           1. query some fields
- *           1. execute GetRowsData(2, -1)
- *           2. get some values
+ *           2. execute GetRowsData(2, -1)
+ *           3. get some values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_007, TestSize.Level1)
@@ -761,9 +765,9 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_007, Test
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, -1);  // maxCount is 2, position is -1
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowsData.size(), 2);   // rowsData size is 2
-    EXPECT_EQ(rowsData[0].size(), 4);   // column size is 4
-    EXPECT_EQ(rowsData[1].size(), 4);   // column size is 4
+    ASSERT_EQ(rowsData.size(), 2);   // rowsData size is 2
+    ASSERT_EQ(rowsData[0].size(), 4);   // column size is 4
+    ASSERT_EQ(rowsData[1].size(), 4);   // column size is 4
 
     int rowPos = 0;
     resultSet->GetRowIndex(rowPos);
@@ -791,8 +795,8 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_007, Test
  * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_008
  * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
  *           1. query all fields
- *           1. execute GetRowsData(2, 0)
- *           2. get all values
+ *           2. execute GetRowsData(2, 0)
+ *           3. get all values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_008, TestSize.Level1)
@@ -816,8 +820,8 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_008, Test
  * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_009
  * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
  *           1. query all fields
- *           1. execute GetRowsData(0, 0)
- *           2. get all values
+ *           2. execute GetRowsData(0, 0)
+ *           3. get all values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_009, TestSize.Level1)
@@ -839,8 +843,8 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_009, Test
  * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_010
  * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
  *           1. query all fields
- *           1. execute GetRowsData(3, 0), rowCount is 2 acutually
- *           2. get all values
+ *           2. execute GetRowsData(3, 0), rowCount is 2 actually
+ *           3. get all values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_010, TestSize.Level1)
@@ -855,6 +859,177 @@ HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_010, Test
     auto [ret, rowsData] = resultSet->GetRowsData(3, 0);  // maxCount is 3, position is 0
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(rowsData.size(), 2);       // rowsData size is 2
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_011
+ * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
+ *           1. query some fields
+ *           2. execute GetRowsData(2, 0)
+ *           3. execute GetRowsData(2, 0)
+ *           4. get some values
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_011, TestSize.Level1)
+{
+    GenerateData1();
+    GenerateData2();
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT t1.name, t2.name, t1.age, t2.age FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    auto [ret, rowsData] = resultSet->GetRowsData(2, 0);  // maxCount is 2, position is 0
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(rowsData.size(), 2);   // rowsData size is 2
+    ASSERT_EQ(rowsData[0].size(), 4);   // column size is 4
+    ASSERT_EQ(rowsData[1].size(), 4);   // column size is 4
+
+    int rowPos = 0;
+    resultSet->GetRowIndex(rowPos);
+    EXPECT_EQ(rowPos, 2);   // rowPos is 2
+
+    EXPECT_EQ(rowsData[0][0], ValueObject("zhangsan"));   // index is 0, name is "zhangsan"
+    EXPECT_EQ(rowsData[0][1], ValueObject("lisi"));       // index is 1, name is "lisi"
+    EXPECT_EQ(rowsData[0][2], ValueObject(10));           // index is 2, age is 10
+    EXPECT_EQ(rowsData[0][3], ValueObject(10));           // index is 3, age is 10
+    EXPECT_EQ(rowsData[1][0], ValueObject("sss"));        // index is 0, name is "sss"
+    EXPECT_EQ(rowsData[1][1], ValueObject());             // index is 1, name is NULL
+    EXPECT_EQ(rowsData[1][2], ValueObject(50));           // index is 2, age is 50
+    EXPECT_EQ(rowsData[1][3], ValueObject());             // index is 3, age is NULL
+
+    std::tie(ret, rowsData) = resultSet->GetRowsData(2, 0);  // maxCount is 2, position is 0
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowsData.size(), 2);   // rowsData size is 2
+
+    resultSet->GetRowIndex(rowPos);
+    EXPECT_EQ(rowPos, 2);   // rowPos is 2
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_012
+ * @tc.desc: Abnormal testcase of SqliteSharedResultSet for GetRowsData.
+ *           1. no data
+ *           2. execute GetRowsData(1, 0) and return E_ROW_OUT_RANGE
+ *           3. execute GetRowsData(1, -1) and return E_OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_012, TestSize.Level1)
+{
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    auto [ret, rowsData] = resultSet->GetRowsData(1, 0); // maxCount is 1, position is 0
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
+    EXPECT_TRUE(rowsData.empty());
+
+    std::tie(ret, rowsData) = resultSet->GetRowsData(1, -1); // maxCount is 1, position is -1
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_TRUE(rowsData.empty());
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_013
+ * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
+ *           1. two records in resultSet
+ *           2. execute GetRowsData(1, 1) and return E_OK
+ *           3. execute GetRowsData(1, 2) and return E_OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_013, TestSize.Level1)
+{
+    GenerateData1();
+    GenerateData2();
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    auto [ret, rowsData] = resultSet->GetRowsData(1, 1); // maxCount is 1, position is 1
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(rowsData.size(), 1);
+    ASSERT_EQ(rowsData[0].size(), 2);
+    EXPECT_EQ(rowsData[0][0], ValueObject("sss"));
+
+    std::tie(ret, rowsData) = resultSet->GetRowsData(1, 2); // maxCount is 1, position is 2
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowsData.size(), 0);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_014
+ * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
+ *           1. use GetRowsData to fetch data
+ *           2. execute GetRow and GetCurrentRow
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_014, TestSize.Level1)
+{
+    GenerateData1();
+    GenerateData2();
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    auto [ret, rowsData] = resultSet->GetRowsData(1, -1); // maxCount is 1, position is -1
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(rowsData.size(), 1);   // rowsData size is 1
+    ASSERT_EQ(rowsData[0].size(), 2);
+    EXPECT_EQ(rowsData[0][0], ValueObject("zhangsan"));
+    EXPECT_EQ(rowsData[0][1], ValueObject("lisi"));
+
+    int position = -1;
+    resultSet->GetRowIndex(position);
+    EXPECT_EQ(position, 1);
+
+    RowEntity rowEntity;
+    ret = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(ret, E_OK);
+    ValueObject nameValue = rowEntity.Get(0);
+    EXPECT_EQ(nameValue, ValueObject("sss"));
+
+    auto [res, rowData] = resultSet->GetRowData();
+    EXPECT_EQ(res, E_OK);
+    ASSERT_EQ(rowData.size(), 2); // column size is 2
+
+    EXPECT_EQ(rowData[0], ValueObject("sss"));   // name is "sss"
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Sqlite_Shared_Result_Set_GetRowsData_015
+ * @tc.desc: Normal testcase of SqliteSharedResultSet for GetRowsData.
+ *           1. use GetRowsData to fetch data until all data is retrieved.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Sqlite_Shared_Result_Set_GetRowsData_015, TestSize.Level1)
+{
+    GenerateData1();
+    GenerateData2();
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QuerySql("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    int ret = E_ERROR;
+    int count = 0;
+    std::vector<std::vector<ValueObject>> rowsData;
+    do {
+        count++;
+        std::tie(ret, rowsData) = resultSet->GetRowsData(1, -1); // maxCount is 1, position is -1
+        EXPECT_EQ(ret, E_OK);
+        if (count > 3) {  // the loop executes 3 times.
+            break;
+        }
+    } while (rowsData.size() != 0);
+
+    EXPECT_EQ(count, 3); // the loop executes 3 times.
     resultSet->Close();
 }
 
@@ -1014,11 +1189,13 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetWholeColumnNames_007, TestS
     std::vector<std::string> columnNames;
     int ret = resultSet->GetAllColumnNames(columnNames);
     EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(2, columnNames.size());  // columnNames size is 2
     EXPECT_EQ("data1", columnNames[0]);
     EXPECT_EQ("", columnNames[1]);
 
     std::tie(ret, columnNames) = resultSet->GetWholeColumnNames();
     EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(2, columnNames.size());  // columnNames size is 2
     EXPECT_EQ("data1", columnNames[0]);
     EXPECT_EQ("data1", columnNames[1]);
     resultSet->Close();
@@ -1043,7 +1220,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_001, TestSize.Level
     resultSet->GoToFirstRow();
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowData.size(), 18); // column size is 18
+    ASSERT_EQ(rowData.size(), 18); // column size is 18
 
     EXPECT_EQ(rowData[0], ValueObject(1));   // index is 0, id is 1
     EXPECT_EQ(rowData[9], ValueObject(1));   // index is 9, id is 1
@@ -1100,7 +1277,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_002, TestSize.Level
     resultSet->GoToFirstRow();
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowData.size(), 6); // column size is 6
+    ASSERT_EQ(rowData.size(), 6); // column size is 6
 
     EXPECT_EQ(rowData[0], ValueObject(2000.56));   // index is 1, salary is 2000.56
     EXPECT_EQ(rowData[1], ValueObject(2001.56));   // index is 2, salary is 2001.56
@@ -1118,7 +1295,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_002, TestSize.Level
  * @tc.desc: Normal testcase of StepResultSet for GetRowData.
  *           1. query some values of fields
  *           2. execute goToRow(1)
- *           2. get some values of fields
+ *           3. get some values of fields
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_003, TestSize.Level1)
@@ -1134,7 +1311,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_003, TestSize.Level
     resultSet->GoToRow(1);
     auto [ret, rowData] = resultSet->GetRowData();
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowData.size(), 4); // column size is 4
+    ASSERT_EQ(rowData.size(), 4); // column size is 4
 
     EXPECT_EQ(rowData[0], ValueObject("sss"));   // index is 1, name is "sss"
     EXPECT_EQ(rowData[1], ValueObject());       // index is 2, name is NULL
@@ -1257,7 +1434,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowData_008, TestSize.Level
 
 /* *
  * @tc.name: Step_Result_Set_GetRowsData_001
- * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
+ * @tc.desc: Abnormal testcase of StepResultSet for GetRowsData.
  *           1. SQL length less than or equal to 3, maxCount than 0
  *           2. execute GetRowsData
  *           3. return E_INVALID_ARGS
@@ -1370,7 +1547,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_005, TestSize.Leve
         store->QueryByStep("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
     ASSERT_NE(resultSet, nullptr);
 
-    auto [ret, columnNames] = resultSet->GetRowsData(2, 2);
+    auto [ret, columnNames] = resultSet->GetRowsData(2, 2); // maxCount is 2, position is 2
     EXPECT_EQ(ret, E_ROW_OUT_RANGE);
     EXPECT_TRUE(columnNames.empty());
     resultSet->Close();
@@ -1380,8 +1557,10 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_005, TestSize.Leve
  * @tc.name: Step_Result_Set_GetRowsData_006
  * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
  *           1. query some fields
- *           1. execute GetRowsData
- *           2. get some values
+ *           2. execute GetRowsData(2, 0)
+ *           3. execute GoToFirstRow, rowPos is 0
+ *           4. execute GetRowsData(2, 0)
+ *           5. get some values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_006, TestSize.Level1)
@@ -1395,9 +1574,9 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_006, TestSize.Leve
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, 0);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowsData.size(), 2);   // rowsData size is 2
-    EXPECT_EQ(rowsData[0].size(), 4);   // rowsData size is 2
-    EXPECT_EQ(rowsData[1].size(), 4);   // rowsData size is 2
+    ASSERT_EQ(rowsData.size(), 2);   // rowsData size is 2
+    ASSERT_EQ(rowsData[0].size(), 4);   // rowsData size is 4
+    ASSERT_EQ(rowsData[1].size(), 4);   // rowsData size is 4
 
     EXPECT_EQ(rowsData[0][0], ValueObject("zhangsan"));   // index is 0, name is "zhangsan"
     EXPECT_EQ(rowsData[0][1], ValueObject("lisi"));       // index is 1, name is "lisi"
@@ -1415,9 +1594,9 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_006, TestSize.Leve
     EXPECT_EQ(rowPos, 0);   // rowPos is 0
     std::tie(ret, rowsData) = resultSet->GetRowsData(2, 0);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowsData.size(), 2);   // rowsData size is 2
-    EXPECT_EQ(rowsData[0].size(), 4);   // column size is 4
-    EXPECT_EQ(rowsData[1].size(), 4);   // column size is 4
+    ASSERT_EQ(rowsData.size(), 2);   // rowsData size is 2
+    ASSERT_EQ(rowsData[0].size(), 4);   // column size is 4
+    ASSERT_EQ(rowsData[1].size(), 4);   // column size is 4
 
     EXPECT_EQ(rowsData[0][0], ValueObject("zhangsan"));   // index is 0, name is "zhangsan"
     EXPECT_EQ(rowsData[0][1], ValueObject("lisi"));       // index is 1, name is "lisi"
@@ -1434,8 +1613,8 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_006, TestSize.Leve
  * @tc.name: Step_Result_Set_GetRowsData_007
  * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
  *           1. query some fields
- *           1. execute GetRowsData(2, -1)
- *           2. get some values
+ *           2. execute GetRowsData(2, -1)
+ *           3. get some values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_007, TestSize.Level1)
@@ -1449,9 +1628,9 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_007, TestSize.Leve
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, -1);  // maxCount is 2, position is -1
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowsData.size(), 2);   // rowsData size is 2
-    EXPECT_EQ(rowsData[0].size(), 4);   // column size is 4
-    EXPECT_EQ(rowsData[1].size(), 4);   // column size is 4
+    ASSERT_EQ(rowsData.size(), 2);   // rowsData size is 2
+    ASSERT_EQ(rowsData[0].size(), 4);   // column size is 4
+    ASSERT_EQ(rowsData[1].size(), 4);   // column size is 4
 
     int rowPos = 0;
     resultSet->GetRowIndex(rowPos);
@@ -1479,8 +1658,8 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_007, TestSize.Leve
  * @tc.name: Step_Result_Set_GetRowsData_008
  * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
  *           1. query all fields
- *           1. execute GetRowsData(2, 0)
- *           2. get all values
+ *           2. execute GetRowsData(2, 0)
+ *           3. get all values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_008, TestSize.Level1)
@@ -1494,7 +1673,7 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_008, TestSize.Leve
 
     auto [ret, rowsData] = resultSet->GetRowsData(2, 0);  // maxCount is 2, position is 0
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(rowsData.size(), 2);       // rowsData size is 2
+    ASSERT_EQ(rowsData.size(), 2);       // rowsData size is 2
     EXPECT_EQ(rowsData[0].size(), 18);   // column size is 18
     EXPECT_EQ(rowsData[1].size(), 18);   // column size is 18
     resultSet->Close();
@@ -1504,8 +1683,8 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_008, TestSize.Leve
  * @tc.name: Step_Result_Set_GetRowsData_009
  * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
  *           1. query all fields
- *           1. execute GetRowsData(0, 0)
- *           2. get all values
+ *           2. execute GetRowsData(0, 0)
+ *           3. get all values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_009, TestSize.Level1)
@@ -1527,8 +1706,8 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_009, TestSize.Leve
  * @tc.name: Step_Result_Set_GetRowsData_010
  * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
  *           1. query all fields
- *           1. execute GetRowsData(3, 0), rowCount is 2 acutually
- *           2. get all values
+ *           2. execute GetRowsData(3, 0), rowCount is 2 actually
+ *           3. get all values
  * @tc.type: FUNC
  */
 HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_010, TestSize.Level1)
@@ -1543,5 +1722,175 @@ HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_010, TestSize.Leve
     auto [ret, rowsData] = resultSet->GetRowsData(3, 0);  // maxCount is 3, position is 0
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(rowsData.size(), 2);       // rowsData size is 2
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Step_Result_Set_GetRowsData_011
+ * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
+ *           1. query some fields
+ *           2. execute GetRowsData(2, 0)
+ *           3. execute GetRowsData(2, 0)
+ *           4. get some values
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_011, TestSize.Level1)
+{
+    GenerateData1();
+    GenerateData2();
+
+    std::shared_ptr<ResultSet> resultSet = store->QueryByStep(
+        "SELECT t1.name, t2.name, t1.age, t2.age FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    auto [ret, rowsData] = resultSet->GetRowsData(2, 0);  // maxCount is 2, position is 0
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(rowsData.size(), 2);   // rowsData size is 2
+    ASSERT_EQ(rowsData[0].size(), 4);   // column size is 4
+    ASSERT_EQ(rowsData[1].size(), 4);   // column size is 4
+
+    int rowPos = 0;
+    resultSet->GetRowIndex(rowPos);
+    EXPECT_EQ(rowPos, 2);   // rowPos is 2
+
+    EXPECT_EQ(rowsData[0][0], ValueObject("zhangsan"));   // index is 0, name is "zhangsan"
+    EXPECT_EQ(rowsData[0][1], ValueObject("lisi"));       // index is 1, name is "lisi"
+    EXPECT_EQ(rowsData[0][2], ValueObject(10));           // index is 2, age is 10
+    EXPECT_EQ(rowsData[0][3], ValueObject(10));           // index is 3, age is 10
+    EXPECT_EQ(rowsData[1][0], ValueObject("sss"));        // index is 0, name is "sss"
+    EXPECT_EQ(rowsData[1][1], ValueObject());             // index is 1, name is NULL
+    EXPECT_EQ(rowsData[1][2], ValueObject(50));           // index is 2, age is 50
+    EXPECT_EQ(rowsData[1][3], ValueObject());             // index is 3, age is NULL
+
+    std::tie(ret, rowsData) = resultSet->GetRowsData(2, 0);  // maxCount is 2, position is 0
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowsData.size(), 2);   // rowsData size is 2
+
+    resultSet->GetRowIndex(rowPos);
+    EXPECT_EQ(rowPos, 2);   // rowPos is 2
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Step_Result_Set_GetRowsData_012
+ * @tc.desc: Abnormal testcase of StepResultSet for GetRowsData.
+ *           1. no data and execute GetRowsData
+ *           2. return E_ROW_OUT_RANGE
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_012, TestSize.Level1)
+{
+    std::shared_ptr<ResultSet> resultSet =
+        store->QueryByStep("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    auto [ret, rowsData] = resultSet->GetRowsData(1, 0); // maxCount is 1, position is 0
+    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
+    EXPECT_TRUE(rowsData.empty());
+
+    std::tie(ret, rowsData) = resultSet->GetRowsData(1, -1); // maxCount is 1, position is -1
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_TRUE(rowsData.empty());
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Step_Result_Set_GetRowsData_013
+ * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
+ *           1. two records in resultSet
+ *           2. execute GetRowsData(1, 1) and return E_OK
+ *           3. execute GetRowsData(1, 2) and return E_OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_013, TestSize.Level1)
+{
+    GenerateData1();
+    GenerateData2();
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QueryByStep("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    auto [ret, rowsData] = resultSet->GetRowsData(1, 1); // maxCount is 1, position is 1
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(rowsData.size(), 1);
+    ASSERT_EQ(rowsData[0].size(), 2);  // column names size is 2
+    EXPECT_EQ(rowsData[0][0], ValueObject("sss"));
+
+    std::tie(ret, rowsData) = resultSet->GetRowsData(1, 2); // maxCount is 1, position is 2
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(rowsData.size(), 0);
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Step_Result_Set_GetRowsData_014
+ * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
+ *           1. use GetRowsData to fetch data
+ *           2. execute GetRow and GetCurrentRow
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_014, TestSize.Level1)
+{
+    GenerateData1();
+    GenerateData2();
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QueryByStep("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    auto [ret, rowsData] = resultSet->GetRowsData(1, -1); // maxCount is 1, position is -1
+    EXPECT_EQ(ret, E_OK);
+    ASSERT_EQ(rowsData.size(), 1);   // rowsData size is 1
+    ASSERT_EQ(rowsData[0].size(), 2);  // column names size is 2
+    EXPECT_EQ(rowsData[0][0], ValueObject("zhangsan"));
+    EXPECT_EQ(rowsData[0][1], ValueObject("lisi"));
+
+    int position = -1;
+    resultSet->GetRowIndex(position);
+    EXPECT_EQ(position, 1);
+
+    RowEntity rowEntity;
+    ret = resultSet->GetRow(rowEntity);
+    EXPECT_EQ(ret, E_OK);
+    ValueObject nameValue = rowEntity.Get(0);
+    EXPECT_EQ(nameValue, ValueObject("sss"));
+
+    auto [res, rowData] = resultSet->GetRowData();
+    EXPECT_EQ(res, E_OK);
+    ASSERT_EQ(rowData.size(), 2); // column size is 2
+
+    EXPECT_EQ(rowData[0], ValueObject("sss"));   // name is "sss"
+    resultSet->Close();
+}
+
+/* *
+ * @tc.name: Step_Result_Set_GetRowsData_015
+ * @tc.desc: Normal testcase of StepResultSet for GetRowsData.
+ *           1. use GetRowsData to fetch data until all data is retrieved.
+ * @tc.type: FUNC
+ */
+HWTEST_F(DuplicateColumnDataTest, Step_Result_Set_GetRowsData_015, TestSize.Level1)
+{
+    GenerateData1();
+    GenerateData2();
+
+    std::shared_ptr<ResultSet> resultSet =
+        store->QueryByStep("SELECT t1.name, t2.name FROM test1 t1 LEFT JOIN test2 t2 ON t1.age=t2.age");
+    ASSERT_NE(resultSet, nullptr);
+
+    int ret = E_ERROR;
+    int count = 0;
+    std::vector<std::vector<ValueObject>> rowsData;
+    do {
+        count++;
+        std::tie(ret, rowsData) = resultSet->GetRowsData(1, -1); // maxCount is 1, position is -1
+        EXPECT_EQ(ret, E_OK);
+        if (count > 3) {    // the loop executes 3 times.
+            break;
+        }
+    } while (rowsData.size() != 0);
+
+    EXPECT_EQ(count, 3); // the loop executes 3 times.
     resultSet->Close();
 }

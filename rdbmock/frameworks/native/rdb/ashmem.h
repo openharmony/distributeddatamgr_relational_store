@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RELATIONAL_STORE_MESSAGE_PARCEL_H
-#define RELATIONAL_STORE_MESSAGE_PARCEL_H
+#ifndef RELATIONAL_STORE_ASHMEM_H
+#define RELATIONAL_STORE_ASHMEM_H
 
 namespace OHOS {
 namespace AppDataFwk {
@@ -28,4 +28,4 @@ public:
 } // namespace AppDataFwk
 } // namespace OHOS
 
-#endif //RELATIONAL_STORE_MESSAGE_PARCEL_H
+#endif //RELATIONAL_STORE_ASHMEM_H
