@@ -157,6 +157,36 @@ static napi_value ExportField(napi_env env)
     return field;
 }
 
+static napi_value ExportDistributedOrigin(napi_env env)
+{
+    napi_value distributedOrigin = nullptr;
+    napi_status status = napi_create_object(env, &distributedOrigin);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    SET_NAPI_PROPERTY(distributedOrigin, "ORI_REMOTE", int32_t(DistributedRdb::DistributedOrigin::ORI_REMOTE));
+    SET_NAPI_PROPERTY(distributedOrigin, "ORI_CLOUD", int32_t(DistributedRdb::DistributedOrigin::ORI_CLOUD));
+    SET_NAPI_PROPERTY(distributedOrigin, "ORI_LOCAL", int32_t(DistributedRdb::DistributedOrigin::ORI_LOCAL));
+    napi_object_freeze(env, distributedOrigin);
+    return distributedOrigin;
+}
+
+static napi_value ExportDistributedField(napi_env env)
+{
+    napi_value distributedField = nullptr;
+    napi_status status = napi_create_object(env, &distributedField);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    SET_NAPI_PROPERTY(distributedField, "ORIGIN", std::string(DistributedRdb::DistributedField::ORIGIN));
+    SET_NAPI_PROPERTY(
+        distributedField, "ORIGIN_ORIDEVICE", std::string(DistributedRdb::DistributedField::ORIGIN_ORIDEVICE));
+    napi_object_freeze(env, distributedField);
+    return distributedField;
+}
+
 static napi_value ExportDistributedType(napi_env env)
 {
     napi_value distributedType = nullptr;
@@ -379,6 +409,8 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ChangeType", ExportChangeType(env)),
         DECLARE_NAPI_PROPERTY("Origin", ExportOrigin(env)),
         DECLARE_NAPI_PROPERTY("Field", ExportField(env)),
+        DECLARE_NAPI_PROPERTY("DistributedOrigin", ExportDistributedOrigin(env)),
+        DECLARE_NAPI_PROPERTY("DistributedField", ExportDistributedField(env)),
         DECLARE_NAPI_PROPERTY("RebuildType", ExportRebuiltType(env)),
         DECLARE_NAPI_PROPERTY("HAMode", ExportHAMode(env)),
         DECLARE_NAPI_PROPERTY("EncryptionAlgo", ExportEncryptionAlgo(env)),

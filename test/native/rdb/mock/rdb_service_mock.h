@@ -34,6 +34,7 @@ public:
     MOCK_METHOD(int32_t, RetainDeviceData,
         (const RdbSyncerParam &param, (const std::map<std::string, std::vector<std::string>> &retainDevices)),
         (override));
+    MOCK_METHOD(int32_t, ObtainUuid, (const RdbSyncerParam &param, std::vector<std::string> &devices), (override));
     MOCK_METHOD(int32_t, Sync,
         (const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates, const AsyncDetail &async),
         (override));

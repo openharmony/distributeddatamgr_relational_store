@@ -212,6 +212,22 @@ int32_t RdbServiceProxy::RetainDeviceData(
     return status;
 }
 
+int32_t RdbServiceProxy::ObtainUuid(const RdbSyncerParam &param, std::vector<std::string> &devices)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_OBTAIN_UUID), reply, param, devices);
+    if (status != RDB_OK) {
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    if (!ITypesUtil::Unmarshal(reply, devices)) {
+        LOG_ERROR("read result failed.");
+        status = RDB_ERROR;
+    }
+    return status;
+}
+
 int32_t RdbServiceProxy::Sync(
     const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates, const AsyncDetail &async)
 {

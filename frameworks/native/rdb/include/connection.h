@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "abs_rdb_predicates.h"
 #include "knowledge_types.h"
 #include "rdb_common.h"
 #include "rdb_store_config.h"
@@ -98,6 +99,8 @@ public:
     virtual ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay = true) = 0;
     virtual int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) = 0;
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor) = 0;
+    virtual int SetDistributedInfo(
+        DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates) = 0;
     virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) = 0;
     virtual int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) = 0;
     virtual void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount) = 0;

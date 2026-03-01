@@ -449,55 +449,113 @@ int RdbStoreImpl::SetDistributedTables(
     return HandleCloudSyncAfterSetDistributedTables(tables, distributedConfig);
 }
 
-int RdbStoreImpl::ConvertRdbStatusNative(int32_t status)
+void CollectDevicesFromPredicates(const AbsRdbPredicates &predicates, std::vector<std::string> &devices)
 {
-    switch (status) {
-        case RdbStatus::RDB_OK:
-            return E_OK;
-        case RdbStatus::RDB_SQLITE_BUSY:
-            return E_SQLITE_BUSY;
-        case RdbStatus::RDB_INVALID_ARGS:
-            return E_INVALID_ARGS_NEW;
-        case RdbStatus::RDB_SQLITE_CORRUPT:
-            return E_SQLITE_CORRUPT;
-        case RdbStatus::RDB_SQLITE_ERROR:
-            return E_SQLITE_ERROR;
-        case RdbStatus::RDB_NOT_SUPPORT:
-            return E_NOT_SUPPORT;
-        case RdbStatus::RDB_DB_NOT_EXIST:
-            return E_DB_NOT_EXIST;
-        case RdbStatus::RDB_NON_SYSTEM_APP:
-            return E_NON_SYSTEM_APP;
-        default:
-            break;
+    std::string device;
+    for (auto &arg : predicates.GetBindArgs()) {
+        if (arg.GetType() == ValueObject::TYPE_STRING && arg.GetString(device) == E_OK && !device.empty()) {
+            devices.push_back(device);
+        }
     }
-    return E_ERROR;
+}
+
+int ProcessDistributedDevices(const DistributedRdb::RdbSyncerParam &syncerParam, std::vector<std::string> &devices)
+{
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    int32_t errorCode = service->ObtainUuid(syncerParam, devices);
+    if (errorCode != RdbStatus::RDB_OK) {
+        return SqliteUtils::ConvertRdbStatusNative(errorCode);
+    }
+    return E_OK;
+}
+
+void UpdatePredicatesArgs(AbsRdbPredicates &predicates, std::vector<std::string> &devices)
+{
+    std::vector<ValueObject> args;
+    std::string device;
+    for (auto &arg : predicates.GetBindArgs()) {
+        if (arg.GetType() == ValueObject::TYPE_STRING && arg.GetString(device) == E_OK && !device.empty() &&
+            !devices.empty()) {
+            args.push_back(ValueObject(devices.front()));
+            devices.erase(devices.begin());
+            continue;
+        }
+        args.push_back(arg);
+    }
+    predicates.SetBindArgs(args);
+}
+
+int RdbStoreImpl::SetDistributedInfo(DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates)
+{
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+        return E_NOT_SUPPORT_NEW;
+    }
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK || conn == nullptr) {
+        LOG_ERROR("The database is busy or closed errCode:%{public}d", errCode);
+        return errCode;
+    }
+    std::vector<std::string> devices;
+    if (!distributedInfo.oriDevice.empty()) {
+        devices.push_back(distributedInfo.oriDevice);
+    }
+    std::string device;
+    if (predicates.HasSpecificField()) {
+        CollectDevicesFromPredicates(predicates, devices);
+    }
+    if (!devices.empty()) {
+        errCode = ProcessDistributedDevices(syncerParam_, devices);
+        if (errCode != E_OK) {
+            return errCode;
+        }
+    }
+    if (!distributedInfo.oriDevice.empty() && !devices.empty()) {
+        distributedInfo.oriDevice = devices.front();
+        devices.erase(devices.begin());
+    }
+    if (predicates.HasSpecificField()) {
+        UpdatePredicatesArgs(predicates, devices);
+    }
+    errCode = conn->SetDistributedInfo(distributedInfo, predicates);
+    if (errCode != E_OK) {
+        LOG_ERROR("Fail to set distributed info, error:%{public}d, name:%{public}s.", errCode,
+            SqliteUtils::Anonymous(config_.GetName()).c_str());
+    }
+    return errCode;
 }
 
 int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices)
 {
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
-        return E_NOT_SUPPORT;
+        return E_NOT_SUPPORT_NEW;
     }
-    isNeedSetAcl_ = true;
-    SetFileGid(config_, SERVICE_GID);
+    for (auto &[table, devices] : retainDevices) {
+        if (table.empty()) {
+            return E_INVALID_ARGS_NEW;
+        }
+        if (devices.empty()) {
+            continue;
+        }
+        for (auto &device : devices) {
+            if (device.empty()) {
+                return E_INVALID_ARGS_NEW;
+            }
+        }
+    }
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
     }
-    if (retainDevices.empty()) {
-        return E_INVALID_ARGS_NEW;
-    }
-    for (auto &[table, devices] : retainDevices) {
-        if (table.empty() || devices.empty()) {
-            return E_INVALID_ARGS_NEW;
-        }
-    }
     int32_t errorCode = service->RetainDeviceData(syncerParam_, retainDevices);
     if (errorCode != RdbStatus::RDB_OK) {
-        LOG_ERROR("Fail to remove except device data, error=%{public}d.", errorCode);
+        LOG_ERROR("Fail to remove except device data, error:%{public}d, name:%{public}s.", errorCode,
+            SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
-    return ConvertRdbStatusNative(errorCode);
+    return SqliteUtils::ConvertRdbStatusNative(errorCode);
 }
 
 int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)

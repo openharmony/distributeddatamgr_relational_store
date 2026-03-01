@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "values_buckets.h"
+#include "abs_predicates.h"
 
 namespace OHOS {
 namespace DistributedRdb {
@@ -67,6 +68,24 @@ struct RdbDebugInfo {
     uint32_t mode_ = 0;
     uint32_t uid_ = 0;
     uint32_t gid_ = 0;
+};
+
+struct DistributedField {
+    static constexpr const char *ORIGIN = "#_origin";
+    static constexpr const char *ORIGIN_ORIDEVICE = "#_ori_device";
+};
+
+enum DistributedOrigin {
+    ORI_LOCAL = 0,   // Indicates the data flag wiil be changed to local.
+    ORI_CLOUD = 1,   // Indicates the data flag wiil be changed to cloud.
+    ORI_REMOTE = 2,  // Indicates the data flag wiil be changed to remote.
+    ORI_ORIGINAL,    // Indicates the data flag wiil be keeped original.
+    BUTT,
+};
+
+struct DistributedInfo {
+    int32_t flag = DistributedOrigin::ORI_ORIGINAL;
+    std::string oriDevice;
 };
 
 struct RdbDfxInfo {

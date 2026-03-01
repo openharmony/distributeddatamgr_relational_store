@@ -127,6 +127,14 @@ int ParseDistributedTypeArg(
     return OK;
 }
 
+int ParseDistributedInfo(const napi_env &env, const napi_value argv, std::shared_ptr<RdbStoreEnhanceContext> context)
+{
+    auto status = JSUtils::Convert2Value(env, argv, context->distributedInfo);
+    CHECK_RETURN_SET(status == napi_ok || JSUtils::IsNull(env, argv),
+        std::make_shared<ParamError>("distributedInfo", "a DistributedInfo type"));
+    return OK;
+}
+
 int ParseDistributedConfigArg(
     const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context)
 {
@@ -187,6 +195,15 @@ int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<Rd
     CHECK_RETURN_SET(status == napi_ok && context->predicatesProxy != nullptr,
         std::make_shared<ParamError>("predicates", "an RdbPredicates."));
     context->tableName = context->predicatesProxy->GetPredicates()->GetTableName();
+    context->rdbPredicates = context->predicatesProxy->GetPredicates();
+    return OK;
+}
+
+int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreEnhanceContext> context)
+{
+    auto status = napi_unwrap(env, arg, reinterpret_cast<void **>(&context->predicatesProxy));
+    CHECK_RETURN_SET(status == napi_ok && context->predicatesProxy != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."));
     context->rdbPredicates = context->predicatesProxy->GetPredicates();
     return OK;
 }

@@ -54,6 +54,9 @@ struct RdbStoreContextBase : public ContextBase {
 struct RdbStoreEnhanceContext : public EnhancedContext {
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
     std::map<std::string, std::vector<std::string>> retainDevices;
+    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+    RdbPredicatesProxy *predicatesProxy;
+    DistributedRdb::DistributedInfo distributedInfo;
 };
 
 struct RdbStoreContext : public RdbStoreContextBase {
@@ -132,6 +135,9 @@ int ParseSyncModeArg(const napi_env env, const napi_value arg, std::shared_ptr<R
 int ParseDistributedTypeArg(
     const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context);
 
+int ParseDistributedInfo(
+    const napi_env &env, const napi_value argv, std::shared_ptr<RdbStoreEnhanceContext> context);
+
 int ParseDistributedConfigArg(
     const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context);
 
@@ -142,6 +148,8 @@ int ParseCallback(const napi_env env, const napi_value arg, std::shared_ptr<RdbS
 int ParseCloudSyncCallback(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 
 int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreEnhanceContext> context);
 
 int ParseSrcType(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 
