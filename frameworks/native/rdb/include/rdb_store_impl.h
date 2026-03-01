@@ -114,6 +114,8 @@ public:
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
         const DistributedRdb::DistributedConfig &distributedConfig) override;
+    int SetDistributedInfo(
+        DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates) override;
     int RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices) override;
     int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam) override;
@@ -248,7 +250,6 @@ private:
     int StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatus);
     int RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
         std::shared_ptr<ConnectionPool> pool);
-    int ConvertRdbStatusNative(int32_t status);
     static int32_t RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path);
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);

@@ -1738,6 +1738,95 @@ int SqliteConnection::CleanDirtyLog(const std::string &table, uint64_t cursor)
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 
+std::pair<int32_t, DistributedDB::Type> ConvertValueObjectToType(const ValueObject &arg)
+{
+    DistributedDB::Type result;
+    int32_t ret = E_ERROR;
+    ValueObject::TypeId typeId = arg.GetType();
+    switch (typeId) {
+        case ValueObject::TYPE_DOUBLE: {
+            double resDouble;
+            ret = arg.GetDouble(resDouble);
+            result = DistributedDB::Type(resDouble);
+            break;
+        }
+        case ValueObject::TYPE_STRING: {
+            std::string resString;
+            ret = arg.GetString(resString);
+            result = DistributedDB::Type(resString);
+            break;
+        }
+        case ValueObject::TYPE_BOOL: {
+            bool resBool;
+            ret = arg.GetBool(resBool);
+            result = DistributedDB::Type(resBool);
+            break;
+        }
+        case ValueObject::TYPE_INT: {
+            int64_t resInt;
+            ret = arg.GetLong(resInt);
+            result = DistributedDB::Type(resInt);
+            break;
+        }
+        case ValueObject::TYPE_BLOB: {
+            ValueObject::Blob resBlob;
+            ret = arg.GetBlob(resBlob);
+            result = DistributedDB::Type(resBlob);
+            break;
+        }
+        case ValueObject::TYPE_NULL: {
+            ret = E_OK;
+            std::monostate resNull;
+            result = DistributedDB::Type(resNull);
+            break;
+        }
+        default:
+            break;
+    }
+    return { ret, result };
+}
+
+int SqliteConnection::SetDistributedInfo(DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates)
+{
+    DistributedDB::UpdateContent updateContent;
+    if (!distributedInfo.oriDevice.empty()) {
+        updateContent.oriDevice = distributedInfo.oriDevice;
+    }
+    if (distributedInfo.flag == DistributedOrigin::BUTT) {
+        return E_INVALID_ARGS_NEW;
+    }
+    if (distributedInfo.flag != DistributedOrigin::ORI_ORIGINAL) {
+        updateContent.flag = distributedInfo.flag == DistributedOrigin::ORI_REMOTE ? DistributedDB::LogFlag::REMOTE
+                                                                                   : DistributedDB::LogFlag::LOCAL;
+    }
+    DistributedDB::SelectCondition selectCondition;
+    selectCondition.sql = SqliteUtils::Replace(predicates.GetWhereClause(), "#_", "");
+    std::vector<DistributedDB::Type> types;
+    for (auto &arg : predicates.GetBindArgs()) {
+        std::string device;
+        if (arg.GetType() == ValueObject::TYPE_DOUBLE && predicates.HasSpecificField()) {
+            continue;
+        }
+        auto [ret, result] = ConvertValueObjectToType(arg);
+        if (ret != E_OK) {
+            return E_INVALID_ARGS_NEW;
+        }
+        types.push_back(DistributedDB::Type(result));
+    }
+    selectCondition.args = types;
+    DistributedDB::UpdateCondition updateCondition;
+    if (predicates.HasSpecificField()) {
+        updateCondition.logCondition = selectCondition;
+    } else {
+        updateCondition.dataCondition = selectCondition;
+    }
+    DistributedDB::UpdateOption updateOption;
+    updateOption.tableName = predicates.GetTableName();
+    updateOption.condition = updateCondition;
+    updateOption.content = updateContent;
+    return SqliteUtils::ConvertDBStatusNative(UpdateDataLog(dbHandle_, updateOption));
+}
+
 int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
 {
     std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);

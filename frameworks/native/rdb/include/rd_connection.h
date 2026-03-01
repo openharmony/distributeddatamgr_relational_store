@@ -20,6 +20,7 @@
 #include <mutex>
 #include <vector>
 
+#include "abs_rdb_predicates.h"
 #include "connection.h"
 #include "rd_utils.h"
 #include "rdb_common.h"
@@ -67,6 +68,8 @@ public:
     ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
+    int SetDistributedInfo(
+        DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates) override;
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
     int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
     void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount) override;

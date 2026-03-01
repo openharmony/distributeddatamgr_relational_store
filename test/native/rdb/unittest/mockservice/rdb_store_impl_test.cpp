@@ -39,6 +39,10 @@ using namespace testing;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb;
 using namespace OHOS::AAFwk;
+using Asset = ValueObject::Asset;
+using Assets = ValueObject::Assets;
+using Blob = ValueObject::Blob;
+using Nil = ValueObject::Nil;
 using CheckOnChangeFunc = std::function<void(RdbStoreObserver::ChangeInfo &changeInfo)>;
 using ValueObjects = std::vector<ValueObject>;
 class SubObserver : public RdbStoreObserver {
@@ -741,13 +745,14 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_007, TestSize.Leve
 
 /**
  * @tc.name: RetainDeviceData_Test_001
- * @tc.desc: Abnormal testCase of RetainDeviceData
+ * @tc.desc: Abnormal testCase of RetainDeviceData file service return RDB_DB_NOT_EXIST
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_001, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(Return(RdbStatus::RDB_DB_NOT_EXIST));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -758,16 +763,11 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_001, TestSize.Level2)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
     ASSERT_NE(store, nullptr) << "store is null";
     std::map<std::string, std::vector<std::string>> map;
-    errCode = store->RetainDeviceData(map);
-    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
     std::vector<std::string> vec;
-    map["employee"] = vec;
-    errCode = store->RetainDeviceData(map);
-    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
     vec.push_back("localDeviceId");
     map["employee"] = vec;
     errCode = store->RetainDeviceData(map);
-    EXPECT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_DB_NOT_EXIST, errCode);
 }
 
 /**
@@ -789,8 +789,9 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_002, TestSize.Level2)
     std::map<std::string, std::vector<std::string>> map;
     std::vector<std::string> vec;
     vec.push_back("localDeviceId");
+    map["employee"] = vec;
     errCode = store->RetainDeviceData(map);
-    EXPECT_EQ(E_NOT_SUPPORT, errCode);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
 }
 
 /**
@@ -812,8 +813,9 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_003, TestSize.Level2)
     std::map<std::string, std::vector<std::string>> map;
     std::vector<std::string> vec;
     vec.push_back("localDeviceId");
+    map["employee"] = vec;
     errCode = store->RetainDeviceData(map);
-    EXPECT_EQ(E_NOT_SUPPORT, errCode);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
 }
 
 /**
@@ -841,6 +843,458 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_004, TestSize.Level2)
     map["employee"] = vec;
     errCode = store->RetainDeviceData(map);
     EXPECT_EQ(E_SQLITE_ERROR, errCode);
+}
+
+/**
+ * @tc.name: RetainDeviceData_Test_005
+ * @tc.desc: Abnormal testCase of RetainDeviceData map is empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_005, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::map<std::string, std::vector<std::string>> map;
+    errCode = store->RetainDeviceData(map);
+    EXPECT_EQ(E_OK, errCode);
+}
+
+/**
+ * @tc.name: RetainDeviceData_Test_006
+ * @tc.desc: Abnormal testCase of RetainDeviceData device vector is empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_006, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::map<std::string, std::vector<std::string>> map;
+    std::vector<std::string> vec;
+    map["employee"] = vec;
+    errCode = store->RetainDeviceData(map);
+    EXPECT_EQ(E_OK, errCode);
+}
+
+/**
+ * @tc.name: RetainDeviceData_Test_007
+ * @tc.desc: Abnormal testCase of RetainDeviceData tableName is empty string
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_007, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::map<std::string, std::vector<std::string>> map;
+    std::vector<std::string> vec;
+    vec.push_back("localDeviceId");
+    map[""] = vec;
+    errCode = store->RetainDeviceData(map);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+}
+
+/**
+ * @tc.name: RetainDeviceData_Test_008
+ * @tc.desc: Abnormal testCase of RetainDeviceData device vector contain empty string
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_008, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::map<std::string, std::vector<std::string>> map;
+    std::vector<std::string> vec;
+    vec.push_back("");
+    vec.push_back("localDeviceId");
+    map["employee"] = vec;
+    errCode = store->RetainDeviceData(map);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+}
+
+/**
+ * @tc.name: RetainDeviceData_Test_009
+ * @tc.desc: Abnormal testCase of RetainDeviceData success service return OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_009, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::map<std::string, std::vector<std::string>> map;
+    std::vector<std::string> vec;
+    vec.push_back("localDeviceId");
+    map["employee"] = vec;
+    errCode = store->RetainDeviceData(map);
+    EXPECT_EQ(E_OK, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_001
+ * @tc.desc: Abnormal testCase of SetDistributedInfo fial due to vector db.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_VECTOR);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    AbsRdbPredicates predicates("test");
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_002
+ * @tc.desc: Abnormal testCase of SetDistributedInfo fial due to mem db.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_002, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    AbsRdbPredicates predicates("test");
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_003
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_003, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo(
+        OHOS::DistributedRdb::DistributedField::ORIGIN, OHOS::DistributedRdb::DistributedOrigin::ORI_LOCAL);
+    predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "");
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_004
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_004, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    distributedInfo.oriDevice = "remotedevice";
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("name", "lisa");
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_005
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_005, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    distributedInfo.oriDevice = "remotedevice";
+    AbsRdbPredicates predicates("test");
+    Asset asset;
+    bool res = true;
+    int64_t ret = 0;
+    Nil resNull;
+    ValueObject obj(resNull);
+    Blob resBlob;
+    predicates.EqualTo("isSilent", res);
+    predicates.EqualTo("age", ret);
+    predicates.EqualTo("name", asset);
+    predicates.EqualTo("null", obj);
+    predicates.EqualTo("blob", resBlob);
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_006
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail service return RDB_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_006, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_INVALID_ARGS));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo(
+        OHOS::DistributedRdb::DistributedField::ORIGIN, OHOS::DistributedRdb::DistributedOrigin::ORI_LOCAL);
+    predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "test");
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_007
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail after delete db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_007, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo(
+        OHOS::DistributedRdb::DistributedField::ORIGIN, OHOS::DistributedRdb::DistributedOrigin::ORI_LOCAL);
+    predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "test");
+    errCode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    EXPECT_EQ(E_OK, errCode);
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_ALREADY_CLOSED, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_008
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_008, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    distributedInfo.oriDevice = "remotedevice";
+    AbsRdbPredicates predicates("test");
+    Assets assets;
+    predicates.EqualTo("name", assets);
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_009
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW flag = BUTT
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_009, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::BUTT;
+    distributedInfo.oriDevice = "remotedevice";
+    AbsRdbPredicates predicates("test");
+    bool res = true;
+    int64_t ret = 0;
+    Nil resNull;
+    ValueObject obj(resNull);
+    Blob resBlob;
+    predicates.EqualTo("isSilent", res);
+    predicates.EqualTo("age", ret);
+    predicates.EqualTo("null", obj);
+    predicates.EqualTo("blob", resBlob);
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_010
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_010, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    AbsRdbPredicates predicates("test");
+    double resDouble = 12645;
+    predicates.EqualTo(
+        OHOS::DistributedRdb::DistributedField::ORIGIN, OHOS::DistributedRdb::DistributedOrigin::ORI_LOCAL);
+    predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "");
+    predicates.EqualTo("salary", resDouble);
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_011
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_011, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo(
+        OHOS::DistributedRdb::DistributedField::ORIGIN, OHOS::DistributedRdb::DistributedOrigin::ORI_LOCAL);
+    predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "test");
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
 }
 
 /**

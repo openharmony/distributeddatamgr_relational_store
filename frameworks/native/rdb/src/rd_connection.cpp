@@ -396,6 +396,12 @@ int RdConnection::CleanDirtyLog([[gnu::unused]] const std::string &table, [[gnu:
     return E_NOT_SUPPORT;
 }
 
+int RdConnection::SetDistributedInfo(
+    DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates)
+{
+    return E_NOT_SUPPORT;
+}
+
 int RdConnection::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)
 {
     int errCode =

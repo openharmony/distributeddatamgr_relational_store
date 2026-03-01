@@ -204,6 +204,13 @@ API_EXPORT DistributedDB::DBStatus CleanDeletedData(sqlite3 *db, const std::stri
     return DBStatus::OK;
 }
 
+API_EXPORT DistributedDB::DBStatus UpdateDataLog(sqlite3 *db, const DistributedDB::UpdateOption &option)
+{
+    (void)db;
+    (void)option;
+    return DBStatus::OK;
+}
+
 API_EXPORT void Clean(bool isOpenSslClean)
 {
     (void)isOpenSslClean;

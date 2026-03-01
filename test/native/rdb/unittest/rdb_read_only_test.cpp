@@ -552,7 +552,21 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0024, TestSize.Level1)
     std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
     std::map<std::string, std::vector<std::string>> map;
     auto ret = store->RetainDeviceData(map);
-    EXPECT_EQ(E_NOT_SUPPORT, ret);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, ret);
+}
+
+/**
+ * @tc.name: RdbStore_ReadOnly_0025
+ * @tc.desc: test SetDistributedInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0025, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    AbsRdbPredicates predicates("test");
+    auto ret = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, ret);
 }
 
 /**

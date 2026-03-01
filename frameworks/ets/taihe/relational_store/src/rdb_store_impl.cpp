@@ -806,31 +806,6 @@ void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, Distr
     }
 }
 
-void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainDevices)
-{
-    auto store = GetResource();
-    ASSERT_RETURN_THROW_ERROR(store != nullptr,
-        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
-    if (retainDevices.empty()) {
-        ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
-        return;
-    }
-    std::map<std::string, std::vector<std::string>> devicesMap;
-    for (const auto &[key, value] : retainDevices) {
-        if (key.empty() || value.empty()) {
-            ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
-            return;
-        }
-        std::vector<std::string> vec(value.begin(), value.end());
-        devicesMap.emplace(key, std::move(vec));
-    }
-    int errCode = store->RetainDeviceData(devicesMap);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode);
-        return;
-    }
-}
-
 void RdbStoreImpl::SetDistributedTablesWithConfig(
     array_view<string> tables, DistributedType type, DistributedConfig const &config)
 {
@@ -900,6 +875,56 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
     int errCode = store->SetDistributedTables(tableList, nativeTableType, nativeConfig);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
+    }
+}
+
+void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainDevices)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    std::map<std::string, std::vector<std::string>> devices;
+    for (const auto &[key, value] : retainDevices) {
+        if (key.empty()) {
+            ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+            return;
+        }
+        if (value.empty()) {
+            continue;
+        }
+        for (auto &device : value) {
+            if (device.empty()) {
+                ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+                return;
+            }
+        }
+        std::vector<std::string> vec(value.begin(), value.end());
+        devices.emplace(key, std::move(vec));
+    }
+    int errCode = store->RetainDeviceData(devices);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerErrorExt(errCode);
+        return;
+    }
+}
+
+void RdbStoreImpl::SetDistributedInfoAsync(DistributedInfo info, weak::RdbPredicates predicates)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
+    auto [isValidInfo, nativeInfo] = ani_rdbutils::DistributedInfoToNative(info);
+    if (!isValidInfo) {
+        ThrowParamError("config must be a DistributedConfig.");
+        return;
+    }
+    int errCode = store->SetDistributedInfo(nativeInfo, *rdbPredicateNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerErrorExt(errCode);
+        return;
     }
 }
 

@@ -17,9 +17,10 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 import relationalStore from '@ohos.data.relationalStore'
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
 import common from '@ohos.app.ability.common';
+import fs from '@ohos.file.fs';
 const delegator = AbilityDelegatorRegistry.getAbilityDelegator();
 const context = delegator.getAppContext().getApplicationContext();
-const TAG = "[RELATIONAL_STORE_RetainDeviceData_JSKITS_TEST]"
+const TAG = "[RELATIONAL_STORE_SetDistributedInfo_JSKITS_TEST]"
 const DISTRIBUTED_CONFIG_SINGLE:relationalStore.DistributedConfig = {
   autoSync: false,
   asyncDownloadAsset: false,
@@ -32,8 +33,8 @@ const STORE_CONFIG:relationalStore.StoreConfig = {
 }
 let rdbStore: relationalStore.RdbStore | undefined;
 
-export default function RetainDeviceData() {
-  describe('RetainDeviceData', () => {
+export default function SetDistributedInfo() {
+  describe('SetDistributedInfo', () => {
     beforeAll(async () => {
       console.info(TAG + 'beforeAll')
     })
@@ -53,12 +54,12 @@ export default function RetainDeviceData() {
     })
 
     /**
-     * @tc.number RetainDeviceDataTest0001
-     * @tc.name Remove ExceptDevice data
-     * @tc.desc Remove ExceptDevice data success
+     * @tc.number SetDistributedInfoTest0001
+     * @tc.name SetDistributedInfo
+     * @tc.desc SetDistributedInfo fail due to non system app
      */
-    it('RetainDeviceDataTest0001', 0, async () => {
-      console.log(TAG + "************* RetainDeviceDataTest0001 start *************");
+    it('SetDistributedInfoTest0001', 0, async () => {
+      console.log(TAG + "************* SetDistributedInfoTest0001 start *************");
       if (rdbStore == undefined) {
         expect().assertFail();
       } else {
@@ -71,26 +72,44 @@ export default function RetainDeviceData() {
         console.info(`SetDistributedTables EMPLOYEE begin`);
         try {
           await rdbStore.setDistributedTables(["EMPLOYEE"], relationalStore.DistributedType.DISTRIBUTED_DEVICE, DISTRIBUTED_CONFIG_SINGLE);
-          console.info('RetainDeviceDataTest0001 EMPLOYEE SINGLE_VERSION successfully.');
+          console.info('SetDistributedInfoTest0001 EMPLOYEE SINGLE_VERSION successfully.');
           expect(true).assertTrue();
         } catch (err) {
-          console.error(`RetainDeviceDataTest0001 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
+          console.error(`SetDistributedInfoTest0001 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
           expect(null).assertFail();
         }
-        const devices: string[] = [];
-        console.log(`RetainDeviceDataTest0001 begin`);
-          try {
-            const tableAndDevice: Record<string, string[]> = {};
-            tableAndDevice['EMPLOYEE'] = devices;
-            await rdbStore.retainDeviceData(tableAndDevice);
-            console.error(`RetainDeviceDataTest0001 success`);
-            expect(null).assertFail();
-          } catch (e) {
-            console.error(`RetainDeviceDataTest0001 failed, code is ${e.code},message is ${e.message}`);
-            expect(e.code).assertEqual(202);
+        let valueBucket: relationalStore.ValuesBucket = {};
+        valueBucket[relationalStore.Field.CURSOR_FIELD]
+        valueBucket["NAME"] = "Lisa";
+        valueBucket["AGE"] = 25;
+        valueBucket["SALARY"] = 23456.6;
+        let value4 = new Uint8Array([1, 2, 3, 4, 5]);
+        valueBucket["CODES"] = value4;
+        try {
+          await (rdbStore as relationalStore.RdbStore).insert("EMPLOYEE", valueBucket);
+          console.info(`Insert is successful`);
+        } catch (e) {
+          console.error(`Insert data failed, code is ${e.code},message is ${e.message}`);
+        }
+        console.log(`SetDistributedInfoTest0001 begin`);
+        try {
+          const distributedInfo:relationalStore.DistributedInfo = {
+            flag: relationalStore.DistributedOrigin.ORI_REMOTE,
           }
+          const predicates = new relationalStore.RdbPredicates('EMPLOYEE');
+          let value4 = new Uint8Array([1, 2, 3, 4, 5]);
+          predicates.equalTo("CODES", value4);
+          predicates.equalTo("AGE", 25);
+          predicates.equalTo("NAME", "Lisa");
+          await rdbStore.setDistributedInfo(distributedInfo, predicates);
+          console.error(`SetDistributedInfoTest0001 success`);
+          expect(null).assertFail();
+        } catch (e) {
+          console.error(`SetDistributedInfoTest0001 failed, code is ${e.code},message is ${e.message}`);
+          expect(e.code).assertEqual(202);
+        }
       }
-      console.log(TAG + "************* RetainDeviceDataTest0001 end *************");
+      console.log(TAG + "************* SetDistributedInfoTest0001 end *************");
     })
     console.log(TAG + "*************Unit Test Begin*************");
   })
