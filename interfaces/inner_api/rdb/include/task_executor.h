@@ -25,8 +25,8 @@ public:
     static constexpr TaskId INVALID_TASK_ID = ExecutorPool::INVALID_TASK_ID;
 
     API_EXPORT static TaskExecutor &GetInstance();
-    std::shared_ptr<ExecutorPool> GetExecutor();
     API_EXPORT void SetExecutor(std::shared_ptr<ExecutorPool> executor);
+    std::shared_ptr<ExecutorPool> GetExecutor();
     void Init();
     bool Stop();
 

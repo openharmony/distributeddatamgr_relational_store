@@ -12,20 +12,20 @@
 # limitations under the License.
 
 declare_args() {
-  relational_store_rdb_support_icu = true
-  if (!defined(global_parts_info) ||
-      defined(global_parts_info.distributeddatamgr_arkdata_database_core)) {
-    arkdata_db_core_is_exists = true
-  } else {
-    arkdata_db_core_is_exists = false
-  }
-  relational_store_config = true
+    relational_store_rdb_support_icu = true
+    if (!defined(global_parts_info) ||
+    defined(global_parts_info.distributeddatamgr_arkdata_database_core)) {
+        arkdata_db_core_is_exists = true
+    } else {
+        arkdata_db_core_is_exists = false
+    }
+    relational_store_config = true
 
-  if (!defined(global_parts_info) || defined(global_parts_info.distributedhardware_device_manager)) {
-    relational_store_dm_part_is_enabled = true
-  } else {
-    relational_store_dm_part_is_enabled = false
-  }
+    if (!defined(global_parts_info) || defined(global_parts_info.distributedhardware_device_manager)) {
+        relational_store_dm_part_is_enabled = true
+    } else {
+        relational_store_dm_part_is_enabled = false
+    }
 }
 
 common_tool_path = "//foundation/distributeddatamgr/kv_store/frameworks/common"
@@ -35,11 +35,9 @@ relational_store_base_path = "//foundation/distributeddatamgr/relational_store"
 
 relational_store_mock_path = "${relational_store_base_path}/rdbmock"
 
-relational_store_mock_test_path =
-    "${relational_store_base_path}/test/native/rdb/mock"
+relational_store_mock_test_path = "${relational_store_base_path}/test/native/rdb/mock"
 
-relational_store_js_common_path =
-    "${relational_store_base_path}/frameworks/js/napi/common"
+relational_store_js_common_path = "${relational_store_base_path}/frameworks/js/napi/common"
 
 relational_store_napi_path = "${relational_store_base_path}/frameworks/js/napi"
 
@@ -47,17 +45,15 @@ relational_store_native_path = "${relational_store_base_path}/frameworks/native"
 
 relational_store_frameworks_path = "${relational_store_base_path}/frameworks"
 
-relational_store_innerapi_path =
-    "${relational_store_base_path}/interfaces/inner_api"
+relational_store_innerapi_path = "${relational_store_base_path}/interfaces/inner_api"
 
 relational_store_common_path = "${relational_store_base_path}/frameworks/common"
 
-cloud_data_native_path =
-    "${relational_store_base_path}/frameworks/native/cloud_data"
+cloud_data_native_path = "${relational_store_base_path}/frameworks/native/cloud_data"
+
 cloud_data_napi_path = "${relational_store_napi_path}/cloud_data"
 
-datashare_path =
-    "//foundation/distributeddatamgr/data_share/interfaces/inner_api"
+datashare_path = "//foundation/distributeddatamgr/data_share/interfaces/inner_api"
 
 ipc_path = "//foundation/communication/ipc/interfaces/innerkits"
 
@@ -65,8 +61,7 @@ kvstore_path = "//foundation/distributeddatamgr/kv_store/frameworks"
 
 kvstore_interface_path = "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata/include"
 
-distributedfile_path =
-    "//foundation/filemanagement/file_api/interfaces/kits/js/src"
+distributedfile_path = "//foundation/filemanagement/file_api/interfaces/kits/js/src"
 
 sdk_c_path = "//interface/sdk_c/distributeddatamgr"
 
@@ -77,3 +72,57 @@ datashare_base_path = "//foundation/distributeddatamgr/data_share"
 datashare_common_native_path = "${datashare_base_path}/frameworks/native/common"
 
 datashare_innerapi_path = "${datashare_base_path}/interfaces/inner_api"
+
+base_sources = [
+  "${relational_store_native_path}/dfx/src/rdb_fault_hiview_reporter.cpp",
+  "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
+  "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
+  "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
+  "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
+  "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
+  "${relational_store_native_path}/rdb/src/base_transaction.cpp",
+  "${relational_store_native_path}/rdb/src/big_integer.cpp",
+  "${relational_store_native_path}/rdb/src/cache_block.cpp",
+  "${relational_store_native_path}/rdb/src/cache_result_set.cpp",
+  "${relational_store_native_path}/rdb/src/connection.cpp",
+  "${relational_store_native_path}/rdb/src/connection_pool.cpp",
+  "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
+  "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+  "${relational_store_native_path}/rdb/src/restricted_db_manager.cpp",
+  "${relational_store_native_path}/rdb/src/global_resource.cpp",
+  "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
+  "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_obs_manager.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_perfStat.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_sql_log.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_sql_statistic.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_sql_utils.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_store.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
+  "${relational_store_native_path}/rdb/src/security_policy.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_default_function.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_sql_builder.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_statement.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+  "${relational_store_native_path}/rdb/src/step_result_set.cpp",
+  "${relational_store_native_path}/rdb/src/string_utils.cpp",
+  "${relational_store_native_path}/rdb/src/suspender.cpp",
+  "${relational_store_native_path}/rdb/src/task_executor.cpp",
+  "${relational_store_native_path}/rdb/src/trans_db.cpp",
+  "${relational_store_native_path}/rdb/src/transaction.cpp",
+  "${relational_store_native_path}/rdb/src/transaction_impl.cpp",
+  "${relational_store_native_path}/rdb/src/value_object.cpp",
+  "${relational_store_native_path}/rdb/src/values_bucket.cpp",
+  "${relational_store_native_path}/rdb/src/values_buckets.cpp",
+]

@@ -23,10 +23,8 @@
 
 #include "abs_shared_block.h"
 #include "message_parcel.h"
-#include "parcel.h"
 #include "rdb_visibility.h"
 #include "securec.h"
-
 
 namespace OHOS {
 namespace AppDataFwk {

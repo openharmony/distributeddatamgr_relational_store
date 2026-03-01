@@ -529,56 +529,54 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, NativeRdb::ReturningConf
     return napi_ok;
 }
 
-std::tuple<int32_t, std::shared_ptr<Error>> GetRealPath(
-    napi_env env, napi_value jsValue, RdbConfig &rdbConfig, ContextParam &param)
+std::shared_ptr<Error> GetRealPath(napi_env env, napi_value jsValue, const ContextParam &param, RdbConfig &rdbConfig)
 {
     CHECK_RETURN_CORE(rdbConfig.name.find(PATH_SPLIT) == std::string::npos, RDB_DO_NOTHING,
-        std::make_tuple(ERR, std::make_shared<ParamError>("StoreConfig.name", "a file name without path.")));
+        std::make_shared<ParamError>("StoreConfig.name", "a file name without path."));
 
     if (!rdbConfig.customDir.empty()) {
         // determine if the first character of customDir is '/'
         CHECK_RETURN_CORE(rdbConfig.customDir.find_first_of(PATH_SPLIT) != 0, RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<ParamError>("customDir", "a relative directory.")));
+            std::make_shared<ParamError>("customDir", "a relative directory."));
         // customDir length is limited to 128 bytes
         CHECK_RETURN_CORE(rdbConfig.customDir.length() <= 128, RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<ParamError>("customDir length", "less than or equal to 128 "
-                                                                                  "bytes.")));
+            std::make_shared<ParamError>("customDir length", "less than or equal to 128 "
+                                                             "bytes."));
     }
 
     std::string baseDir = param.baseDir;
     if (!rdbConfig.dataGroupId.empty()) {
         if (!param.isStageMode) {
-            return std::make_tuple(ERR, std::make_shared<InnerError>(E_NOT_STAGE_MODE));
+            return std::make_shared<InnerError>(E_NOT_STAGE_MODE);
         }
         auto stageContext = JSAbility::GetStageModeContext(env, jsValue);
         if (stageContext == nullptr) {
-            return std::make_tuple(ERR, std::make_shared<ParamError>("Illegal context."));
+            return std::make_shared<ParamError>("Illegal context.");
         }
         std::string groupDir;
         int errCode = stageContext->GetSystemDatabaseDir(rdbConfig.dataGroupId, groupDir);
         CHECK_RETURN_CORE(errCode == E_OK || !groupDir.empty(), RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID)));
+            std::make_shared<InnerError>(E_DATA_GROUP_ID_INVALID));
         baseDir = groupDir;
     }
 
     if (!rdbConfig.rootDir.empty()) {
         // determine if the first character of rootDir is '/'
-        CHECK_RETURN_CORE(rdbConfig.rootDir.find_first_of(PATH_SPLIT) == 0, RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<PathError>()));
+        CHECK_RETURN_CORE(
+            rdbConfig.rootDir.find_first_of(PATH_SPLIT) == 0, RDB_DO_NOTHING, std::make_shared<PathError>());
         auto [realPath, errorCode] =
             RdbSqlUtils::GetCustomDatabasePath(rdbConfig.rootDir, rdbConfig.name, rdbConfig.customDir);
-        CHECK_RETURN_CORE(errorCode == E_OK, RDB_DO_NOTHING,
-            std::make_tuple(ERR, std::make_shared<PathError>()));
+        CHECK_RETURN_CORE(errorCode == E_OK, RDB_DO_NOTHING, std::make_shared<PathError>());
         rdbConfig.path = realPath;
-        return std::make_tuple(E_OK, nullptr);
+        return nullptr;
     }
 
     auto [realPath, errorCode] = RdbSqlUtils::GetDefaultDatabasePath(baseDir, rdbConfig.name, rdbConfig.customDir);
     // realPath length is limited to 1024 bytes
     CHECK_RETURN_CORE(errorCode == E_OK && realPath.length() <= 1024, RDB_DO_NOTHING,
-        std::make_tuple(ERR, std::make_shared<ParamError>("database path", "a valid path.")));
+        std::make_shared<ParamError>("database path", "a valid path."));
     rdbConfig.path = realPath;
-    return std::make_tuple(E_OK, nullptr);
+    return nullptr;
 }
 
 RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam &param)
@@ -610,6 +608,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
 
     rdbStoreConfig.SetEnableSemanticIndex(rdbConfig.enableSemanticIndex);
+    rdbStoreConfig.SetVersion(rdbConfig.version);
     return rdbStoreConfig;
 }
 }; // namespace JSUtils
