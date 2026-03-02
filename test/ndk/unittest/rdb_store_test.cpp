@@ -190,9 +190,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_001, TestSize.Level1)
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
     EXPECT_EQ(size, 5);
-    char data1Value1[size];
-    cursor->getText(cursor, 1, data1Value1, size);
-    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
+    std::vector<char> data1Value1(size);
+    cursor->getText(cursor, 1, data1Value1.data(), data1Value1.size());
+    EXPECT_EQ(strcmp(data1Value1.data(), "liSi"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 2, &data2Value);
@@ -203,8 +203,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_001, TestSize.Level1)
     EXPECT_EQ(data3Value, 200.1);
 
     cursor->getSize(cursor, 4, &size);
-    unsigned char data4Value[size];
-    cursor->getBlob(cursor, 4, data4Value, size);
+    std::vector<unsigned char> data4Value(size);
+    cursor->getBlob(cursor, 4, data4Value.data(), data4Value.size());
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
 
@@ -256,9 +256,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_002, TestSize.Level1)
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
     EXPECT_EQ(size, 5);
-    char data1Value1[size];
-    cursor->getText(cursor, 1, data1Value1, size);
-    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
+    std::vector<char> data1Value1(size);
+    cursor->getText(cursor, 1, data1Value1.data(), data1Value1.size());
+    EXPECT_EQ(strcmp(data1Value1.data(), "liSi"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 2, &data2Value);
@@ -273,9 +273,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_002, TestSize.Level1)
     EXPECT_EQ(isNull, true);
 
     cursor->getSize(cursor, 5, &size);
-    char data5Value[size];
-    cursor->getText(cursor, 5, data5Value, size);
-    EXPECT_EQ(strcmp(data5Value, "ABCDEFGH"), 0);
+    std::vector<char> data5Value(size);
+    cursor->getText(cursor, 5, data5Value.data(), data5Value.size());
+    EXPECT_EQ(strcmp(data5Value.data(), "ABCDEFGH"), 0);
 
     valueObject->destroy(valueObject);
     valueBucket->destroy(valueBucket);
@@ -601,9 +601,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
 
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
-    char data1Value1[size];
-    cursor->getText(cursor, 1, data1Value1, size);
-    EXPECT_EQ(strcmp(data1Value1, "zhangSan"), 0);
+    std::vector<char> data1Value1(size);
+    cursor->getText(cursor, 1, data1Value1.data(), data1Value1.size());
+    EXPECT_EQ(strcmp(data1Value1.data(), "zhangSan"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 2, &data2Value);
@@ -614,8 +614,8 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
     EXPECT_EQ(data3Value, 100.1);
 
     cursor->getSize(cursor, 4, &size);
-    unsigned char data4Value[size];
-    cursor->getBlob(cursor, 4, data4Value, size);
+    std::vector<unsigned char> data4Value(size);
+    cursor->getBlob(cursor, 4, data4Value.data(), data4Value.size());
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
 
@@ -1840,9 +1840,9 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_040, TestSize.Level1)
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
     EXPECT_EQ(size, 5);
-    char data1Value1[size];
-    cursor->getText(cursor, 1, data1Value1, size);
-    EXPECT_STREQ(data1Value1, "liSi");
+    std::vector<char> data1Value1(size);
+    cursor->getText(cursor, 1, data1Value1.data(), data1Value1.size());
+    EXPECT_STREQ(data1Value1.data(), "liSi");
 
     valueObject->destroy(valueObject);
     valueBucket->destroy(valueBucket);

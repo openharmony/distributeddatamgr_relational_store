@@ -123,9 +123,9 @@ HWTEST_F(RdbVectorTest, RDB_vector_001, TestSize.Level1)
     size_t count = 0;
     auto errCode = OH_Cursor_GetFloatVectorCount(cursor, 1, &count);
     EXPECT_EQ(errCode, RDB_OK);
-    float test[count];
+    std::vector<float> test(count);
     size_t outLen;
-    OH_Cursor_GetFloatVector(cursor, 1, test, count, &outLen);
+    OH_Cursor_GetFloatVector(cursor, 1, test.data(), test.size(), &outLen);
     EXPECT_EQ(outLen, 2);
     EXPECT_EQ(test[0], test_[0]);
     EXPECT_EQ(test[1], test_[1]);
@@ -191,9 +191,9 @@ HWTEST_F(RdbVectorTest, RDB_vector_003, TestSize.Level1)
     size_t count = 0;
     auto errCode = OH_Cursor_GetFloatVectorCount(cursor, 0, &count);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
-    float test[count];
+    std::vector<float> test(count);
     size_t outLen;
-    errCode = OH_Cursor_GetFloatVector(cursor, 0, test, count, &outLen);
+    errCode = OH_Cursor_GetFloatVector(cursor, 0, test.data(), test.size(), &outLen);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
     OH_Values_Destroy(values);
 }
@@ -230,9 +230,9 @@ HWTEST_F(RdbVectorTest, RDB_vector_004, TestSize.Level1)
     size_t count = 0;
     errCode = OH_Cursor_GetFloatVectorCount(cursor, 1, &count);
     EXPECT_EQ(errCode, RDB_OK);
-    float test1[count];
+    std::vector<float> test1(count);
     size_t outLen;
-    OH_Cursor_GetFloatVector(cursor, 1, test1, count, &outLen);
+    OH_Cursor_GetFloatVector(cursor, 1, test1.data(), test1.size(), &outLen);
     EXPECT_EQ(outLen, 2);
     EXPECT_EQ(test1[0], test[0]);
     EXPECT_EQ(test1[1], test[1]);
