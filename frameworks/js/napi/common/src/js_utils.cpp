@@ -70,10 +70,7 @@ void JSUtils::ReportInterfaceUsed(const std::string &methodName)
         OHOS::NativeRdb::RdbFaultEvent(
             OHOS::NativeRdb::RdbFaultType::INTERFACE_USED,
             OHOS::NativeRdb::E_DFX_INTERFACE_USED,
-            bundleName,
-            custLog
-        )
-    );
+            bundleName, custLog));
 }
 
 const std::optional<JSUtils::JsFeatureSpace> JSUtils::GetJsFeatureSpace(const std::string &name)
