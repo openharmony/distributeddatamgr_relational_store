@@ -687,6 +687,7 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_Replace");
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
@@ -964,6 +965,7 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_QueryByStep");
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {

@@ -112,6 +112,11 @@ static constexpr int E_DFX_VALUELESS_BY_EXCEPTION = (E_DFX_BASE + 0x11);
  * @brief Only use for dfx, valueobject type index out of range.
  */
 static constexpr int E_DFX_TYPE_INDEX_OUT_OF_RANGE = (E_DFX_BASE + 0x12);
+
+/**
+ * @brief Only use for dfx, interface is used.
+ */
+static constexpr int E_DFX_INTERFACE_USED = (E_DFX_BASE + 0x13);
 } // namespace NativeRdb
 } // namespace OHOS
 

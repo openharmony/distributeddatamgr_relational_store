@@ -60,6 +60,7 @@ struct JsFeatureSpace {
 
 void SetHapVersion(int32_t hapversion);
 int32_t GetHapVersion();
+void ReportInterfaceUsed(const std::string &methodName);
 
 int32_t Convert2Value(napi_env env, napi_value jsValue, napi_value &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, bool &output);
