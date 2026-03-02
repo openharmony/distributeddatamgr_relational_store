@@ -1032,7 +1032,6 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_003, TestSize.Level2
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1059,9 +1058,11 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_003, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_004, TestSize.Level2)
 {
+    std::vector<std::string> uuids;
+    uuids.push_back("remotedevice");
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, uuids)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1087,9 +1088,11 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_004, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_005, TestSize.Level2)
 {
+    std::vector<std::string> uuids;
+    uuids.push_back("remotedevice");
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, uuids)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1125,9 +1128,11 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_005, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_006, TestSize.Level2)
 {
+    std::vector<std::string> uuids;
+    uuids.push_back("remotedevice");
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_INVALID_ARGS));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_INVALID_ARGS, uuids)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1154,9 +1159,11 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_006, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_007, TestSize.Level2)
 {
+    std::vector<std::string> uuids;
+    uuids.push_back("remotedevice");
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, uuids)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1185,9 +1192,11 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_007, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_008, TestSize.Level2)
 {
+    std::vector<std::string> uuids;
+    uuids.push_back("remotedevice");
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, uuids)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1214,9 +1223,11 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_008, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_009, TestSize.Level2)
 {
+    std::vector<std::string> uuids;
+    uuids.push_back("remotedevice");
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, uuids)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1252,7 +1263,6 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_010, TestSize.Level2
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1281,9 +1291,11 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_010, TestSize.Level2
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_011, TestSize.Level2)
 {
+    std::vector<std::string> uuids;
+    uuids.push_back("remotedevice");
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, uuids)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -1301,6 +1313,68 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_011, TestSize.Level2
     predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "test");
     errCode = store->SetDistributedInfo(distributedInfo, predicates);
     EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_012
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_012, TestSize.Level2)
+{
+    std::vector<std::string> uuids;
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, uuids)));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo(
+        OHOS::DistributedRdb::DistributedField::ORIGIN, OHOS::DistributedRdb::DistributedOrigin::ORI_LOCAL);
+    predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "test");
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+}
+
+/**
+ * @tc.name: SetDistributedInfo_Test_013
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_013, TestSize.Level2)
+{
+    std::vector<std::string> uuids;
+    uuids.push_back("remotedevice");
+    uuids.push_back("remotedevice1");
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, ObtainUuid(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, uuids)));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo(
+        OHOS::DistributedRdb::DistributedField::ORIGIN, OHOS::DistributedRdb::DistributedOrigin::ORI_LOCAL);
+    predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "test");
+    errCode = store->SetDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
 }
 
 /**
