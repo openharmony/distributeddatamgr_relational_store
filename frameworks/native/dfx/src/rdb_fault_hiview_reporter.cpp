@@ -88,7 +88,8 @@ RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
     { E_DFX_VISITOR_VERIFY_FAULT, 0 },
     { E_DFX_STRING_SIZE_EXCEED_LIMIT, 0 },
     { E_DFX_VALUELESS_BY_EXCEPTION, 0 },
-    { E_DFX_TYPE_INDEX_OUT_OF_RANGE, 0 }
+    { E_DFX_TYPE_INDEX_OUT_OF_RANGE, 0 },
+    { E_DFX_SILENT_PROXY_QUERY, 0 }
 };
 
 RdbFaultEvent::~RdbFaultEvent() = default;

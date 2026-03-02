@@ -17,7 +17,6 @@
 
 #include <algorithm>
 #include <cinttypes>
-#include <fstream>
 #include <sstream>
 
 #include "logger.h"
@@ -39,8 +38,6 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 using Reportor = RdbFaultHiViewReporter;
 using RdbMgr = DistributedRdb::RdbManager;
-static constexpr const char *SILENT_CONF_PATH = "/system/etc/silent/conf/";
-static constexpr const char *IS_SILENT_DB_JSON_PATH = "silentproxy_config.json";
 __attribute__((used))
 const bool RdbStoreManager::regCollector_ = RdbFaultHiViewReporter::RegCollector(RdbStoreManager::Collector);
 RdbStoreManager &RdbStoreManager::GetInstance()
@@ -54,13 +51,12 @@ RdbStoreManager::~RdbStoreManager()
     Clear();
 }
 
-RdbStoreManager::RdbStoreManager()
-    : configCache_(BUCKET_MAX_SIZE), promiseInfoCache_(PROMISEINFO_CACHE_SIZE), isSilentCache_(BUCKET_MAX_SIZE)
+RdbStoreManager::RdbStoreManager() : configCache_(BUCKET_MAX_SIZE), promiseInfoCache_(PROMISEINFO_CACHE_SIZE)
 {
 }
 
-std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(const std::string &path,
-    const RdbStoreConfig &config, int &errCode)
+std::shared_ptr<RdbStoreImpl> RdbStoreManager::GetStoreFromCache(
+    const std::string &path, const RdbStoreConfig &config, int &errCode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::shared_ptr<RdbStoreImpl> rdbStore = nullptr;
@@ -120,7 +116,9 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     if (rdbStore == nullptr) {
         return rdbStore;
     }
-    bool isNeedAcl = config.IsSearchable() || IsSupportSilent(config).second;
+    bool isNeedAcl = config.GetRoleType() == OWNER &&
+                    (config.IsSearchable() ||
+                    silentProxyManager_.IsSupportSilent(config.GetBundleName(), config.GetName()).second);
     errCode = rdbStore->Init(version, openCallback, isNeedAcl);
     if (errCode != E_OK) {
         if (modifyConfig.IsEncrypt() != config.IsEncrypt()) {
@@ -154,8 +152,8 @@ void RdbStoreManager::CheckDBVisitor(const std::string &storeName)
         bool isIllegalAccess = RestrictedDBManager::GetInstance().IsDbAccessOutOfBounds(caller);
         if (isIllegalAccess) {
             LOG_ERROR("database visitor:%{public}s.", caller.c_str());
-            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT,
-                E_DFX_VISITOR_VERIFY_FAULT, caller, "database visitor is not target process"));
+            Reportor::ReportFault(RdbFaultEvent(RdbFaultType::VISITOR_FAULT, E_DFX_VISITOR_VERIFY_FAULT, caller,
+                "database visitor is not target process"));
         }
     };
 
@@ -188,128 +186,6 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdb(const RdbStoreConfig &config)
     return rdbStore;
 }
 
-bool RdbStoreManager::SilentProxys::Marshal(Serializable::json &node) const
-{
-    SetValue(node[GET_NAME(silentProxys)], silentProxys);
-    return true;
-}
-
-bool RdbStoreManager::SilentProxys::Unmarshal(const Serializable::json &node)
-{
-    GetValue(node, GET_NAME(silentProxys), silentProxys);
-    return true;
-}
-
-bool RdbStoreManager::SilentProxy::Marshal(Serializable::json &node) const
-{
-    SetValue(node[GET_NAME(bundleName)], bundleName);
-    SetValue(node[GET_NAME(storeNames)], storeNames);
-    return true;
-}
-
-bool RdbStoreManager::SilentProxy::Unmarshal(const Serializable::json &node)
-{
-    GetValue(node, GET_NAME(bundleName), bundleName);
-    GetValue(node, GET_NAME(storeNames), storeNames);
-    return true;
-}
-
-std::pair<int32_t, bool> RdbStoreManager::IsSupportSilentFromProxy(const RdbStoreConfig &config)
-{
-    bool isSilent = false;
-    std::ifstream fin(std::string(SILENT_CONF_PATH) + std::string(IS_SILENT_DB_JSON_PATH));
-    if (!fin.good()) {
-        LOG_ERROR("Failed to open silent json file");
-        return { E_ERROR, isSilent };
-    }
-    std::string jsonStr;
-    std::string line;
-    while (fin.good()) {
-        std::string line;
-        std::getline(fin, line);
-        jsonStr += line;
-    }
-    bool isContain = false;
-    std::string key = config.GetBundleName() + "proxy";
-    std::map<std::string, bool> temp;
-    std::string dbName = SqliteUtils::RemoveSuffix(config.GetName());
-    RdbStoreManager::SilentProxys silentProxys;
-    silentProxys.Unmarshall(jsonStr);
-    fin.close();
-    for (auto &silentProxy : silentProxys.silentProxys) {
-        if (silentProxy.bundleName != config.GetBundleName()) {
-            continue;
-        }
-        isContain = true;
-        for (auto &name : silentProxy.storeNames) {
-            if (name == dbName) {
-                isSilent = true;
-            }
-            temp[name] = true;
-        }
-        break;
-    }
-    if (!isContain || !isSilent) {
-        temp[dbName] = false;
-    }
-    isSilentCache_.Set(key, temp);
-    return { E_OK, isSilent };
-}
-
-std::pair<int32_t, bool> RdbStoreManager::IsSupportSilentFromService(const RdbStoreConfig &config)
-{
-    Param param = GetSyncParam(config);
-    auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
-    if (err == E_NOT_SUPPORT) {
-        return { err, false };
-    }
-    if (err != E_OK || service == nullptr) {
-        LOG_ERROR("GetRdbService failed, err is %{public}d.", err);
-        return { err, false };
-    }
-    auto [errcode, ret] = service->IsSupportSilent(param);
-    if (errcode != DistributedRdb::RDB_OK) {
-        return { E_ERROR, false };
-    }
-    std::map<std::string, bool> temp;
-    std::string dbName = SqliteUtils::RemoveSuffix(config.GetName());
-    std::string key = config.GetBundleName() + "service";
-    isSilentCache_.Get(key, temp);
-    temp[dbName] = ret;
-    isSilentCache_.Set(key, temp);
-    return { E_OK, ret };
-}
-
-std::pair<int32_t, bool> RdbStoreManager::IsSupportSilent(const RdbStoreConfig &config)
-{
-    std::string key = config.GetBundleName();
-    std::map<std::string, bool> cacheConf;
-    std::string dbName = SqliteUtils::RemoveSuffix(config.GetName());
-    if (!isSilentCache_.Get(key + "proxy", cacheConf)) {
-        auto [err, flag] = IsSupportSilentFromProxy(config);
-        if (err == E_OK && flag == true) {
-            return { err, flag };
-        }
-    } else {
-        auto it = cacheConf.find(dbName);
-        if (it == cacheConf.end()) {
-            cacheConf[dbName] = false;
-            isSilentCache_.Set(key + "proxy", cacheConf);
-        }
-        if (it != cacheConf.end() && it->second) {
-            return { E_OK, it->second };
-        }
-    }
-    std::map<std::string, bool> cacheService;
-    if (isSilentCache_.Get(key + "service", cacheService)) {
-        auto it = cacheService.find(dbName);
-        if (it != cacheService.end()) {
-            return { E_OK, it->second };
-        }
-    }
-    return IsSupportSilentFromService(config);
-}
-
 bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreConfig &config)
 {
     if (config.IsMemoryRdb()) {
@@ -330,10 +206,10 @@ bool RdbStoreManager::IsConfigInvalidChanged(const std::string &path, RdbStoreCo
         lastParam.area_ != config.GetArea()) {
         std::stringstream ss;
         ss << "Diff db with the same name! customDir:" << SqliteUtils::Anonymous(lastParam.customDir_).c_str() << "->"
-            << SqliteUtils::Anonymous(config.GetCustomDir()).c_str()
-            << ", hapName:" << SqliteUtils::Anonymous(lastParam.hapName_).c_str() << "->"
-            << SqliteUtils::Anonymous(config.GetModuleName()).c_str()
-            << ", area:" << lastParam.area_ << "->" << config.GetArea();
+           << SqliteUtils::Anonymous(config.GetCustomDir()).c_str()
+           << ", hapName:" << SqliteUtils::Anonymous(lastParam.hapName_).c_str() << "->"
+           << SqliteUtils::Anonymous(config.GetModuleName()).c_str() << ", area:" << lastParam.area_ << "->"
+           << config.GetArea();
         LOG_WARN("%{public}s", ss.str().c_str());
         Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_CONFIG_INVALID_CHANGE, config, ss.str()));
         return false;
@@ -418,8 +294,6 @@ void RdbStoreManager::Clear()
 {
     configCache_.ResetCapacity(0);
     configCache_.ResetCapacity(BUCKET_MAX_SIZE);
-    isSilentCache_.ResetCapacity(0);
-    isSilentCache_.ResetCapacity(BUCKET_MAX_SIZE);
     promiseInfoCache_.ResetCapacity(0);
     promiseInfoCache_.ResetCapacity(PROMISEINFO_CACHE_SIZE);
     std::lock_guard<std::mutex> lock(mutex_);
