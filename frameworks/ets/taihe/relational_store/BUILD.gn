@@ -86,6 +86,7 @@ taihe_shared_library("relationalstore_ani") {
     "-DHILOG_ENABLE",
     "-fPIC",
     "-g3",
+    "-Werror=vla",
   ]
   external_deps = [
     "ability_runtime:abilitykit_native",

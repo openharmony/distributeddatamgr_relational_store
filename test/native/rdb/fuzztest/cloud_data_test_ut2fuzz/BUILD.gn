@@ -37,6 +37,7 @@ ohos_fuzztest("cloud_data_test_ut2fuzz") {
     "-O0",
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
+    "-Werror=vla",
   ]
 
   fuzz_config_file =

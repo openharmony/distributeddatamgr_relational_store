@@ -13,7 +13,7 @@
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 config("cloud_public_config") {
-  cflags = [ "-Wno-c99-designator" ]
+  cflags = [ "-Wno-c99-designator", "-Werror=vla", ]
   visibility = [
     "${distributeddata_base_path}/datamgr_service/*",
     "${distributeddata_base_path}/relational_store/*",
@@ -45,7 +45,7 @@ ohos_shared_library("cloud_data_native") {
   }
   configs = [ ":cloud_data_native_config" ]
   public_configs = [ ":cloud_public_config" ]
-  cflags_cc = [ "-fvisibility=hidden" ]
+  cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
   sources = [
     "${cloud_data_native_path}/src/cloud_manager.cpp",
     "${cloud_data_native_path}/src/cloud_notifier_stub.cpp",

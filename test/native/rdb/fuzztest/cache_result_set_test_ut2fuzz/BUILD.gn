@@ -30,6 +30,7 @@ ohos_fuzztest("cache_result_set_test_ut2fuzz") {
     "-O0",
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
+    "-Werror=vla",
   ]
 
   fuzz_config_file =

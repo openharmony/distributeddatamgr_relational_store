@@ -44,6 +44,7 @@ ohos_unittest("NativeRdbConditionTest") {
 
   cflags = [
     "-fno-access-control",  # Ignore Private Member Access Control
+    "-Werror=vla",
   ]
 
   sources = [ "rdb_store_impl_test.cpp" ]

@@ -171,6 +171,7 @@ ohos_unittest("NativeRdbTest") {
 
   cflags = [
     "-fno-access-control",  # Ignore Private Member Access Control
+    "-Werror=vla",
   ]
 
   sources = [
@@ -318,6 +319,7 @@ ohos_unittest("NativeRdbSecurityManagerTest") {
 
   cflags = [
     "-fno-access-control",  # Ignore Private Member Access Control
+    "-Werror=vla",
   ]
 
   include_dirs = [
