@@ -459,18 +459,18 @@ void CollectDevicesFromPredicates(const AbsRdbPredicates &predicates, std::vecto
     }
 }
 
-int ProcessDistributedDevices(const DistributedRdb::RdbSyncerParam &syncerParam, std::vector<std::string> &devices)
+std::pair<int32_t, std::vector<std::string>> ProcessDistributedDevices(
+    const DistributedRdb::RdbSyncerParam &syncerParam, const std::vector<std::string> &devices)
 {
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam);
     if (errCode != E_OK) {
-        return errCode;
+        return { errCode, {} };
     }
-
-    int32_t errorCode = service->ObtainUuid(syncerParam, devices);
+    auto [errorCode, uuids] = service->ObtainUuid(syncerParam, devices);
     if (errorCode != RdbStatus::RDB_OK) {
-        return SqliteUtils::ConvertRdbStatusNative(errorCode);
+        return { SqliteUtils::ConvertRdbStatusNative(errorCode), {} };
     }
-    return E_OK;
+    return { E_OK, uuids };
 }
 
 void UpdatePredicatesArgs(AbsRdbPredicates &predicates, std::vector<std::string> &devices)
@@ -500,6 +500,7 @@ int RdbStoreImpl::SetDistributedInfo(DistributedRdb::DistributedInfo &distribute
         return errCode;
     }
     std::vector<std::string> devices;
+    std::vector<std::string> uuids;
     if (!distributedInfo.oriDevice.empty()) {
         devices.push_back(distributedInfo.oriDevice);
     }
@@ -508,17 +509,21 @@ int RdbStoreImpl::SetDistributedInfo(DistributedRdb::DistributedInfo &distribute
         CollectDevicesFromPredicates(predicates, devices);
     }
     if (!devices.empty()) {
-        errCode = ProcessDistributedDevices(syncerParam_, devices);
+        auto [errcode, temp] = ProcessDistributedDevices(syncerParam_, devices);
         if (errCode != E_OK) {
             return errCode;
         }
+        if (temp.empty() || (temp.size() != devices.size())) {
+            return E_INVALID_ARGS_NEW;
+        }
+        uuids = std::move(temp);
     }
-    if (!distributedInfo.oriDevice.empty() && !devices.empty()) {
-        distributedInfo.oriDevice = devices.front();
-        devices.erase(devices.begin());
+    if (!distributedInfo.oriDevice.empty() && !uuids.empty()) {
+        distributedInfo.oriDevice = uuids.front();
+        uuids.erase(uuids.begin());
     }
-    if (predicates.HasSpecificField()) {
-        UpdatePredicatesArgs(predicates, devices);
+    if (predicates.HasSpecificField() && !uuids.empty()) {
+        UpdatePredicatesArgs(predicates, uuids);
     }
     errCode = conn->SetDistributedInfo(distributedInfo, predicates);
     if (errCode != E_OK) {

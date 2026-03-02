@@ -49,7 +49,8 @@ public:
     virtual int32_t RetainDeviceData(
         const RdbSyncerParam &param, const std::map<std::string, std::vector<std::string>> &retainDevices) = 0;
 
-    virtual int32_t ObtainUuid(const RdbSyncerParam &param, std::vector<std::string> &devices) = 0;
+    virtual std::pair<int32_t, std::vector<std::string>> ObtainUuid(
+        const RdbSyncerParam &param, const std::vector<std::string> &devices) = 0;
 
     virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) = 0;
