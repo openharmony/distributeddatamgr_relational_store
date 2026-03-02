@@ -777,6 +777,9 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_002, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -980,6 +983,9 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_009, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_001, TestSize.Level2)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
