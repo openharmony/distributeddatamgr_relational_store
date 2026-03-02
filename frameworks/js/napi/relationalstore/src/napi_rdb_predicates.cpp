@@ -690,6 +690,7 @@ napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Using(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_Using");
     napi_value thiz = nullptr;
     std::vector<std::string> fields;
     auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, fields, "fields", "string");
@@ -700,6 +701,7 @@ napi_value RdbPredicatesProxy::Using(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::LeftOuterJoin(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_LeftOuterJoin");
     napi_value thiz = nullptr;
     std::string tablename = "";
     auto predicatesProxy = ParseFieldByName(env, info, thiz, tablename, "tablename");
@@ -710,6 +712,7 @@ napi_value RdbPredicatesProxy::LeftOuterJoin(napi_env env, napi_callback_info in
 
 napi_value RdbPredicatesProxy::InnerJoin(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_InnerJoin");
     napi_value thiz = nullptr;
     std::string tablename = "";
     auto predicatesProxy = ParseFieldByName(env, info, thiz, tablename, "tablename");
@@ -720,6 +723,7 @@ napi_value RdbPredicatesProxy::InnerJoin(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_On");
     napi_value thiz = nullptr;
     std::vector<std::string> clauses;
     auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, clauses, "clauses", "string");
@@ -730,6 +734,7 @@ napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::GetStatement(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_GetStatement");
     napi_value thiz = nullptr;
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info, thiz);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
@@ -740,6 +745,7 @@ napi_value RdbPredicatesProxy::GetStatement(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::GetBindArgs(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_GetBindArgs");
     napi_value thiz = nullptr;
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info, thiz);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
@@ -750,6 +756,7 @@ napi_value RdbPredicatesProxy::GetBindArgs(napi_env env, napi_callback_info info
 
 napi_value RdbPredicatesProxy::Clear(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_Clear");
     napi_value thiz = nullptr;
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info, thiz);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
@@ -759,6 +766,7 @@ napi_value RdbPredicatesProxy::Clear(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::CrossJoin(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_CrossJoin");
     napi_value thiz = nullptr;
     std::string tablename = "";
     auto predicatesProxy = ParseFieldByName(env, info, thiz, tablename, "tablename");
@@ -769,6 +777,7 @@ napi_value RdbPredicatesProxy::CrossJoin(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::GetJoinCount(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_GetJoinCount");
     napi_value thiz = nullptr;
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info, thiz);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
@@ -778,6 +787,7 @@ napi_value RdbPredicatesProxy::GetJoinCount(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::SetJoinCount(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_SetJoinCount");
     napi_value thiz;
     int32_t joinCount = 0;
     auto predicatesProxy = ParseInt32FieldByName(env, info, thiz, joinCount, "joinCount");
@@ -788,6 +798,7 @@ napi_value RdbPredicatesProxy::SetJoinCount(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::GetJoinTypes(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_GetJoinTypes");
     napi_value thiz = nullptr;
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info, thiz);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
@@ -797,6 +808,7 @@ napi_value RdbPredicatesProxy::GetJoinTypes(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::GetJoinTableNames(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_GetJoinTableNames");
     napi_value thiz = nullptr;
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info, thiz);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
@@ -806,6 +818,7 @@ napi_value RdbPredicatesProxy::GetJoinTableNames(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::GetJoinConditions(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_GetJoinConditions");
     napi_value thiz = nullptr;
     RdbPredicatesProxy *predicatesProxy = GetNativePredicates(env, info, thiz);
     CHECK_RETURN_NULL(predicatesProxy && predicatesProxy->GetInstance());
@@ -815,6 +828,7 @@ napi_value RdbPredicatesProxy::GetJoinConditions(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::SetJoinConditions(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_SetJoinConditions");
     napi_value thiz = nullptr;
     std::vector<std::string> joinConditions;
     auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, joinConditions, "joinConditions", "string");
@@ -825,6 +839,7 @@ napi_value RdbPredicatesProxy::SetJoinConditions(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::SetJoinTableNames(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_SetJoinTableNames");
     napi_value thiz = nullptr;
     std::vector<std::string> joinNames;
     auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, joinNames, "joinNames", "string");
@@ -835,6 +850,7 @@ napi_value RdbPredicatesProxy::SetJoinTableNames(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::SetJoinTypes(napi_env env, napi_callback_info info)
 {
+    JSUtils::ReportInterfaceUsed("relationalStore_SetJoinTypes");
     napi_value thiz = nullptr;
     std::vector<std::string> joinTypes;
     auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, joinTypes, "joinTypes", "string");
