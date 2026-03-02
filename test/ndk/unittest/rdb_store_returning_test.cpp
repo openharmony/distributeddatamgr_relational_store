@@ -196,10 +196,10 @@ void RdbStoreReturningTest::VerifyCursorData(OH_Cursor *cursor, const std::strin
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
     EXPECT_EQ(size, EXPECTED_NAME_SIZE);
 
-    char dataValue[size];
-    ret = cursor->getText(cursor, 0, dataValue, size);
+    std::vector<char> dataValue(size);
+    ret = cursor->getText(cursor, 0, dataValue.data(), dataValue.size());
     EXPECT_EQ(ret, OH_Rdb_ErrCode::RDB_OK);
-    EXPECT_EQ(std::string(dataValue), expectedValue);
+    EXPECT_EQ(std::string(dataValue.data()), expectedValue);
 }
 
 void RdbStoreReturningTest::VerifyCursorRowCount(OH_Cursor *cursor, int expectedRowCount)
@@ -1280,9 +1280,9 @@ HWTEST_F(RdbStoreReturningTest, OH_Rdb_BatchInsertWithReturning_GetFloat32Array_
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_OK);
     EXPECT_EQ(count, FLOATS_SIZE);
 
-    float test[count];
+    std::vector<float> test(count);
     size_t outLen = 0;
-    OH_Cursor_GetFloatVector(cursor, columnIndex, test, count, &outLen);
+    OH_Cursor_GetFloatVector(cursor, columnIndex, test.data(), test.size(), &outLen);
     EXPECT_EQ(outLen, FLOATS_SIZE);
     EXPECT_EQ(test[0], DEFAULT_FLOATS[0]);
     EXPECT_EQ(test[1], DEFAULT_FLOATS[1]);

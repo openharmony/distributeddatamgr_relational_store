@@ -329,9 +329,9 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_004, TestSize.Level1)
 
     size_t size = 0;
     cursor->getSize(cursor, 0, &size);
-    char data1Value[size];
-    cursor->getText(cursor, 0, data1Value, size);
-    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+    std::vector<char> data1Value(size);
+    cursor->getText(cursor, 0, data1Value.data(), data1Value.size());
+    EXPECT_EQ(strcmp(data1Value.data(), "zhangSan"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 1, &data2Value);
@@ -342,17 +342,17 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_004, TestSize.Level1)
     EXPECT_EQ(data3Value, 100.1);
 
     cursor->getSize(cursor, 3, &size);
-    unsigned char data4Value[size];
-    cursor->getBlob(cursor, 3, data4Value, size);
+    std::vector<unsigned char> data4Value(size);
+    cursor->getBlob(cursor, 3, data4Value.data(), data4Value.size());
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
 
     cursor->goToNextRow(cursor);
 
     cursor->getSize(cursor, 0, &size);
-    char data1Value1[size];
-    cursor->getText(cursor, 0, data1Value1, size);
-    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
+    std::vector<char> data1Value1(size);
+    cursor->getText(cursor, 0, data1Value1.data(), data1Value1.size());
+    EXPECT_EQ(strcmp(data1Value1.data(), "liSi"), 0);
 
     cursor->getInt64(cursor, 1, &data2Value);
     EXPECT_EQ(data2Value, 13800);
@@ -403,12 +403,12 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_005, TestSize.Level1)
     errCode = cursor->getSize(cursor, 0, nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
-    char data1Value[size + 1];
-    errCode = cursor->getText(nullptr, 0, data1Value, size + 1);
+    std::vector<char> data1Value(size + 1);
+    errCode = cursor->getText(nullptr, 0, data1Value.data(), data1Value.size());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     errCode = cursor->getText(cursor, 0, nullptr, size + 1);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    errCode = cursor->getText(cursor, 0, data1Value, 0);
+    errCode = cursor->getText(cursor, 0, data1Value.data(), 0);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     predicates->destroy(predicates);
@@ -442,12 +442,12 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_006, TestSize.Level1)
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     size_t size = 0;
-    unsigned char data4Value[size];
-    errCode = cursor->getBlob(nullptr, 3, data4Value, size);
+    std::vector<unsigned char> data4Value(size);
+    errCode = cursor->getBlob(nullptr, 3, data4Value.data(), data4Value.size());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     errCode = cursor->getBlob(cursor, 3, nullptr, size);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
-    errCode = cursor->getBlob(cursor, 3, data4Value, 0);
+    errCode = cursor->getBlob(cursor, 3, data4Value.data(), 0);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     bool isNull = false;
@@ -741,7 +741,7 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetColumnName_test_012, TestSize.L
     size_t outLen;
     char querySql[] = "select * from test where id = ?;";
     OH_Data_Values *values = OH_Values_Create();
-    float test[count];
+    std::vector<float> test(count);
     OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(cursorTestRdbStore_, querySql, values);
 
     auto errCode = OH_Cursor_GetFloatVectorCount(nullptr, 1, nullptr);
@@ -751,8 +751,8 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetColumnName_test_012, TestSize.L
     
     EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(nullptr, 1, nullptr, count, &outLen));
     EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, nullptr, count, &outLen));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, test, 0, &outLen));
-    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, test, count, nullptr));
+    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, test.data(), 0, &outLen));
+    EXPECT_EQ(RDB_E_INVALID_ARGS, OH_Cursor_GetFloatVector(cursor, 1, test.data(), test.size(), nullptr));
 
     Data_Asset *asset = OH_Data_Asset_CreateOne();
 

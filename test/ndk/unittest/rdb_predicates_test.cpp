@@ -204,9 +204,9 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level
 
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
-    char data1Value[size];
-    cursor->getText(cursor, 1, data1Value, size);
-    EXPECT_EQ(strcmp(data1Value, "liSi"), 0);
+    std::vector<char> data1Value(size);
+    cursor->getText(cursor, 1, data1Value.data(), data1Value.size());
+    EXPECT_EQ(strcmp(data1Value.data(), "liSi"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 2, &data2Value);
@@ -221,9 +221,9 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level
     EXPECT_EQ(isNull, true);
 
     cursor->getSize(cursor, 5, &size);
-    char data5Value1[size];
-    cursor->getText(cursor, 5, data5Value1, size);
-    EXPECT_EQ(strcmp(data5Value1, "ABCDEFGH"), 0);
+    std::vector<char> data5Value1(size);
+    cursor->getText(cursor, 5, data5Value1.data(), data5Value1.size());
+    EXPECT_EQ(strcmp(data5Value1.data(), "ABCDEFGH"), 0);
 
     cursor->goToNextRow(cursor);
     cursor->getInt64(cursor, 0, &id);

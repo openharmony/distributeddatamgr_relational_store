@@ -121,12 +121,12 @@ std::string RdConnection::GetConfigStr(const std::vector<uint8_t> &keys, bool is
     if (isEncrypt) {
         const size_t keyBuffSize = keys.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '/0'
         config.reserve(CONFIG_SIZE_EXCEPT_ENCRYPT + keyBuffSize);
-        char keyBuff[keyBuffSize];
+        std::vector<char> keyBuff(keyBuffSize);
         config += "\"isEncrypted\":1,";
         config += "\"hexPassword\":\"";
-        config += RdUtils::GetEncryptKey(keys, keyBuff, keyBuffSize);
+        config += RdUtils::GetEncryptKey(keys, keyBuff.data(), keyBuff.size());
         config += "\",";
-        std::fill(keyBuff, keyBuff + keyBuffSize, 0);
+        std::fill(keyBuff.begin(), keyBuff.end(), 0);
     }
     config += RdConnection::GRD_OPEN_CONFIG_STR;
     config += "}";

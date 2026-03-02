@@ -360,12 +360,12 @@ void TestOH_Predicates_groupBy(FuzzedDataProvider &provider)
         return;
     }
     size_t loops = provider.ConsumeIntegralInRange<size_t>(LENGTH_MIN, LENGTH_MAX);
-    const char *fields[loops];
+    std::vector<const char *> fields(loops);
     for (size_t i = 0; i < loops; ++i) {
         static std::string fieldsString = provider.ConsumeRandomLengthString(STRING_LENGTH_MAX).c_str();
         fields[i] = fieldsString.c_str();
     }
-    predicates->groupBy(predicates, fields, loops);
+    predicates->groupBy(predicates, fields.data(), fields.size());
     predicates->destroy(predicates);
 }
 

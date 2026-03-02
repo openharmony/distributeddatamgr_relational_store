@@ -422,9 +422,9 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_ICU_TEST002, TestSize.Level1)
 
     size_t size = 0;
     cursor->getSize(cursor, columnIndex, &size);
-    char data1Value[size + 1];
-    cursor->getText(cursor, columnIndex, data1Value, size + 1);
-    EXPECT_EQ(strcmp(data1Value, "文档1"), 0);
+    std::vector<char> data1Value(size + 1);
+    cursor->getText(cursor, columnIndex, data1Value.data(), size + 1);
+    EXPECT_EQ(strcmp(data1Value.data(), "文档1"), 0);
 
     errCode = cursor->getColumnIndex(cursor, "content", &columnIndex);
     char name2[10];
@@ -432,9 +432,9 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_ICU_TEST002, TestSize.Level1)
     EXPECT_EQ(strcmp(name2, "content"), 0);
 
     cursor->getSize(cursor, columnIndex, &size);
-    char data2Value[size + 1];
-    cursor->getText(cursor, columnIndex, data2Value, size + 1);
-    EXPECT_EQ(strcmp(data2Value, "这是一个测试文档，用于测试中文文本的分词和索引。"), 0);
+    std::vector<char> data2Value(size + 1);
+    cursor->getText(cursor, columnIndex, data2Value.data(), size + 1);
+    EXPECT_EQ(strcmp(data2Value.data(), "这是一个测试文档，用于测试中文文本的分词和索引。"), 0);
 
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_CloseStore(storeConfigV2TestRdbStore));
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_DeleteStoreV2(config));
