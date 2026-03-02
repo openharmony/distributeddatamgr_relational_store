@@ -16,7 +16,7 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 config("rdb_data_ability_adapter_config") {
   visibility = [ ":*" ]
   if (!is_mingw && !is_mac) {
-    cflags_cc = [ "-fvisibility=hidden" ]
+    cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
   }
   include_dirs = [
     "include",

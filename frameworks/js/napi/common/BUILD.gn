@@ -20,7 +20,7 @@ group("build_module") {
 config("objectstore_config") {
   ldflags = [ "-Wl,--exclude-libs=ALL" ]
 
-  cflags = [ "-DHILOG_ENABLE" ]
+  cflags = [ "-DHILOG_ENABLE", "-Werror=vla",]
 
   include_dirs = [ "${relational_store_innerapi_path}/common_type/include" ]
 }

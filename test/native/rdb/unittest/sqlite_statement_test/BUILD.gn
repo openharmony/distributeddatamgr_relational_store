@@ -41,6 +41,7 @@ ohos_unittest("SqliteStatementTest") {
 
   cflags = [
     "-fno-access-control",  # Ignore Private Member Access Control
+    "-Werror=vla",
   ]
 
   sources = [

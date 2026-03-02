@@ -102,6 +102,7 @@ if (is_ohos) {
     cflags_cc = [
       "-std=c++17",
       "-stdlib=libc++",
+      "-Werror=vla",
     ]
 
     buildos = "windows"
@@ -144,6 +145,7 @@ if (is_ohos) {
       "-std=c++17",
       "-stdlib=libc++",
       "-Dnapi_send_event=SendEventMock",
+      "-Werror=vla",
     ]
 
     buildos = "mac"
@@ -190,6 +192,7 @@ if (is_ohos) {
     cflags_cc = [
       "-std=c++17",
       "-stdlib=libc++",
+      "-Werror=vla",
     ]
 
     defines = [
@@ -232,6 +235,7 @@ if (is_ohos) {
       "-std=c++17",
       "-stdlib=libc++",
       "-Dnapi_send_event=SendEventMock",
+      "-Werror=vla",
     ]
 
     defines = [

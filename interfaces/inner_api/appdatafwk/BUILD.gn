@@ -21,7 +21,7 @@ config("appdatafwk_config") {
     "${relational_store_common_path}/include",
   ]
   if (!is_mingw && !is_mac) {
-    cflags_cc = [ "-fvisibility=hidden" ]
+    cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
   }
 }
 
@@ -54,7 +54,7 @@ if (is_android || is_ios) {
       sources += [
         "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
       ]
-      cflags_cc = [ "-fvisibility=hidden" ]
+      cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
     }
 
     configs = [
@@ -95,7 +95,7 @@ if (is_android || is_ios) {
       sources += [
         "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
       ]
-      cflags_cc = [ "-fvisibility=hidden" ]
+      cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
     }
 
     configs = [

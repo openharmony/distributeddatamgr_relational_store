@@ -35,6 +35,7 @@ ohos_unittest("NativeRdbNdkTest") {
 
   cflags = [
     "-fno-access-control",  # Ignore Private Member Access Control
+    "-Werror=vla",
   ]
 
   sources = [
