@@ -27,11 +27,8 @@
 namespace OHOS {
 using Rdb::LogLabel;
 namespace NativeRdb {
-static constexpr const char *SILENT_CONF_PATH = "/system/etc/silent/conf/";
-static constexpr const char *IS_SILENT_DB_JSON_PATH = "silentproxy_config.json";
+static constexpr const char *SILENT_CONF_PATH = "/system/etc/silent/conf/silentproxy_config.json";
 static constexpr uint32_t BUCKET_MAX_SIZE = 4;
-
-std::string SilentProxyManager::configPath_;
 
 bool SilentProxys::Marshal(Serializable::json &node) const
 {
@@ -59,16 +56,9 @@ bool SilentProxy::Unmarshal(const Serializable::json &node)
     return true;
 }
 
-SilentProxyManager::SilentProxyManager() : isSilentCache_(BUCKET_MAX_SIZE)
+SilentProxyManager::SilentProxyManager(const std::string &configPath) : isSilentCache_(BUCKET_MAX_SIZE)
 {
-    if (configPath_.empty()) {
-        configPath_ = std::string(SILENT_CONF_PATH) + std::string(IS_SILENT_DB_JSON_PATH);
-    }
-}
-
-void SilentProxyManager::SetConfigPath(const std::string &path)
-{
-    configPath_ = path;
+    configPath_ = configPath.empty() ? SILENT_CONF_PATH : configPath;
 }
 
 std::pair<int32_t, bool> SilentProxyManager::IsSupportSilentFromProxy(

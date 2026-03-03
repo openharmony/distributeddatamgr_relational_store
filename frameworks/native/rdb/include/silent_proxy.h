@@ -19,7 +19,6 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -31,31 +30,28 @@ namespace NativeRdb {
 struct SilentProxy final : public Serializable {
     std::string bundleName;
     std::vector<std::string> storeNames;
-    API_EXPORT bool Marshal(Serializable::json &node) const override;
-    API_EXPORT bool Unmarshal(const Serializable::json &node) override;
+    bool Marshal(Serializable::json &node) const override;
+    bool Unmarshal(const Serializable::json &node) override;
 };
 
 struct SilentProxys final : public Serializable {
     std::vector<SilentProxy> silentProxys{};
-    API_EXPORT bool Marshal(Serializable::json &node) const override;
-    API_EXPORT bool Unmarshal(const Serializable::json &node) override;
+    bool Marshal(Serializable::json &node) const override;
+    bool Unmarshal(const Serializable::json &node) override;
 };
 
 class SilentProxyManager {
 public:
-    SilentProxyManager();
+    explicit SilentProxyManager(const std::string &configPath = "");
     ~SilentProxyManager() = default;
 
     std::pair<int32_t, bool> IsSupportSilent(const std::string &bundleName, const std::string &storeName);
-
-    // For test purpose only
-    static void SetConfigPath(const std::string &path);
 
 private:
     std::pair<int32_t, bool> IsSupportSilentFromProxy(const std::string &bundleName, const std::string &storeName);
     std::pair<int32_t, bool> IsSupportSilentFromService(const std::string &bundleName, const std::string &storeName);
 
-    static std::string configPath_;
+    std::string configPath_;
     std::mutex mutex_;
     LRUBucket<std::string, std::map<std::string, bool>> isSilentCache_;
 };
