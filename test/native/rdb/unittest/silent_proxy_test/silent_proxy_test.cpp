@@ -22,8 +22,11 @@
 #include <thread>
 
 #include "rdb_errno.h"
+#include "rdb_helper.h"
 #include "rdb_manager_mock.h"
+#include "rdb_open_callback.h"
 #include "rdb_service_mock.h"
+#include "rdb_store_config.h"
 #include "rdb_types.h"
 
 using namespace testing::ext;
@@ -34,7 +37,6 @@ using namespace OHOS::DistributedRdb;
 namespace {
 const std::string TEST_CONFIG_DIR = "/data/test/silent_conf/";
 const std::string TEST_CONFIG_PATH = TEST_CONFIG_DIR + "silentproxy_config.json";
-const std::string DEFAULT_CONFIG_PATH = "/system/etc/silent/conf/silentproxy_config.json";
 }
 
 class SilentProxyTest : public testing::Test {
@@ -57,13 +59,12 @@ public:
 
 void SilentProxyTest::SetUpTestCase(void)
 {
+    ::testing::FLAGS_gmock_verbose = "error";
     system(("mkdir -p " + TEST_CONFIG_DIR).c_str());
-    SilentProxyManager::SetConfigPath(TEST_CONFIG_PATH);
 }
 
 void SilentProxyTest::TearDownTestCase(void)
 {
-    SilentProxyManager::SetConfigPath(DEFAULT_CONFIG_PATH);
     system(("rm -rf " + TEST_CONFIG_DIR).c_str());
 }
 
@@ -228,7 +229,7 @@ HWTEST_F(SilentProxyTest, SilentProxys_Unmarshal_Empty_002, TestSize.Level1)
  */
 HWTEST_F(SilentProxyTest, SilentProxyManager_Constructor_001, TestSize.Level1)
 {
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     EXPECT_NE(&manager, nullptr);
 }
 
@@ -241,7 +242,7 @@ HWTEST_F(SilentProxyTest, SilentProxyManager_Constructor_001, TestSize.Level1)
  */
 HWTEST_F(SilentProxyTest, IsSupportSilent_ProxyNotExist_ServiceFailed_001, TestSize.Level1)
 {
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_FALSE(flag);
 }
@@ -263,7 +264,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_ProxyMatch_StoreInList_002, TestSize.L
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_OK);
     EXPECT_TRUE(flag);
@@ -286,7 +287,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_ProxyMatch_StoreNotInList_003, TestSiz
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_FALSE(flag);
 }
@@ -308,7 +309,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_ProxyNotMatch_004, TestSize.Level1)
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_FALSE(flag);
 }
@@ -330,7 +331,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_ProxyCacheHit_005, TestSize.Level1)
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err1, flag1] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err1, E_OK);
     EXPECT_TRUE(flag1);
@@ -359,7 +360,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_StoreNameSuffix_006, TestSize.Level1)
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_OK);
     EXPECT_TRUE(flag);
@@ -377,7 +378,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_EmptyConfig_007, TestSize.Level1)
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_FALSE(flag);
 }
@@ -392,7 +393,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_InvalidJson_008, TestSize.Level1)
     std::string config = "invalid json content";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_ERROR);
     EXPECT_FALSE(flag);
@@ -415,7 +416,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_MalformedJson_008A, TestSize.Level1)
     })";  // Missing comma between bundleName and storeNames
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_ERROR);
     EXPECT_FALSE(flag);
@@ -442,7 +443,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_MultipleBundles_009, TestSize.Level1)
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
 
     auto [err1, flag1] = manager.IsSupportSilent("com.example.test1", "db1.db");
     EXPECT_EQ(err1, E_OK);
@@ -470,7 +471,7 @@ HWTEST_F(SilentProxyTest, IsSupportSilent_ProxyReturnTrue_NoServiceCall_010, Tes
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_OK);
     EXPECT_TRUE(flag);
@@ -489,7 +490,7 @@ HWTEST_F(SilentProxyTest, Service_GetRdbService_NotSupport_011, TestSize.Level1)
     EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
         .WillOnce(Return(std::make_pair(E_NOT_SUPPORT, nullptr)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_NOT_SUPPORT);
     EXPECT_FALSE(flag);
@@ -506,7 +507,7 @@ HWTEST_F(SilentProxyTest, Service_GetRdbService_Error_012, TestSize.Level1)
     EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
         .WillOnce(Return(std::make_pair(E_ERROR, nullptr)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_ERROR);
     EXPECT_FALSE(flag);
@@ -523,7 +524,7 @@ HWTEST_F(SilentProxyTest, Service_GetRdbService_NullService_013, TestSize.Level1
     EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
         .WillOnce(Return(std::make_pair(E_OK, nullptr)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_OK);
     EXPECT_FALSE(flag);
@@ -542,7 +543,7 @@ HWTEST_F(SilentProxyTest, Service_IsSupportSilent_ReturnError_014, TestSize.Leve
     EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
         .WillOnce(Return(std::make_pair(-1, false)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_ERROR);
     EXPECT_FALSE(flag);
@@ -561,7 +562,7 @@ HWTEST_F(SilentProxyTest, Service_IsSupportSilent_ReturnTrue_015, TestSize.Level
     EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
         .WillOnce(Return(std::make_pair(RDB_OK, true)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_OK);
     EXPECT_TRUE(flag);
@@ -580,7 +581,7 @@ HWTEST_F(SilentProxyTest, Service_IsSupportSilent_ReturnFalse_016, TestSize.Leve
     EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
         .WillOnce(Return(std::make_pair(RDB_OK, false)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err, E_OK);
     EXPECT_FALSE(flag);
@@ -599,7 +600,7 @@ HWTEST_F(SilentProxyTest, Service_CacheHit_017, TestSize.Level1)
     EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
         .WillOnce(Return(std::make_pair(RDB_OK, true)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     // First call - should call service
     auto [err1, flag1] = manager.IsSupportSilent("com.example.test", "test.db");
     EXPECT_EQ(err1, E_OK);
@@ -630,7 +631,7 @@ HWTEST_F(SilentProxyTest, Proxy_DoubleCheck_Concurrent_018, TestSize.Level1)
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     const int threadCount = 10;
     std::vector<std::thread> threads;
     std::vector<std::pair<int32_t, bool>> results(threadCount);
@@ -671,7 +672,7 @@ HWTEST_F(SilentProxyTest, Proxy_DoubleCheck_Concurrent_Miss_019, TestSize.Level1
     })";
     CreateConfigFile(config);
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     const int threadCount = 10;
     std::vector<std::thread> threads;
     std::vector<std::pair<int32_t, bool>> results(threadCount);
@@ -708,7 +709,7 @@ HWTEST_F(SilentProxyTest, Service_DoubleCheck_Concurrent_020, TestSize.Level1)
     EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
         .WillOnce(Return(std::make_pair(RDB_OK, true)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     const int threadCount = 10;
     std::vector<std::thread> threads;
     std::vector<std::pair<int32_t, bool>> results(threadCount);
@@ -748,7 +749,7 @@ HWTEST_F(SilentProxyTest, Service_DoubleCheck_CacheMiss_021, TestSize.Level1)
         .WillOnce(Return(std::make_pair(RDB_OK, true)))
         .WillOnce(Return(std::make_pair(RDB_OK, false)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
 
     // First call with dbName1
     auto [err1, flag1] = manager.IsSupportSilent("com.example.test", "db1.db");
@@ -775,7 +776,7 @@ HWTEST_F(SilentProxyTest, Mixed_ProxyAndService_Concurrent_022, TestSize.Level1)
     EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
         .WillRepeatedly(Return(std::make_pair(RDB_OK, true)));
 
-    SilentProxyManager manager;
+    SilentProxyManager manager(TEST_CONFIG_PATH);
     const int threadCount = 20;
     std::vector<std::thread> threads;
     std::vector<std::pair<int32_t, bool>> results(threadCount);
@@ -803,4 +804,148 @@ HWTEST_F(SilentProxyTest, Mixed_ProxyAndService_Concurrent_022, TestSize.Level1)
     for (int i = 0; i < threadCount; i++) {
         EXPECT_EQ(results[i].first, E_OK);
     }
+}
+
+// ==================== RoleType Skip IsSupportSilent Tests ====================
+
+namespace {
+const std::string RDB_VISITOR_TEST_PATH = "/data/test/rdb_visitor_test/";
+}
+
+class VisitorTestOpenCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &store) override
+    {
+        return store.ExecuteSql("CREATE TABLE IF NOT EXISTS test "
+            "(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER)");
+    }
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override
+    {
+        return E_OK;
+    }
+};
+
+class VisitorTestVisitorOpenCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &store) override { return E_OK; }
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override { return E_OK; }
+};
+
+/**
+ * @tc.name: Visitor_SkipIsSupportSilent_023
+ * @tc.desc: Test VISITOR role skips IsSupportSilent call
+ * @tc.type: FUNC
+ */
+HWTEST_F(SilentProxyTest, Visitor_SkipIsSupportSilent_023, TestSize.Level1)
+{
+    SetupMock();
+    ON_CALL(*mockRdbManager_, GetRdbService(_))
+        .WillByDefault(Return(std::make_pair(E_OK, mockRdbService_)));
+    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_)).Times(1);
+
+    system(("mkdir -p " + RDB_VISITOR_TEST_PATH).c_str());
+    const std::string dbPath = RDB_VISITOR_TEST_PATH + "visitor_test.db";
+
+    RdbStoreConfig ownerConfig(dbPath);
+    ownerConfig.SetBundleName("com.test.visitor");
+    ownerConfig.SetName("visitor_test.db");
+    VisitorTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> ownerStore = RdbHelper::GetRdbStore(ownerConfig, 1, helper, errCode);
+    ASSERT_NE(ownerStore, nullptr);
+
+    RdbStoreConfig config("", StorageMode::MODE_DISK, true);
+    config.SetRoleType(OHOS::NativeRdb::VISITOR);
+    config.SetVisitorDir(dbPath);
+    config.SetBundleName("com.test.visitor");
+    config.SetName("visitor_test.db");
+
+    VisitorTestVisitorOpenCallback visitorHelper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, visitorHelper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    ownerStore = nullptr;
+    store = nullptr;
+    RdbHelper::ClearCache();
+    RdbHelper::DeleteRdbStore(dbPath);
+    system(("rm -rf " + RDB_VISITOR_TEST_PATH).c_str());
+}
+
+/**
+ * @tc.name: VisitorWrite_SkipIsSupportSilent_024
+ * @tc.desc: Test VISITOR_WRITE role skips IsSupportSilent call
+ * @tc.type: FUNC
+ */
+HWTEST_F(SilentProxyTest, VisitorWrite_SkipIsSupportSilent_024, TestSize.Level1)
+{
+    SetupMock();
+    ON_CALL(*mockRdbManager_, GetRdbService(_))
+        .WillByDefault(Return(std::make_pair(E_OK, mockRdbService_)));
+    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_)).Times(1);
+
+    system(("mkdir -p " + RDB_VISITOR_TEST_PATH).c_str());
+    const std::string dbPath = RDB_VISITOR_TEST_PATH + "visitor_write_test.db";
+
+    RdbStoreConfig ownerConfig(dbPath);
+    ownerConfig.SetBundleName("com.test.visitorwrite");
+    ownerConfig.SetName("visitor_write_test.db");
+    VisitorTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> ownerStore = RdbHelper::GetRdbStore(ownerConfig, 1, helper, errCode);
+    ASSERT_NE(ownerStore, nullptr);
+
+    RdbStoreConfig config("");
+    config.SetRoleType(OHOS::NativeRdb::VISITOR_WRITE);
+    config.SetVisitorDir(dbPath);
+    config.SetBundleName("com.test.visitorwrite");
+    config.SetName("visitor_write_test.db");
+
+    VisitorTestVisitorOpenCallback visitorHelper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, visitorHelper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("test"));
+    values.PutInt("age", 20);
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    ownerStore = nullptr;
+    store = nullptr;
+    RdbHelper::ClearCache();
+    RdbHelper::DeleteRdbStore(dbPath);
+    system(("rm -rf " + RDB_VISITOR_TEST_PATH).c_str());
+}
+
+/**
+ * @tc.name: Owner_TriggerIsSupportSilent_025
+ * @tc.desc: Test OWNER role with Searchable=true triggers IsSupportSilent call
+ * @tc.type: FUNC
+ */
+HWTEST_F(SilentProxyTest, Owner_TriggerIsSupportSilent_025, TestSize.Level1)
+{
+    SetupMock();
+    ON_CALL(*mockRdbManager_, GetRdbService(_))
+        .WillByDefault(Return(std::make_pair(E_OK, mockRdbService_)));
+    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
+        .WillOnce(Return(std::make_pair(RDB_OK, false)));
+
+    system(("mkdir -p " + RDB_VISITOR_TEST_PATH).c_str());
+    const std::string dbPath = RDB_VISITOR_TEST_PATH + "owner_test.db";
+
+    RdbStoreConfig ownerConfig(dbPath);
+    ownerConfig.SetBundleName("com.test.owner");
+    ownerConfig.SetName("owner_test.db");
+
+    VisitorTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(ownerConfig, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+
+    store = nullptr;
+    RdbHelper::ClearCache();
+    RdbHelper::DeleteRdbStore(dbPath);
+    system(("rm -rf " + RDB_VISITOR_TEST_PATH).c_str());
 }
