@@ -31,7 +31,7 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
 #define REPORT() \
-    JSUtils::ReportInterfaceUsed(std::string("rdb::") + __FUNCTION__)
+    JSUtils::ReportInterfaceUsed(std::string("relationalstore::") + __FUNCTION__)
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
