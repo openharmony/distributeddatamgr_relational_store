@@ -25,6 +25,9 @@ using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
+#define REPORT() \
+    JSUtils::ReportInterfaceUsed(std::string("rdb::") + __FUNCTION__)
+
 namespace OHOS {
 namespace RdbJsKit {
 static __thread napi_ref constructor_ = nullptr;
@@ -730,7 +733,7 @@ napi_value RdbPredicatesProxy::NotIn(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Using(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_IsUsing");
+    REPORT();
     napi_value thiz = nullptr;
     std::vector<std::string> fields;
     auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, fields, "fields", "string");
@@ -742,7 +745,7 @@ napi_value RdbPredicatesProxy::Using(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::LeftOuterJoin(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_LeftOuterJoin");
+    REPORT();
     napi_value thiz = nullptr;
     std::string tablename = "";
     auto predicatesProxy = ParseFieldByName(env, info, thiz, tablename, "tablename");
@@ -754,7 +757,7 @@ napi_value RdbPredicatesProxy::LeftOuterJoin(napi_env env, napi_callback_info in
 
 napi_value RdbPredicatesProxy::InnerJoin(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_InnerJoin");
+    REPORT();
     napi_value thiz = nullptr;
     std::string tablename = "";
     auto predicatesProxy = ParseFieldByName(env, info, thiz, tablename, "tablename");
@@ -766,7 +769,7 @@ napi_value RdbPredicatesProxy::InnerJoin(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_On");
+    REPORT();
     napi_value thiz = nullptr;
     std::vector<std::string> clauses;
     auto predicatesProxy = ParseFieldArrayByName(env, info, thiz, clauses, "clauses", "string");
@@ -778,7 +781,7 @@ napi_value RdbPredicatesProxy::On(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::Clear(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_Clear");
+    REPORT();
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
@@ -789,7 +792,7 @@ napi_value RdbPredicatesProxy::Clear(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::CrossJoin(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_CrossJoin");
+    REPORT();
     napi_value thiz = nullptr;
     std::string tablename = "";
     auto predicatesProxy = ParseFieldByName(env, info, thiz, tablename, "tablename");
@@ -801,7 +804,7 @@ napi_value RdbPredicatesProxy::CrossJoin(napi_env env, napi_callback_info info)
 
 napi_value RdbPredicatesProxy::GetJoinCount(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_GetJoinCount");
+    REPORT();
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
@@ -812,7 +815,7 @@ napi_value RdbPredicatesProxy::GetJoinCount(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::SetJoinCount(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_SetJoinCount");
+    REPORT();
     napi_value thiz = nullptr;
     int32_t joinCount = 0;
     RdbPredicatesProxy *predicatesProxy = ParseInt32FieldByName(env, info, thiz, joinCount, "joinCount");
@@ -824,7 +827,7 @@ napi_value RdbPredicatesProxy::SetJoinCount(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::GetJoinTypes(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_GetJoinTypes");
+    REPORT();
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
@@ -835,7 +838,7 @@ napi_value RdbPredicatesProxy::GetJoinTypes(napi_env env, napi_callback_info inf
 
 napi_value RdbPredicatesProxy::GetJoinTableNames(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_GetJoinTableNames");
+    REPORT();
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
@@ -847,7 +850,7 @@ napi_value RdbPredicatesProxy::GetJoinTableNames(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::GetJoinConditions(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_GetJoinConditions");
+    REPORT();
     napi_value thiz = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thiz, nullptr);
     auto nativePredicates = GetNativePredicates(env, info);
@@ -858,7 +861,7 @@ napi_value RdbPredicatesProxy::GetJoinConditions(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::SetJoinConditions(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_SetJoinConditions");
+    REPORT();
     napi_value thiz = nullptr;
     std::vector<std::string> joinConditions;
     RdbPredicatesProxy *predicatesProxy =
@@ -871,7 +874,7 @@ napi_value RdbPredicatesProxy::SetJoinConditions(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::SetJoinTableNames(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_SetJoinTableNames");
+    REPORT();
     napi_value thiz = nullptr;
     std::vector<std::string> joinNames;
     RdbPredicatesProxy *predicatesProxy = ParseFieldArrayByName(env, info, thiz, joinNames, "joinNames", "string");
@@ -883,7 +886,7 @@ napi_value RdbPredicatesProxy::SetJoinTableNames(napi_env env, napi_callback_inf
 
 napi_value RdbPredicatesProxy::SetJoinTypes(napi_env env, napi_callback_info info)
 {
-    JSUtils::ReportInterfaceUsed("rdb_SetJoinTypes");
+    REPORT();
     napi_value thiz = nullptr;
     std::vector<std::string> joinTypes;
     RdbPredicatesProxy *predicatesProxy = ParseFieldArrayByName(env, info, thiz, joinTypes, "joinTypes", "string");
