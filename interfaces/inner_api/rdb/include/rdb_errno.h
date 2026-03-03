@@ -496,7 +496,7 @@ static constexpr int E_SQLITE_INTERRUPT = (E_BASE + 0x5a);
 static constexpr int E_NON_SYSTEM_APP = (E_BASE + 0x5b);
 
 /**
-* @brief The error code for non-system app uses system API.
+* @brief The error code for the database does not support this scenario.
 */
 static constexpr int E_NOT_SUPPORT_NEW = (E_BASE + 0x5c);
 } // namespace NativeRdb

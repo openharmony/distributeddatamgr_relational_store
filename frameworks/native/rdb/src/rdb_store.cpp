@@ -513,7 +513,7 @@ int RdbStore::SetDistributedTables(
 }
 
 int RdbStore::SetDistributedInfo(
-    DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates)
+    DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates)
 {
     (void)distributedInfo;
     (void)predicates;

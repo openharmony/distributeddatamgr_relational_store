@@ -680,7 +680,7 @@ public:
      * @param distributedInfo Indicates the info you want to set.
      */
     virtual int SetDistributedInfo(
-        DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates);
+        DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates);
 
     /**
      * @brief Remove distributed table remote data.

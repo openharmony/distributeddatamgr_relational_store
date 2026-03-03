@@ -1547,9 +1547,16 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     return ASYNC_CALL(env, context);
 }
 
+struct DistributedInfoContext : public EnhancedContext {
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
+    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+    RdbPredicatesProxy *predicatesProxy;
+    DistributedRdb::DistributedInfo distributedInfo;
+};
+
 napi_value RdbStoreProxy::SetDistributedInfo(napi_env env, napi_callback_info info)
 {
-    auto context = std::make_shared<RdbStoreEnhanceContext>();
+    auto context = std::make_shared<DistributedInfoContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2"));
         RdbStoreProxy *obj = GetNativeInstance(env, self);
@@ -1557,8 +1564,13 @@ napi_value RdbStoreProxy::SetDistributedInfo(napi_env env, napi_callback_info in
         CHECK_RETURN_SET_E(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
         CHECK_RETURN_SET_E(obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         context->rdbStore = obj->GetInstance();
-        CHECK_RETURN(OK == ParseDistributedInfo(env, argv[0], context));
-        CHECK_RETURN(OK == ParsePredicates(env, argv[1], context));
+        auto status = JSUtils::Convert2Value(env, argv[0], context->distributedInfo);
+        CHECK_RETURN_SET_E(status == napi_ok || JSUtils::IsNull(env, argv[0]),
+            std::make_shared<ParamError>("distributedInfo", "a DistributedInfo type"));
+        status = napi_unwrap(env, argv[1], reinterpret_cast<void **>(&context->predicatesProxy));
+        CHECK_RETURN_SET_E(status == napi_ok && context->predicatesProxy != nullptr,
+            std::make_shared<ParamError>("predicates", "an RdbPredicates."));
+        context->rdbPredicates = context->predicatesProxy->GetPredicates();
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
@@ -1574,9 +1586,14 @@ napi_value RdbStoreProxy::SetDistributedInfo(napi_env env, napi_callback_info in
     return ASYNC_CALL(env, context);
 }
 
+struct RetainDeviceContext : public EnhancedContext {
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
+    std::map<std::string, std::vector<std::string>> retainDevices;
+};
+
 napi_value RdbStoreProxy::RetainDeviceData(napi_env env, napi_callback_info info)
 {
-    auto context = std::make_shared<RdbStoreEnhanceContext>();
+    auto context = std::make_shared<RetainDeviceContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc < 2, std::make_shared<ParamNumError>("0 - 1"));
         RdbStoreProxy *obj = GetNativeInstance(env, self);

@@ -898,8 +898,7 @@ void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainD
                 return;
             }
         }
-        std::vector<std::string> vec(value.begin(), value.end());
-        devices.emplace(key, std::move(vec));
+        devices.emplace(key, std::vector<std::string>(value.begin(), value.end()));
     }
     int errCode = store->RetainDeviceData(devices);
     if (errCode != OHOS::NativeRdb::E_OK) {

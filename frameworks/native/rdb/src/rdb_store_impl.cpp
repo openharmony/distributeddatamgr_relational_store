@@ -449,88 +449,83 @@ int RdbStoreImpl::SetDistributedTables(
     return HandleCloudSyncAfterSetDistributedTables(tables, distributedConfig);
 }
 
-void CollectDevicesFromPredicates(const AbsRdbPredicates &predicates, std::vector<std::string> &devices)
+std::pair<int32_t, std::vector<std::string>> RdbStoreImpl::ConvertToUuids(
+    const DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates)
 {
-    std::string device;
-    for (auto &arg : predicates.GetBindArgs()) {
-        if (arg.GetType() == ValueObject::TYPE_STRING && arg.GetString(device) == E_OK && !device.empty()) {
-            devices.push_back(device);
+    std::vector<std::string> devices;
+    if (!distributedInfo.oriDevice.empty()) {
+        devices.push_back(distributedInfo.oriDevice);
+    }
+    if (predicates.HasSpecificField()) {
+        std::string device;
+        for (auto &arg : predicates.GetBindArgs()) {
+            if (arg.GetType() == ValueObject::TYPE_STRING && arg.GetString(device) == E_OK && !device.empty()) {
+                devices.push_back(device);
+            }
         }
     }
-}
-
-std::pair<int32_t, std::vector<std::string>> ProcessDistributedDevices(
-    const DistributedRdb::RdbSyncerParam &syncerParam, const std::vector<std::string> &devices)
-{
-    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam);
-    if (errCode != E_OK) {
-        return { errCode, {} };
+    if (devices.empty()) {
+        return { E_OK, devices };
     }
-    auto [errorCode, uuids] = service->ObtainUuid(syncerParam, devices);
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK || service == nullptr) {
+        return { errCode != E_OK ? errCode : E_ERROR, {} };
+    }
+    auto [errorCode, uuids] = service->ObtainUuid(syncerParam_, devices);
     if (errorCode != RdbStatus::RDB_OK) {
         return { SqliteUtils::ConvertRdbStatusNative(errorCode), {} };
+    }
+    if (uuids.empty() || (uuids.size() != devices.size())) {
+        return { E_INVALID_ARGS_NEW, {} };
     }
     return { E_OK, uuids };
 }
 
-void UpdatePredicatesArgs(AbsRdbPredicates &predicates, std::vector<std::string> &devices)
-{
-    std::vector<ValueObject> args;
-    std::string device;
-    for (auto &arg : predicates.GetBindArgs()) {
-        if (arg.GetType() == ValueObject::TYPE_STRING && arg.GetString(device) == E_OK && !device.empty() &&
-            !devices.empty()) {
-            args.push_back(ValueObject(devices.front()));
-            devices.erase(devices.begin());
-            continue;
-        }
-        args.push_back(arg);
-    }
-    predicates.SetBindArgs(args);
-}
-
-int RdbStoreImpl::SetDistributedInfo(DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates)
+int RdbStoreImpl::SetDistributedInfo(
+    DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates)
 {
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT_NEW;
     }
-    auto [errCode, conn] = GetConn(false);
-    if (errCode != E_OK || conn == nullptr) {
-        LOG_ERROR("The database is busy or closed errCode:%{public}d", errCode);
+    if (distributedInfo.flag == DistributedOrigin::BUTT) {
+        return E_INVALID_ARGS_NEW;
+    }
+    auto [errCode, uuids] = ConvertToUuids(distributedInfo, predicates);
+    if (errCode != E_OK) {
         return errCode;
-    }
-    std::vector<std::string> devices;
-    std::vector<std::string> uuids;
-    if (!distributedInfo.oriDevice.empty()) {
-        devices.push_back(distributedInfo.oriDevice);
-    }
-    std::string device;
-    if (predicates.HasSpecificField()) {
-        CollectDevicesFromPredicates(predicates, devices);
-    }
-    if (!devices.empty()) {
-        auto [errcode, temp] = ProcessDistributedDevices(syncerParam_, devices);
-        if (errCode != E_OK) {
-            return errCode;
-        }
-        if (temp.empty() || (temp.size() != devices.size())) {
-            return E_INVALID_ARGS_NEW;
-        }
-        uuids = std::move(temp);
     }
     if (!distributedInfo.oriDevice.empty() && !uuids.empty()) {
         distributedInfo.oriDevice = uuids.front();
         uuids.erase(uuids.begin());
     }
-    if (predicates.HasSpecificField() && !uuids.empty()) {
-        UpdatePredicatesArgs(predicates, uuids);
+    SqlInfo sqlInfo;
+    if (!predicates.HasSpecificField()) {
+        sqlInfo.args = predicates.GetBindArgs();
+    } else {
+        std::string device;
+        for (auto &arg : predicates.GetBindArgs()) {
+            if (arg.GetType() == ValueObject::TYPE_STRING && arg.GetString(device) == E_OK && !device.empty() &&
+                !uuids.empty()) {
+                sqlInfo.args.push_back(ValueObject(uuids.front()));
+                uuids.erase(uuids.begin());
+                continue;
+            }
+            sqlInfo.args.push_back(arg);
+        }
     }
-    errCode = conn->SetDistributedInfo(distributedInfo, predicates);
-    if (errCode != E_OK) {
-        LOG_ERROR("Fail to set distributed info, error:%{public}d, name:%{public}s.", errCode,
+    sqlInfo.sql = SqliteUtils::Replace(predicates.GetWhereClause(), "#_", "");
+    auto [errorCode, conn] = GetConn(false);
+    if (errorCode != E_OK || conn == nullptr) {
+        LOG_ERROR("The database is busy or closed errCode:%{public}d", errorCode);
+        return errorCode != E_OK ? errorCode : E_ERROR;
+    }
+    errorCode =
+        conn->SetDistributedInfo(distributedInfo, sqlInfo, predicates.GetTableName(), predicates.HasSpecificField());
+    if (errorCode != E_OK) {
+        LOG_ERROR("Fail to set distributed info, error:%{public}d, name:%{public}s.", errorCode,
             SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
-    return errCode;
+    return errorCode;
 }
 
 int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices)

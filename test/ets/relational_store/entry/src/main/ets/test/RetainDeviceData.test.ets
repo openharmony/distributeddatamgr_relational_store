@@ -61,34 +61,18 @@ export default function RetainDeviceData() {
       console.log(TAG + "************* RetainDeviceDataTest0001 start *************");
       if (rdbStore == undefined) {
         expect().assertFail();
-      } else {
-        try {
-          await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL UNIQUE, AGE INTEGER, SALARY REAL, CODES BLOB)');
-        } catch (e) {
-          console.error(`executeSql error, code is ${e.code},massegeis ${e.message}`);
-          expect(null).assertFail();
-        }
-        console.info(`SetDistributedTables EMPLOYEE begin`);
-        try {
-          await rdbStore.setDistributedTables(["EMPLOYEE"], relationalStore.DistributedType.DISTRIBUTED_DEVICE, DISTRIBUTED_CONFIG_SINGLE);
-          console.info('RetainDeviceDataTest0001 EMPLOYEE SINGLE_VERSION successfully.');
-          expect(true).assertTrue();
-        } catch (err) {
-          console.error(`RetainDeviceDataTest0001 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
-          expect(null).assertFail();
-        }
-        const devices: string[] = [];
-        console.log(`RetainDeviceDataTest0001 begin`);
-          try {
-            const tableAndDevice: Record<string, string[]> = {};
-            tableAndDevice['EMPLOYEE'] = devices;
-            await rdbStore.retainDeviceData(tableAndDevice);
-            console.error(`RetainDeviceDataTest0001 success`);
-            expect(null).assertFail();
-          } catch (e) {
-            console.error(`RetainDeviceDataTest0001 failed, code is ${e.code},message is ${e.message}`);
-            expect(e.code).assertEqual(202);
-          }
+      }
+      const devices: string[] = [];
+      console.log(`RetainDeviceDataTest0001 begin`);
+      try {
+        const tableAndDevice: Record<string, string[]> = {};
+        tableAndDevice['EMPLOYEE'] = devices;
+        await rdbStore.retainDeviceData(tableAndDevice);
+        console.error(`RetainDeviceDataTest0001 success`);
+        expect(null).assertFail();
+      } catch (e) {
+        console.error(`RetainDeviceDataTest0001 failed, code is ${e.code},message is ${e.message}`);
+        expect(e.code).assertEqual(202);
       }
       console.log(TAG + "************* RetainDeviceDataTest0001 end *************");
     })
