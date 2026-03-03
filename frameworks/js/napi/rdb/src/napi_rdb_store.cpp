@@ -45,8 +45,7 @@ using OHOS::DistributedRdb::SyncOption;
 using OHOS::DistributedRdb::SyncResult;
 #endif
 
-#define REPORT() \
-    JSUtils::ReportInterfaceUsed(std::string("rdb::") + __FUNCTION__)
+#define REPORT() JSUtils::ReportInterfaceUsed(std::string("rdb::") + __FUNCTION__)
 
 namespace OHOS {
 namespace RdbJsKit {

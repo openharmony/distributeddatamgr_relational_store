@@ -25,8 +25,7 @@ using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 
-#define REPORT() \
-    JSUtils::ReportInterfaceUsed(std::string("rdb::") + __FUNCTION__)
+#define REPORT() JSUtils::ReportInterfaceUsed(std::string("rdb::") + __FUNCTION__)
 
 namespace OHOS {
 namespace RdbJsKit {

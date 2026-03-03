@@ -62,8 +62,7 @@ using OHOS::DistributedRdb::Details;
 using OHOS::DistributedRdb::SyncResult;
 #endif
 
-#define REPORT() \
-    JSUtils::ReportInterfaceUsed(std::string("relationalstore::") + __FUNCTION__)
+#define REPORT() JSUtils::ReportInterfaceUsed(std::string("relationalstore::") + __FUNCTION__)
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
