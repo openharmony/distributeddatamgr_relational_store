@@ -60,6 +60,6 @@ void NapiLogObserver::OnErrorLog(const ExceptionMessage &exceptionMessage)
         [infos = std::move(exceptionMessage)](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
             argv[0] = JSUtils::Convert2JSValue(env, infos);
-        });
+        }, {}, "OnErrorLog");
 }
 } // namespace OHOS::RelationalStoreJsKit

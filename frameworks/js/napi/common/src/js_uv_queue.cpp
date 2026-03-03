@@ -55,7 +55,7 @@ UvQueue::~UvQueue()
     isValid_ = nullptr;
 }
 
-void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
+void UvQueue::AsyncCall(UvCallback callback, Args args, Result result, const char* taskName)
 {
     if (callback.IsNull()) {
         LOG_ERROR("callback is nullptr.");
@@ -70,16 +70,16 @@ void UvQueue::AsyncCall(UvCallback callback, Args args, Result result)
     entry->args_ = std::move(args);
     entry->result_ = std::move(result);
     entry->isValid_ = isValid_;
-    auto status = napi_send_event(env_, GenCallbackTask(entry), napi_eprio_immediate);
+    auto status = napi_send_event(env_, GenCallbackTask(entry), napi_eprio_immediate, taskName);
     if (status != napi_ok) {
         LOG_ERROR("Failed to SendEvent, status:%{public}d", status);
     }
 }
 
-void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
+void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result, const char* taskName)
 {
     if (handler_ == nullptr) {
-        AsyncCall(std::move(callback), std::move(args), std::move(result));
+        AsyncCall(std::move(callback), std::move(args), std::move(result), taskName);
     }
     if (callback.IsNull()) {
         LOG_ERROR("handler_ or callback is nullptr.");
@@ -100,7 +100,7 @@ void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result)
     }
 }
 
-void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
+void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args, const char* taskName)
 {
     if (promise.IsNull()) {
         LOG_ERROR("promise is nullptr.");
@@ -111,13 +111,13 @@ void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args)
     entry->defer_ = promise.defer_;
     entry->args_ = std::move(args);
     entry->isValid_ = isValid_;
-    auto status = napi_send_event(env_, GenPromiseTask(entry), napi_eprio_immediate);
+    auto status = napi_send_event(env_, GenPromiseTask(entry), napi_eprio_immediate, taskName);
     if (status != napi_ok) {
         LOG_ERROR("Failed to SendEvent, status:%{public}d", status);
     }
 }
 
-void UvQueue::Execute(UvQueue::Task task)
+void UvQueue::Execute(UvQueue::Task task, const char* taskName)
 {
     if (loop_ == nullptr || !task) {
         LOG_ERROR("loop_ or task is nullptr.");
@@ -136,9 +136,10 @@ void UvQueue::Execute(UvQueue::Task task)
     }
     *entry = task;
     work->data = entry;
-    int ret = uv_queue_work(loop_, work, DoExecute, [](uv_work_t *work, int status) { delete work; });
+    int ret = uv_queue_work_internal(loop_, work, DoExecute, [](uv_work_t *work, int status) { delete work; },
+        taskName);
     if (ret < 0) {
-        LOG_ERROR("uv_queue_work failed, errCode:%{public}d", ret);
+        LOG_ERROR("uv_queue_work_internal failed, errCode:%{public}d", ret);
         delete entry;
         delete work;
     }

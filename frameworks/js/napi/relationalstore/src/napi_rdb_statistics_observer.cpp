@@ -60,7 +60,7 @@ void NapiStatisticsObserver::OnStatistic(const SqlExecutionInfo &sqlExeInfo)
         [infos = std::move(sqlExeInfo)](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
             argv[0] = JSUtils::Convert2JSValue(env, infos);
-        });
+        }, {}, "NapiStatisticsObserver::OnStatistic");
 }
 
 NapiPerfStatObserver::NapiPerfStatObserver(
@@ -105,6 +105,6 @@ void NapiPerfStatObserver::OnStatistic(const SqlExecutionInfo &sqlExeInfo)
         [infos = std::move(sqlExeInfo)](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
             argv[0] = JSUtils::Convert2JSValue(env, infos);
-        });
+        }, {}, "NapiPerfStatObserver::OnStatistic");
 }
 } // namespace OHOS::RelationalStoreJsKit
