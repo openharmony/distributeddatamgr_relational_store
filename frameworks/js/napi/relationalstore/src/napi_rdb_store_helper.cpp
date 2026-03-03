@@ -40,6 +40,9 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 using namespace OHOS::AppDataMgrJsKit::JSUtils;
 
+#define REPORT() \
+    JSUtils::ReportInterfaceUsed(std::string("rdb::") + __FUNCTION__)
+
 namespace OHOS {
 namespace RelationalStoreJsKit {
 constexpr int32_t PARAM_LENGTH_MAX = 256;
@@ -214,7 +217,7 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     if (context->isAsync_ != true) {
-        JSUtils::ReportInterfaceUsed("relationalStore_deleteRdbStoreSync");
+        REPORT();
     }
     return ASYNC_CALL(env, context);
 }
