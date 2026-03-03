@@ -1083,7 +1083,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_004, TestSize.Level2
 
 /**
  * @tc.name: SetDistributedInfo_Test_005
- * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW contain asset
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_005, TestSize.Level2)
@@ -1187,7 +1187,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_007, TestSize.Level2
 
 /**
  * @tc.name: SetDistributedInfo_Test_008
- * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW contain assets
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_008, TestSize.Level2)
@@ -1256,7 +1256,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_009, TestSize.Level2
 
 /**
  * @tc.name: SetDistributedInfo_Test_010
- * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW and empty devices
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_010, TestSize.Level2)
@@ -1281,12 +1281,12 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_010, TestSize.Level2
     predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "");
     predicates.EqualTo("salary", resDouble);
     errCode = store->SetDistributedInfo(distributedInfo, predicates);
-    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, errCode);
 }
 
 /**
  * @tc.name: SetDistributedInfo_Test_011
- * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW and devices is not empty
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_011, TestSize.Level2)
@@ -1317,7 +1317,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_011, TestSize.Level2
 
 /**
  * @tc.name: SetDistributedInfo_Test_012
- * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW due to uuid is empty
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_012, TestSize.Level2)
@@ -1347,7 +1347,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_012, TestSize.Level2
 
 /**
  * @tc.name: SetDistributedInfo_Test_013
- * @tc.desc: Abnormal testCase of RetainDeviceData fail E_NOT_SUPPORT_NEW
+ * @tc.desc: Abnormal testCase of RetainDeviceData fail E_INVALID_ARGS_NEW due to uuids length is 2
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, SetDistributedInfo_Test_013, TestSize.Level2)

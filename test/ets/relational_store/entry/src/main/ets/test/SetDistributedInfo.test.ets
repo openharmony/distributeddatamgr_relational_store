@@ -62,52 +62,19 @@ export default function SetDistributedInfo() {
       console.log(TAG + "************* SetDistributedInfoTest0001 start *************");
       if (rdbStore == undefined) {
         expect().assertFail();
-      } else {
-        try {
-          await rdbStore.executeSql('CREATE TABLE IF NOT EXISTS EMPLOYEE (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL UNIQUE, AGE INTEGER, SALARY REAL, CODES BLOB)');
-        } catch (e) {
-          console.error(`executeSql error, code is ${e.code},massegeis ${e.message}`);
-          expect(null).assertFail();
+      }
+      console.log(`SetDistributedInfoTest0001 begin`);
+      try {
+        const distributedInfo:relationalStore.DistributedInfo = {
+          flag: relationalStore.DistributedOrigin.ORI_REMOTE,
         }
-        console.info(`SetDistributedTables EMPLOYEE begin`);
-        try {
-          await rdbStore.setDistributedTables(["EMPLOYEE"], relationalStore.DistributedType.DISTRIBUTED_DEVICE, DISTRIBUTED_CONFIG_SINGLE);
-          console.info('SetDistributedInfoTest0001 EMPLOYEE SINGLE_VERSION successfully.');
-          expect(true).assertTrue();
-        } catch (err) {
-          console.error(`SetDistributedInfoTest0001 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
-          expect(null).assertFail();
-        }
-        let valueBucket: relationalStore.ValuesBucket = {};
-        valueBucket[relationalStore.Field.CURSOR_FIELD]
-        valueBucket["NAME"] = "Lisa";
-        valueBucket["AGE"] = 25;
-        valueBucket["SALARY"] = 23456.6;
-        let value4 = new Uint8Array([1, 2, 3, 4, 5]);
-        valueBucket["CODES"] = value4;
-        try {
-          await (rdbStore as relationalStore.RdbStore).insert("EMPLOYEE", valueBucket);
-          console.info(`Insert is successful`);
-        } catch (e) {
-          console.error(`Insert data failed, code is ${e.code},message is ${e.message}`);
-        }
-        console.log(`SetDistributedInfoTest0001 begin`);
-        try {
-          const distributedInfo:relationalStore.DistributedInfo = {
-            flag: relationalStore.DistributedOrigin.ORI_REMOTE,
-          }
-          const predicates = new relationalStore.RdbPredicates('EMPLOYEE');
-          let value4 = new Uint8Array([1, 2, 3, 4, 5]);
-          predicates.equalTo("CODES", value4);
-          predicates.equalTo("AGE", 25);
-          predicates.equalTo("NAME", "Lisa");
-          await rdbStore.setDistributedInfo(distributedInfo, predicates);
-          console.error(`SetDistributedInfoTest0001 success`);
-          expect(null).assertFail();
-        } catch (e) {
-          console.error(`SetDistributedInfoTest0001 failed, code is ${e.code},message is ${e.message}`);
-          expect(e.code).assertEqual(202);
-        }
+        const predicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        await rdbStore.setDistributedInfo(distributedInfo, predicates);
+        console.error(`SetDistributedInfoTest0001 success`);
+        expect(null).assertFail();
+      } catch (e) {
+        console.error(`SetDistributedInfoTest0001 failed, code is ${e.code},message is ${e.message}`);
+        expect(e.code).assertEqual(202);
       }
       console.log(TAG + "************* SetDistributedInfoTest0001 end *************");
     })

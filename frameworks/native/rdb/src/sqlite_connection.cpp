@@ -1786,27 +1786,21 @@ std::pair<int32_t, DistributedDB::Type> ConvertValueObjectToType(const ValueObje
     return { ret, result };
 }
 
-int SqliteConnection::SetDistributedInfo(DistributedRdb::DistributedInfo &distributedInfo, AbsRdbPredicates &predicates)
+int SqliteConnection::SetDistributedInfo(const DistributedRdb::DistributedInfo &distributedInfo,
+    const SqlInfo &sqlInfo, const std::string &tableName, bool hasSpecificField)
 {
     DistributedDB::UpdateContent updateContent;
     if (!distributedInfo.oriDevice.empty()) {
         updateContent.oriDevice = distributedInfo.oriDevice;
-    }
-    if (distributedInfo.flag == DistributedOrigin::BUTT) {
-        return E_INVALID_ARGS_NEW;
     }
     if (distributedInfo.flag != DistributedOrigin::ORI_ORIGINAL) {
         updateContent.flag = distributedInfo.flag == DistributedOrigin::ORI_REMOTE ? DistributedDB::LogFlag::REMOTE
                                                                                    : DistributedDB::LogFlag::LOCAL;
     }
     DistributedDB::SelectCondition selectCondition;
-    selectCondition.sql = SqliteUtils::Replace(predicates.GetWhereClause(), "#_", "");
+    selectCondition.sql = sqlInfo.sql;
     std::vector<DistributedDB::Type> types;
-    for (auto &arg : predicates.GetBindArgs()) {
-        std::string device;
-        if (arg.GetType() == ValueObject::TYPE_DOUBLE && predicates.HasSpecificField()) {
-            continue;
-        }
+    for (auto &arg : sqlInfo.args) {
         auto [ret, result] = ConvertValueObjectToType(arg);
         if (ret != E_OK) {
             return E_INVALID_ARGS_NEW;
@@ -1815,13 +1809,13 @@ int SqliteConnection::SetDistributedInfo(DistributedRdb::DistributedInfo &distri
     }
     selectCondition.args = types;
     DistributedDB::UpdateCondition updateCondition;
-    if (predicates.HasSpecificField()) {
+    if (hasSpecificField) {
         updateCondition.logCondition = selectCondition;
     } else {
         updateCondition.dataCondition = selectCondition;
     }
     DistributedDB::UpdateOption updateOption;
-    updateOption.tableName = predicates.GetTableName();
+    updateOption.tableName = tableName;
     updateOption.condition = updateCondition;
     updateOption.content = updateContent;
     return SqliteUtils::ConvertDBStatusNative(UpdateDataLog(dbHandle_, updateOption));
