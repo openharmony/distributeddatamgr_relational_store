@@ -45,7 +45,7 @@ napi_status SendEventMock(napi_env env,
     entry->callback = cb;
     work->data = entry;
 
-    int ret = uv_queue_work(loop, work, [](uv_work_t *data) {
+    int ret = uv_queue_work_internal(loop, work, [](uv_work_t *data) {
         return;
     }, [](uv_work_t *work, int status) {
         if (work == nullptr) {
@@ -62,7 +62,7 @@ napi_status SendEventMock(napi_env env,
         delete entry;
         delete work;
         return;
-    });
+    }, name);
     if (ret < 0) {
         delete entry;
         delete work;
