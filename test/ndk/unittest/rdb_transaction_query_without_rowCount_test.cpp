@@ -290,7 +290,6 @@ void RdbTransactionQueryWithoutRowCountTest::CheckAllAndDestroyCursor(OH_Cursor 
 void RdbTransactionQueryWithoutRowCountTest::CheckErrAndDestroyCursor(OH_Cursor *cursor)
 {
     cursor->goToNextRow(cursor);
-
     size_t size = 0;
     // cursor is nullptr
     int errCode = cursor->getSize(nullptr, 1, &size);
