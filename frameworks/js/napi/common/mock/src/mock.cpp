@@ -21,7 +21,8 @@ struct UvEntry {
 napi_status SendEventMock(napi_env env,
                           const std::function<void()>& cb,
                           napi_event_priority priority,
-                          const char* name)
+                          const char* name,
+                          napi_event_barrier_option option)
 {
     if (env == nullptr || !cb || priority < napi_eprio_vip || priority > napi_eprio_idle) {
         return napi_status::napi_invalid_arg;
