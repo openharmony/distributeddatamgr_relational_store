@@ -102,29 +102,6 @@ int SqliteUtils::ConvertRdbStatusNative(int32_t status)
     return E_ERROR;
 }
 
-int SqliteUtils::ConvertDBStatusNative(int32_t status)
-{
-    switch (status) {
-        case DBStatus::OK:
-            return E_OK;
-        case DBStatus::BUSY:
-            return E_SQLITE_BUSY;
-        case DBStatus::INVALID_ARGS:
-            return E_INVALID_ARGS_NEW;
-        case DBStatus::INVALID_PASSWD_OR_CORRUPTED_DB:
-            return E_SQLITE_CORRUPT;
-        case DBStatus::TABLE_NOT_FOUND:
-        case DBStatus::DB_ERROR:
-            return E_SQLITE_ERROR;
-        case DBStatus::NOT_SUPPORT:
-        case DBStatus::DISTRIBUTED_SCHEMA_NOT_FOUND:
-            return E_NOT_SUPPORT_NEW;
-        default:
-            break;
-    }
-    return E_ERROR;
-}
-
 bool SqliteUtils::HasPermit(const std::string &path, mode_t mode)
 {
     struct stat fileStat;

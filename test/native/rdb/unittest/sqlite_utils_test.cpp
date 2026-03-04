@@ -28,7 +28,6 @@
 #include "rdb_platform.h"
 #include "rdb_errno.h"
 #include "rdb_types.h"
-#include "relational_store_client.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -832,30 +831,5 @@ HWTEST_F(SqliteUtilsTest, ConvertRdbStatusNative, TestSize.Level1)
     ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_ERROR);
     EXPECT_EQ(ret, E_ERROR);
     ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_NO_META);
-    EXPECT_EQ(ret, E_ERROR);
-}
-
-/**
- * @tc.name: ConvertDBStatusNative
- * @tc.desc: test ConvertDBStatusNative
- * @tc.type: FUNC
- */
-HWTEST_F(SqliteUtilsTest, ConvertDBStatusNative, TestSize.Level1)
-{
-    int ret = SqliteUtils::ConvertDBStatusNative(DistributedDB::DBStatus::OK);
-    EXPECT_EQ(ret, E_OK);
-    ret = SqliteUtils::ConvertDBStatusNative(DistributedDB::DBStatus::BUSY);
-    EXPECT_EQ(ret, E_SQLITE_BUSY);
-    ret = SqliteUtils::ConvertDBStatusNative(DistributedDB::DBStatus::INVALID_ARGS);
-    EXPECT_EQ(ret, E_INVALID_ARGS_NEW);
-    ret = SqliteUtils::ConvertDBStatusNative(DistributedDB::DBStatus::INVALID_PASSWD_OR_CORRUPTED_DB);
-    EXPECT_EQ(ret, E_SQLITE_CORRUPT);
-    ret = SqliteUtils::ConvertDBStatusNative(DistributedDB::DBStatus::TABLE_NOT_FOUND);
-    EXPECT_EQ(ret, E_SQLITE_ERROR);
-    ret = SqliteUtils::ConvertDBStatusNative(DistributedDB::DBStatus::NOT_SUPPORT);
-    EXPECT_EQ(ret, E_NOT_SUPPORT_NEW);
-    ret = SqliteUtils::ConvertDBStatusNative(DistributedDB::DBStatus::DISTRIBUTED_SCHEMA_NOT_FOUND);
-    EXPECT_EQ(ret, E_NOT_SUPPORT_NEW);
-    ret = SqliteUtils::ConvertDBStatusNative(DistributedDB::DBStatus::BUTT_STATUS);
     EXPECT_EQ(ret, E_ERROR);
 }

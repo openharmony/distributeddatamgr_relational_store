@@ -114,8 +114,6 @@ public:
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
         const DistributedRdb::DistributedConfig &distributedConfig) override;
-    int SetDistributedInfo(
-        DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates) override;
     int RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices) override;
     int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam) override;
@@ -254,8 +252,6 @@ private:
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
     static void ReplayCallbackImpl(const RdbStoreConfig &config);
-    std::pair<int32_t, std::vector<std::string>> ConvertToUuids(
-        const DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
