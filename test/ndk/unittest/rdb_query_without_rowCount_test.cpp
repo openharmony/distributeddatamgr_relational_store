@@ -311,7 +311,7 @@ void RdbQueryWithoutRowCountTest::CheckErrAndDestroyCursor(OH_Cursor *cursor)
     errCode = cursor->getText(cursor, 1, nullptr, size);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     // the size is invalid
-    errCode = cursor->getText(cursor, 1, data1Value.data(), data1Value.size());
+    errCode = cursor->getText(cursor, 1, data1Value.data(), 0);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     int64_t data2Value;
