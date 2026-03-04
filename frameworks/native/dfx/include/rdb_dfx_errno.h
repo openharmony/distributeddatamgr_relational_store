@@ -114,9 +114,14 @@ static constexpr int E_DFX_VALUELESS_BY_EXCEPTION = (E_DFX_BASE + 0x11);
 static constexpr int E_DFX_TYPE_INDEX_OUT_OF_RANGE = (E_DFX_BASE + 0x12);
 
 /**
+ * @brief Only use for dfx, silent proxy query success.
+ */
+static constexpr int E_DFX_SILENT_PROXY_QUERY = (E_DFX_BASE + 0x13);
+
+/**
  * @brief Only use for dfx, interface is used.
  */
-static constexpr int E_DFX_INTERFACE_USED = (E_DFX_BASE + 0x13);
+static constexpr int E_DFX_INTERFACE_USED = (E_DFX_BASE + 0x14);
 } // namespace NativeRdb
 } // namespace OHOS
 

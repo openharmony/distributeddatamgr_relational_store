@@ -1611,16 +1611,18 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
             auto args = [result](napi_env env, int &argc, napi_value *argv) {
                 argv[1] = JSUtils::Convert2JSValue(env, result);
             };
-            callback ? queue->AsyncCall({ callback }, args) : queue->AsyncPromise({ defer }, args);
+            callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnComplete") :
+                queue->AsyncPromise({ defer }, args, "DistributedSync::OnComplete");
         });
         if (ret != NativeRdb::E_OK) {
             auto args = [ret](napi_env env, int &argc, napi_value *argv) mutable {
                 SetBusinessError(env, std::make_shared<InnerError>(ret), &argv[0]);
             };
-            callback ? queue->AsyncCall({ callback }, args) : queue->AsyncPromise({ defer }, args);
+            callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnError") :
+                queue->AsyncPromise({ defer }, args, "DistributedSync::OnError");
         }
     };
-    queue->Execute(std::move(exec));
+    queue->Execute(std::move(exec), "DistributedSync::Execute");
     context = nullptr;
     return promise;
 }
@@ -1686,7 +1688,7 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
             queue->AsyncCallInOrder({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
                 argc = 1;
                 argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
-            });
+            }, {}, "CloudSync");
         };
         if (context->rdbPredicates == nullptr) {
             context->execCode_ = rdbStore->Sync(option, context->tablesNames, async);

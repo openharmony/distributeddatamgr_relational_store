@@ -92,6 +92,7 @@ ohos_unittest("NativeRdbConditionTest") {
     "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
+    "${relational_store_native_path}/rdb/src/silent_proxy.cpp",
     "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
     "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
     "${relational_store_native_path}/rdb/src/security_policy.cpp",
