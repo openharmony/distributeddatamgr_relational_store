@@ -60,10 +60,10 @@ public:
     ~UvQueue();
 
     napi_env GetEnv();
-    void AsyncCall(UvCallback callback, Args args = Args(), Result result = Result());
-    void AsyncCallInOrder(UvCallback callback, Args args = Args(), Result result = Result());
-    void AsyncPromise(UvPromise promise, Args args = Args());
-    void Execute(Task task);
+    void AsyncCall(UvCallback callback, Args args = Args(), Result result = Result(), const char* taskName = "");
+    void AsyncCallInOrder(UvCallback callback, Args args = Args(), Result result = Result(), const char* taskName = "");
+    void AsyncPromise(UvPromise promise, Args args = Args(), const char* taskName = "");
+    void Execute(Task task, const char* taskName = "");
 
 private:
     static constexpr char RESOLVED[] = "resolved";

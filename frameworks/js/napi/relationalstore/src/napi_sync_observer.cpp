@@ -62,7 +62,7 @@ void SyncObserver::ProgressNotification(const Details &details)
         [syncDetails = std::move(details)](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
             argv[0] = syncDetails.empty() ? nullptr : JSUtils::Convert2JSValue(env, syncDetails.begin()->second);
-        });
+        }, {}, "ProgressNotification");
 }
 } // namespace RelationalStoreJsKit
-} // namespace OHOS
+} // namespace OHOS
