@@ -116,7 +116,6 @@ public:
     static bool IsUseAsyncRestore(const RdbStoreConfig &config, const std::string &newPath,
         const std::string &backupPath);
     static int ConvertRdbStatusNative(int32_t status);
-    static int ConvertDBStatusNative(int32_t status);
 
 private:
     struct SqlType {

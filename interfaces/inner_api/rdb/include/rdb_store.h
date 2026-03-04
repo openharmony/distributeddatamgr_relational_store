@@ -675,14 +675,6 @@ public:
         const DistributedRdb::DistributedConfig &distributedConfig = { true });
 
     /**
-     * @brief Set distributed table info.
-     *
-     * @param distributedInfo Indicates the info you want to set.
-     */
-    virtual int SetDistributedInfo(
-        DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates);
-
-    /**
      * @brief Remove distributed table remote data.
      *
      * @param retainDevices Indicates the tables name you want to remove and devices you want to keep.

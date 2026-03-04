@@ -67,8 +67,6 @@ public:
     ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
-    int SetDistributedInfo(const DistributedRdb::DistributedInfo &distributedInfo, const SqlInfo &sqlInfo,
-        const std::string &tableName, bool hasSpecificField) override;
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
     int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
     void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount) override;

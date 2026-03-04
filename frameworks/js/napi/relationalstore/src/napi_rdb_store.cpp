@@ -1506,7 +1506,6 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
 {
     properties.push_back(DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery));
     properties.push_back(DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables));
-    properties.push_back(DECLARE_NAPI_FUNCTION("setDistributedInfo", SetDistributedInfo));
     properties.push_back(DECLARE_NAPI_FUNCTION("retainDeviceData", RetainDeviceData));
     properties.push_back(DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName));
     properties.push_back(DECLARE_NAPI_FUNCTION("sync", Sync));
@@ -1547,65 +1546,32 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
     return ASYNC_CALL(env, context);
 }
 
-struct DistributedInfoContext : public EnhancedContext {
-    std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
-    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
-    RdbPredicatesProxy *predicatesProxy;
-    DistributedRdb::DistributedInfo distributedInfo;
-};
-
-napi_value RdbStoreProxy::SetDistributedInfo(napi_env env, napi_callback_info info)
-{
-    auto context = std::make_shared<DistributedInfoContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2"));
+struct RetainDeviceDataContext : public EnhancedContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        ASSERT_RETURN_SET_ERROR(argc < 2, std::make_shared<ParamNumError>("0 - 1"));
         RdbStoreProxy *obj = GetNativeInstance(env, self);
-        CHECK_RETURN_SET_E(obj != nullptr, std::make_shared<ParamError>("RdbStore", "not nullptr."));
-        CHECK_RETURN_SET_E(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
-        CHECK_RETURN_SET_E(obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
-        context->rdbStore = obj->GetInstance();
-        auto status = JSUtils::Convert2Value(env, argv[0], context->distributedInfo);
-        CHECK_RETURN_SET_E(status == napi_ok || JSUtils::IsNull(env, argv[0]),
-            std::make_shared<ParamError>("distributedInfo", "a DistributedInfo type"));
-        status = napi_unwrap(env, argv[1], reinterpret_cast<void **>(&context->predicatesProxy));
-        CHECK_RETURN_SET_E(status == napi_ok && context->predicatesProxy != nullptr,
-            std::make_shared<ParamError>("predicates", "an RdbPredicates."));
-        context->rdbPredicates = context->predicatesProxy->GetPredicates();
-    };
-    auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        return context->rdbStore->SetDistributedInfo(context->distributedInfo, *(context->rdbPredicates));
-    };
-    auto output = [context](napi_env env, napi_value &result) {
-        napi_status status = napi_get_undefined(env, &result);
-        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-    };
-    context->InitAction(env, info, input, exec, output);
-
-    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    return ASYNC_CALL(env, context);
-}
-
-struct RetainDeviceContext : public EnhancedContext {
+        ASSERT_RETURN_SET_ERROR(obj != nullptr, std::make_shared<ParamError>("RdbStore", "not nullptr."));
+        ASSERT_RETURN_SET_ERROR(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
+        ASSERT_RETURN_SET_ERROR(
+            obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        rdbStore = obj->GetInstance();
+        if (argc == 1) {
+            auto result = JSUtils::Convert2Value(env, argv[0], retainDevices, true);
+            ASSERT_RETURN_SET_ERROR(
+                result == napi_ok, std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal map."));
+        }
+        return OK;
+    }
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
     std::map<std::string, std::vector<std::string>> retainDevices;
 };
 
 napi_value RdbStoreProxy::RetainDeviceData(napi_env env, napi_callback_info info)
 {
-    auto context = std::make_shared<RetainDeviceContext>();
+    auto context = std::make_shared<RetainDeviceDataContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
-        CHECK_RETURN_SET_E(argc < 2, std::make_shared<ParamNumError>("0 - 1"));
-        RdbStoreProxy *obj = GetNativeInstance(env, self);
-        CHECK_RETURN_SET_E(obj != nullptr, std::make_shared<ParamError>("RdbStore", "not nullptr."));
-        CHECK_RETURN_SET_E(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
-        CHECK_RETURN_SET_E(obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
-        context->rdbStore = obj->GetInstance();
-        if (argc == 1) {
-            auto result = JSUtils::Convert2Value(env, argv[0], context->retainDevices, true);
-            CHECK_RETURN_SET_E(
-                result == napi_ok, std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal map."));
-        }
+        context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);

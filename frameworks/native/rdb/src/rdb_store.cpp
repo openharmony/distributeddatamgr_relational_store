@@ -512,14 +512,6 @@ int RdbStore::SetDistributedTables(
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::SetDistributedInfo(
-    DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates)
-{
-    (void)distributedInfo;
-    (void)predicates;
-    return E_NOT_SUPPORT;
-}
-
 int RdbStore::RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices)
 {
     (void)retainDevices;

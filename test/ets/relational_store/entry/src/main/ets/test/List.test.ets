@@ -40,7 +40,6 @@ import ReturningMultiThreaded from './ReturningMultiThreaded.test';
 import RdbStoreUndefinedTest from './RdbStoreUndefined.test';
 import RdbStoreGetRdbStoreSyncEtsTest from './RdbStoreGetRdbStoreSyncEts.test';
 import RetainDeviceData from './RetainDeviceData.test';
-import SetDistributedInfo from './SetDistributedInfo.test';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -70,5 +69,4 @@ export default function testsuite() {
   RdbStoreUndefinedTest();
   RdbStoreGetRdbStoreSyncEtsTest();
   RetainDeviceData();
-  SetDistributedInfo();
 }

@@ -96,7 +96,6 @@ enum DBStatus {
     NEED_CORRECT_TARGET_USER,           // The target user ID is incorrect and needs to be re-obtained
     CLOUD_ASSET_NOT_FOUND,              // The cloud download asset return 404 error
     TASK_INTERRUPTED,                   // Task(cloud sync) interrupted
-    TABLE_NOT_FOUND,
     SKIP_WHEN_CLOUD_SPACE_INSUFFICIENT, // Whitelist for contact, skip when cloud space insufficient
     BUTT_STATUS = 27394048              // end of status
 };
@@ -262,11 +261,6 @@ using Assets = std::vector<Asset>;
 using Bytes = std::vector<uint8_t>;
 using Entries = std::map<std::string, std::string>;
 using Type = std::variant<Nil, int64_t, double, std::string, bool, Bytes, Asset, Assets, Entries>;
-enum class LogFlag : uint32_t {
-    REMOTE = 0,
-    LOCAL = 2,
-    BUTT
-};
 
 struct RemoteCondition {
     std::string sql;                   // The sql statement;
