@@ -25,7 +25,7 @@
 #include "lru_bucket.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
-#include "serializable.h"
+#include "silent_proxy.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -46,17 +46,6 @@ public:
     std::string GetSelfBundleName();
 
 private:
-    struct SilentProxy final : public Serializable {
-        std::string bundleName;
-        std::vector<std::string> storeNames;
-        API_EXPORT bool Marshal(json &node) const override;
-        API_EXPORT bool Unmarshal(const json &node) override;
-    };
-    struct SilentProxys final : public Serializable {
-        std::vector<SilentProxy> silentProxys {};
-        API_EXPORT bool Marshal(json &node) const override;
-        API_EXPORT bool Unmarshal(const json &node) override;
-    };
     using Param = DistributedRdb::RdbSyncerParam;
     using Info = DistributedRdb::RdbDebugInfo;
     using DebugInfos = std::map<std::string, RdbStoreManager::Info>;
@@ -67,11 +56,8 @@ private:
     int32_t CheckConfig(const RdbStoreConfig &config, const std::string &path);
     static Param GetSyncParam(const RdbStoreConfig &config);
     static int32_t Collector(const RdbStoreConfig &config, DebugInfos &debugInfos, DfxInfo &dfxInfo);
-    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(const std::string &path,
-        const RdbStoreConfig &config, int &errCode);
-    std::pair<int32_t, bool> IsSupportSilentFromProxy(const RdbStoreConfig &config);
-    std::pair<int32_t, bool> IsSupportSilentFromService(const RdbStoreConfig &config);
-    std::pair<int32_t, bool> IsSupportSilent(const RdbStoreConfig &config);
+    std::shared_ptr<RdbStoreImpl> GetStoreFromCache(
+        const std::string &path, const RdbStoreConfig &config, int &errCode);
     void CheckDBVisitor(const std::string &storeName);
 
     static constexpr uint32_t BUCKET_MAX_SIZE = 4;
@@ -81,7 +67,7 @@ private:
     std::map<std::string, std::weak_ptr<RdbStoreImpl>> storeCache_;
     LRUBucket<std::string, Param> configCache_;
     LRUBucket<std::string, bool> promiseInfoCache_;
-    LRUBucket<std::string, std::map<std::string, bool>> isSilentCache_;
+    SilentProxyManager silentProxyManager_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
