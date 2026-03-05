@@ -675,6 +675,14 @@ public:
         const DistributedRdb::DistributedConfig &distributedConfig = { true });
 
     /**
+     * @brief Remove distributed table remote data.
+     *
+     * @param retainDevices Indicates the tables name you want to remove and devices you want to keep.
+     */
+    virtual int RetainDeviceData(
+        const std::map<std::string, std::vector<std::string>> &retainDevices);
+
+    /**
      * @brief Obtain distributed table name of specified remote device according to local table name.
      * When query remote device database, distributed table name is needed.
      *

@@ -512,6 +512,12 @@ int RdbStore::SetDistributedTables(
     return E_NOT_SUPPORT;
 }
 
+int RdbStore::RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices)
+{
+    (void)retainDevices;
+    return E_NOT_SUPPORT;
+}
+
 int RdbStore::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     (void)cryptoParam;

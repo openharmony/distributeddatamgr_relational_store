@@ -90,7 +90,7 @@ template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<T> &value);
 
 template<typename T>
-int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, T> &value);
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, T> &value, bool isAllowEmpty = false);
 
 template<typename... Types>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::variant<Types...> &value);
@@ -251,7 +251,7 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::vector<T> 
 }
 
 template<typename T>
-int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, T> &value)
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, T> &value, bool isAllowEmpty)
 {
     napi_value jsMapList = nullptr;
     uint32_t jsCount = 0;
@@ -260,6 +260,9 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         return napi_invalid_arg;
     }
     status = napi_get_array_length(env, jsMapList, &jsCount);
+    if (isAllowEmpty && jsCount == 0 && status == napi_ok) {
+        return napi_ok;
+    }
     if (status != napi_ok || jsCount <= 0) {
         return napi_invalid_arg;
     }

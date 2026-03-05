@@ -199,6 +199,38 @@ int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam &param, const
     return status;
 }
 
+int32_t RdbServiceProxy::RetainDeviceData(
+    const RdbSyncerParam &param, const std::map<std::string, std::vector<std::string>> &retainDevices)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REMOVE_REMOTE_DATA), reply, param, retainDevices);
+    if (status != RDB_OK) {
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
+}
+
+std::pair<int32_t, std::vector<std::string>> RdbServiceProxy::ObtainUuid(
+    const RdbSyncerParam &param, const std::vector<std::string> &devices)
+{
+    MessageParcel reply;
+    std::vector<std::string> uuids;
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_OBTAIN_UUID), reply, param, devices);
+    if (status != RDB_OK) {
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+        return { status, uuids };
+    }
+    if (!ITypesUtil::Unmarshal(reply, uuids)) {
+        LOG_ERROR("read result failed.");
+        status = RDB_ERROR;
+    }
+    return { status, uuids };
+}
+
 int32_t RdbServiceProxy::Sync(
     const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates, const AsyncDetail &async)
 {
