@@ -80,6 +80,7 @@
 namespace OHOS::NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
+using RdbStatus = OHOS::DistributedRdb::RdbStatus;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 using PerfStat = DistributedRdb::PerfStat;
 using RdbNotifyConfig = DistributedRdb::RdbNotifyConfig;
@@ -446,6 +447,36 @@ int RdbStoreImpl::SetDistributedTables(
     }
 
     return HandleCloudSyncAfterSetDistributedTables(tables, distributedConfig);
+}
+
+int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices)
+{
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+        return E_NOT_SUPPORT_NEW;
+    }
+    for (auto &[table, devices] : retainDevices) {
+        if (table.empty()) {
+            return E_INVALID_ARGS_NEW;
+        }
+        if (devices.empty()) {
+            continue;
+        }
+        for (auto &device : devices) {
+            if (device.empty()) {
+                return E_INVALID_ARGS_NEW;
+            }
+        }
+    }
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK || service == nullptr) {
+        return errCode != E_OK ? errCode : E_ERROR;
+    }
+    int32_t errorCode = service->RetainDeviceData(syncerParam_, retainDevices);
+    if (errorCode != RdbStatus::RDB_OK) {
+        LOG_ERROR("Fail to remove except device data, error:%{public}d, name:%{public}s.", errorCode,
+            SqliteUtils::Anonymous(config_.GetName()).c_str());
+    }
+    return SqliteUtils::ConvertRdbStatusNative(errorCode);
 }
 
 int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)

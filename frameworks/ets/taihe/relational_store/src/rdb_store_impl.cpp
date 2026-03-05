@@ -878,6 +878,35 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
     }
 }
 
+void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainDevices)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(
+        store != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    std::map<std::string, std::vector<std::string>> nativeRetainDevices;
+    for (auto &[table, devices] : retainDevices) {
+        if (table.empty()) {
+            ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+            return;
+        }
+        if (devices.empty()) {
+            continue;
+        }
+        for (auto &device : devices) {
+            if (device.empty()) {
+                ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
+                return;
+            }
+        }
+        nativeRetainDevices.emplace(table, std::vector<std::string>(devices.begin(), devices.end()));
+    }
+    int errCode = store->RetainDeviceData(nativeRetainDevices);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerErrorExt(errCode);
+        return;
+    }
+}
+
 string RdbStoreImpl::ObtainDistributedTableNameSync(string_view device, string_view table)
 {
     auto store = GetResource();

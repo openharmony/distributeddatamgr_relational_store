@@ -44,13 +44,17 @@
 #include "rdb_file_system.h"
 #include "rdb_platform.h"
 #include "rdb_store_config.h"
+#include "rdb_types.h"
 #include "string_utils.h"
 #include "rdb_time_utils.h"
+#include "relational_store_client.h"
 
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace OHOS::DATABASE_UTILS;
+using DBStatus = DistributedDB::DBStatus;
+using RdbStatus = OHOS::DistributedRdb::RdbStatus;
 /* A continuous number must contain at least eight digits, because the employee ID has eight digits,
     and the mobile phone number has 11 digits. The UUID is longer */
 constexpr int32_t CONTINUOUS_DIGITS_MINI_SIZE = 6;
@@ -71,6 +75,32 @@ constexpr const unsigned char MAX_PRINTABLE_BYTE = 0x7F;
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
 constexpr char const *DATABASE = "database";
+
+
+int SqliteUtils::ConvertRdbStatusNative(int32_t status)
+{
+    switch (status) {
+        case RdbStatus::RDB_OK:
+            return E_OK;
+        case RdbStatus::RDB_SQLITE_BUSY:
+            return E_SQLITE_BUSY;
+        case RdbStatus::RDB_INVALID_ARGS:
+            return E_INVALID_ARGS_NEW;
+        case RdbStatus::RDB_SQLITE_CORRUPT:
+            return E_SQLITE_CORRUPT;
+        case RdbStatus::RDB_SQLITE_ERROR:
+            return E_SQLITE_ERROR;
+        case RdbStatus::RDB_NOT_SUPPORT:
+            return E_NOT_SUPPORT_NEW;
+        case RdbStatus::RDB_DB_NOT_EXIST:
+            return E_DB_NOT_EXIST;
+        case RdbStatus::RDB_NON_SYSTEM_APP:
+            return E_NON_SYSTEM_APP;
+        default:
+            break;
+    }
+    return E_ERROR;
+}
 
 bool SqliteUtils::HasPermit(const std::string &path, mode_t mode)
 {

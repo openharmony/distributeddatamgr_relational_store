@@ -26,10 +26,13 @@
 #include <sys/stat.h>
 #include "acl.h"
 #include "rdb_platform.h"
+#include "rdb_errno.h"
+#include "rdb_types.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DATABASE_UTILS;
+using RdbStatus = OHOS::DistributedRdb::RdbStatus;
 
 class SqliteUtilsTest : public testing::Test {
 public:
@@ -800,4 +803,33 @@ HWTEST_F(SqliteUtilsTest, CopyFile001, TestSize.Level1)
 
     std::remove(srcFilename.c_str());
     std::remove(desFilename.c_str());
+}
+
+/**
+ * @tc.name: ConvertRdbStatusNative
+ * @tc.desc: test ConvertRdbStatusNative
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, ConvertRdbStatusNative, TestSize.Level1)
+{
+    int ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_OK);
+    EXPECT_EQ(ret, E_OK);
+    ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_SQLITE_BUSY);
+    EXPECT_EQ(ret, E_SQLITE_BUSY);
+    ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_INVALID_ARGS);
+    EXPECT_EQ(ret, E_INVALID_ARGS_NEW);
+    ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_SQLITE_CORRUPT);
+    EXPECT_EQ(ret, E_SQLITE_CORRUPT);
+    ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_SQLITE_ERROR);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
+    ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_NOT_SUPPORT);
+    EXPECT_EQ(ret, E_NOT_SUPPORT_NEW);
+    ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_DB_NOT_EXIST);
+    EXPECT_EQ(ret, E_DB_NOT_EXIST);
+    ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_NON_SYSTEM_APP);
+    EXPECT_EQ(ret, E_NON_SYSTEM_APP);
+    ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_ERROR);
+    EXPECT_EQ(ret, E_ERROR);
+    ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_NO_META);
+    EXPECT_EQ(ret, E_ERROR);
 }

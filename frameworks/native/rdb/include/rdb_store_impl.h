@@ -114,6 +114,7 @@ public:
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
         const DistributedRdb::DistributedConfig &distributedConfig) override;
+    int RetainDeviceData(const std::map<std::string, std::vector<std::string>> &retainDevices) override;
     int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     std::string ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode) override;

@@ -33,6 +33,13 @@ enum RdbStatus {
     RDB_OK,
     RDB_ERROR,
     RDB_NO_META,
+    RDB_SQLITE_BUSY,
+    RDB_INVALID_ARGS,
+    RDB_DB_NOT_EXIST,
+    RDB_SQLITE_CORRUPT,
+    RDB_SQLITE_ERROR,
+    RDB_NOT_SUPPORT,
+    RDB_NON_SYSTEM_APP,
 };
 
 enum RdbDistributedType {
