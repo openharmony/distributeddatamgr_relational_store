@@ -18,7 +18,7 @@ config("rdb_data_share_adapter_config") {
 
   cflags = [ "-Wno-c99-designator", "-Werror=vla", ]
   if (!is_mingw && !is_mac) {
-    cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
+    cflags_cc = [ "-fvisibility=hidden" ]
   }
   include_dirs = [
     "include",

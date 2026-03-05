@@ -21,7 +21,7 @@ config("appdatafwk_config") {
     "${relational_store_common_path}/include",
   ]
   if (!is_mingw && !is_mac) {
-    cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
+    cflags_cc = [ "-fvisibility=hidden" ]
   }
 }
 
