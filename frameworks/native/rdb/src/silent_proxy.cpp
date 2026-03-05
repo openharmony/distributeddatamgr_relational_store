@@ -15,7 +15,9 @@
 #define LOG_TAG "SilentProxy"
 #include "silent_proxy.h"
 
+#include <algorithm>
 #include <fstream>
+#include <vector>
 
 #include "logger.h"
 #include "rdb_errno.h"
@@ -56,7 +58,7 @@ bool SilentProxy::Unmarshal(const Serializable::json &node)
     return true;
 }
 
-SilentProxyManager::SilentProxyManager(const std::string &configPath) : isSilentCache_(BUCKET_MAX_SIZE)
+SilentProxyManager::SilentProxyManager(const std::string &configPath) : silentCache_(BUCKET_MAX_SIZE)
 {
     configPath_ = configPath.empty() ? SILENT_CONF_PATH : configPath;
 }
@@ -65,16 +67,16 @@ std::pair<int32_t, bool> SilentProxyManager::IsSupportSilentFromProxy(
     const std::string &bundleName, const std::string &storeName)
 {
     std::string key = bundleName + "proxy";
-    std::map<std::string, bool> cacheConfig;
+    std::set<std::string> cacheConfig;
     std::string dbName = SqliteUtils::RemoveSuffix(storeName);
 
-    if (isSilentCache_.Get(key, cacheConfig)) {
+    if (silentCache_.Get(key, cacheConfig)) {
         return { E_OK, cacheConfig.count(dbName) != 0 };
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (isSilentCache_.Get(key, cacheConfig)) {
+    if (silentCache_.Get(key, cacheConfig)) {
         return { E_OK, cacheConfig.count(dbName) != 0 };
     }
 
@@ -100,12 +102,12 @@ std::pair<int32_t, bool> SilentProxyManager::IsSupportSilentFromProxy(
             continue;
         }
         for (auto &name : silentProxy.storeNames) {
-            cacheConfig[name] = true;
+            cacheConfig.insert(name);
         }
         break;
     }
 
-    isSilentCache_.Set(key, cacheConfig);
+    silentCache_.Set(key, cacheConfig);
     return { E_OK, cacheConfig.count(dbName) != 0 };
 }
 
@@ -113,23 +115,17 @@ std::pair<int32_t, bool> SilentProxyManager::IsSupportSilentFromService(
     const std::string &bundleName, const std::string &storeName)
 {
     std::string key = bundleName + "service";
-    std::map<std::string, bool> cacheConfig;
+    std::set<std::string> cacheConfig;
     std::string dbName = SqliteUtils::RemoveSuffix(storeName);
 
-    if (isSilentCache_.Get(key, cacheConfig)) {
-        auto it = cacheConfig.find(dbName);
-        if (it != cacheConfig.end()) {
-            return { E_OK, it->second };
-        }
+    if (silentCache_.Get(key, cacheConfig)) {
+        return { E_OK, cacheConfig.count(dbName) != 0 };
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (isSilentCache_.Get(key, cacheConfig)) {
-        auto it = cacheConfig.find(dbName);
-        if (it != cacheConfig.end()) {
-            return { E_OK, it->second };
-        }
+    if (silentCache_.Get(key, cacheConfig)) {
+        return { E_OK, cacheConfig.count(dbName) != 0 };
     }
 
     DistributedRdb::RdbSyncerParam param;
@@ -138,24 +134,32 @@ std::pair<int32_t, bool> SilentProxyManager::IsSupportSilentFromService(
 
     auto [err, service] = DistributedRdb::RdbManager::GetInstance().GetRdbService(param);
     if (err == E_NOT_SUPPORT) {
-        cacheConfig[dbName] = false;
-        isSilentCache_.Set(key, cacheConfig);
+        silentCache_.Set(key, cacheConfig);
         return { err, false };
     }
     if (err != E_OK || service == nullptr) {
         LOG_ERROR("GetRdbService failed, err is %{public}d.", err);
         return { err, false };
     }
-    auto [errcode, ret] = service->IsSupportSilent(param);
-    if (errcode != DistributedRdb::RDB_OK) {
+    auto [errCode, stores] = service->GetSilentAccessStores(param);
+    if (errCode == DistributedRdb::RDB_PERMISSION_DENIED) {
+        silentCache_.Set(key, cacheConfig);
         return { E_ERROR, false };
     }
+    if (errCode != DistributedRdb::RDB_OK) {
+        return { E_ERROR, false };
+    }
+    std::string dbNames;
+    for (auto &store : stores) {
+        cacheConfig.insert(store);
+        dbNames += store + ",";
+    }
+    bool ret = cacheConfig.count(dbName) != 0;
     if (ret) {
         RdbFaultHiViewReporter::ReportFault(
             RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_SILENT_PROXY_QUERY, bundleName, dbName));
     }
-    cacheConfig[dbName] = ret;
-    isSilentCache_.Set(key, cacheConfig);
+    silentCache_.Set(key, cacheConfig);
     return { E_OK, ret };
 }
 
@@ -167,6 +171,12 @@ std::pair<int32_t, bool> SilentProxyManager::IsSupportSilent(
         return { err, flag };
     }
     return IsSupportSilentFromService(bundleName, storeName);
+}
+
+void SilentProxyManager::ClearCache()
+{
+    silentCache_.ResetCapacity(0);
+    silentCache_.ResetCapacity(BUCKET_MAX_SIZE);
 }
 } // namespace NativeRdb
 } // namespace OHOS

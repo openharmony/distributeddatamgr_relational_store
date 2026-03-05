@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -46,6 +47,7 @@ public:
     ~SilentProxyManager() = default;
 
     std::pair<int32_t, bool> IsSupportSilent(const std::string &bundleName, const std::string &storeName);
+    void ClearCache();
 
 private:
     std::pair<int32_t, bool> IsSupportSilentFromProxy(const std::string &bundleName, const std::string &storeName);
@@ -53,7 +55,7 @@ private:
 
     std::string configPath_;
     std::mutex mutex_;
-    LRUBucket<std::string, std::map<std::string, bool>> isSilentCache_;
+    LRUBucket<std::string, std::set<std::string>> silentCache_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

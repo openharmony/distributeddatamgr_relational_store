@@ -15,7 +15,6 @@
 #define LOG_TAG "RdbStoreManager"
 #include "rdb_store_manager.h"
 
-#include <algorithm>
 #include <cinttypes>
 #include <sstream>
 
@@ -296,6 +295,7 @@ void RdbStoreManager::Clear()
     configCache_.ResetCapacity(BUCKET_MAX_SIZE);
     promiseInfoCache_.ResetCapacity(0);
     promiseInfoCache_.ResetCapacity(PROMISEINFO_CACHE_SIZE);
+    silentProxyManager_.ClearCache();
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = storeCache_.begin();
     while (iter != storeCache_.end()) {
