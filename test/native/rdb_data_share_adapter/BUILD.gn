@@ -30,6 +30,7 @@ config("module_private_config") {
 
   cflags = [
     "-fno-access-control",  #Ignore Private Member Access Control
+    "-Werror=vla",
   ]
 
 }

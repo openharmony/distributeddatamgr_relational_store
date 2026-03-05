@@ -112,7 +112,6 @@ void RdbStepResultSetTest::GenerateDefaultTable()
 
     std::string insertSql = "INSERT INTO test (data1, data2, data3, data4, data5, data6, data7, data8) VALUES "
                             "(?, ?, ?, ?, ?, ?, ?, ?);";
-
     /* insert first entry data */
     AssetValue asset {
         .version = 0,

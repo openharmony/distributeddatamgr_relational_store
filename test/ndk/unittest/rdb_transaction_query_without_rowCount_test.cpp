@@ -195,9 +195,9 @@ void RdbTransactionQueryWithoutRowCountTest::CheckAndDestroyCursor(OH_Cursor *cu
             size_t size = 0;
             cursor->getSize(cursor, 0, &size);
             EXPECT_EQ(size, 9); // the size of text is 9
-            char data1Value[size];
-            cursor->getText(cursor, 0, data1Value, size);
-            EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+            std::vector<char> data1Value(size);
+            cursor->getText(cursor, 0, data1Value.data(), data1Value.size());
+            EXPECT_EQ(strcmp(data1Value.data(), "zhangSan"), 0);
 
             int64_t data2Value;
             cursor->getInt64(cursor, 1, &data2Value);
@@ -209,8 +209,8 @@ void RdbTransactionQueryWithoutRowCountTest::CheckAndDestroyCursor(OH_Cursor *cu
 
             cursor->getSize(cursor, 3, &size); // columnIndex is 3
             EXPECT_EQ(size, 5); // the size of blob is 5
-            unsigned char data4Value[size];
-            cursor->getBlob(cursor, 3, data4Value, size); // columnIndex is 3
+            std::vector<unsigned char> data4Value(size);
+            cursor->getBlob(cursor, 3, data4Value.data(), data4Value.size()); // columnIndex is 3
             EXPECT_EQ(data4Value[0], 1); // the value of data4Value[0] is 1
             EXPECT_EQ(data4Value[1], 2); // the value of data4Value[1] is 2
         }
@@ -218,9 +218,9 @@ void RdbTransactionQueryWithoutRowCountTest::CheckAndDestroyCursor(OH_Cursor *cu
             size_t size = 0;
             cursor->getSize(cursor, 0, &size);
             EXPECT_EQ(size, 5); // the size of text is 5
-            char data1Value1[size];
-            cursor->getText(cursor, 0, data1Value1, size);
-            EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
+            std::vector<char> data1Value1(size);
+            cursor->getText(cursor, 0, data1Value1.data(), data1Value1.size());
+            EXPECT_EQ(strcmp(data1Value1.data(), "liSi"), 0);
 
             int64_t data2Value;
             cursor->getInt64(cursor, 1, &data2Value);
@@ -249,9 +249,9 @@ void RdbTransactionQueryWithoutRowCountTest::CheckAllAndDestroyCursor(OH_Cursor 
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
     EXPECT_EQ(size, 9); // the size of text is 9
-    char data1Value[size];
-    cursor->getText(cursor, 1, data1Value, size);
-    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+    std::vector<char> data1Value(size);
+    cursor->getText(cursor, 1, data1Value.data(), data1Value.size());
+    EXPECT_EQ(strcmp(data1Value.data(), "zhangSan"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 2, &data2Value); // columnIndex is 2
@@ -263,8 +263,8 @@ void RdbTransactionQueryWithoutRowCountTest::CheckAllAndDestroyCursor(OH_Cursor 
 
     cursor->getSize(cursor, 4, &size); // columnIndex is 4
     EXPECT_EQ(size, 5); // the size of blob is 5
-    unsigned char data4Value[size];
-    cursor->getBlob(cursor, 4, data4Value, size); // columnIndex is 4
+    std::vector<unsigned char> data4Value(size);
+    cursor->getBlob(cursor, 4, data4Value.data(), data4Value.size()); // columnIndex is 4
     EXPECT_EQ(data4Value[0], 1); // the value of data4Value[0] is 1
     EXPECT_EQ(data4Value[1], 2); // the value of data4Value[1] is 2
 
@@ -275,9 +275,9 @@ void RdbTransactionQueryWithoutRowCountTest::CheckAllAndDestroyCursor(OH_Cursor 
 
     cursor->getSize(cursor, 1, &size);
     EXPECT_EQ(size, 5); // the size of text is 5
-    char data1Value1[size];
-    cursor->getText(cursor, 1, data1Value1, size);
-    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
+    std::vector<char> data1Value1(size);
+    cursor->getText(cursor, 1, data1Value1.data(), data1Value1.size());
+    EXPECT_EQ(strcmp(data1Value1.data(), "liSi"), 0);
 
     cursor->getInt64(cursor, 2, &data2Value); // columnIndex is 2
     EXPECT_EQ(data2Value, 13800); // the value of data2 is 13800
@@ -290,7 +290,6 @@ void RdbTransactionQueryWithoutRowCountTest::CheckAllAndDestroyCursor(OH_Cursor 
 void RdbTransactionQueryWithoutRowCountTest::CheckErrAndDestroyCursor(OH_Cursor *cursor)
 {
     cursor->goToNextRow(cursor);
-
     size_t size = 0;
     // cursor is nullptr
     int errCode = cursor->getSize(nullptr, 1, &size);
@@ -306,20 +305,20 @@ void RdbTransactionQueryWithoutRowCountTest::CheckErrAndDestroyCursor(OH_Cursor 
 
     errCode = cursor->getSize(cursor, 1, &size);
 
-    char data1Value[size];
+    std::vector<char> data1Value(size);
     // cursor is nullptr
-    errCode = cursor->getText(nullptr, 1, data1Value, size);
+    errCode = cursor->getText(nullptr, 1, data1Value.data(), data1Value.size());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     // columnIndex out of range
-    errCode = cursor->getText(cursor, -1, data1Value, size);
+    errCode = cursor->getText(cursor, -1, data1Value.data(), data1Value.size());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_COLUMN_INDEX);
-    errCode = cursor->getText(cursor, 5, data1Value, size); // columnIndex is 5
+    errCode = cursor->getText(cursor, 5, data1Value.data(), data1Value.size()); // columnIndex is 5
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_COLUMN_INDEX);
     // value is nullptr
     errCode = cursor->getText(cursor, 1, nullptr, size);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     // the size is invalid
-    errCode = cursor->getText(cursor, 1, data1Value, 0);
+    errCode = cursor->getText(cursor, 1, data1Value.data(), 0);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
 
     int64_t data2Value;
@@ -357,21 +356,21 @@ void RdbTransactionQueryWithoutRowCountTest::CheckErrnoAndDestroyCursor(OH_Curso
 
     size_t size = 0;
     errCode = cursor->getSize(cursor, 4, &size); // columnIndex is 4
-    unsigned char data4Value[size];
+    std::vector<unsigned char> data4Value(size);
     // cursor is nullptr
-    errCode = cursor->getBlob(nullptr, 4, data4Value, size); // columnIndex is 4
+    errCode = cursor->getBlob(nullptr, 4, data4Value.data(), data4Value.size()); // columnIndex is 4
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     // value is nullptr
     errCode = cursor->getBlob(cursor, 4, nullptr, size); // columnIndex is 4
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     // the size is invalid
-    errCode = cursor->getBlob(cursor, 4, data4Value, 0); // columnIndex is 4
+    errCode = cursor->getBlob(cursor, 4, data4Value.data(), 0); // columnIndex is 4
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     // columnIndex out of range
-    errCode = cursor->getBlob(cursor, -1, data4Value, size);
+    errCode = cursor->getBlob(cursor, -1, data4Value.data(), data4Value.size());
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_COLUMN_INDEX);
 
-    errCode = cursor->getBlob(cursor, 5, data4Value, size); // columnIndex is 5
+    errCode = cursor->getBlob(cursor, 5, data4Value.data(), data4Value.size()); // columnIndex is 5
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_COLUMN_INDEX);
 
     bool isNull = false;
@@ -593,9 +592,9 @@ HWTEST_F(
     size_t size = 0;
     cursor->getSize(cursor, 0, &size);
     EXPECT_EQ(size, 9);
-    char data1Value[size];
-    cursor->getText(cursor, 0, data1Value, size);
-    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+    std::vector<char> data1Value(size);
+    cursor->getText(cursor, 0, data1Value.data(), data1Value.size());
+    EXPECT_EQ(strcmp(data1Value.data(), "zhangSan"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 1, &data2Value);
@@ -608,17 +607,17 @@ HWTEST_F(
     errCode = cursor->getSize(cursor, 3, &size);
     EXPECT_EQ(errCode, RDB_E_INVALID_COLUMN_INDEX);
     size = 5;
-    unsigned char data4Value[size];
-    errCode = cursor->getBlob(cursor, 3, data4Value, size);
+    std::vector<unsigned char> data4Value(size);
+    errCode = cursor->getBlob(cursor, 3, data4Value.data(), data4Value.size());
     EXPECT_EQ(errCode, RDB_E_INVALID_COLUMN_INDEX);
 
     cursor->goToNextRow(cursor);
 
     cursor->getSize(cursor, 0, &size);
     EXPECT_EQ(size, 5);
-    char data1Value1[size];
-    cursor->getText(cursor, 0, data1Value1, size);
-    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
+    std::vector<char> data1Value1(size);
+    cursor->getText(cursor, 0, data1Value1.data(), data1Value1.size());
+    EXPECT_EQ(strcmp(data1Value1.data(), "liSi"), 0);
 
     cursor->getInt64(cursor, 1, &data2Value);
     EXPECT_EQ(data2Value, 13800);
@@ -715,9 +714,9 @@ HWTEST_F(
     size_t size = 0;
     cursor->getSize(cursor, 0, &size);
     EXPECT_EQ(size, 9);
-    char data1Value[size];
-    cursor->getText(cursor, 0, data1Value, size);
-    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+    std::vector<char> data1Value(size);
+    cursor->getText(cursor, 0, data1Value.data(), data1Value.size());
+    EXPECT_EQ(strcmp(data1Value.data(), "zhangSan"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 1, &data2Value);
@@ -729,8 +728,8 @@ HWTEST_F(
 
     cursor->getSize(cursor, 3, &size);
     EXPECT_EQ(size, 5);
-    unsigned char data4Value[size];
-    cursor->getBlob(cursor, 3, data4Value, size);
+    std::vector<unsigned char> data4Value(size);
+    cursor->getBlob(cursor, 3, data4Value.data(), data4Value.size());
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
 
@@ -738,9 +737,9 @@ HWTEST_F(
 
     cursor->getSize(cursor, 0, &size);
     EXPECT_EQ(size, 5);
-    char data1Value1[size];
-    cursor->getText(cursor, 0, data1Value1, size);
-    EXPECT_EQ(strcmp(data1Value1, "liSi"), 0);
+    std::vector<char> data1Value1(size);
+    cursor->getText(cursor, 0, data1Value1.data(), data1Value1.size());
+    EXPECT_EQ(strcmp(data1Value1.data(), "liSi"), 0);
 
     cursor->getInt64(cursor, 1, &data2Value);
     EXPECT_EQ(data2Value, 13800);
@@ -1241,9 +1240,9 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCoun
     size_t size = 0;
     cursor->getSize(cursor, 1, &size);
     EXPECT_EQ(size, 9);
-    char data1Value[size];
-    cursor->getText(cursor, 1, data1Value, size);
-    EXPECT_EQ(strcmp(data1Value, "zhangSan"), 0);
+    std::vector<char> data1Value(size);
+    cursor->getText(cursor, 1, data1Value.data(), data1Value.size());
+    EXPECT_EQ(strcmp(data1Value.data(), "zhangSan"), 0);
 
     int64_t data2Value;
     cursor->getInt64(cursor, 2, &data2Value);
@@ -1255,8 +1254,8 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCoun
 
     cursor->getSize(cursor, 4, &size);
     EXPECT_EQ(size, 5);
-    unsigned char data4Value[size];
-    cursor->getBlob(cursor, 4, data4Value, size);
+    std::vector<unsigned char> data4Value(size);
+    cursor->getBlob(cursor, 4, data4Value.data(), data4Value.size());
     EXPECT_EQ(data4Value[0], 1);
     EXPECT_EQ(data4Value[1], 2);
 

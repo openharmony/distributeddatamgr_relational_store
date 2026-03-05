@@ -158,12 +158,12 @@ void OH_Value_PutFloatVectorFuzz(FuzzedDataProvider &provider)
 {
     OH_Data_Value *value = OH_Value_Create();
     size_t length = provider.ConsumeIntegralInRange<size_t>(BLOBSIZE_MIN, BLOBSIZE_MAX);
-    float floatArr[length];
+    std::vector<float> floatArr(length);
     for (int i = 0; i < length; i++) {
         float val = provider.ConsumeFloatingPoint<float>();
         floatArr[i] = val;
     }
-    OH_Value_PutFloatVector(value, floatArr, length);
+    OH_Value_PutFloatVector(value, floatArr.data(), floatArr.size());
     OH_Value_Destroy(value);
 
     OH_Value_PutFloatVector(nullptr, nullptr, 0);
@@ -178,12 +178,12 @@ void OH_Value_PutUnlimitedIntFuzz(FuzzedDataProvider &provider)
     }
     int sign = provider.ConsumeBool() ? 0 : 1;
     size_t length = provider.ConsumeIntegralInRange<size_t>(BLOBSIZE_MIN, BLOBSIZE_MAX);
-    uint64_t trueForm[length];
+    std::vector<uint64_t> trueForm(length);
     for (int i = 0; i < length; i++) {
         uint64_t trueFormValue = provider.ConsumeIntegral<uint64_t>();
         trueForm[i] = trueFormValue;
     }
-    OH_Value_PutUnlimitedInt(value, sign, trueForm, length);
+    OH_Value_PutUnlimitedInt(value, sign, trueForm.data(), trueForm.size());
     OH_Value_Destroy(value);
 
     OH_Value_PutUnlimitedInt(nullptr, 0, nullptr, 0);

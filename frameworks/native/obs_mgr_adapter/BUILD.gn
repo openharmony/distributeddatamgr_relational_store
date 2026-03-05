@@ -29,7 +29,7 @@ ohos_shared_library("rdb_obs_mgr_adapter") {
   }
 
   ldflags = [ "-Wl,--exclude-libs,ALL" ]
-  cflags_cc = [ "-fvisibility=hidden" ]
+  cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
 
   include_dirs = [
     "${relational_store_common_path}/include",

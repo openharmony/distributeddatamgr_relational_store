@@ -16,8 +16,8 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 config("native_dataability_config") {
   visibility = [ ":*" ]
 
-  cflags = [ "-Wc99-designator" ]
-  cflags_cc = [ "-Wc99-designator" ]
+  cflags = [ "-Wc99-designator", "-Werror=vla", ]
+  cflags_cc = [ "-Wc99-designator", "-Werror=vla", ]
   if (!is_mingw && !is_mac) {
     cflags_cc += [ "-fvisibility=hidden" ]
   }
