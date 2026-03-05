@@ -19,7 +19,7 @@ config("native_dataability_config") {
   cflags = [ "-Wc99-designator", "-Werror=vla", ]
   cflags_cc = [ "-Wc99-designator", "-Werror=vla", ]
   if (!is_mingw && !is_mac) {
-    cflags_cc += [ "-fvisibility=hidden", "-Werror=vla", ]
+    cflags_cc += [ "-fvisibility=hidden" ]
   }
 
   include_dirs = [
