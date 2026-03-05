@@ -41,6 +41,7 @@ ohos_unittest("DynamicLoadTest") {
 
   cflags = [
     "-fno-access-control",  # Ignore Private Member Access Control
+    "-Werror=vla",
   ]
 
   sources = [ "dynamic_load_test.cpp" ]

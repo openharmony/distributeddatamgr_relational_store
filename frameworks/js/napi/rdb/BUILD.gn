@@ -50,6 +50,7 @@ ohos_shared_library("napi_rdb") {
     cflags_cc = [
       "-std=c++17",
       "-stdlib=libc++",
+      "-Werror=vla",
     ]
     if (is_mac) {
       buildos = "mac"
@@ -133,6 +134,7 @@ ohos_shared_library("rdb") {
     cflags_cc = [
       "-std=c++17",
       "-stdlib=libc++",
+      "-Werror=vla",
     ]
     if (is_mac) {
       buildos = "mac"

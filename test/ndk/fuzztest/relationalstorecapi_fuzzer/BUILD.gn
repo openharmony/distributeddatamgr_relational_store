@@ -34,6 +34,7 @@ ohos_fuzztest("RelationalStoreCAPIFuzzTest") {
     "-O0",
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
+    "-Werror=vla",
   ]
 
   fuzz_config_file = "${relational_store_base_path}/test/ndk/fuzztest/relationalstorecapi_fuzzer"

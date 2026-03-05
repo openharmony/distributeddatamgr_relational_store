@@ -573,15 +573,11 @@ int RdUtils::RdDbBackup(GRD_DB *db, const char *backupDbFile, const std::vector<
         return E_NOT_SUPPORT;
     }
     const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '/0'
-    char key[keySize];
+    std::vector<char> key(keySize);
     GRD_CipherInfoT info = { 0 };
-    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key, keySize) : nullptr;
+    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key.data(), key.size()) : nullptr;
     int ret = TransferGrdErrno(GRD_KVApiInfo.DBBackupApi(db, backupDbFile, &info));
-    errno_t err = memset_s(key, keySize, 0, keySize);
-    if (err != E_OK) {
-        LOG_ERROR("can not memset 0, size %{public}zu", keySize);
-        return E_ERROR;
-    }
+    std::fill(key.begin(), key.end(), 0);
     return ret;
 }
 
@@ -594,15 +590,11 @@ int RdUtils::RdDbRestore(const char *dbFile, const char *backupDbFile, const std
         return E_NOT_SUPPORT;
     }
     const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '/0'
-    char key[keySize];
+    std::vector<char> key(keySize);
     GRD_CipherInfoT info = { 0 };
-    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key, keySize) : nullptr;
+    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key.data(), key.size()) : nullptr;
     int ret = TransferGrdErrno(GRD_KVApiInfo.DBRestoreApi(dbFile, backupDbFile, &info));
-    errno_t err = memset_s(key, keySize, 0, keySize);
-    if (err != E_OK) {
-        LOG_ERROR("can not memset 0, size %{public}zu", keySize);
-        return E_ERROR;
-    }
+    std::fill(key.begin(), key.end(), 0);
     return ret;
 }
 
@@ -615,15 +607,11 @@ int RdUtils::RdDbRekey(const char *dbFile, const char *configStr, const std::vec
         return E_NOT_SUPPORT;
     }
     const size_t keySize = encryptedKey.size() * 2 + 1; // 2 hex number can represent a uint8_t, 1 is for '/0'
-    char key[keySize];
+    std::vector<char> key(keySize);
     GRD_CipherInfoT info = { 0 };
-    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key, keySize) : nullptr;
+    info.hexPassword = (encryptedKey.size() > 0) ? GetEncryptKey(encryptedKey, key.data(), key.size()) : nullptr;
     int ret = TransferGrdErrno(GRD_KVApiInfo.DBReKeyApi(dbFile, configStr, &info));
-    errno_t err = memset_s(key, keySize, 0, keySize);
-    if (err != E_OK) {
-        LOG_ERROR("can not memset 0, size %{public}zu", keySize);
-        return E_ERROR;
-    }
+    std::fill(key.begin(), key.end(), 0);
     return ret;
 }
 
