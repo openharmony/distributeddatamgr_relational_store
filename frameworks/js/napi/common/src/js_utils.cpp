@@ -61,6 +61,18 @@ int32_t JSUtils::GetHapVersion()
     return g_hapVersion;
 }
 
+void JSUtils::ReportInterfaceUsed(const std::string &methodName)
+{
+    std::string bundleName = OHOS::NativeRdb::RdbHelper::GetSelfBundleName();
+    std::string custLog = methodName + " is used by " + bundleName;
+ 
+    Reportor::ReportFault(
+        OHOS::NativeRdb::RdbFaultEvent(
+            OHOS::NativeRdb::RdbFaultType::INTERFACE_USED,
+            OHOS::NativeRdb::E_DFX_INTERFACE_USED,
+            bundleName, custLog));
+}
+
 const std::optional<JSUtils::JsFeatureSpace> JSUtils::GetJsFeatureSpace(const std::string &name)
 {
     auto jsFeature = JsFeatureSpace{ name.data(), nullptr, false };
