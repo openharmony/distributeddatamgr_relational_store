@@ -260,10 +260,9 @@ ohos_unittest("SilentProxyTest") {
     "${relational_store_mock_test_path}/",
   ]
 
-  defines = [
-    "RELATIONAL_STORE",
-    "private=public",
-  ]
+  defines = [ "RELATIONAL_STORE" ]
+
+  cflags = [ "-fno-access-control" ]
 
   external_deps = [
     "ability_base:zuri",
