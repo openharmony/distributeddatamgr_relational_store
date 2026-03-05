@@ -344,7 +344,6 @@ if (is_ohos && !build_ohos_sdk) {
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
-      "-Werror=vla",
     ]
 
     defines += [
