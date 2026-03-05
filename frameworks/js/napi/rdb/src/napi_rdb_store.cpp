@@ -45,6 +45,8 @@ using OHOS::DistributedRdb::SyncOption;
 using OHOS::DistributedRdb::SyncResult;
 #endif
 
+#define REPORT() JSUtils::ReportInterfaceUsed(std::string("rdb::") + __FUNCTION__)
+
 namespace OHOS {
 namespace RdbJsKit {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
@@ -931,6 +933,7 @@ napi_value RdbStoreProxy::Attach(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::IsHoldingConnection(napi_env env, napi_callback_info info)
 {
+    REPORT();
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -943,6 +946,7 @@ napi_value RdbStoreProxy::IsHoldingConnection(napi_env env, napi_callback_info i
 
 napi_value RdbStoreProxy::IsReadOnly(napi_env env, napi_callback_info info)
 {
+    REPORT();
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -955,6 +959,7 @@ napi_value RdbStoreProxy::IsReadOnly(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::IsMemoryRdb(napi_env env, napi_callback_info info)
 {
+    REPORT();
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -967,6 +972,7 @@ napi_value RdbStoreProxy::IsMemoryRdb(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::GetPath(napi_env env, napi_callback_info info)
 {
+    REPORT();
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -1052,6 +1058,7 @@ napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
 {
+    REPORT();
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
@@ -1063,6 +1070,7 @@ napi_value RdbStoreProxy::IsInTransaction(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::IsOpen(napi_env env, napi_callback_info info)
 {
+    REPORT();
     napi_value thisObj = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisObj, nullptr);
     RdbStoreProxy *rdbStoreProxy = GetNativeInstance(env, thisObj);
