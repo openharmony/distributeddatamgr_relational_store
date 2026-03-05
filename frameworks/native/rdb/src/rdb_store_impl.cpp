@@ -468,8 +468,8 @@ int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::
         }
     }
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
-    if (errCode != E_OK) {
-        return errCode;
+    if (errCode != E_OK || service == nullptr) {
+        return errCode != E_OK ? errCode : E_ERROR;
     }
     int32_t errorCode = service->RetainDeviceData(syncerParam_, retainDevices);
     if (errorCode != RdbStatus::RDB_OK) {

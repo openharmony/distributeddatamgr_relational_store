@@ -211,7 +211,7 @@ export default function RetainDeviceData() {
           expect(e.code).assertEqual(14800043);
         }
       }
-      rdbStore1?.close();
+      await rdbStore1?.close();
       rdbStore1 = undefined;
       console.log(TAG + "************* RetainDeviceDataTest0004 end *************");
     })
@@ -255,7 +255,7 @@ export default function RetainDeviceData() {
       if (rdbStore != undefined) {
         console.log(`RetainDeviceDataTest0007 begin`);
         try {
-          rdbStore.close();
+          await rdbStore.close();
           await rdbStore.retainDeviceData();
           console.error(`RetainDeviceDataTest0007 success`);
           expect(null).assertFail();
