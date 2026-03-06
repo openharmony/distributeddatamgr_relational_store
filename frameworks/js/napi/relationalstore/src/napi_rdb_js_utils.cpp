@@ -109,6 +109,21 @@ int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Distribute
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::DistributedInfo &output)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, input, &type);
+    if (status != napi_ok || type != napi_object) {
+        LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
+        return napi_invalid_arg;
+    }
+ 
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "oriDevice", output.oriDevice, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "flag", output.flag, true), napi_invalid_arg);
+    return napi_ok;
+}
+ 
+template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, ValueObject &valueObject)
 {
     auto status = Convert2Value(env, jsValue, valueObject.value);

@@ -479,6 +479,55 @@ int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::
     return SqliteUtils::ConvertRdbStatusNative(errorCode);
 }
 
+std::pair<int32_t, std::vector<std::string>> RdbStoreImpl::ConvertToUuids(const std::vector<std::string> &devices)
+{
+    if (devices.empty()) {
+        return { E_OK, devices };
+    }
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK || service == nullptr) {
+        return { errCode != E_OK ? errCode : E_ERROR, {} };
+    }
+    auto [errorCode, uuids] = service->ObtainUuid(syncerParam_, devices);
+    if (errorCode != RdbStatus::RDB_OK) {
+        return { SqliteUtils::ConvertRdbStatusNative(errorCode), {} };
+    }
+    if (uuids.empty() || uuids.size() != devices.size()) {
+        return { E_INVALID_ARGS_NEW, {} };
+    }
+    return { E_OK, uuids };
+}
+
+std::pair<int32_t, int32_t> RdbStoreImpl::UpdateDistributedInfo(
+    const DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates)
+{
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+        return { E_NOT_SUPPORT_NEW, -1 };
+    }
+    if (distributedInfo.flag == DistributedOrigin::BUTT) {
+        return { E_INVALID_ARGS_NEW, -1 };
+    }
+    std::string table = predicates.GetTableName();
+    std::string logTable = GetLogTableName(predicates.GetTableName());
+    if (table.empty() || logTable.empty()) {
+        return { E_INVALID_ARGS_NEW, -1 };
+    }
+    SqlInfo sqlInfo;
+    if (!distributedInfo.oriDevice.empty()) {
+        auto [errorCode, uuids] = ConvertToUuids({ distributedInfo.oriDevice });
+        if (errorCode != E_OK || uuids.empty() || uuids[0].empty()) {
+            return { errorCode != E_OK ? errorCode : E_INVALID_ARGS_NEW, -1 };
+        }
+        sqlInfo.args.push_back(ValueObject(uuids[0]));
+    }
+    for (auto &args : predicates.GetBindArgs()) {
+        sqlInfo.args.push_back(args);
+    }
+    sqlInfo.sql = SqliteSqlBuilder::BuildUpdateLogString(predicates, logTable, distributedInfo);
+    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args);
+    return { code, result.changed };
+}
+
 int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));

@@ -186,6 +186,34 @@ std::string SqliteSqlBuilder::BuildCursorQueryString(const AbsRdbPredicates &pre
     return sql;
 }
 
+std::string SqliteSqlBuilder::BuildUpdateLogString(const AbsRdbPredicates &predicates, const std::string &logTable,
+    const DistributedRdb::DistributedInfo &distributedInfo)
+{
+    std::string table = predicates.GetTableName();
+    std::string sql;
+    sql.append("UPDATE ").append(logTable).append(" SET ");
+    if (distributedInfo.flag != DistributedRdb::DistributedOrigin::ORI_ORIGINAL) {
+        std::string flagSql = distributedInfo.flag == DistributedRdb::DistributedOrigin::ORI_LOCAL ? "flag=flag|~0x2"
+                                                                                                   : "flag=flag&~0x2";
+        sql.append(flagSql);
+    }
+    if (!distributedInfo.oriDevice.empty()) {
+        if (distributedInfo.flag != DistributedRdb::DistributedOrigin::ORI_ORIGINAL) {
+            sql.append(", ");
+        }
+        sql.append("ori_device=calc_hash(?, 0)");
+    }
+    std::string suffix = table + RDBLOG;
+    sql.append(" WHERE data_key IN (SELECT " + table + ".rowid FROM " + table);
+    sql.append(" INNER JOIN ");
+    sql.append("(SELECT data_key AS " + suffix + "data_key, flag AS " + suffix + "flag, ori_device AS " +
+                       suffix + "ori_device FROM " + logTable + ")");
+    sql.append(" AS log_data ON " + table + ".rowid = log_data." + suffix + "data_key");
+    AppendClause(sql, " WHERE ", SqliteUtils::Replace(predicates.GetWhereClause(), SqliteUtils::REP, suffix));
+    sql.append(")");
+    return sql;
+}
+
 std::string SqliteSqlBuilder::BuildLockRowQueryString(
     const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable)
 {
