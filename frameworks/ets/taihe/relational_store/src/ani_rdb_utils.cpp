@@ -497,28 +497,28 @@ void InitRdbStoreConfig(OHOS::NativeRdb::RdbStoreConfig &nativeStoreConfig,
     nativeStoreConfig.SetVersion(rdbConfig.version);
 }
 
-std::pair<int, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
+std::pair<std::shared_ptr<OHOS::RelationalStoreJsKit::Error>, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
     ani_env *env, ani_object aniContext, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig)
 {
     using namespace OHOS::RelationalStoreJsKit;
     using namespace OHOS::NativeRdb;
     OHOS::NativeRdb::RdbStoreConfig defaultConfig("");
     if (!rdbConfig.cryptoParam.IsValid()) {
-        return std::make_pair(E_PARAM_ERROR, defaultConfig);
+        return std::make_pair(std::make_shared<ParamError>("Illegal CryptoParam."), defaultConfig);
     }
     if (rdbConfig.tokenizer < NONE_TOKENIZER || rdbConfig.tokenizer >= TOKENIZER_END) {
-        return std::make_pair(E_PARAM_ERROR, defaultConfig);
+        return std::make_pair(std::make_shared<ParamError>("Illegal CryptoParam."), defaultConfig);
     }
     if (!RdbHelper::IsSupportedTokenizer(rdbConfig.tokenizer)) {
-        return std::make_pair(E_NOT_SUPPORT, defaultConfig);
+        return std::make_pair(std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT), defaultConfig);
     }
     if (!rdbConfig.persist && !rdbConfig.rootDir.empty()) {
-        return std::make_pair(E_NOT_SUPPORT, defaultConfig);
+        return std::make_pair(std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT), defaultConfig);
     }
     OHOS::AppDataMgrJsKit::JSUtils::ContextParam contextParam;
     int32_t ret = ani_abilityutils::AniGetContext(aniContext, contextParam);
     if (ret != ANI_OK) {
-        return std::make_pair(E_INNER_ERROR, defaultConfig);
+        return std::make_pair(std::make_shared<InnerError>(E_INNER_ERROR), defaultConfig);
     }
     rdbConfig.isSystemApp = contextParam.isSystemApp;
     auto err = AniGetRdbRealPath(env, aniContext, rdbConfig, contextParam);
@@ -526,12 +526,12 @@ std::pair<int, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
         rdbConfig.isReadOnly = true;
     }
     if (err != nullptr) {
-        return std::make_pair(err->GetCode(), defaultConfig);
+        return std::make_pair(err, defaultConfig);
     }
 
     OHOS::NativeRdb::RdbStoreConfig nativeStoreConfig(rdbConfig.path);
     InitRdbStoreConfig(nativeStoreConfig, rdbConfig, contextParam);
-    return std::make_pair(OK, nativeStoreConfig);
+    return std::make_pair(nullptr, nativeStoreConfig);
 }
 
 OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalStore::SubscribeType type)
