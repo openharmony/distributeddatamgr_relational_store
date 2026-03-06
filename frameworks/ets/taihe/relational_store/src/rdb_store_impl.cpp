@@ -880,6 +880,10 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
 
 void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainDevices)
 {
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return;
+    }
     auto store = GetResource();
     ASSERT_RETURN_THROW_ERROR(
         store != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
@@ -905,6 +909,30 @@ void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainD
         ThrowInnerErrorExt(errCode);
         return;
     }
+}
+
+int64_t RdbStoreImpl::UpdateDistributedInfoAsync(DistributedInfo info, weak::RdbPredicates predicates)
+{
+    if (!isSystemApp_) {
+        ThrowNonSystemError();
+        return 0;
+    }
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), ERR_NULL);
+    auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), ERR_NULL);
+    auto [isValidInfo, nativeInfo] = ani_rdbutils::DistributedInfoToNative(info);
+    if (!isValidInfo) {
+        ThrowParamError("config must be a DistributedConfig.");
+        return 0;
+    }
+    auto [errCode, output] = store->UpdateDistributedInfo(nativeInfo, *rdbPredicateNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerErrorExt(errCode);
+    }
+    return output;
 }
 
 string RdbStoreImpl::ObtainDistributedTableNameSync(string_view device, string_view table)

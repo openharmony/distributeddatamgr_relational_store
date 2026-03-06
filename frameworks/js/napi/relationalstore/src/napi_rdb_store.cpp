@@ -1511,6 +1511,7 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
     properties.push_back(DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery));
     properties.push_back(DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables));
     properties.push_back(DECLARE_NAPI_FUNCTION("retainDeviceData", RetainDeviceData));
+    properties.push_back(DECLARE_NAPI_FUNCTION("updateDistributedInfo", UpdateDistributedInfo));
     properties.push_back(DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName));
     properties.push_back(DECLARE_NAPI_FUNCTION("sync", Sync));
     properties.push_back(DECLARE_NAPI_FUNCTION("cloudSync", CloudSync));
@@ -1588,6 +1589,57 @@ napi_value RdbStoreProxy::RetainDeviceData(napi_env env, napi_callback_info info
     };
     context->InitAction(env, info, input, exec, output);
 
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct UpdateDistributedInfoContext : public EnhancedContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        ASSERT_RETURN_SET_ERROR(argc == 2, std::make_shared<ParamNumError>("2"));
+        RdbStoreProxy *obj = GetNativeInstance(env, self);
+        ASSERT_RETURN_SET_ERROR(obj != nullptr, std::make_shared<ParamError>("RdbStore", "not nullptr."));
+        ASSERT_RETURN_SET_ERROR(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
+        ASSERT_RETURN_SET_ERROR(
+            obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        rdbStore = obj->GetInstance();
+        auto status = JSUtils::Convert2Value(env, argv[0], distributedInfo);
+        ASSERT_RETURN_SET_ERROR(status == napi_ok || JSUtils::IsNull(env, argv[0]),
+            std::make_shared<ParamError>("distributedInfo", "a DistributedInfo type"));
+        RdbPredicatesProxy *predicatesProxy = nullptr;
+        status = napi_unwrap(env, argv[1], reinterpret_cast<void **>(&predicatesProxy));
+        ASSERT_RETURN_SET_ERROR(status == napi_ok && predicatesProxy != nullptr,
+            std::make_shared<ParamError>("predicates", "an RdbPredicates."));
+        rdbPredicates = predicatesProxy->GetInstance();
+        ASSERT_RETURN_SET_ERROR(
+            rdbPredicates != nullptr, std::make_shared<ParamError>("predicates", "an RdbPredicates."));
+        return OK;
+    }
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
+    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
+    DistributedRdb::DistributedInfo distributedInfo;
+    int64_t int64Output;
+};
+
+napi_value RdbStoreProxy::UpdateDistributedInfo(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<UpdateDistributedInfoContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto status = E_ERROR;
+        std::tie(status, context->int64Output) =
+            context->rdbStore->UpdateDistributedInfo(context->distributedInfo, *(context->rdbPredicates));
+        context->rdbStore = nullptr;
+        return status;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_create_int64(env, context->int64Output, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->InitAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }

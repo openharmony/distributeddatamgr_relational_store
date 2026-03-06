@@ -211,6 +211,17 @@ enum DistributedTableType : i32 {
     SINGLE_VERSION
 }
 
+enum DistributedField : String {
+    ORIGIN = "#_origin",
+    ORIGIN_ORIDEVICE = "#_ori_device"
+}
+ 
+enum DistributedOrigin : i32 {
+    ORI_LOCAL,
+    ORI_CLOUD,
+    ORI_REMOTE
+}
+
 struct Reference {
     sourceTable: String;
     targetTable: String;
@@ -223,6 +234,11 @@ struct DistributedConfig {
     asyncDownloadAsset: Optional<bool>;
     enableCloud: Optional<bool>;
     tableType: Optional<DistributedTableType>;
+}
+
+struct DistributedInfo {
+    flag: Optional<DistributedOrigin>;
+    oriDevice: Optional<String>;
 }
 
 enum ConflictResolution  : i32 {
@@ -836,6 +852,9 @@ interface RdbStore {
     @gen_promise("retainDeviceData")
     RetainDeviceDataAsync(retainDevices: @record Map<String, Array<String>>): void;
     
+    @gen_promise("updateDistributedInfo")
+    UpdateDistributedInfoAsync(info: DistributedInfo, predicates: RdbPredicates): i64;
+
     @gen_async("obtainDistributedTableName")
     @gen_promise("obtainDistributedTableName")
     ObtainDistributedTableNameSync(device: String, table: String): String;
