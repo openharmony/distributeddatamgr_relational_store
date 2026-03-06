@@ -67,8 +67,7 @@ void AniGetRdbConfigAppend(const ohos::data::relationalStore::StoreConfig &store
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &storeConfigNative);
 OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(
     ::ohos::data::relationalStore::StoreConfig const &storeConfig);
-std::pair<int, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(
-    ani_env *env, ani_object aniContext, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig);
+std::pair<int, OHOS::NativeRdb::RdbStoreConfig> AniGetRdbStoreConfig(ani_env *env, ani_object aniContext, OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig);
 
 OHOS::NativeRdb::ReturningConfig ReturningConfigToNative(
     ::ohos::data::relationalStore::ReturningConfig returningConfig);
