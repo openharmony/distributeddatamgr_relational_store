@@ -556,6 +556,21 @@ HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0024, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_ReadOnly_0025
+ * @tc.desc: test UpdateDistributedInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbReadOnlyTest, RdbStore_ReadOnly_0025, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = RdbReadOnlyTest::readOnlyStore;
+    OHOS::DistributedRdb::DistributedInfo distributedInfo;
+    AbsRdbPredicates predicates("test");
+    auto [ret, result] = store->UpdateDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, ret);
+    EXPECT_EQ(-1, result);
+}
+
+/**
  * @tc.name: RdbStore_CreateTransaction_001
  * @tc.desc: test Create Transaction
  * @tc.type: FUNC

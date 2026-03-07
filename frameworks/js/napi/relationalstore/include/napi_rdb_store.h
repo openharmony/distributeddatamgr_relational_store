@@ -80,6 +80,7 @@ private:
     static napi_value Restore(napi_env env, napi_callback_info info);
     static napi_value SetDistributedTables(napi_env env, napi_callback_info info);
     static napi_value RetainDeviceData(napi_env env, napi_callback_info info);
+    static napi_value UpdateDistributedInfo(napi_env env, napi_callback_info info);
     static napi_value ObtainDistributedTableName(napi_env env, napi_callback_info info);
     static napi_value Sync(napi_env env, napi_callback_info info);
     static napi_value CloudSync(napi_env env, napi_callback_info info);

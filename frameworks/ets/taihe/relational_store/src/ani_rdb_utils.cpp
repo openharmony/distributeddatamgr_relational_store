@@ -38,7 +38,9 @@ using namespace OHOS::NativeRdb;
 using TaiheAssetStatus = ::ohos::data::relationalStore::AssetStatus;
 using TaiheValueType = ::ohos::data::relationalStore::ValueType;
 using TaiheDistributedTableType = ohos::data::relationalStore::DistributedTableType;
+using TaiheDistributedOrigin = ohos::data::relationalStore::DistributedOrigin;
 using NativeDistributedTableMode = OHOS::DistributedRdb::DistributedTableMode;
+using NativeDistributedOrigin = OHOS::DistributedRdb::DistributedOrigin;
 
 #ifndef PATH_SPLIT
 #define PATH_SPLIT '/'
@@ -595,6 +597,31 @@ std::pair<bool, NativeDistributedConfig> DistributedConfigToNative(
             return { true, nativeConfig };
         default:
             LOG_ERROR("Invalid distributed table type.");
+            return { false, {} };
+    }
+}
+
+std::pair<bool, NativeDistributedInfo> DistributedInfoToNative(const TaiheDistributedInfo &info)
+{
+    NativeDistributedInfo nativeInfo;
+    if (info.oriDevice.has_value()) {
+        nativeInfo.oriDevice = info.oriDevice.value();
+    }
+    if (!info.flag.has_value()) {
+        return { true, nativeInfo };
+    }
+    switch (info.flag->get_key()) {
+        case TaiheDistributedOrigin::key_t::ORI_LOCAL:
+            nativeInfo.flag = NativeDistributedOrigin::ORI_LOCAL;
+            return { true, nativeInfo };
+        case TaiheDistributedOrigin::key_t::ORI_CLOUD:
+            nativeInfo.flag = NativeDistributedOrigin::ORI_CLOUD;
+            return { true, nativeInfo };
+        case TaiheDistributedOrigin::key_t::ORI_REMOTE:
+            nativeInfo.flag = NativeDistributedOrigin::ORI_REMOTE;
+            return { true, nativeInfo };
+        default:
+            LOG_ERROR("Invalid distributed info flag.");
             return { false, {} };
     }
 }
