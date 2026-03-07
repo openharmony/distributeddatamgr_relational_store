@@ -85,7 +85,7 @@ int SqliteUtils::ConvertRdbStatusNative(int32_t status)
         case RdbStatus::RDB_SQLITE_BUSY:
             return E_SQLITE_BUSY;
         case RdbStatus::RDB_INVALID_ARGS:
-            return E_INVALID_ARGS_NEW;
+            return E_INVALID_ARGS;
         case RdbStatus::RDB_SQLITE_CORRUPT:
             return E_SQLITE_CORRUPT;
         case RdbStatus::RDB_SQLITE_ERROR:

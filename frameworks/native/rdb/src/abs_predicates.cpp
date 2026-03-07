@@ -71,6 +71,16 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObjec
         valObj = ValueObject(flagVal);
     }
     CheckIsNeedAnd();
+    if (newField == DistributedRdb::DistributedField::ORIGIN_ORIDEVICE) {
+        std::string device;
+        valObj.GetString(device);
+        if (device.empty()) {
+            whereClause += "(" + newField + " IS null)";
+            return this;
+        }
+        whereClause += "(" + newField + " IS NOT null)";
+        return this;
+    }
     if (flagVal.empty()) {
         whereClause += newField + " = ? ";
         bindArgs.push_back(std::move(valObj));
@@ -90,6 +100,16 @@ AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const ValueOb
     }
     hasSpecificField = hasSpecificField || IsSpecificField(field);
     CheckIsNeedAnd();
+    if (field == DistributedRdb::DistributedField::ORIGIN_ORIDEVICE) {
+        std::string device;
+        value.GetString(device);
+        if (device.empty()) {
+            whereClause += "(" + field + " IS NOT null)";
+            return this;
+        }
+        whereClause += "(" + field + " IS null)";
+        return this;
+    }
     whereClause += field + " <> ? ";
     bindArgs.push_back(value);
     return this;

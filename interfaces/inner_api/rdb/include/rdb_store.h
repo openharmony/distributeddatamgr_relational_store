@@ -673,6 +673,15 @@ public:
     virtual int SetDistributedTables(const std::vector<std::string> &tables,
         int32_t type = DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE,
         const DistributedRdb::DistributedConfig &distributedConfig = { true });
+    
+    /**
+     * @brief update distributed table info.
+     *
+     * @param distributedInfo Indicates the info you want to update.
+     * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
+     */
+    virtual std::pair<int32_t, int32_t> UpdateDistributedInfo(
+        const DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates);
 
     /**
      * @brief Remove distributed table remote data.

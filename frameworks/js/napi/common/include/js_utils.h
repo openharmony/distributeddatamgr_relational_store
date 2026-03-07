@@ -212,6 +212,34 @@ inline std::enable_if_t<!std::is_same_v<T, int32_t> && !std::is_same_v<T, uint32
 };
 
 template<typename T>
+inline std::enable_if_t<std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t>, int32_t> GetNamedProperty(
+    napi_env env, napi_value in, const std::string &prop, std::optional<T> &value)
+{
+    auto [status, jsValue] = GetInnerValue(env, in, prop, true);
+    if (jsValue == nullptr) {
+        return status;
+    }
+    T tmp;
+    auto code = Convert2ValueExt(env, jsValue, tmp);
+    value = std::move(tmp);
+    return code;
+};
+
+template<typename T>
+inline std::enable_if_t<!std::is_same_v<T, int32_t> && !std::is_same_v<T, uint32_t>, int32_t> GetNamedProperty(
+    napi_env env, napi_value in, const std::string &prop, std::optional<T> &value)
+{
+    auto [status, jsValue] = GetInnerValue(env, in, prop, true);
+    if (jsValue == nullptr) {
+        return status;
+    }
+    T tmp;
+    auto code = Convert2Value(env, jsValue, tmp);
+    value = std::move(tmp);
+    return code;
+};
+
+template<typename T>
 inline int32_t SetNamedProperty(napi_env env, napi_value in, const std::string &prop, T value)
 {
     return napi_set_named_property(env, in, prop.c_str(), Convert2JSValue(env, value));

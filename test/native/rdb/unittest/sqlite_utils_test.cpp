@@ -817,7 +817,7 @@ HWTEST_F(SqliteUtilsTest, ConvertRdbStatusNative, TestSize.Level1)
     ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_SQLITE_BUSY);
     EXPECT_EQ(ret, E_SQLITE_BUSY);
     ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_INVALID_ARGS);
-    EXPECT_EQ(ret, E_INVALID_ARGS_NEW);
+    EXPECT_EQ(ret, E_INVALID_ARGS);
     ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_SQLITE_CORRUPT);
     EXPECT_EQ(ret, E_SQLITE_CORRUPT);
     ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_SQLITE_ERROR);

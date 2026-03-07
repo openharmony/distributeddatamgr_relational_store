@@ -39,8 +39,10 @@ using JsExceptionMessageCallbackType =
     taihe::callback<void(ohos::data::relationalStore::ExceptionMessage const& info)>;
 using RdbStoreVarCallbackType = std::variant<JsDevicesCallbackType, JsChangeInfoCallbackType, JsVoidCallbackType>;
 using NativeDistributedConfig = OHOS::DistributedRdb::DistributedConfig;
-using TaiheDistributedConfig = ohos::data::relationalStore::DistributedConfig;
+using NativeDistributedInfo = OHOS::DistributedRdb::DistributedInfo;
 using NativeDistributedTableType = OHOS::DistributedRdb::DistributedTableType;
+using TaiheDistributedConfig = ohos::data::relationalStore::DistributedConfig;
+using TaiheDistributedInfo = ohos::data::relationalStore::DistributedInfo;
 using TaiheDistributedType = ohos::data::relationalStore::DistributedType;
 
 constexpr std::string_view EVENT_DATA_CHANGE = "dataChange";
@@ -77,6 +79,7 @@ OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalSt
 std::pair<bool, NativeDistributedTableType> DistributedTableTypeToNative(TaiheDistributedType type);
 std::pair<bool, NativeDistributedConfig> DistributedConfigToNative(
     const TaiheDistributedConfig &config, NativeDistributedTableType &nativeType);
+std::pair<bool, NativeDistributedInfo> DistributedInfoToNative(const TaiheDistributedInfo &info);
 OHOS::DistributedRdb::Reference ReferenceToNative(
     const ohos::data::relationalStore::Reference &reference);
 ohos::data::relationalStore::ProgressDetails ProgressDetailToTaihe(

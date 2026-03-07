@@ -38,6 +38,8 @@ public:
     static std::string BuildClauseFromPredicates(const AbsRdbPredicates &predicates);
     static std::string BuildCursorQueryString(const AbsRdbPredicates &predicates,
         const std::vector<std::string> &columns, const std::string &logTable, const std::pair<bool, bool> &queryStatus);
+    static std::string BuildUpdateLogString(const AbsRdbPredicates &predicates, const std::string &logTable,
+        const DistributedRdb::DistributedInfo &distributedInfo);
     static std::string BuildLockRowQueryString(
         const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, const std::string &logTable);
     static std::string GetSqlArgs(size_t size);
@@ -59,6 +61,7 @@ private:
     static std::string GetSelectClause(const std::vector<std::string> &columns, bool IsDistinct,
         const std::string &ast, const std::string &table = "");
     static constexpr const char *SHARING_RESOURCE = "sharing_resource";
+    static constexpr const char *RDBLOG = "_log_";
     static constexpr uint32_t EXPANSION = 2;
     static ValueObject nullObject_;
     static std::reference_wrapper<ValueObject> nullRef_;

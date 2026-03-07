@@ -456,14 +456,14 @@ int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::
     }
     for (auto &[table, devices] : retainDevices) {
         if (table.empty()) {
-            return E_INVALID_ARGS_NEW;
+            return E_INVALID_ARGS;
         }
         if (devices.empty()) {
             continue;
         }
         for (auto &device : devices) {
             if (device.empty()) {
-                return E_INVALID_ARGS_NEW;
+                return E_INVALID_ARGS;
             }
         }
     }
@@ -477,6 +477,58 @@ int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::
             SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
     return SqliteUtils::ConvertRdbStatusNative(errorCode);
+}
+
+std::pair<int32_t, std::vector<std::string>> RdbStoreImpl::ConvertToUuids(const std::vector<std::string> &devices)
+{
+    if (devices.empty()) {
+        return { E_OK, devices };
+    }
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK || service == nullptr) {
+        return { errCode != E_OK ? errCode : E_ERROR, {} };
+    }
+    auto [errorCode, uuids] = service->ObtainUuid(syncerParam_, devices);
+    if (errorCode != RdbStatus::RDB_OK) {
+        return { SqliteUtils::ConvertRdbStatusNative(errorCode), {} };
+    }
+    if (uuids.empty() || uuids.size() != devices.size()) {
+        return { E_INVALID_ARGS, {} };
+    }
+    return { E_OK, uuids };
+}
+
+std::pair<int32_t, int32_t> RdbStoreImpl::UpdateDistributedInfo(
+    const DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates)
+{
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+        return { E_NOT_SUPPORT_NEW, -1 };
+    }
+    if (distributedInfo.flag.has_value() && distributedInfo.flag == DistributedOrigin::BUTT) {
+        return { E_INVALID_ARGS, -1 };
+    }
+    std::string table = predicates.GetTableName();
+    std::string logTable = GetLogTableName(predicates.GetTableName());
+    if (table.empty() || logTable.empty()) {
+        return { E_INVALID_ARGS, -1 };
+    }
+    std::vector<ValueObject> args;
+    if (distributedInfo.oriDevice.has_value() && distributedInfo.oriDevice->empty()) {
+        args.push_back(ValueObject(""));
+    }
+    if (distributedInfo.oriDevice.has_value() && !distributedInfo.oriDevice->empty()) {
+        auto [errorCode, uuids] = ConvertToUuids({ distributedInfo.oriDevice.value() });
+        if (errorCode != E_OK || uuids.empty() || uuids[0].empty()) {
+            return { errorCode != E_OK ? errorCode : E_INVALID_ARGS, -1 };
+        }
+        args.push_back(ValueObject(uuids[0]));
+    }
+    for (auto &arg : predicates.GetBindArgs()) {
+        args.push_back(arg);
+    }
+    std::string sql = SqliteSqlBuilder::BuildUpdateLogString(predicates, logTable, distributedInfo);
+    auto [code, result] = ExecuteForRow(sql, args);
+    return { code, result.changed };
 }
 
 int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
