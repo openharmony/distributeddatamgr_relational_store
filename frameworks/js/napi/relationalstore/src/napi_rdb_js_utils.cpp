@@ -117,8 +117,8 @@ int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Distribute
         LOG_DEBUG("napi_typeof failed status = %{public}d type = %{public}d", status, type);
         return napi_invalid_arg;
     }
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "oriDevice", output.oriDevice, true), napi_invalid_arg);
-    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "flag", output.flag, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "oriDevice", output.oriDevice), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "flag", output.flag), napi_invalid_arg);
     return napi_ok;
 }
  
