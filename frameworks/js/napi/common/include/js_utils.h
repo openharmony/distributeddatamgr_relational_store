@@ -65,7 +65,6 @@ void ReportInterfaceUsed(const std::string &methodName);
 int32_t Convert2Value(napi_env env, napi_value jsValue, napi_value &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, bool &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, double &output);
-int32_t Convert2Value(napi_env env, napi_value jsValue, int32_t &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, int64_t &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::string &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<uint8_t> &output);
