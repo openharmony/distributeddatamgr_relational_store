@@ -621,7 +621,7 @@ std::pair<bool, NativeDistributedInfo> DistributedInfoToNative(const TaiheDistri
             nativeInfo.flag = NativeDistributedOrigin::ORI_REMOTE;
             return { true, nativeInfo };
         default:
-            LOG_ERROR("Invalid distributed table type.");
+            LOG_ERROR("Invalid distributed info flag.");
             return { false, {} };
     }
 }
