@@ -1604,8 +1604,12 @@ struct UpdateDistributedInfoContext : public EnhancedContext {
             obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         rdbStore = obj->GetInstance();
         auto status = JSUtils::Convert2Value(env, argv[0], distributedInfo);
-        ASSERT_RETURN_SET_ERROR(status == napi_ok || JSUtils::IsNull(env, argv[0]),
-            std::make_shared<ParamError>("distributedInfo", "a DistributedInfo type"));
+        auto check = status == napi_ok;
+        if (distributedInfo.flag.has_value()) {
+            check = check && distributedInfo.flag.value() >= DistributedRdb::ORI_LOCAL &&
+                    distributedInfo.flag.value() <= DistributedRdb::ORI_REMOTE;
+        }
+        ASSERT_RETURN_SET_ERROR(check, std::make_shared<ParamError>("distributedInfo", "a DistributedInfo type"));
         RdbPredicatesProxy *predicatesProxy = nullptr;
         status = napi_unwrap(env, argv[1], reinterpret_cast<void **>(&predicatesProxy));
         ASSERT_RETURN_SET_ERROR(status == napi_ok && predicatesProxy != nullptr,
@@ -1618,7 +1622,7 @@ struct UpdateDistributedInfoContext : public EnhancedContext {
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
     std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
     DistributedRdb::DistributedInfo distributedInfo;
-    int64_t int64Output;
+    int64_t changedRows;
 };
 
 napi_value RdbStoreProxy::UpdateDistributedInfo(napi_env env, napi_callback_info info)
@@ -1630,13 +1634,13 @@ napi_value RdbStoreProxy::UpdateDistributedInfo(napi_env env, napi_callback_info
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto status = E_ERROR;
-        std::tie(status, context->int64Output) =
+        std::tie(status, context->changedRows) =
             context->rdbStore->UpdateDistributedInfo(context->distributedInfo, *(context->rdbPredicates));
         context->rdbStore = nullptr;
         return status;
     };
     auto output = [context](napi_env env, napi_value &result) {
-        napi_status status = napi_create_int64(env, context->int64Output, &result);
+        napi_status status = napi_create_int64(env, context->changedRows, &result);
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);

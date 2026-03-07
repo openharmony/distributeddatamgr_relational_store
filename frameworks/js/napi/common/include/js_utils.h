@@ -65,6 +65,7 @@ void ReportInterfaceUsed(const std::string &methodName);
 int32_t Convert2Value(napi_env env, napi_value jsValue, napi_value &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, bool &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, double &output);
+int32_t Convert2Value(napi_env env, napi_value jsValue, int32_t &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, int64_t &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::string &output);
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<uint8_t> &output);
@@ -92,6 +93,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, std::vector<T> &value);
 
 template<typename T>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::map<std::string, T> &value, bool isAllowEmpty = false);
+
+template<typename T>
+int32_t Convert2Value(napi_env env, napi_value jsValue, std::optional<T> &value);
 
 template<typename... Types>
 int32_t Convert2Value(napi_env env, napi_value jsValue, std::variant<Types...> &value);
@@ -290,6 +294,18 @@ int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::map<std::s
         }
         value.insert(std::pair<std::string, T>(key, val));
     }
+    return napi_ok;
+}
+
+template<typename T>
+int32_t JSUtils::Convert2Value(napi_env env, napi_value jsValue, std::optional<T> &value)
+{
+    T val;
+    auto ret = Convert2Value(env, jsValue, val);
+    if (ret != napi_ok) {
+        return napi_invalid_arg;
+    }
+    value = val;
     return napi_ok;
 }
 

@@ -456,14 +456,14 @@ int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::
     }
     for (auto &[table, devices] : retainDevices) {
         if (table.empty()) {
-            return E_INVALID_ARGS_NEW;
+            return E_INVALID_ARGS;
         }
         if (devices.empty()) {
             continue;
         }
         for (auto &device : devices) {
             if (device.empty()) {
-                return E_INVALID_ARGS_NEW;
+                return E_INVALID_ARGS;
             }
         }
     }
@@ -493,7 +493,7 @@ std::pair<int32_t, std::vector<std::string>> RdbStoreImpl::ConvertToUuids(const 
         return { SqliteUtils::ConvertRdbStatusNative(errorCode), {} };
     }
     if (uuids.empty() || uuids.size() != devices.size()) {
-        return { E_INVALID_ARGS_NEW, {} };
+        return { E_INVALID_ARGS, {} };
     }
     return { E_OK, uuids };
 }
@@ -504,27 +504,30 @@ std::pair<int32_t, int32_t> RdbStoreImpl::UpdateDistributedInfo(
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
         return { E_NOT_SUPPORT_NEW, -1 };
     }
-    if (distributedInfo.flag == DistributedOrigin::BUTT) {
-        return { E_INVALID_ARGS_NEW, -1 };
+    if (distributedInfo.flag.has_value() && distributedInfo.flag == DistributedOrigin::BUTT) {
+        return { E_INVALID_ARGS, -1 };
     }
     std::string table = predicates.GetTableName();
     std::string logTable = GetLogTableName(predicates.GetTableName());
     if (table.empty() || logTable.empty()) {
-        return { E_INVALID_ARGS_NEW, -1 };
+        return { E_INVALID_ARGS, -1 };
     }
-    SqlInfo sqlInfo;
-    if (!distributedInfo.oriDevice.empty()) {
-        auto [errorCode, uuids] = ConvertToUuids({ distributedInfo.oriDevice });
+    std::vector<ValueObject> args;
+    if (distributedInfo.oriDevice.has_value() && distributedInfo.oriDevice->empty()) {
+        args.push_back(ValueObject(""));
+    }
+    if (distributedInfo.oriDevice.has_value() && !distributedInfo.oriDevice->empty()) {
+        auto [errorCode, uuids] = ConvertToUuids({ distributedInfo.oriDevice.value() });
         if (errorCode != E_OK || uuids.empty() || uuids[0].empty()) {
-            return { errorCode != E_OK ? errorCode : E_INVALID_ARGS_NEW, -1 };
+            return { errorCode != E_OK ? errorCode : E_INVALID_ARGS, -1 };
         }
-        sqlInfo.args.push_back(ValueObject(uuids[0]));
+        args.push_back(ValueObject(uuids[0]));
     }
-    for (auto &args : predicates.GetBindArgs()) {
-        sqlInfo.args.push_back(args);
+    for (auto &arg : predicates.GetBindArgs()) {
+        args.push_back(arg);
     }
-    sqlInfo.sql = SqliteSqlBuilder::BuildUpdateLogString(predicates, logTable, distributedInfo);
-    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args);
+    std::string sql = SqliteSqlBuilder::BuildUpdateLogString(predicates, logTable, distributedInfo);
+    auto [code, result] = ExecuteForRow(sql, args);
     return { code, result.changed };
 }
 

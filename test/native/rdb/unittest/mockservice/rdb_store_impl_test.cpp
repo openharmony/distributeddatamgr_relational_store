@@ -919,7 +919,7 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_007, TestSize.Level2)
     vec.push_back("localDeviceId");
     map[""] = vec;
     errCode = store->RetainDeviceData(map);
-    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
 }
 
 /**
@@ -946,7 +946,7 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_008, TestSize.Level2)
     vec.push_back("localDeviceId");
     map["employee"] = vec;
     errCode = store->RetainDeviceData(map);
-    EXPECT_EQ(E_INVALID_ARGS_NEW, errCode);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
 }
 
 /**
@@ -1155,7 +1155,7 @@ HWTEST_F(RdbStoreImplConditionTest, UpdateDistributedInfo_Test_006, TestSize.Lev
     AbsRdbPredicates predicates("test");
     predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "test");
     auto [ret, result] = store->UpdateDistributedInfo(distributedInfo, predicates);
-    EXPECT_EQ(E_INVALID_ARGS_NEW, ret);
+    EXPECT_EQ(E_INVALID_ARGS, ret);
     EXPECT_EQ(-1, result);
 }
 
@@ -1187,13 +1187,13 @@ HWTEST_F(RdbStoreImplConditionTest, UpdateDistributedInfo_Test_007, TestSize.Lev
     predicates.EqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "test");
     predicates.NotEqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "");
     auto [ret, result] = store->UpdateDistributedInfo(distributedInfo, predicates);
-    EXPECT_EQ(E_INVALID_ARGS_NEW, ret);
+    EXPECT_EQ(E_INVALID_ARGS, ret);
     EXPECT_EQ(-1, result);
 }
 
 /**
  * @tc.name: UpdateDistributedInfo_Test_008
- * @tc.desc: Abnormal testCase of UpdateDistributedInfo fail flag is BUTT  ORI_ORIGINAL ORI_REMOTE
+ * @tc.desc: Abnormal testCase of UpdateDistributedInfo fail flag is BUTT ORI_REMOTE
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, UpdateDistributedInfo_Test_008, TestSize.Level2)
@@ -1213,21 +1213,25 @@ HWTEST_F(RdbStoreImplConditionTest, UpdateDistributedInfo_Test_008, TestSize.Lev
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
     ASSERT_NE(store, nullptr) << "store is null";
     OHOS::DistributedRdb::DistributedInfo distributedInfo;
-    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::BUTT;
     AbsRdbPredicates predicates("test");
-    auto [ret, result] = store->UpdateDistributedInfo(distributedInfo, predicates);
-    EXPECT_EQ(E_INVALID_ARGS_NEW, ret);
-    EXPECT_EQ(-1, result);
-    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_ORIGINAL;
     predicates.EqualTo(OHOS::DistributedRdb::DistributedField::ORIGIN_ORIDEVICE, "");
+    auto [ret, result] = store->UpdateDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_SQLITE_ERROR, ret);
+    EXPECT_EQ(-1, result);
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::BUTT;
     auto [ret1, result1] = store->UpdateDistributedInfo(distributedInfo, predicates);
-    EXPECT_EQ(E_SQLITE_ERROR, ret1);
+    EXPECT_EQ(E_INVALID_ARGS, ret1);
     EXPECT_EQ(-1, result1);
     distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
     distributedInfo.oriDevice = "test";
     auto [ret2, result2] = store->UpdateDistributedInfo(distributedInfo, predicates);
     EXPECT_EQ(E_SQLITE_ERROR, ret2);
     EXPECT_EQ(-1, result2);
+    distributedInfo.flag = OHOS::DistributedRdb::DistributedOrigin::ORI_REMOTE;
+    distributedInfo.oriDevice = "";
+    auto [ret3, result3] = store->UpdateDistributedInfo(distributedInfo, predicates);
+    EXPECT_EQ(E_SQLITE_ERROR, ret3);
+    EXPECT_EQ(-1, result3);
 }
 
 /**
@@ -1249,7 +1253,7 @@ HWTEST_F(RdbStoreImplConditionTest, UpdateDistributedInfo_Test_009, TestSize.Lev
     OHOS::DistributedRdb::DistributedInfo distributedInfo;
     AbsRdbPredicates predicates("");
     auto [ret2, result2] = store->UpdateDistributedInfo(distributedInfo, predicates);
-    EXPECT_EQ(E_INVALID_ARGS_NEW, ret2);
+    EXPECT_EQ(E_INVALID_ARGS, ret2);
     EXPECT_EQ(-1, result2);
 }
 
