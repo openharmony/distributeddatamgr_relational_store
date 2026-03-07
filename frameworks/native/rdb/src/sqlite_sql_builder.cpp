@@ -192,24 +192,28 @@ std::string SqliteSqlBuilder::BuildUpdateLogString(const AbsRdbPredicates &predi
     std::string table = predicates.GetTableName();
     std::string sql;
     sql.append("UPDATE ").append(logTable).append(" SET ");
-    if (distributedInfo.flag != DistributedRdb::DistributedOrigin::ORI_ORIGINAL) {
+    if (distributedInfo.flag.has_value()) {
         std::string flagSql = distributedInfo.flag == DistributedRdb::DistributedOrigin::ORI_LOCAL ? "flag=flag|~0x2"
                                                                                                    : "flag=flag&~0x2";
         sql.append(flagSql);
     }
-    if (!distributedInfo.oriDevice.empty()) {
-        if (distributedInfo.flag != DistributedRdb::DistributedOrigin::ORI_ORIGINAL) {
+    if (distributedInfo.oriDevice.has_value()) {
+        if (distributedInfo.flag.has_value()) {
             sql.append(", ");
         }
-        sql.append("ori_device=calc_hash(?, 0)");
+        if (distributedInfo.oriDevice->empty()) {
+            sql.append("ori_device= ?");
+        } else {
+            sql.append("ori_device=calc_hash(?, 0)");
+        }
     }
-    std::string suffix = table + RDBLOG;
+    std::string alias = table + RDBLOG;
     sql.append(" WHERE data_key IN (SELECT " + table + ".rowid FROM " + table);
     sql.append(" INNER JOIN ");
-    sql.append("(SELECT data_key AS " + suffix + "data_key, flag AS " + suffix + "flag, ori_device AS " +
-                       suffix + "ori_device FROM " + logTable + ")");
-    sql.append(" AS log_data ON " + table + ".rowid = log_data." + suffix + "data_key");
-    AppendClause(sql, " WHERE ", SqliteUtils::Replace(predicates.GetWhereClause(), SqliteUtils::REP, suffix));
+    sql.append("(SELECT data_key AS " + alias + "data_key, flag AS " + alias + "flag, ori_device AS " +
+                       alias + "ori_device FROM " + logTable + ")");
+    sql.append(" AS log_data ON " + table + ".rowid = log_data." + alias + "data_key");
+    AppendClause(sql, " WHERE ", SqliteUtils::Replace(predicates.GetWhereClause(), SqliteUtils::REP, alias));
     sql.append(")");
     return sql;
 }

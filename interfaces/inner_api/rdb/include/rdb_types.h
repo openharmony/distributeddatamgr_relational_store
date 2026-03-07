@@ -78,13 +78,12 @@ enum DistributedOrigin {
     ORI_LOCAL = 0,   // Indicates the data flag wiil be changed to local.
     ORI_CLOUD = 1,   // Indicates the data flag wiil be changed to cloud.
     ORI_REMOTE = 2,  // Indicates the data flag wiil be changed to remote.
-    ORI_ORIGINAL,    // Indicates the data flag wiil be keeped original.
     BUTT,
 };
 
 struct DistributedInfo {
-    int32_t flag = DistributedOrigin::ORI_ORIGINAL;
-    std::string oriDevice;
+    std::optional<int32_t> flag;
+    std::optional<std::string> oriDevice;
 };
 
 struct RdbDfxInfo {
