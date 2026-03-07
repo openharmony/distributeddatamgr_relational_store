@@ -74,16 +74,16 @@ RdbStoreImpl::RdbStoreImpl(ani_object context, StoreConfig const &config, Config
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
     rdbConfig.version = version;
-    auto [code, storeConfig] = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
+    auto [error, storeConfig] = ani_rdbutils::AniGetRdbStoreConfig(env, context, rdbConfig);
     isSystemApp_ = rdbConfig.isSystemApp;
     DefaultOpenCallback callback;
     int errCode = OHOS::AppDataMgrJsKit::JSUtils::OK;
-    if (code != OK) {
+    if (error != nullptr && error->GetCode() != OK) {
         LOG_ERROR("AniGetRdbStoreConfig failed, use default config");
-        ThrowInnerErrorExt(
-            ((rdbConfig.version >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED) && (code == E_PARAM_ERROR))
-                ? NativeRdb::E_INVALID_ARGS
-                : code);
+        ThrowError(((rdbConfig.version >= ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED) &&
+                       (error->GetCode() == E_PARAM_ERROR))
+                       ? std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS)
+                       : error);
         return;
     }
     auto nativeRdbStore = OHOS::NativeRdb::RdbHelper::GetRdbStore(storeConfig, -1, callback, errCode);
@@ -1432,10 +1432,10 @@ int32_t RdbStoreImpl::AttachWithContext(
 
     ani_env *env = get_env();
     OHOS::AppDataMgrJsKit::JSUtils::RdbConfig rdbConfig = ani_rdbutils::AniGetRdbConfig(config);
-    auto [code, storeConfig] =
+    auto [error, storeConfig] =
         ani_rdbutils::AniGetRdbStoreConfig(env, reinterpret_cast<ani_object>(context), rdbConfig);
-    if (code != OK) {
-        ThrowInnerErrorExt(code);
+    if (error != nullptr && error->GetCode() != OK) {
+        ThrowError(error);
         return 0;
     }
 
