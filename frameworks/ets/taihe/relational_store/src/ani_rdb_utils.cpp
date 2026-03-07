@@ -507,7 +507,7 @@ std::pair<std::shared_ptr<OHOS::RelationalStoreJsKit::Error>, OHOS::NativeRdb::R
         return std::make_pair(std::make_shared<ParamError>("Illegal CryptoParam."), defaultConfig);
     }
     if (rdbConfig.tokenizer < NONE_TOKENIZER || rdbConfig.tokenizer >= TOKENIZER_END) {
-        return std::make_pair(std::make_shared<ParamError>("Illegal CryptoParam."), defaultConfig);
+        return std::make_pair(std::make_shared<ParamError>("Illegal tokenizer."), defaultConfig);
     }
     if (!RdbHelper::IsSupportedTokenizer(rdbConfig.tokenizer)) {
         return std::make_pair(std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT), defaultConfig);
