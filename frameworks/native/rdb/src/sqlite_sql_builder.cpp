@@ -193,7 +193,7 @@ std::string SqliteSqlBuilder::BuildUpdateLogString(const AbsRdbPredicates &predi
     std::string sql;
     sql.append("UPDATE ").append(logTable).append(" SET ");
     if (distributedInfo.flag.has_value()) {
-        std::string flagSql = distributedInfo.flag == DistributedRdb::DistributedOrigin::ORI_LOCAL ? "flag=flag|~0x2"
+        std::string flagSql = distributedInfo.flag == DistributedRdb::DistributedOrigin::ORI_LOCAL ? "flag=flag|0x2"
                                                                                                    : "flag=flag&~0x2";
         sql.append(flagSql);
     }
