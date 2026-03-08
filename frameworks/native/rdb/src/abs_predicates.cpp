@@ -75,10 +75,10 @@ AbsPredicates *AbsPredicates::EqualTo(const std::string &field, const ValueObjec
         std::string device;
         valObj.GetString(device);
         if (device.empty()) {
-            whereClause += "(" + newField + " IS null)";
+            whereClause += "(LENGTH(" + newField + ") = 0)";
             return this;
         }
-        whereClause += "(" + newField + " IS NOT null)";
+        whereClause += "(LENGTH(" + newField + ") > 0 )";
         return this;
     }
     if (flagVal.empty()) {
@@ -104,10 +104,10 @@ AbsPredicates *AbsPredicates::NotEqualTo(const std::string &field, const ValueOb
         std::string device;
         value.GetString(device);
         if (device.empty()) {
-            whereClause += "(" + field + " IS NOT null)";
+            whereClause += "(LENGTH(" + field + ") > 0 )";
             return this;
         }
-        whereClause += "(" + field + " IS null)";
+        whereClause += "(LENGTH(" + field + ") = 0)";
         return this;
     }
     whereClause += field + " <> ? ";
