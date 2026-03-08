@@ -113,7 +113,7 @@ export default function UpdateDistributedInfo() {
           const predicates = new relationalStore.RdbPredicates('EMPLOYEE');
           await rdbStore1.updateDistributedInfo(distributedInfo, predicates);
           expect(null).assertFail();
-          console.error(`UpdateDistributedInfoTest0001 success`);
+          console.log(`UpdateDistributedInfoTest0001 success`);
         } catch (e) {
           console.error(`UpdateDistributedInfoTest0001 failed, code is ${e.code},message is ${e.message}`);
           expect(e.code).assertEqual(14800043);
@@ -161,7 +161,7 @@ export default function UpdateDistributedInfo() {
           const predicates = new relationalStore.RdbPredicates('EMPLOYEE');
           await corruptDb(context, STORE_CONFIG);
           await rdbStore.updateDistributedInfo(distributedInfo, predicates);
-          console.error(`UpdateDistributedInfoTest0002 success`);
+          console.log(`UpdateDistributedInfoTest0002 success`);
           expect(null).assertFail();
         } catch (e) {
           console.error(`UpdateDistributedInfoTest0002 failed, code is ${e.code},message is ${e.message}`);
@@ -187,7 +187,7 @@ export default function UpdateDistributedInfo() {
           }
           const predicates = new relationalStore.RdbPredicates('EMPLOYEE');
           await rdbStore.updateDistributedInfo(distributedInfo, predicates);
-          console.error(`UpdateDistributedInfoTest0003 success`);
+          console.log(`UpdateDistributedInfoTest0003 success`);
           expect(null).assertFail();
         } catch (e) {
           console.error(`UpdateDistributedInfoTest0003 failed, code is ${e.code},message is ${e.message}`);
@@ -230,7 +230,7 @@ export default function UpdateDistributedInfo() {
           }
           const predicates = new relationalStore.RdbPredicates('EMPLOYEE');
           await rdbStore.updateDistributedInfo(distributedInfo, predicates);
-          console.error(`UpdateDistributedInfoTest0004 success`);
+          console.log(`UpdateDistributedInfoTest0004 success`);
           expect(null).assertFail();
         } catch (e) {
           console.error(`UpdateDistributedInfoTest0004 failed, code is ${e.code},message is ${e.message}`);
@@ -255,7 +255,7 @@ export default function UpdateDistributedInfo() {
           const predicates = new relationalStore.RdbPredicates('EMPLOYEE');
           await rdbStore.close();
           await rdbStore.updateDistributedInfo(distributedInfo, predicates);
-          console.error(`UpdateDistributedInfoTest0005 success`);
+          console.log(`UpdateDistributedInfoTest0005 success`);
           expect(null).assertFail();
         } catch (e) {
           console.error(`UpdateDistributedInfoTest0005 failed, code is ${e.code},message is ${e.message}`);
@@ -297,7 +297,7 @@ export default function UpdateDistributedInfo() {
           predicates.equalTo("AGE", 25);
           predicates.equalTo("NAME", "Lisa");
           await rdbStore.updateDistributedInfo(distributedInfo, predicates);
-          console.error(`UpdateDistributedInfoTest0006 success`);
+          console.log(`UpdateDistributedInfoTest0006 success`);
           expect(null).assertFail();
         } catch (e) {
           console.error(`UpdateDistributedInfoTest0006 failed, code is ${e.code},message is ${e.message}`);
@@ -360,7 +360,7 @@ export default function UpdateDistributedInfo() {
           predicates.equalTo(relationalStore.DistributedField.ORIGIN, relationalStore.DistributedOrigin.ORI_LOCAL);
           predicates.equalTo(relationalStore.DistributedField.ORIGIN_ORIDEVICE, "");
           let ret = await rdbStore.updateDistributedInfo(distributedInfo, predicates);
-          console.error(`UpdateDistributedInfoTest0007 success`);
+          console.log(`UpdateDistributedInfoTest0007 success`);
           expect(ret).assertEqual(1);
           const pre = new relationalStore.RdbPredicates('naturalbase_rdb_aux_EMPLOYEE_log');
           let resultSet:relationalStore.ResultSet = await rdbStore?.query(pre) as relationalStore.ResultSet;
@@ -429,7 +429,7 @@ export default function UpdateDistributedInfo() {
           predicates.equalTo(relationalStore.DistributedField.ORIGIN, relationalStore.DistributedOrigin.ORI_REMOTE);
           predicates.equalTo(relationalStore.DistributedField.ORIGIN_ORIDEVICE, "");
           let ret = await rdbStore.updateDistributedInfo(distributedInfo, predicates);
-          console.error(`UpdateDistributedInfoTest0008 success`);
+          console.log(`UpdateDistributedInfoTest0008 success`);
           expect(ret).assertEqual(0);
           const pre = new relationalStore.RdbPredicates('naturalbase_rdb_aux_EMPLOYEE_log');
           let resultSet:relationalStore.ResultSet = await rdbStore?.query(pre) as relationalStore.ResultSet;
@@ -498,7 +498,7 @@ export default function UpdateDistributedInfo() {
           predicates.equalTo(relationalStore.DistributedField.ORIGIN, relationalStore.DistributedOrigin.ORI_LOCAL);
           predicates.notEqualTo(relationalStore.DistributedField.ORIGIN_ORIDEVICE, "test");
           let ret = await rdbStore.updateDistributedInfo(distributedInfo, predicates);
-          console.error(`UpdateDistributedInfoTest0009 success`);
+          console.log(`UpdateDistributedInfoTest0009 success`);
           expect(ret).assertEqual(1);
           const pre = new relationalStore.RdbPredicates('naturalbase_rdb_aux_EMPLOYEE_log');
           let resultSet:relationalStore.ResultSet = await rdbStore?.query(pre) as relationalStore.ResultSet;
