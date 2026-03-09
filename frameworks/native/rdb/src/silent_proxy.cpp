@@ -101,9 +101,7 @@ std::pair<int32_t, bool> SilentProxyManager::IsSupportSilentFromProxy(
         if (silentProxy.bundleName != bundleName) {
             continue;
         }
-        for (auto &name : silentProxy.storeNames) {
-            cacheConfig.insert(name);
-        }
+        cacheConfig.insert(silentProxy.storeNames.begin(), silentProxy.storeNames.end());
         break;
     }
 
@@ -157,7 +155,7 @@ std::pair<int32_t, bool> SilentProxyManager::IsSupportSilentFromService(
     bool ret = cacheConfig.count(dbName) != 0;
     if (ret) {
         RdbFaultHiViewReporter::ReportFault(
-            RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_SILENT_PROXY_QUERY, bundleName, dbName));
+            RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_SILENT_PROXY_QUERY, bundleName, dbNames));
     }
     silentCache_.Set(key, cacheConfig);
     return { E_OK, ret };
