@@ -58,7 +58,7 @@ bool AniContext::Init(uintptr_t callback)
     return true;
 }
 
-void AniAsyncCall::ReturnResult(std::shared_ptr<AniContext> ctx)
+void AniAsyncCall::ReturnResult(std::shared_ptr<AniContext> ctx, ResultSetter resultSetter)
 {
     ::taihe::env_guard gurd;
     auto env = gurd.get_env();
@@ -66,7 +66,13 @@ void AniAsyncCall::ReturnResult(std::shared_ptr<AniContext> ctx)
         LOG_ERROR("Get env failed.");
         return;
     }
-
+    int32_t errCode = NativeRdb::E_OK;
+    if (resultSetter != nullptr) {
+        errCode = resultSetter(env, &ctx->result_);
+    }
+    if (errCode != NativeRdb::E_OK) {
+        ctx->error_ = std::make_shared<InnerError>(errCode);
+    }
     if (ctx->callbackRef_ == nullptr && ctx->deferred_ == nullptr) {
         return;
     }

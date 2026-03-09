@@ -23,6 +23,8 @@
 #include "napi_rdb_error.h"
 namespace OHOS {
 namespace RdbTaihe {
+using ResultSetter = std::function<int(ani_env *, ani_ref *)>;
+
 class AniContext {
 public:
     AniContext() = default;
@@ -43,10 +45,10 @@ public:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     AniAsyncCall() = default;
     ~AniAsyncCall();
-    static void ReturnResult(std::shared_ptr<AniContext> ctx);
+    static void ReturnResult(std::shared_ptr<AniContext> ctx, ResultSetter resultSetter = nullptr);
     static void CallPromise(ani_env *env, std::shared_ptr<AniContext> ctx);
     static void CallCallback(ani_env *env, std::shared_ptr<AniContext> ctx);
 };
-}
-}
+} // namespace RdbTaihe
+} // namespace OHOS
 #endif
