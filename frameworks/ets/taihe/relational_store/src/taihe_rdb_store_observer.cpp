@@ -83,6 +83,10 @@ void TaiheRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
 void TaiheRdbStoreObserver::OnChange(const OHOS::DistributedRdb::Origin &origin, const PrimaryFields &fields,
     OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo)
 {
+    if (subscribeMode_ != DistributedRdb::CLOUD_DETAIL && subscribeMode_ != DistributedRdb::LOCAL_DETAIL) {
+        RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
+        return;
+    }
     if (callbackPtr_ == nullptr) {
         LOG_ERROR("Js callback is nullptr.");
         return;
@@ -91,8 +95,6 @@ void TaiheRdbStoreObserver::OnChange(const OHOS::DistributedRdb::Origin &origin,
         auto jsChangeInfo = RdbChangeInfoToTaihe(origin, changeInfo);
         auto jsfunc = std::get<JsChangeInfoCallbackType>(*callbackPtr_);
         jsfunc(jsChangeInfo);
-    } else {
-        OHOS::DistributedRdb::RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
     }
 }
 
