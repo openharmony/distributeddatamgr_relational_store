@@ -951,12 +951,11 @@ string RdbStoreImpl::ObtainDistributedTableNameSync(string_view device, string_v
     return distributedTableName;
 }
 
-void RdbStoreImpl::Sync(
-    SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise)
+void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise)
 {
     auto store = GetResource();
-    ASSERT_RETURN_THROW_ERROR(store != nullptr,
-        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    ASSERT_RETURN_THROW_ERROR(
+        store != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
         std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
@@ -973,16 +972,12 @@ void RdbStoreImpl::Sync(
     }
     promise = context->promise_;
     auto nativeSyncCallback = [context](const OHOS::DistributedRdb::SyncResult &data) {
-        {
-            ::taihe::env_guard gurd;
+        AniAsyncCall::ReturnResult(context, [data](ani_env *env, ani_ref *result) {
             ani_object object = {};
-            ani_status status = ani_utils::Convert2AniValue(gurd.get_env(), data, object);
-            context->result_ = static_cast<ani_ref>(object);
-            if (status != ANI_OK || context->result_ == nullptr) {
-                context->error_ = std::make_shared<InnerError>(NativeRdb::E_ERROR);
-            }
-        }
-        AniAsyncCall::ReturnResult(context);
+            ani_status status = ani_utils::Convert2AniValue(env, data, object);
+            *result = static_cast<ani_ref>(object);
+            return (status != ANI_OK || *result == nullptr) ? NativeRdb::E_ERROR : NativeRdb::E_OK;
+        });
     };
     int errCode = store->Sync(option, *rdbPredicateNative, nativeSyncCallback);
     if (errCode != OHOS::NativeRdb::E_OK) {
