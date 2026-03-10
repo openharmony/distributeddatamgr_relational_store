@@ -17,6 +17,7 @@
 #include <fuzzer/FuzzedDataProvider.h>
 
 #include <climits>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include "abs_result_set.h"
@@ -41,19 +42,21 @@ static const std::string CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
 
 class AbsresultsetFuzzerTestCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &store) override;
-    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
+    explicit AbsresultsetFuzzerTestCallback(const std::string &createTableSql) : createTableSql_(createTableSql) {}
+
+    int OnCreate(RdbStore &store) override
+    {
+        return store.ExecuteSql(createTableSql_);
+    }
+
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override
+    {
+        return E_OK;
+    }
+
+private:
+    std::string createTableSql_;
 };
-
-int AbsresultsetFuzzerTestCallback::OnCreate(RdbStore &store)
-{
-    return store.ExecuteSql(CREATE_TABLE_TEST);
-}
-
-int AbsresultsetFuzzerTestCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
-{
-    return E_OK;
-}
 
 std::vector<ValueObject> ConsumeRandomLengthValueObjectVector(FuzzedDataProvider &provider)
 {
@@ -266,16 +269,32 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     FuzzedDataProvider provider(data, size);
     RdbHelper::DeleteRdbStore(RDB_PATH);
     RdbStoreConfig config(RDB_PATH);
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    config.SetReadOnly(false);
-    AbsresultsetFuzzerTestCallback helper;
+    // Use mutation data for configuration to improve fuzz coverage
+    bool haMode = provider.ConsumeBool();
+    config.SetHaMode(haMode ? HAMode::MAIN_REPLICA : HAMode::SINGLE);
+    bool readOnly = provider.ConsumeBool();
+    config.SetReadOnly(readOnly);
+
+    // Use mutation data for table creation SQL to improve fuzz coverage
+    std::string createTableSql = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    if (createTableSql.empty()) {
+        createTableSql = CREATE_TABLE_TEST;
+    }
+    AbsresultsetFuzzerTestCallback helper(createTableSql);
     int errCode = E_OK;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    int version = provider.ConsumeIntegralInRange<int>(1, 10);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
     if (store == nullptr || errCode != E_OK) {
         return 0;
     }
-    std::vector<std::string> selectionArgs;
-    std::shared_ptr<AbsResultSet> resultSet = store->QuerySql("SELECT * FROM test", selectionArgs);
+    // Use mutation data for SQL query to improve fuzz coverage
+    std::string sqlQuery = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    if (sqlQuery.empty()) {
+        sqlQuery = "SELECT * FROM test";
+    }
+
+    std::vector<std::string> selectionArgs = ConsumeRandomLengthStringVector(provider);
+    std::shared_ptr<AbsResultSet> resultSet = store->QuerySql(sqlQuery, selectionArgs);
     if (resultSet == nullptr) {
         return 0;
     }
