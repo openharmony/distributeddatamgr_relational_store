@@ -152,7 +152,7 @@ void TestGetRow(std::shared_ptr<AbsResultSet> &resultSet)
     resultSet->GetRow(rowEntity);
 }
 
-void TestGoToRow(std::shared_ptr<AbsResultSet> &resultSet)
+void TestGoToRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
     int position = provider.ConsumeIntegral<int>();
     resultSet->GoToRow(position);
@@ -291,7 +291,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::TestGetFloat32Array(provider, resultSet);
     OHOS::TestIsColumnNull(provider, resultSet);
     OHOS::TestGetRow(resultSet);
-    OHOS::TestGoToRow(resultSet);
+    OHOS::TestGoToRow(provider, resultSet);
     OHOS::TestGetColumnType(provider, resultSet);
     OHOS::TestGetRowIndex(resultSet);
     OHOS::TestGoTo(provider, resultSet);
@@ -307,7 +307,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::TestGetColumnIndex(provider, resultSet);
     OHOS::TestGetColumnName(provider, resultSet);
     OHOS::TestGetWholeColumnNames(resultSet);
-    OHOS::TestGetRowData(provider, resultSet);
+    OHOS::TestGetRowData(resultSet);
     OHOS::TestGetRowsData(provider, resultSet);
     return 0;
 }
