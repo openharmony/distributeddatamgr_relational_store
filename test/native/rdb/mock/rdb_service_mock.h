@@ -18,6 +18,8 @@
 
 #include <gmock/gmock.h>
 
+#include <vector>
+
 #include "iremote_object.h"
 #include "rdb_service.h"
 
@@ -56,8 +58,9 @@ public:
     MOCK_METHOD(int32_t, InitNotifier, (const RdbSyncerParam &param, sptr<IRemoteObject> notifier), (override));
 
     MOCK_METHOD(int32_t, BeforeOpen, (RdbSyncerParam & param), (override));
-    
-    MOCK_METHOD((std::pair<int32_t, bool>), IsSupportSilent, (const RdbSyncerParam & param), (override));
+
+    MOCK_METHOD((std::pair<int32_t, std::vector<std::string>>), GetSilentAccessStores,
+        (const RdbSyncerParam &param), (override));
 
     MOCK_METHOD(int32_t, AfterOpen, (const RdbSyncerParam &param), (override));
 
