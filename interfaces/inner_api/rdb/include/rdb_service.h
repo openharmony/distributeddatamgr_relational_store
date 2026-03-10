@@ -74,7 +74,7 @@ public:
 
     virtual int32_t BeforeOpen(RdbSyncerParam &param) = 0;
 
-    virtual std::pair<int32_t, bool> IsSupportSilent(const RdbSyncerParam &param) = 0;
+    virtual std::pair<int32_t, std::vector<std::string>> GetSilentAccessStores(const RdbSyncerParam &param) = 0;
 
     virtual int32_t AfterOpen(const RdbSyncerParam &param) = 0;
 

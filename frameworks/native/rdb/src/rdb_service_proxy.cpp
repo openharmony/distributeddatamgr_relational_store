@@ -16,6 +16,7 @@
 #include "rdb_service_proxy.h"
 
 #include <thread>
+#include <vector>
 #include "itypes_util.h"
 #include "logger.h"
 #include "result_set_proxy.h"
@@ -390,22 +391,21 @@ int32_t RdbServiceProxy::BeforeOpen(RdbSyncerParam &param)
     return status;
 }
 
-std::pair<int32_t, bool> RdbServiceProxy::IsSupportSilent(const RdbSyncerParam &param)
+std::pair<int32_t, std::vector<std::string>> RdbServiceProxy::GetSilentAccessStores(const RdbSyncerParam &param)
 {
     MessageParcel reply;
-    bool isSilent = false;
-    int32_t status =
-        IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_GET_ISSILENT), reply, param, isSilent);
+    std::vector<std::string> stores;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_GET_ISSILENT), reply, param);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
             SqliteUtils::Anonymous(param.storeName_).c_str());
-        return {status, isSilent};
+        return { status, stores };
     }
-    if (!ITypesUtil::Unmarshal(reply, isSilent)) {
+    if (!ITypesUtil::Unmarshal(reply, stores)) {
         LOG_ERROR("read result failed.");
         status = RDB_ERROR;
     }
-    return {status, isSilent};
+    return { status, stores };
 }
 
 int32_t RdbServiceProxy::AfterOpen(const RdbSyncerParam &param)
