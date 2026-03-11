@@ -263,6 +263,24 @@ void TestGetRowsData(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet>
 
 } // namespace OHOS
 
+std::string CreateTableSql(FuzzedDataProvider &provider)
+{
+    std::string createTableSql = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    if (createTableSql.empty()) {
+        createTableSql = CREATE_TABLE_TEST;
+    }
+    return createTableSql;
+}
+
+std::string CreateQuerySql(FuzzedDataProvider &provider)
+{
+    std::string sqlQuery = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    if (sqlQuery.empty()) {
+        sqlQuery = "SELECT * FROM test";
+    }
+    return sqlQuery;
+}
+
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -274,10 +292,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     config.SetReadOnly(provider.ConsumeBool());
 
     // Use mutation data for table creation SQL to improve fuzz coverage
-    std::string createTableSql = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    if (createTableSql.empty()) {
-        createTableSql = CREATE_TABLE_TEST;
-    }
+    std::string createTableSql = CreateTableSql(provider);
     AbsresultsetFuzzerTestCallback helper(createTableSql);
     int errCode = E_OK;
     int version = provider.ConsumeIntegralInRange<int>(1, 10);
@@ -286,11 +301,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         return 0;
     }
     // Use mutation data for SQL query to improve fuzz coverage
-    std::string sqlQuery = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    if (sqlQuery.empty()) {
-        sqlQuery = "SELECT * FROM test";
-    }
-
+    std::string sqlQuery = CreateQuerySql(provider);
     std::vector<std::string> selectionArgs = ConsumeRandomLengthStringVector(provider);
     std::shared_ptr<AbsResultSet> resultSet = store->QuerySql(sqlQuery, selectionArgs);
     if (resultSet == nullptr) {
