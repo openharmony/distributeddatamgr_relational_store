@@ -62,6 +62,7 @@ ohos_shared_library("clouddata") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "ipc:ipc_single",
     "kv_store:datamgr_common",
     "napi:ace_napi",
   ]
