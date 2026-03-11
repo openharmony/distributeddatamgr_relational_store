@@ -58,8 +58,8 @@ void SharedBlockPutFuzz(std::shared_ptr<AppDataFwk::SharedBlock> sharedBlock, Fu
     {
         uint32_t row = provider.ConsumeIntegral<int32_t>();
         uint32_t column = provider.ConsumeIntegral<int32_t>();
-        size_t size = provider.ConsumeIntegralInRange<size_t>(MIN_BLOB_SIZE, MAX_BLOB_SIZE);
-        std::vector<uint8_t> value = provider.ConsumeBytes<uint8_t>(size);
+        std::string str = provider.ConsumeRandomLengthString();
+        std::vector<uint8_t> value(str.begin(), str.end());
         sharedBlock->PutAssets(row, column, value.data(), value.size());
     }
 
