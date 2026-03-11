@@ -66,7 +66,9 @@ void OH_Values_PutFuzz(FuzzedDataProvider &provider)
         return;
     }
     OH_Data_Value *dataValue = OH_Value_Create();
+    double realValue = provider.ConsumeFloatingPoint<double>();
     if (dataValue != nullptr) {
+        OH_Value_PutReal(dataValue, realValue);
         OH_Values_Put(values, dataValue);
         OH_Values_Put(values, nullptr);
         OH_Values_Put(nullptr, dataValue);
@@ -84,6 +86,12 @@ void OH_Values_PutNullFuzz(FuzzedDataProvider &provider)
     OH_Data_Values *values = OH_Values_Create();
     if (values == nullptr) {
         return;
+    }
+    OH_Data_Value *dataValue = OH_Value_Create();
+    double realValue = provider.ConsumeFloatingPoint<double>();
+    if (dataValue != nullptr) {
+        OH_Value_PutReal(dataValue, realValue);
+        OH_Values_Put(values, dataValue);
     }
 
     OH_Values_PutNull(values);
@@ -167,6 +175,8 @@ void OH_Values_PutAssetFuzz(FuzzedDataProvider &provider)
         OH_Values_Destroy(values);
         return;
     }
+    int64_t createTime = provider.ConsumeIntegral<int64_t>();
+    OH_Data_Asset_SetCreateTime(asset, createTime);
     OH_Values_PutAsset(values, asset);
     OH_Values_Destroy(values);
     OH_Data_Asset_DestroyOne(asset);
