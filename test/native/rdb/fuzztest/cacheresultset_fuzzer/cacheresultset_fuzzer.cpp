@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cache_result_set_test_ut2fuzz.h"
+#include "cacheresultset_fuzzer.h"
 
 #include <fuzzer/FuzzedDataProvider.h>
 #include <rdb_helper.h>
@@ -343,7 +343,7 @@ void CacheResultSetTestGetColumnNameTest001(FuzzedDataProvider &fdp)
     CacheResultSet cacheResultSet(std::move(valuesBuckets));
 
     std::string columnName;
-    const int index = 0;
+    int index = fdp.ConsumeIntegral<int>();
     cacheResultSet.GetColumnName(index, columnName);
 }
 
