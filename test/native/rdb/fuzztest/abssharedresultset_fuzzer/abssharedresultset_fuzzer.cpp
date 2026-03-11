@@ -33,7 +33,9 @@
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
 
-static const size_t DEFAULT_BLOCK_SIZE = 1 * 1024 * 1024;
+static const size_t MAX_SHARE_BLOCK_NAME_SIZE = 128;    // max length is 128
+static const size_t MIN_BLOCK_SIZE = 1024;             // 1Kb
+static const size_t MAX_BLOCK_SIZE = 2 * 1024 * 1024;  // 2M
 
 namespace OHOS {
 void FuzzGetString(FuzzedDataProvider &provider, AbsSharedResultSet &resultSet)
@@ -70,13 +72,13 @@ void FuzzGoToRow(FuzzedDataProvider &provider, AbsSharedResultSet &resultSet)
     resultSet.GoToRow(position);
 }
 
-void FuzzGetRowCount(FuzzedDataProvider &provider, AbsSharedResultSet &resultSet)
+void FuzzGetRowCount(AbsSharedResultSet &resultSet)
 {
     int count;
     resultSet.GetRowCount(count);
 }
 
-void FuzzGetBlock(FuzzedDataProvider &provider, AbsSharedResultSet &resultSet)
+void FuzzGetBlock(AbsSharedResultSet &resultSet)
 {
     resultSet.GetBlock();
 }
@@ -90,21 +92,23 @@ void FuzzOnGo(FuzzedDataProvider &provider, AbsSharedResultSet &resultSet)
 
 void FuzzSetBlock(FuzzedDataProvider &provider, AbsSharedResultSet &resultSet)
 {
+    std::string sharedBlockName = provider.ConsumeRandomLengthString(MAX_SHARE_BLOCK_NAME_SIZE);
+    size_t blockSize = provider.ConsumeIntegralInRange<size_t>(MIN_BLOCK_SIZE, MAX_BLOCK_SIZE);
+
     AppDataFwk::SharedBlock *block = nullptr;
-    std::string sharedBlockName = "SharedBlockFuzzTestBlock";
-    auto errcode = AppDataFwk::SharedBlock::Create(sharedBlockName, DEFAULT_BLOCK_SIZE, block);
+    auto errcode = AppDataFwk::SharedBlock::Create(sharedBlockName, blockSize, block);
     if (errcode != AppDataFwk::SharedBlock::SHARED_BLOCK_OK) {
         return;
     }
     resultSet.SetBlock(block);
 }
 
-void FuzzClose(FuzzedDataProvider &provider, AbsSharedResultSet &resultSet)
+void FuzzClose(AbsSharedResultSet &resultSet)
 {
     resultSet.Close();
 }
 
-void FuzzHasBlock(FuzzedDataProvider &provider, AbsSharedResultSet &resultSet)
+void FuzzHasBlock(AbsSharedResultSet &resultSet)
 {
     resultSet.HasBlock();
 }
@@ -135,10 +139,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::FuzzGoToRow(provider, resultSet);
 
     // Fuzzing for GetRowCount
-    OHOS::FuzzGetRowCount(provider, resultSet);
+    OHOS::FuzzGetRowCount(resultSet);
 
     // Fuzzing for GetBlock
-    OHOS::FuzzGetBlock(provider, resultSet);
+    OHOS::FuzzGetBlock(resultSet);
 
     // Fuzzing for OnGo
     OHOS::FuzzOnGo(provider, resultSet);
@@ -146,11 +150,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     // Fuzzing for SetBlock
     OHOS::FuzzSetBlock(provider, resultSet);
 
-    // Fuzzing for Close
-    OHOS::FuzzClose(provider, resultSet);
-
     // Fuzzing for HasBlock
-    OHOS::FuzzHasBlock(provider, resultSet);
+    OHOS::FuzzHasBlock(resultSet);
+
+    // Fuzzing for Close
+    OHOS::FuzzClose(resultSet);
 
     return 0;
 }
