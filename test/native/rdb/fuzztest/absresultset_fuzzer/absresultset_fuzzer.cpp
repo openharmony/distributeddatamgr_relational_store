@@ -270,10 +270,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     RdbHelper::DeleteRdbStore(RDB_PATH);
     RdbStoreConfig config(RDB_PATH);
     // Use mutation data for configuration to improve fuzz coverage
-    bool haMode = provider.ConsumeBool();
-    config.SetHaMode(haMode ? HAMode::MAIN_REPLICA : HAMode::SINGLE);
-    bool readOnly = provider.ConsumeBool();
-    config.SetReadOnly(readOnly);
+    config.SetHaMode(provider.ConsumeBool() ? HAMode::MAIN_REPLICA : HAMode::SINGLE);
+    config.SetReadOnly(provider.ConsumeBool());
 
     // Use mutation data for table creation SQL to improve fuzz coverage
     std::string createTableSql = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
