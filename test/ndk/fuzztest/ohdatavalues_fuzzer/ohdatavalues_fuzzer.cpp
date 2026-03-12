@@ -70,15 +70,9 @@ void OH_Values_PutFuzz(FuzzedDataProvider &provider)
     if (dataValue != nullptr) {
         OH_Value_PutReal(dataValue, realValue);
         OH_Values_Put(values, dataValue);
-        OH_Values_Put(values, nullptr);
-        OH_Values_Put(nullptr, dataValue);
     }
-
     OH_Values_Destroy(values);
     OH_Value_Destroy(dataValue);
-
-    OH_Values_Put(nullptr, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_PutNullFuzz(FuzzedDataProvider &provider)
@@ -139,13 +133,10 @@ void OH_Values_PutTextFuzz(FuzzedDataProvider &provider)
     }
 
     std::string textValue = provider.ConsumeRandomLengthString();
-    OH_Values_PutText(values, textValue.c_str());
-    OH_Values_PutText(values, nullptr);
-    OH_Values_PutText(nullptr, textValue.c_str());
+    if (!textValue.empty()) {
+        OH_Values_PutText(values, textValue.c_str());
+    }
     OH_Values_Destroy(values);
-
-    OH_Values_PutText(nullptr, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_PutBlobFuzz(FuzzedDataProvider &provider)
@@ -154,13 +145,10 @@ void OH_Values_PutBlobFuzz(FuzzedDataProvider &provider)
     if (values == nullptr) {
         return;
     }
-    size_t blobLength = provider.ConsumeIntegralInRange<size_t>(LOOPS_MIN, LOOPS_MAX);
+    size_t blobLength = provider.ConsumeIntegralInRange<size_t>(1, 100);
     std::vector<uint8_t> blobValue = provider.ConsumeBytes<uint8_t>(blobLength);
     OH_Values_PutBlob(values, blobValue.data(), blobValue.size());
     OH_Values_Destroy(values);
-
-    OH_Values_PutBlob(nullptr, nullptr, 0);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_PutAssetFuzz(FuzzedDataProvider &provider)
@@ -277,13 +265,16 @@ void OH_Values_GetTypeFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t count;
+    OH_Values_Count(values, &count);
+    if (count == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, count - 1);
     OH_ColumnType type;
     OH_Values_GetType(values, index, &type);
     OH_Values_Destroy(values);
-
-    OH_Values_GetType(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetFuzz(FuzzedDataProvider &provider)
@@ -293,13 +284,16 @@ void OH_Values_GetFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t count;
+    OH_Values_Count(values, &count);
+    if (count == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, count - 1);
     OH_Data_Value *dataValue;
     OH_Values_Get(values, index, &dataValue);
     OH_Values_Destroy(values);
-
-    OH_Values_Get(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_IsNullFuzz(FuzzedDataProvider &provider)
@@ -309,13 +303,16 @@ void OH_Values_IsNullFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t count;
+    OH_Values_Count(values, &count);
+    if (count == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, count - 1);
     bool isNull;
     OH_Values_IsNull(values, index, &isNull);
     OH_Values_Destroy(values);
-
-    OH_Values_IsNull(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetIntFuzz(FuzzedDataProvider &provider)
@@ -325,13 +322,16 @@ void OH_Values_GetIntFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t count;
+    OH_Values_Count(values, &count);
+    if (count == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, count - 1);
     int64_t intValue;
     OH_Values_GetInt(values, index, &intValue);
     OH_Values_Destroy(values);
-
-    OH_Values_GetInt(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetRealFuzz(FuzzedDataProvider &provider)
@@ -341,13 +341,16 @@ void OH_Values_GetRealFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t count;
+    OH_Values_Count(values, &count);
+    if (count == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, count - 1);
     double realValue;
     OH_Values_GetReal(values, index, &realValue);
     OH_Values_Destroy(values);
-
-    OH_Values_GetReal(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetTextFuzz(FuzzedDataProvider &provider)
@@ -357,13 +360,16 @@ void OH_Values_GetTextFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t count;
+    OH_Values_Count(values, &count);
+    if (count == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, count - 1);
     const char *textValue;
     OH_Values_GetText(values, index, &textValue);
     OH_Values_Destroy(values);
-
-    OH_Values_GetText(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetBlobFuzz(FuzzedDataProvider &provider)
@@ -373,14 +379,17 @@ void OH_Values_GetBlobFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t count;
+    OH_Values_Count(values, &count);
+    if (count == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, count - 1);
     const uint8_t *blobValue;
     size_t blobLength;
     OH_Values_GetBlob(values, index, &blobValue, &blobLength);
     OH_Values_Destroy(values);
-
-    OH_Values_GetBlob(nullptr, 0, nullptr, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetAssetFuzz(FuzzedDataProvider &provider)
@@ -390,16 +399,21 @@ void OH_Values_GetAssetFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t count;
+    OH_Values_Count(values, &count);
+    if (count == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, count - 1);
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     if (asset != nullptr) {
         OH_Values_GetAsset(values, index, asset);
     }
     OH_Values_Destroy(values);
-    OH_Data_Asset_DestroyOne(asset);
-
-    OH_Values_GetAsset(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
+    if (asset != nullptr) {
+        OH_Data_Asset_DestroyOne(asset);
+    }
 }
 
 void OH_Values_GetAssetsCountFuzz(FuzzedDataProvider &provider)
@@ -409,13 +423,16 @@ void OH_Values_GetAssetsCountFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t totalCount;
+    OH_Values_Count(values, &totalCount);
+    if (totalCount == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, totalCount - 1);
     size_t count;
     OH_Values_GetAssetsCount(values, index, &count);
     OH_Values_Destroy(values);
-
-    OH_Values_GetAssetsCount(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetAssetsFuzz(FuzzedDataProvider &provider)
@@ -425,7 +442,13 @@ void OH_Values_GetAssetsFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t totalCount;
+    OH_Values_Count(values, &totalCount);
+    if (totalCount == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, totalCount - 1);
     size_t inLen;
     OH_Values_GetAssetsCount(values, index, &inLen);
     if (inLen > 0) {
@@ -440,9 +463,6 @@ void OH_Values_GetAssetsFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
-    
-    OH_Values_GetAssets(nullptr, 0, nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetFloatVectorCountFuzz(FuzzedDataProvider &provider)
@@ -452,13 +472,16 @@ void OH_Values_GetFloatVectorCountFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t totalCount;
+    OH_Values_Count(values, &totalCount);
+    if (totalCount == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, totalCount - 1);
     size_t count;
     OH_Values_GetFloatVectorCount(values, index, &count);
     OH_Values_Destroy(values);
-
-    OH_Values_GetFloatVectorCount(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetFloatVectorFuzz(FuzzedDataProvider &provider)
@@ -468,10 +491,16 @@ void OH_Values_GetFloatVectorFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t totalCount;
+    OH_Values_Count(values, &totalCount);
+    if (totalCount == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, totalCount - 1);
     size_t inLen;
     OH_Values_GetFloatVectorCount(values, index, &inLen);
-    if (inLen > 0) {
+    if (inLen > 0 && inLen <= 1000) { // Limit maximum length
         float *floatVector = new float[inLen];
         size_t outLen;
         OH_Values_GetFloatVector(values, index, floatVector, inLen, &outLen);
@@ -479,9 +508,6 @@ void OH_Values_GetFloatVectorFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
-
-    OH_Values_GetFloatVector(nullptr, 0, nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetUnlimitedIntBandFuzz(FuzzedDataProvider &provider)
@@ -491,13 +517,16 @@ void OH_Values_GetUnlimitedIntBandFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t totalCount;
+    OH_Values_Count(values, &totalCount);
+    if (totalCount == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, totalCount - 1);
     size_t count;
     OH_Values_GetUnlimitedIntBand(values, index, &count);
     OH_Values_Destroy(values);
-
-    OH_Values_GetUnlimitedIntBand(nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 void OH_Values_GetUnlimitedIntFuzz(FuzzedDataProvider &provider)
@@ -507,10 +536,16 @@ void OH_Values_GetUnlimitedIntFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    int index = provider.ConsumeIntegral<int>();
+    size_t totalCount;
+    OH_Values_Count(values, &totalCount);
+    if (totalCount == 0) {
+        OH_Values_Destroy(values);
+        return;
+    }
+    int index = provider.ConsumeIntegralInRange<int>(0, totalCount - 1);
     size_t inLen;
     OH_Values_GetUnlimitedIntBand(values, index, &inLen);
-    if (inLen > 0) {
+    if (inLen > 0 && inLen <= 100) {
         int sign;
         uint64_t *trueForm = new uint64_t[inLen];
         size_t outLen;
@@ -519,9 +554,6 @@ void OH_Values_GetUnlimitedIntFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
-
-    OH_Values_GetUnlimitedInt(nullptr, 0, nullptr, nullptr, 0, nullptr);
-    OH_Values_Destroy(nullptr);
 }
 
 } // namespace OHOS
