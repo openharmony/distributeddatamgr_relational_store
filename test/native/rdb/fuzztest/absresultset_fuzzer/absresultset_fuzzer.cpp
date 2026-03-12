@@ -28,12 +28,10 @@
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 
-
 // Define constants
 #define MAX_STRING_LENGTH 50
 #define MAX_VECTOR_SIZE 10
 #define MAX_COLUMN_INDEX 100
-#define MIN_POSITION_VALUE -1000
 #define MAX_POSITION_VALUE 1000
 #define SAFE_MAX_RETRY 3
 
@@ -413,8 +411,10 @@ void TestGetColumnIndex(FuzzedDataProvider &provider, std::shared_ptr<AbsResultS
     }
 
     std::string columnName = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    if (columnName.empty())
+    if (columnName.empty()) {
         return;
+    }
+
     int columnIndex;
     resultSet->GetColumnIndex(columnName, columnIndex);
 }
@@ -471,7 +471,6 @@ void TestGetRowsData(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet>
 
 std::string CreateTableSql(FuzzedDataProvider &provider)
 {
-    // Use a limited set of valid SQL statements to reduce crashes
     // The fuzzer will test the database operations with valid table structures
     bool useCustomSql = provider.ConsumeBool();
     if (useCustomSql && provider.remaining_bytes() > QUERY_MIN_LENGTH) {
@@ -489,7 +488,6 @@ std::string CreateTableSql(FuzzedDataProvider &provider)
 
 std::string CreateQuerySql(FuzzedDataProvider &provider)
 {
-    // Use a limited set of valid SQL queries to reduce crashes
     // The fuzzer will test the database operations with valid query structures
     bool useCustomSql = provider.ConsumeBool();
     if (useCustomSql && provider.remaining_bytes() > QUERY_MIN_LENGTH) {
@@ -506,10 +504,8 @@ std::string CreateQuerySql(FuzzedDataProvider &provider)
     return "SELECT * FROM test";
 }
 
-std::shared_ptr<RdbStore> GetRdbStoreWithRetry(FuzzedDataProvider &provider,
-                                               RdbStoreConfig &config,
-                                               int version,
-                                               AbsresultsetFuzzerTestCallback &helper)
+std::shared_ptr<RdbStore> GetRdbStoreWithRetry(
+    FuzzedDataProvider &provider, RdbStoreConfig &config, int version, AbsresultsetFuzzerTestCallback &helper)
 {
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store;
@@ -549,10 +545,8 @@ std::shared_ptr<RdbStore> CreateDatabaseStore(FuzzedDataProvider &provider)
     return GetRdbStoreWithRetry(provider, config, version, helper);
 }
 
-std::shared_ptr<AbsResultSet> QueryResultSetWithRetry(std::shared_ptr<RdbStore> &store,
-                                                    FuzzedDataProvider &provider,
-                                                    const std::string &sqlQuery,
-                                                    const std::vector<std::string> &selectionArgs)
+std::shared_ptr<AbsResultSet> QueryResultSetWithRetry(std::shared_ptr<RdbStore> &store, FuzzedDataProvider &provider,
+    const std::string &sqlQuery, const std::vector<std::string> &selectionArgs)
 {
     std::shared_ptr<AbsResultSet> resultSet;
     int retryCount = 0;
