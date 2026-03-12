@@ -28,7 +28,7 @@ group("fuzztest") {
     "transdb_fuzzer:fuzztest",
     "transaction_fuzzer:fuzztest",
     "big_integer_test_ut2fuzz:fuzztest",
-    "cache_result_set_test_ut2fuzz:fuzztest",
+    "cacheresultset_fuzzer:fuzztest",
     "cloud_data_test_ut2fuzz:fuzztest",
     "connection_test_ut2fuzz:fuzztest",
     "rdb_attach_test_ut2fuzz:fuzztest",
