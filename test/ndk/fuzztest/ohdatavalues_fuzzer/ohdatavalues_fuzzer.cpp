@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "oh_data_values_fuzzer.h"
+#include "ohdatavalues_fuzzer.h"
 
 #include <fuzzer/FuzzedDataProvider.h>
 
