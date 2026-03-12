@@ -79,9 +79,9 @@ void OH_Values_PutFuzz(FuzzedDataProvider &provider)
         OH_Values_Put(values, dataValue);
         OH_Values_Put(values, nullptr);
         OH_Values_Put(nullptr, dataValue);
+        OH_Value_Destroy(dataValue);
     }
     OH_Values_Destroy(values);
-    OH_Value_Destroy(dataValue);
 }
 
 void OH_Values_PutNullFuzz(FuzzedDataProvider &provider)
