@@ -414,8 +414,6 @@ void TestGetRowsData(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet>
     resultSet->GetRowsData(maxCount, safePosition);
 }
 
-} // namespace OHOS
-
 std::string CreateTableSql(FuzzedDataProvider &provider)
 {
     // Use a limited set of valid SQL statements to reduce crashes
@@ -453,15 +451,31 @@ std::string CreateQuerySql(FuzzedDataProvider &provider)
     return "SELECT * FROM test";
 }
 
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+std::shared_ptr<RdbStore> GetRdbStoreWithRetry(FuzzedDataProvider &provider,
+                                               RdbStoreConfig &config,
+                                               int version,
+                                               AbsresultsetFuzzerTestCallback &helper)
 {
-    if (data == nullptr || size == 0) {
-        return 0;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store;
+    int retryCount = 0;
+
+    while (retryCount < SAFE_MAX_RETRY) {
+        store = RdbHelper::GetRdbStore(config, version, helper, errCode);
+        if (store != nullptr && errCode == E_OK) {
+            break;
+        }
+        retryCount++;
+        if (retryCount < SAFE_MAX_RETRY) {
+            provider.ConsumeIntegralInRange<int>(1, 100);
+        }
     }
 
-    FuzzedDataProvider provider(data, size);
+    return store;
+}
 
+std::shared_ptr<RdbStore> CreateDatabaseStore(FuzzedDataProvider &provider)
+{
     // Clean up any existing database
     RdbHelper::DeleteRdbStore(RDB_PATH);
 
@@ -474,34 +488,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     std::string createTableSql = CreateTableSql(provider);
     AbsresultsetFuzzerTestCallback helper(createTableSql);
 
-    int errCode = E_OK;
     int version = provider.ConsumeIntegralInRange<int>(1, 10);
 
     // Get database store with retry mechanism
-    std::shared_ptr<RdbStore> store;
-    int retryCount = 0;
-    while (retryCount < SAFE_MAX_RETRY) {
-        store = RdbHelper::GetRdbStore(config, version, helper, errCode);
-        if (store != nullptr && errCode == E_OK) {
-            break;
-        }
-        retryCount++;
-        if (retryCount < SAFE_MAX_RETRY) {
-            provider.ConsumeIntegralInRange<int>(1, 100);
-        }
-    }
+    return GetRdbStoreWithRetry(provider, config, version, helper);
+}
 
-    if (store == nullptr || errCode != E_OK) {
-        return 0;
-    }
-
-    // Create query with validation
-    std::string sqlQuery = CreateQuerySql(provider);
-    std::vector<std::string> selectionArgs = ConsumeRandomLengthStringVector(provider);
-
-    // Query with retry mechanism
+std::shared_ptr<AbsResultSet> QueryResultSetWithRetry(std::shared_ptr<RdbStore> &store,
+                                                    FuzzedDataProvider &provider,
+                                                    const std::string &sqlQuery,
+                                                    const std::vector<std::string> &selectionArgs)
+{
     std::shared_ptr<AbsResultSet> resultSet;
-    retryCount = 0;
+    int retryCount = 0;
+
     while (retryCount < SAFE_MAX_RETRY) {
         resultSet = store->QuerySql(sqlQuery, selectionArgs);
         if (resultSet != nullptr) {
@@ -513,39 +513,96 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         }
     }
 
+    return resultSet;
+}
+
+std::shared_ptr<AbsResultSet> CreateResultSet(FuzzedDataProvider &provider, std::shared_ptr<RdbStore> &store)
+{
+    // Create query with validation
+    std::string sqlQuery = CreateQuerySql(provider);
+    std::vector<std::string> selectionArgs = ConsumeRandomLengthStringVector(provider);
+
+    // Query with retry mechanism
+    return QueryResultSetWithRetry(store, provider, sqlQuery, selectionArgs);
+}
+
+void TestResultSetDataAccessMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+{
+    TestGetBlob(provider, resultSet);
+    TestGetString(provider, resultSet);
+    TestGetInt(provider, resultSet);
+    TestGetLong(provider, resultSet);
+    TestGetDouble(provider, resultSet);
+    TestGetAsset(provider, resultSet);
+    TestGetAssets(provider, resultSet);
+    TestGetFloat32Array(provider, resultSet);
+    TestIsColumnNull(provider, resultSet);
+    TestGetRow(resultSet);
+}
+
+void TestResultSetNavigationMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+{
+    TestGoToRow(provider, resultSet);
+    TestGetRowIndex(resultSet);
+    TestGoTo(provider, resultSet);
+    TestGoToFirstRow(resultSet);
+    TestGoToLastRow(resultSet);
+    TestGoToNextRow(resultSet);
+    TestGoToPreviousRow(resultSet);
+    TestIsAtFirstRow(resultSet);
+    TestIsAtLastRow(resultSet);
+    TestIsStarted(resultSet);
+    TestIsEnded(resultSet);
+}
+
+void TestResultSetMetadataMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+{
+    TestGetColumnType(provider, resultSet);
+    TestGetColumnCount(resultSet);
+    TestGetColumnIndex(provider, resultSet);
+    TestGetColumnName(provider, resultSet);
+    TestGetWholeColumnNames(resultSet);
+}
+
+void TestResultSetDataMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+{
+    TestGetRowData(resultSet);
+    TestGetRowsData(provider, resultSet);
+}
+
+void TestAllAbsResultSetMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+{
+    TestResultSetDataAccessMethods(provider, resultSet);
+    TestResultSetNavigationMethods(provider, resultSet);
+    TestResultSetMetadataMethods(provider, resultSet);
+    TestResultSetDataMethods(provider, resultSet);
+}
+} // namespace OHOS
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+    if (data == nullptr || size == 0) {
+        return 0;
+    }
+
+    FuzzedDataProvider provider(data, size);
+
+    // Create database store
+    int errCode = E_OK;
+    auto store = CreateDatabaseStore(provider);
+    if (store == nullptr || errCode != E_OK) {
+        return 0;
+    }
+
+    // Create result set
+    auto resultSet = CreateResultSet(provider, store);
     if (resultSet == nullptr) {
         RdbHelper::DeleteRdbStore(RDB_PATH);
         return 0;
     }
 
-    OHOS::TestGetBlob(provider, resultSet);
-    OHOS::TestGetString(provider, resultSet);
-    OHOS::TestGetInt(provider, resultSet);
-    OHOS::TestGetLong(provider, resultSet);
-    OHOS::TestGetDouble(provider, resultSet);
-    OHOS::TestGetAsset(provider, resultSet);
-    OHOS::TestGetAssets(provider, resultSet);
-    OHOS::TestGetFloat32Array(provider, resultSet);
-    OHOS::TestIsColumnNull(provider, resultSet);
-    OHOS::TestGetRow(resultSet);
-    OHOS::TestGoToRow(provider, resultSet);
-    OHOS::TestGetColumnType(provider, resultSet);
-    OHOS::TestGetRowIndex(resultSet);
-    OHOS::TestGoTo(provider, resultSet);
-    OHOS::TestGoToFirstRow(resultSet);
-    OHOS::TestGoToLastRow(resultSet);
-    OHOS::TestGoToNextRow(resultSet);
-    OHOS::TestGoToPreviousRow(resultSet);
-    OHOS::TestIsAtFirstRow(resultSet);
-    OHOS::TestIsAtLastRow(resultSet);
-    OHOS::TestIsStarted(resultSet);
-    OHOS::TestIsEnded(resultSet);
-    OHOS::TestGetColumnCount(resultSet);
-    OHOS::TestGetColumnIndex(provider, resultSet);
-    OHOS::TestGetColumnName(provider, resultSet);
-    OHOS::TestGetWholeColumnNames(resultSet);
-    OHOS::TestGetRowData(resultSet);
-    OHOS::TestGetRowsData(provider, resultSet);
+    // Test all AbsResultSet methods
+    OHOS::TestAllAbsResultSetMethods(provider, resultSet);
 
     RdbHelper::DeleteRdbStore(RDB_PATH);
     return 0;
