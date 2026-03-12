@@ -479,34 +479,46 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
     return self;
 }
 
-napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
+void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shared_ptr<QueryLastSyncInfoContext> ctxt)
 {
-    struct QueryLastSyncInfoContext : public ContextBase {
-        std::string accountId;
-        std::string bundleName;
-        std::string storeId;
-        QueryLastResults results;
-    };
-    auto ctxt = std::make_shared<QueryLastSyncInfoContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
-        // less required 2 arguments :: <accountId> <bundleName> , <storeId> is optional
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        // 0 is the index of argument accountId
-        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
-        // 1 is the index of argument bundleName
-        status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
-        // 2 is the index of argument storeId
-        if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) {
-            // 2 is the index of argument storeId
-            status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId);
+        napi_valuetype type = napi_undefined;
+        napi_typeof(env, argv[1], &type);
+
+        if (type == napi_string) {
+            ctxt->isBatch = false;
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
             ASSERT_BUSINESS_ERR(
-                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of storeId must be string.");
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
+            ASSERT_BUSINESS_ERR(
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+            if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) {
+                status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId);
+                ASSERT_BUSINESS_ERR(
+                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of storeId must be string.");
+            }
+        } else {
+            ctxt->isBatch = true;
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20,
+                "The type of accountId must be string.");
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleInfos);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20,
+                "The type of bundleInfos must be Array<BundleInfo>.");
+            ASSERT_BUSINESS_ERR(ctxt, ctxt->bundleInfos.size() > 0, Status::INVALID_ARGUMENT_V20,
+                "The size of bundleInfos must be greater than 0.");
+            ASSERT_BUSINESS_ERR(ctxt, ctxt->bundleInfos.size() <= 30, Status::INVALID_ARGUMENT_V20,
+                "The size of bundleInfos must be less than or equal to 30.");
         }
     });
+}
+
+napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
+{
+    auto ctxt = std::make_shared<QueryLastSyncInfoContext>();
+    ParseQueryParams(env, info, ctxt);
 
     ASSERT_NULL(!ctxt->isThrowError, "QueryLastSyncInfo exit");
 
@@ -521,13 +533,24 @@ napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
                                : napi_generic_failure;
             return;
         }
-        auto [status, results] = proxy->QueryLastSyncInfo(ctxt->accountId, ctxt->bundleName, ctxt->storeId);
-        ctxt->status =
-            (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
-        ctxt->results = std::move(results);
+        if (ctxt->isBatch) {
+            auto [status, batchResults] = proxy->QueryLastSyncInfoBatch(ctxt->accountId, ctxt->bundleInfos);
+            ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok : napi_generic_failure;
+            ctxt->batchResults = std::move(batchResults);
+        } else {
+            auto [status, results] = proxy->QueryLastSyncInfo(ctxt->accountId, ctxt->bundleName, ctxt->storeId);
+            ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok : napi_generic_failure;
+            ctxt->results = std::move(results);
+        }
     };
     auto output = [env, ctxt](napi_value &result) {
-        result = JSUtils::Convert2JSValue(env, ctxt->results);
+        if (ctxt->isBatch) {
+            result = JSUtils::Convert2JSValue(env, ctxt->batchResults);
+        } else {
+            result = JSUtils::Convert2JSValue(env, ctxt->results);
+        }
         ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
@@ -661,7 +684,7 @@ bool JsConfig::IsDbInfoValid(const std::map<std::string, CloudData::DBActionInfo
         if (!ValidSubscribeType(dbInfo.action)) {
             return false;
         }
-        
+
         if (!IsTablesValid(dbInfo.tableInfo)) {
             return false;
         }

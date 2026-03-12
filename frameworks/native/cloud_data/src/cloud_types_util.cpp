@@ -187,4 +187,10 @@ bool Marshalling(const DBActionInfo &input, MessageParcel &data)
 {
     return Marshal(data, input.action, input.tableInfo);
 }
+
+template<>
+bool Marshalling(const BundleInfo &input, MessageParcel &data)
+{
+    return Marshal(data, input.bundleName, input.storeId);
+}
 } // namespace OHOS::ITypesUtil

@@ -58,6 +58,8 @@ public:
     int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values) override;
     std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
         const std::string &id, const std::string &bundleName, const std::string &storeId) override;
+    std::pair<int32_t, BatchQueryLastResults> QueryLastSyncInfoBatch(
+        const std::string &id, const std::vector<BundleInfo> &bundleInfos) override;
     int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const AsyncDetail &async) override;
     int32_t InitNotifier(sptr<IRemoteObject> notifier) override;

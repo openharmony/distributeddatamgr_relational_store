@@ -566,5 +566,381 @@ export default function CloudConfigEtsTest() {
         done();
       }
     });
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_EmptyAccountId
+     * @tc.desc Test queryLastSyncInfo with empty accountId string
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_EmptyAccountId', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_EmptyAccountId');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        await cloudData.Config.queryLastSyncInfo("", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_EmptyAccountId fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_NullAccountId
+     * @tc.desc Test queryLastSyncInfo with null accountId
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_NullAccountId', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_NullAccountId');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        await cloudData.Config.queryLastSyncInfo(null, bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_NullAccountId fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_UndefinedAccountId
+     * @tc.desc Test queryLastSyncInfo with undefined accountId
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_UndefinedAccountId', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_UndefinedAccountId');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        await cloudData.Config.queryLastSyncInfo(undefined, bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_UndefinedAccountId fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_InvalidAccountIdType
+     * @tc.desc Test queryLastSyncInfo with invalid accountId type (number)
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_InvalidAccountIdType', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_InvalidAccountIdType');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        await cloudData.Config.queryLastSyncInfo(12345, bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_InvalidAccountIdType fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_EmptyBundleInfosArray
+     * @tc.desc Test queryLastSyncInfo with empty bundleInfos array
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_EmptyBundleInfosArray', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_EmptyBundleInfosArray');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [];
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_EmptyBundleInfosArray fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_NullBundleInfos
+     * @tc.desc Test queryLastSyncInfo with null bundleInfos
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_NullBundleInfos', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_NullBundleInfos');
+      try {
+        await cloudData.Config.queryLastSyncInfo("test_account", null);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_NullBundleInfos fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_UndefinedBundleInfos
+     * @tc.desc Test queryLastSyncInfo with undefined bundleInfos
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_UndefinedBundleInfos', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_UndefinedBundleInfos');
+      try {
+        await cloudData.Config.queryLastSyncInfo("test_account", undefined);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_UndefinedBundleInfos fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_InvalidBundleInfosType
+     * @tc.desc Test queryLastSyncInfo with invalid bundleInfos type (string)
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_InvalidBundleInfosType', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_InvalidBundleInfosType');
+      try {
+        await cloudData.Config.queryLastSyncInfo("test_account", "invalid");
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_InvalidBundleInfosType fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_EmptyBundleName
+     * @tc.desc Test queryLastSyncInfo with empty bundleName in BundleInfo
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_EmptyBundleName', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_EmptyBundleName');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "" }
+        ];
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_EmptyBundleName fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_NullBundleName
+     * @tc.desc Test queryLastSyncInfo with null bundleName in BundleInfo
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_NullBundleName', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_NullBundleName');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: null }
+        ];
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_NullBundleName fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_NoPermission_SingleBundle
+     * @tc.desc Test queryLastSyncInfo with no 202 permission for single bundle
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_NoPermission_SingleBundle', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_NoPermission_SingleBundle');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_NoPermission_SingleBundle fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 202).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_NoPermission_MultipleBundles
+     * @tc.desc Test queryLastSyncInfo with no 202 permission for multiple bundles
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_NoPermission_MultipleBundles', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_NoPermission_MultipleBundles');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" },
+          { bundleName: "com.example.app2" }
+        ];
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_NoPermission_MultipleBundles fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 202).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_NoPermission_WithStoreId
+     * @tc.desc Test queryLastSyncInfo with no 202 permission and with storeId
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_NoPermission_WithStoreId', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_NoPermission_WithStoreId');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1", storeId: "db1" }
+        ];
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_NoPermission_WithStoreId fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 202).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_MissingAllParams
+     * @tc.desc Test queryLastSyncInfo with no parameters
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_MissingAllParams', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_MissingAllParams');
+      try {
+        await cloudData.Config.queryLastSyncInfo();
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_MissingAllParams fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_MissingBundleInfosParam
+     * @tc.desc Test queryLastSyncInfo with only accountId parameter
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_MissingBundleInfosParam', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_MissingBundleInfosParam');
+      try {
+        await cloudData.Config.queryLastSyncInfo("test_account");
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_MissingBundleInfosParam fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_Exactly30Items
+     * @tc.desc Test queryLastSyncInfo with exactly 30 BundleInfo items (boundary test)
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_Exactly30Items', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_Exactly30Items');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [];
+        for (let i = 0; i < 30; i++) {
+          bundleInfos.push({ bundleName: "com.example.app" + i });
+        }
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_Exactly30Items fail' +
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 202).assertTrue();
+        done();
+      }
+    })
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_31Items
+     * @tc.desc Test queryLastSyncInfo with 31 BundleInfo items (should fail)
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('QueryLastSyncInfoBatch_31Items', 0, async function (done) {
+      console.info('QueryLastSyncInfoBatch_31Items');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [];
+        for (let i = 0; i < 31; i++) {
+          bundleInfos.push({ bundleName: "com.example.app" + i });
+        }
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('QueryLastSyncInfoBatch_31Items fail' + `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 14800001).assertTrue();
+        done();
+      }
+    })
   })
 }

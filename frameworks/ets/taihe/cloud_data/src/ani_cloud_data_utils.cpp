@@ -162,6 +162,20 @@ std::pair<bool, map<string, SyncInfo>> ConvertSyncInfo(const QueryLastResults &i
     return std::make_pair(true, out);
 }
 
+std::pair<bool, map<string, map<string, SyncInfo>>> ConvertBatchSyncInfo(const BatchQueryLastResults &in)
+{
+    map<string, map<string, SyncInfo>> out;
+    for (auto &bundleIt : in) {
+        auto syncInfoResult = ConvertSyncInfo(bundleIt.second);
+        if (!syncInfoResult.first) {
+            out.clear();
+            return std::make_pair(false, out);
+        }
+        out.emplace(bundleIt.first, syncInfoResult.second);
+    }
+    return std::make_pair(true, out);
+}
+
 ProgressDetails ConvertProgressDetail(const OHOS::DistributedRdb::ProgressDetail &in)
 {
     map<string, ::ohos::data::relationalStore::TableDetails> tdMap;

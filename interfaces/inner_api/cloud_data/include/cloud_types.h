@@ -92,6 +92,13 @@ using Results = std::tuple<int32_t, std::string, std::vector<std::pair<int32_t, 
 using QueryResults = std::tuple<int32_t, std::string, Participants>;
 using QueryLastResults = std::map<std::string, CloudSyncInfo>;
 
+struct BundleInfo {
+    std::string bundleName;
+    std::string storeId;
+};
+
+using BatchQueryLastResults = std::map<std::string, QueryLastResults>;
+
 constexpr const char *DATA_CHANGE_EVENT_ID = "cloud_data_change";
 
 /**

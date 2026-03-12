@@ -77,6 +77,11 @@ struct SyncInfo {
     syncStatus: Optional<SyncStatus>;
 }
 
+struct BundleInfo {
+    bundleName: String;
+    storeId: Optional<String>;
+}
+
 struct ExtraData {
     eventId: String;
     extraData: String;
@@ -125,6 +130,10 @@ function QueryStatisticsImpl(accountId: String, bundleName: String, storeId: Opt
 @static("Config")
 @gen_promise("queryLastSyncInfo")
 function QueryLastSyncInfoImpl(accountId: String, bundleName: String, storeId: Optional<String>): @record Map<String, SyncInfo>;
+
+@static("Config")
+@gen_promise("queryLastSyncInfo")
+function QueryLastSyncInfoBatchImpl(accountId: String, bundleInfos: Array<BundleInfo>): @record Map<String, @record Map<String, SyncInfo>>;
 
 @static("Config")
 @gen_promise("clear")

@@ -190,6 +190,53 @@ map<string, SyncInfo> ConfigImpl::QueryLastSyncInfoImpl(
     return ret;
 }
 
+map<string, map<string, SyncInfo>> ConfigImpl::QueryLastSyncInfoBatchImpl(
+    string_view accountId, array_view<::ohos::data::cloudData::BundleInfo> bundleInfos)
+{
+    std::optional<std::pair<int32_t, BatchQueryLastResults>> result;
+    map<string, map<string, SyncInfo>> ret;
+    if (accountId.empty()) {
+        ThrowAniError(
+            CloudService::Status::INVALID_ARGUMENT_V20, "The type of accountId must be string and not empty.");
+        return ret;
+    }
+    if (bundleInfos.empty()) {
+        ThrowAniError(
+            CloudService::Status::INVALID_ARGUMENT_V20, "The type of bundleInfos must be array and not empty.");
+        return ret;
+    }
+    if (bundleInfos.size() > 30) {
+        ThrowAniError(
+            CloudService::Status::INVALID_ARGUMENT_V20, "The size of bundleInfos must be less than or equal to 30.");
+        return ret;
+    }
+
+    std::vector<OHOS::CloudData::BundleInfo> nativeBundleInfos;
+    for (auto &info : bundleInfos) {
+        OHOS::CloudData::BundleInfo nativeInfo;
+        nativeInfo.bundleName = std::string(info.bundleName);
+        if (info.storeId.has_value()) {
+            nativeInfo.storeId = std::string(info.storeId.value());
+        }
+        nativeBundleInfos.push_back(nativeInfo);
+    }
+
+    auto work = [&accountId, &nativeBundleInfos, &result](std::shared_ptr<CloudService> proxy) {
+        result = proxy->QueryLastSyncInfoBatch(std::string(accountId), nativeBundleInfos);
+    };
+    RequestIPC(work);
+    int errCode = CloudService::Status::ERROR;
+    if (result.has_value()) {
+        errCode = result.value().first;
+        auto batchSyncInfo = ConvertBatchSyncInfo(result.value().second);
+        if (!batchSyncInfo.first) {
+            LOG_ERROR(" ConvertBatchSyncInfo failed");
+        }
+        ret = batchSyncInfo.second;
+    }
+    return ret;
+}
+
 void ConfigImpl::ClearImpl(string_view accountId, map_view<string, ClearAction> appActions)
 {
     if (accountId.empty()) {
@@ -393,6 +440,7 @@ TH_EXPORT_CPP_API_NotifyDataChangeWithId(AniCloudData::ConfigImpl::NotifyDataCha
 TH_EXPORT_CPP_API_NotifyDataChangeBoth(AniCloudData::ConfigImpl::NotifyDataChangeBoth);
 TH_EXPORT_CPP_API_QueryStatisticsImpl(AniCloudData::ConfigImpl::QueryStatisticsImpl);
 TH_EXPORT_CPP_API_QueryLastSyncInfoImpl(AniCloudData::ConfigImpl::QueryLastSyncInfoImpl);
+TH_EXPORT_CPP_API_QueryLastSyncInfoBatchImpl(AniCloudData::ConfigImpl::QueryLastSyncInfoBatchImpl);
 TH_EXPORT_CPP_API_ClearImpl(AniCloudData::ConfigImpl::ClearImpl);
 TH_EXPORT_CPP_API_ChangeAppCloudSwitchImplWithConfig(AniCloudData::ConfigImpl::ChangeAppCloudSwitchImplWithConfig);
 TH_EXPORT_CPP_API_ClearImplWithConfig(AniCloudData::ConfigImpl::ClearImplWithConfig);

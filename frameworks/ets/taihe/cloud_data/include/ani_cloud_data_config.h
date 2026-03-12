@@ -46,6 +46,8 @@ public:
         optional_view<string> storeId);
     static map<string, SyncInfo> QueryLastSyncInfoImpl(string_view accountId, string_view bundleName,
         optional_view<string> storeId);
+    static map<string, map<string, SyncInfo>> QueryLastSyncInfoBatchImpl(string_view accountId,
+        array_view<::ohos::data::cloudData::BundleInfo> bundleInfos);
     static void ClearImpl(string_view accountId, map_view<string, ClearAction> appActions);
     static void ChangeAppCloudSwitchImplWithConfig(string_view accountId, string_view bundleName, bool status,
         optional_view<::ohos::data::cloudData::SwitchConfig> config);
