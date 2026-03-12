@@ -44,6 +44,7 @@ public:
         TRANS_NOTIFY_DATA_CHANGE_EXT,
         TRANS_QUERY_STATISTICS,
         TRANS_QUERY_LAST_SYNC_INFO,
+        TRANS_QUERY_LAST_SYNC_INFO_BATCH,
         TRANS_SET_GLOBAL_CLOUD_STRATEGY,
         TRANS_CLOUD_SYNC,
         TRANS_CONFIG_BUTT,
@@ -138,6 +139,8 @@ public:
     virtual int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values) = 0;
     virtual std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
         const std::string &id, const std::string &bundleName, const std::string &storeId) = 0;
+    virtual std::pair<int32_t, BatchQueryLastResults> QueryLastSyncInfoBatch(
+        const std::string &id, const std::vector<BundleInfo> &bundleInfos) = 0;
     virtual int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const DistributedRdb::AsyncDetail &async) = 0;
     virtual int32_t InitNotifier(sptr<IRemoteObject> notifier) = 0;

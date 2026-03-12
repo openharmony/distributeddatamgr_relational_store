@@ -63,6 +63,16 @@ public:
     static napi_value CloudSync(napi_env env, napi_callback_info info);
 
 private:
+    struct QueryLastSyncInfoContext : public ContextBase {
+        std::string accountId;
+        std::string bundleName;
+        std::string storeId;
+        std::vector<CloudData::BundleInfo> bundleInfos;
+        bool isBatch = false;
+        QueryLastResults results;
+        BatchQueryLastResults batchResults;
+    };
+    static void ParseQueryParams(napi_env env, napi_callback_info info, std::shared_ptr<QueryLastSyncInfoContext> ctxt);
     struct CloudSyncContext : public ContextBase {
         std::string bundleName;
         std::string storeId;

@@ -274,6 +274,19 @@ std::pair<int32_t, QueryLastResults> CloudServiceProxy::QueryLastSyncInfo(
     return { status, results };
 }
 
+std::pair<int32_t, BatchQueryLastResults> CloudServiceProxy::QueryLastSyncInfoBatch(
+    const std::string &id, const std::vector<BundleInfo> &bundleInfos)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_QUERY_LAST_SYNC_INFO_BATCH, reply, id, bundleInfos);
+    if (status != SUCCESS) {
+        LOG_ERROR("Status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), bundleInfos.size());
+    }
+    BatchQueryLastResults results;
+    ITypesUtil::Unmarshal(reply, results);
+    return { status, results };
+}
+
 int32_t CloudServiceProxy::DoAsync(const std::string &bundleName, const std::string &storeId, Option option)
 {
     MessageParcel reply;
