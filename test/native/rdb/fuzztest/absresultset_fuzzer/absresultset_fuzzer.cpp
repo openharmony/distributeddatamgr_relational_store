@@ -475,7 +475,6 @@ std::string CreateTableSql(FuzzedDataProvider &provider)
     bool useCustomSql = provider.ConsumeBool();
     if (useCustomSql && provider.remaining_bytes() > QUERY_MIN_LENGTH) {
         std::string createTableSql = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
-
         // Basic validation - ensure it contains CREATE TABLE and doesn't contain dangerous keywords
         if (!createTableSql.empty() && createTableSql.find("CREATE TABLE") != std::string::npos &&
             createTableSql.find("DROP") == std::string::npos && createTableSql.find("DELETE") == std::string::npos &&
@@ -492,7 +491,6 @@ std::string CreateQuerySql(FuzzedDataProvider &provider)
     bool useCustomSql = provider.ConsumeBool();
     if (useCustomSql && provider.remaining_bytes() > QUERY_MIN_LENGTH) {
         std::string sqlQuery = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
-
         // Basic validation - ensure it's a SELECT query and doesn't contain dangerous keywords
         if (!sqlQuery.empty() && sqlQuery.find("SELECT") != std::string::npos &&
             sqlQuery.find("DROP") == std::string::npos && sqlQuery.find("DELETE") == std::string::npos &&
