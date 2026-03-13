@@ -27,7 +27,6 @@
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
 
-
 #define LOOPS_MIN 1
 #define LOOPS_MAX 10
 
@@ -82,7 +81,7 @@ void OH_Values_PutFuzz(FuzzedDataProvider &provider)
         OH_Value_Destroy(dataValue);
     }
     OH_Values_Destroy(values);
-    OH_Values_Put(nullptr, nullptr); 
+    OH_Values_Put(nullptr, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
@@ -148,7 +147,7 @@ void OH_Values_PutTextFuzz(FuzzedDataProvider &provider)
         OH_Values_PutText(values, textValue.c_str());
     }
     OH_Values_Destroy(values);
-    OH_Values_PutText(nullptr, nullptr); 
+    OH_Values_PutText(nullptr, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
@@ -162,7 +161,7 @@ void OH_Values_PutBlobFuzz(FuzzedDataProvider &provider)
     std::vector<uint8_t> blobValue = provider.ConsumeBytes<uint8_t>(blobLength);
     OH_Values_PutBlob(values, blobValue.data(), blobValue.size());
     OH_Values_Destroy(values);
-    OH_Values_PutBlob(nullptr, nullptr, 0); 
+    OH_Values_PutBlob(nullptr, nullptr, 0);
     OH_Values_Destroy(nullptr);
 }
 
@@ -290,7 +289,7 @@ void OH_Values_GetTypeFuzz(FuzzedDataProvider &provider)
     OH_ColumnType type;
     OH_Values_GetType(values, index, &type);
     OH_Values_Destroy(values);
-    OH_Values_GetType(nullptr, 0, nullptr); 
+    OH_Values_GetType(nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
@@ -368,7 +367,7 @@ void OH_Values_GetRealFuzz(FuzzedDataProvider &provider)
     double realValue;
     OH_Values_GetReal(values, index, &realValue);
     OH_Values_Destroy(values);
-    OH_Values_GetReal(nullptr, 0, nullptr); 
+    OH_Values_GetReal(nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
@@ -409,7 +408,7 @@ void OH_Values_GetBlobFuzz(FuzzedDataProvider &provider)
     size_t blobLength;
     OH_Values_GetBlob(values, index, &blobValue, &blobLength);
     OH_Values_Destroy(values);
-    OH_Values_GetBlob(nullptr, 0, nullptr, nullptr); 
+    OH_Values_GetBlob(nullptr, 0, nullptr, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
@@ -435,7 +434,7 @@ void OH_Values_GetAssetFuzz(FuzzedDataProvider &provider)
     if (asset != nullptr) {
         OH_Data_Asset_DestroyOne(asset);
     }
-    OH_Values_GetAsset(nullptr, 0, nullptr);	 
+    OH_Values_GetAsset(nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
@@ -486,7 +485,7 @@ void OH_Values_GetAssetsFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
-    OH_Values_GetAssets(nullptr, 0, nullptr, 0, nullptr); 
+    OH_Values_GetAssets(nullptr, 0, nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
@@ -507,7 +506,7 @@ void OH_Values_GetFloatVectorCountFuzz(FuzzedDataProvider &provider)
     size_t count;
     OH_Values_GetFloatVectorCount(values, index, &count);
     OH_Values_Destroy(values);
-    OH_Values_GetFloatVectorCount(nullptr, 0, nullptr); 
+    OH_Values_GetFloatVectorCount(nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
@@ -535,7 +534,7 @@ void OH_Values_GetFloatVectorFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
-    OH_Values_GetFloatVector(nullptr, 0, nullptr, 0, nullptr); 
+    OH_Values_GetFloatVector(nullptr, 0, nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
@@ -583,7 +582,7 @@ void OH_Values_GetUnlimitedIntFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
-    OH_Values_GetUnlimitedInt(nullptr, 0, nullptr, nullptr, 0, nullptr); 
+    OH_Values_GetUnlimitedInt(nullptr, 0, nullptr, nullptr, 0, nullptr);
     OH_Values_Destroy(nullptr);
 }
 
