@@ -81,7 +81,7 @@ void OH_Values_PutFuzz(FuzzedDataProvider &provider)
     OH_Values_Destroy(nullptr);
 }
 
-void OH_Values_PutNullFuzz()
+void OhValuesPutNullFuzz()
 {
     OH_Data_Values *values = OH_Values_Create();
     if (values == nullptr) {
@@ -526,7 +526,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     // Run your code on data
     FuzzedDataProvider provider(data, size);
     OHOS::OH_Values_PutFuzz(provider);
-    OHOS::OH_Values_PutNullFuzz();
+    OHOS::OhValuesPutNullFuzz();
     OHOS::OH_Values_PutIntFuzz(provider);
     OHOS::OH_Values_PutRealFuzz(provider);
     OHOS::OH_Values_PutTextFuzz(provider);
