@@ -105,7 +105,7 @@ int OH_Value_PutReal(OH_Data_Value *value, double val)
 
 int OH_Value_PutText(OH_Data_Value *value, const char *val)
 {
-    if (value == nullptr || !value->IsValid()) {
+    if (value == nullptr || !value->IsValid() || val == nullptr) {
         return RDB_E_INVALID_ARGS;
     }
     value->value_.value = std::string(val);
