@@ -17,12 +17,8 @@
 #include <fuzzer/FuzzedDataProvider.h>
 
 #include <climits>
-#include <cstdint>
-#include <exception>
-#include <memory>
 #include <string>
 #include <vector>
-
 #include "abs_result_set.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -31,22 +27,6 @@
 // Define constants
 #define MAX_STRING_LENGTH 50
 #define MAX_VECTOR_SIZE 10
-#define MAX_COLUMN_INDEX 100
-#define MAX_POSITION_VALUE 1000
-#define SAFE_MAX_RETRY 3
-
-// Additional constants for number replacement
-#define BLOB_LENGTH_MIN 1
-#define BLOB_LENGTH_MAX 100
-#define FLOAT_VECTOR_SIZE_MAX 1000
-#define UNLIMITED_INT_SIZE_MAX 100
-#define QUERY_MIN_LENGTH 1
-#define QUERY_MAX_LENGTH 10
-#define MIN_COLUMN_INDEX 0
-#define VERSION_MIN 1
-#define VERSION_MAX 10
-#define PROVIDER_CONSUME_MIN 1
-#define PROVIDER_CONSUME_MAX 100
 
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
@@ -61,32 +41,42 @@ static const std::string CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test "
 
 class AbsresultsetFuzzerTestCallback : public RdbOpenCallback {
 public:
-    explicit AbsresultsetFuzzerTestCallback(const std::string &createTableSql) : createTableSql_(createTableSql)
-    {
-    }
-
-    int OnCreate(RdbStore &store) override
-    {
-        return store.ExecuteSql(createTableSql_);
-    }
-
-    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override
-    {
-        return E_OK;
-    }
-
-private:
-    std::string createTableSql_;
+    int OnCreate(RdbStore &store) override;
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
 };
+
+int AbsresultsetFuzzerTestCallback::OnCreate(RdbStore &store)
+{
+    return store.ExecuteSql(CREATE_TABLE_TEST);
+}
+
+int AbsresultsetFuzzerTestCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+{
+    return E_OK;
+}
+
+std::vector<ValueObject> ConsumeRandomLengthValueObjectVector(FuzzedDataProvider &provider)
+{
+    const int loopsMin = 0;
+    const int loopsMax = 100;
+    size_t loops = provider.ConsumeIntegralInRange<size_t>(loopsMin, loopsMax);
+    std::vector<ValueObject> columns;
+    for (size_t i = 0; i < loops; ++i) {
+        int32_t value = provider.ConsumeIntegral<int32_t>();
+        ValueObject obj(value);
+        columns.emplace_back(obj);
+    }
+    return columns;
+}
 
 std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider &provider)
 {
-    const size_t loopsMin = 0;
-    const size_t loopsMax = MAX_VECTOR_SIZE;
+    const int loopsMin = 0;
+    const int loopsMax = 100;
     size_t loops = provider.ConsumeIntegralInRange<size_t>(loopsMin, loopsMax);
     std::vector<std::string> columns;
     for (size_t i = 0; i < loops; ++i) {
-        int32_t length = provider.ConsumeIntegralInRange<int32_t>(0, MAX_STRING_LENGTH);
+        int32_t length = provider.ConsumeIntegral<int32_t>();
         auto bytes = provider.ConsumeBytes<char>(length);
         columns.emplace_back(bytes.begin(), bytes.end());
     }
@@ -95,561 +85,229 @@ std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider &pro
 
 void TestGetBlob(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int columnIndex = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, columnCount - 1);
+    int columnIndex = provider.ConsumeIntegral<int>();
     std::vector<uint8_t> blob;
     resultSet->GetBlob(columnIndex, blob);
 }
 
 void TestGetString(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int columnIndex = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, columnCount - 1);
+    int columnIndex = provider.ConsumeIntegral<int>();
     std::string value;
     resultSet->GetString(columnIndex, value);
 }
 
 void TestGetInt(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int columnIndex = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, columnCount - 1);
+    int columnIndex = provider.ConsumeIntegral<int>();
     int value;
     resultSet->GetInt(columnIndex, value);
 }
 
 void TestGetLong(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int columnIndex = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, columnCount - 1);
+    int columnIndex = provider.ConsumeIntegral<int>();
     int64_t value;
     resultSet->GetLong(columnIndex, value);
 }
 
 void TestGetDouble(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int columnIndex = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, columnCount - 1);
+    int columnIndex = provider.ConsumeIntegral<int>();
     double value;
     resultSet->GetDouble(columnIndex, value);
 }
 
 void TestGetAsset(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int32_t columnIndex = provider.ConsumeIntegralInRange<int32_t>(MIN_COLUMN_INDEX, columnCount - 1);
+    int32_t columnIndex = provider.ConsumeIntegral<int32_t>();
     ValueObject::Asset value;
     resultSet->GetAsset(columnIndex, value);
 }
 
 void TestGetAssets(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int32_t columnIndex = provider.ConsumeIntegralInRange<int32_t>(MIN_COLUMN_INDEX, columnCount - 1);
+    int32_t columnIndex = provider.ConsumeIntegral<int32_t>();
     ValueObject::Assets value;
     resultSet->GetAssets(columnIndex, value);
 }
 
 void TestGetFloat32Array(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int32_t columnIndex = provider.ConsumeIntegralInRange<int32_t>(MIN_COLUMN_INDEX, columnCount - 1);
+    int32_t columnIndex = provider.ConsumeIntegral<int32_t>();
     ValueObject::FloatVector value;
     resultSet->GetFloat32Array(columnIndex, value);
 }
 
 void TestIsColumnNull(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int columnIndex = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, columnCount - 1);
+    int columnIndex = provider.ConsumeIntegral<int>();
     bool isNull;
     resultSet->IsColumnNull(columnIndex, isNull);
 }
 
-void TestGetRow(std::shared_ptr<AbsResultSet> &resultSet)
+void TestGetRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
     RowEntity rowEntity;
     resultSet->GetRow(rowEntity);
 }
 
 void TestGoToRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int rowCount;
-    bool goToLastSucceeded = resultSet->GoToLastRow();
-    if (goToLastSucceeded) {
-        resultSet->GetRowIndex(rowCount);
-        if (rowCount > 0) {
-            resultSet->GoToFirstRow();
-            int maxPosition = std::max(0, rowCount - 1);
-            if (maxPosition > 0) {
-                int position = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, maxPosition);
-                resultSet->GoToRow(position);
-            }
-        }
-    }
+    int position = provider.ConsumeIntegral<int>();
+    resultSet->GoToRow(position);
 }
 
 void TestGetColumnType(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int columnIndex = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, columnCount - 1);
+    int columnIndex = provider.ConsumeIntegral<int>();
     ColumnType columnType;
     resultSet->GetColumnType(columnIndex, columnType);
 }
 
-void TestGetRowIndex(std::shared_ptr<AbsResultSet> &resultSet)
+void TestGetRowIndex(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
     int position;
     resultSet->GetRowIndex(position);
 }
 
 void TestGoTo(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int currentPosition;
-    resultSet->GetRowIndex(currentPosition);
-
-    int maxOffset = std::abs(currentPosition) + MAX_VECTOR_SIZE;
-    if (maxOffset > 0) {
-        int offset = provider.ConsumeIntegralInRange<int>(-maxOffset, maxOffset);
-        resultSet->GoTo(offset);
-    }
+    int offset = provider.ConsumeIntegral<int>();
+    resultSet->GoTo(offset);
 }
 
 void TestGoToFirstRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     resultSet->GoToFirstRow();
 }
 
 void TestGoToLastRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     resultSet->GoToLastRow();
 }
 
 void TestGoToNextRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     resultSet->GoToNextRow();
 }
 
 void TestGoToPreviousRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     resultSet->GoToPreviousRow();
 }
 
 void TestIsAtFirstRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     bool result;
     resultSet->IsAtFirstRow(result);
 }
 
 void TestIsAtLastRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     bool result;
     resultSet->IsAtLastRow(result);
 }
 
 void TestIsStarted(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     bool result;
     resultSet->IsStarted(result);
 }
 
 void TestIsEnded(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     bool result;
     resultSet->IsEnded(result);
 }
 
 void TestGetColumnCount(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     int count;
     resultSet->GetColumnCount(count);
 }
 
 void TestGetColumnIndex(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
     std::string columnName = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    if (columnName.empty()) {
-        return;
-    }
-
     int columnIndex;
     resultSet->GetColumnIndex(columnName, columnIndex);
 }
 
 void TestGetColumnName(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int columnCount;
-    int result = resultSet->GetColumnCount(columnCount);
-    if (result != E_OK || columnCount <= 0) {
-        return;
-    }
-
-    int columnIndex = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, columnCount - 1);
+    int columnIndex = provider.ConsumeIntegral<int>();
     std::string columnName;
     resultSet->GetColumnName(columnIndex, columnName);
 }
 
 void TestGetWholeColumnNames(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     resultSet->GetWholeColumnNames();
 }
 
 void TestGetRowData(std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
     resultSet->GetRowData();
 }
 
 void TestGetRowsData(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
 {
-    if (!resultSet) {
-        return;
-    }
-
-    int32_t maxCount = provider.ConsumeIntegralInRange<int32_t>(0, MAX_VECTOR_SIZE);
-    int position;
-    resultSet->GetRowIndex(position);
-    if (position < 0) {
-        return;
-    }
-
-    int32_t safePosition = provider.ConsumeIntegralInRange<int32_t>(0, position + MAX_VECTOR_SIZE);
-    resultSet->GetRowsData(maxCount, safePosition);
+    int32_t maxCount = provider.ConsumeIntegral<int32_t>();
+    int32_t position = provider.ConsumeIntegral<int32_t>();
+    resultSet->GetRowsData(maxCount, position);
 }
 
-std::string CreateTableSql(FuzzedDataProvider &provider)
-{
-    // The fuzzer will test the database operations with valid table structures
-    bool useCustomSql = provider.ConsumeBool();
-    if (useCustomSql && provider.remaining_bytes() > QUERY_MIN_LENGTH) {
-        std::string createTableSql = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        // Basic validation - ensure it contains CREATE TABLE and doesn't contain dangerous keywords
-        if (!createTableSql.empty() && createTableSql.find("CREATE TABLE") != std::string::npos &&
-            createTableSql.find("DROP") == std::string::npos && createTableSql.find("DELETE") == std::string::npos &&
-            createTableSql.find("UPDATE") == std::string::npos) {
-            return createTableSql;
-        }
-    }
-    return CREATE_TABLE_TEST;
-}
-
-std::string CreateQuerySql(FuzzedDataProvider &provider)
-{
-    // The fuzzer will test the database operations with valid query structures
-    bool useCustomSql = provider.ConsumeBool();
-    if (useCustomSql && provider.remaining_bytes() > QUERY_MIN_LENGTH) {
-        std::string sqlQuery = provider.ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        // Basic validation - ensure it's a SELECT query and doesn't contain dangerous keywords
-        if (!sqlQuery.empty() && sqlQuery.find("SELECT") != std::string::npos &&
-            sqlQuery.find("DROP") == std::string::npos && sqlQuery.find("DELETE") == std::string::npos &&
-            sqlQuery.find("UPDATE") == std::string::npos && sqlQuery.find("INSERT") == std::string::npos &&
-            sqlQuery.find("ALTER") == std::string::npos) {
-            return sqlQuery;
-        }
-    }
-    return "SELECT * FROM test";
-}
-
-std::shared_ptr<RdbStore> GetRdbStoreWithRetry(
-    FuzzedDataProvider &provider, RdbStoreConfig &config, int version, AbsresultsetFuzzerTestCallback &helper)
-{
-    int errCode = E_OK;
-    std::shared_ptr<RdbStore> store;
-    int retryCount = 0;
-
-    while (retryCount < SAFE_MAX_RETRY) {
-        store = RdbHelper::GetRdbStore(config, version, helper, errCode);
-        if (store != nullptr && errCode == E_OK) {
-            break;
-        }
-        retryCount++;
-        if (retryCount < SAFE_MAX_RETRY) {
-            provider.ConsumeIntegralInRange<int>(PROVIDER_CONSUME_MIN, PROVIDER_CONSUME_MAX);
-        }
-    }
-
-    return store;
-}
-
-std::shared_ptr<RdbStore> CreateDatabaseStore(FuzzedDataProvider &provider)
-{
-    // Clean up any existing database
-    RdbHelper::DeleteRdbStore(RDB_PATH);
-
-    // Create safe configuration
-    RdbStoreConfig config(RDB_PATH);
-    config.SetHaMode(provider.ConsumeBool() ? HAMode::MAIN_REPLICA : HAMode::SINGLE);
-    config.SetReadOnly(provider.ConsumeBool());
-
-    // Create table with validation
-    std::string createTableSql = CreateTableSql(provider);
-    AbsresultsetFuzzerTestCallback helper(createTableSql);
-
-    int version = provider.ConsumeIntegralInRange<int>(VERSION_MIN, VERSION_MAX);
-
-    // Get database store with retry mechanism
-    return GetRdbStoreWithRetry(provider, config, version, helper);
-}
-
-std::shared_ptr<AbsResultSet> QueryResultSetWithRetry(std::shared_ptr<RdbStore> &store, FuzzedDataProvider &provider,
-    const std::string &sqlQuery, const std::vector<std::string> &selectionArgs)
-{
-    std::shared_ptr<AbsResultSet> resultSet;
-    int retryCount = 0;
-
-    while (retryCount < SAFE_MAX_RETRY) {
-        resultSet = store->QuerySql(sqlQuery, selectionArgs);
-        if (resultSet != nullptr) {
-            break;
-        }
-        retryCount++;
-        if (retryCount < SAFE_MAX_RETRY) {
-            provider.ConsumeIntegralInRange<int>(PROVIDER_CONSUME_MIN, PROVIDER_CONSUME_MAX);
-        }
-    }
-
-    return resultSet;
-}
-
-std::shared_ptr<AbsResultSet> CreateResultSet(FuzzedDataProvider &provider, std::shared_ptr<RdbStore> &store)
-{
-    // Create query with validation
-    std::string sqlQuery = CreateQuerySql(provider);
-    std::vector<std::string> selectionArgs = ConsumeRandomLengthStringVector(provider);
-
-    // Query with retry mechanism
-    return QueryResultSetWithRetry(store, provider, sqlQuery, selectionArgs);
-}
-
-void TestResultSetDataAccessMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
-{
-    TestGetBlob(provider, resultSet);
-    TestGetString(provider, resultSet);
-    TestGetInt(provider, resultSet);
-    TestGetLong(provider, resultSet);
-    TestGetDouble(provider, resultSet);
-    TestGetAsset(provider, resultSet);
-    TestGetAssets(provider, resultSet);
-    TestGetFloat32Array(provider, resultSet);
-    TestIsColumnNull(provider, resultSet);
-    TestGetRow(resultSet);
-}
-
-void TestResultSetNavigationMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
-{
-    TestGoToRow(provider, resultSet);
-    TestGetRowIndex(resultSet);
-    TestGoTo(provider, resultSet);
-    TestGoToFirstRow(resultSet);
-    TestGoToLastRow(resultSet);
-    TestGoToNextRow(resultSet);
-    TestGoToPreviousRow(resultSet);
-    TestIsAtFirstRow(resultSet);
-    TestIsAtLastRow(resultSet);
-    TestIsStarted(resultSet);
-    TestIsEnded(resultSet);
-}
-
-void TestResultSetMetadataMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
-{
-    TestGetColumnType(provider, resultSet);
-    TestGetColumnCount(resultSet);
-    TestGetColumnIndex(provider, resultSet);
-    TestGetColumnName(provider, resultSet);
-    TestGetWholeColumnNames(resultSet);
-}
-
-void TestResultSetDataMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
-{
-    TestGetRowData(resultSet);
-    TestGetRowsData(provider, resultSet);
-}
-
-void TestAllAbsResultSetMethods(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
-{
-    TestResultSetDataAccessMethods(provider, resultSet);
-    TestResultSetNavigationMethods(provider, resultSet);
-    TestResultSetMetadataMethods(provider, resultSet);
-    TestResultSetDataMethods(provider, resultSet);
-}
 } // namespace OHOS
+
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    if (data == nullptr || size == 0) {
-        return 0;
-    }
-
     FuzzedDataProvider provider(data, size);
-
-    // Create database store
+    RdbHelper::DeleteRdbStore(RDB_PATH);
+    RdbStoreConfig config(RDB_PATH);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    config.SetReadOnly(false);
+    AbsresultsetFuzzerTestCallback helper;
     int errCode = E_OK;
-    auto store = CreateDatabaseStore(provider);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     if (store == nullptr || errCode != E_OK) {
         return 0;
     }
-
-    // Create result set
-    auto resultSet = CreateResultSet(provider, store);
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<AbsResultSet> resultSet = store->QuerySql("SELECT * FROM test", selectionArgs);
     if (resultSet == nullptr) {
-        RdbHelper::DeleteRdbStore(RDB_PATH);
         return 0;
     }
 
-    // Test all AbsResultSet methods
-    OHOS::TestAllAbsResultSetMethods(provider, resultSet);
-
-    RdbHelper::DeleteRdbStore(RDB_PATH);
+    // Call test functions
+    OHOS::TestGetBlob(provider, resultSet);
+    OHOS::TestGetString(provider, resultSet);
+    OHOS::TestGetInt(provider, resultSet);
+    OHOS::TestGetLong(provider, resultSet);
+    OHOS::TestGetDouble(provider, resultSet);
+    OHOS::TestGetAsset(provider, resultSet);
+    OHOS::TestGetAssets(provider, resultSet);
+    OHOS::TestGetFloat32Array(provider, resultSet);
+    OHOS::TestIsColumnNull(provider, resultSet);
+    OHOS::TestGetRow(provider, resultSet);
+    OHOS::TestGoToRow(provider, resultSet);
+    OHOS::TestGetColumnType(provider, resultSet);
+    OHOS::TestGetRowIndex(provider, resultSet);
+    OHOS::TestGoTo(provider, resultSet);
+    OHOS::TestGoToFirstRow(resultSet);
+    OHOS::TestGoToLastRow(resultSet);
+    OHOS::TestGoToNextRow(resultSet);
+    OHOS::TestGoToPreviousRow(resultSet);
+    OHOS::TestIsAtFirstRow(resultSet);
+    OHOS::TestIsAtLastRow(resultSet);
+    OHOS::TestIsStarted(resultSet);
+    OHOS::TestIsEnded(resultSet);
+    OHOS::TestGetColumnCount(resultSet);
+    OHOS::TestGetColumnIndex(provider, resultSet);
+    OHOS::TestGetColumnName(provider, resultSet);
+    OHOS::TestGetWholeColumnNames(resultSet);
+    OHOS::TestGetRowData(resultSet);
+    OHOS::TestGetRowsData(provider, resultSet);
     return 0;
 }
