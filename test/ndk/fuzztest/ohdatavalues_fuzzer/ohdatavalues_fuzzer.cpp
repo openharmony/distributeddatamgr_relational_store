@@ -31,7 +31,6 @@
 #define LOOPS_MAX 10
 
 // Additional constants for number replacement
-#define LOOP_START 0
 #define BLOB_LENGTH_MIN 1
 #define BLOB_LENGTH_MAX 100
 #define FLOAT_VECTOR_SIZE_MAX 1000
@@ -50,7 +49,7 @@ OH_Data_Values *CreateRandomDataValues(FuzzedDataProvider &provider)
         return nullptr;
     }
     size_t loops = provider.ConsumeIntegralInRange<size_t>(LOOPS_MIN, LOOPS_MAX);
-    for (size_t i = LOOP_START; i < loops; ++i) {
+    for (size_t i = 0; i < loops; ++i) {
         int64_t intValue = provider.ConsumeIntegral<int64_t>();
         double realValue = provider.ConsumeFloatingPoint<double>();
         std::string textValue = provider.ConsumeRandomLengthString();
@@ -195,7 +194,7 @@ void OH_Values_PutAssetsFuzz(FuzzedDataProvider &provider)
     }
     size_t loops = provider.ConsumeIntegralInRange<size_t>(LOOPS_MIN, LOOPS_MAX);
     std::vector<Data_Asset *> assets;
-    for (size_t i = LOOP_START; i < loops; i++) {
+    for (size_t i = 0; i < loops; i++) {
         Data_Asset *asset = OH_Data_Asset_CreateOne();
         if (asset == nullptr) {
             continue;
@@ -208,7 +207,7 @@ void OH_Values_PutAssetsFuzz(FuzzedDataProvider &provider)
     }
 
     OH_Values_Destroy(values);
-    for (size_t i = LOOP_START; i < assets.size(); i++) {
+    for (size_t i = 0; i < assets.size(); i++) {
         Data_Asset *asset = assets[i];
         OH_Data_Asset_DestroyOne(asset);
     }
@@ -225,7 +224,7 @@ void OH_Values_PutFloatVectorFuzz(FuzzedDataProvider &provider)
     }
     size_t loops = provider.ConsumeIntegralInRange<size_t>(LOOPS_MIN, LOOPS_MAX);
     std::vector<float> floatVector(loops);
-    for (size_t i = LOOP_START; i < loops; ++i) {
+    for (size_t i = 0; i < loops; ++i) {
         floatVector[i] = provider.ConsumeFloatingPoint<float>();
     }
 
@@ -246,7 +245,7 @@ void OH_Values_PutUnlimitedIntFuzz(FuzzedDataProvider &provider)
     int sign = provider.ConsumeIntegral<int>();
     size_t loops = provider.ConsumeIntegralInRange<size_t>(LOOPS_MIN, LOOPS_MAX);
     std::vector<uint64_t> trueForm(loops);
-    for (size_t i = LOOP_START; i < loops; ++i) {
+    for (size_t i = 0; i < loops; ++i) {
         trueForm[i] = provider.ConsumeIntegral<uint64_t>();
     }
 
@@ -281,7 +280,7 @@ void OH_Values_GetTypeFuzz(FuzzedDataProvider &provider)
 
     size_t count;
     OH_Values_Count(values, &count);
-    if (count == LOOP_START) {
+    if (count == 0) {
         OH_Values_Destroy(values);
         return;
     }
@@ -302,7 +301,7 @@ void OH_Values_GetFuzz(FuzzedDataProvider &provider)
 
     size_t count;
     OH_Values_Count(values, &count);
-    if (count == LOOP_START) {
+    if (count == 0) {
         OH_Values_Destroy(values);
         return;
     }
@@ -321,7 +320,7 @@ void OH_Values_IsNullFuzz(FuzzedDataProvider &provider)
 
     size_t count;
     OH_Values_Count(values, &count);
-    if (count == LOOP_START) {
+    if (count == 0) {
         OH_Values_Destroy(values);
         return;
     }
@@ -340,7 +339,7 @@ void OH_Values_GetIntFuzz(FuzzedDataProvider &provider)
 
     size_t count;
     OH_Values_Count(values, &count);
-    if (count == LOOP_START) {
+    if (count == 0) {
         OH_Values_Destroy(values);
         return;
     }
@@ -359,7 +358,7 @@ void OH_Values_GetRealFuzz(FuzzedDataProvider &provider)
 
     size_t count;
     OH_Values_Count(values, &count);
-    if (count == LOOP_START) {
+    if (count == 0) {
         OH_Values_Destroy(values);
         return;
     }
@@ -380,7 +379,7 @@ void OH_Values_GetTextFuzz(FuzzedDataProvider &provider)
 
     size_t count;
     OH_Values_Count(values, &count);
-    if (count == LOOP_START) {
+    if (count == 0) {
         OH_Values_Destroy(values);
         return;
     }
@@ -399,7 +398,7 @@ void OH_Values_GetBlobFuzz(FuzzedDataProvider &provider)
 
     size_t count;
     OH_Values_Count(values, &count);
-    if (count == LOOP_START) {
+    if (count == 0) {
         OH_Values_Destroy(values);
         return;
     }
@@ -421,7 +420,7 @@ void OH_Values_GetAssetFuzz(FuzzedDataProvider &provider)
 
     size_t count;
     OH_Values_Count(values, &count);
-    if (count == LOOP_START) {
+    if (count == 0) {
         OH_Values_Destroy(values);
         return;
     }
