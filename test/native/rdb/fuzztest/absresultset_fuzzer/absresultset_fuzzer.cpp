@@ -36,7 +36,6 @@
 #define SAFE_MAX_RETRY 3
 
 // Additional constants for number replacement
-#define LOOP_START 0
 #define BLOB_LENGTH_MIN 1
 #define BLOB_LENGTH_MAX 100
 #define FLOAT_VECTOR_SIZE_MAX 1000
@@ -82,12 +81,12 @@ private:
 
 std::vector<std::string> ConsumeRandomLengthStringVector(FuzzedDataProvider &provider)
 {
-    const size_t loopsMin = LOOP_START;
+    const size_t loopsMin = 0;
     const size_t loopsMax = MAX_VECTOR_SIZE;
     size_t loops = provider.ConsumeIntegralInRange<size_t>(loopsMin, loopsMax);
     std::vector<std::string> columns;
-    for (size_t i = LOOP_START; i < loops; ++i) {
-        int32_t length = provider.ConsumeIntegralInRange<int32_t>(LOOP_START, MAX_STRING_LENGTH);
+    for (size_t i = 0; i < loops; ++i) {
+        int32_t length = provider.ConsumeIntegralInRange<int32_t>(0, MAX_STRING_LENGTH);
         auto bytes = provider.ConsumeBytes<char>(length);
         columns.emplace_back(bytes.begin(), bytes.end());
     }
@@ -269,8 +268,8 @@ void TestGoToRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &re
         resultSet->GetRowIndex(rowCount);
         if (rowCount > 0) {
             resultSet->GoToFirstRow();
-            int maxPosition = std::max(LOOP_START, rowCount - 1);
-            if (maxPosition > LOOP_START) {
+            int maxPosition = std::max(0, rowCount - 1);
+            if (maxPosition > 0) {
                 int position = provider.ConsumeIntegralInRange<int>(MIN_COLUMN_INDEX, maxPosition);
                 resultSet->GoToRow(position);
             }
@@ -315,7 +314,7 @@ void TestGoTo(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resul
     resultSet->GetRowIndex(currentPosition);
 
     int maxOffset = std::abs(currentPosition) + MAX_VECTOR_SIZE;
-    if (maxOffset > LOOP_START) {
+    if (maxOffset > 0) {
         int offset = provider.ConsumeIntegralInRange<int>(-maxOffset, maxOffset);
         resultSet->GoTo(offset);
     }
@@ -458,14 +457,14 @@ void TestGetRowsData(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet>
         return;
     }
 
-    int32_t maxCount = provider.ConsumeIntegralInRange<int32_t>(LOOP_START, MAX_VECTOR_SIZE);
+    int32_t maxCount = provider.ConsumeIntegralInRange<int32_t>(0, MAX_VECTOR_SIZE);
     int position;
     resultSet->GetRowIndex(position);
     if (position < 0) {
         return;
     }
 
-    int32_t safePosition = provider.ConsumeIntegralInRange<int32_t>(LOOP_START, position + MAX_VECTOR_SIZE);
+    int32_t safePosition = provider.ConsumeIntegralInRange<int32_t>(0, position + MAX_VECTOR_SIZE);
     resultSet->GetRowsData(maxCount, safePosition);
 }
 
