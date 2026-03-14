@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "oh_data_values_fuzzer.h"
+#include "ohdatavalues_fuzzer.h"
 
 #include <fuzzer/FuzzedDataProvider.h>
 
@@ -66,7 +66,9 @@ void OH_Values_PutFuzz(FuzzedDataProvider &provider)
         return;
     }
     OH_Data_Value *dataValue = OH_Value_Create();
+    double realValue = provider.ConsumeFloatingPoint<double>();
     if (dataValue != nullptr) {
+        OH_Value_PutReal(dataValue, realValue);
         OH_Values_Put(values, dataValue);
         OH_Values_Put(values, nullptr);
         OH_Values_Put(nullptr, dataValue);
@@ -79,7 +81,7 @@ void OH_Values_PutFuzz(FuzzedDataProvider &provider)
     OH_Values_Destroy(nullptr);
 }
 
-void OH_Values_PutNullFuzz(FuzzedDataProvider &provider)
+void OhValuesPutNullFuzz()
 {
     OH_Data_Values *values = OH_Values_Create();
     if (values == nullptr) {
@@ -163,7 +165,9 @@ void OH_Values_PutAssetFuzz(FuzzedDataProvider &provider)
     }
 
     Data_Asset *asset = OH_Data_Asset_CreateOne();
+    int64_t createTime = provider.ConsumeIntegral<int64_t>();
     if (asset == nullptr) {
+        OH_Data_Asset_SetCreateTime(asset, createTime);
         OH_Values_Destroy(values);
         return;
     }
@@ -522,7 +526,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     // Run your code on data
     FuzzedDataProvider provider(data, size);
     OHOS::OH_Values_PutFuzz(provider);
-    OHOS::OH_Values_PutNullFuzz(provider);
+    OHOS::OhValuesPutNullFuzz();
     OHOS::OH_Values_PutIntFuzz(provider);
     OHOS::OH_Values_PutRealFuzz(provider);
     OHOS::OH_Values_PutTextFuzz(provider);
