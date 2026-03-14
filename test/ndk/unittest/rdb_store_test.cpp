@@ -1742,6 +1742,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_038, TestSize.Level1)
     EXPECT_EQ(OH_Value_PutText(nullptr, "test"), RDB_E_INVALID_ARGS);
     OH_Data_Value *dataValue = OH_Value_Create();
     EXPECT_EQ(OH_Value_PutText(dataValue, nullptr), RDB_E_INVALID_ARGS);
+    OH_Value_Destroy(dataValue);
 
     Rdb_DistributedConfig config{ .version = 0, .isAutoSync = true };
     EXPECT_EQ(
