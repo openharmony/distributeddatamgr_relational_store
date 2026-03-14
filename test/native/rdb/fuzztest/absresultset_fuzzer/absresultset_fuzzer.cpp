@@ -177,51 +177,51 @@ void TestGoTo(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resul
     resultSet->GoTo(offset);
 }
 
-void TestGoToFirstRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestGoToFirstRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
     resultSet->GoToFirstRow();
 }
 
-void TestGoToLastRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestGoToLastRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
     resultSet->GoToLastRow();
 }
 
-void TestGoToNextRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestGoToNextRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
     resultSet->GoToNextRow();
 }
 
-void TestGoToPreviousRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestGoToPreviousRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
     resultSet->GoToPreviousRow();
 }
 
-void TestIsAtFirstRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestIsAtFirstRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
     bool result;
     resultSet->IsAtFirstRow(result);
 }
 
-void TestIsAtLastRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestIsAtLastRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
     bool result;
     resultSet->IsAtLastRow(result);
 }
 
-void TestIsStarted(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestIsStarted(std::shared_ptr<AbsResultSet> &resultSet)
 {
     bool result;
     resultSet->IsStarted(result);
 }
 
-void TestIsEnded(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestIsEnded(std::shared_ptr<AbsResultSet> &resultSet)
 {
     bool result;
     resultSet->IsEnded(result);
 }
 
-void TestGetColumnCount(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestGetColumnCount(std::shared_ptr<AbsResultSet> &resultSet)
 {
     int count;
     resultSet->GetColumnCount(count);
@@ -241,12 +241,12 @@ void TestGetColumnName(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSe
     resultSet->GetColumnName(columnIndex, columnName);
 }
 
-void TestGetWholeColumnNames(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestGetWholeColumnNames(std::shared_ptr<AbsResultSet> &resultSet)
 {
     resultSet->GetWholeColumnNames();
 }
 
-void TestGetRowData(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestGetRowData(std::shared_ptr<AbsResultSet> &resultSet)
 {
     resultSet->GetRowData();
 }
@@ -295,19 +295,19 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::TestGetColumnType(provider, resultSet);
     OHOS::TestGetRowIndex(provider, resultSet);
     OHOS::TestGoTo(provider, resultSet);
-    OHOS::TestGoToFirstRow(provider, resultSet);
-    OHOS::TestGoToLastRow(provider, resultSet);
-    OHOS::TestGoToNextRow(provider, resultSet);
-    OHOS::TestGoToPreviousRow(provider, resultSet);
-    OHOS::TestIsAtFirstRow(provider, resultSet);
-    OHOS::TestIsAtLastRow(provider, resultSet);
-    OHOS::TestIsStarted(provider, resultSet);
-    OHOS::TestIsEnded(provider, resultSet);
-    OHOS::TestGetColumnCount(provider, resultSet);
+    OHOS::TestGoToFirstRow(resultSet);
+    OHOS::TestGoToLastRow(resultSet);
+    OHOS::TestGoToNextRow(resultSet);
+    OHOS::TestGoToPreviousRow(resultSet);
+    OHOS::TestIsAtFirstRow(resultSet);
+    OHOS::TestIsAtLastRow(resultSet);
+    OHOS::TestIsStarted(resultSet);
+    OHOS::TestIsEnded(resultSet);
+    OHOS::TestGetColumnCount(resultSet);
     OHOS::TestGetColumnIndex(provider, resultSet);
     OHOS::TestGetColumnName(provider, resultSet);
-    OHOS::TestGetWholeColumnNames(provider, resultSet);
-    OHOS::TestGetRowData(provider, resultSet);
+    OHOS::TestGetWholeColumnNames(resultSet);
+    OHOS::TestGetRowData(resultSet);
     OHOS::TestGetRowsData(provider, resultSet);
     return 0;
 }
