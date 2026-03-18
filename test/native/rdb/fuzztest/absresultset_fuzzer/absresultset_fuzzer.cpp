@@ -146,7 +146,7 @@ void TestIsColumnNull(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet
     resultSet->IsColumnNull(columnIndex, isNull);
 }
 
-void TestGetRow(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestGetRow(std::shared_ptr<AbsResultSet> &resultSet)
 {
     RowEntity rowEntity;
     resultSet->GetRow(rowEntity);
@@ -165,7 +165,7 @@ void TestGetColumnType(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSe
     resultSet->GetColumnType(columnIndex, columnType);
 }
 
-void TestGetRowIndex(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+void TestGetRowIndex(std::shared_ptr<AbsResultSet> &resultSet)
 {
     int position;
     resultSet->GetRowIndex(position);
@@ -260,6 +260,39 @@ void TestGetRowsData(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet>
 
 } // namespace OHOS
 
+void ResultSetApiFuzzTest(FuzzedDataProvider &provider, std::shared_ptr<AbsResultSet> &resultSet)
+{
+    // Call test functions
+    OHOS::TestGetBlob(provider, resultSet);
+    OHOS::TestGetString(provider, resultSet);
+    OHOS::TestGetInt(provider, resultSet);
+    OHOS::TestGetLong(provider, resultSet);
+    OHOS::TestGetDouble(provider, resultSet);
+    OHOS::TestGetAsset(provider, resultSet);
+    OHOS::TestGetAssets(provider, resultSet);
+    OHOS::TestGetFloat32Array(provider, resultSet);
+    OHOS::TestIsColumnNull(provider, resultSet);
+    OHOS::TestGetRow(resultSet);
+    OHOS::TestGoToRow(provider, resultSet);
+    OHOS::TestGetColumnType(provider, resultSet);
+    OHOS::TestGetRowIndex(resultSet);
+    OHOS::TestGoTo(provider, resultSet);
+    OHOS::TestGoToFirstRow(resultSet);
+    OHOS::TestGoToLastRow(resultSet);
+    OHOS::TestGoToNextRow(resultSet);
+    OHOS::TestGoToPreviousRow(resultSet);
+    OHOS::TestIsAtFirstRow(resultSet);
+    OHOS::TestIsAtLastRow(resultSet);
+    OHOS::TestIsStarted(resultSet);
+    OHOS::TestIsEnded(resultSet);
+    OHOS::TestGetColumnCount(resultSet);
+    OHOS::TestGetColumnIndex(provider, resultSet);
+    OHOS::TestGetColumnName(provider, resultSet);
+    OHOS::TestGetWholeColumnNames(resultSet);
+    OHOS::TestGetRowData(resultSet);
+    OHOS::TestGetRowsData(provider, resultSet);
+}
+
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -279,35 +312,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (resultSet == nullptr) {
         return 0;
     }
-
-    // Call test functions
-    OHOS::TestGetBlob(provider, resultSet);
-    OHOS::TestGetString(provider, resultSet);
-    OHOS::TestGetInt(provider, resultSet);
-    OHOS::TestGetLong(provider, resultSet);
-    OHOS::TestGetDouble(provider, resultSet);
-    OHOS::TestGetAsset(provider, resultSet);
-    OHOS::TestGetAssets(provider, resultSet);
-    OHOS::TestGetFloat32Array(provider, resultSet);
-    OHOS::TestIsColumnNull(provider, resultSet);
-    OHOS::TestGetRow(provider, resultSet);
-    OHOS::TestGoToRow(provider, resultSet);
-    OHOS::TestGetColumnType(provider, resultSet);
-    OHOS::TestGetRowIndex(provider, resultSet);
-    OHOS::TestGoTo(provider, resultSet);
-    OHOS::TestGoToFirstRow(resultSet);
-    OHOS::TestGoToLastRow(resultSet);
-    OHOS::TestGoToNextRow(resultSet);
-    OHOS::TestGoToPreviousRow(resultSet);
-    OHOS::TestIsAtFirstRow(resultSet);
-    OHOS::TestIsAtLastRow(resultSet);
-    OHOS::TestIsStarted(resultSet);
-    OHOS::TestIsEnded(resultSet);
-    OHOS::TestGetColumnCount(resultSet);
-    OHOS::TestGetColumnIndex(provider, resultSet);
-    OHOS::TestGetColumnName(provider, resultSet);
-    OHOS::TestGetWholeColumnNames(resultSet);
-    OHOS::TestGetRowData(resultSet);
-    OHOS::TestGetRowsData(provider, resultSet);
+    ResultSetApiFuzzTest(provider, resultSet);
     return 0;
 }
