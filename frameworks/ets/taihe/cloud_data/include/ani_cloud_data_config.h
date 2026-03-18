@@ -77,6 +77,8 @@ public:
         callback_view<void(const ProgressDetails &data)> progress);
     static void OnSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
         callback_view<void(map_view<string, map<string, SyncInfo>> data)> progress);
+    static void OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
+        optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress);
 
 private:
     struct SyncInfoObserverRecord {
