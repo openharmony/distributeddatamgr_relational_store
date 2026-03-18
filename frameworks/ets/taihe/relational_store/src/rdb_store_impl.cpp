@@ -304,17 +304,35 @@ int64_t RdbStoreImpl::DeleteDataShareSync(::taihe::string_view table, uintptr_t 
 ResultSet RdbStoreImpl::QueryWithPredicate(weak::RdbPredicates predicates)
 {
     optional_view<array<string>> empty;
-    return QuerySync(predicates, empty);
+    return Query(predicates, empty);
 }
 
 ResultSet RdbStoreImpl::QueryWithColumn(weak::RdbPredicates predicates, array_view<string> columns)
 {
-    return QuerySync(predicates, optional<array<string>>::make(columns));
+    return Query(predicates, optional<array<string>>::make(columns));
 }
 
 ResultSet RdbStoreImpl::QueryWithOptionalColumn(weak::RdbPredicates predicates, optional_view<array<string>> columns)
 {
-    return QuerySync(predicates, columns);
+    return Query(predicates, columns);
+}
+
+ResultSet RdbStoreImpl::Query(weak::RdbPredicates predicates, optional_view<array<string>> columns)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), (make_holder<ResultSetImpl, ResultSet>()));
+    std::vector<std::string> stdcolumns;
+    if (columns.has_value()) {
+        stdcolumns = std::vector<std::string>(columns.value().begin(), columns.value().end());
+    }
+    auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
+    auto nativeResultSet = store->Query(*rdbPredicateNative, stdcolumns);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
+        (make_holder<ResultSetImpl, ResultSet>()));
+    return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
 ResultSet RdbStoreImpl::QuerySync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
@@ -329,7 +347,7 @@ ResultSet RdbStoreImpl::QuerySync(weak::RdbPredicates predicates, optional_view<
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
         std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
-    auto nativeResultSet = store->Query(*rdbPredicateNative, stdcolumns);
+    auto nativeResultSet = store->QueryByStep(*rdbPredicateNative, stdcolumns);
     ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
         (make_holder<ResultSetImpl, ResultSet>()));
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
