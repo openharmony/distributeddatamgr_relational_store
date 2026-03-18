@@ -520,11 +520,8 @@ void OH_Values_GetUnlimitedIntFuzz(FuzzedDataProvider &provider)
 
 } // namespace OHOS
 
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+void OhDataValusApiFuzzTest(FuzzedDataProvider &provider)
 {
-    // Run your code on data
-    FuzzedDataProvider provider(data, size);
     OHOS::OH_Values_PutFuzz(provider);
     OHOS::OhValuesPutNullFuzz();
     OHOS::OH_Values_PutIntFuzz(provider);
@@ -550,5 +547,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::OH_Values_GetFloatVectorFuzz(provider);
     OHOS::OH_Values_GetUnlimitedIntBandFuzz(provider);
     OHOS::OH_Values_GetUnlimitedIntFuzz(provider);
+}
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+    // Run your code on data
+    FuzzedDataProvider provider(data, size);
+    OhDataValusApiFuzzTest(provider);
     return 0;
 }
