@@ -942,5 +942,360 @@ export default function CloudConfigEtsTest() {
         done();
       }
     })
+
+    // ==================== onSyncInfoChanged Tests ====================
+
+    /**
+     * @tc.name OnSyncInfoChanged_EmptyBundleInfosArray
+     * @tc.desc Test onSyncInfoChanged with empty bundleInfos array
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_EmptyBundleInfosArray', 0, function (done) {
+      console.info('OnSyncInfoChanged_EmptyBundleInfosArray');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [];
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_EmptyBundleInfosArray fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_NullBundleInfos
+     * @tc.desc Test onSyncInfoChanged with null bundleInfos
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_NullBundleInfos', 0, function (done) {
+      console.info('OnSyncInfoChanged_NullBundleInfos');
+      try {
+        cloudData.Config.onSyncInfoChanged(null, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_NullBundleInfos fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_UndefinedBundleInfos
+     * @tc.desc Test onSyncInfoChanged with undefined bundleInfos
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_UndefinedBundleInfos', 0, function (done) {
+      console.info('OnSyncInfoChanged_UndefinedBundleInfos');
+      try {
+        cloudData.Config.onSyncInfoChanged(undefined, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_UndefinedBundleInfos fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_InvalidBundleInfosType
+     * @tc.desc Test onSyncInfoChanged with invalid bundleInfos type (string)
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_InvalidBundleInfosType', 0, function (done) {
+      console.info('OnSyncInfoChanged_InvalidBundleInfosType');
+      try {
+        cloudData.Config.onSyncInfoChanged("invalid" as any, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_InvalidBundleInfosType fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_NullCallback
+     * @tc.desc Test onSyncInfoChanged with null callback
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_NullCallback', 0, function (done) {
+      console.info('OnSyncInfoChanged_NullCallback');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        cloudData.Config.onSyncInfoChanged(bundleInfos, null);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_NullCallback fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_UndefinedCallback
+     * @tc.desc Test onSyncInfoChanged with undefined callback
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_UndefinedCallback', 0, function (done) {
+      console.info('OnSyncInfoChanged_UndefinedCallback');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        cloudData.Config.onSyncInfoChanged(bundleInfos, undefined);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_UndefinedCallback fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_InvalidCallbackType
+     * @tc.desc Test onSyncInfoChanged with invalid callback type (number)
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_InvalidCallbackType', 0, function (done) {
+      console.info('OnSyncInfoChanged_InvalidCallbackType');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        cloudData.Config.onSyncInfoChanged(bundleInfos, 12345 as any);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_InvalidCallbackType fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_EmptyBundleName
+     * @tc.desc Test onSyncInfoChanged with empty bundleName in BundleInfo
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_EmptyBundleName', 0, function (done) {
+      console.info('OnSyncInfoChanged_EmptyBundleName');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "" }
+        ];
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_EmptyBundleName fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_NullBundleName
+     * @tc.desc Test onSyncInfoChanged with null bundleName in BundleInfo
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_NullBundleName', 0, function (done) {
+      console.info('OnSyncInfoChanged_NullBundleName');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: null }
+        ];
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_NullBundleName fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_NoPermission_SingleBundle
+     * @tc.desc Test onSyncInfoChanged with no 202 permission for single bundle
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_NoPermission_SingleBundle', 0, function (done) {
+      console.info('OnSyncInfoChanged_NoPermission_SingleBundle');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_NoPermission_SingleBundle fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 202).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_NoPermission_MultipleBundles
+     * @tc.desc Test onSyncInfoChanged with no 202 permission for multiple bundles
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_NoPermission_MultipleBundles', 0, function (done) {
+      console.info('OnSyncInfoChanged_NoPermission_MultipleBundles');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" },
+          { bundleName: "com.example.app2" }
+        ];
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_NoPermission_MultipleBundles fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 202).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_NoPermission_WithStoreId
+     * @tc.desc Test onSyncInfoChanged with no 202 permission and with storeId
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_NoPermission_WithStoreId', 0, function (done) {
+      console.info('OnSyncInfoChanged_NoPermission_WithStoreId');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1", storeId: "db1" }
+        ];
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_NoPermission_WithStoreId fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 202).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_MissingAllParams
+     * @tc.desc Test onSyncInfoChanged with no parameters
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_MissingAllParams', 0, function (done) {
+      console.info('OnSyncInfoChanged_MissingAllParams');
+      try {
+        cloudData.Config.onSyncInfoChanged();
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_MissingAllParams fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OnSyncInfoChanged_MissingCallbackParam
+     * @tc.desc Test onSyncInfoChanged with only bundleInfos parameter
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OnSyncInfoChanged_MissingCallbackParam', 0, function (done) {
+      console.info('OnSyncInfoChanged_MissingCallbackParam');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [
+          { bundleName: "com.example.app1" }
+        ];
+        cloudData.Config.onSyncInfoChanged(bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OnSyncInfoChanged_MissingCallbackParam fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    // ==================== offSyncInfoChanged Tests ====================
+ 
+    /**
+     * @tc.name OffSyncInfoChanged_EmptyBundleInfosArray
+     * @tc.desc Test offSyncInfoChanged with empty bundleInfos array
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OffSyncInfoChanged_EmptyBundleInfosArray', 0, function (done) {
+      console.info('OffSyncInfoChanged_EmptyBundleInfosArray');
+      try {
+        let bundleInfos: cloudData.BundleInfo[] = [];
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OffSyncInfoChanged_EmptyBundleInfosArray fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name OffSyncInfoChanged_InvalidBundleInfosType
+     * @tc.desc Test offSyncInfoChanged with invalid bundleInfos type
+     * @tc.type: FUNC
+     * @tc.require: issueNumber
+     */
+    it('OffSyncInfoChanged_InvalidBundleInfosType', 0, function (done) {
+      console.info('OffSyncInfoChanged_InvalidBundleInfosType');
+      try {
+        cloudData.Config.offSyncInfoChanged("invalid" as any);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        console.error('OffSyncInfoChanged_InvalidBundleInfosType fail' + 
+          `, error code is ${e.code}, message is ${e.message}`);
+        expect(e.code == 401).assertTrue();
+        done();
+      }
+    });
   })
 }

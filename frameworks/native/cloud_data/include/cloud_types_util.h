@@ -40,6 +40,7 @@ using ClearConfig = OHOS::CloudData::ClearConfig;
 using DBSwitchInfo = OHOS::CloudData::DBSwitchInfo;
 using DBActionInfo = OHOS::CloudData::DBActionInfo;
 using BundleInfo = OHOS::CloudData::BundleInfo;
+using CloudSubscribeType = OHOS::CloudData::CloudSubscribeType;
 
 template<>
 bool Marshalling(const Participant &input, MessageParcel &data);
@@ -112,5 +113,8 @@ bool Marshalling(const DBActionInfo &input, MessageParcel &data);
 
 template<>
 bool Marshalling(const BundleInfo &input, MessageParcel &data);
+
+template<>
+bool Marshalling(const CloudSubscribeType &type, MessageParcel &data);
 } // namespace OHOS::ITypesUtil
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_UTIL_H

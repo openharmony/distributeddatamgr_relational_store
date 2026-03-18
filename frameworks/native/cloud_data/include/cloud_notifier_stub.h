@@ -32,22 +32,30 @@ public:
 class CloudNotifierStub : public IRemoteStub<CloudNotifierStubBroker> {
 public:
     using SyncCompleteHandler = std::function<void(uint32_t, Details &&)>;
+    using SyncInfoNotifyHandler = std::function<void(const std::string &, const std::string &, const CloudSyncInfo &)>;
     explicit CloudNotifierStub(const SyncCompleteHandler &syncComplete);
+    explicit CloudNotifierStub(const SyncCompleteHandler &syncComplete, const SyncInfoNotifyHandler &subscribeNotify);
     virtual ~CloudNotifierStub() noexcept;
 
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
     int32_t OnComplete(uint32_t seqNum, Details &&result) override;
+    int32_t OnSyncInfoNotify(const std::string &bundleName, const std::string &storeId,
+        const CloudSyncInfo &syncInfo) override;
 
 private:
     int32_t OnCompleteInner(MessageParcel& data, MessageParcel& reply);
+    int32_t OnSyncInfoNotifyInner(MessageParcel& data, MessageParcel& reply);
     bool CheckInterfaceToken(MessageParcel& data);
 
     using RequestHandle = int32_t (CloudNotifierStub::*)(MessageParcel&, MessageParcel&);
     static constexpr RequestHandle HANDLES[static_cast<uint32_t>(NotifierCode::CLOUD_NOTIFIER_CMD_MAX)] = {
         [static_cast<uint32_t>(NotifierCode::CLOUD_NOTIFIER_CMD_SYNC_COMPLETE)] = &CloudNotifierStub::OnCompleteInner,
+        [static_cast<uint32_t>(NotifierCode::CLOUD_NOTIFIER_CMD_SYNC_INFO_NOTIFY)] =
+            &CloudNotifierStub::OnSyncInfoNotifyInner,
     };
 
     SyncCompleteHandler completeNotifier_;
+    SyncInfoNotifyHandler syncInfoNotifier_;
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_NOTIFIER_STUB_H

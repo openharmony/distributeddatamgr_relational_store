@@ -1109,5 +1109,664 @@ export default function CloudConfigSystemEtsTest() {
         done();
       }
     });
+
+    // ==================== onSyncInfoChanged Tests ====================
+
+    /**
+     * @tc.name OnSyncInfoChanged_System_EmptyBundleInfosArray
+     * @tc.desc Test onSyncInfoChanged with empty bundleInfos array
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_System_EmptyBundleInfosArray', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_System_EmptyBundleInfosArray fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 401).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_System_NullBundleInfos
+     * @tc.desc Test onSyncInfoChanged with null bundleInfos
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_System_NullBundleInfos', 0, (done: () => void) => {
+      try {
+        cloudData.Config.onSyncInfoChanged(null as any, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_System_NullBundleInfos fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 401).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_System_InvalidBundleNameType
+     * @tc.desc Test onSyncInfoChanged with invalid bundleName type (number)
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_System_InvalidBundleNameType', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: 12345 as any }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_System_InvalidBundleNameType fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 401).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_System_InvalidStoreIdType
+     * @tc.desc Test onSyncInfoChanged with invalid storeId type (number)
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_System_InvalidStoreIdType', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: 12345 as any }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {});
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_System_InvalidStoreIdType fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 401).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_System_NullCallback
+     * @tc.desc Test onSyncInfoChanged with null callback
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_System_NullCallback', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, null as any);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_System_NullCallback fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 401).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_System_InvalidCallbackType
+     * @tc.desc Test onSyncInfoChanged with invalid callback type (string)
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_System_InvalidCallbackType', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, "invalid" as any);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_System_InvalidCallbackType fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 401).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_SingleBundle_OnlyBundleName
+     * @tc.desc Test onSyncInfoChanged with single BundleInfo containing only bundleName
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_SingleBundle_OnlyBundleName', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OnSyncInfoChanged_SingleBundle_OnlyBundleName callback: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OnSyncInfoChanged_SingleBundle_OnlyBundleName subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_SingleBundle_OnlyBundleName fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_SingleBundle_WithStoreId
+     * @tc.desc Test onSyncInfoChanged with single BundleInfo containing both bundleName and storeId
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_SingleBundle_WithStoreId', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OnSyncInfoChanged_SingleBundle_WithStoreId callback: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OnSyncInfoChanged_SingleBundle_WithStoreId subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_SingleBundle_WithStoreId fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_MultipleBundles
+     * @tc.desc Test onSyncInfoChanged with multiple BundleInfo objects
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_MultipleBundles', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" },
+        { bundleName: "com.example.app2" },
+        { bundleName: "com.example.app3", storeId: "db3" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OnSyncInfoChanged_MultipleBundles callback: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OnSyncInfoChanged_MultipleBundles subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_MultipleBundles fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_DuplicateSubscribe
+     * @tc.desc Test onSyncInfoChanged with duplicate subscription
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_DuplicateSubscribe', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" }
+      ];
+
+      let callback = (data: Record<string, Record<string, cloudData.SyncInfo>>) => {
+        console.info('OnSyncInfoChanged_DuplicateSubscribe callback: ' + 
+          JSON.stringify(data));
+      };
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, callback);
+        console.info('OnSyncInfoChanged_DuplicateSubscribe first subscribe success');
+        
+        cloudData.Config.onSyncInfoChanged(bundleInfos, callback);
+        console.info('OnSyncInfoChanged_DuplicateSubscribe second subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_DuplicateSubscribe fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_DifferentCallbacksSameBundleInfos
+     * @tc.desc Test onSyncInfoChanged with same bundleInfos but different callbacks
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_DifferentCallbacksSameBundleInfos', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" }
+      ];
+
+      let callback1 = (data: Record<string, Record<string, cloudData.SyncInfo>>) => {
+        console.info('OnSyncInfoChanged_DifferentCallbacksSameBundleInfos callback1: ' + 
+          JSON.stringify(data));
+      };
+
+      let callback2 = (data: Record<string, Record<string, cloudData.SyncInfo>>) => {
+        console.info('OnSyncInfoChanged_DifferentCallbacksSameBundleInfos callback2: ' + 
+          JSON.stringify(data));
+      };
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, callback1);
+        console.info('OnSyncInfoChanged_DifferentCallbacksSameBundleInfos first subscribe success');
+        
+        cloudData.Config.onSyncInfoChanged(bundleInfos, callback2);
+        console.info('OnSyncInfoChanged_DifferentCallbacksSameBundleInfos second subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_DifferentCallbacksSameBundleInfos fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_DuplicateBundleNames
+     * @tc.desc Test onSyncInfoChanged with duplicate bundleName in BundleInfo array
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_DuplicateBundleNames', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" },
+        { bundleName: "com.example.app1", storeId: "db2" },
+        { bundleName: "com.example.app1" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OnSyncInfoChanged_DuplicateBundleNames callback: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OnSyncInfoChanged_DuplicateBundleNames subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_DuplicateBundleNames fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_LargeArray
+     * @tc.desc Test onSyncInfoChanged with large array of BundleInfo (30 items)
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_LargeArray', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [];
+      
+      for (let i = 0; i < 30; i++) {
+        bundleInfos.push({
+          bundleName: `com.example.app${i}`,
+          storeId: `db${i % 10}`
+        });
+      }
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OnSyncInfoChanged_LargeArray callback: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OnSyncInfoChanged_LargeArray subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_LargeArray fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_EmptyStoreId
+     * @tc.desc Test onSyncInfoChanged with empty storeId string
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_EmptyStoreId', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OnSyncInfoChanged_EmptyStoreId callback: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OnSyncInfoChanged_EmptyStoreId subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_EmptyStoreId fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    // ==================== offSyncInfoChanged Tests ====================
+
+    /**
+     * @tc.name OffSyncInfoChanged_System_EmptyBundleInfosArray
+     * @tc.desc Test offSyncInfoChanged with empty bundleInfos array
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OffSyncInfoChanged_System_EmptyBundleInfosArray', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [];
+
+      try {
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OffSyncInfoChanged_System_EmptyBundleInfosArray fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 401).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OffSyncInfoChanged_System_NullBundleInfos
+     * @tc.desc Test offSyncInfoChanged with null bundleInfos
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OffSyncInfoChanged_System_NullBundleInfos', 0, (done: () => void) => {
+      try {
+        cloudData.Config.offSyncInfoChanged(null as any);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OffSyncInfoChanged_System_NullBundleInfos fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 401).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OffSyncInfoChanged_System_InvalidBundleNameType
+     * @tc.desc Test offSyncInfoChanged with invalid bundleName type
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OffSyncInfoChanged_System_InvalidBundleNameType', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: 12345 as any }
+      ];
+
+      try {
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OffSyncInfoChanged_System_InvalidBundleNameType fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 401).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OffSyncInfoChanged_WithCallback
+     * @tc.desc Test offSyncInfoChanged with callback parameter
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OffSyncInfoChanged_WithCallback', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" }
+      ];
+
+      let callback = (data: Record<string, Record<string, cloudData.SyncInfo>>) => {
+        console.info('OffSyncInfoChanged_WithCallback callback: ' + 
+          JSON.stringify(data));
+      };
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, callback);
+        console.info('OffSyncInfoChanged_WithCallback subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos, callback);
+        console.info('OffSyncInfoChanged_WithCallback unsubscribe success');
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OffSyncInfoChanged_WithCallback fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OffSyncInfoChanged_WithoutCallback
+     * @tc.desc Test offSyncInfoChanged without callback parameter
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OffSyncInfoChanged_WithoutCallback', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OffSyncInfoChanged_WithoutCallback callback: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OffSyncInfoChanged_WithoutCallback subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        console.info('OffSyncInfoChanged_WithoutCallback unsubscribe success');
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OffSyncInfoChanged_WithoutCallback fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OffSyncInfoChanged_NotSubscribed
+     * @tc.desc Test offSyncInfoChanged when not subscribed
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OffSyncInfoChanged_NotSubscribed', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" }
+      ];
+
+      try {
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        console.info('OffSyncInfoChanged_NotSubscribed success');
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OffSyncInfoChanged_NotSubscribed fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OffSyncInfoChanged_PartialMatch
+     * @tc.desc Test offSyncInfoChanged with partial match
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OffSyncInfoChanged_PartialMatch', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" },
+        { bundleName: "com.example.app2", storeId: "db2" }
+      ];
+
+      let partialBundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OffSyncInfoChanged_PartialMatch callback: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OffSyncInfoChanged_PartialMatch subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(partialBundleInfos);
+        console.info('OffSyncInfoChanged_PartialMatch unsubscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OffSyncInfoChanged_PartialMatch fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OffSyncInfoChanged_MultipleSubscriptions
+     * @tc.desc Test offSyncInfoChanged with multiple subscriptions
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OffSyncInfoChanged_MultipleSubscriptions', 0, (done: () => void) => {
+      let bundleInfos1: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" }
+      ];
+
+      let bundleInfos2: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app2", storeId: "db2" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos1, (data) => {
+          console.info('OffSyncInfoChanged_MultipleSubscriptions callback1: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OffSyncInfoChanged_MultipleSubscriptions subscribe1 success');
+        
+        cloudData.Config.onSyncInfoChanged(bundleInfos2, (data) => {
+          console.info('OffSyncInfoChanged_MultipleSubscriptions callback2: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OffSyncInfoChanged_MultipleSubscriptions subscribe2 success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos1);
+        cloudData.Config.offSyncInfoChanged(bundleInfos2);
+        console.info('OffSyncInfoChanged_MultipleSubscriptions unsubscribe success');
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OffSyncInfoChanged_MultipleSubscriptions fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OffSyncInfoChanged_AllSubscriptions
+     * @tc.desc Test offSyncInfoChanged to cancel all subscriptions
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OffSyncInfoChanged_AllSubscriptions', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" },
+        { bundleName: "com.example.app2", storeId: "db2" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OffSyncInfoChanged_AllSubscriptions callback: ' + 
+            JSON.stringify(data));
+        });
+        console.info('OffSyncInfoChanged_AllSubscriptions subscribe success');
+        
+        cloudData.Config.offSyncInfoChanged(bundleInfos);
+        console.info('OffSyncInfoChanged_AllSubscriptions unsubscribe all success');
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OffSyncInfoChanged_AllSubscriptions fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
   })
 }
