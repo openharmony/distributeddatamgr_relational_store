@@ -19,7 +19,10 @@
 #include "cloud_manager.h"
 #include "js_const_properties.h"
 #include "js_uv_queue.h"
+#include "napi_cloud_sync_info_observer.h"
 #include "napi_queue.h"
+#include <list>
+#include <mutex>
 
 namespace OHOS::CloudData {
 using namespace OHOS::AppDataMgrJsKit;
@@ -61,6 +64,8 @@ public:
     static napi_value SetGlobalCloudStrategy(napi_env env, napi_callback_info info);
     static napi_value QueryLastSyncInfo(napi_env env, napi_callback_info info);
     static napi_value CloudSync(napi_env env, napi_callback_info info);
+    static napi_value OnSyncInfoChanged(napi_env env, napi_callback_info info);
+    static napi_value OffSyncInfoChanged(napi_env env, napi_callback_info info);
 
 private:
     struct QueryLastSyncInfoContext : public ContextBase {
@@ -86,6 +91,13 @@ private:
     static bool IsDbInfoValid(const std::map<std::string, CloudData::DBActionInfo> &dbInfos);
     static bool IsTablesValid(const std::map<std::string, int32_t> &tableInfo);
     static std::atomic<uint32_t> seqNum_;
+
+    struct SyncInfoObserverRecord {
+        std::vector<CloudData::BundleInfo> bundleInfos;
+        std::shared_ptr<NapiCloudSyncInfoObserver> observer;
+    };
+    static std::mutex syncInfoObserversMutex_;
+    static std::list<SyncInfoObserverRecord> syncInfoObservers_;
 };
 
 } // namespace OHOS::CloudData

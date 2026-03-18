@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 #include "cloud_manager.h"
 #include "cloud_service.h"
@@ -30,6 +31,8 @@
 using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 std::atomic<uint32_t> JsConfig::seqNum_{};
+std::mutex JsConfig::syncInfoObserversMutex_;
+std::list<JsConfig::SyncInfoObserverRecord> JsConfig::syncInfoObservers_;
 JsConfig::JsConfig()
 {
 }
@@ -647,6 +650,108 @@ uint32_t JsConfig::GetSeqNum()
     return value;
 }
 
+napi_value JsConfig::OnSyncInfoChanged(napi_env env, napi_callback_info info)
+{
+    size_t argc = ARGC_MAX;
+    napi_value argv[ARGC_MAX] = { nullptr };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    struct SyncInfoContext : public ContextBase {
+        std::vector<CloudData::BundleInfo> bundleInfos;
+        napi_value callback = nullptr;
+        std::shared_ptr<UvQueue> queue;
+    };
+    auto ctxt = std::make_shared<SyncInfoContext>();
+    ctxt->queue = std::make_shared<UvQueue>(env);
+    ASSERT_ERR(env, argc >= 2, Status::INVALID_ARGUMENT_V20, "The number of parameters is incorrect.");
+    auto status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleInfos);
+    ASSERT_ERR(env, status == JSUtils::OK && !ctxt->bundleInfos.empty(),
+        Status::INVALID_ARGUMENT_V20, "The type of bundleInfos must be Array<BundleInfo>.");
+    napi_valuetype type = napi_undefined;
+    ASSERT_ERR(env, napi_typeof(env, argv[1], &type) == napi_ok && type == napi_function,
+        Status::INVALID_ARGUMENT_V20, "The type of callback must be function.");
+    ctxt->callback = argv[1];
+    {
+        std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+        bool isDuplicate = std::any_of(syncInfoObservers_.begin(), syncInfoObservers_.end(),
+            [&ctxt](const SyncInfoObserverRecord &record) {
+                return record.bundleInfos == ctxt->bundleInfos && (*record.observer == ctxt->callback);
+            });
+        if (isDuplicate) {
+            LOG_DEBUG("Duplicate subscribe for sync info changed.");
+            return nullptr;
+        }
+    }
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
+        }
+        ThrowNapiError(env, state, "");
+        return nullptr;
+    }
+    auto observer = std::make_shared<NapiCloudSyncInfoObserver>(env, ctxt->callback, ctxt->queue);
+    status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, ctxt->bundleInfos, observer);
+    if (status != CloudService::SUCCESS) {
+        observer->Clear();
+        ThrowNapiError(env, status, "");
+        return nullptr;
+    }
+    std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+    SyncInfoObserverRecord record{ctxt->bundleInfos, observer};
+    syncInfoObservers_.push_back(std::move(record));
+    return nullptr;
+}
+
+napi_value JsConfig::OffSyncInfoChanged(napi_env env, napi_callback_info info)
+{
+    size_t argc = ARGC_MAX;
+    napi_value argv[ARGC_MAX] = { nullptr };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    struct UnsubscribeContext : public ContextBase {
+        std::vector<CloudData::BundleInfo> bundleInfos;
+        napi_value callback = nullptr;
+        bool hasCallback = false;
+    };
+    auto ctxt = std::make_shared<UnsubscribeContext>();
+    ASSERT_ERR(env, argc >= 1, Status::INVALID_ARGUMENT_V20, "The number of parameters is incorrect.");
+    int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleInfos);
+    ASSERT_ERR(env, status == JSUtils::OK && !ctxt->bundleInfos.empty(), Status::INVALID_ARGUMENT_V20,
+        "The type of bundleInfos must be Array<BundleInfo>.");
+    if (argc >= 2) {
+        napi_valuetype type = napi_undefined;
+        if (napi_typeof(env, argv[1], &type) == napi_ok && type == napi_function) {
+            ctxt->callback = argv[1];
+            ctxt->hasCallback = true;
+        }
+    }
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
+        }
+        ThrowNapiError(env, state, "");
+        return nullptr;
+    }
+
+    std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>> observersToRemove;
+    {
+        std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+        for (auto it = syncInfoObservers_.begin(); it != syncInfoObservers_.end();) {
+            if (it->bundleInfos != ctxt->bundleInfos || (ctxt->hasCallback && !(*it->observer == ctxt->callback))) {
+                ++it;
+                continue;
+            }
+            observersToRemove.push_back(it->observer);
+            it = syncInfoObservers_.erase(it);
+        }
+    }
+    for (const auto &observer : observersToRemove) {
+        proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, ctxt->bundleInfos, observer);
+        observer->Clear();
+    }
+    return nullptr;
+}
+
 napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
 {
     auto lambda = []() -> std::vector<napi_property_descriptor> {
@@ -661,6 +766,8 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
             DECLARE_NAPI_STATIC_FUNCTION("setGlobalCloudStrategy", JsConfig::SetGlobalCloudStrategy),
             DECLARE_NAPI_STATIC_FUNCTION("queryLastSyncInfo", JsConfig::QueryLastSyncInfo),
             DECLARE_NAPI_STATIC_FUNCTION("cloudSync", JsConfig::CloudSync),
+            DECLARE_NAPI_STATIC_FUNCTION("onSyncInfoChanged", JsConfig::OnSyncInfoChanged),
+            DECLARE_NAPI_STATIC_FUNCTION("offSyncInfoChanged", JsConfig::OffSyncInfoChanged),
         };
         return properties;
     };

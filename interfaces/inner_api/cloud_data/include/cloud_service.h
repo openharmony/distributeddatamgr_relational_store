@@ -47,6 +47,8 @@ public:
         TRANS_QUERY_LAST_SYNC_INFO_BATCH,
         TRANS_SET_GLOBAL_CLOUD_STRATEGY,
         TRANS_CLOUD_SYNC,
+        TRANS_SUBSCRIBE,
+        TRANS_UNSUBSCRIBE,
         TRANS_CONFIG_BUTT,
         TRANS_SHARE_HEAD = TRANS_CONFIG_BUTT,
         TRANS_ALLOC_RESOURCE_AND_SHARE = TRANS_SHARE_HEAD,
@@ -145,6 +147,10 @@ public:
         const DistributedRdb::AsyncDetail &async) = 0;
     virtual int32_t InitNotifier(sptr<IRemoteObject> notifier) = 0;
 
+    virtual int32_t Subscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
+        std::shared_ptr<ISyncInfoObserver> observer) = 0;
+    virtual int32_t Unsubscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
+        std::shared_ptr<ISyncInfoObserver> observer) = 0;
     inline static constexpr const char *SERVICE_NAME = "cloud";
 };
 } // namespace CloudData

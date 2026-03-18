@@ -23,10 +23,29 @@
 namespace AniCloudData {
 using namespace OHOS::Rdb;
 static constexpr size_t MAX_ACTIONS = 1000;
+std::mutex ConfigImpl::syncInfoObserversMutex_;
+std::list<ConfigImpl::SyncInfoObserverRecord> ConfigImpl::syncInfoObservers_;
 
 bool VerifyExtraData(const ExtraData &data)
 {
     return (!data.eventId.empty()) && (!data.extraData.empty());
+}
+
+TaiheCloudSyncInfoObserver::TaiheCloudSyncInfoObserver(TaiheSyncInfoCallback callback) : callback_(std::move(callback))
+{
+}
+
+void TaiheCloudSyncInfoObserver::OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data)
+{
+    auto converted = ConvertBatchSyncInfo(data);
+    if (converted.first) {
+        callback_(converted.second);
+    }
+}
+
+bool TaiheCloudSyncInfoObserver::operator==(const TaiheSyncInfoCallback &other) const
+{
+    return callback_ == other;
 }
 
 void ConfigImpl::EnableCloudImpl(string_view accountId, map_view<string, bool> switches)
@@ -395,6 +414,100 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
     RequestIPC(work);
 }
 
+void ConfigImpl::OnSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
+    callback_view<void(map_view<string, map<string, SyncInfo>> data)> progress)
+{
+    if (bundleInfos.empty()) {
+        ThrowAniError(
+            CloudService::Status::INVALID_ARGUMENT_V20, "The type of bundleInfos must be array and not empty.");
+        return;
+    }
+    std::vector<OHOS::CloudData::BundleInfo> nativeBundleInfos;
+    for (auto &info : bundleInfos) {
+        OHOS::CloudData::BundleInfo nativeInfo;
+        nativeInfo.bundleName = std::string(info.bundleName);
+        if (info.storeId.has_value()) {
+            nativeInfo.storeId = std::string(info.storeId.value());
+        }
+        nativeBundleInfos.push_back(nativeInfo);
+    }
+    TaiheSyncInfoCallback holder = progress;
+    {
+        std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+        bool isDuplicate = std::any_of(syncInfoObservers_.begin(), syncInfoObservers_.end(),
+            [&nativeBundleInfos, &holder](const SyncInfoObserverRecord &record) {
+                return record.bundleInfos == nativeBundleInfos && (*record.observer == holder);
+            });
+        if (isDuplicate) {
+            LOG_DEBUG("Duplicate subscribe for sync info changed.");
+            return;
+        }
+    }
+    auto observer = std::make_shared<TaiheCloudSyncInfoObserver>(holder);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
+        }
+        LOG_ERROR("proxy is NULL");
+        ThrowAniError(state);
+        return;
+    }
+    auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, nativeBundleInfos, observer);
+    if (status != CloudService::Status::SUCCESS) {
+        LOG_ERROR("Subscribe failed, errcode = %{public}d", status);
+        ThrowAniError(status);
+        return;
+    }
+    std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+    syncInfoObservers_.push_back({ nativeBundleInfos, observer });
+}
+
+void ConfigImpl::OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
+    optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress)
+{
+    if (bundleInfos.empty()) {
+        ThrowAniError(
+            CloudService::Status::INVALID_ARGUMENT_V20, "The type of bundleInfos must be array and not empty.");
+        return;
+    }
+
+    std::vector<OHOS::CloudData::BundleInfo> nativeBundleInfos;
+    for (auto &info : bundleInfos) {
+        OHOS::CloudData::BundleInfo nativeInfo;
+        nativeInfo.bundleName = std::string(info.bundleName);
+        if (info.storeId.has_value()) {
+            nativeInfo.storeId = std::string(info.storeId.value());
+        }
+        nativeBundleInfos.push_back(nativeInfo);
+    }
+
+    bool hasCallback = progress.has_value();
+    std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>> observersToRemove;
+    {
+        std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+        for (auto it = syncInfoObservers_.begin(); it != syncInfoObservers_.end();) {
+            if (it->bundleInfos != nativeBundleInfos) {
+                ++it;
+                continue;
+            }
+            if (hasCallback && !(*it->observer == progress.value())) {
+                ++it;
+                continue;
+            }
+            observersToRemove.push_back(it->observer);
+            it = syncInfoObservers_.erase(it);
+        }
+    }
+
+    auto work = [nativeBundleInfos, observersToRemove](std::shared_ptr<CloudService> proxy) {
+        for (const auto &observer : observersToRemove) {
+            proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, nativeBundleInfos, observer);
+        }
+    };
+    RequestIPC(work);
+}
+
 void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
 {
     if (strategy.get_key() != StrategyType::key_t::NETWORK) {
@@ -446,6 +559,8 @@ TH_EXPORT_CPP_API_ChangeAppCloudSwitchImplWithConfig(AniCloudData::ConfigImpl::C
 TH_EXPORT_CPP_API_ClearImplWithConfig(AniCloudData::ConfigImpl::ClearImplWithConfig);
 TH_EXPORT_CPP_API_SetGlobalCloudStrategyImpl(AniCloudData::ConfigImpl::SetGlobalCloudStrategyImpl);
 TH_EXPORT_CPP_API_CloudSyncImpl(AniCloudData::ConfigImpl::CloudSyncImpl);
+TH_EXPORT_CPP_API_OnSyncInfoChanged(AniCloudData::ConfigImpl::OnSyncInfoChanged);
+TH_EXPORT_CPP_API_OffSyncInfoChanged(AniCloudData::ConfigImpl::OffSyncInfoChanged);
 TH_EXPORT_CPP_API_SetCloudStrategyImpl(AniCloudData::SetCloudStrategyImpl);
 
 // NOLINTEND

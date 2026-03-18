@@ -31,6 +31,7 @@ ohos_shared_library("clouddata") {
     "${cloud_data_napi_path}/src/js_const_properties.cpp",
     "${cloud_data_napi_path}/src/js_error_utils.cpp",
     "${cloud_data_napi_path}/src/napi_queue.cpp",
+    "${cloud_data_napi_path}/src/napi_cloud_sync_info_observer.cpp",
     "${relational_store_napi_path}/common/src/js_df_manager.cpp",
     "${relational_store_napi_path}/common/src/js_scope.cpp",
     "${relational_store_napi_path}/common/src/js_utils.cpp",

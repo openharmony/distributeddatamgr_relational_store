@@ -156,6 +156,12 @@ function SetGlobalCloudStrategyImpl(strategy: StrategyType, param: Optional<Arra
 @gen_promise("cloudSync")
 function CloudSyncImpl(bundleName: String, storeId: String, mode: SyncMode, progress: (data: ProgressDetails)=> void): void;
 
+@static("Config")
+function OnSyncInfoChanged(bundleInfos: Array<BundleInfo>, progress: (data: @record Map<String, @record Map<String, SyncInfo>>)=> void): void;
+
+@static("Config")
+function OffSyncInfoChanged(bundleInfos: Array<BundleInfo>, progress: Optional<(data: @record Map<String, @record Map<String, SyncInfo>>)=> void>): void;
+
 @gen_promise("setCloudStrategy")
 function SetCloudStrategyImpl(strategy: StrategyType, param: Optional<Array<ValueType>>): void;
 

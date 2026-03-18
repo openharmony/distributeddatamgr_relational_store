@@ -193,4 +193,10 @@ bool Marshalling(const BundleInfo &input, MessageParcel &data)
 {
     return Marshal(data, input.bundleName, input.storeId);
 }
+
+template<>
+bool Marshalling(const CloudSubscribeType &type, MessageParcel &data)
+{
+    return Marshal(data, static_cast<uint32_t>(type));
+}
 } // namespace OHOS::ITypesUtil
