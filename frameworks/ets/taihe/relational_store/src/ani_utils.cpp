@@ -16,7 +16,6 @@
 #include "ani_utils.h"
 
 #include <ani_signature_builder.h>
-#include <cstdarg>
 
 #include <cstdarg>
 #include <cstddef>
@@ -31,6 +30,14 @@
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace arkts::ani_signature;
+
+#define ANI_CHECK_RETURN(call)       \
+    do {                             \
+        ani_status _status = (call); \
+        if (_status != ANI_OK) {     \
+            return _status;          \
+        }                            \
+    } while (0)
 
 namespace ani_utils {
 ani_status AniGetProperty(
@@ -403,11 +410,10 @@ bool UnionAccessor::GetObjectRefPropertyByName(const std::string &clsName, const
         LOG_ERROR("FindClass failed, status=%{public}d", status);
         return false;
     }
-    std::string methodName(name);
     ani_method getter;
-    status = env_->Class_FindMethod(cls, Builder::BuildGetterName(methodName).c_str(), nullptr, &getter);
+    status = env_->Class_FindGetter(cls, name, &getter);
     if (status != ANI_OK) {
-        LOG_ERROR("GetObjectRefPropertyByName Class_FindMethod failed, status=%{public}d", status);
+        LOG_ERROR("GetObjectRefPropertyByName Class_FindGetter failed, status=%{public}d", status);
         return false;
     }
     ani_ref ref;
@@ -542,7 +548,10 @@ bool UnionAccessor::TryConvert<BigInteger>(BigInteger &value)
         return false;
     }
     ani_boolean ret = false;
-    env_->Object_InstanceOf(obj_, cls, &ret);
+    if (ANI_OK != env_->Object_InstanceOf(obj_, cls, &ret)) {
+        LOG_ERROR("Object_InstanceOf failed");
+        return false;
+    }
     if (!ret) {
         return false;
     }
@@ -652,11 +661,17 @@ std::optional<std::string> OptionalAccessor::Convert<std::string>()
         return std::nullopt;
     }
     ani_size strSize = 0;
-    env_->String_GetUTF8Size(static_cast<ani_string>(obj_), &strSize);
+    if (ANI_OK != env_->String_GetUTF8Size(static_cast<ani_string>(obj_), &strSize)) {
+        LOG_ERROR("String_GetUTF8Size failed");
+        return std::nullopt;
+    }
     std::vector<char> buffer(strSize + 1);
     char *utf8_buffer = buffer.data();
     ani_size bytes_written = 0;
-    env_->String_GetUTF8(static_cast<ani_string>(obj_), utf8_buffer, strSize + 1, &bytes_written);
+    if (ANI_OK != env_->String_GetUTF8(static_cast<ani_string>(obj_), utf8_buffer, strSize + 1, &bytes_written)) {
+        LOG_ERROR("String_GetUTF8 failed");
+        return std::nullopt;
+    }
     utf8_buffer[bytes_written] = '\0';
     std::string content = std::string(utf8_buffer);
     return content;
@@ -720,7 +735,7 @@ ani_status CreateAniObj(ani_env *env, const std::string &className, const std::s
             className.c_str(), methodName.c_str(), signature.c_str());
         return ANI_ERROR;
     }
-    
+
     if (env->Object_New_V(cls, method, obj, args) != ANI_OK) {
         va_end(args);
         LOG_ERROR("[ANI] Object_New failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
@@ -762,21 +777,19 @@ ani_status Convert2AniValue(ani_env *env, const std::map<std::string, int> &valu
     size_t mapSize = value.size();
     ani_array res = {};
     ani_ref element = {};
-    env->GetUndefined(&element);
-    env->Array_New(mapSize, element, &res);
+    ANI_CHECK_RETURN(env->GetUndefined(&element));
+    ANI_CHECK_RETURN(env->Array_New(mapSize, element, &res));
     int i = 0;
     for (const auto &[key, val] : value) {
         ani_array arr = {};
-        env->Array_New(SYNC_RESULT_ELEMENT_NUM, element, &arr);
+        ANI_CHECK_RETURN(env->Array_New(SYNC_RESULT_ELEMENT_NUM, element, &arr));
         ani_string aniKey = {};
-        env->String_NewUTF8(key.c_str(), key.size(), &aniKey);
-        env->Array_Set(arr, 0, aniKey);
+        ANI_CHECK_RETURN(env->String_NewUTF8(key.c_str(), key.size(), &aniKey));
+        ANI_CHECK_RETURN(env->Array_Set(arr, 0, aniKey));
         ani_object aniVal = {};
-        if (CreateAniObj(env, "std.core.Int", "<ctor>", "i:", &aniVal, static_cast<ani_int>(val)) != ANI_OK) {
-            return ANI_ERROR;
-        }
-        env->Array_Set(arr, 1, aniVal);
-        env->Array_Set(res, i++, arr);
+        ANI_CHECK_RETURN(CreateAniObj(env, "std.core.Int", "<ctor>", "i:", &aniVal, static_cast<ani_int>(val)));
+        ANI_CHECK_RETURN(env->Array_Set(arr, 1, aniVal));
+        ANI_CHECK_RETURN(env->Array_Set(res, i++, arr));
     }
     result = res;
     return ANI_OK;
