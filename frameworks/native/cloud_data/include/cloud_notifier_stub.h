@@ -32,15 +32,14 @@ public:
 class CloudNotifierStub : public IRemoteStub<CloudNotifierStubBroker> {
 public:
     using SyncCompleteHandler = std::function<void(uint32_t, Details &&)>;
-    using SyncInfoNotifyHandler = std::function<void(const std::string &, const std::string &, const CloudSyncInfo &)>;
+    using SyncInfoNotifyHandler = std::function<void(const BatchQueryLastResults &)>;
     explicit CloudNotifierStub(const SyncCompleteHandler &syncComplete);
     explicit CloudNotifierStub(const SyncCompleteHandler &syncComplete, const SyncInfoNotifyHandler &subscribeNotify);
     virtual ~CloudNotifierStub() noexcept;
 
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
     int32_t OnComplete(uint32_t seqNum, Details &&result) override;
-    int32_t OnSyncInfoNotify(const std::string &bundleName, const std::string &storeId,
-        const CloudSyncInfo &syncInfo) override;
+    int32_t OnSyncInfoNotify(const BatchQueryLastResults &data) override;
 
 private:
     int32_t OnCompleteInner(MessageParcel& data, MessageParcel& reply);

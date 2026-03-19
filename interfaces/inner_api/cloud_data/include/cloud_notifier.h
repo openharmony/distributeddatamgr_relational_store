@@ -24,8 +24,7 @@ namespace OHOS::CloudData {
 class ICloudNotifier {
 public:
     virtual int32_t OnComplete(uint32_t seqNum, DistributedRdb::Details &&result) = 0;
-    virtual int32_t OnSyncInfoNotify(const std::string &bundleName, const std::string &storeId,
-        const CloudSyncInfo &syncInfo) = 0;
+    virtual int32_t OnSyncInfoNotify(const BatchQueryLastResults &data) = 0;
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_NOTIFIER_H
