@@ -750,7 +750,8 @@ interface RdbStore {
       predicates: @sts_type("dataSharePredicates.DataSharePredicates") Opaque,
       columns: Optional<Array<String>>) : ResultSet;
 
-    QuerySync(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
+    @rename("querySync")
+    QueryByStep(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
 
     @gen_async("querySql")
     QuerySqlWithSql(sql: String) : ResultSet;
