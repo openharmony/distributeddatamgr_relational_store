@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "common.h"
+#include "rdb_test_common.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -325,7 +325,7 @@ HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_001, TestSize.Level0)
     int64_t id;
     ValuesBucket values;
 
-    int ret = store_->Replace(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Replace(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -374,7 +374,7 @@ HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_002, TestSize.Level0)
     int64_t id;
     ValuesBucket values;
 
-    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -475,7 +475,7 @@ HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_005, TestSize.Level0)
 {
     int64_t id;
 
-    int ret = store_->Replace(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Replace(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -521,7 +521,7 @@ HWTEST_P(RdbStoreInsertTest, RdbStore_Replace_006, TestSize.Level0)
     int64_t id;
     ValuesBucket values;
 
-    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -668,7 +668,7 @@ HWTEST_P(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_006, TestSize
     ValuesBucket values;
 
     int ret = store_->InsertWithConflictResolution(
-        id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]), ConflictResolution::ON_CONFLICT_REPLACE);
+        id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]), ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
@@ -728,7 +728,7 @@ HWTEST_P(RdbStoreInsertTest, RdbStore_InsertWithConflictResolution_007, TestSize
     ValuesBucket values;
 
     int ret = store_->InsertWithConflictResolution(
-        id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]), ConflictResolution::ON_CONFLICT_REPLACE);
+        id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]), ConflictResolution::ON_CONFLICT_REPLACE);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 

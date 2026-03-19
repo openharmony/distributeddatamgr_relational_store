@@ -19,7 +19,7 @@
 #include <string>
 
 #include "cache_result_set.h"
-#include "common.h"
+#include "rdb_test_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -37,7 +37,7 @@ struct ResultSetData {
     std::vector<uint8_t> blobValue;
 };
 
-class RdbStepResultSetTest : public testing::Test {
+class RdbInterfaceStepResultSetTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -55,9 +55,9 @@ public:
     static ResultSetData g_resultSetData[3];
 };
 
-const std::string RdbStepResultSetTest::DATABASE_NAME = RDB_TEST_PATH + "stepResultSet_test.db";
-std::shared_ptr<RdbStore> RdbStepResultSetTest::store = nullptr;
-ResultSetData RdbStepResultSetTest::g_resultSetData[3] = { { "2", -5, 2.5, std::vector<uint8_t>{} },
+const std::string RdbInterfaceStepResultSetTest::DATABASE_NAME = RDB_TEST_PATH + "stepResultSet_test.db";
+std::shared_ptr<RdbStore> RdbInterfaceStepResultSetTest::store = nullptr;
+ResultSetData RdbInterfaceStepResultSetTest::g_resultSetData[3] = { { "2", -5, 2.5, std::vector<uint8_t>{} },
     { "hello", 10, 1.0, std::vector<uint8_t>{ 66 } }, { "hello world", 3, 1.8, std::vector<uint8_t>{} } };
 
 class RdbStepResultSetOpenCallback : public RdbOpenCallback {
@@ -77,33 +77,33 @@ int RdbStepResultSetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int
     return E_OK;
 }
 
-void RdbStepResultSetTest::SetUpTestCase(void)
+void RdbInterfaceStepResultSetTest::SetUpTestCase(void)
 {
     int errCode = E_OK;
     RdbHelper::DeleteRdbStore(DATABASE_NAME);
-    RdbStoreConfig config(RdbStepResultSetTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceStepResultSetTest::DATABASE_NAME);
     RdbStepResultSetOpenCallback helper;
-    RdbStepResultSetTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbStepResultSetTest::store, nullptr);
+    RdbInterfaceStepResultSetTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbInterfaceStepResultSetTest::store, nullptr);
     EXPECT_EQ(errCode, E_OK);
 }
 
-void RdbStepResultSetTest::TearDownTestCase(void)
+void RdbInterfaceStepResultSetTest::TearDownTestCase(void)
 {
-    RdbHelper::DeleteRdbStore(RdbStepResultSetTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbInterfaceStepResultSetTest::DATABASE_NAME);
 }
 
-void RdbStepResultSetTest::SetUp(void)
+void RdbInterfaceStepResultSetTest::SetUp(void)
 {
     store->ExecuteSql("DELETE FROM test");
 }
 
-void RdbStepResultSetTest::TearDown(void)
+void RdbInterfaceStepResultSetTest::TearDown(void)
 {
     RdbHelper::ClearCache();
 }
 
-void RdbStepResultSetTest::GenerateDefaultTable()
+void RdbInterfaceStepResultSetTest::GenerateDefaultTable()
 {
     std::string createTableSql =
         "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, data3 FLOAT, data4 BLOB, "
@@ -158,14 +158,14 @@ void RdbStepResultSetTest::GenerateDefaultTable()
     store->ExecuteSql(insertSql, args);
 }
 
-void RdbStepResultSetTest::GenerateDefaultEmptyTable()
+void RdbInterfaceStepResultSetTest::GenerateDefaultEmptyTable()
 {
     std::string createTableSql = std::string("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, ") +
                                  std::string("data2 INTEGER, data3 FLOAT, data4 BLOB);");
     store->ExecuteSql(createTableSql);
 }
 
-void RdbStepResultSetTest::CheckColumnType(std::shared_ptr<ResultSet> resultSet, int columnIndex, ColumnType type)
+void RdbInterfaceStepResultSetTest::CheckColumnType(std::shared_ptr<ResultSet> resultSet, int columnIndex, ColumnType type)
 {
     ColumnType columnType;
     int iRet = resultSet->GetColumnType(columnIndex, columnType);
@@ -173,7 +173,7 @@ void RdbStepResultSetTest::CheckColumnType(std::shared_ptr<ResultSet> resultSet,
     EXPECT_EQ(columnType, type);
 }
 
-void RdbStepResultSetTest::CheckResultSetAttribute(
+void RdbInterfaceStepResultSetTest::CheckResultSetAttribute(
     std::shared_ptr<ResultSet> resultSet, int pos, bool isStart, bool isAtFirstRow, bool isEnded)
 {
     int position = -1;
@@ -197,7 +197,7 @@ void RdbStepResultSetTest::CheckResultSetAttribute(
     EXPECT_EQ(isEnded, bResultSet);
 }
 
-void RdbStepResultSetTest::CheckResultSetData(
+void RdbInterfaceStepResultSetTest::CheckResultSetData(
     int columnIndex, std::shared_ptr<ResultSet> resultSet, ResultSetData &resultSetData)
 {
     std::string strValue;
@@ -230,7 +230,7 @@ void RdbStepResultSetTest::CheckResultSetData(
  * @tc.desc: test StepResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -284,7 +284,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_001, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_002, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_002, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -339,7 +339,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_002, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -370,7 +370,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_003, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -394,7 +394,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_004, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -426,7 +426,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_005, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for moveFirstWithoutEntry
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -455,7 +455,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_006, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for goToNextRow
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -491,7 +491,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_007, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for moveNextWithoutEntry
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -524,7 +524,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_008, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for getInt
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -584,7 +584,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_009, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for getString
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -632,7 +632,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_010, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for GetDouble
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -679,7 +679,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_011, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for getBlob
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -732,7 +732,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_012, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for getBlob
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -765,7 +765,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_013, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for getColumnIndexForName
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_014, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_014, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -806,7 +806,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_014, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for getColumnNameForIndex
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_015, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_015, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -845,7 +845,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_015, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -878,7 +878,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_016, TestSize.Level1)
  * @tc.desc: Abnormal testcase of StepResultSet, arguments of GetAsset and GetAssets are invalid
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -897,7 +897,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_017, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_018, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_018, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test", {}, false);
@@ -946,7 +946,7 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_018, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for getRowCount
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testGetRowCount003, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -996,7 +996,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount003, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for getRowCount
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testGetRowCount004, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -1045,7 +1045,7 @@ HWTEST_F(RdbStepResultSetTest, testGetRowCount004, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for goToRow
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testGoToRow005, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -1089,7 +1089,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToRow005, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for goToRow
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testGo006, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test");
@@ -1128,7 +1128,7 @@ HWTEST_F(RdbStepResultSetTest, testGo006, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for go
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testGoToPrevious007, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -1185,7 +1185,7 @@ HWTEST_F(RdbStepResultSetTest, testGoToPrevious007, TestSize.Level1)
  * @tc.desc: normal testcase of SqlStep for go
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep008, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -1232,7 +1232,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep008, TestSize.Level1)
  * @tc.desc: normal testcase of SqlStep for go
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep009, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -1294,7 +1294,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep009, TestSize.Level1)
  * @tc.desc: normal testcase of SqlStep for go
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep010, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test");
@@ -1321,7 +1321,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep010, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: NA
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep011, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep011, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
 
@@ -1355,7 +1355,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep011, TestSize.Level1)
  * @tc.desc: Normal testcase of SqlStep for constructor std::vector<ValueObject>
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep012, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep012, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
 
@@ -1387,7 +1387,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep012, TestSize.Level1)
  * @tc.desc: Abnormal testcase of SqlStep, if close resultSet before query
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep013, TestSize.Level1)
 {
     GenerateDefaultTable();
 
@@ -1444,7 +1444,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep013, TestSize.Level1)
  * @tc.desc: Abnormal testcase of SqlStep for GoToRow, if connection counts over limit
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep014, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep014, TestSize.Level1)
 {
     GenerateDefaultTable();
 
@@ -1480,7 +1480,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep014, TestSize.Level1)
  * @tc.desc: Abnormal testcase of SqlStep for QueryByStep, if sql is inValid
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep015, TestSize.Level1)
 {
     GenerateDefaultTable();
 
@@ -1498,7 +1498,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep015, TestSize.Level1)
  * @tc.desc: Abnormal testcase of SqlStep for GetSize, if rowPos is inValid
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep016, TestSize.Level1)
 {
     GenerateDefaultTable();
 
@@ -1513,127 +1513,11 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep016, TestSize.Level1)
 }
 
 /* *
- * @tc.name: testSqlStep017
- * @tc.desc: Abnormal testcase for build query string
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStepResultSetTest, testSqlStep017, TestSize.Level1)
-{
-    std::vector<std::string> columns = { "data1", "data2" };
-
-    std::string outSql;
-    int errCode = SqliteSqlBuilder::BuildQueryString(false, "", "", columns, "", "", "", "", 0, 0, outSql);
-    EXPECT_EQ(E_EMPTY_TABLE_NAME, errCode);
-}
-
-/* *
- * @tc.name: testSqlStep018
- * @tc.desc: Abnormal testcase for build query string
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStepResultSetTest, testSqlStep018, TestSize.Level1)
-{
-    AbsRdbPredicates predicates("test");
-    std::vector<std::string> columns;
-    std::string logTable = "naturalbase_rdb_aux_test_log";
-    std::string sqlstr;
-    std::pair<bool, bool> queryStatus = { false, false };
-
-    // logtable is empty && tableName is not empty
-    queryStatus = { false, true };
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, "", queryStatus);
-    EXPECT_EQ("", sqlstr);
-
-    // logtable is empty && tableName is empty
-    AbsRdbPredicates emptyPredicates("");
-    std::string tableName = emptyPredicates.GetTableName();
-    EXPECT_EQ("", tableName);
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, "", queryStatus);
-    EXPECT_EQ("", sqlstr);
-
-    // logtable is not empty && tableName is empty
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(emptyPredicates, columns, logTable, queryStatus);
-    EXPECT_EQ("", sqlstr);
-
-    // Distinct is false, clumns is empty
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
-    std::string value = "SELECT test.*, naturalbase_rdb_aux_test_log.cursor, CASE "
-                        "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
-                        "THEN true ELSE false END AS deleted_flag, CASE "
-                        "WHEN naturalbase_rdb_aux_test_log.flag & 0x808 = 0x808 THEN 3 WHEN "
-                        "naturalbase_rdb_aux_test_log.flag & 0x800 = 0x800 THEN 1 WHEN "
-                        "naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN 2 ELSE 0 END AS data_status "
-                        "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
-                        "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
-    EXPECT_EQ(value, sqlstr);
-
-    // Distinct is true, clumns is not empty
-    predicates.Distinct();
-    columns.push_back("name");
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
-    value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.cursor, CASE "
-            "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
-            "THEN true ELSE false END AS deleted_flag, CASE "
-            "WHEN naturalbase_rdb_aux_test_log.flag & 0x808 = 0x808 THEN 3 WHEN "
-            "naturalbase_rdb_aux_test_log.flag & 0x800 = 0x800 THEN 1 WHEN "
-            "naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN 2 ELSE 0 END AS data_status "
-            "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
-            "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
-    EXPECT_EQ(value, sqlstr);
-}
-
-/* *
- * @tc.name: testSqlStep019
- * @tc.desc: Abnormal testcase for build query string
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStepResultSetTest, testSqlStep019, TestSize.Level1)
-{
-    AbsRdbPredicates predicates("test");
-    std::vector<std::string> columns;
-    std::string logTable = "naturalbase_rdb_aux_test_log";
-    std::string sqlstr;
-    std::pair<bool, bool> queryStatus = { true, false };
-
-    //Distinct is false, columns has spacial field
-    queryStatus = { true, false };
-    columns.push_back("name");
-    columns.push_back("#_sharing_resource_field");
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
-    std::string value = "SELECT test.name, naturalbase_rdb_aux_test_log.sharing_resource AS sharing_resource_field"
-                        " FROM test INNER JOIN naturalbase_rdb_aux_test_log "
-                        "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
-    EXPECT_EQ(value, sqlstr);
-
-    //Distinct is true, columns has spacial field
-    predicates.Distinct();
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
-    value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.sharing_resource AS sharing_resource_field"
-            " FROM test INNER JOIN naturalbase_rdb_aux_test_log "
-            "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
-    EXPECT_EQ(value, sqlstr);
-
-    //Distinct is true, columns and predicates have spacial fields
-    queryStatus = { true, true };
-    sqlstr = SqliteSqlBuilder::BuildCursorQueryString(predicates, columns, logTable, queryStatus);
-    value = "SELECT DISTINCT test.name, naturalbase_rdb_aux_test_log.sharing_resource AS sharing_resource_field, "
-            "naturalbase_rdb_aux_test_log.cursor, CASE "
-            "WHEN naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 "
-            "THEN true ELSE false END AS deleted_flag, CASE "
-            "WHEN naturalbase_rdb_aux_test_log.flag & 0x808 = 0x808 THEN 3 WHEN "
-            "naturalbase_rdb_aux_test_log.flag & 0x800 = 0x800 THEN 1 WHEN "
-            "naturalbase_rdb_aux_test_log.flag & 0x8 = 0x8 THEN 2 ELSE 0 END AS data_status "
-            "FROM test INNER JOIN naturalbase_rdb_aux_test_log "
-            "ON test.ROWID = naturalbase_rdb_aux_test_log.data_key";
-    EXPECT_EQ(value, sqlstr);
-}
-
-/* *
  * @tc.name: testSqlStep020
  * @tc.desc: normal testcase of SqlStep for QueryByStep, if sql is WITH
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep020, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep020, TestSize.Level1)
 {
     GenerateDefaultTable();
 
@@ -1675,7 +1559,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep020, TestSize.Level1)
  * @tc.desc: normal testcase of SqlStep for QueryByStep, PRAGMA user_version
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep021, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep021, TestSize.Level1)
 {
     // 2 is used to set the store version
     int ret = store->ExecuteSql("PRAGMA user_version = 2");
@@ -1695,7 +1579,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep021, TestSize.Level1)
  * @tc.desc: normal testcase of SqlStep for QueryByStep, PRAGMA table_info
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep022, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep022, TestSize.Level1)
 {
     GenerateDefaultEmptyTable();
     int ret = store->ExecuteSql("PRAGMA table_info(test)");
@@ -1724,7 +1608,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep022, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep023, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep023, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT * FROM test", {}, false);
@@ -1781,7 +1665,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep023, TestSize.Level1)
  * @tc.desc: normal testcase of StepResultSet for getInt
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, testSqlStep024, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, testSqlStep024, TestSize.Level1)
 {
     GenerateDefaultTable();
     std::shared_ptr<ResultSet> resultSet = store->QueryByStep("SELECT data1, data2, data3, data4 FROM test", {}, false);
@@ -1844,7 +1728,7 @@ HWTEST_F(RdbStepResultSetTest, testSqlStep024, TestSize.Level1)
  * @tc.desc: test StepResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_025, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, RdbStore_StepResultSet_025, TestSize.Level1)
 {
     GenerateDefaultTable();
     int64_t id;
@@ -1883,53 +1767,11 @@ HWTEST_F(RdbStepResultSetTest, RdbStore_StepResultSet_025, TestSize.Level1)
 }
 
 /**
- * @tc.name: ResultSetProxy001
- * @tc.desc: Abnormal testcase of distributed ResultSetProxy, if resultSet is Empty
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStepResultSetTest, Abnormal_ResultSetProxy001, TestSize.Level1)
-{
-    int errCode = 0;
-    auto resultSet = std::make_shared<OHOS::NativeRdb::ResultSetProxy>(nullptr);
-    ColumnType columnType;
-    errCode = resultSet->GetColumnType(1, columnType);
-    EXPECT_NE(E_OK, errCode);
-
-    std::string columnName;
-    errCode = resultSet->GetColumnName(1, columnName);
-    EXPECT_NE(E_OK, errCode);
-
-    std::vector<uint8_t> blob;
-    errCode = resultSet->GetBlob(1, blob);
-    EXPECT_NE(E_OK, errCode);
-
-    std::string getStringValue;
-    errCode = resultSet->GetString(1, getStringValue);
-    EXPECT_NE(E_OK, errCode);
-
-    int getIntValue;
-    errCode = resultSet->GetInt(1, getIntValue);
-    EXPECT_NE(E_OK, errCode);
-
-    int64_t getLongValue;
-    errCode = resultSet->GetLong(1, getLongValue);
-    EXPECT_NE(E_OK, errCode);
-
-    double getDoubleValue;
-    errCode = resultSet->GetDouble(1, getDoubleValue);
-    EXPECT_NE(E_OK, errCode);
-
-    bool isNull;
-    errCode = resultSet->IsColumnNull(1, isNull);
-    EXPECT_NE(E_OK, errCode);
-}
-
-/**
  * @tc.name: Normal_CacheResultSet002
  * @tc.desc: Normal testcase of CacheResultSet
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, Normal_CacheResultSet002, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, Normal_CacheResultSet002, TestSize.Level1)
 {
     std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
     OHOS::NativeRdb::ValuesBucket value1;
@@ -1981,7 +1823,7 @@ HWTEST_F(RdbStepResultSetTest, Normal_CacheResultSet002, TestSize.Level1)
  *           if position is illegal, and columName is not exist.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet005, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, Abnormal_CacheResultSet005, TestSize.Level1)
 {
     std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
     OHOS::NativeRdb::ValuesBucket value1;
@@ -2046,7 +1888,7 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet005, TestSize.Level1)
  * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet003, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, Abnormal_CacheResultSet003, TestSize.Level1)
 {
     std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
     // if valuebucket.size = 0
@@ -2112,7 +1954,7 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet003, TestSize.Level1)
  * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet004, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, Abnormal_CacheResultSet004, TestSize.Level1)
 {
     std::vector<OHOS::NativeRdb::ValuesBucket> valueBuckets;
     std::shared_ptr<OHOS::NativeRdb::CacheResultSet> resultSet =
@@ -2156,7 +1998,7 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_CacheResultSet004, TestSize.Level1)
  * @tc.desc: Abnormal testcase of CacheResultSet, if CacheResultSet is Empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStepResultSetTest, Invalid_TableName, TestSize.Level1)
+HWTEST_F(RdbInterfaceStepResultSetTest, Invalid_TableName, TestSize.Level1)
 {
     auto sql = "create table if not exists 'test_name' (id INTEGER PRIMARY KEY AUTOINCREMENT)";
     auto ret = store->ExecuteSql(sql);

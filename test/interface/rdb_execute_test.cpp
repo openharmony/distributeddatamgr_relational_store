@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "common.h"
+#include "rdb_test_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -177,15 +177,15 @@ HWTEST_P(RdbExecuteTest, RdbStore_Execute_002, TestSize.Level1)
     int64_t id;
     ValuesBucket values;
 
-    int ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    int ret = store_->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ret = store_->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    ret = store_->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
+    ret = store_->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 

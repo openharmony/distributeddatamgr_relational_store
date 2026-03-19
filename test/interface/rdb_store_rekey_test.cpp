@@ -26,7 +26,7 @@
 #include <thread>
 
 #include "block_data.h"
-#include "common.h"
+#include "rdb_test_common.h"
 #include "file_ex.h"
 #include "logger.h"
 #include "rdb_errno.h"
@@ -39,7 +39,7 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
-class RdbRekeyTest : public testing::Test {
+class RdbInterfaceRekeyTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -65,11 +65,11 @@ public:
     static constexpr int HOURS_NOT_EXPIRED = (24 * 30);
 };
 
-const std::string RdbRekeyTest::encryptedDatabaseName = "encrypted.db";
-const std::string RdbRekeyTest::encryptedDatabasePath = RDB_TEST_PATH + encryptedDatabaseName;
-const std::string RdbRekeyTest::encryptedDatabaseKeyDir = RDB_TEST_PATH + "key/";
-const std::string RdbRekeyTest::encryptedDatabaseMockName = "encrypted_mock.db";
-const std::string RdbRekeyTest::encryptedDatabaseMockPath = RDB_TEST_PATH + encryptedDatabaseMockName;
+const std::string RdbInterfaceRekeyTest::encryptedDatabaseName = "encrypted.db";
+const std::string RdbInterfaceRekeyTest::encryptedDatabasePath = RDB_TEST_PATH + encryptedDatabaseName;
+const std::string RdbInterfaceRekeyTest::encryptedDatabaseKeyDir = RDB_TEST_PATH + "key/";
+const std::string RdbInterfaceRekeyTest::encryptedDatabaseMockName = "encrypted_mock.db";
+const std::string RdbInterfaceRekeyTest::encryptedDatabaseMockPath = RDB_TEST_PATH + encryptedDatabaseMockName;
 
 class RekeyTestOpenCallback : public RdbOpenCallback {
 public:
@@ -95,18 +95,18 @@ int RekeyTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVer
     return E_OK;
 }
 
-void RdbRekeyTest::SetUpTestCase()
+void RdbInterfaceRekeyTest::SetUpTestCase()
 {
 }
 
-void RdbRekeyTest::TearDownTestCase()
+void RdbInterfaceRekeyTest::TearDownTestCase()
 {
 }
 
-void RdbRekeyTest::SetUp()
+void RdbInterfaceRekeyTest::SetUp()
 {
     RdbHelper::ClearCache();
-    RdbHelper::DeleteRdbStore(RdbRekeyTest::encryptedDatabasePath);
+    RdbHelper::DeleteRdbStore(RdbInterfaceRekeyTest::encryptedDatabasePath);
     RdbStoreConfig config = GetRdbConfig(encryptedDatabasePath);
     RekeyTestOpenCallback helper;
     int errCode;
@@ -117,13 +117,13 @@ void RdbRekeyTest::SetUp()
     RdbHelper::ClearCache();
 }
 
-void RdbRekeyTest::TearDown()
+void RdbInterfaceRekeyTest::TearDown()
 {
     RdbHelper::ClearCache();
-    RdbHelper::DeleteRdbStore(RdbRekeyTest::encryptedDatabasePath);
+    RdbHelper::DeleteRdbStore(RdbInterfaceRekeyTest::encryptedDatabasePath);
 }
 
-std::string RdbRekeyTest::RemoveSuffix(const std::string &name)
+std::string RdbInterfaceRekeyTest::RemoveSuffix(const std::string &name)
 {
     std::string suffix(".db");
     auto pos = name.rfind(suffix);
@@ -133,7 +133,7 @@ std::string RdbRekeyTest::RemoveSuffix(const std::string &name)
     return { name, 0, pos };
 }
 
-std::chrono::system_clock::time_point RdbRekeyTest::GetKeyFileDate(const std::string &dbName)
+std::chrono::system_clock::time_point RdbInterfaceRekeyTest::GetKeyFileDate(const std::string &dbName)
 {
     std::chrono::system_clock::time_point timePoint;
     std::string name = RemoveSuffix(dbName);
@@ -155,7 +155,7 @@ std::chrono::system_clock::time_point RdbRekeyTest::GetKeyFileDate(const std::st
     return timePoint;
 }
 
-bool RdbRekeyTest::ChangeKeyFileDate(const std::string &dbName, int rep)
+bool RdbInterfaceRekeyTest::ChangeKeyFileDate(const std::string &dbName, int rep)
 {
     std::string name = RemoveSuffix(dbName);
     auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_v2";
@@ -176,7 +176,7 @@ bool RdbRekeyTest::ChangeKeyFileDate(const std::string &dbName, int rep)
     return saved;
 }
 
-bool RdbRekeyTest::SaveNewKey(const string &dbName)
+bool RdbInterfaceRekeyTest::SaveNewKey(const string &dbName)
 {
     std::string name = RemoveSuffix(dbName);
     auto keyPath = RDB_TEST_PATH + "key/" + name + ".pub_key_v2";
@@ -194,7 +194,7 @@ bool RdbRekeyTest::SaveNewKey(const string &dbName)
     return OHOS::SaveBufferToFile(keyPath, content);
 }
 
-RdbStoreConfig RdbRekeyTest::GetRdbConfig(const std::string &name)
+RdbStoreConfig RdbInterfaceRekeyTest::GetRdbConfig(const std::string &name)
 {
     RdbStoreConfig config(name);
     config.SetEncryptStatus(true);
@@ -203,7 +203,7 @@ RdbStoreConfig RdbRekeyTest::GetRdbConfig(const std::string &name)
     return config;
 }
 
-RdbStoreConfig RdbRekeyTest::GetRdbNotRekeyConfig(const std::string &name)
+RdbStoreConfig RdbInterfaceRekeyTest::GetRdbNotRekeyConfig(const std::string &name)
 {
     RdbStoreConfig config(name);
     config.SetEncryptStatus(true);
@@ -212,7 +212,7 @@ RdbStoreConfig RdbRekeyTest::GetRdbNotRekeyConfig(const std::string &name)
     return config;
 }
 
-void RdbRekeyTest::InsertData(std::shared_ptr<RdbStore> &store)
+void RdbInterfaceRekeyTest::InsertData(std::shared_ptr<RdbStore> &store)
 {
     int64_t id;
     ValuesBucket values;
@@ -228,7 +228,7 @@ void RdbRekeyTest::InsertData(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(insertRet, E_OK);
 }
 
-void RdbRekeyTest::CheckQueryData(std::shared_ptr<RdbStore> &store)
+void RdbInterfaceRekeyTest::CheckQueryData(std::shared_ptr<RdbStore> &store)
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
@@ -256,7 +256,7 @@ void RdbRekeyTest::CheckQueryData(std::shared_ptr<RdbStore> &store)
 * @tc.desc: test RdbStore rekey function
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_01, TestSize.Level1)
 {
     std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
@@ -264,10 +264,10 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
-    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_EXPIRED);
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbInterfaceRekeyTest::HOURS_EXPIRED);
     ASSERT_TRUE(isFileDateChanged);
 
-    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config = GetRdbConfig(RdbInterfaceRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -287,19 +287,19 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
 * @tc.desc: test RdbStore with not outdated password
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_02, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_02, TestSize.Level1)
 {
     std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
-    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_NOT_EXPIRED);
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbInterfaceRekeyTest::HOURS_NOT_EXPIRED);
     ASSERT_TRUE(isFileDateChanged);
 
     auto changedDate = GetKeyFileDate(encryptedDatabaseName);
-    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_NOT_EXPIRED));
+    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbInterfaceRekeyTest::HOURS_NOT_EXPIRED));
 
-    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config = GetRdbConfig(RdbInterfaceRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -309,42 +309,11 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_02, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Rekey_Test_003
-* @tc.desc: try to open store and execute RekeyRecover() without key and new key files.
-* @tc.type: FUNC
-*/
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
-{
-    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
-    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
-
-    bool isFileExists = OHOS::FileExists(keyPath);
-    ASSERT_TRUE(isFileExists);
-
-    SqliteUtils::DeleteFile(keyPath);
-    isFileExists = OHOS::FileExists(keyPath);
-    ASSERT_FALSE(isFileExists);
-    isFileExists = OHOS::FileExists(newKeyPath);
-    ASSERT_FALSE(isFileExists);
-
-    RekeyTestOpenCallback helper;
-    int errCode = E_OK;
-    RdbStoreConfig config = GetRdbConfig(encryptedDatabasePath);
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    ASSERT_EQ(errCode, E_OK);
-    store = nullptr;
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    ASSERT_EQ(errCode, E_OK);
-}
-
-/**
 * @tc.name: Rdb_Rekey_Test_004
 * @tc.desc: try to open store and modify create date to a future time.
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_04, TestSize.Level1)
 {
     std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
@@ -352,10 +321,10 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
-    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, -RdbRekeyTest::HOURS_EXPIRED);
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, -RdbInterfaceRekeyTest::HOURS_EXPIRED);
     ASSERT_TRUE(isFileDateChanged);
 
-    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config = GetRdbConfig(RdbInterfaceRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
     int errCode;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -374,7 +343,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
 * @tc.desc: re key and rename failed the new key file.
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
 {
     std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
@@ -382,10 +351,10 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
-    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_LONG_LONG_AGO);
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbInterfaceRekeyTest::HOURS_LONG_LONG_AGO);
     ASSERT_TRUE(isFileDateChanged);
 
-    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config = GetRdbConfig(RdbInterfaceRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
     int errCode = E_OK;
     for (int i = 0; i < 50; ++i) {
@@ -405,7 +374,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
 * @tc.desc: test RdbStore rekey function
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_06, TestSize.Level1)
 {
     std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
     std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
@@ -413,13 +382,13 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
     bool isFileExists = OHOS::FileExists(keyPath);
     ASSERT_TRUE(isFileExists);
 
-    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_EXPIRED);
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbInterfaceRekeyTest::HOURS_EXPIRED);
     ASSERT_TRUE(isFileDateChanged);
 
     auto changedDate = GetKeyFileDate(encryptedDatabaseName);
-    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_EXPIRED));
+    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbInterfaceRekeyTest::HOURS_EXPIRED));
 
-    RdbStoreConfig config = GetRdbNotRekeyConfig(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config = GetRdbNotRekeyConfig(RdbInterfaceRekeyTest::encryptedDatabasePath);
     RekeyTestOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -431,7 +400,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
     isFileExists = OHOS::FileExists(newKeyPath);
     ASSERT_FALSE(isFileExists);
 
-    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_EXPIRED));
+    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbInterfaceRekeyTest::HOURS_EXPIRED));
     CheckQueryData(store);
 }
 
@@ -440,9 +409,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
 * @tc.desc: test deleting the key file of the encrypted database
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_07, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_07, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetAllowRebuild(true);
     config.SetEncryptStatus(true);
@@ -486,9 +455,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_07, TestSize.Level1)
 * @tc.desc: test deleting the key file of the encrypted database
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_08, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_08, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetAllowRebuild(false);
     config.SetEncryptStatus(true);
@@ -532,9 +501,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_08, TestSize.Level1)
 * @tc.desc: test rekey the encrypted database
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_009, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_009, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetAllowRebuild(false);
     config.SetEncryptStatus(true);
@@ -596,7 +565,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_009, TestSize.Level1)
 * @tc.desc: test rekey the encrypted database
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_010, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_010, TestSize.Level1)
 {
     const std::string encryptedDatabaseName1 = "encrypted1.db";
     const std::string encryptedDatabasePath1 = RDB_TEST_PATH + encryptedDatabaseName1;
@@ -659,9 +628,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_010, TestSize.Level1)
 * @tc.desc: test rekey other parameters
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_011, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_011, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetBundleName("com.example.test_rekey");
     config.SetEncryptStatus(true);
@@ -717,9 +686,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_011, TestSize.Level1)
 * @tc.desc: test custom encrypt rekey
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_012, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_012, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     RdbStoreConfig::CryptoParam cryptoParam;
@@ -779,9 +748,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_012, TestSize.Level1)
 * @tc.desc: test rekey
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_013, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_013, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     config.SetBundleName("com.example.test_rekey");
@@ -838,9 +807,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_013, TestSize.Level1)
 * @tc.desc: test rekey
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_014, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_014, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     config.SetBundleName("com.example.test_rekey");
@@ -899,9 +868,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_014, TestSize.Level1)
 * @tc.desc: test rekey
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_015, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_015, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     RdbStoreConfig::CryptoParam cryptoParam;
@@ -959,9 +928,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_015, TestSize.Level1)
 * @tc.desc: test transaction rekey
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_016, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_016, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetAllowRebuild(false);
     config.SetEncryptStatus(true);
@@ -983,7 +952,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_016, TestSize.Level1)
     ASSERT_EQ(ret, E_OK);
     ASSERT_NE(transaction, nullptr);
 
-    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    auto result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(1, result.second);
 
@@ -996,7 +965,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_016, TestSize.Level1)
     errCode = store->Rekey(newCryptoParam);
     ASSERT_EQ(errCode, E_DATABASE_BUSY);
 
-    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(2, result.second);
 
@@ -1024,9 +993,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_016, TestSize.Level1)
 * @tc.desc: test transaction rekey
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_017, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_017, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetAllowRebuild(false);
     config.SetEncryptStatus(true);
@@ -1047,7 +1016,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_017, TestSize.Level1)
     ASSERT_EQ(ret, E_OK);
     ASSERT_NE(transaction, nullptr);
  
-    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    auto result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(1, result.second);
  
@@ -1059,7 +1028,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_017, TestSize.Level1)
     errCode = store->Rekey(newCryptoParam);
     ASSERT_EQ(errCode, E_DATABASE_BUSY);
  
-    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(2, result.second);
  
@@ -1087,9 +1056,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_017, TestSize.Level1)
 * @tc.desc: rekey test
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_018, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_018, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetEncryptStatus(true);
     config.SetReadOnly(true);
     config.SetBundleName("com.example.test_rekey");
@@ -1113,9 +1082,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_018, TestSize.Level1)
 * @tc.desc: mutltiThread rekey test
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_019, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     RdbStoreConfig::CryptoParam cryptoParam;
     cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
     config.SetCryptoParam(cryptoParam);
@@ -1175,7 +1144,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
 * @tc.desc: non-encrypted rekey to encrypted
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_020, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_020, TestSize.Level1)
 {
     const std::string encryptedDatabaseName1 = "encrypted1.db";
     const std::string encryptedDatabasePath1 = RDB_TEST_PATH + encryptedDatabaseName1;
@@ -1238,9 +1207,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_020, TestSize.Level1)
 * @tc.desc: rekey other parameters
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_021, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_021, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetBundleName("com.example.test_rekey");
     config.SetEncryptStatus(true);
@@ -1301,9 +1270,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_021, TestSize.Level1)
 * @tc.desc: custom encrypted rekey to custom encrypted
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_022, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_022, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     RdbStoreConfig::CryptoParam cryptoParam;
@@ -1364,9 +1333,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_022, TestSize.Level1)
 * @tc.desc: encrypted rekey to custom encrypted
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_023, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_023, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     config.SetBundleName("com.example.test_rekey");
@@ -1427,9 +1396,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_023, TestSize.Level1)
 * @tc.desc: encrypted rekey to encrypted
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_024, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_024, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     config.SetBundleName("com.example.test_rekey");
@@ -1487,9 +1456,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_024, TestSize.Level1)
 * @tc.desc: custom encrypted rekey to encrypted
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_025, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_025, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     RdbStoreConfig::CryptoParam cryptoParam;
@@ -1548,9 +1517,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_025, TestSize.Level1)
 * @tc.desc: encrypted rekey to non-encrypted
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_026, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_026, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     config.SetBundleName("com.example.test_rekey");
@@ -1610,9 +1579,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_026, TestSize.Level1)
 * @tc.desc: test rekey iterNum
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_027, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_027, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetBundleName("com.example.test_rekey");
     config.SetEncryptStatus(true);
@@ -1670,9 +1639,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_027, TestSize.Level1)
 * @tc.desc: test rekey encryptAlgo
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_028, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_028, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     RdbStoreConfig::CryptoParam cryptoParam;
@@ -1732,9 +1701,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_028, TestSize.Level1)
 * @tc.desc: test rekey hmacAlgo
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_029, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_029, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     config.SetBundleName("com.example.test_rekey");
@@ -1797,9 +1766,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_029, TestSize.Level1)
 * @tc.desc: test rekey kdfAlgo
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_030, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_030, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     config.SetBundleName("com.example.test_rekey");
@@ -1859,9 +1828,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_030, TestSize.Level1)
 * @tc.desc: test rekey cryptoPageSize
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_031, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_031, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
     RdbStoreConfig::CryptoParam cryptoParam;
@@ -1921,9 +1890,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_031, TestSize.Level1)
 * @tc.desc: test transaction rekey
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_032, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_032, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetAllowRebuild(false);
     config.SetEncryptStatus(true);
@@ -1945,7 +1914,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_032, TestSize.Level1)
     ASSERT_EQ(ret, E_OK);
     ASSERT_NE(transaction, nullptr);
 
-    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    auto result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(1, result.second);
 
@@ -1958,7 +1927,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_032, TestSize.Level1)
     errCode = store->RekeyEx(newCryptoParam);
     ASSERT_EQ(errCode, E_SQLITE_BUSY);
 
-    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(2, result.second);
 
@@ -1986,9 +1955,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_032, TestSize.Level1)
 * @tc.desc: test transaction rekey
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_033, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_033, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetAllowRebuild(false);
     config.SetEncryptStatus(true);
@@ -2009,7 +1978,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_033, TestSize.Level1)
     ASSERT_EQ(ret, E_OK);
     ASSERT_NE(transaction, nullptr);
 
-    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    auto result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(1, result.second);
 
@@ -2021,7 +1990,7 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_033, TestSize.Level1)
     errCode = store->RekeyEx(newCryptoParam);
     ASSERT_EQ(errCode, E_SQLITE_BUSY);
 
-    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(2, result.second);
 
@@ -2049,9 +2018,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_033, TestSize.Level1)
 * @tc.desc: readOnly rekey test
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_034, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_034, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetEncryptStatus(true);
     config.SetReadOnly(true);
     config.SetBundleName("com.example.test_rekey");
@@ -2075,9 +2044,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_034, TestSize.Level1)
 * @tc.desc: mutltiThread rekey test
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_035, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_035, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     RdbStoreConfig::CryptoParam cryptoParam;
     cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
     config.SetCryptoParam(cryptoParam);
@@ -2133,38 +2102,13 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_035, TestSize.Level1)
 }
 
 /**
-* @tc.name: Rdb_Rekey_036
-* @tc.desc: invalid param test
-* @tc.type: FUNC
-*/
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_036, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
-    config.SetSecurityLevel(SecurityLevel::S1);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.test_rekey");
-    RekeyTestOpenCallback helper;
-    int errCode = E_OK;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    ASSERT_EQ(errCode, E_OK);
-
-    RdbStoreConfig::CryptoParam cryptoParam1;
-    cryptoParam1.encryptAlgo = -1;
-    cryptoParam1.hmacAlgo = -1;
-    cryptoParam1.kdfAlgo = -1;
-    errCode = store->RekeyEx(cryptoParam1);
-    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
-}
-
-/**
 * @tc.name: Rdb_Rekey_037
 * @tc.desc: memory rekey test
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_037, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_037, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetBundleName("com.example.test_rekey");
     config.SetName("RekeyEx_Memmory_test.db");
     config.SetStorageMode(StorageMode::MODE_MEMORY);
@@ -2188,9 +2132,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_037, TestSize.Level1)
 * @tc.desc: replica rekey test
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_038, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_038, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     config.SetEncryptStatus(true);
     config.SetHaMode(HAMode::MAIN_REPLICA);
     config.SetBundleName("com.example.test_rekey");
@@ -2214,9 +2158,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_038, TestSize.Level1)
 * @tc.desc: open non-enctypted database with encryptAlgo is PLAIN_TEXT
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_039, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_039, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     int errCode = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(errCode, E_OK);
     RdbStoreConfig::CryptoParam cryptoParam;
@@ -2239,9 +2183,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_039, TestSize.Level1)
 * @tc.desc: open non-enctypted database with encryptAlgo is PLAIN_TEXT then rekeyex success and query success
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_040, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_040, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     int errCode = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(errCode, E_OK);
     RdbStoreConfig::CryptoParam cryptoParam;
@@ -2294,9 +2238,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_040, TestSize.Level1)
 * @tc.desc: test cryptoParam is custom then rekey and query success
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_041, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_041, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     int errCode = RdbHelper::DeleteRdbStore(config);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
@@ -2351,9 +2295,9 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_041, TestSize.Level1)
 * @tc.desc: test cryptoParam is custom then rekey and query success
 * @tc.type: FUNC
 */
-HWTEST_F(RdbRekeyTest, Rdb_Rekey_042, TestSize.Level1)
+HWTEST_F(RdbInterfaceRekeyTest, Rdb_Rekey_042, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig config(RdbInterfaceRekeyTest::encryptedDatabasePath);
     int errCode = RdbHelper::DeleteRdbStore(config);
     config.SetSecurityLevel(SecurityLevel::S1);
     config.SetEncryptStatus(true);
