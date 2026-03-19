@@ -51,13 +51,6 @@ CloudServiceProxy::CloudServiceProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<ICloudService>(object)
 {
     remote_ = Remote();
-    delayActuator_ = std::make_shared<DelayActuator>(
-        SYNC_INFO_NOTIFY_FIRST_INTERVAL,
-        SYNC_INFO_NOTIFY_MIN_INTERVAL,
-        SYNC_INFO_NOTIFY_INTERVAL);
-    delayActuator_->SetTask([this]() {
-        ExecuteSyncInfoNotify();
-    });
 }
 
 int32_t CloudServiceProxy::EnableCloud(const std::string &id, const std::map<std::string, int32_t> &switches)
@@ -322,8 +315,8 @@ int32_t CloudServiceProxy::InitNotifier()
     notifier_ = new (std::nothrow) CloudNotifierStub([this](uint32_t seqNum, Details &&result) {
         OnSyncComplete(seqNum, std::move(result));
     },
-    [this](const std::string &bundleName, const std::string &storeId, const CloudSyncInfo &syncInfo) {
-        OnSyncInfoNotify(bundleName, storeId, syncInfo);
+    [this](const BatchQueryLastResults &data) {
+        OnSyncInfoNotify(data);
     });
     if (notifier_ == nullptr) {
         LOG_ERROR("create notifier failed");
@@ -349,56 +342,49 @@ void CloudServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
     });
 }
 
-void CloudServiceProxy::OnSyncInfoNotify(const std::string &bundleName, const std::string &storeId,
-    const CloudSyncInfo &syncInfo)
+void CloudServiceProxy::OnSyncInfoNotify(const BatchQueryLastResults &data)
 {
-    subObservers_.ComputeIfPresent(bundleName,
-        [&bundleName, &storeId, &syncInfo, this](const auto &, auto &storeMap) {
-            auto addToPendingData = [&](const auto &params) {
-                for (const auto &param : params) {
-                    if (param.observer != nullptr) {
-                        std::lock_guard<std::mutex> lock(pendingNotifyDataMutex_);
-                        pendingNotifyData_[param.observer][bundleName][storeId] = syncInfo;
-                    }
-                }
-            };
-            auto obsIt = storeMap.find(storeId);
-            if (obsIt != storeMap.end()) {
-                addToPendingData(obsIt->second);
-            }
-            
-            auto wildIt = storeMap.find("");
-            if (wildIt != storeMap.end() && wildIt != obsIt) {
-                addToPendingData(wildIt->second);
-            }
-            return true;
-        });
-    
-    StartSyncInfoTimer();
-}
-
-void CloudServiceProxy::StartSyncInfoTimer()
-{
-    if (delayActuator_ != nullptr) {
-        delayActuator_->Execute();
+    std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> observerData;
+    for (const auto &bundleItem : data) {
+        subObservers_.ComputeIfPresent(
+            bundleItem.first, [&observerData, &bundleItem, this](const auto &, auto &storeMap) {
+                CollectObserverData(bundleItem.first, bundleItem.second, storeMap, observerData);
+                return true;
+            });
     }
-}
-
-void CloudServiceProxy::ExecuteSyncInfoNotify()
-{
-    decltype(pendingNotifyData_) pendingData;
-    {
-        std::lock_guard<std::mutex> lock(pendingNotifyDataMutex_);
-        pendingData = std::move(pendingNotifyData_);
-        pendingNotifyData_.clear();
-    }
-    
-    for (auto &[observer, data] : pendingData) {
-        if (observer != nullptr && !data.empty()) {
-            observer->OnSyncInfoChanged(data);
+    for (auto &obsItem : observerData) {
+        if (obsItem.first != nullptr && !obsItem.second.empty()) {
+            obsItem.first->OnSyncInfoChanged(obsItem.second);
         }
     }
-}    
+}
+
+void CloudServiceProxy::CollectObserverData(const std::string &bundleName,
+    const std::map<std::string, CloudSyncInfo> &storeResults,
+    const std::map<std::string, std::list<SubObserverParam>> &storeMap,
+    std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> &observerData)
+{
+    for (const auto &storeItem : storeResults) {
+        auto obsIt = storeMap.find(storeItem.first);
+        if (obsIt == storeMap.end()) {
+            continue;
+        }
+        for (const auto &param : obsIt->second) {
+            if (param.observer != nullptr) {
+                observerData[param.observer][bundleName][storeItem.first] = storeItem.second;
+            }
+        }
+    }
+    auto wildIt = storeMap.find("");
+    if (wildIt == storeMap.end()) {
+        return;
+    }
+    for (const auto &param : wildIt->second) {
+        if (param.observer != nullptr) {
+            observerData[param.observer][bundleName] = storeResults;
+        }
+    }
+}
 
 int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::string &storeId,
     const Option &option, const AsyncDetail &async)

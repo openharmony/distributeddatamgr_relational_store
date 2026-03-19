@@ -41,6 +41,9 @@ using DBSwitchInfo = OHOS::CloudData::DBSwitchInfo;
 using DBActionInfo = OHOS::CloudData::DBActionInfo;
 using BundleInfo = OHOS::CloudData::BundleInfo;
 using CloudSubscribeType = OHOS::CloudData::CloudSubscribeType;
+using ProgressDetail = DistributedRdb::ProgressDetail;
+using TableDetail = DistributedRdb::TableDetail;
+using Statistic = DistributedRdb::Statistic;
 
 template<>
 bool Marshalling(const Participant &input, MessageParcel &data);
@@ -116,5 +119,14 @@ bool Marshalling(const BundleInfo &input, MessageParcel &data);
 
 template<>
 bool Marshalling(const CloudSubscribeType &type, MessageParcel &data);
+
+template<>
+bool Unmarshalling(ProgressDetail &output, MessageParcel &data);
+
+template<>
+bool Unmarshalling(TableDetail &output, MessageParcel &data);
+
+template<>
+bool Unmarshalling(Statistic &output, MessageParcel &data);
 } // namespace OHOS::ITypesUtil
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_UTIL_H

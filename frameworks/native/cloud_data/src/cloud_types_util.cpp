@@ -199,4 +199,22 @@ bool Marshalling(const CloudSubscribeType &type, MessageParcel &data)
 {
     return Marshal(data, static_cast<uint32_t>(type));
 }
+
+template<>
+bool Unmarshalling(ProgressDetail &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.progress, output.code, output.details);
+}
+
+template<>
+bool Unmarshalling(TableDetail &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.upload, output.download);
+}
+
+template<>
+bool Unmarshalling(Statistic &output, MessageParcel &data)
+{
+    return Unmarshal(data, output.total, output.success, output.failed, output.untreated);
+}
 } // namespace OHOS::ITypesUtil

@@ -83,24 +83,21 @@ int32_t CloudNotifierStub::OnComplete(uint32_t seqNum, Details &&result)
     return CloudService::SUCCESS;
 }
 
-int32_t CloudNotifierStub::OnSyncInfoNotify(const std::string &bundleName, const std::string &storeId,
-    const CloudSyncInfo &syncInfo)
+int32_t CloudNotifierStub::OnSyncInfoNotify(const BatchQueryLastResults &data)
 {
     if (syncInfoNotifier_) {
-        syncInfoNotifier_(bundleName, storeId, syncInfo);
+        syncInfoNotifier_(data);
     }
     return CloudService::SUCCESS;
 }
 
 int32_t CloudNotifierStub::OnSyncInfoNotifyInner(MessageParcel& data, MessageParcel& reply)
 {
-    std::string bundleName;
-    std::string storeId;
-    CloudSyncInfo syncInfo;
-    if (!ITypesUtil::Unmarshal(data, bundleName, storeId, syncInfo)) {
+    BatchQueryLastResults notifyData;
+    if (!ITypesUtil::Unmarshal(data, notifyData)) {
         LOG_ERROR("read subscribe notify data failed.");
         return CloudService::IPC_PARCEL_ERROR;
     }
-    return OnSyncInfoNotify(bundleName, storeId, syncInfo);
+    return OnSyncInfoNotify(notifyData);
 }
 } // namespace OHOS::CloudData

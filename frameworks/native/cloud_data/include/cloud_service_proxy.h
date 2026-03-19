@@ -22,7 +22,6 @@
 #include "iremote_proxy.h"
 #include "cloud_notifier_stub.h"
 #include "cloud_types.h"
-#include "delay_actuator.h"
 #include <map>
 #include <memory>
 #include <mutex>
@@ -83,25 +82,18 @@ public:
     void OnRemoteDeadSyncComplete();
 
 private:
-    static constexpr uint32_t SYNC_INFO_NOTIFY_FIRST_INTERVAL = 5000;   // 5 seconds
-    static constexpr uint32_t SYNC_INFO_NOTIFY_MIN_INTERVAL = 5000;     // 5 seconds
-    static constexpr uint32_t SYNC_INFO_NOTIFY_INTERVAL = 10000;        // 10 seconds
-
     int32_t DoAsync(const std::string &bundleName, const std::string &storeId, Option option);
     int32_t DoSubscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos);
     void OnSyncComplete(uint32_t seqNum, Details &&result);
-    void OnSyncInfoNotify(const std::string &bundleName, const std::string &storeId, const CloudSyncInfo &syncInfo);
-    void StartSyncInfoTimer();
-    void ExecuteSyncInfoNotify();
+    void OnSyncInfoNotify(const BatchQueryLastResults &data);
+    void CollectObserverData(const std::string &bundleName, const std::map<std::string, CloudSyncInfo> &storeResults,
+        const std::map<std::string, std::list<SubObserverParam>> &storeMap,
+        std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> &observerData);
 
     sptr<IRemoteObject> remote_;
     sptr<CloudNotifierStub> notifier_;
     ConcurrentMap<uint32_t, AsyncDetail> syncCallbacks_;
     SubObservers subObservers_;
-
-    std::mutex pendingNotifyDataMutex_;
-    std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> pendingNotifyData_;
-    std::shared_ptr<DelayActuator> delayActuator_;
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_PROXY_H
