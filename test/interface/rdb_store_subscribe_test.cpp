@@ -18,11 +18,12 @@
 #include <string>
 
 #include "block_data.h"
-#include "common.h"
+#include "rdb_test_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_store_manager.h"
 #include "rdb_types.h"
 
 using namespace testing::ext;

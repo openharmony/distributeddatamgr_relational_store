@@ -28,7 +28,7 @@
 #include <vector>
 
 #include "abs_rdb_predicates.h"
-#include "common.h"
+#include "rdb_test_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -36,7 +36,7 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
-class AllDataType {
+class RdbTestDataEntity {
 public:
     int GetId() const
     {
@@ -304,7 +304,7 @@ private:
     int order;
 };
 
-class RdbStorePredicateTest : public testing::Test {
+class RdbPredicatesInterfaceTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -315,11 +315,11 @@ public:
     static std::shared_ptr<RdbStore> store;
 
     time_t DateMakeTime(std::vector<int> data);
-    void InsertDates(std::vector<AllDataType> dataTypes);
-    AllDataType BuildAllDataType1();
-    AllDataType BuildAllDataType2();
-    AllDataType BuildAllDataType3();
-    void GenerateAllDataTypeTable();
+    void InsertDates(std::vector<RdbTestDataEntity> dataTypes);
+    RdbTestDataEntity BuildRdbTestDataEntity1();
+    RdbTestDataEntity BuildRdbTestDataEntity2();
+    RdbTestDataEntity BuildRdbTestDataEntity3();
+    void GenerateRdbTestDataEntityTable();
     void CalendarTest(RdbPredicates predicates1);
     void BasicDataTypeTest(RdbPredicates predicates1);
     int ResultSize(std::shared_ptr<ResultSet> &resultSet);
@@ -328,10 +328,10 @@ public:
     void SetJionList(RdbPredicates &predicates1);
 };
 
-std::shared_ptr<RdbStore> RdbStorePredicateTest::store = nullptr;
-const std::string RdbStorePredicateTest::DATABASE_NAME = RDB_TEST_PATH + "predicates_test.db";
+std::shared_ptr<RdbStore> RdbPredicatesInterfaceTest::store = nullptr;
+const std::string RdbPredicatesInterfaceTest::DATABASE_NAME = RDB_TEST_PATH + "predicates_test.db";
 const std::string CREATE_TABLE_ALL_DATA_TYPE_SQL =
-    "CREATE TABLE IF NOT EXISTS AllDataType "
+    "CREATE TABLE IF NOT EXISTS RdbTestDataEntity "
     "(id INTEGER PRIMARY KEY AUTOINCREMENT, integerValue INTEGER , longValue INTEGER , "
     "shortValue INTEGER , booleanValue INTEGER , doubleValue REAL , floatValue REAL , "
     "stringValue TEXT , blobValue BLOB , clobValue TEXT , byteValue INTEGER , "
@@ -347,7 +347,7 @@ const std::string CREATE_TABLE_PERSON_SQL =
     "attachment ASSET);";
 
 const std::string ALL_DATA_TYPE_INSERT_SQL =
-    "INSERT INTO AllDataType (id, integerValue, longValue, "
+    "INSERT INTO RdbTestDataEntity (id, integerValue, longValue, "
     "shortValue, booleanValue, doubleValue, floatValue, stringValue, blobValue, "
     "clobValue, byteValue, timeValue, characterValue, primIntValue, primLongValue, "
     "primShortValue, primFloatValue, primDoubleValue, "
@@ -359,71 +359,71 @@ const std::string HAVING_INSERT_SQL =
     "INSERT INTO orders (customer_id, amount) VALUES (1, 1500), (1, 2000), (1, 3000), (2, 800), (2, 1200), (3, 1500),"
     " (3, 2000), (3, 2500), (3, 1000)";
 const std::string HAVING_DROP_SQL = "DROP TABLE IF EXISTS orders";
-class PredicateTestOpenCallback : public RdbOpenCallback {
+class RdbPredicatesTestCallback : public RdbOpenCallback {
 public:
-    int OnCreate(RdbStore &store) override;
-    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
+    int OnCreate(RdbStore &rdbStore) override;
+    int OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion) override;
 };
 
-int PredicateTestOpenCallback::OnCreate(RdbStore &store)
+int RdbPredicatesTestCallback::OnCreate(RdbStore &rdbStore)
 {
     return E_OK;
 }
 
-int PredicateTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+int RdbPredicatesTestCallback::OnUpgrade(RdbStore &rdbStore, int oldVersion, int newVersion)
 {
     return E_OK;
 }
 
-void RdbStorePredicateTest::SetUpTestCase()
+void RdbPredicatesInterfaceTest::SetUpTestCase()
 {
 }
 
-void RdbStorePredicateTest::TearDownTestCase()
+void RdbPredicatesInterfaceTest::TearDownTestCase()
 {
-    RdbHelper::DeleteRdbStore(RdbStorePredicateTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbPredicatesInterfaceTest::DATABASE_NAME);
 }
 
-void RdbStorePredicateTest::SetUp()
+void RdbPredicatesInterfaceTest::SetUp()
 {
-    if (access(RdbStorePredicateTest::DATABASE_NAME.c_str(), F_OK) != 0) {
-        remove(RdbStorePredicateTest::DATABASE_NAME.c_str());
+    if (access(RdbPredicatesInterfaceTest::DATABASE_NAME.c_str(), F_OK) != 0) {
+        remove(RdbPredicatesInterfaceTest::DATABASE_NAME.c_str());
     }
 
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStorePredicateTest::DATABASE_NAME);
-    PredicateTestOpenCallback helper;
-    RdbStorePredicateTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(RdbStorePredicateTest::store, nullptr);
+    RdbStoreConfig config(RdbPredicatesInterfaceTest::DATABASE_NAME);
+    RdbPredicatesTestCallback helper;
+    RdbPredicatesInterfaceTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(RdbPredicatesInterfaceTest::store, nullptr);
 
-    RdbStorePredicateTest::GenerateAllDataTypeTable();
+    RdbPredicatesInterfaceTest::GenerateRdbTestDataEntityTable();
 }
 
-void RdbStorePredicateTest::TearDown(void)
+void RdbPredicatesInterfaceTest::TearDown(void)
 {
 }
 
-void RdbStorePredicateTest::GenerateAllDataTypeTable()
+void RdbPredicatesInterfaceTest::GenerateRdbTestDataEntityTable()
 {
-    RdbStorePredicateTest::store->ExecuteSql(CREATE_TABLE_ALL_DATA_TYPE_SQL);
-    RdbStorePredicateTest::store->ExecuteSql(CREATE_TABLE_PERSON_SQL);
+    RdbPredicatesInterfaceTest::store->ExecuteSql(CREATE_TABLE_ALL_DATA_TYPE_SQL);
+    RdbPredicatesInterfaceTest::store->ExecuteSql(CREATE_TABLE_PERSON_SQL);
 
-    AllDataType dataType1 = RdbStorePredicateTest::BuildAllDataType1();
-    AllDataType dataType2 = RdbStorePredicateTest::BuildAllDataType2();
-    AllDataType dataType3 = RdbStorePredicateTest::BuildAllDataType3();
+    RdbTestDataEntity dataType1 = RdbPredicatesInterfaceTest::BuildRdbTestDataEntity1();
+    RdbTestDataEntity dataType2 = RdbPredicatesInterfaceTest::BuildRdbTestDataEntity2();
+    RdbTestDataEntity dataType3 = RdbPredicatesInterfaceTest::BuildRdbTestDataEntity3();
 
-    std::vector<AllDataType> dataTypes;
+    std::vector<RdbTestDataEntity> dataTypes;
     dataTypes.push_back(dataType1);
     dataTypes.push_back(dataType2);
     dataTypes.push_back(dataType3);
-    RdbStorePredicateTest::InsertDates(dataTypes);
+    RdbPredicatesInterfaceTest::InsertDates(dataTypes);
 }
 
-AllDataType RdbStorePredicateTest::RdbStorePredicateTest::BuildAllDataType1()
+RdbTestDataEntity RdbPredicatesInterfaceTest::BuildRdbTestDataEntity1()
 {
     std::vector<uint8_t> blob = { 1, 2, 3 };
-    AllDataType dataType;
-    dataType.SetId(1); // 1 means Id of the AllDataType object is 1
+    RdbTestDataEntity dataType;
+    dataType.SetId(1); // 1 means Id of the RdbTestDataEntity object is 1
     dataType.SetIntegerValue(INT_MAX);
     dataType.SetDoubleValue(DBL_MAX);
     dataType.SetBooleanValue(true);
@@ -437,7 +437,7 @@ AllDataType RdbStorePredicateTest::RdbStorePredicateTest::BuildAllDataType1()
     dataType.SetByteValue(INT8_MAX);
 
     std::vector<int> date = { 2019, 7, 10 };
-    time_t timeValue = RdbStorePredicateTest::DateMakeTime(date);
+    time_t timeValue = RdbPredicatesInterfaceTest::DateMakeTime(date);
     dataType.SetTimeValue(timeValue);
 
     dataType.SetPrimIntValue(INT_MAX);
@@ -451,11 +451,11 @@ AllDataType RdbStorePredicateTest::RdbStorePredicateTest::BuildAllDataType1()
     return dataType;
 }
 
-AllDataType RdbStorePredicateTest::BuildAllDataType2()
+RdbTestDataEntity RdbPredicatesInterfaceTest::BuildRdbTestDataEntity2()
 {
     std::vector<uint8_t> blob = { 1, 2, 3 };
-    AllDataType dataType2;
-    dataType2.SetId(2); // 2 means Id of the AllDataType object is 2
+    RdbTestDataEntity dataType2;
+    dataType2.SetId(2); // 2 means Id of the RdbTestDataEntity object is 2
     dataType2.SetIntegerValue(1);
     dataType2.SetDoubleValue(1.0);
     dataType2.SetBooleanValue(false);
@@ -469,7 +469,7 @@ AllDataType RdbStorePredicateTest::BuildAllDataType2()
     dataType2.SetByteValue(INT8_MIN);
 
     std::vector<int> date = { 2019, 7, 17 };
-    time_t timeValue2 = RdbStorePredicateTest::DateMakeTime(date);
+    time_t timeValue2 = RdbPredicatesInterfaceTest::DateMakeTime(date);
     dataType2.SetTimeValue(timeValue2);
 
     dataType2.SetPrimIntValue(1);
@@ -483,11 +483,11 @@ AllDataType RdbStorePredicateTest::BuildAllDataType2()
     return dataType2;
 }
 
-AllDataType RdbStorePredicateTest::BuildAllDataType3()
+RdbTestDataEntity RdbPredicatesInterfaceTest::BuildRdbTestDataEntity3()
 {
     std::vector<uint8_t> blob = { 1, 2, 3 };
-    AllDataType dataType3;
-    dataType3.SetId(3); // 3 means Id of the AllDataType object is 3
+    RdbTestDataEntity dataType3;
+    dataType3.SetId(3); // 3 means Id of the RdbTestDataEntity object is 3
     dataType3.SetIntegerValue(INT_MIN);
     dataType3.SetDoubleValue(DBL_MIN);
     dataType3.SetBooleanValue(false);
@@ -501,7 +501,7 @@ AllDataType RdbStorePredicateTest::BuildAllDataType3()
     dataType3.SetByteValue(INT8_MIN);
 
     std::vector<int> date = { 2019, 6, 10 };
-    time_t timeValue3 = RdbStorePredicateTest::DateMakeTime(date);
+    time_t timeValue3 = RdbPredicatesInterfaceTest::DateMakeTime(date);
     dataType3.SetTimeValue(timeValue3);
 
     dataType3.SetPrimIntValue(INT_MIN);
@@ -515,7 +515,7 @@ AllDataType RdbStorePredicateTest::BuildAllDataType3()
     return dataType3;
 }
 
-void RdbStorePredicateTest::InsertDates(std::vector<AllDataType> dataTypes)
+void RdbPredicatesInterfaceTest::InsertDates(std::vector<RdbTestDataEntity> dataTypes)
 {
     for (size_t i = 0; i < dataTypes.size(); i++) {
         char characterValue = dataTypes[i].GetCharacterValue();
@@ -563,11 +563,11 @@ void RdbStorePredicateTest::InsertDates(std::vector<AllDataType> dataTypes)
         string str2 = strByte.str();
         objects.push_back(ValueObject(str2));
         objects.push_back(ValueObject());
-        RdbStorePredicateTest::store->ExecuteSql(ALL_DATA_TYPE_INSERT_SQL, objects);
+        RdbPredicatesInterfaceTest::store->ExecuteSql(ALL_DATA_TYPE_INSERT_SQL, objects);
     }
 }
 
-time_t RdbStorePredicateTest::DateMakeTime(std::vector<int> data)
+time_t RdbPredicatesInterfaceTest::DateMakeTime(std::vector<int> data)
 {
     struct tm t1 = { 0 };
     t1.tm_year = data[0] - 1990;
@@ -585,12 +585,12 @@ time_t RdbStorePredicateTest::DateMakeTime(std::vector<int> data)
  * @tc.desc: Abnormal testCase of RdbPredicates, if tableName is ""
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_RdbPredicates_001, TestSize.Level1)
 {
     AbsRdbPredicates predicates("");
     predicates.EqualTo("integerValue", "1");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes));
     allDataTypes->Close();
 
@@ -598,7 +598,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_001, TestSize.Level1)
     predicates.OrderByAsc("#_number");
     bool hasSpecificField = predicates.HasSpecificField();
     EXPECT_EQ(true, hasSpecificField);
-    std::shared_ptr<AbsSharedResultSet> resultSet = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<AbsSharedResultSet> resultSet = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_NE(nullptr, resultSet);
     resultSet->Close();
 }
@@ -608,16 +608,16 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates, if tableNames is [] or counts is rather than 1
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_RdbPredicates_002, TestSize.Level1)
 {
     std::vector<std::string> tableEmpty;
-    std::vector<std::string> tables({ "AllDataType", "person" });
+    std::vector<std::string> tables({ "RdbTestDataEntity", "person" });
 
     AbsRdbPredicates predicates1(tableEmpty);
     AbsRdbPredicates predicates2(tables);
     predicates2.EqualTo("id", "1");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates2, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates2, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -627,9 +627,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_002, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for EqualTo
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_EqualTo_001, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
 
     BasicDataTypeTest(predicates1);
 
@@ -641,7 +641,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_001, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for EqualTo
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_EqualTo_002, TestSize.Level1)
 {
     ValuesBucket values;
     int64_t id;
@@ -665,114 +665,65 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_002, TestSize.Level1)
     RdbPredicates predicates("person");
     predicates.EqualTo("name", "");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allPerson = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allPerson = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allPerson));
 
     RdbPredicates predicates1("person");
     predicates1.EqualTo("name", "zhangsi");
-    allPerson = RdbStorePredicateTest::store->Query(predicates1, columns);
+    allPerson = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allPerson));
-    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 3;");
+    RdbPredicatesInterfaceTest::store->ExecuteSql("delete from person where id < 3;");
 }
 
-/* *
- * @tc.name: RdbStore_EqualTo_003
- * @tc.desc: Normal testCase of RdbPredicates for EqualTo
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_003, TestSize.Level1)
-{
-    ValuesBucket values;
-    int64_t id;
-    values.PutInt("id", 1);
-    std::vector<OHOS::NativeRdb::AssetValue> assets;
-    OHOS::NativeRdb::AssetValue asset{ .name = "asset" };
-    assets.push_back(std::move(asset));
-    ValueObject object(assets);
-    values.Put("attachments", object);
-    int ret = store->Insert(id, "person", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    RdbPredicates predicates("person");
-    predicates.EqualTo("attachments", object);
-
-    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 2;");
-}
-
-/* *
- * @tc.name: RdbStore_EqualTo_004
- * @tc.desc: Normal testCase of RdbPredicates for EqualTo
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_004, TestSize.Level1)
-{
-    ValuesBucket values;
-    int64_t id;
-    values.PutInt("id", 1);;
-    OHOS::NativeRdb::AssetValue asset{ .name = "asset" };
-    ValueObject object(asset);
-    values.Put("attachment", object);
-    int ret = store->Insert(id, "person", values);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    RdbPredicates predicates("person");
-    predicates.EqualTo("attachment", object);
-    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 2;");
-}
-
-void RdbStorePredicateTest::CalendarTest(RdbPredicates predicates1)
+void RdbPredicatesInterfaceTest::CalendarTest(RdbPredicates predicates1)
 {
     std::vector<std::string> columns;
 
     predicates1.Clear();
     std::vector<int> date = { 2019, 7, 17 };
-    time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
+    time_t calendarTime = RdbPredicatesInterfaceTest::DateMakeTime(date);
 
     predicates1.EqualTo("timeValue", std::to_string(calendarTime));
-    std::shared_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes9 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes9->GoToFirstRow());
     int valueInt = 0;
     allDataTypes9->GetInt(0, valueInt);
     EXPECT_EQ(2, valueInt);
 }
 
-void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
+void RdbPredicatesInterfaceTest::BasicDataTypeTest(RdbPredicates predicates1)
 {
     std::vector<std::string> columns;
     std::stringstream tempValue;
     predicates1.EqualTo("booleanValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.EqualTo("byteValue", std::to_string(INT8_MIN))->Or()->EqualTo("byteValue", std::to_string(1));
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN");
-    std::shared_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes3 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.EqualTo("doubleValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes4 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     predicates1.EqualTo("shortValue", std::to_string(SHRT_MIN));
-    std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes5 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     predicates1.EqualTo("integerValue", std::to_string(1));
-    std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes6 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes6->GoToFirstRow());
     int valueInt = 0;
     allDataTypes6->GetInt(0, valueInt);
@@ -780,7 +731,7 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
 
     predicates1.Clear();
     predicates1.EqualTo("longValue", std::to_string(1));
-    std::shared_ptr<ResultSet> allDataTypes7 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes7 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes7->GoToFirstRow());
     allDataTypes7->GetInt(0, valueInt);
     EXPECT_EQ(2, valueInt);
@@ -789,19 +740,19 @@ void RdbStorePredicateTest::BasicDataTypeTest(RdbPredicates predicates1)
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.EqualTo("floatValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes8 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes8 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes8->GoToFirstRow());
     allDataTypes8->GetInt(0, valueInt);
     EXPECT_EQ(3, valueInt);
 
     predicates1.Clear();
     predicates1.EqualTo("blobValue", std::vector<uint8_t>{ 1, 2, 3 });
-    std::shared_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes9 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     // 3 rows in the resultSet when blobValue={1, 2, 3}
     EXPECT_EQ(3, ResultSize(allDataTypes9));
 }
 
-int RdbStorePredicateTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
+int RdbPredicatesInterfaceTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
 {
     if (resultSet->GoToFirstRow() != E_OK) {
         return 0;
@@ -818,13 +769,13 @@ int RdbStorePredicateTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
  * @tc.desc: Abnormal testCase of RdbPredicates for NotEqualTo, if field is ""
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotEqualTo_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.NotEqualTo("", "1");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
 }
 
@@ -833,9 +784,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_001, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for NotEqualTo
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotEqualTo_002, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
 
     BasicDataTypeTest002(predicates1);
 
@@ -847,7 +798,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_002, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for EqualTo
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_003, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotEqualTo_003, TestSize.Level1)
 {
     ValuesBucket values;
     int64_t id;
@@ -880,77 +831,77 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotEqualTo_003, TestSize.Level1)
     RdbPredicates predicates("person");
     predicates.NotEqualTo("name", "");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allPerson = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allPerson = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(2, ResultSize(allPerson));
 
     RdbPredicates predicates1("person");
     predicates1.NotEqualTo("name", "zhangsi");
 
-    allPerson = RdbStorePredicateTest::store->Query(predicates1, columns);
+    allPerson = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allPerson));
 
-    RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 4;");
+    RdbPredicatesInterfaceTest::store->ExecuteSql("delete from person where id < 4;");
 }
 
-void RdbStorePredicateTest::CalendarTest002(RdbPredicates predicates1)
+void RdbPredicatesInterfaceTest::CalendarTest002(RdbPredicates predicates1)
 {
     std::vector<std::string> columns;
 
     predicates1.Clear();
     std::vector<int> date = { 2019, 7, 17 };
-    time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
+    time_t calendarTime = RdbPredicatesInterfaceTest::DateMakeTime(date);
 
     predicates1.NotEqualTo("timeValue", std::to_string(calendarTime));
-    std::shared_ptr<ResultSet> allDataTypes9 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes9 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes9));
 }
 
-void RdbStorePredicateTest::BasicDataTypeTest002(RdbPredicates predicates1)
+void RdbPredicatesInterfaceTest::BasicDataTypeTest002(RdbPredicates predicates1)
 {
     std::vector<std::string> columns;
     std::stringstream tempValue;
 
     predicates1.NotEqualTo("primBooleanValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.NotEqualTo("primByteValue", std::to_string(INT8_MIN))->NotEqualTo("primByteValue", std::to_string(1));
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.NotEqualTo("stringValue", "ABCDEFGHIJKLMN");
-    std::shared_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes3 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.NotEqualTo("doubleValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes4 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     predicates1.NotEqualTo("shortValue", std::to_string(SHRT_MIN));
-    std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes5 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     predicates1.NotEqualTo("integerValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes6 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes6));
 
     predicates1.Clear();
     predicates1.NotEqualTo("longValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes7 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes7 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes7));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.NotEqualTo("floatValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes8 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes8 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes8));
 }
 
@@ -959,12 +910,12 @@ void RdbStorePredicateTest::BasicDataTypeTest002(RdbPredicates predicates1)
  * @tc.desc: Normal testCase of RdbPredicates for IsNull
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_IsNull_003, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_IsNull_003, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     predicates1.IsNull("primLongValue");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes1));
 }
 
@@ -973,12 +924,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_IsNull_003, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for NotNull
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotNull_003, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotNull_003, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     predicates1.IsNotNull("primLongValue");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -987,45 +938,45 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotNull_003, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for GreaterThan
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThan_005, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GreaterThan_005, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
     std::stringstream tempValue;
 
     predicates1.GreaterThan("stringValue", "ABC");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.GreaterThan("doubleValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.GreaterThan("integerValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes3 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.GreaterThan("longValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes4 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.GreaterThan("floatValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes5 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     std::vector<int> date = { 2019, 6, 9 };
-    time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
+    time_t calendarTime = RdbPredicatesInterfaceTest::DateMakeTime(date);
     predicates1.GreaterThan("timeValue", std::to_string(calendarTime).c_str());
-    std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes6 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
 }
 
@@ -1034,51 +985,51 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThan_005, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for GreaterThanOrEqualTo
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_006, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GreaterThanOrEqualTo_006, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
     std::stringstream tempValue;
 
     predicates1.GreaterThanOrEqualTo("stringValue", "ABC");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.GreaterThanOrEqualTo("doubleValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.GreaterThanOrEqualTo("integerValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes3 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.GreaterThanOrEqualTo("longValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes4 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.GreaterThanOrEqualTo("floatValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes5 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     std::vector<int> date = { 2019, 6, 9 };
-    time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
+    time_t calendarTime = RdbPredicatesInterfaceTest::DateMakeTime(date);
     predicates1.GreaterThanOrEqualTo("timeValue", std::to_string(calendarTime).c_str());
-    std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes6 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
 
     // Abnormal testCase of RdbPredicates for GreaterThanOrEqualTo if field is empty
     predicates1.Clear();
     predicates1.GreaterThanOrEqualTo("", "1");
-    std::shared_ptr<ResultSet> allDataTypes7 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes7 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes7));
 }
 
@@ -1087,45 +1038,45 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_006, TestSize.Leve
  * @tc.desc: Normal testCase of RdbPredicates for LessThan
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_lessThan_007, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_lessThan_007, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
     std::stringstream tempValue;
 
     predicates1.LessThan("stringValue", "ABD");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.LessThan("doubleValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.LessThan("integerValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes3 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.LessThan("longValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes4 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.LessThan("floatValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes5 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     std::vector<int> date = { 2019, 6, 9 };
-    time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
+    time_t calendarTime = RdbPredicatesInterfaceTest::DateMakeTime(date);
     predicates1.LessThan("timeValue", std::to_string(calendarTime).c_str());
-    std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes6 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes6));
 }
 
@@ -1134,45 +1085,45 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_lessThan_007, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for LessThanOrEqualTo
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_LessThanOrEqualTo_008, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_LessThanOrEqualTo_008, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
     std::stringstream tempValue;
 
     predicates1.LessThanOrEqualTo("stringValue", "ABD");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MIN;
     predicates1.LessThanOrEqualTo("doubleValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.LessThanOrEqualTo("integerValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes3 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.LessThanOrEqualTo("longValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes4 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.LessThanOrEqualTo("floatValue", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes5 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     std::vector<int> date = { 2019, 6, 9 };
-    time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
+    time_t calendarTime = RdbPredicatesInterfaceTest::DateMakeTime(date);
     predicates1.LessThanOrEqualTo("timeValue", std::to_string(calendarTime).c_str());
-    std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes6 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes6));
 }
 
@@ -1181,31 +1132,31 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_LessThanOrEqualTo_008, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for Between
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Between_009, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Between_009, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
     std::stringstream tempValue;
 
     predicates1.Between("stringValue", "ABB", "ABD");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MAX;
     predicates1.Between("doubleValue", "0.0", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.Between("integerValue", "0", "1");
-    std::shared_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes3 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.Between("longValue", "0", "2");
-    std::shared_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes4 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes4));
 
     predicates1.Clear();
@@ -1215,16 +1166,16 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Between_009, TestSize.Level1)
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.Between("floatValue", tempValue.str(), floatMax);
-    std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes5 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     std::vector<int> lowCalendar = { 2019, 6, 9 };
-    time_t lowCalendarTime = RdbStorePredicateTest::DateMakeTime(lowCalendar);
+    time_t lowCalendarTime = RdbPredicatesInterfaceTest::DateMakeTime(lowCalendar);
     std::vector<int> highCalendar = { 2019, 7, 17 };
-    time_t highCalendarTime = RdbStorePredicateTest::DateMakeTime(highCalendar);
+    time_t highCalendarTime = RdbPredicatesInterfaceTest::DateMakeTime(highCalendar);
     predicates1.Between("timeValue", std::to_string(lowCalendarTime).c_str(), std::to_string(highCalendarTime).c_str());
-    std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes6 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
 }
 
@@ -1233,13 +1184,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Between_009, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for Contain
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Contain_010, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Contain_010, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.Contains("stringValue", "DEF");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1248,13 +1199,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Contain_010, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for BeginsWith
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_BeginsWith_011, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_BeginsWith_011, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.BeginsWith("stringValue", "ABC");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1263,13 +1214,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_BeginsWith_011, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for EndsWith
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_EndsWith_012, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_EndsWith_012, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.EndsWith("stringValue", "LMN");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1278,13 +1229,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EndsWith_012, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for Like
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Like_013, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Like_013, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.Like("stringValue", "%LMN%");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1293,9 +1244,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Like_013, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for BeginEndWrap
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_BeginEndWrap_014, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_BeginEndWrap_014, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
@@ -1304,12 +1255,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_BeginEndWrap_014, TestSize.Level1)
         ->Or()
         ->EqualTo("integerValue", std::to_string(INT_MAX))
         ->EndWrap();
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->And()->EqualTo("integerValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes2));
 }
 
@@ -1318,9 +1269,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_BeginEndWrap_014, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for AndOR
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_AndOR_015, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_AndOR_015, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
@@ -1330,12 +1281,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_AndOR_015, TestSize.Level1)
         ->EqualTo("integerValue", std::to_string(INT_MAX))
         ->EndWrap();
 
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->And()->EqualTo("integerValue", "1");
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes2));
 }
 
@@ -1344,13 +1295,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_AndOR_015, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for Order
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Order_016, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Order_016, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->OrderByAsc("integerValue")->Distinct();
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes1->GoToFirstRow());
     int valueInt = 0;
     allDataTypes1->GetInt(0, valueInt);
@@ -1364,7 +1315,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Order_016, TestSize.Level1)
 
     predicates1.Clear();
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->OrderByDesc("integerValue")->Distinct();
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(E_OK, allDataTypes2->GoToFirstRow());
     allDataTypes2->GetInt(0, valueInt);
     EXPECT_EQ(1, valueInt);
@@ -1381,13 +1332,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Order_016, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for Limit
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Limit_017, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Limit_017, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")->Limit(1);
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 }
 
@@ -1396,12 +1347,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Limit_017, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for JoinTypes
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_JoinTypes_018, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_JoinTypes_018, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> joinEntityNames;
 
-    joinEntityNames.push_back("AllDataType");
+    joinEntityNames.push_back("RdbTestDataEntity");
     predicates1.SetJoinTableNames(joinEntityNames);
 
     std::vector<std::string> joinTypes;
@@ -1424,38 +1375,38 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_JoinTypes_018, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for Glob
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Glob_019, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Glob_019, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.Glob("stringValue", "ABC*");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "*EFG*");
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "?B*");
-    std::shared_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes3 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "A????????????N");
-    std::shared_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes4 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes4));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "A?????????????N");
-    std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes5 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes5));
 
     predicates1.Clear();
     predicates1.Glob("stringValue", "?B*N");
-    std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes6 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes6));
 }
 
@@ -1464,31 +1415,31 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Glob_019, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for NotBetween
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_020, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotBetween_020, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
     std::stringstream tempValue;
 
     predicates1.NotBetween("stringValue", "ABB", "ABD");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes1));
 
     predicates1.Clear();
     tempValue.str("");
     tempValue << DBL_MAX;
     predicates1.NotBetween("doubleValue", "0.0", tempValue.str());
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes2));
 
     predicates1.Clear();
     predicates1.NotBetween("integerValue", "0", "1");
-    std::shared_ptr<ResultSet> allDataTypes3 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes3 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes3));
 
     predicates1.Clear();
     predicates1.NotBetween("longValue", "0", "2");
-    std::shared_ptr<ResultSet> allDataTypes4 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes4 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes4));
 
     predicates1.Clear();
@@ -1498,16 +1449,16 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_020, TestSize.Level1)
     tempValue.str("");
     tempValue << FLT_MIN;
     predicates1.NotBetween("floatValue", tempValue.str(), floatMax);
-    std::shared_ptr<ResultSet> allDataTypes5 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes5 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes5));
 
     std::vector<int> lowCalendar = { 2019, 6, 9 };
-    time_t lowCalendarTime = RdbStorePredicateTest::DateMakeTime(lowCalendar);
+    time_t lowCalendarTime = RdbPredicatesInterfaceTest::DateMakeTime(lowCalendar);
     std::vector<int> highCalendar = { 2019, 7, 17 };
-    time_t highCalendarTime = RdbStorePredicateTest::DateMakeTime(highCalendar);
+    time_t highCalendarTime = RdbPredicatesInterfaceTest::DateMakeTime(highCalendar);
     predicates1.Clear();
     predicates1.NotBetween("timeValue", std::to_string(lowCalendarTime), std::to_string(highCalendarTime));
-    std::shared_ptr<ResultSet> allDataTypes6 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes6 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes6));
 }
 
@@ -1516,17 +1467,17 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_020, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for complex combine sql
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_ComplexPredicate_021, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_ComplexPredicate_021, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.Glob("stringValue", "ABC*")->EqualTo("booleanValue", "1")->NotBetween("longValue", "0", "2");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(1, ResultSize(allDataTypes1));
 }
 
-void RdbStorePredicateTest::SetJionList(RdbPredicates &predicates1)
+void RdbPredicatesInterfaceTest::SetJionList(RdbPredicates &predicates1)
 {
     std::vector<std::string> lists = { "ohos", "bazhahei", "zhaxidelie" };
     predicates1.SetJoinTableNames(lists);
@@ -1542,9 +1493,9 @@ void RdbStorePredicateTest::SetJionList(RdbPredicates &predicates1)
  * @tc.desc: Normal testCase of RdbPredicates for Clear Method
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_ClearMethod_022, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
@@ -1556,10 +1507,10 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
         ->OrderByDesc("integerValue")
         ->Limit(2);
 
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
 
-    EXPECT_EQ("AllDataType", predicates1.GetTableName());
+    EXPECT_EQ("RdbTestDataEntity", predicates1.GetTableName());
     EXPECT_EQ(2, predicates1.GetLimit());
     EXPECT_EQ(true, predicates1.GetWhereClause().find("stringValue") != std::string::npos);
 
@@ -1586,7 +1537,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
     EXPECT_EQ(true, predicates1.IsDistinct());
 
     predicates1.Clear();
-    EXPECT_EQ("AllDataType", predicates1.GetTableName());
+    EXPECT_EQ("RdbTestDataEntity", predicates1.GetTableName());
     EXPECT_EQ(-2147483648, predicates1.GetLimit());
     EXPECT_EQ(true, predicates1.GetWhereClause().empty());
     EXPECT_EQ(true, predicates1.GetWhereArgs().empty());
@@ -1605,43 +1556,43 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ClearMethod_022, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for in method
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_InMethod_023, TestSize.Level1)
 {
-    RdbPredicates rdbPredicates1("AllDataType");
+    RdbPredicates rdbPredicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
     std::vector<std::string> agrs = { std::to_string(INT_MAX) };
     rdbPredicates1.In("integerValue", agrs);
-    std::shared_ptr<ResultSet> resultSet1 = RdbStorePredicateTest::store->Query(rdbPredicates1, columns);
+    std::shared_ptr<ResultSet> resultSet1 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates1, columns);
     int count = 0;
     resultSet1->GetRowCount(count);
     EXPECT_EQ(1, count);
 
-    RdbPredicates rdbPredicates2("AllDataType");
+    RdbPredicates rdbPredicates2("RdbTestDataEntity");
     agrs[0] = "1";
     rdbPredicates2.In("longValue", agrs);
-    std::shared_ptr<ResultSet> resultSet2 = RdbStorePredicateTest::store->Query(rdbPredicates2, columns);
+    std::shared_ptr<ResultSet> resultSet2 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates2, columns);
     resultSet2->GetRowCount(count);
     EXPECT_EQ(1, count);
 
-    RdbPredicates rdbPredicates3("AllDataType");
+    RdbPredicates rdbPredicates3("RdbTestDataEntity");
     agrs[0] = "1.0";
     rdbPredicates3.In("doubleValue", agrs);
-    std::shared_ptr<ResultSet> resultSet3 = RdbStorePredicateTest::store->Query(rdbPredicates3, columns);
+    std::shared_ptr<ResultSet> resultSet3 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates3, columns);
     resultSet3->GetRowCount(count);
     EXPECT_EQ(1, count);
 
-    RdbPredicates rdbPredicates4("AllDataType");
+    RdbPredicates rdbPredicates4("RdbTestDataEntity");
     rdbPredicates4.In("floatValue", agrs);
-    std::shared_ptr<ResultSet> resultSet4 = RdbStorePredicateTest::store->Query(rdbPredicates4, columns);
+    std::shared_ptr<ResultSet> resultSet4 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates4, columns);
     resultSet4->GetRowCount(count);
     EXPECT_EQ(1, count);
 
     std::vector<int> date = { 2019, 6, 10 };
-    time_t calendarTime = RdbStorePredicateTest::DateMakeTime(date);
-    RdbPredicates rdbPredicates5("AllDataType");
+    time_t calendarTime = RdbPredicatesInterfaceTest::DateMakeTime(date);
+    RdbPredicates rdbPredicates5("RdbTestDataEntity");
     agrs[0] = std::to_string(calendarTime);
     rdbPredicates5.In("timeValue", agrs);
-    std::shared_ptr<ResultSet> resultSet5 = RdbStorePredicateTest::store->Query(rdbPredicates5, columns);
+    std::shared_ptr<ResultSet> resultSet5 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates5, columns);
     resultSet5->GetRowCount(count);
     EXPECT_EQ(1, count);
 }
@@ -1651,44 +1602,44 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InMethod_023, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for notIn method
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotInMethod_023, TestSize.Level1)
 {
     std::vector<std::string> columns;
     std::vector<std::string> agrs = { std::to_string(INT_MAX), std::to_string(INT_MIN) };
     std::stringstream tempValue;
 
-    RdbPredicates rdbPredicates1("AllDataType");
+    RdbPredicates rdbPredicates1("RdbTestDataEntity");
     rdbPredicates1.NotIn("integerValue", agrs);
-    std::shared_ptr<ResultSet> resultSet1 = RdbStorePredicateTest::store->Query(rdbPredicates1, columns);
+    std::shared_ptr<ResultSet> resultSet1 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates1, columns);
     int count = 0;
     resultSet1->GetRowCount(count);
     EXPECT_EQ(1, count);
 
-    RdbPredicates rdbPredicates2("AllDataType");
+    RdbPredicates rdbPredicates2("RdbTestDataEntity");
     agrs[0] = "1";
     agrs[1] = std::to_string(LONG_MAX);
     rdbPredicates2.NotIn("longValue", agrs);
-    std::shared_ptr<ResultSet> resultSet2 = RdbStorePredicateTest::store->Query(rdbPredicates2, columns);
+    std::shared_ptr<ResultSet> resultSet2 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates2, columns);
     resultSet2->GetRowCount(count);
     EXPECT_EQ(1, count);
 
-    RdbPredicates rdbPredicates3("AllDataType");
+    RdbPredicates rdbPredicates3("RdbTestDataEntity");
     tempValue.str("");
     tempValue << DBL_MIN;
     agrs[0] = "1.0";
     agrs[1] = tempValue.str();
     rdbPredicates3.NotIn("doubleValue", agrs);
-    std::shared_ptr<ResultSet> resultSet3 = RdbStorePredicateTest::store->Query(rdbPredicates3, columns);
+    std::shared_ptr<ResultSet> resultSet3 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates3, columns);
     resultSet3->GetRowCount(count);
     EXPECT_EQ(1, count);
 
-    RdbPredicates rdbPredicates4("AllDataType");
+    RdbPredicates rdbPredicates4("RdbTestDataEntity");
     tempValue.str("");
     tempValue << FLT_MAX;
     agrs[0] = "1.0";
     agrs[1] = tempValue.str();
     rdbPredicates4.NotIn("floatValue", agrs);
-    std::shared_ptr<ResultSet> resultSet4 = RdbStorePredicateTest::store->Query(rdbPredicates4, columns);
+    std::shared_ptr<ResultSet> resultSet4 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates4, columns);
     resultSet4->GetRowCount(count);
     EXPECT_EQ(1, count);
 }
@@ -1698,9 +1649,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_023, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for clear method
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_KeywordMethod_024, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
         ->BeginWrap()
         ->EqualTo("integerValue", "1")
@@ -1711,12 +1662,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
         ->Limit(2);
 
     std::vector<std::string> columns = { "booleanValue", "doubleValue", "orderr" };
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     allDataTypes1->GoToFirstRow();
     int count = ResultSize(allDataTypes1);
     EXPECT_EQ(2, count);
 
-    EXPECT_EQ("AllDataType", predicates1.GetTableName());
+    EXPECT_EQ("RdbTestDataEntity", predicates1.GetTableName());
     EXPECT_EQ(2, predicates1.GetLimit());
 
     EXPECT_EQ(true, predicates1.GetWhereClause().find("stringValue") != std::string::npos);
@@ -1743,7 +1694,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
     EXPECT_EQ(true, predicates1.IsDistinct());
 
     predicates1.Clear();
-    EXPECT_EQ("AllDataType", predicates1.GetTableName());
+    EXPECT_EQ("RdbTestDataEntity", predicates1.GetTableName());
     EXPECT_EQ(-2147483648, predicates1.GetLimit());
     EXPECT_EQ(true, predicates1.GetWhereClause().empty());
     EXPECT_EQ(true, predicates1.GetWhereArgs().empty());
@@ -1762,9 +1713,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_KeywordMethod_024, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for clear method
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_ToString_025, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     predicates1.EqualTo("stringValue", "ABCDEFGHIJKLMN")
         ->BeginWrap()
         ->EqualTo("integerValue", "1")
@@ -1774,7 +1725,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
         ->OrderByDesc("integerValue")
         ->Limit(2);
     std::string toString = predicates1.ToString();
-    std::string result = "TableName = AllDataType, {WhereClause:stringValue = ? AND  ( integerValue = ?  OR "
+    std::string result = "TableName = RdbTestDataEntity, {WhereClause:stringValue = ? AND  ( integerValue = ?  OR "
                          "integerValue = ?  ) , bindArgs:{ABCDEFGHIJKLMN, 1, 2147483647, }, order:integerValue "
                          "DESC , group:, index:, limit:2, offset:-2147483648, distinct:0, isNeedAnd:1, isSorted:1}";
     EXPECT_EQ(result, toString);
@@ -1785,9 +1736,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_ToString_025, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for InDevices and InAllDevices method
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_InDevices_InAllDevices_026, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_InDevices_InAllDevices_026, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     std::vector<std::string> devices;
     devices.push_back("7001005458323933328a071dab423800");
     devices.push_back("7001005458323933328a268fa2fa3900");
@@ -1804,12 +1755,12 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_InDevices_InAllDevices_026, TestSize.Le
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GetDistributedPredicates_027, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GetDistributedPredicates_027, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN")->OrderByDesc("integerValue")->Limit(2);
     auto distributedRdbPredicates = predicates.GetDistributedPredicates();
-    EXPECT_EQ(*(distributedRdbPredicates.tables_.begin()), "AllDataType");
+    EXPECT_EQ(*(distributedRdbPredicates.tables_.begin()), "RdbTestDataEntity");
     EXPECT_EQ(distributedRdbPredicates.operations_.size(), 3UL);
     EXPECT_EQ(distributedRdbPredicates.operations_[0].operator_, OHOS::DistributedRdb::EQUAL_TO);
     EXPECT_EQ(distributedRdbPredicates.operations_[0].field_, "stringValue");
@@ -1821,24 +1772,24 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetDistributedPredicates_027, TestSize.
  * @tc.desc: Abnormal testCase of RdbPredicates for notIn method
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_028, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotInMethod_028, TestSize.Level1)
 {
     std::vector<std::string> columns;
     std::vector<ValueObject> arg;
     int count = 0;
 
     // RdbPredicates field is empty
-    RdbPredicates rdbPredicates1("AllDataType");
+    RdbPredicates rdbPredicates1("RdbTestDataEntity");
     rdbPredicates1.NotIn("", arg);
-    std::shared_ptr<ResultSet> resultSet1 = RdbStorePredicateTest::store->Query(rdbPredicates1, columns);
+    std::shared_ptr<ResultSet> resultSet1 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates1, columns);
     resultSet1->GetRowCount(count);
     EXPECT_EQ(3, count);
     resultSet1->Close();
 
     // RdbPredicates values is empty
-    RdbPredicates rdbPredicates2("AllDataType");
+    RdbPredicates rdbPredicates2("RdbTestDataEntity");
     rdbPredicates2.NotIn("integerValue", arg);
-    std::shared_ptr<ResultSet> resultSet2 = RdbStorePredicateTest::store->Query(rdbPredicates2, columns);
+    std::shared_ptr<ResultSet> resultSet2 = RdbPredicatesInterfaceTest::store->Query(rdbPredicates2, columns);
     resultSet2->GetRowCount(count);
     EXPECT_EQ(3, count);
     resultSet2->Close();
@@ -1850,13 +1801,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotInMethod_028, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: #I9EMOO
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotContain_029, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotContain_029, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.NotContains("stringValue", "OPQ");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1866,13 +1817,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotContain_029, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: #I9EMOO
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotLike_030, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotLike_030, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     std::vector<std::string> columns;
 
     predicates1.NotLike("stringValue", "OPQ");
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes1));
 }
 
@@ -1881,13 +1832,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotLike_030, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for EndWrap, fail to add ')'
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_EndWrap_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_EndWrap_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.NotEqualTo("id", "1")->BeginWrap()->EndWrap();
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -1897,13 +1848,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EndWrap_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for Or, fail to add 'OR'
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Or_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Or_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.EqualTo("id", "1")->BeginWrap()->Or();
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -1913,13 +1864,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Or_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for And, fail to add 'AND'
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_And_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_And_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.EqualTo("id", "1")->BeginWrap()->And();
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -1929,13 +1880,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_And_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for Contain, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Contain_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Contain_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.Contains("", "1");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -1945,13 +1896,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Contain_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for BeginsWith, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_BeginsWith_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_BeginsWith_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.BeginsWith("", "s");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -1961,13 +1912,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_BeginsWith_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for EndsWith, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_EndsWith_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_EndsWith_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.EndsWith("", "s");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -1977,13 +1928,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EndsWith_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for IsNull, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_IsNull_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_IsNull_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.IsNull("");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -1993,13 +1944,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_IsNull_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for IsNotNull, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_IsNotNull_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_IsNotNull_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.IsNotNull("");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2009,13 +1960,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_IsNotNull_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for Like, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Like_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Like_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.Like("", "wks");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2025,13 +1976,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Like_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for Glob, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Glob_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Glob_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.Glob("", "wks");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2041,13 +1992,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Glob_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for Between, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Between_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Between_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.Between("", "1", "4");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2057,13 +2008,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Between_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for NotBetween, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_NotBetween_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.NotBetween("", "1", "4");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2073,13 +2024,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_NotBetween_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for GreaterThan, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThan_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GreaterThan_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.GreaterThan("", "1");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2089,13 +2040,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThan_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for LessThan, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_LessThan_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_LessThan_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.LessThan("", "4");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2105,13 +2056,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_LessThan_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for GreaterThanOrEqualTo, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GreaterThanOrEqualTo_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.LessThan("", "1");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2121,13 +2072,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GreaterThanOrEqualTo_001, TestSize.Leve
  * @tc.desc: Abnormal testCase of RdbPredicates for LessThanOrEqualTo, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_LessThanOrEqualTo_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_LessThanOrEqualTo_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.LessThanOrEqualTo("", "1");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2137,13 +2088,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_LessThanOrEqualTo_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for OrderByDesc, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByDesc_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_OrderByDesc_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.OrderByDesc("");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2153,14 +2104,14 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByDesc_001, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for OrderByDesc
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByDesc_002, TestSize.Level2)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_OrderByDesc_002, TestSize.Level2)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.OrderByDesc("id");
     predicates.OrderByDesc("integerValue");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2170,13 +2121,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByDesc_002, TestSize.Level2)
  * @tc.desc: Abnormal testCase of RdbPredicates for OrderByAsc, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByAsc_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_OrderByAsc_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.OrderByAsc("");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2186,14 +2137,14 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByAsc_001, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for OrderByAsc
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByAsc_002, TestSize.Level2)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_OrderByAsc_002, TestSize.Level2)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.OrderByAsc("id");
     predicates.OrderByAsc("integerValue");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2203,13 +2154,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_OrderByAsc_002, TestSize.Level2)
  * @tc.desc: Abnormal testCase of RdbPredicates for OrderByAsc, if set limit param twice
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Limit_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Limit_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.Limit(2)->Limit(2);
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2219,13 +2170,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Limit_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for Offset, if set Offset param twice
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Offset_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Offset_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.Limit(2)->Offset(1)->Offset(1);
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(2, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2235,21 +2186,21 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Offset_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for Offset, if Offset param is less than 1
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Offset_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Offset_002, TestSize.Level1)
 {
-    RdbPredicates predicates1("AllDataType");
+    RdbPredicates predicates1("RdbTestDataEntity");
     predicates1.Limit(2)->Offset(0);
 
     std::vector<std::string> columns1;
-    std::shared_ptr<ResultSet> allDataTypes1 = RdbStorePredicateTest::store->Query(predicates1, columns1);
+    std::shared_ptr<ResultSet> allDataTypes1 = RdbPredicatesInterfaceTest::store->Query(predicates1, columns1);
     EXPECT_EQ(2, ResultSize(allDataTypes1));
     allDataTypes1->Close();
 
-    RdbPredicates predicates2("AllDataType");
+    RdbPredicates predicates2("RdbTestDataEntity");
     predicates2.Limit(2)->Offset(-1);
 
     std::vector<std::string> columns2;
-    std::shared_ptr<ResultSet> allDataTypes2 = RdbStorePredicateTest::store->Query(predicates2, columns2);
+    std::shared_ptr<ResultSet> allDataTypes2 = RdbPredicatesInterfaceTest::store->Query(predicates2, columns2);
     EXPECT_EQ(2, ResultSize(allDataTypes2));
     allDataTypes2->Close();
 }
@@ -2259,13 +2210,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Offset_002, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for GroupBy, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GroupBy_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.GroupBy({});
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2275,13 +2226,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for GroupBy, if param is invalid
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GroupBy_002, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.GroupBy({ "idx" });
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2291,13 +2242,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_002, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for GroupBy, if fields is invalid
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_003, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GroupBy_003, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.GroupBy({ "" });
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2307,13 +2258,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GroupBy_003, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for IndexedBy, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_IndexedBy_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_IndexedBy_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.IndexedBy("");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2323,15 +2274,15 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_IndexedBy_001, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for IndexedBy
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_IndexedBy_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_IndexedBy_002, TestSize.Level1)
 {
-    RdbStorePredicateTest::store->ExecuteSql("CREATE INDEX orderr_index ON AllDataType(orderr)");
+    RdbPredicatesInterfaceTest::store->ExecuteSql("CREATE INDEX orderr_index ON RdbTestDataEntity(orderr)");
 
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.IndexedBy("orderr_index");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2341,13 +2292,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_IndexedBy_002, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for In, if field is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_In_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_In_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.In("", std::vector<std::string>{ "1", "3" });
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2357,13 +2308,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_In_001, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for In, if values is []
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_In_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_In_002, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.In("id", std::vector<std::string>{});
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(0, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2373,13 +2324,13 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_In_002, TestSize.Level1)
  * @tc.desc: Abnormal testCase of RdbPredicates for SetOrder, if order is ''
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_SetOrder_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_SetOrder_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.SetOrder("");
 
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> allDataTypes = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(3, ResultSize(allDataTypes));
     allDataTypes->Close();
 }
@@ -2390,9 +2341,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_SetOrder_001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GetStatement_GetBnidArgs_001, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN")
         ->BeginWrap()
         ->EqualTo("integerValue", 1)
@@ -2404,7 +2355,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_001, TestSize.
 
     std::vector<std::string> columns;
     int count = 0;
-    std::shared_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> resultSet = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     resultSet->GetRowCount(count);
     EXPECT_EQ(2, count);
 
@@ -2421,9 +2372,9 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_001, TestSize.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GetStatement_GetBnidArgs_002, TestSize.Level1)
 {
-    RdbPredicates predicates("AllDataType");
+    RdbPredicates predicates("RdbTestDataEntity");
     predicates.SetWhereClause("integerValue = 1 and ");
     predicates.EqualTo("stringValue", "ABCDEFGHIJKLMN");
 
@@ -2432,7 +2383,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_002, TestSize.
 
     std::vector<std::string> columns;
     int count = 0;
-    std::shared_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> resultSet = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     resultSet->GetRowCount(count);
     EXPECT_EQ(1, count);
 }
@@ -2442,7 +2393,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetStatement_GetBnidArgs_002, TestSize.
  * @tc.desc: Normal testCase of RdbPredicates for GetString
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GetString_001, TestSize.Level1)
 {
     ValuesBucket values;
     int64_t id;
@@ -2459,7 +2410,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_001, TestSize.Level1)
     RdbPredicates predicates("person");
     predicates.EqualTo("name", "");
     std::vector<std::string> columns;
-    std::shared_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->Query(predicates, columns);
+    std::shared_ptr<ResultSet> resultSet = RdbPredicatesInterfaceTest::store->Query(predicates, columns);
     EXPECT_EQ(1, ResultSize(resultSet));
 
     ret = resultSet->GoToFirstRow();
@@ -2481,7 +2432,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_001, TestSize.Level1)
  * @tc.desc: Normal testCase of RdbPredicates for GetString
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GetString_002, TestSize.Level1)
 {
     ValuesBucket values;
     int64_t id;
@@ -2494,7 +2445,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_002, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    std::shared_ptr<ResultSet> resultSet = RdbStorePredicateTest::store->QueryByStep("SELECT * FROM person");
+    std::shared_ptr<ResultSet> resultSet = RdbPredicatesInterfaceTest::store->QueryByStep("SELECT * FROM person");
     EXPECT_EQ(1, ResultSize(resultSet));
 
     int errCode = 0;
@@ -2520,7 +2471,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_GetString_002, TestSize.Level1)
  * 2.Query data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Having_001, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Having_001, TestSize.Level1)
 {
     store->Execute(HAVING_CREATE_SQL);
     store->Execute(HAVING_INSERT_SQL);
@@ -2549,7 +2500,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Having_001, TestSize.Level1)
  * 2.Query data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Having_002, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Having_002, TestSize.Level1)
 {
     store->Execute(HAVING_CREATE_SQL);
     store->Execute(HAVING_INSERT_SQL);
@@ -2571,7 +2522,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Having_002, TestSize.Level1)
  * 2.Query data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Having_003, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Having_003, TestSize.Level1)
 {
     store->Execute(HAVING_CREATE_SQL);
     store->Execute(HAVING_INSERT_SQL);
@@ -2591,7 +2542,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Having_003, TestSize.Level1)
  * 2.Query data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Having_004, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Having_004, TestSize.Level1)
 {
     store->Execute(HAVING_CREATE_SQL);
     store->Execute(HAVING_INSERT_SQL);
@@ -2612,7 +2563,7 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_Having_004, TestSize.Level1)
  * 2.Query data
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStorePredicateTest, RdbStore_Having_005, TestSize.Level1)
+HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_Having_005, TestSize.Level1)
 {
     store->Execute(HAVING_CREATE_SQL);
     store->Execute(HAVING_INSERT_SQL);

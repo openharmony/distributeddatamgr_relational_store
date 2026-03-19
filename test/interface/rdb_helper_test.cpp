@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include "common.h"
+#include "rdb_test_common.h"
 #include "rdb_errno.h"
 #include "rdb_open_callback.h"
 
@@ -613,7 +613,7 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_023, TestSize.Level0)
     int err = RdbHelper::DeleteRdbStore(RdbHelperTest::rdbStorePath);
     EXPECT_EQ(err, E_OK);
 
-    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    auto result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
     ASSERT_EQ(result.first, E_ALREADY_CLOSED);
 }
 
@@ -655,6 +655,11 @@ HWTEST_F(RdbHelperTest, GetDatabase_001, TestSize.Level0)
     EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
 }
 
+/**
+ * @tc.name: GetDatabase_002
+ * @tc.desc: Test GetRdbStore with same config returns same database instance
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbHelperTest, GetDatabase_002, TestSize.Level0)
 {
     const std::string dbPath = RDB_TEST_PATH + "GetDatabase.db";
@@ -680,6 +685,11 @@ HWTEST_F(RdbHelperTest, GetDatabase_002, TestSize.Level0)
     EXPECT_EQ(rdbStore1, rdbStore2);
 }
 
+/**
+ * @tc.name: GetDatabase_003
+ * @tc.desc: Test GetRdbStore after changing encrypt parameters
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbHelperTest, GetDatabase_003, TestSize.Level0)
 {
     const std::string dbPath = RDB_TEST_PATH + "GetDatabase.db";
@@ -709,6 +719,11 @@ HWTEST_F(RdbHelperTest, GetDatabase_003, TestSize.Level0)
     EXPECT_EQ(rdbStore1, rdbStore2);
 }
 
+/**
+ * @tc.name: GetDatabase_004
+ * @tc.desc: Test GetRdbStore with visitor directory and role type
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbHelperTest, GetDatabase_004, TestSize.Level0)
 {
     const std::string dbPath = RDB_TEST_PATH + "GetDatabase.db";
@@ -734,6 +749,11 @@ HWTEST_F(RdbHelperTest, GetDatabase_004, TestSize.Level0)
     EXPECT_EQ(rdbStore2, nullptr);
 }
 
+/**
+ * @tc.name: GetDatabase_005
+ * @tc.desc: Test GetRdbStore with sub user configuration
+ * @tc.type: FUNC
+ */
 HWTEST_F(RdbHelperTest, GetDatabase_005, TestSize.Level0)
 {
     const std::string dbPath = RDB_TEST_PATH + "GetSubUserDatabase.db";

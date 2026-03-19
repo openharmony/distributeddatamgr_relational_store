@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "abs_predicates.h"
-#include "common.h"
+#include "rdb_test_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -193,7 +193,7 @@ void RdbStorePredicateJoinBTest::InsertEmpDates()
 
     int ret = 0;
     for (int i = 0; i <= CYCLENUM; i++) {
-        ret = store_->Insert(id, "emp", UTUtils::SetRowDatas(UTUtils::gRowDatas[i]));
+        ret = store_->Insert(id, "emp", RdbTestUtils::SetRowDatas(RdbTestUtils::gRowDatas[i]));
     }
     EXPECT_EQ(ret, E_OK);
 }

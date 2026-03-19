@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "common.h"
+#include "rdb_test_common.h"
 #include "grd_api_manager.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"

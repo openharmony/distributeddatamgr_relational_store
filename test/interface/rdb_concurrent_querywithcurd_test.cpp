@@ -15,7 +15,7 @@
 
 #include <gtest/gtest.h>
 
-#include "common.h"
+#include "rdb_test_common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "values_bucket.h"

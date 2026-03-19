@@ -18,7 +18,7 @@
 #include <map>
 #include <string>
 #include "block_data.h"
-#include "common.h"
+#include "rdb_test_common.h"
 #include "file_ex.h"
 #include "grd_api_manager.h"
 #include "rdb_errno.h"
@@ -31,7 +31,7 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
-class RdbStoreBackupRestoreTest : public testing::Test {
+class RdbInterfaceBackupRestoreTest : public testing::Test {
 public:
     static void SetUpTestCase()
     {
@@ -51,28 +51,28 @@ public:
     static constexpr char BACKUP_DATABASE_NAME[] = "/data/test/backup_restore_test_backup.db";
 };
 
-class RdbStoreBackupRestoreTestOpenCallback : public RdbOpenCallback {
+class RdbInterfaceBackupRestoreTestOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
 
-const std::string RdbStoreBackupRestoreTestOpenCallback::CREATE_TABLE_TEST =
+const std::string RdbInterfaceBackupRestoreTestOpenCallback::CREATE_TABLE_TEST =
     std::string("CREATE TABLE IF NOT EXISTS test ") + std::string("(id INTEGER PRIMARY KEY AUTOINCREMENT, "
                                                                   "name TEXT NOT NULL, age INTEGER, salary "
                                                                   "REAL, blobType BLOB)");
 
-int RdbStoreBackupRestoreTestOpenCallback::OnCreate(RdbStore &store)
+int RdbInterfaceBackupRestoreTestOpenCallback::OnCreate(RdbStore &store)
 {
     return store.ExecuteSql(CREATE_TABLE_TEST);
 }
 
-int RdbStoreBackupRestoreTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+int RdbInterfaceBackupRestoreTestOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
     return E_OK;
 }
-void RdbStoreBackupRestoreTest::SetUp(void)
+void RdbInterfaceBackupRestoreTest::SetUp(void)
 {
     RdbHelper::ClearCache();
     int errocode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
@@ -80,7 +80,7 @@ void RdbStoreBackupRestoreTest::SetUp(void)
     errocode = RdbHelper::DeleteRdbStore(BACKUP_DATABASE_NAME);
     EXPECT_EQ(E_OK, errocode);
 }
-void RdbStoreBackupRestoreTest::TearDown(void)
+void RdbInterfaceBackupRestoreTest::TearDown(void)
 {
     RdbHelper::ClearCache();
     int errocode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
@@ -88,7 +88,7 @@ void RdbStoreBackupRestoreTest::TearDown(void)
     errocode = RdbHelper::DeleteRdbStore(BACKUP_DATABASE_NAME);
     EXPECT_EQ(E_OK, errocode);
 }
-void RdbStoreBackupRestoreTest::CorruptDoubleWriteStore(void)
+void RdbInterfaceBackupRestoreTest::CorruptDoubleWriteStore(void)
 {
     std::fstream file(DATABASE_NAME, std::ios::in | std::ios::out | std::ios::binary);
     ASSERT_TRUE(file.is_open() == true);
@@ -102,13 +102,13 @@ void RdbStoreBackupRestoreTest::CorruptDoubleWriteStore(void)
     file.close();
 }
 
-std::shared_ptr<RdbStore> RdbStoreBackupRestoreTest::InitStore(HAMode mode, bool preData, bool encrypt)
+std::shared_ptr<RdbStore> RdbInterfaceBackupRestoreTest::InitStore(HAMode mode, bool preData, bool encrypt)
 {
     char databaseName[] = "/data/test/new_backup_test.db";
     RdbStoreConfig config(databaseName);
     config.SetHaMode(mode);
     config.SetEncryptStatus(encrypt);
-    RdbStoreBackupRestoreTestOpenCallback callback;
+    RdbInterfaceBackupRestoreTestOpenCallback callback;
     int code = E_ERROR;
     auto store = RdbHelper::GetRdbStore(config, 1, callback, code);
     EXPECT_EQ(code, E_OK) << "GetRdbStore failed, code:" << code;
@@ -133,7 +133,7 @@ std::shared_ptr<RdbStore> RdbStoreBackupRestoreTest::InitStore(HAMode mode, bool
     return store;
 }
 
-std::shared_ptr<RdbStore> RdbStoreBackupRestoreTest::InitStoreV2(
+std::shared_ptr<RdbStore> RdbInterfaceBackupRestoreTest::InitStoreV2(
     bool isReadOnly, StorageMode storageMode, HAMode mode, int32_t dbType)
 {
     char databaseName[] = "/data/test/new_backup_test.db";
@@ -142,7 +142,7 @@ std::shared_ptr<RdbStore> RdbStoreBackupRestoreTest::InitStoreV2(
     config.SetStorageMode(storageMode);
     config.SetHaMode(mode);
     config.SetDBType(dbType);
-    RdbStoreBackupRestoreTestOpenCallback callback;
+    RdbInterfaceBackupRestoreTestOpenCallback callback;
     int code = E_ERROR;
     auto store = RdbHelper::GetRdbStore(config, 0, callback, code);
     EXPECT_EQ(code, E_OK) << "GetRdbStore failed, code:" << code;
@@ -157,12 +157,12 @@ std::shared_ptr<RdbStore> RdbStoreBackupRestoreTest::InitStoreV2(
  * @tc.desc: backup and restore
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_001, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_001, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(true);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -203,12 +203,12 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_001, TestSize.Level2)
  * @tc.desc: backup and restore for broken original and broken backup db
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_002, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_002, TestSize.Level2)
 {
     int errCode = E_OK;
     RdbStoreConfig config(DATABASE_NAME);
     config.SetEncryptStatus(true);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -248,7 +248,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_002, TestSize.Level2)
     ret = store->Restore(BACKUP_DATABASE_NAME);
     EXPECT_EQ(ret, E_SQLITE_CORRUPT);
 
-    ret = store->ExecuteSql(RdbStoreBackupRestoreTestOpenCallback::CREATE_TABLE_TEST);
+    ret = store->ExecuteSql(RdbInterfaceBackupRestoreTestOpenCallback::CREATE_TABLE_TEST);
     EXPECT_EQ(ret, E_OK);
 }
 
@@ -257,14 +257,14 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_002, TestSize.Level2)
  * @tc.desc: backup and restore
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_003, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_003, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(true);
     config.SetAllowRebuild(true);
     config.SetHaMode(HAMode::MAIN_REPLICA);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -305,13 +305,13 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_003, TestSize.Level2)
  * @tc.desc: hamode is replica, backup and deletestore and restore, after restore can insert
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_004, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_004, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(true);
     config.SetHaMode(HAMode::MAIN_REPLICA);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -331,7 +331,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_004, TestSize.Level2)
     ret = store->Backup(BACKUP_DATABASE_NAME);
     EXPECT_EQ(ret, E_OK);
 
-    ret = RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    ret = RdbHelper::DeleteRdbStore(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     EXPECT_EQ(ret, E_OK);
 
     ret = store->Restore(BACKUP_DATABASE_NAME);
@@ -343,13 +343,13 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_004, TestSize.Level2)
  * @tc.desc: hamode is replica , backup and restore for broken original db, and after restore can insert
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_005, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_005, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(true);
     config.SetHaMode(HAMode::MAIN_REPLICA);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -397,13 +397,13 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_005, TestSize.Level2)
  * @tc.desc: hamode is replica , backup and restore, aftre restore ,store can insert data and delete data and query
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_006, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_006, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(true);
     config.SetHaMode(HAMode::MAIN_REPLICA);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -453,13 +453,13 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_006, TestSize.Level2)
  * @tc.desc: hamode is replica , deletestore , cannot backup and restore
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_007, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_007, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(true);
     config.SetHaMode(HAMode::MAIN_REPLICA);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -488,13 +488,13 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_007, TestSize.Level2)
  * @tc.desc: hamode is replica , backup and restore, check slavestore and backupstore
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_008, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_008, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(true);
     config.SetHaMode(HAMode::MAIN_REPLICA);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -540,12 +540,12 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_008, TestSize.Level2)
  * @tc.desc: sql func empty param test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_009, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_009, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -561,7 +561,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_009, TestSize.Level2)
     EXPECT_EQ("ok", val);
 
     store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
 }
 
 /* *
@@ -569,12 +569,12 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_009, TestSize.Level2)
  * @tc.desc: source db empty path test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_010, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_010, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -590,7 +590,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_010, TestSize.Level2)
     EXPECT_EQ("ok", val);
 
     store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
 }
 
 /* *
@@ -598,12 +598,12 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_010, TestSize.Level2)
  * @tc.desc: souce db not exist test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_011, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_011, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -619,7 +619,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_011, TestSize.Level2)
     EXPECT_EQ("ok", val);
 
     store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
 }
 
 /* *
@@ -627,7 +627,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_011, TestSize.Level2)
  * @tc.desc: source db corrupt test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_012, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_012, TestSize.Level2)
 {
     int errCode = E_OK;
     std::string destDbPath = "/data/test/dest.db";
@@ -635,14 +635,14 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_012, TestSize.Level2)
 
     RdbStoreConfig config(destDbPath);
     config.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto dest = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(dest, nullptr);
 
     RdbStoreConfig sourceConfig(sourceDbPath);
     sourceConfig.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper1;
+    RdbInterfaceBackupRestoreTestOpenCallback helper1;
     auto source = RdbHelper::GetRdbStore(sourceConfig, 1, helper1, errCode);
     source = nullptr;
 
@@ -673,7 +673,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_012, TestSize.Level2)
  * @tc.desc: import from source db test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_013, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_013, TestSize.Level2)
 {
     int errCode = E_OK;
     std::string destDbPath = "/data/test/dest.db";
@@ -681,14 +681,14 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_013, TestSize.Level2)
 
     RdbStoreConfig config(destDbPath);
     config.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto dest = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(dest, nullptr);
 
     RdbStoreConfig sourceConfig(sourceDbPath);
     sourceConfig.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper1;
+    RdbInterfaceBackupRestoreTestOpenCallback helper1;
     auto source = RdbHelper::GetRdbStore(sourceConfig, 1, helper1, errCode);
 
     for (uint i = 0; i < 100; i++) {
@@ -731,12 +731,12 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_013, TestSize.Level2)
  * @tc.desc: sql func empty param test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_014, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_014, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -752,7 +752,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_014, TestSize.Level2)
     EXPECT_EQ("ok", val);
 
     store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
 }
 
 /* *
@@ -760,12 +760,12 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_014, TestSize.Level2)
  * @tc.desc: restore wal file exist test
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_015, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_015, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -773,27 +773,27 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_015, TestSize.Level2)
     int ret = store->Backup(BACKUP_DATABASE_NAME);
     EXPECT_EQ(ret, E_OK);
 
-    RdbStoreConfig backupConfig(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    RdbStoreConfig backupConfig(RdbInterfaceBackupRestoreTest::BACKUP_DATABASE_NAME);
     backupConfig.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback backupHelper;
+    RdbInterfaceBackupRestoreTestOpenCallback backupHelper;
     auto backupStore = RdbHelper::GetRdbStore(backupConfig, 1, backupHelper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(backupStore, nullptr);
     backupStore = nullptr;
 
     struct stat fileStat;
-    std::string walFilePath = std::string(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME) + "-wal";
+    std::string walFilePath = std::string(RdbInterfaceBackupRestoreTest::BACKUP_DATABASE_NAME) + "-wal";
     EXPECT_EQ(stat(walFilePath.c_str(), &fileStat), 0);
 
-    ret = store->Restore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    ret = store->Restore(RdbInterfaceBackupRestoreTest::BACKUP_DATABASE_NAME);
     EXPECT_EQ(ret, E_OK);
     ret = stat(walFilePath.c_str(), &fileStat);
     EXPECT_EQ(ret, -1);
     EXPECT_EQ(errno, 2);
 
     store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbInterfaceBackupRestoreTest::BACKUP_DATABASE_NAME);
 }
 
 /* *
@@ -801,12 +801,12 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_015, TestSize.Level2)
  * @tc.desc: restore wal file not empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_016, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_016, TestSize.Level2)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
     config.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback helper;
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -814,9 +814,9 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_016, TestSize.Level2)
     int ret = store->Backup(BACKUP_DATABASE_NAME);
     EXPECT_EQ(ret, E_OK);
 
-    RdbStoreConfig backupConfig(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    RdbStoreConfig backupConfig(RdbInterfaceBackupRestoreTest::BACKUP_DATABASE_NAME);
     backupConfig.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback backupHelper;
+    RdbInterfaceBackupRestoreTestOpenCallback backupHelper;
     auto backupStore = RdbHelper::GetRdbStore(backupConfig, 1, backupHelper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(backupStore, nullptr);
@@ -834,60 +834,17 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_016, TestSize.Level2)
     EXPECT_EQ(1, id);
 
     struct stat fileStat;
-    std::string walFilePath = std::string(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME) + "-wal";
+    std::string walFilePath = std::string(RdbInterfaceBackupRestoreTest::BACKUP_DATABASE_NAME) + "-wal";
     EXPECT_EQ(stat(walFilePath.c_str(), &fileStat), 0);
     EXPECT_NE(fileStat.st_size, 0);
 
-    ret = store->Restore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    ret = store->Restore(RdbInterfaceBackupRestoreTest::BACKUP_DATABASE_NAME);
     EXPECT_EQ(ret, E_SQLITE_CORRUPT);
 
     backupStore = nullptr;
     store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
-}
-
-/* *
- * @tc.name: Rdb_BackupRestoreTest_017
- * @tc.desc: restore from backup & check acl access
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_017, TestSize.Level2)
-{
-    int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreBackupRestoreTest::DATABASE_NAME);
-    config.SetEncryptStatus(false);
-    config.SetSearchable(true);
-    RdbStoreBackupRestoreTestOpenCallback helper;
-    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    EXPECT_NE(store, nullptr);
-
-    int ret = store->Backup(BACKUP_DATABASE_NAME);
-    EXPECT_EQ(ret, E_OK);
-
-    RdbStoreConfig backupConfig(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
-    backupConfig.SetEncryptStatus(false);
-    RdbStoreBackupRestoreTestOpenCallback backupHelper;
-    auto backupStore = RdbHelper::GetRdbStore(backupConfig, 1, backupHelper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    EXPECT_NE(backupStore, nullptr);
-    backupStore = nullptr;
-
-    struct stat fileStat;
-    std::string walFilePath = std::string(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME) + "-wal";
-    EXPECT_EQ(stat(walFilePath.c_str(), &fileStat), 0);
-
-    ret = store->Restore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
-    EXPECT_EQ(ret, E_OK);
-
-    ret = stat(walFilePath.c_str(), &fileStat);
-    EXPECT_EQ(ret, -1);
-    EXPECT_EQ(errno, 2);
-
-    store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::DATABASE_NAME);
-    RdbHelper::DeleteRdbStore(RdbStoreBackupRestoreTest::BACKUP_DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbInterfaceBackupRestoreTest::DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(RdbInterfaceBackupRestoreTest::BACKUP_DATABASE_NAME);
 }
 
 /* *
@@ -903,7 +860,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_017, TestSize.Level2)
  *           9. query data from main db
  *           10. compare data
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_018, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_018, TestSize.Level2)
 {
     auto store = InitStore(HAMode::MAIN_REPLICA, false);
     ASSERT_NE(store, nullptr);
@@ -969,7 +926,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_018, TestSize.Level2)
  *           7. confirm that asynchronous backup has been interrupted
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_019, TestSize.Level2)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_019, TestSize.Level2)
 {
     auto store = InitStore(HAMode::MAIN_REPLICA, false);
     ASSERT_NE(store, nullptr);
@@ -1017,7 +974,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_019, TestSize.Level2)
  * @tc.desc: Abnormal backup test cases, SINGLE and readOnly is not support
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_020, TestSize.Level0)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_020, TestSize.Level0)
 {
     auto store = InitStoreV2();
     ASSERT_NE(store, nullptr);
@@ -1038,7 +995,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_020, TestSize.Level0)
  * @tc.desc: Abnormal backup test cases, MODE_MEMORY is not support
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_021, TestSize.Level0)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_021, TestSize.Level0)
 {
     auto store = InitStoreV2(false, StorageMode::MODE_MEMORY);
     ASSERT_NE(store, nullptr);
@@ -1054,7 +1011,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_021, TestSize.Level0)
  * @tc.desc: Abnormal backup test cases, DB_VECTOR is not support
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_022, TestSize.Level0)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_022, TestSize.Level0)
 {
     if (!IsUsingArkData()) {
         GTEST_SKIP() << "Current testcase is not compatible from current rdb";
@@ -1073,7 +1030,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_022, TestSize.Level0)
  * @tc.desc: Abnormal backup test cases, Backup is not supported when the standby database does not exist
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_023, TestSize.Level0)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_023, TestSize.Level0)
 {
     auto store = InitStore(HAMode::MANUAL_TRIGGER);
     ASSERT_NE(store, nullptr);
@@ -1096,7 +1053,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_023, TestSize.Level0)
  *           6. delete slave db
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_024, TestSize.Level0)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_024, TestSize.Level0)
 {
     auto store = InitStore(HAMode::MAIN_REPLICA, false);
     ASSERT_NE(store, nullptr);
@@ -1109,7 +1066,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_024, TestSize.Level0)
     char databaseSalveName[] = "/data/test/new_backup_test_slave.db";
     RdbStoreConfig config(databaseSalveName);
     config.SetHaMode(HAMode::SINGLE);
-    RdbStoreBackupRestoreTestOpenCallback callback;
+    RdbInterfaceBackupRestoreTestOpenCallback callback;
     int code = E_ERROR;
     auto salveStore = RdbHelper::GetRdbStore(config, 1, callback, code);
     ASSERT_NE(salveStore, nullptr);
@@ -1129,7 +1086,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_024, TestSize.Level0)
  *           4. backup to replica db
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_025, TestSize.Level0)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_025, TestSize.Level0)
 {
     auto store = InitStore(HAMode::MAIN_REPLICA, false);
     ASSERT_NE(store, nullptr);
@@ -1176,7 +1133,7 @@ HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_025, TestSize.Level0)
  *           6.delete db
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreBackupRestoreTest, Rdb_BackupRestoreTest_026, TestSize.Level0)
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_026, TestSize.Level0)
 {
     auto store = InitStore(HAMode::MAIN_REPLICA, false);
     ASSERT_NE(store, nullptr);

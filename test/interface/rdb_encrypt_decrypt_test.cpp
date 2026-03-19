@@ -235,7 +235,7 @@ HWTEST_F(RdbInterfaceEncryptTest, RdbStore_Encrypt_06, TestSize.Level1)
     EXPECT_NE(store, nullptr);
 
     std::string keyPath = RDB_TEST_PATH + "key/" + "encrypted.pub_key";
-    std::string newKeyPath = RDB_TEST_PATH + "key/" + "encrypted.pub_key.new";
+    std::string newKeyPath = RDB_TEST_PATH + "key/" + +"encrypted.pub_key.new";
     bool isFileExists = OHOS::FileExists(keyPath);
     EXPECT_EQ(isFileExists, false);
     isFileExists = OHOS::FileExists(newKeyPath);

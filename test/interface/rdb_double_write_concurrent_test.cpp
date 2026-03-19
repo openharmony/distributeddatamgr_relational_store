@@ -20,7 +20,7 @@
 #include <fstream>
 #include <string>
 
-#include "common.h"
+#include "rdb_test_common.h"
 #include "file_ex.h"
 #include "logger.h"
 #include "rdb_common.h"
