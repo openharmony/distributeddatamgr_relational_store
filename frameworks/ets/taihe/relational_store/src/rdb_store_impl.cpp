@@ -335,7 +335,7 @@ ResultSet RdbStoreImpl::Query(weak::RdbPredicates predicates, optional_view<arra
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
-ResultSet RdbStoreImpl::QuerySync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
+ResultSet RdbStoreImpl::QueryByStep(weak::RdbPredicates predicates, optional_view<array<string>> columns)
 {
     auto store = GetResource();
     ASSERT_RETURN_THROW_ERROR(store != nullptr,
