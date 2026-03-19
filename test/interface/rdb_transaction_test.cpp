@@ -18,7 +18,7 @@
 #include <climits>
 #include <string>
 
-#include "rdb_test_common.h"
+#include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -102,15 +102,15 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_001, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -141,15 +141,15 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_002, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -187,15 +187,15 @@ HWTEST_F(RdbTransactionTest, RdbStore_Transaction_003, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -231,19 +231,19 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_001, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit(); // not commit
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -281,13 +281,13 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit();
@@ -295,7 +295,7 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_002, TestSize.Level1)
     ret = store->Commit(); // commit
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -330,19 +330,19 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_003, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit(); // not commit
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -380,19 +380,19 @@ HWTEST_F(RdbTransactionTest, RdbStore_NestedTransaction_004, TestSize.Level1)
     int ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
 
     ret = store->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(2, id);
     ret = store->Commit(); // commit
     EXPECT_EQ(ret, E_OK);
 
-    ret = store->Insert(id, "test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]));
+    ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[2]));
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(3, id);
 
@@ -506,8 +506,8 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
     std::vector<uint8_t> blob = { 1, 2, 3 };
     std::vector<ValuesBucket> valuesBuckets;
     for (int i = 0; i < 100; i++) {
-        RdbRowData rowData1 = { id + i, name, age + i, salary + i, blob };
-        ValuesBucket values = RdbTestUtils::SetRowData(rowData1);
+        RowData rowData1 = { id + i, name, age + i, salary + i, blob };
+        ValuesBucket values = UTUtils::SetRowData(rowData1);
         valuesBuckets.push_back(std::move(values));
     }
 
@@ -523,8 +523,8 @@ HWTEST_F(RdbTransactionTest, RdbStore_BatchInsert_003, TestSize.Level1)
 
     valuesBuckets.clear();
     for (int i = 50; i < 100; i++) {
-        RdbRowData rowData2 = { id + i, name, age + i, salary + i, blob };
-        ValuesBucket values = RdbTestUtils::SetRowData(rowData2);
+        RowData rowData2 = { id + i, name, age + i, salary + i, blob };
+        ValuesBucket values = UTUtils::SetRowData(rowData2);
         valuesBuckets.push_back(std::move(values));
     }
 

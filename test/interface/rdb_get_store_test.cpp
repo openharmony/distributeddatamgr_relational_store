@@ -16,31 +16,18 @@
 #include <gtest/gtest.h>
 
 #include <string>
-#include "rdb_test_common.h"
+#include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_platform.h"
+#include "sqlite_utils.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
+constexpr int32_t SERVICE_GID = 3012;
 
-// Database version constants
-constexpr int DATABASE_VERSION_UPGRADED = 2;
-
-// Test data ID constants
-constexpr int TEST_ID_3 = 3;
-constexpr int TEST_ID_4 = 4;
-constexpr int TEST_ID_5 = 5;
-
-// Test data age constants
-constexpr int ROW_COUNT_THREE = 3;
-constexpr int TEST_AGE_18 = 18;
-constexpr int TEST_AGE_19 = 19;
-constexpr int TEST_AGE_20 = 20;
-constexpr int TEST_AGE_21 = 21;
-
-class RdbInterfaceGetStoreTest : public testing::Test {
+class RdbGetStoreTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -48,6 +35,7 @@ public:
     void TearDown();
     void QueryCheck1(std::shared_ptr<RdbStore> &store) const;
     void QueryCheck2(std::shared_ptr<RdbStore> &store) const;
+    void CheckAccess(const std::string &dbPath);
 
     static const std::string MAIN_DATABASE_NAME;
     static const std::string MAIN_DATABASE_NAME_RELEASE;
@@ -57,37 +45,37 @@ public:
     void CreateRDB(int version);
 };
 
-const std::string RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "getrdb.db";
-const std::string RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_RELEASE = RDB_TEST_PATH + "releaserdb.db";
-const std::string RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_STATUS = RDB_TEST_PATH + "status.db";
-const std::string RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_MINUS = RDB_TEST_PATH + "minus.db";
+const std::string RdbGetStoreTest::MAIN_DATABASE_NAME = RDB_TEST_PATH + "getrdb.db";
+const std::string RdbGetStoreTest::MAIN_DATABASE_NAME_RELEASE = RDB_TEST_PATH + "releaserdb.db";
+const std::string RdbGetStoreTest::MAIN_DATABASE_NAME_STATUS = RDB_TEST_PATH + "status.db";
+const std::string RdbGetStoreTest::MAIN_DATABASE_NAME_MINUS = RDB_TEST_PATH + "minus.db";
 
-class GetRdbOpenCallback : public RdbOpenCallback {
+class GetOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
     static const std::string CREATE_TABLE_TEST;
 };
 
-std::string const GetRdbOpenCallback::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test1(id INTEGER PRIMARY KEY "
+std::string const GetOpenCallback::CREATE_TABLE_TEST = "CREATE TABLE IF NOT EXISTS test1(id INTEGER PRIMARY KEY "
                                                        "AUTOINCREMENT, name TEXT NOT NULL, age INTEGER)";
 
-int GetRdbOpenCallback::OnCreate(RdbStore &store)
+int GetOpenCallback::OnCreate(RdbStore &store)
 {
     return store.ExecuteSql(CREATE_TABLE_TEST);
 }
 
-int GetRdbOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
+int GetOpenCallback::OnUpgrade(RdbStore &store, int oldVersion, int newVersion)
 {
     return E_OK;
 }
 
-void RdbInterfaceGetStoreTest::SetUpTestCase(void)
+void RdbGetStoreTest::SetUpTestCase(void)
 {
     RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
 }
 
-void RdbInterfaceGetStoreTest::TearDownTestCase(void)
+void RdbGetStoreTest::TearDownTestCase(void)
 {
     RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME);
     RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME_RELEASE);
@@ -95,19 +83,19 @@ void RdbInterfaceGetStoreTest::TearDownTestCase(void)
     RdbHelper::DeleteRdbStore(MAIN_DATABASE_NAME_MINUS);
 }
 
-void RdbInterfaceGetStoreTest::SetUp(void)
+void RdbGetStoreTest::SetUp(void)
 {
 }
 
-void RdbInterfaceGetStoreTest::TearDown(void)
+void RdbGetStoreTest::TearDown(void)
 {
     RdbHelper::ClearCache();
 }
 
-void RdbInterfaceGetStoreTest::CreateRDB(int version)
+void RdbGetStoreTest::CreateRDB(int version)
 {
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_RELEASE);
-    GetRdbOpenCallback helper;
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME_RELEASE);
+    GetOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
     EXPECT_NE(store, nullptr);
@@ -127,18 +115,18 @@ void RdbInterfaceGetStoreTest::CreateRDB(int version)
     QueryCheck2(store);
 }
 
-void RdbInterfaceGetStoreTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
+void RdbGetStoreTest::QueryCheck1(std::shared_ptr<RdbStore> &store) const
 {
     int ret;
     int64_t id;
     ValuesBucket values;
     values.Clear();
-    values.PutInt("id", TEST_ID_3);
+    values.PutInt("id", 3);
     values.PutString("name", std::string("lisi"));
-    values.PutInt("age", TEST_AGE_18);
+    values.PutInt("age", 18);
     ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(TEST_ID_3, id);
+    EXPECT_EQ(3, id);
 
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
     EXPECT_NE(resultSet, nullptr);
@@ -153,7 +141,7 @@ void RdbInterfaceGetStoreTest::QueryCheck1(std::shared_ptr<RdbStore> &store) con
     EXPECT_EQ(strVal, "lisi");
 }
 
-void RdbInterfaceGetStoreTest::QueryCheck2(std::shared_ptr<RdbStore> &store) const
+void RdbGetStoreTest::QueryCheck2(std::shared_ptr<RdbStore> &store) const
 {
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
     EXPECT_NE(resultSet, nullptr);
@@ -168,13 +156,13 @@ void RdbInterfaceGetStoreTest::QueryCheck2(std::shared_ptr<RdbStore> &store) con
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(intVal, TEST_AGE_18);
+    EXPECT_EQ(intVal, 18);
 
     ValuesBucket values;
     values.Clear();
     values.PutInt("id", 1);
     values.PutString("name", std::string("lisi"));
-    values.PutInt("age", TEST_AGE_18);
+    values.PutInt("age", 18);
     ret = store->Insert(id, "test2", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
@@ -195,6 +183,18 @@ void RdbInterfaceGetStoreTest::QueryCheck2(std::shared_ptr<RdbStore> &store) con
     EXPECT_EQ(strVal, "lisi");
 }
 
+void RdbGetStoreTest::CheckAccess(const std::string &dbPath)
+{
+    bool ret = SqliteUtils::HasAccessAcl(dbPath, SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(dbPath + "-dwr", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(dbPath + "-shm", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+    ret = SqliteUtils::HasAccessAcl(dbPath + "-wal", SERVICE_GID);
+    EXPECT_EQ(ret, true);
+}
+
 /**
  * @tc.name: RdbStore_GetStore_001
  * @tc.desc: createRDB
@@ -202,7 +202,7 @@ void RdbInterfaceGetStoreTest::QueryCheck2(std::shared_ptr<RdbStore> &store) con
  * @tc.require: issue
  * @tc.author: lcl
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_001, TestSize.Level1)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_001, TestSize.Level1)
 {
     CreateRDB(1);
     sleep(1);
@@ -215,10 +215,10 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_001, TestSize.Level1)
  * @tc.require: issue
  * @tc.author: lcl
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_002, TestSize.Level1)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_002, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_STATUS);
-    GetRdbOpenCallback helper;
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME_STATUS);
+    GetOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
@@ -236,10 +236,10 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_002, TestSize.Level1)
  * @tc.require: issue
  * @tc.author: lcl
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_003, TestSize.Level1)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_003, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_MINUS);
-    GetRdbOpenCallback helper;
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME_MINUS);
+    GetOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, -1, helper, errCode);
     EXPECT_NE(store, nullptr);
@@ -250,10 +250,10 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_003, TestSize.Level1)
     sleep(1);
 }
 
-std::shared_ptr<RdbStore> RdbInterfaceGetStoreTest::CreateGetRDB(int version)
+std::shared_ptr<RdbStore> RdbGetStoreTest::CreateGetRDB(int version)
 {
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME);
-    GetRdbOpenCallback helper;
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
+    GetOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, version, helper, errCode);
     EXPECT_NE(store, nullptr);
@@ -267,11 +267,11 @@ std::shared_ptr<RdbStore> RdbInterfaceGetStoreTest::CreateGetRDB(int version)
  * @tc.require: issue
  * @tc.author: lcl
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_004, TestSize.Level1)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_004, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> store1 = CreateGetRDB(1);
 
-    std::shared_ptr<RdbStore> store = CreateGetRDB(DATABASE_VERSION_UPGRADED);
+    std::shared_ptr<RdbStore> store = CreateGetRDB(2);
 
     int currentVersion;
     int64_t id;
@@ -291,36 +291,36 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_004, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
 
     values.Clear();
-    values.PutInt("id", TEST_ID_3);
+    values.PutInt("id", 3);
     values.PutString("name", std::string("lisi"));
-    values.PutInt("age", TEST_AGE_18);
+    values.PutInt("age", 18);
     ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(TEST_ID_3, id);
+    EXPECT_EQ(3, id);
 
     values.Clear();
-    values.PutInt("id", TEST_ID_4);
+    values.PutInt("id", 4);
     values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", TEST_AGE_20);
+    values.PutInt("age", 20);
     ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(TEST_ID_4, id);
+    EXPECT_EQ(4, id);
 
     values.Clear();
-    values.PutInt("id", TEST_ID_5);
+    values.PutInt("id", 5);
     values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", TEST_AGE_19);
+    values.PutInt("age", 19);
     ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(TEST_ID_5, id);
+    EXPECT_EQ(5, id);
 
     std::shared_ptr<ResultSet> resultSet = store1->QuerySql("select * from test1");
     ret = resultSet->GetRowCount(rowCount);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(ROW_COUNT_THREE, rowCount);
+    EXPECT_EQ(3, rowCount);
 
     values.Clear();
-    values.PutInt("age", TEST_AGE_21);
+    values.PutInt("age", 21);
     ret = store->Update(changedRows, "test1", values, "age = ?", std::vector<std::string>{ "18" });
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
@@ -337,10 +337,10 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_004, TestSize.Level1)
  * @tc.require: issue
  * @tc.author: lcl
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_005, TestSize.Level1)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_005, TestSize.Level1)
 {
     sleep(1);
-    CreateRDB(DATABASE_VERSION_UPGRADED);
+    CreateRDB(2);
 }
 
 /**
@@ -350,17 +350,17 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_005, TestSize.Level1)
  * @tc.require: issue
  * @tc.author: lcl
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_006, TestSize.Level1)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_006, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_STATUS);
-    GetRdbOpenCallback helper;
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME_STATUS);
+    GetOpenCallback helper;
     int errCode = E_OK;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, DATABASE_VERSION_UPGRADED, helper, errCode);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 2, helper, errCode);
     EXPECT_NE(store, nullptr);
     int currentVersion;
     int ret = store->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, DATABASE_VERSION_UPGRADED);
+    EXPECT_EQ(currentVersion, 2);
     sleep(1);
 }
 
@@ -371,10 +371,10 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_006, TestSize.Level1)
  * @tc.require: issue
  * @tc.author: lcl
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_007, TestSize.Level1)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_007, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_MINUS);
-    GetRdbOpenCallback helper;
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME_MINUS);
+    GetOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, -1, helper, errCode);
     EXPECT_NE(store, nullptr);
@@ -392,11 +392,11 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_007, TestSize.Level1)
  * @tc.require: issue
  * @tc.author: lcl
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_008, TestSize.Level1)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_008, TestSize.Level1)
 {
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_MINUS);
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME_MINUS);
     config.SetCustomDir("SetCustomDirTest/");
-    GetRdbOpenCallback helper;
+    GetOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
@@ -407,12 +407,12 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_008, TestSize.Level1)
  * @tc.desc: get database with quick_check
  * @tc.type: FUNC
  */
-HWTEST_F(RdbInterfaceGetStoreTest, GetDatabase_009, TestSize.Level0)
+HWTEST_F(RdbGetStoreTest, GetDatabase_009, TestSize.Level0)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME);
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
     config.SetIntegrityCheck(IntegrityCheck::QUICK);
-    GetRdbOpenCallback helper;
+    GetOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 }
@@ -422,12 +422,12 @@ HWTEST_F(RdbInterfaceGetStoreTest, GetDatabase_009, TestSize.Level0)
  * @tc.desc: get database with quick_check
  * @tc.type: FUNC
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_010, TestSize.Level0)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_010, TestSize.Level0)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME);
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
     config.SetIntegrityCheck(IntegrityCheck::FULL);
-    GetRdbOpenCallback helper;
+    GetOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store, nullptr);
 }
@@ -437,13 +437,13 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_010, TestSize.Level0)
  * @tc.desc: use libs as relative path to get rdbStore
  * @tc.type: FUNC
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_011, TestSize.Level0)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_011, TestSize.Level0)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME);
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
     std::vector<std::string> paths = { "./" };
     config.SetPluginLibs(paths);
-    GetRdbOpenCallback helper;
+    GetOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_SQLITE_ERROR);
     EXPECT_EQ(store, nullptr);
@@ -454,13 +454,13 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_011, TestSize.Level0)
  * @tc.desc: use libs as empty path to get rdbStore
  * @tc.type: FUNC
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_012, TestSize.Level0)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_012, TestSize.Level0)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME);
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
     std::vector<std::string> paths = { "", "" };
     config.SetPluginLibs(paths);
-    GetRdbOpenCallback helper;
+    GetOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     EXPECT_NE(store, nullptr);
@@ -471,14 +471,52 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_012, TestSize.Level0)
  * @tc.desc: use libs as invalid path to get rdbStore
  * @tc.type: FUNC
  */
-HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_013, TestSize.Level0)
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_013, TestSize.Level0)
 {
     int errCode = E_OK;
-    RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME);
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
     std::vector<std::string> paths = { "", "/data/errPath/libErr.so" };
     config.SetPluginLibs(paths);
-    GetRdbOpenCallback helper;
+    GetOpenCallback helper;
     auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_INVALID_FILE_PATH);
     EXPECT_EQ(store, nullptr);
+}
+
+/**
+ * @tc.name: RdbStore_GetStore_014
+ * @tc.desc: createRDB & setAcl check bundle and db from proxylist
+ * @tc.type: FUNC
+ * @tc.require: issue
+ * @tc.author: zd
+ */
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_014, TestSize.Level0)
+{
+    std::string dbPath = "/data/test/settingsdata.db";
+    RdbStoreConfig config(dbPath);
+    config.SetBundleName("com.ohos.settingsdata");
+    GetOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, -1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    RdbGetStoreTest::CheckAccess(dbPath);
+    RdbHelper::DeleteRdbStore(dbPath);
+}
+
+/**
+ * @tc.name: RdbStore_GetStore_015
+ * @tc.desc: createRDB & search setAcl
+ * @tc.type: FUNC
+ * @tc.require: issue
+ * @tc.author: zd
+ */
+HWTEST_F(RdbGetStoreTest, RdbStore_GetStore_015, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbGetStoreTest::MAIN_DATABASE_NAME);
+    config.SetSearchable(true);
+    GetOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, -1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    RdbGetStoreTest::CheckAccess(std::string(RdbGetStoreTest::MAIN_DATABASE_NAME));
 }

@@ -15,7 +15,7 @@
 #define LOG_TAG "RdbBigIntTest"
 #include <gtest/gtest.h>
 
-#include "rdb_test_common.h"
+#include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 using namespace testing::ext;
