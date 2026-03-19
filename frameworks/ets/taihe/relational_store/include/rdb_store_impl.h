@@ -58,7 +58,7 @@ public:
     ResultSet QueryWithColumn(weak::RdbPredicates predicates, array_view<string> columns);
     ResultSet QueryWithOptionalColumn(weak::RdbPredicates predicates, optional_view<array<string>> columns);
     ResultSet Query(weak::RdbPredicates predicates, optional_view<array<string>> columns);
-    ResultSet QuerySync(weak::RdbPredicates predicates, optional_view<array<string>> columns);
+    ResultSet QueryByStep(weak::RdbPredicates predicates, optional_view<array<string>> columns);
     LiteResultSet QueryWithoutRowCountSync(weak::RdbPredicates predicates, optional_view<array<string>> columns);
     LiteResultSet QuerySqlWithoutRowCountSync(string_view sql, optional_view<array<ValueType>> bindArgs);
     ResultSet QueryDataShareSync(::taihe::string_view table, uintptr_t predicates);
