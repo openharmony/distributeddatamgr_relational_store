@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "rdb_test_common.h"
+#include "common.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"

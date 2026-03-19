@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "rdb_test_common.h"
+#include "common.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -27,8 +27,6 @@
 using namespace testing::ext;
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
-static constexpr int MIN_TIMEOUT = 1;
-static constexpr int MAX_TIMEOUT = 300;
 using RdbConfig = OHOS::NativeRdb::RdbStoreConfig;
 
 class RdbStoreConfigTest : public testing::Test {
@@ -1327,12 +1325,12 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_041, TestSize.Level2)
     // set transactionTime_ to 0
     int transactionTime = 0;
     config.SetTransactionTime(transactionTime);
-    EXPECT_EQ(MIN_TIMEOUT, config.GetTransactionTime());
+    EXPECT_EQ(1, config.GetTransactionTime());
 
     // set transactionTime_ to 400
     transactionTime = 400;
     config.SetTransactionTime(transactionTime);
-    EXPECT_EQ(MAX_TIMEOUT, config.GetTransactionTime());
+    EXPECT_EQ(300, config.GetTransactionTime());
 
     // set transactionTime_ to 200
     transactionTime = 200;

@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "rdb_test_common.h"
+#include "common.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -273,15 +273,15 @@ HWTEST_F(RdbMemoryDbTest, CRUDWithMemoryDb_001, TestSize.Level1)
     ASSERT_EQ(ret, E_OK);
     ASSERT_NE(transaction, nullptr);
 
-    auto result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(1, result.second);
 
-    result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]));
+    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(2, result.second);
 
-    result = store->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]), RdbStore::NO_ACTION);
+    result = store->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[2]), RdbStore::NO_ACTION);
     ASSERT_EQ(result.first, E_SQLITE_LOCKED);
 
     auto resultSet = transaction->QueryByStep("SELECT * FROM test");
@@ -298,11 +298,11 @@ HWTEST_F(RdbMemoryDbTest, CRUDWithMemoryDb_001, TestSize.Level1)
     ret = resultSet->Get(0, value);
     ASSERT_EQ(ret, E_ALREADY_CLOSED);
 
-    result = store->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]), RdbStore::NO_ACTION);
+    result = store->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[2]), RdbStore::NO_ACTION);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(3, result.second);
 
-    result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     ASSERT_EQ(result.first, E_ALREADY_CLOSED);
 
     resultSet = store->QueryByStep("SELECT * FROM test");
@@ -326,11 +326,11 @@ HWTEST_F(RdbMemoryDbTest, CRUDWithMemoryDb_002, TestSize.Level1)
     ASSERT_EQ(ret, E_OK);
     ASSERT_NE(transaction, nullptr);
 
-    auto result = transaction->Insert("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[0]));
+    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 1);
 
-    result = transaction->Update("test", RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[1]), "id=1");
+    result = transaction->Update("test", UTUtils::SetRowData(UTUtils::g_rowData[1]), "id=1");
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 1);
 
@@ -352,7 +352,7 @@ HWTEST_F(RdbMemoryDbTest, CRUDWithMemoryDb_002, TestSize.Level1)
 
     AbsRdbPredicates predicates("test");
     predicates.EqualTo("id", ValueObject(2));
-    result = transaction->Update(RdbTestUtils::SetRowData(RdbTestUtils::g_rowData[2]), predicates);
+    result = transaction->Update(UTUtils::SetRowData(UTUtils::g_rowData[2]), predicates);
     ASSERT_EQ(result.first, E_OK);
     ASSERT_EQ(result.second, 1);
 
