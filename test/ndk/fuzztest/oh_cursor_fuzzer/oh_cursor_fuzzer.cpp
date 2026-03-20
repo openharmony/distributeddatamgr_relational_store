@@ -127,7 +127,7 @@ void OH_Cursor_GetRowCountFuzz(FuzzedDataProvider &provider)
     cursor->getRowCount(cursor, &count);
 }
 
-void OH_Cursor_GoToNextRowFuzz(FuzzedDataProvider &provider)
+void OhCursorGoToNextRowFuzz()
 {
     OH_Cursor *cursor = GetOH_Cursor();
     cursor->goToNextRow(cursor);
@@ -245,7 +245,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::OH_Cursor_GetColumnIndexFuzz(provider);
     OHOS::OH_Cursor_GetColumnNameFuzz(provider);
     OHOS::OH_Cursor_GetRowCountFuzz(provider);
-    OHOS::OH_Cursor_GoToNextRowFuzz(provider);
+    OHOS::OhCursorGoToNextRowFuzz();
     OHOS::OH_Cursor_GetSizeFuzz(provider);
     OHOS::OH_Cursor_GetTextFuzz(provider);
     OHOS::OH_Cursor_GetInt64Fuzz(provider);
