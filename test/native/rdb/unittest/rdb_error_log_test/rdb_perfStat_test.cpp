@@ -29,6 +29,7 @@
 #include "logger.h"
 #include "rdb_platform.h"
 #include "rdb_perfStat.h"
+#include "transaction_impl.h"
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
@@ -66,6 +67,12 @@ std::shared_ptr<PerfStatObserver> RdbPerfStatTest::sqlObserver_ = nullptr;
 void RdbPerfStatTest::SetUpTestCase(void)
 {
     RdbHelper::DeleteRdbStore(databasePath);
+    // Attempt to manually call LoadCreator to ensure that creator_ is set
+    auto creator = Transaction::RegisterCreator(TransactionImpl::Create);
+    // Verify if the creator has been registered
+    if (creator != E_OK) {
+        LOG_ERROR("Failed to register transaction creator");
+    }
     store = CreateRDB(1);
     if (sqlObserver_ == nullptr) {
         sqlObserver_ = std::make_shared<PerfStatObserver>();
