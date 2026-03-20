@@ -29,7 +29,10 @@ AniContext::~AniContext()
     ::taihe::env_guard gurd;
     auto env = gurd.get_env();
     if (env != nullptr) {
-        env->GlobalReference_Delete(callbackRef_);
+        ani_status status = env->GlobalReference_Delete(callbackRef_);
+        if (status != ANI_OK) {
+            LOG_ERROR("GlobalReference_Delete failed. status = %{public}d", status);
+        }
     }
 }
 
@@ -122,10 +125,14 @@ void AniAsyncCall::CallCallback(ani_env *env, std::shared_ptr<AniContext> ctx)
             return;
         }
     } else {
-        env->GetUndefined(&args[ARG_ERROR]);
+        if (env->GetUndefined(&args[ARG_ERROR]) != ANI_OK) {
+            LOG_ERROR("GetUndefined for ARG_ERROR failed.");
+        }
     }
     if (ctx->result_ == nullptr) {
-        env->GetUndefined(&args[ARG_DATA]);
+        if (env->GetUndefined(&args[ARG_DATA]) != ANI_OK) {
+            LOG_ERROR("GetUndefined for ARG_DATA failed.");
+        }
     } else {
         args[ARG_DATA] = ctx->result_;
     }
