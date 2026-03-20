@@ -19,7 +19,9 @@
 
 #include <string>
 
+#include "asset_value.h"
 #include "common.h"
+#include "relational_asset.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 
