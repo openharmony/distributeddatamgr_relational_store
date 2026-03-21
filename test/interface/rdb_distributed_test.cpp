@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,6 @@
 
 #include <iostream>
 #include <string>
-#include "acl.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -29,12 +28,10 @@
 
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
-using namespace OHOS::DATABASE_UTILS;
-constexpr int32_t SERVICE_GID = 3012;
 
 static std::shared_ptr<RdbStore> rdbStore;
 
-class RdbStoreDistributedTest : public testing::Test {
+class RdbInterfaceStoreDistributedTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -51,8 +48,8 @@ public:
     static const std::string DRDB_PATH;
 };
 
-const std::string RdbStoreDistributedTest::DRDB_NAME = "distributed_rdb.db";
-const std::string RdbStoreDistributedTest::DRDB_PATH = "/data/test/";
+const std::string RdbInterfaceStoreDistributedTest::DRDB_NAME = "distributed_rdb.db";
+const std::string RdbInterfaceStoreDistributedTest::DRDB_PATH = "/data/test/";
 
 class TestOpenCallback : public RdbOpenCallback {
 public:
@@ -79,10 +76,10 @@ public:
     }
 };
 
-void RdbStoreDistributedTest::SetUpTestCase()
+void RdbInterfaceStoreDistributedTest::SetUpTestCase()
 {
     int errCode = 0;
-    std::string path = RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME;
+    std::string path = RdbInterfaceStoreDistributedTest::DRDB_PATH + RdbInterfaceStoreDistributedTest::DRDB_NAME;
     RdbHelper::DeleteRdbStore(path);
     int fd = open(path.c_str(), O_CREAT, S_IRWXU | S_IRWXG);
     if (fd < 0) {
@@ -95,24 +92,25 @@ void RdbStoreDistributedTest::SetUpTestCase()
 
     RdbStoreConfig config(path);
     config.SetBundleName("com.example.distributed.rdb");
-    config.SetName(RdbStoreDistributedTest::DRDB_NAME);
+    config.SetName(RdbInterfaceStoreDistributedTest::DRDB_NAME);
     TestOpenCallback callback;
     rdbStore = RdbHelper::GetRdbStore(config, 1, callback, errCode);
     EXPECT_NE(nullptr, rdbStore);
 }
 
-void RdbStoreDistributedTest::TearDownTestCase()
+void RdbInterfaceStoreDistributedTest::TearDownTestCase()
 {
-    RdbHelper::DeleteRdbStore(RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME);
+    RdbHelper::DeleteRdbStore(
+        RdbInterfaceStoreDistributedTest::DRDB_PATH + RdbInterfaceStoreDistributedTest::DRDB_NAME);
 }
 
-void RdbStoreDistributedTest::SetUp()
+void RdbInterfaceStoreDistributedTest::SetUp()
 {
     EXPECT_NE(nullptr, rdbStore);
     rdbStore->ExecuteSql("DELETE FROM test");
 }
 
-void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
+void RdbInterfaceStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
 {
     int64_t id;
     ValuesBucket values;
@@ -126,7 +124,7 @@ void RdbStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
     EXPECT_EQ(1, id);
 }
 
-void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
+void RdbInterfaceStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 {
     std::shared_ptr<ResultSet> resultSet =
         store->QuerySql("SELECT * FROM employee WHERE name = ?", std::vector<std::string>{ "zhangsan" });
@@ -168,33 +166,110 @@ void RdbStoreDistributedTest::CheckResultSet(std::shared_ptr<RdbStore> &store)
 }
 
 /**
- * @tc.name: RdbStore_Distributed_Test_006
- * @tc.desc: SetAcl testCase of SetDistributedTables
+ * @tc.name: RdbStore_Distributed_Test_001
+ * @tc.desc: test RdbStore set distributed tables
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_006, TestSize.Level2)
+HWTEST_F(RdbInterfaceStoreDistributedTest, RdbStore_Distributed_001, TestSize.Level1)
+{
+    EXPECT_NE(nullptr, rdbStore);
+    InsertValue(rdbStore);
+    CheckResultSet(rdbStore);
+}
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_002
+ * @tc.desc: Abnormal testCase of ObtainDistributedTableName, if networkId is ""
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbInterfaceStoreDistributedTest, RdbStore_Distributed_002, TestSize.Level2)
+{
+    EXPECT_NE(nullptr, rdbStore);
+    int errCode;
+    EXPECT_EQ("", rdbStore->ObtainDistributedTableName("", "employee", errCode));
+    EXPECT_EQ(E_ERROR, errCode);
+}
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_003
+ * @tc.desc: Abnormal testCase of ObtainDistributedTableName, if networkId is invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbInterfaceStoreDistributedTest, RdbStore_Distributed_003, TestSize.Level2)
+{
+    EXPECT_NE(nullptr, rdbStore);
+    int errCode;
+    EXPECT_EQ("", rdbStore->ObtainDistributedTableName("123456", "employee", errCode));
+    EXPECT_EQ(E_ERROR, errCode);
+}
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_004
+ * @tc.desc: Abnormal testCase of SetDistributedTables
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbInterfaceStoreDistributedTest, RdbStore_Distributed_Test_004, TestSize.Level2)
 {
     int errCode;
-    std::string pathAcl = RdbStoreDistributedTest::DRDB_PATH + RdbStoreDistributedTest::DRDB_NAME;
-    RdbStoreConfig config(pathAcl);
-    config.SetSearchable(true);
-    config.SetBundleName("com.example.distributed.rdb");
-    config.SetName(RdbStoreDistributedTest::DRDB_NAME);
-    TestOpenCallback callback;
-    rdbStore = RdbHelper::GetRdbStore(config, 1, callback, errCode);
-    EXPECT_NE(nullptr, rdbStore);
     std::vector<std::string> tables;
     OHOS::DistributedRdb::DistributedConfig distributedConfig;
 
     // if tabels empty, return ok
     errCode = rdbStore->SetDistributedTables(tables, 1, distributedConfig);
     EXPECT_EQ(E_OK, errCode);
-    bool ret = SqliteUtils::HasAccessAcl(pathAcl, SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(pathAcl + "-dwr", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(pathAcl + "-shm", SERVICE_GID);
-    EXPECT_EQ(ret, true);
-    ret = SqliteUtils::HasAccessAcl(pathAcl + "-wal", SERVICE_GID);
-    EXPECT_EQ(ret, true);
+
+    // if tabels not empty, IPC_SEND failed
+    tables.push_back("employee");
+    errCode = rdbStore->SetDistributedTables(tables, 1, distributedConfig);
+    EXPECT_NE(E_OK, errCode);
+
+    std::string path = RdbInterfaceStoreDistributedTest::DRDB_PATH + "test.db";
+    RdbHelper::DeleteRdbStore(path);
+    RdbStoreConfig config(path);
+    TestOpenCallback callback;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, callback, errCode);
+    EXPECT_NE(nullptr, store);
+
+    // if tabels not empty, bundleName empty
+    errCode = store->SetDistributedTables(tables, 1, distributedConfig);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+
+    RdbHelper::DeleteRdbStore(path);
+}
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_005
+ * @tc.desc: Normal testCase of Sync
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbInterfaceStoreDistributedTest, RdbStore_Distributed_Test_005, TestSize.Level2)
+{
+    int errCode;
+    OHOS::DistributedRdb::SyncOption option = { OHOS::DistributedRdb::TIME_FIRST, false };
+    AbsRdbPredicates predicate("employee");
+    std::vector<std::string> tables;
+
+    // get rdb service succeeded, if configuration file has already been configured
+    errCode = rdbStore->Sync(option, predicate, OHOS::DistributedRdb::AsyncBrief());
+    EXPECT_EQ(E_OK, errCode);
+
+    errCode = rdbStore->Sync(option, tables, OHOS::DistributedRdb::AsyncDetail());
+    EXPECT_EQ(E_OK, errCode);
+
+    errCode = rdbStore->Sync(option, predicate, OHOS::DistributedRdb::AsyncDetail());
+    EXPECT_EQ(E_OK, errCode);
+
+    std::string path = RdbInterfaceStoreDistributedTest::DRDB_PATH + "test.db";
+    RdbStoreConfig config(path);
+    TestOpenCallback callback;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, callback, errCode);
+    EXPECT_NE(nullptr, store);
+
+    // get rdb service failed, if not configured
+    errCode = store->Sync(option, predicate, OHOS::DistributedRdb::AsyncBrief());
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+    errCode = store->Sync(option, tables, nullptr);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+
+    RdbHelper::DeleteRdbStore(path);
 }

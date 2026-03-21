@@ -1,0 +1,109 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed by the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+
+module_output_path = "relational_store/relational_store/native_rdb"
+
+###############################################################################
+config("module_private_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "${relational_store_common_path}/include",
+    "${relational_store_native_path}/rdb_crypt",
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/dfx/include",
+    "${relational_store_native_path}/rdb/src/rdb/include",
+    "${relational_store_innerapi_path}/appdatafwk/include",
+    "${relational_store_base_path}/test/interface",
+  ]
+
+  defines = [ "RELATIONAL_STORE" ]
+}
+
+###############################################################################
+ohos_unittest("RdbInterfaceTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    "rdb_test_common.cpp",
+    "cache_result_set_test.cpp",
+    "rdb_attach_test.cpp",
+    "rdb_bigint_test.cpp",
+    "rdb_callback_icu_test.cpp",
+    "rdb_concurrent_querywithcurd_test.cpp",
+    "rdb_corrupt_test.cpp",
+    "rdb_delete_test.cpp",
+    "rdb_distributed_test.cpp",
+    "rdb_execute_test.cpp",
+    "rdb_get_store_test.cpp",
+    "rdb_helper_test.cpp",
+    "rdb_insert_test.cpp",
+    "rdb_memory_db_test.cpp",
+    "rdb_open_callback_test.cpp",
+    "rdb_step_result_get_row_test.cpp",
+    "rdb_store_interface_test.cpp",
+    "rdb_transaction_test.cpp",
+    "rdb_upgrade_test.cpp",
+    "rdb_encrypt_decrypt_test.cpp",
+    "rdb_duplicate_column_data_test.cpp",
+    "rdb_predicates_join_b_test.cpp",
+    "rdb_predicates_join_test.cpp",
+    "rdb_rd_data_aging_test.cpp",
+    "rdb_read_only_test.cpp",
+    "rdb_sql_utils_test.cpp",
+    "rdb_store_concurrent_test.cpp",
+    "rdb_store_config_test.cpp",
+    "rdb_store_rekeyEx_test.cpp",
+    "rdb_store_subscribe_test.cpp",
+    "rdb_update_test.cpp",
+    "rdb_value_bucket_test.cpp",
+    "rdb_wal_limit_test.cpp",
+    "restricted_db_test.cpp",
+    "value_object_test.cpp",
+  ]
+
+  configs = [ ":module_private_config" ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "huks:libhukssdk",
+    "ipc:ipc_core",
+    "json:nlohmann_json_static",
+    "kv_store:database_utils",
+    "kv_store:datamgr_common",
+    "kv_store:distributeddata_inner",
+    "kv_store:distributeddb",
+    "kv_store:distributeddb_client",
+    "sqlite:sqlite",
+  ]
+
+  deps = [
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+  ]
+}
+
+###############################################################################
+group("unittest") {
+  testonly = true
+
+  deps = [
+    ":RdbInterfaceTest",
+  ]
+}
