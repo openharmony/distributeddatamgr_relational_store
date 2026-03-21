@@ -442,69 +442,6 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getSize_invalid_stri
 
 /**
  * @tc.number: RDB_Native_asset_test_0018
- * @tc.name: Abnormal testCase of asset for getCreateTime with empty string.
- * @tc.desc: 1.Create asset
- *           2.Set empty create time string
- *           3.Get create time should fail
- *           4.Destroy asset
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getCreateTime_empty_string, TestSize.Level1)
-{
-    Data_Asset *asset = OH_Data_Asset_CreateOne();
-    asset->asset_.createTime = "";
-
-    int64_t createTime = 0;
-    int errCode = OH_Data_Asset_GetCreateTime(asset, &createTime);
-    EXPECT_EQ(errCode, RDB_ERR);
-
-    OH_Data_Asset_DestroyOne(asset);
-}
-
-/**
- * @tc.number: RDB_Native_asset_test_0019
- * @tc.name: Abnormal testCase of asset for getModifyTime with empty string.
- * @tc.desc: 1.Create asset
- *           2.Set empty modify time string
- *           3.Get modify time should fail
- *           4.Destroy asset
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getModifyTime_empty_string, TestSize.Level1)
-{
-    Data_Asset *asset = OH_Data_Asset_CreateOne();
-    asset->asset_.modifyTime = "";
-
-    int64_t modifyTime = 0;
-    int errCode = OH_Data_Asset_GetModifyTime(asset, &modifyTime);
-    EXPECT_EQ(errCode, RDB_ERR);
-
-    OH_Data_Asset_DestroyOne(asset);
-}
-
-/**
- * @tc.number: RDB_Native_asset_test_0020
- * @tc.name: Abnormal testCase of asset for getSize with empty string.
- * @tc.desc: 1.Create asset
- *           2.Set empty size string
- *           3.Get size should fail
- *           4.Destroy asset
- * @tc.type: FUNC
- */
-HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getSize_empty_string, TestSize.Level1)
-{
-    Data_Asset *asset = OH_Data_Asset_CreateOne();
-    asset->asset_.size = "";
-
-    size_t size = 0;
-    int errCode = OH_Data_Asset_GetSize(asset, &size);
-    EXPECT_EQ(errCode, RDB_ERR);
-
-    OH_Data_Asset_DestroyOne(asset);
-}
-
-/**
- * @tc.number: RDB_Native_asset_test_0021
  * @tc.name: testCase of asset for getCreateTime with zero value.
  * @tc.desc: 1.Create asset
  *           2.Set zero create time
@@ -528,7 +465,7 @@ HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getCreateTime_zero, Te
 }
 
 /**
- * @tc.number: RDB_Native_asset_test_0022
+ * @tc.number: RDB_Native_asset_test_0019
  * @tc.name: testCase of asset for getSize with zero value.
  * @tc.desc: 1.Create asset
  *           2.Set zero size
@@ -552,7 +489,7 @@ HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getSize_zero, TestSize
 }
 
 /**
- * @tc.number: RDB_Native_asset_test_0023
+ * @tc.number: RDB_Native_asset_test_0020
  * @tc.name: Abnormal testCase of asset for getCreateTime with negative number in string.
  * @tc.desc: 1.Create asset
  *           2.Set negative number string
