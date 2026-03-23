@@ -505,7 +505,7 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
         } else {
             ctxt->isBatch = true;
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20,
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT_V20,
                 "The type of accountId must be string.");
             status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleInfos);
             ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20,
@@ -677,7 +677,7 @@ napi_value JsConfig::OnSyncInfoChanged(napi_env env, napi_callback_info info)
                 return record.bundleInfos == ctxt->bundleInfos && (*record.observer == ctxt->callback);
             });
         if (isDuplicate) {
-            LOG_DEBUG("Duplicate subscribe for sync info changed.");
+            LOG_INFO("Duplicate subscribe for sync info changed.");
             return nullptr;
         }
     }
@@ -733,23 +733,47 @@ napi_value JsConfig::OffSyncInfoChanged(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>> observersToRemove;
-    {
-        std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
-        for (auto it = syncInfoObservers_.begin(); it != syncInfoObservers_.end();) {
-            if (it->bundleInfos != ctxt->bundleInfos || (ctxt->hasCallback && !(*it->observer == ctxt->callback))) {
-                ++it;
-                continue;
-            }
-            observersToRemove.push_back(it->observer);
-            it = syncInfoObservers_.erase(it);
-        }
-    }
-    for (const auto &observer : observersToRemove) {
-        proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, ctxt->bundleInfos, observer);
-        observer->Clear();
+    auto unsubscribeInfos = CollectUnsubscribeInfos(ctxt->bundleInfos, ctxt->callback, ctxt->hasCallback);
+    for (const auto &[observer, bundleInfos] : unsubscribeInfos) {
+        proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
     }
     return nullptr;
+}
+
+JsConfig::UnsubscribeInfoList JsConfig::CollectUnsubscribeInfos(
+    const std::vector<CloudData::BundleInfo>& toUnsubscribe, napi_value callback, bool hasCallback)
+{
+    UnsubscribeInfoList unsubscribeInfos;
+    std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+    auto it = syncInfoObservers_.begin();
+    while (it != syncInfoObservers_.end()) {
+        std::vector<CloudData::BundleInfo> intersection;
+        for (const auto &info : toUnsubscribe) {
+            if (std::find(it->bundleInfos.begin(), it->bundleInfos.end(), info) != it->bundleInfos.end()) {
+                intersection.push_back(info);
+            }
+        }
+        
+        if (intersection.empty() || (hasCallback && !(*it->observer == callback))) {
+            ++it;
+            continue;
+        }
+        
+        for (const auto &info : intersection) {
+            auto removeIt = std::remove(it->bundleInfos.begin(), it->bundleInfos.end(), info);
+            it->bundleInfos.erase(removeIt, it->bundleInfos.end());
+        }
+        
+        unsubscribeInfos.emplace_back(it->observer, std::move(intersection));
+        
+        if (it->bundleInfos.empty()) {
+            it->observer->Clear();
+            it = syncInfoObservers_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    return unsubscribeInfos;
 }
 
 napi_value JsConfig::InitConfig(napi_env env, napi_value exports)

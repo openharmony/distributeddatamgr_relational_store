@@ -722,14 +722,14 @@ export default function CloudConfigEtsTest() {
 
     /**
      * @tc.name QueryLastSyncInfoBatch_InvalidBundleInfosType
-     * @tc.desc Test queryLastSyncInfo with invalid bundleInfos type (string)
+     * @tc.desc Test queryLastSyncInfo with invalid bundleInfos type (number)
      * @tc.type: FUNC
      * @tc.require: issueNumber
      */
     it('QueryLastSyncInfoBatch_InvalidBundleInfosType', 0, async function (done) {
       console.info('QueryLastSyncInfoBatch_InvalidBundleInfosType');
       try {
-        await cloudData.Config.queryLastSyncInfo("test_account", "invalid");
+        await cloudData.Config.queryLastSyncInfo("test_account", 12345);
         expect(false).assertTrue();
         done();
       } catch (e) {
@@ -871,7 +871,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('QueryLastSyncInfoBatch_MissingAllParams fail' +
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 14800001).assertTrue();
+        expect(e.code == 401).assertTrue();
         done();
       }
     })
@@ -891,7 +891,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('QueryLastSyncInfoBatch_MissingBundleInfosParam fail' +
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 14800001).assertTrue();
+        expect(e.code == 401).assertTrue();
         done();
       }
     })
@@ -961,7 +961,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_EmptyBundleInfosArray fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -982,7 +982,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_NullBundleInfos fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1002,7 +1002,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_UndefinedBundleInfos fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1022,7 +1022,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_InvalidBundleInfosType fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1045,7 +1045,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_NullCallback fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1068,7 +1068,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_UndefinedCallback fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1091,7 +1091,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_InvalidCallbackType fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1114,7 +1114,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_EmptyBundleName fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1137,7 +1137,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_NullBundleName fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1227,7 +1227,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_MissingAllParams fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1250,7 +1250,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OnSyncInfoChanged_MissingCallbackParam fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1273,7 +1273,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OffSyncInfoChanged_EmptyBundleInfosArray fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });
@@ -1293,7 +1293,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('OffSyncInfoChanged_InvalidBundleInfosType fail' + 
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 401).assertTrue();
+        expect(e.code == 14800001).assertTrue();
         done();
       }
     });

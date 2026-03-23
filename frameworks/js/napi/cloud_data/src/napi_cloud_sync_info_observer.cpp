@@ -39,7 +39,7 @@ void NapiCloudSyncInfoObserver::OnSyncInfoChanged(const std::map<std::string, Qu
     if (uvQueue == nullptr) {
         return;
     }
-    uvQueue->AsyncCallInOrder({ callback_, false },
+    uvQueue->AsyncCallInOrder({ callback_, true },
         [observer = shared_from_this(), data](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
             argv[0] = JSUtils::Convert2JSValue(env, data);

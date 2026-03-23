@@ -195,6 +195,10 @@ int32_t Convert2Value(napi_env env, napi_value input, BundleInfo &output)
         return napi_invalid_arg;
     }
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "bundleName", output.bundleName), napi_invalid_arg);
+    if (output.bundleName.empty()) {
+        LOG_ERROR("bundleName is empty");
+        return napi_invalid_arg;
+    }
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "storeId", output.storeId, true), napi_invalid_arg);
     return napi_ok;
 }

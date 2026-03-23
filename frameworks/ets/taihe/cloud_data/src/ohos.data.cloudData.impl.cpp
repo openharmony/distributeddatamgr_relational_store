@@ -463,6 +463,43 @@ void ConfigImpl::OnSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInf
     syncInfoObservers_.push_back({ nativeBundleInfos, observer });
 }
 
+ConfigImpl::UnsubscribeInfoList ConfigImpl::CollectUnsubscribeInfos(
+    const std::vector<OHOS::CloudData::BundleInfo> &toUnsubscribe,
+    optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress)
+{
+    bool hasCallback = progress.has_value();
+    UnsubscribeInfoList unsubscribeInfos;
+    std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+    auto it = syncInfoObservers_.begin();
+    while (it != syncInfoObservers_.end()) {
+        std::vector<OHOS::CloudData::BundleInfo> intersection;
+        for (const auto &info : toUnsubscribe) {
+            if (std::find(it->bundleInfos.begin(), it->bundleInfos.end(), info) != it->bundleInfos.end()) {
+                intersection.push_back(info);
+            }
+        }
+
+        if (intersection.empty() || (hasCallback && !(*it->observer == progress.value()))) {
+            ++it;
+            continue;
+        }
+
+        for (const auto &info : intersection) {
+            auto removeIt = std::remove(it->bundleInfos.begin(), it->bundleInfos.end(), info);
+            it->bundleInfos.erase(removeIt, it->bundleInfos.end());
+        }
+
+        unsubscribeInfos.emplace_back(it->observer, std::move(intersection));
+
+        if (it->bundleInfos.empty()) {
+            it = syncInfoObservers_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    return unsubscribeInfos;
+}
+
 void ConfigImpl::OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
     optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress)
 {
@@ -482,30 +519,20 @@ void ConfigImpl::OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleIn
         nativeBundleInfos.push_back(nativeInfo);
     }
 
-    bool hasCallback = progress.has_value();
-    std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>> observersToRemove;
-    {
-        std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
-        for (auto it = syncInfoObservers_.begin(); it != syncInfoObservers_.end();) {
-            if (it->bundleInfos != nativeBundleInfos) {
-                ++it;
-                continue;
-            }
-            if (hasCallback && !(*it->observer == progress.value())) {
-                ++it;
-                continue;
-            }
-            observersToRemove.push_back(it->observer);
-            it = syncInfoObservers_.erase(it);
+    auto unsubscribeInfos = CollectUnsubscribeInfos(nativeBundleInfos, progress);
+
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
         }
+        ThrowAniError(state);
+        return;
     }
 
-    auto work = [nativeBundleInfos, observersToRemove](std::shared_ptr<CloudService> proxy) {
-        for (const auto &observer : observersToRemove) {
-            proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, nativeBundleInfos, observer);
-        }
-    };
-    RequestIPC(work);
+    for (const auto &[observer, infos] : unsubscribeInfos) {
+        proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, infos, observer);
+    }
 }
 
 void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
