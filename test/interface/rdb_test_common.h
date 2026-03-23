@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace NativeRdb {
 
-static const std::string RDB_TEST_PATH = "/data/test/";
+inline const std::string RDB_TEST_PATH = "/data/test/";
 struct RdbRowData {
     int id;
     std::string name;

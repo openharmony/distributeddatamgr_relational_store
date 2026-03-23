@@ -252,6 +252,63 @@ void RdbRekeyTest::CheckQueryData(std::shared_ptr<RdbStore> &store)
 }
 
 /**
+* @tc.name: Rdb_Rekey_Test_001
+* @tc.desc: test RdbStore rekey function
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_01, TestSize.Level1)
+{
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
+
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_EXPIRED);
+    ASSERT_TRUE(isFileDateChanged);
+
+    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    isFileExists = OHOS::FileExists(newKeyPath);
+    ASSERT_FALSE(isFileExists);
+
+    CheckQueryData(store);
+}
+
+/**
+* @tc.name: Rdb_Rekey_Test_002
+* @tc.desc: test RdbStore with not outdated password
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_02, TestSize.Level1)
+{
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_NOT_EXPIRED);
+    ASSERT_TRUE(isFileDateChanged);
+
+    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
+    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_NOT_EXPIRED));
+
+    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    CheckQueryData(store);
+}
+
+/**
 * @tc.name: Rdb_Rekey_Test_003
 * @tc.desc: try to open store and execute RekeyRecover() without key and new key files.
 * @tc.type: FUNC
@@ -280,6 +337,1799 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_03, TestSize.Level1)
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(errCode, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_Test_004
+* @tc.desc: try to open store and modify create date to a future time.
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_04, TestSize.Level1)
+{
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
+
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, -RdbRekeyTest::HOURS_EXPIRED);
+    ASSERT_TRUE(isFileDateChanged);
+
+    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RekeyTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    isFileExists = OHOS::FileExists(newKeyPath);
+    ASSERT_FALSE(isFileExists);
+
+    CheckQueryData(store);
+}
+
+/**
+* @tc.name: Rdb_Rekey_RenameFailed_05
+* @tc.desc: re key and rename failed the new key file.
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_RenameFailed_05, TestSize.Level1)
+{
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
+
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_LONG_LONG_AGO);
+    ASSERT_TRUE(isFileDateChanged);
+
+    RdbStoreConfig config = GetRdbConfig(RdbRekeyTest::encryptedDatabasePath);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    for (int i = 0; i < 50; ++i) {
+        auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+        ASSERT_NE(store, nullptr);
+        ASSERT_EQ(errCode, E_OK);
+        store = nullptr;
+        SaveNewKey(encryptedDatabaseName);
+    }
+
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    CheckQueryData(store);
+}
+
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_06
+* @tc.desc: test RdbStore rekey function
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_06, TestSize.Level1)
+{
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    std::string newKeyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2.new";
+
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+
+    bool isFileDateChanged = ChangeKeyFileDate(encryptedDatabaseName, RdbRekeyTest::HOURS_EXPIRED);
+    ASSERT_TRUE(isFileDateChanged);
+
+    auto changedDate = GetKeyFileDate(encryptedDatabaseName);
+    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_EXPIRED));
+
+    RdbStoreConfig config = GetRdbNotRekeyConfig(RdbRekeyTest::encryptedDatabasePath);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    isFileExists = OHOS::FileExists(newKeyPath);
+    ASSERT_FALSE(isFileExists);
+
+    ASSERT_TRUE(std::chrono::system_clock::now() - changedDate > std::chrono::hours(RdbRekeyTest::HOURS_EXPIRED));
+    CheckQueryData(store);
+}
+
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_07
+* @tc.desc: test deleting the key file of the encrypted database
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_07, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetAllowRebuild(true);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    struct stat fileStat;
+    ino_t inodeNumber1 = -1;
+    if (stat(keyPath.c_str(), &fileStat) == 0) {
+        inodeNumber1 = fileStat.st_ino;
+    }
+    store = nullptr;
+
+    {
+        std::ofstream fsDb(encryptedDatabasePath, std::ios_base::binary | std::ios_base::out);
+        fsDb.seekp(64);
+        fsDb.write("hello", 5);
+        fsDb.close();
+    }
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    ino_t inodeNumber2 = -1;
+    if (stat(keyPath.c_str(), &fileStat) == 0) {
+        inodeNumber2 = fileStat.st_ino;
+    }
+
+    ASSERT_NE(inodeNumber1, inodeNumber2);
+}
+
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_08
+* @tc.desc: test deleting the key file of the encrypted database
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_08, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetAllowRebuild(false);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    struct stat fileStat;
+    ino_t inodeNumber1 = -1;
+    if (stat(keyPath.c_str(), &fileStat) == 0) {
+        inodeNumber1 = fileStat.st_ino;
+    }
+    store = nullptr;
+
+    {
+        std::ofstream fsDb(encryptedDatabasePath, std::ios_base::binary | std::ios_base::out);
+        fsDb.seekp(64);
+        fsDb.write("hello", 5);
+        fsDb.close();
+    }
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+    ino_t inodeNumber2 = -1;
+    if (stat(keyPath.c_str(), &fileStat) == 0) {
+        inodeNumber2 = fileStat.st_ino;
+    }
+
+    ASSERT_EQ(inodeNumber1, inodeNumber2);
+}
+
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_009
+* @tc.desc: test rekey the encrypted database
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_009, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetAllowRebuild(false);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+ 
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+    cryptoParam1.iterNum = -1;
+    errCode = store->Rekey(cryptoParam1);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
+
+    RdbStoreConfig::CryptoParam cryptoParam2;
+    cryptoParam2.encryptAlgo = -1;
+    errCode = store->Rekey(cryptoParam2);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
+
+    RdbStoreConfig::CryptoParam cryptoParam3;
+    cryptoParam3.hmacAlgo = -1;
+    errCode = store->Rekey(cryptoParam3);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
+
+    RdbStoreConfig::CryptoParam cryptoParam4;
+    cryptoParam4.kdfAlgo = -1;
+    errCode = store->Rekey(cryptoParam4);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
+
+    RdbStoreConfig::CryptoParam cryptoParam5;
+    cryptoParam5.cryptoPageSize = -1;
+    errCode = store->Rekey(cryptoParam5);
+    ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+}
+ 
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_010
+* @tc.desc: test rekey the encrypted database
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_010, TestSize.Level1)
+{
+    const std::string encryptedDatabaseName1 = "encrypted1.db";
+    const std::string encryptedDatabasePath1 = RDB_TEST_PATH + encryptedDatabaseName1;
+    RdbStoreConfig config(encryptedDatabasePath1);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan1"));
+    values.PutInt("age", 50);
+    values.PutDouble("salary", 263);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3, 4, 5});
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam;
+    auto isEncrypt = config.IsEncrypt();
+    ASSERT_EQ(isEncrypt, false);
+    errCode = store->Rekey(cryptoParam);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    errCode = store->Rekey(cryptoParam);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi1"));
+    values.PutInt("age", 191);
+    values.PutDouble("salary", 2001.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6, 7 });
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+ 
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_011
+* @tc.desc: test rekey other parameters
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_011, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetEncryptStatus(true);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("1zhangsan"));
+    values.PutInt("age", 118);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+    cryptoParam1.iterNum = 500;
+    errCode = store->Rekey(cryptoParam1);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    RdbStoreConfig::CryptoParam cryptoParam2;
+    cryptoParam2.encryptAlgo = EncryptAlgo::AES_256_CBC;
+    errCode = store->Rekey(cryptoParam2);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    RdbStoreConfig::CryptoParam cryptoParam3;
+    cryptoParam3.hmacAlgo = HmacAlgo::SHA512;
+    errCode = store->Rekey(cryptoParam3);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    RdbStoreConfig::CryptoParam cryptoParam4;
+    cryptoParam4.kdfAlgo = KdfAlgo::KDF_SHA512;
+    errCode = store->Rekey(cryptoParam4);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    RdbStoreConfig::CryptoParam cryptoParam5;
+    cryptoParam5.cryptoPageSize = 2048;
+    errCode = store->Rekey(cryptoParam5);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+ 
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_12
+* @tc.desc: test custom encrypt rekey
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_012, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+ 
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 2, 3, 4, 5, 1 };
+    errCode = store->Rekey(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+ 
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+ 
+ 
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_013
+* @tc.desc: test rekey
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_013, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    int changedRows;
+    values.Clear();
+    values.PutInt("age", 30);
+    ret = store->Update(changedRows, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    errCode = store->Rekey(cryptoParam);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+ 
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    values.Clear();
+    values.PutInt("age", 60);
+    ret = store->Update(changedRows, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, changedRows);
+ 
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+ 
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_014
+* @tc.desc: test rekey
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_014, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam;
+    errCode = store->Rekey(cryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    int changedRows = 0;
+    AbsRdbPredicates predicates("test1");
+    predicates.EqualTo("id", 1);
+    ret = store->Delete(changedRows, predicates);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(changedRows, 1);
+
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+}
+ 
+ 
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_015
+* @tc.desc: test rekey
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_015, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    RdbHelper::DeleteRdbStore(config);
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    errCode = store->Rekey(newCryptoParam);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+ 
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+ 
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_016
+* @tc.desc: test transaction rekey
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_016, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetAllowRebuild(false);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(config);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(1, result.second);
+
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_FALSE(isFileExists);
+
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 5, 4, 3, 2, 1 };
+    errCode = store->Rekey(newCryptoParam);
+    ASSERT_EQ(errCode, E_DATABASE_BUSY);
+
+    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(2, result.second);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+
+    resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(rowCount, 2);
+
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+ 
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_017
+* @tc.desc: test transaction rekey
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_017, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetAllowRebuild(false);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(config);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+ 
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+    
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+ 
+    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(1, result.second);
+ 
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+ 
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    errCode = store->Rekey(newCryptoParam);
+    ASSERT_EQ(errCode, E_DATABASE_BUSY);
+ 
+    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(2, result.second);
+ 
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+ 
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+ 
+    resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(rowCount, 2);
+ 
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_018
+* @tc.desc: rekey test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_018, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetEncryptStatus(true);
+    config.SetReadOnly(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+
+    errCode = store->Rekey(cryptoParam1);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    int ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Delete_Rekey_Test_019
+* @tc.desc: mutltiThread rekey test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_019, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetEncryptStatus(true);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    
+    auto blockResult = std::make_shared<OHOS::BlockData<bool>>(3, false);
+    std::thread thread([store, blockResult]() {
+        RdbStoreConfig::CryptoParam cryptoParam;
+        cryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 2, 3, 4, 5, 1 };
+        int ret1 = store->Rekey(cryptoParam);
+        LOG_INFO("Rdb_Rekey_019 thread Rekey finish, code:%{public}d", ret1);
+        blockResult->SetValue(true);
+    });
+    thread.detach();
+    RdbStoreConfig::CryptoParam cryptoParam2;
+    cryptoParam2.encryptKey_ = std::vector<uint8_t>{ 6, 5, 3, 4, 2, 1 };
+    int ret2 = store->Rekey(cryptoParam2);
+    LOG_INFO("Rdb_Rekey_019 main Rekey finish, code:%{public}d", ret2);
+    EXPECT_TRUE(blockResult->GetValue());
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+    
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan1"));
+    values.PutInt("age", 50);
+    values.PutDouble("salary", 263);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3, 4, 5 });
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    int changedRows;
+    values.Clear();
+    values.PutInt("age", 30);
+    ret = store->Update(changedRows, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+}
+
+/**
+* @tc.name: Rdb_Rekey_020
+* @tc.desc: non-encrypted rekey to encrypted
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_020, TestSize.Level1)
+{
+    const std::string encryptedDatabaseName1 = "encrypted1.db";
+    const std::string encryptedDatabasePath1 = RDB_TEST_PATH + encryptedDatabaseName1;
+    RdbStoreConfig config(encryptedDatabasePath1);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan1"));
+    values.PutInt("age", 50);
+    values.PutDouble("salary", 263);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3, 4, 5 });
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam;
+    auto isEncrypt = config.IsEncrypt();
+    ASSERT_EQ(isEncrypt, false);
+    errCode = store->RekeyEx(cryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi1"));
+    values.PutInt("age", 191);
+    values.PutDouble("salary", 2001.5);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 4, 5, 6, 7 });
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    config.SetEncryptStatus(true);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_021
+* @tc.desc: rekey other parameters
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_021, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetEncryptStatus(true);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("1zhangsan"));
+    values.PutInt("age", 118);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+    cryptoParam1.iterNum = 500;
+    cryptoParam1.encryptAlgo = EncryptAlgo::AES_256_CBC;
+    errCode = store->RekeyEx(cryptoParam1);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig::CryptoParam cryptoParam2;
+    cryptoParam2.hmacAlgo = HmacAlgo::SHA512;
+    cryptoParam2.kdfAlgo = KdfAlgo::KDF_SHA512;
+    cryptoParam2.cryptoPageSize = 2048;
+    errCode = store->RekeyEx(cryptoParam2);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    config.SetCryptoParam(cryptoParam2);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+}
+
+/**
+* @tc.name: Rdb_Rekey_022
+* @tc.desc: custom encrypted rekey to custom encrypted
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_022, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 2, 3, 4, 5, 1 };
+    errCode = store->RekeyEx(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_023
+* @tc.desc: encrypted rekey to custom encrypted
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_023, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    int changedRows;
+    values.Clear();
+    values.PutInt("age", 30);
+    ret = store->Update(changedRows, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    errCode = store->RekeyEx(cryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    config.SetCryptoParam(cryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+
+    values.Clear();
+    values.PutInt("age", 60);
+    ret = store->Update(changedRows, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, changedRows);
+
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_024
+* @tc.desc: encrypted rekey to encrypted
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_024, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam;
+    errCode = store->RekeyEx(cryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    int changedRows = 0;
+    AbsRdbPredicates predicates("test1");
+    predicates.EqualTo("id", 1);
+    ret = store->Delete(changedRows, predicates);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(changedRows, 1);
+
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+}
+
+/**
+* @tc.name: Rdb_Rekey_025
+* @tc.desc: custom encrypted rekey to encrypted
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_025, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    RdbHelper::DeleteRdbStore(config);
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    errCode = store->RekeyEx(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_026
+* @tc.desc: encrypted rekey to non-encrypted
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_026, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptAlgo = EncryptAlgo::PLAIN_TEXT;
+    errCode = store->RekeyEx(cryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    int changedRows = 0;
+    AbsRdbPredicates predicates("test1");
+    predicates.EqualTo("id", 1);
+    ret = store->Delete(changedRows, predicates);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(changedRows, 1);
+
+    store = nullptr;
+    config.SetEncryptStatus(false);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+}
+
+/**
+* @tc.name: Rdb_Rekey_027
+* @tc.desc: test rekey iterNum
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_027, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetEncryptStatus(true);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("1zhangsan"));
+    values.PutInt("age", 118);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+    cryptoParam1.iterNum = 500;
+    errCode = store->RekeyEx(cryptoParam1);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_EQ(store, nullptr);
+    config.SetCryptoParam(cryptoParam1);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_028
+* @tc.desc: test rekey encryptAlgo
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_028, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 2, 3, 4, 5, 1 };
+    newCryptoParam.encryptAlgo = EncryptAlgo::AES_256_CBC;
+    newCryptoParam.iterNum = 500;
+    errCode = store->RekeyEx(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    LOG_ERROR("newCryptoParam.ITEM  = %{public}d", newCryptoParam.iterNum);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+}
+
+/**
+* @tc.name: Rdb_Rekey_029
+* @tc.desc: test rekey hmacAlgo
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_029, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    int changedRows;
+    values.Clear();
+    values.PutInt("age", 30);
+    ret = store->Update(changedRows, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    cryptoParam.hmacAlgo = HmacAlgo::SHA512;
+    errCode = store->RekeyEx(cryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    config.SetCryptoParam(cryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    values.Clear();
+    values.PutInt("age", 60);
+    ret = store->Update(changedRows, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, changedRows);
+
+    ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_030
+* @tc.desc: test rekey kdfAlgo
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_030, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.kdfAlgo = KdfAlgo::KDF_SHA512;
+    errCode = store->RekeyEx(cryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    int changedRows = 0;
+    AbsRdbPredicates predicates("test1");
+    predicates.EqualTo("id", 1);
+    ret = store->Delete(changedRows, predicates);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(changedRows, 1);
+
+    store = nullptr;
+    config.SetCryptoParam(cryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+}
+
+/**
+* @tc.name: Rdb_Rekey_031
+* @tc.desc: test rekey cryptoPageSize
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_031, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    RdbHelper::DeleteRdbStore(config);
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    newCryptoParam.cryptoPageSize = 2048;
+    errCode = store->RekeyEx(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    values.PutInt("id", 2);
+    values.PutString("name", std::string("lisi"));
+    values.PutInt("age", 19);
+    ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(2, id);
+
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_032
+* @tc.desc: test transaction rekey
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_032, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetAllowRebuild(false);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(config);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(1, result.second);
+
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_FALSE(isFileExists);
+
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 5, 4, 3, 2, 1 };
+    errCode = store->RekeyEx(newCryptoParam);
+    ASSERT_EQ(errCode, E_SQLITE_BUSY);
+
+    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(2, result.second);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+
+    resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(rowCount, 2);
+
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_033
+* @tc.desc: test transaction rekey
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_033, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetAllowRebuild(false);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    RdbHelper::DeleteRdbStore(config);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(1, result.second);
+
+    std::string keyPath = encryptedDatabaseKeyDir + RemoveSuffix(encryptedDatabaseName) + ".pub_key_v2";
+    bool isFileExists = OHOS::FileExists(keyPath);
+    ASSERT_TRUE(isFileExists);
+
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    errCode = store->RekeyEx(newCryptoParam);
+    ASSERT_EQ(errCode, E_SQLITE_BUSY);
+
+    result = transaction->Insert("test", UTUtils::SetRowData(UTUtils::g_rowData[1]));
+    ASSERT_EQ(result.first, E_OK);
+    ASSERT_EQ(2, result.second);
+
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 2);
+
+    ret = transaction->Commit();
+    ASSERT_EQ(ret, E_OK);
+
+    resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    resultSet->GetRowCount(rowCount);
+    EXPECT_EQ(rowCount, 2);
+
+    RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_034
+* @tc.desc: readOnly rekey test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_034, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetEncryptStatus(true);
+    config.SetReadOnly(true);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+
+    errCode = store->RekeyEx(cryptoParam1);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    int ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_035
+* @tc.desc: mutltiThread rekey test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_035, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetEncryptStatus(true);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    auto blockResult = std::make_shared<OHOS::BlockData<bool>>(3, false);
+    std::thread thread([store, blockResult]() {
+        RdbStoreConfig::CryptoParam cryptoParam;
+        cryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 2, 3, 4, 5, 1 };
+        int ret1 = store->RekeyEx(cryptoParam);
+        LOG_INFO("Rdb_Rekey_035 thread Rekey finish, code:%{public}d", ret1);
+        blockResult->SetValue(true);
+    });
+    thread.detach();
+    RdbStoreConfig::CryptoParam cryptoParam2;
+    cryptoParam2.encryptKey_ = std::vector<uint8_t>{ 6, 5, 3, 4, 2, 1 };
+    int ret2 = store->RekeyEx(cryptoParam2);
+    LOG_INFO("Rdb_Rekey_035 main Rekey finish, code:%{public}d", ret2);
+    EXPECT_TRUE(blockResult->GetValue());
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER, salary REAL, blobType BLOB)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan1"));
+    values.PutInt("age", 50);
+    values.PutDouble("salary", 263);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3, 4, 5 });
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    int changedRows;
+    values.Clear();
+    values.PutInt("age", 30);
+    ret = store->Update(changedRows, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, changedRows);
+
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
 }
 
 /**
@@ -317,4 +2167,250 @@ HWTEST_F(RdbRekeyTest, Rdb_Rekey_036, TestSize.Level1)
     EXPECT_EQ(codecConfig.pCipher, nullptr);
     EXPECT_EQ(codecConfig.pHmacAlgo, nullptr);
     EXPECT_EQ(codecConfig.pKdfAlgo, nullptr);
+}
+
+/**
+* @tc.name: Rdb_Rekey_037
+* @tc.desc: memory rekey test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_037, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetName("RekeyEx_Memmory_test.db");
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+
+    errCode = store->RekeyEx(cryptoParam1);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    int ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_038
+* @tc.desc: replica rekey test
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_038, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    config.SetEncryptStatus(true);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    RdbStoreConfig::CryptoParam cryptoParam1;
+
+    errCode = store->RekeyEx(cryptoParam1);
+    ASSERT_EQ(errCode, E_NOT_SUPPORT);
+
+    int ret = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+* @tc.name: Rdb_Rekey_039
+* @tc.desc: open non-enctypted database with encryptAlgo is PLAIN_TEXT
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_039, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    int errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptAlgo = EncryptAlgo::PLAIN_TEXT;
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetName("test_plain_test.db");
+    config.SetCryptoParam(cryptoParam);
+    RekeyTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto ret = config.IsEncrypt();
+    ASSERT_EQ(ret, false);
+}
+
+/**
+* @tc.name: Rdb_Rekey_040
+* @tc.desc: open non-enctypted database with encryptAlgo is PLAIN_TEXT then rekeyex success and query success
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_040, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    int errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptAlgo = EncryptAlgo::PLAIN_TEXT;
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("com.example.test_rekey");
+    config.SetCryptoParam(cryptoParam);
+    RekeyTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam;
+    newCryptoParam.encryptAlgo = EncryptAlgo::AES_256_CBC;
+    newCryptoParam.iterNum = 500;
+    newCryptoParam.hmacAlgo = HmacAlgo::SHA512;
+    newCryptoParam.kdfAlgo = KdfAlgo::KDF_SHA512;
+    newCryptoParam.cryptoPageSize = 2048;
+    errCode = store->RekeyEx(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    values.Clear();
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+}
+
+/**
+* @tc.name: Rdb_Rekey_041
+* @tc.desc: test cryptoParam is custom then rekey and query success
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_041, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    int errCode = RdbHelper::DeleteRdbStore(config);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
+    cryptoParam.encryptAlgo = EncryptAlgo::AES_256_CBC;
+    cryptoParam.iterNum = 500;
+    cryptoParam.hmacAlgo = HmacAlgo::SHA512;
+    cryptoParam.kdfAlgo = KdfAlgo::KDF_SHA512;
+    cryptoParam.cryptoPageSize = 2048;
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    errCode = E_OK;
+
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam = cryptoParam;
+    newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 2, 3, 4, 5, 1 };
+    errCode = store->Rekey(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
+}
+
+/**
+* @tc.name: Rdb_Rekey_042
+* @tc.desc: test cryptoParam is custom then rekey and query success
+* @tc.type: FUNC
+*/
+HWTEST_F(RdbRekeyTest, Rdb_Rekey_042, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbRekeyTest::encryptedDatabasePath);
+    int errCode = RdbHelper::DeleteRdbStore(config);
+    config.SetSecurityLevel(SecurityLevel::S1);
+    config.SetEncryptStatus(true);
+    RdbStoreConfig::CryptoParam cryptoParam;
+    cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6, 7, 8 };
+    cryptoParam.encryptAlgo = EncryptAlgo::AES_256_GCM;
+    cryptoParam.iterNum = 2000;
+    cryptoParam.hmacAlgo = HmacAlgo::SHA1;
+    cryptoParam.kdfAlgo = KdfAlgo::KDF_SHA256;
+    cryptoParam.cryptoPageSize = 4096;
+    config.SetCryptoParam(cryptoParam);
+    config.SetBundleName("com.example.test_rekey");
+    RekeyTestOpenCallback helper;
+    errCode = E_OK;
+
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                      "name TEXT NOT NULL, age INTEGER)");
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    values.PutInt("age", 18);
+    int ret = store->Insert(id, "test1", values);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(1, id);
+
+    RdbStoreConfig::CryptoParam newCryptoParam = cryptoParam;
+    newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 8, 7, 6, 2, 3, 4, 5, 1 };
+    errCode = store->Rekey(newCryptoParam);
+    ASSERT_EQ(errCode, E_OK);
+
+    store = nullptr;
+    config.SetCryptoParam(newCryptoParam);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto resultSet = store->QueryByStep("SELECT * FROM test1");
+    ASSERT_NE(resultSet, nullptr);
+    int32_t rowCount{};
+    ret = resultSet->GetRowCount(rowCount);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_EQ(rowCount, 1);
 }

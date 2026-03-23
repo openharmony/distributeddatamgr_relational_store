@@ -100,13 +100,13 @@ void RdbInterfaceStoreDistributedTest::SetUpTestCase()
 
 void RdbInterfaceStoreDistributedTest::TearDownTestCase()
 {
-    RdbHelper::DeleteRdbStore(RdbInterfaceStoreDistributedTest::DRDB_PATH + RdbInterfaceStoreDistributedTest::DRDB_NAME);
+    RdbHelper::DeleteRdbStore(
+        RdbInterfaceStoreDistributedTest::DRDB_PATH + RdbInterfaceStoreDistributedTest::DRDB_NAME);
 }
 
 void RdbInterfaceStoreDistributedTest::SetUp()
 {
     EXPECT_NE(nullptr, rdbStore);
-    rdbStore->ExecuteSql("DELETE FROM test");
 }
 
 void RdbInterfaceStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)

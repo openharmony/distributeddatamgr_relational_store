@@ -25,6 +25,21 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
+// Database version constants
+constexpr int DATABASE_VERSION_UPGRADED = 2;
+
+// Test data ID constants
+constexpr int TEST_ID_3 = 3;
+constexpr int TEST_ID_4 = 4;
+constexpr int TEST_ID_5 = 5;
+
+// Test data age constants
+constexpr int ROW_COUNT_THREE = 3;
+constexpr int TEST_AGE_18 = 18;
+constexpr int TEST_AGE_19 = 19;
+constexpr int TEST_AGE_20 = 20;
+constexpr int TEST_AGE_21 = 21;
+
 class RdbInterfaceGetStoreTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -118,12 +133,12 @@ void RdbInterfaceGetStoreTest::QueryCheck1(std::shared_ptr<RdbStore> &store) con
     int64_t id;
     ValuesBucket values;
     values.Clear();
-    values.PutInt("id", 3);
+    values.PutInt("id", TEST_ID_3);
     values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 18);
+    values.PutInt("age", TEST_AGE_18);
     ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, id);
+    EXPECT_EQ(TEST_ID_3, id);
 
     std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test1");
     EXPECT_NE(resultSet, nullptr);
@@ -153,13 +168,13 @@ void RdbInterfaceGetStoreTest::QueryCheck2(std::shared_ptr<RdbStore> &store) con
     EXPECT_EQ(ret, E_OK);
     ret = resultSet->GetInt(columnIndex, intVal);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(intVal, 18);
+    EXPECT_EQ(intVal, TEST_AGE_18);
 
     ValuesBucket values;
     values.Clear();
     values.PutInt("id", 1);
     values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 18);
+    values.PutInt("age", TEST_AGE_18);
     ret = store->Insert(id, "test2", values);
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, id);
@@ -256,7 +271,7 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_004, TestSize.Level1)
 {
     std::shared_ptr<RdbStore> store1 = CreateGetRDB(1);
 
-    std::shared_ptr<RdbStore> store = CreateGetRDB(2);
+    std::shared_ptr<RdbStore> store = CreateGetRDB(DATABASE_VERSION_UPGRADED);
 
     int currentVersion;
     int64_t id;
@@ -276,36 +291,36 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_004, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
 
     values.Clear();
-    values.PutInt("id", 3);
+    values.PutInt("id", TEST_ID_3);
     values.PutString("name", std::string("lisi"));
-    values.PutInt("age", 18);
+    values.PutInt("age", TEST_AGE_18);
     ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, id);
+    EXPECT_EQ(TEST_ID_3, id);
 
     values.Clear();
-    values.PutInt("id", 4);
+    values.PutInt("id", TEST_ID_4);
     values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 20);
+    values.PutInt("age", TEST_AGE_20);
     ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(4, id);
+    EXPECT_EQ(TEST_ID_4, id);
 
     values.Clear();
-    values.PutInt("id", 5);
+    values.PutInt("id", TEST_ID_5);
     values.PutString("name", std::string("zhangsan"));
-    values.PutInt("age", 19);
+    values.PutInt("age", TEST_AGE_19);
     ret = store->Insert(id, "test1", values);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(5, id);
+    EXPECT_EQ(TEST_ID_5, id);
 
     std::shared_ptr<ResultSet> resultSet = store1->QuerySql("select * from test1");
     ret = resultSet->GetRowCount(rowCount);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, rowCount);
+    EXPECT_EQ(ROW_COUNT_THREE, rowCount);
 
     values.Clear();
-    values.PutInt("age", 21);
+    values.PutInt("age", TEST_AGE_21);
     ret = store->Update(changedRows, "test1", values, "age = ?", std::vector<std::string>{ "18" });
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(1, changedRows);
@@ -325,7 +340,7 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_004, TestSize.Level1)
 HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_005, TestSize.Level1)
 {
     sleep(1);
-    CreateRDB(2);
+    CreateRDB(DATABASE_VERSION_UPGRADED);
 }
 
 /**
@@ -340,12 +355,12 @@ HWTEST_F(RdbInterfaceGetStoreTest, RdbStore_GetStore_006, TestSize.Level1)
     RdbStoreConfig config(RdbInterfaceGetStoreTest::MAIN_DATABASE_NAME_STATUS);
     GetRdbOpenCallback helper;
     int errCode = E_OK;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 2, helper, errCode);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, DATABASE_VERSION_UPGRADED, helper, errCode);
     EXPECT_NE(store, nullptr);
     int currentVersion;
     int ret = store->GetVersion(currentVersion);
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(currentVersion, 2);
+    EXPECT_EQ(currentVersion, DATABASE_VERSION_UPGRADED);
     sleep(1);
 }
 
