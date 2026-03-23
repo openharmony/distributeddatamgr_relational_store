@@ -107,7 +107,6 @@ void RdbInterfaceStoreDistributedTest::TearDownTestCase()
 void RdbInterfaceStoreDistributedTest::SetUp()
 {
     EXPECT_NE(nullptr, rdbStore);
-    rdbStore->ExecuteSql("DELETE FROM test");
 }
 
 void RdbInterfaceStoreDistributedTest::InsertValue(std::shared_ptr<RdbStore> &store)
