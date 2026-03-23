@@ -57,6 +57,7 @@ ohos_unittest("RdbInterfaceTest") {
     "rdb_store_interface_test.cpp",
     "rdb_transaction_test.cpp",
     "rdb_upgrade_test.cpp",
+    "rdb_execute_rd_test.cpp",
     "rdb_encrypt_decrypt_test.cpp",
     "rdb_duplicate_column_data_test.cpp",
     "rdb_predicates_join_b_test.cpp",
