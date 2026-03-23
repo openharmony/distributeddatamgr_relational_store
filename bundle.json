@@ -226,6 +226,7 @@
                 }
             ],
             "test": [
+                "//foundation/distributeddatamgr/relational_store/test/interface:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:performancetest",
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:unittest",

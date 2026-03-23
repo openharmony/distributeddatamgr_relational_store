@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,7 @@ namespace OHOS {
 namespace NativeRdb {
 
 inline const std::string RDB_TEST_PATH = "/data/test/";
-struct RowData {
+struct RdbRowData {
     int id;
     std::string name;
     int age;
@@ -34,7 +34,7 @@ struct RowData {
     std::vector<AssetValue> assets;
 };
 
-struct RowDatas {
+struct RdbRowDatas {
     int id;
     std::string eName;
     int jobId;
@@ -45,15 +45,15 @@ struct RowDatas {
     int deptId;
 };
 
-class UTUtils {
+class RdbTestUtils {
 public:
-    static ValuesBucket SetRowData(const RowData &rowData);
+    static ValuesBucket SetRowData(const RdbRowData &rowData);
 
-    static ValuesBucket SetRowDatas(const RowDatas &rowDatas);
+    static ValuesBucket SetRowDatas(const RdbRowDatas &rowDatas);
 
-    static const RowData g_rowData[3];
+    static const RdbRowData g_rowData[3];
 
-    static const RowDatas gRowDatas[14];
+    static const RdbRowDatas g_RowDatas[14];
 };
 
 } // namespace NativeRdb
