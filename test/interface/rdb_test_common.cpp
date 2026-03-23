@@ -77,7 +77,7 @@ ValuesBucket RdbTestUtils::SetRowDatas(const RdbRowDatas &rowDatas)
     return value;
 }
 
-const RdbRowDatas RdbTestUtils::gRowDatas[14] = {
+const RdbRowDatas RdbTestUtils::g_RowDatas[14] = {
     { 1001, "SunWuKong", 4, ValueObject(1004), "2000-12-17", 8000.00, ValueObject(), 20 },
     { 1002, "LuJunYi", 3, ValueObject(1006), "2001-02-20", 16000.00, ValueObject(3000.00), 30 },
     { 1003, "LinChong", 3, ValueObject(1006), "2001-02-22", 12500.00, ValueObject(5000.00), 30 },

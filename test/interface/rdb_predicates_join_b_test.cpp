@@ -193,7 +193,7 @@ void RdbStorePredicateJoinBTest::InsertEmpDates()
 
     int ret = 0;
     for (int i = 0; i <= CYCLENUM; i++) {
-        ret = store_->Insert(id, "emp", RdbTestUtils::SetRowDatas(RdbTestUtils::gRowDatas[i]));
+        ret = store_->Insert(id, "emp", RdbTestUtils::SetRowDatas(RdbTestUtils::g_RowDatas[i]));
     }
     EXPECT_EQ(ret, E_OK);
 }

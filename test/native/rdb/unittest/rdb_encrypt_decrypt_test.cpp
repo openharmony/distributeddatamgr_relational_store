@@ -170,7 +170,7 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_013, TestSize.Level1)
     EXPECT_EQ(count, 0);
 }
 
-/** 
+/**
   * @tc.name: RdbStore_RdbPassword_001
   * @tc.desc: Abnomal test RdbStore RdbPassword class
   * @tc.type: FUNC
@@ -200,7 +200,7 @@ HWTEST_F(RdbEncryptTest, AbnomalRdbStore_RdbPassword_001, TestSize.Level2)
     EXPECT_EQ(true, password1 == password2);
 }
 
-/** 
+/**
   * @tc.name: KeyCorruptTest
   * @tc.desc: test key file corrupt readonly
   * @tc.type: FUNC
@@ -254,7 +254,7 @@ HWTEST_F(RdbEncryptTest, KeyCorruptTest_01, TestSize.Level1)
     store2 = nullptr;
 }
 
-/** 
+/**
   * @tc.name: KeyCorruptTest
   * @tc.desc: test key file not exist when readonly
   * @tc.type: FUNC
