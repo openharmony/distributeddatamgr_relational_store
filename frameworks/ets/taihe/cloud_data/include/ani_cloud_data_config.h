@@ -81,6 +81,10 @@ public:
         optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress);
 
 private:
+    using UnsubscribeInfoList = std::vector<std::pair<std::shared_ptr<TaiheCloudSyncInfoObserver>,
+        std::vector<OHOS::CloudData::BundleInfo>>>;
+    static UnsubscribeInfoList CollectUnsubscribeInfos(const std::vector<OHOS::CloudData::BundleInfo> &toUnsubscribe,
+        optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress);
     struct SyncInfoObserverRecord {
         std::vector<OHOS::CloudData::BundleInfo> bundleInfos;
         std::shared_ptr<TaiheCloudSyncInfoObserver> observer;

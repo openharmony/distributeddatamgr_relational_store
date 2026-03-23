@@ -91,6 +91,11 @@ private:
     static bool IsDbInfoValid(const std::map<std::string, CloudData::DBActionInfo> &dbInfos);
     static bool IsTablesValid(const std::map<std::string, int32_t> &tableInfo);
     static std::atomic<uint32_t> seqNum_;
+    using UnsubscribeInfo = std::pair<std::shared_ptr<NapiCloudSyncInfoObserver>, std::vector<CloudData::BundleInfo>>;
+    using UnsubscribeInfoList = std::vector<UnsubscribeInfo>;
+    
+    static UnsubscribeInfoList CollectUnsubscribeInfos(const std::vector<CloudData::BundleInfo>& toUnsubscribe,
+        napi_value callback, bool hasCallback);
 
     struct SyncInfoObserverRecord {
         std::vector<CloudData::BundleInfo> bundleInfos;
