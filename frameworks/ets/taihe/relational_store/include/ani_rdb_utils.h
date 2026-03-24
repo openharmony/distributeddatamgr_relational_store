@@ -63,6 +63,7 @@ OHOS::NativeRdb::ValuesBuckets BucketValuesToNative(
 OHOS::NativeRdb::ValuesBuckets ValueBucketsToNative(
     taihe::array_view<::ohos::data::relationalStore::ValuesBucket> const &values);
 OHOS::NativeRdb::ValuesBucket ValueBucketToNative(::ohos::data::relationalStore::ValuesBucket const &value);
+OHOS::NativeRdb::RdbStoreConfig::CryptoParam Uint8ArrayParamToNative(std::vector<uint8_t> const &param);
 OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
     ::ohos::data::relationalStore::CryptoParam const &param);
 void AniGetRdbConfigAppend(const ohos::data::relationalStore::StoreConfig &storeConfig,
