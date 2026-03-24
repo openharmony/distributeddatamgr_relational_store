@@ -2,7 +2,7 @@
   "dbSchema": [
     {
       "version": 0,
-      "bundleName": "com.example.clouddatatest",
+      "bundleName": "com.example.rdbtest.system",
       "dbName": "RdbTest",
       "tables": [
         {
