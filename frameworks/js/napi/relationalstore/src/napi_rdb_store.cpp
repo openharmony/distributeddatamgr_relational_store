@@ -1142,7 +1142,15 @@ napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(argc >= 0 && argc <= 1, std::make_shared<ParamNumError>("0 - 1"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (argc == 1 && !JSUtils::IsNull(env, argv[0])) {
-            CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
+            bool isArray = false;
+            napi_status status = napi_is_typedarray(env, argv[0], &isArray);
+            CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+            context->cryptoParam.isVectorRekey = isArray;
+            if (isArray) {
+                CHECK_RETURN(OK == ParseEncryptionkey(env, argv[0], context));
+            } else {
+                CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
+            }
         }
         CHECK_RETURN_SET_E(context->cryptoParam.IsValid(),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."));
