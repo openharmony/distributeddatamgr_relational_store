@@ -12,10 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "rdbpredicates_fuzzer.h"
+
 #include <fuzzer/FuzzedDataProvider.h>
 
 #include "rdb_predicates.h"
-
 
 #define LOOPS_MIN 0
 #define LOOPS_MAX 100
@@ -88,4 +89,4 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RdbPredicatesUsingFuzz(provider);
     OHOS::RdbPredicatesOnFuzz(provider);
     return 0;
-}
+}

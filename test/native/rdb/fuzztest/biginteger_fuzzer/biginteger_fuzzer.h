@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef CACHERESULTSET_FUZZER_H
-#define CACHERESULTSET_FUZZER_H
+#ifndef BIGINTEGER_FUZZER_H
+#define BIGINTEGER_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "cacheresultset_fuzzer"
+#define FUZZ_PROJECT_NAME "biginteger_fuzzer"
 
-#endif // CACHERESULTSET_FUZZER_H
+#endif // BIGINTEGER_FUZZER_H
