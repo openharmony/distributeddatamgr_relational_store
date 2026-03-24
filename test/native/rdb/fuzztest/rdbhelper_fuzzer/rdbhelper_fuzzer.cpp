@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "rdbhelper_fuzzer.h"
+
 #include <fuzzer/FuzzedDataProvider.h>
 #include <rdb_helper.h>
 #include <rdb_store.h>

@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef CACHERESULTSET_FUZZER_H
-#define CACHERESULTSET_FUZZER_H
+#ifndef RDBDISTRIBUTED_FUZZER_H
+#define RDBDISTRIBUTED_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "cacheresultset_fuzzer"
+#define FUZZ_PROJECT_NAME "rdbdistributed_fuzzer"
 
-#endif // CACHERESULTSET_FUZZER_H
+#endif // RDBDISTRIBUTED_FUZZER_H

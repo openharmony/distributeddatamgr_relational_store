@@ -17,12 +17,19 @@ import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("RdbPredicatesFuzzTest") {
+ohos_fuzztest("CloudDataFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
-  include_dirs = [
+  include_dirs = [ 
     "${relational_store_native_path}/rdb/include",
+    "${relational_store_base_path}/interfaces/ndk/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_innerapi_path}/appdatafwk/include",
+    "${relational_store_base_path}/interfaces/ndk/src",
     "${relational_store_common_path}/include",
+    "${cloud_data_native_path}/include",
+    "${relational_store_innerapi_path}/cloud_data/include",
+    "${relational_store_innerapi_path}/common_type/include",
   ]
 
   cflags = [
@@ -30,14 +37,19 @@ ohos_fuzztest("RdbPredicatesFuzzTest") {
     "-O0",
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
-    "-fno-access-control",  # Ignore Private Member Access Control
     "-Werror=vla",
   ]
 
   fuzz_config_file =
-      "${relational_store_base_path}/test/native/rdb/fuzztest/rdbpredicates_fuzzer"
+      "${relational_store_base_path}/test/native/rdb/fuzztest/clouddata_fuzzer"
 
-  sources = [ "rdbpredicates_fuzzer.cpp" ]
+  sources = [ 
+    "${cloud_data_native_path}/src/cloud_types_util.cpp",
+    "${cloud_data_native_path}/src/cloud_manager.cpp",
+    "${cloud_data_native_path}/src/cloud_notifier_stub.cpp",
+    "${cloud_data_native_path}/src/cloud_service_proxy.cpp",
+    "clouddata_fuzzer.cpp",
+  ]
 
   deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
 
@@ -48,7 +60,12 @@ ohos_fuzztest("RdbPredicatesFuzzTest") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "kv_store:distributeddb",
+    "kv_store:datamgr_common",
     "sqlite:sqlite",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtoken_setproc",
+    "access_token:libtokenid_sdk",
+    "samgr:samgr_proxy",
   ]
 }
 
@@ -58,7 +75,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":RdbPredicatesFuzzTest",
+    ":CloudDataFuzzTest",
   ]
 }
 ###############################################################################
