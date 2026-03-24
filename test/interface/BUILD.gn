@@ -73,6 +73,7 @@ ohos_unittest("RdbInterfaceTest") {
     "rdb_value_bucket_test.cpp",
     "rdb_wal_limit_test.cpp",
     "restricted_db_test.cpp",
+    "transaction_test.cpp",
     "value_object_test.cpp",
   ]
 
