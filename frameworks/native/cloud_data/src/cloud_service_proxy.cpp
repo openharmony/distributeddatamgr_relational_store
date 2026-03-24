@@ -354,6 +354,7 @@ void CloudServiceProxy::OnSyncInfoNotify(const BatchQueryLastResults &data)
     }
     for (auto &obsItem : observerData) {
         if (obsItem.first != nullptr && !obsItem.second.empty()) {
+            LOG_INFO("SyncInfoObserverManager::SyncInfoChanged: size:%{public}zu", obsItem.second.size());
             obsItem.first->OnSyncInfoChanged(obsItem.second);
         }
     }

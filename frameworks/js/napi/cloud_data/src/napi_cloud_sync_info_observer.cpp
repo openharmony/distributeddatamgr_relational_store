@@ -39,6 +39,7 @@ void NapiCloudSyncInfoObserver::OnSyncInfoChanged(const std::map<std::string, Qu
     if (uvQueue == nullptr) {
         return;
     }
+    LOG_INFO("OnSyncInfoChanged size:%{public}zu", data.size());
     uvQueue->AsyncCallInOrder({ callback_, true },
         [observer = shared_from_this(), data](napi_env env, int &argc, napi_value *argv) {
             argc = 1;

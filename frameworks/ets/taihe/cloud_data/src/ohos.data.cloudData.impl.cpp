@@ -37,8 +37,10 @@ TaiheCloudSyncInfoObserver::TaiheCloudSyncInfoObserver(TaiheSyncInfoCallback cal
 
 void TaiheCloudSyncInfoObserver::OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data)
 {
+    taihe::env_guard guard;
     auto converted = ConvertBatchSyncInfo(data);
     if (converted.first) {
+        LOG_INFO("OnSyncInfoChanged size: %{public}zu", converted.second.size());
         callback_(converted.second);
     }
 }
