@@ -54,6 +54,7 @@ ohos_unittest("RdbInterfaceTest") {
     "rdb_memory_db_test.cpp",
     "rdb_open_callback_test.cpp",
     "rdb_step_result_get_row_test.cpp",
+    "rdb_step_result_set_test.cpp",
     "rdb_store_backup_restore_test.cpp",
     "rdb_store_interface_test.cpp",
     "rdb_transaction_test.cpp",
