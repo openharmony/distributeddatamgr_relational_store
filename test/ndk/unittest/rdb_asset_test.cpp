@@ -317,7 +317,7 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getStatus, TestSize.
 HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getCreateTime, TestSize.Level1)
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
-    int64_t testTime = 1234567890;
+    int64_t testTime = 9876543210;
     int errCode = OH_Data_Asset_SetCreateTime(asset, testTime);
     EXPECT_EQ(errCode, RDB_OK);
 
