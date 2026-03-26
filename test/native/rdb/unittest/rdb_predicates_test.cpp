@@ -641,6 +641,18 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_EqualTo_004, TestSize.Level1)
     RdbStorePredicateTest::store->ExecuteSql("delete from person where id < 2;");
 }
 
+int RdbStorePredicateTest::ResultSize(std::shared_ptr<ResultSet> &resultSet)
+{
+    if (resultSet->GoToFirstRow() != E_OK) {
+        return 0;
+    }
+    int count = 1;
+    while (resultSet->GoToNextRow() == E_OK) {
+        count++;
+    }
+    return count;
+}
+
 
 /* *
  * @tc.name: RdbStore_BeginsWith_001
