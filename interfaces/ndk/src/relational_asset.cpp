@@ -159,7 +159,7 @@ int OH_Data_Asset_GetCreateTime(Data_Asset *asset, int64_t *createTime)
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     char *endPtr = nullptr;
-    *createTime = strtol(asset->asset_.createTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
+    *createTime = strtoll(asset->asset_.createTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
     if (endPtr == nullptr || *endPtr != '\0') {
         LOG_ERROR("GetCreateTime failed.");
         return OH_Rdb_ErrCode::RDB_ERR;
@@ -173,7 +173,7 @@ int OH_Data_Asset_GetModifyTime(Data_Asset *asset, int64_t *modifyTime)
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     char *endPtr = nullptr;
-    *modifyTime = strtol(asset->asset_.modifyTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
+    *modifyTime = strtoll(asset->asset_.modifyTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
     if (endPtr == nullptr || *endPtr != '\0') {
         LOG_ERROR("GetModifyTime failed.");
         return OH_Rdb_ErrCode::RDB_ERR;
