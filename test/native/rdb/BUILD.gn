@@ -68,7 +68,8 @@ ohos_unittest("NativeRdbMultiProcessTest") {
 
   sources = [
     "unittest/common.cpp",
-    "unittest/multiThread/rdb_store_multiprocess_createDB_test.cpp",
+    "unittest/multiProcess/rdb_store_multiprocess_createDB_test.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
   ]
   include_dirs = [
     "${relational_store_common_path}/include",
@@ -78,6 +79,7 @@ ohos_unittest("NativeRdbMultiProcessTest") {
     "${relational_store_native_path}/rdb/src",
     "${relational_store_innerapi_path}/appdatafwk/include",
     "${relational_store_base_path}/test/native/rdb/unittest",
+    "${relational_store_native_path}/rdb_crypt",
   ]
 
   defines = [ "RELATIONAL_STORE" ]
@@ -264,6 +266,7 @@ ohos_unittest("SilentProxyTest") {
   deps = [
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
     "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+    "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
   ]
 }
 
