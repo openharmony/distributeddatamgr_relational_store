@@ -23,7 +23,6 @@
 namespace OHOS::CloudData {
 class API_EXPORT CloudManager {
 public:
-    static constexpr int WAIT_TIME = 2;
     static API_EXPORT CloudManager &GetInstance();
     API_EXPORT std::pair<int32_t, std::shared_ptr<CloudService>> GetCloudService();
 

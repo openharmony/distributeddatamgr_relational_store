@@ -226,7 +226,7 @@ map<string, map<string, SyncInfo>> ConfigImpl::QueryLastSyncInfoBatchImpl(
             CloudService::Status::INVALID_ARGUMENT_V20, "The type of bundleInfos must be array and not empty.");
         return ret;
     }
-    if (bundleInfos.size() > 30) {
+    if (bundleInfos.size() > 30) { // 30 is max bundleInfos size
         ThrowAniError(
             CloudService::Status::INVALID_ARGUMENT_V20, "The size of bundleInfos must be less than or equal to 30.");
         return ret;
