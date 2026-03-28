@@ -17,7 +17,7 @@ import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("abspredicates_fuzzer") {
+ohos_fuzztest("AbsPredicatesFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
   include_dirs = [
@@ -59,7 +59,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":abspredicates_fuzzer",
+    ":AbsPredicatesFuzzTest",
   ]
 }
 ###############################################################################

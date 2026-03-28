@@ -14,6 +14,7 @@
  */
 #include <fuzzer/FuzzedDataProvider.h>
 
+#include "cloudnotifierstub_fuzzer.h"
 #include "cloud_notifier_stub.h"
 
 using namespace OHOS;
