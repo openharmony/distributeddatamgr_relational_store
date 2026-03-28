@@ -487,18 +487,4 @@ void CloudServiceProxy::ImportSubObservers(SubObservers &observers)
     });
     subObservers_ = observers;
 }
-
-void CloudServiceProxy::OnRemoteDeadSyncComplete()
-{
-    std::map<std::string, ProgressDetail> result;
-    result.insert({"", {Progress::SYNC_FINISH, ProgressCode::UNKNOWN_ERROR}});
-    auto callbacks = std::move(syncCallbacks_);
-    callbacks.ForEach([&result](const auto &key, const AsyncDetail &callback) {
-        LOG_INFO("remote dead, compensate progress notification");
-        if (callback != nullptr) {
-            callback(std::move(result));
-        }
-        return false;
-    });
-}
 } // namespace OHOS::CloudData

@@ -38,6 +38,22 @@ uint64_t g_selfTokenID = 0;
 static constexpr const char *TEST_BUNDLE_NAME = "bundleName";
 static constexpr const char *TEST_ACCOUNT_ID = "testId";
 static constexpr const char *TEST_STORE_ID = "storeId";
+
+class MockSyncInfoObserver : public ISyncInfoObserver {
+public:
+    void OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data) override
+    {
+        called_ = true;
+        data_ = data;
+    }
+    bool IsCalled() const { return called_; }
+    const std::map<std::string, QueryLastResults>& GetData() const { return data_; }
+    void Reset() { called_ = false; data_.clear(); }
+private:
+    bool called_ = false;
+    std::map<std::string, QueryLastResults> data_;
+};
+
 void AllocSystemHapToken(const HapPolicyParams &policy)
 {
     HapInfoParams info = {
@@ -813,4 +829,229 @@ HWTEST_F(CloudDataTest, MarshallingOptionTest, TestSize.Level1)
     EXPECT_EQ(output.seqNum, input.seqNum);
     LOG_INFO("MarshallingOptionTest test end.");
 }
-} // namespace OHOS::CloudData
+
+/**
+ * @tc.name: Subscribe_EmptyBundleInfos
+ * @tc.desc: Test Subscribe with empty bundleInfos
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Subscribe_EmptyBundleInfos, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos;
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::INVALID_ARGUMENT_V20);
+}
+
+/**
+ * @tc.name: Subscribe_NullObserver
+ * @tc.desc: Test Subscribe with null observer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Subscribe_NullObserver, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, nullptr);
+    EXPECT_EQ(status, CloudService::INVALID_ARGUMENT_V20);
+}
+
+/**
+ * @tc.name: Subscribe_SystemPermission
+ * @tc.desc: Test Subscribe with system permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Subscribe_SystemPermission, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+}
+
+/**
+ * @tc.name: Subscribe_NormalHapPermission
+ * @tc.desc: Test Subscribe with normal hap permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Subscribe_NormalHapPermission, TestSize.Level1)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::PERMISSION_DENIED);
+}
+
+/**
+ * @tc.name: Subscribe_NoConfigPermission
+ * @tc.desc: Test Subscribe without config permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Subscribe_NoConfigPermission, TestSize.Level1)
+{
+    AllocSystemHapToken(g_notPermissonPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.name: Unsubscribe_NullObserver
+ * @tc.desc: Test Unsubscribe with null observer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Unsubscribe_NullObserver, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto status = proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, nullptr);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+}
+
+/**
+ * @tc.name: Unsubscribe_RemoveObserver
+ * @tc.desc: Test Unsubscribe with observer to remove
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Unsubscribe_RemoveObserver, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    auto status = proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+}
+
+/**
+ * @tc.name: Unsubscribe_SystemPermission
+ * @tc.desc: Test Unsubscribe with system permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Unsubscribe_SystemPermission, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    auto status = proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+}
+
+/**
+ * @tc.name: Unsubscribe_NormalHapPermission
+ * @tc.desc: Test Unsubscribe with normal hap permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Unsubscribe_NormalHapPermission, TestSize.Level1)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    auto status = proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::PERMISSION_DENIED);
+}
+
+/**
+ * @tc.name: QueryLastSyncInfoBatch_NormalHapPermission
+ * @tc.desc: Test QueryLastSyncInfoBatch with normal hap permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, QueryLastSyncInfoBatch_NormalHapPermission, TestSize.Level0)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto [status, results] = proxy->QueryLastSyncInfoBatch(TEST_ACCOUNT_ID, bundleInfos);
+    EXPECT_EQ(status, CloudService::PERMISSION_DENIED);
+    EXPECT_TRUE(results.empty());
+}
+
+/**
+ * @tc.name: QueryLastSyncInfoBatch_NoConfigPermission
+ * @tc.desc: Test QueryLastSyncInfoBatch without config permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, QueryLastSyncInfoBatch_NoConfigPermission, TestSize.Level1)
+{
+    AllocSystemHapToken(g_notPermissonPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto [status, results] = proxy->QueryLastSyncInfoBatch(TEST_ACCOUNT_ID, bundleInfos);
+    EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
+    EXPECT_TRUE(results.empty());
+}
+
+/**
+ * @tc.name: QueryLastSyncInfoBatch_SystemPermission
+ * @tc.desc: Test QueryLastSyncInfoBatch with system permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, QueryLastSyncInfoBatch_SystemPermission, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    auto [status, results] = proxy->QueryLastSyncInfoBatch(TEST_ACCOUNT_ID, bundleInfos);
+    EXPECT_EQ(status, CloudService::ERROR);
+    EXPECT_TRUE(results.empty());
+}
+
+/**
+ * @tc.name: ImportSubObservers_WithObservers
+ * @tc.desc: Test ImportSubObservers with observers
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, ImportSubObservers_WithObservers, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+    CloudServiceProxy::SubObservers observers;
+    std::map<std::string, std::list<CloudServiceProxy::SubObserverParam>> storeMap;
+    storeMap[TEST_STORE_ID].push_back({std::make_shared<MockSyncInfoObserver>()});
+    observers.Insert(TEST_BUNDLE_NAME, storeMap);
+    cloudServiceProxy->ImportSubObservers(observers);
+    auto exportedObservers = cloudServiceProxy->ExportSubObservers();
+    EXPECT_FALSE(exportedObservers.Empty());
+}
+}

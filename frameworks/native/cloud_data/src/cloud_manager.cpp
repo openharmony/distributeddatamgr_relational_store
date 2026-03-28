@@ -124,10 +124,7 @@ void CloudManager::OnRemoteDied()
     }
 
     auto observers = proxy->ExportSubObservers();
-    proxy->OnRemoteDeadSyncComplete();
     ResetServiceHandle();
-
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
 
     auto [errCode, service] = GetCloudService();
     if (errCode != CloudService::Status::SUCCESS || service == nullptr) {

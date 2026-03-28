@@ -79,7 +79,6 @@ public:
 
     SubObservers ExportSubObservers();
     void ImportSubObservers(SubObservers &observers);
-    void OnRemoteDeadSyncComplete();
 
 private:
     int32_t DoAsync(const std::string &bundleName, const std::string &storeId, Option option);

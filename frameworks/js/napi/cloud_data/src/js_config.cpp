@@ -485,7 +485,8 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
 void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shared_ptr<QueryLastSyncInfoContext> ctxt)
 {
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
-        ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        // 2 is The Number of parameters
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect."); 
         napi_valuetype type = napi_undefined;
         napi_typeof(env, argv[1], &type);
 
@@ -497,8 +498,8 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
             status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
             ASSERT_BUSINESS_ERR(
                 ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
-            if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) {
-                status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId);
+            if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) { // 2 is The third parameter
+                status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId); // 2 is The third parameter
                 ASSERT_BUSINESS_ERR(
                     ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of storeId must be string.");
             }
@@ -512,6 +513,7 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
                 "The type of bundleInfos must be Array<BundleInfo>.");
             ASSERT_BUSINESS_ERR(ctxt, ctxt->bundleInfos.size() > 0, Status::INVALID_ARGUMENT_V20,
                 "The size of bundleInfos must be greater than 0.");
+            //30 is max bundleInfos size
             ASSERT_BUSINESS_ERR(ctxt, ctxt->bundleInfos.size() <= 30, Status::INVALID_ARGUMENT_V20,
                 "The size of bundleInfos must be less than or equal to 30.");
         }
@@ -662,6 +664,7 @@ napi_value JsConfig::OnSyncInfoChanged(napi_env env, napi_callback_info info)
     };
     auto ctxt = std::make_shared<SyncInfoContext>();
     ctxt->queue = std::make_shared<UvQueue>(env);
+    // 2 is Number of parameters
     ASSERT_ERR(env, argc >= 2, Status::INVALID_ARGUMENT_V20, "The number of parameters is incorrect.");
     auto status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleInfos);
     ASSERT_ERR(env, status == JSUtils::OK && !ctxt->bundleInfos.empty(),
@@ -717,7 +720,7 @@ napi_value JsConfig::OffSyncInfoChanged(napi_env env, napi_callback_info info)
     int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleInfos);
     ASSERT_ERR(env, status == JSUtils::OK && !ctxt->bundleInfos.empty(), Status::INVALID_ARGUMENT_V20,
         "The type of bundleInfos must be Array<BundleInfo>.");
-    if (argc >= 2) {
+    if (argc >= 2) { // 2 is Number of parameters
         napi_valuetype type = napi_undefined;
         if (napi_typeof(env, argv[1], &type) == napi_ok && type == napi_function) {
             ctxt->callback = argv[1];
