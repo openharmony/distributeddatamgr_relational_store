@@ -46,9 +46,20 @@ public:
         called_ = true;
         data_ = data;
     }
-    bool IsCalled() const { return called_; }
-    const std::map<std::string, QueryLastResults>& GetData() const { return data_; }
-    void Reset() { called_ = false; data_.clear(); }
+    bool IsCalled() const
+    {
+        return called_;
+    }
+    const std::map<std::string, QueryLastResults> &GetData() const
+    {
+        return data_;
+    }
+    void Reset()
+    {
+        called_ = false;
+        data_.clear();
+    }
+
 private:
     bool called_ = false;
     std::map<std::string, QueryLastResults> data_;

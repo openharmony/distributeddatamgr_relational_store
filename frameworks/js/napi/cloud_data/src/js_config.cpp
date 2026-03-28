@@ -486,7 +486,7 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
 {
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // 2 is The Number of parameters
-        ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect."); 
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         napi_valuetype type = napi_undefined;
         napi_typeof(env, argv[1], &type);
 
