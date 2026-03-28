@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef CACHERESULTSET_FUZZER_H
-#define CACHERESULTSET_FUZZER_H
+#ifndef OHRDBCRYPTOPARAM_FUZZER_H
+#define OHRDBCRYPTOPARAM_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "cacheresultset_fuzzer"
+#define FUZZ_PROJECT_NAME "ohrdbcryptoparam_fuzzer"
 
-#endif // CACHERESULTSET_FUZZER_H
+#endif // OHRDBCRYPTOPARAM_FUZZER_H
