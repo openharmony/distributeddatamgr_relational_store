@@ -435,7 +435,9 @@ int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vecto
     if (observer != nullptr) {
         auto processStore = [&observer](auto &storeMap, const auto &info) {
             auto obsIt = storeMap.find(info.storeId);
-            if (obsIt == storeMap.end()) return;
+            if (obsIt == storeMap.end()) {
+                return;
+            }
             auto &observerList = obsIt->second;
             observerList.remove_if([&observer](const auto &param) {
                 return param.observer.get() == observer.get();

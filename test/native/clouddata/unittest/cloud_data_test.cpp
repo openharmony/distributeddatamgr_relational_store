@@ -1065,4 +1065,498 @@ HWTEST_F(CloudDataTest, ImportSubObservers_WithObservers, TestSize.Level1)
     auto exportedObservers = cloudServiceProxy->ExportSubObservers();
     EXPECT_FALSE(exportedObservers.Empty());
 }
+
+/**
+ * @tc.name: OnSyncInfoNotify_EmptyData
+ * @tc.desc: Test OnSyncInfoNotify with empty data
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotify_EmptyData, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    BatchQueryLastResults emptyData;
+    cloudServiceProxy->OnSyncInfoNotify(emptyData);
+    EXPECT_FALSE(observer->IsCalled());
+}
+
+/**
+ * @tc.name: OnSyncInfoNotify_NoMatchingBundle
+ * @tc.desc: Test OnSyncInfoNotify when bundle not found in subObservers
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotify_NoMatchingBundle, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    BatchQueryLastResults data;
+    QueryLastResults storeResults;
+    CloudSyncInfo syncInfo;
+    syncInfo.code = 0;
+    syncInfo.syncStatus = SyncStatus::FINISHED;
+    storeResults[TEST_STORE_ID] = syncInfo;
+    data["non_existent_bundle"] = storeResults;
+
+    cloudServiceProxy->OnSyncInfoNotify(data);
+    EXPECT_FALSE(observer->IsCalled());
+}
+
+/**
+ * @tc.name: OnSyncInfoNotify_WithMatchingBundle
+ * @tc.desc: Test OnSyncInfoNotify when bundle found in subObservers
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotify_WithMatchingBundle, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    BatchQueryLastResults data;
+    QueryLastResults storeResults;
+    CloudSyncInfo syncInfo;
+    syncInfo.code = 0;
+    syncInfo.syncStatus = SyncStatus::FINISHED;
+    storeResults[TEST_STORE_ID] = syncInfo;
+    data[TEST_BUNDLE_NAME] = storeResults;
+
+    cloudServiceProxy->OnSyncInfoNotify(data);
+    EXPECT_TRUE(observer->IsCalled());
+}
+
+/**
+ * @tc.name: OnSyncInfoNotify_MultipleObservers
+ * @tc.desc: Test OnSyncInfoNotify with multiple observers
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotify_MultipleObservers, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer1 = std::make_shared<MockSyncInfoObserver>();
+    auto observer2 = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer1);
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer2);
+
+    BatchQueryLastResults data;
+    QueryLastResults storeResults;
+    CloudSyncInfo syncInfo;
+    syncInfo.code = 0;
+    syncInfo.syncStatus = SyncStatus::FINISHED;
+    storeResults[TEST_STORE_ID] = syncInfo;
+    data[TEST_BUNDLE_NAME] = storeResults;
+
+    cloudServiceProxy->OnSyncInfoNotify(data);
+    EXPECT_TRUE(observer1->IsCalled());
+    EXPECT_TRUE(observer2->IsCalled());
+}
+
+/**
+ * @tc.name: CollectObserverData_StoreIdNotFound
+ * @tc.desc: Test CollectObserverData when storeId not found in storeMap
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CollectObserverData_StoreIdNotFound, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, "store_001"}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    std::map<std::string, CloudSyncInfo> storeResults;
+    CloudSyncInfo syncInfo;
+    syncInfo.code = 0;
+    storeResults["different_store"] = syncInfo;
+
+    auto subObservers = cloudServiceProxy->ExportSubObservers();
+    std::map<std::string, std::list<CloudServiceProxy::SubObserverParam>> storeMap;
+    subObservers.ComputeIfPresent(TEST_BUNDLE_NAME, [&storeMap](const auto &, auto &map) {
+        storeMap = map;
+        return true;
+    });
+
+    std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> observerData;
+    cloudServiceProxy->CollectObserverData(TEST_BUNDLE_NAME, storeResults, storeMap, observerData);
+    EXPECT_TRUE(observerData.empty());
+}
+
+/**
+ * @tc.name: CollectObserverData_StoreIdFound
+ * @tc.desc: Test CollectObserverData when storeId found in storeMap
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CollectObserverData_StoreIdFound, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    std::map<std::string, CloudSyncInfo> storeResults;
+    CloudSyncInfo syncInfo;
+    syncInfo.code = 0;
+    syncInfo.syncStatus = SyncStatus::FINISHED;
+    storeResults[TEST_STORE_ID] = syncInfo;
+
+    auto subObservers = cloudServiceProxy->ExportSubObservers();
+    std::map<std::string, std::list<CloudServiceProxy::SubObserverParam>> storeMap;
+    subObservers.ComputeIfPresent(TEST_BUNDLE_NAME, [&storeMap](const auto &, auto &map) {
+        storeMap = map;
+        return true;
+    });
+
+    std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> observerData;
+    cloudServiceProxy->CollectObserverData(TEST_BUNDLE_NAME, storeResults, storeMap, observerData);
+    EXPECT_FALSE(observerData.empty());
+}
+
+/**
+ * @tc.name: CollectObserverData_WildcardStoreId
+ * @tc.desc: Test CollectObserverData with wildcard storeId (empty string)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CollectObserverData_WildcardStoreId, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, ""}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    std::map<std::string, CloudSyncInfo> storeResults;
+    CloudSyncInfo syncInfo1;
+    syncInfo1.code = 0;
+    CloudSyncInfo syncInfo2;
+    syncInfo2.code = 1;
+    storeResults["store_001"] = syncInfo1;
+    storeResults["store_002"] = syncInfo2;
+
+    auto subObservers = cloudServiceProxy->ExportSubObservers();
+    std::map<std::string, std::list<CloudServiceProxy::SubObserverParam>> storeMap;
+    subObservers.ComputeIfPresent(TEST_BUNDLE_NAME, [&storeMap](const auto &, auto &map) {
+        storeMap = map;
+        return true;
+    });
+
+    std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> observerData;
+    cloudServiceProxy->CollectObserverData(TEST_BUNDLE_NAME, storeResults, storeMap, observerData);
+    EXPECT_FALSE(observerData.empty());
+}
+
+/**
+ * @tc.name: CollectObserverData_MultipleStores
+ * @tc.desc: Test CollectObserverData with multiple stores matching
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CollectObserverData_MultipleStores, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {
+        {TEST_BUNDLE_NAME, "store_001"},
+        {TEST_BUNDLE_NAME, "store_002"}
+    };
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    std::map<std::string, CloudSyncInfo> storeResults;
+    CloudSyncInfo syncInfo1;
+    syncInfo1.code = 0;
+    CloudSyncInfo syncInfo2;
+    syncInfo2.code = 1;
+    storeResults["store_001"] = syncInfo1;
+    storeResults["store_002"] = syncInfo2;
+    storeResults["store_003"] = CloudSyncInfo{};
+
+    auto subObservers = cloudServiceProxy->ExportSubObservers();
+    std::map<std::string, std::list<CloudServiceProxy::SubObserverParam>> storeMap;
+    subObservers.ComputeIfPresent(TEST_BUNDLE_NAME, [&storeMap](const auto &, auto &map) {
+        storeMap = map;
+        return true;
+    });
+
+    std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> observerData;
+    cloudServiceProxy->CollectObserverData(TEST_BUNDLE_NAME, storeResults, storeMap, observerData);
+    EXPECT_FALSE(observerData.empty());
+}
+
+/**
+ * @tc.name: OnSyncInfoNotifyInner_Success
+ * @tc.desc: Test OnSyncInfoNotifyInner with valid data
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotifyInner_Success, TestSize.Level1)
+{
+    bool handlerCalled = false;
+    BatchQueryLastResults receivedData;
+    sptr<CloudNotifierStub> notifier = new CloudNotifierStub(
+        [](uint32_t, Details &&) {},
+        [&handlerCalled, &receivedData](const BatchQueryLastResults &data) {
+            handlerCalled = true;
+            receivedData = data;
+        });
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    BatchQueryLastResults testData;
+    QueryLastResults storeResults;
+    CloudSyncInfo syncInfo;
+    syncInfo.code = 0;
+    syncInfo.syncStatus = SyncStatus::FINISHED;
+    storeResults[TEST_STORE_ID] = syncInfo;
+    testData[TEST_BUNDLE_NAME] = storeResults;
+
+    ASSERT_TRUE(ITypesUtil::Marshal(data, testData));
+
+    auto result = notifier->OnSyncInfoNotifyInner(data, reply);
+    EXPECT_EQ(result, CloudService::SUCCESS);
+    EXPECT_TRUE(handlerCalled);
+}
+
+/**
+ * @tc.name: OnSyncInfoNotifyInner_UnmarshalFailed
+ * @tc.desc: Test OnSyncInfoNotifyInner with invalid MessageParcel
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotifyInner_UnmarshalFailed, TestSize.Level1)
+{
+    sptr<CloudNotifierStub> notifier = new CloudNotifierStub(
+        [](uint32_t, Details &&) {},
+        [](const BatchQueryLastResults &) {});
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto result = notifier->OnSyncInfoNotifyInner(data, reply);
+    EXPECT_EQ(result, CloudService::IPC_PARCEL_ERROR);
+}
+
+/**
+ * @tc.name: OnSyncInfoNotifyInner_EmptyData
+ * @tc.desc: Test OnSyncInfoNotifyInner with empty data
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotifyInner_EmptyData, TestSize.Level1)
+{
+    bool handlerCalled = false;
+    sptr<CloudNotifierStub> notifier = new CloudNotifierStub(
+        [](uint32_t, Details &&) {},
+        [&handlerCalled](const BatchQueryLastResults &data) {
+            handlerCalled = true;
+            EXPECT_TRUE(data.empty());
+        });
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    BatchQueryLastResults emptyData;
+    ASSERT_TRUE(ITypesUtil::Marshal(data, emptyData));
+
+    auto result = notifier->OnSyncInfoNotifyInner(data, reply);
+    EXPECT_EQ(result, CloudService::SUCCESS);
+    EXPECT_TRUE(handlerCalled);
+}
+
+/**
+ * @tc.name: OnSyncInfoNotifyInner_NullHandler
+ * @tc.desc: Test OnSyncInfoNotifyInner with null handler
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotifyInner_NullHandler, TestSize.Level1)
+{
+    sptr<CloudNotifierStub> notifier = new CloudNotifierStub(nullptr, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    BatchQueryLastResults testData;
+    QueryLastResults storeResults;
+    storeResults[TEST_STORE_ID] = CloudSyncInfo{};
+    testData[TEST_BUNDLE_NAME] = storeResults;
+
+    ASSERT_TRUE(ITypesUtil::Marshal(data, testData));
+
+    auto result = notifier->OnSyncInfoNotifyInner(data, reply);
+    EXPECT_EQ(result, CloudService::SUCCESS);
+}
+
+/**
+ * @tc.name: OnRemoteDied_NullCloudService
+ * @tc.desc: Test OnRemoteDied when cloudService_ is nullptr
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnRemoteDied_NullCloudService, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto &manager = CloudManager::GetInstance();
+    auto [state, proxy] = manager.GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    auto exportedObservers = cloudServiceProxy->ExportSubObservers();
+    EXPECT_FALSE(exportedObservers.Empty());
+}
+
+/**
+ * @tc.name: OnRemoteDied_ExportAndImportObservers
+ * @tc.desc: Test observer export and import during OnRemoteDied
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnRemoteDied_ExportAndImportObservers, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    auto exportedObservers = cloudServiceProxy->ExportSubObservers();
+    EXPECT_FALSE(exportedObservers.Empty());
+
+    auto newProxy = std::static_pointer_cast<CloudServiceProxy>(
+        CloudManager::GetInstance().GetCloudService().second);
+    ASSERT_NE(newProxy, nullptr);
+    newProxy->ImportSubObservers(exportedObservers);
+
+    auto reExportedObservers = newProxy->ExportSubObservers();
+    EXPECT_FALSE(reExportedObservers.Empty());
+}
+
+/**
+ * @tc.name: OnRemoteDied_RemoteDeadSyncComplete
+ * @tc.desc: Test OnRemoteDeadSyncComplete callback execution
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnRemoteDied_RemoteDeadSyncComplete, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    bool callbackCalled = false;
+    auto progress = [&callbackCalled](DistributedRdb::Details &&details) {
+        callbackCalled = true;
+        EXPECT_FALSE(details.empty());
+        EXPECT_EQ(details.begin()->second.progress, Progress::SYNC_FINISH);
+    };
+
+    int32_t syncMode = 4;
+    uint32_t seqNum = 9999;
+    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {syncMode, seqNum}, progress);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+
+    cloudServiceProxy->OnRemoteDeadSyncComplete();
+    EXPECT_TRUE(callbackCalled);
+}
+
+/**
+ * @tc.name: OnSyncInfoNotify_ObserverDataVerification
+ * @tc.desc: Test OnSyncInfoNotify verifies correct data passed to observer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotify_ObserverDataVerification, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    BatchQueryLastResults data;
+    QueryLastResults storeResults;
+    CloudSyncInfo syncInfo;
+    syncInfo.code = 100;
+    syncInfo.syncStatus = SyncStatus::FINISHED;
+    syncInfo.startTime = 1000;
+    syncInfo.finishTime = 2000;
+    storeResults[TEST_STORE_ID] = syncInfo;
+    data[TEST_BUNDLE_NAME] = storeResults;
+
+    cloudServiceProxy->OnSyncInfoNotify(data);
+    EXPECT_TRUE(observer->IsCalled());
+
+    const auto &receivedData = observer->GetData();
+    EXPECT_EQ(receivedData.size(), 1u);
+    EXPECT_EQ(receivedData.count(TEST_BUNDLE_NAME), 1u);
+    EXPECT_EQ(receivedData.at(TEST_BUNDLE_NAME).at(TEST_STORE_ID).code, 100);
+    EXPECT_EQ(receivedData.at(TEST_BUNDLE_NAME).at(TEST_STORE_ID).syncStatus, SyncStatus::FINISHED);
+}
 }
