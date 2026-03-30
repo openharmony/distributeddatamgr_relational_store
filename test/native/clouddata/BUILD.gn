@@ -41,6 +41,9 @@ ohos_unittest("NativeCloudDataTest") {
   ]
 
   configs = [ ":module_private_config" ]
+  cflags = [
+    "-fno-access-control",  # Ignore Private Member Access Control
+  ]
 
   branch_protector_ret = "pac_ret"
   sanitize = {
