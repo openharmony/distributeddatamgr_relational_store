@@ -54,7 +54,7 @@ bool WarpDate(int64_t time, ani_object &outObj)
         LOG_ERROR("Object_CallMethodByName_Long failed, status:%{public}d", status);
         return false;
     }
-    LOG_INFO("Object_CallMethodByName_Long success, msObj:%{public}ld", msObj);
+    LOG_INFO("Object_CallMethodByName_Long success, msObj:%{public}" PRId64, msObj);
     return true;
 }
 
