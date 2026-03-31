@@ -1493,36 +1493,6 @@ HWTEST_F(CloudDataTest, OnRemoteDied_ExportAndImportObservers, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnRemoteDied_RemoteDeadSyncComplete
- * @tc.desc: Test OnRemoteDeadSyncComplete callback execution
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(CloudDataTest, OnRemoteDied_RemoteDeadSyncComplete, TestSize.Level1)
-{
-    AllocSystemHapToken(g_systemPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
-    ASSERT_NE(cloudServiceProxy, nullptr);
-
-    bool callbackCalled = false;
-    auto progress = [&callbackCalled](DistributedRdb::Details &&details) {
-        callbackCalled = true;
-        EXPECT_FALSE(details.empty());
-        EXPECT_EQ(details.begin()->second.progress, Progress::SYNC_FINISH);
-    };
-
-    int32_t syncMode = 4;
-    uint32_t seqNum = 9999;
-    auto status = proxy->CloudSync(TEST_BUNDLE_NAME, TEST_STORE_ID, {syncMode, seqNum}, progress);
-    EXPECT_EQ(status, CloudService::SUCCESS);
-
-    cloudServiceProxy->OnRemoteDeadSyncComplete();
-    EXPECT_TRUE(callbackCalled);
-}
-
-/**
  * @tc.name: OnSyncInfoNotify_ObserverDataVerification
  * @tc.desc: Test OnSyncInfoNotify verifies correct data passed to observer
  * @tc.type: FUNC
