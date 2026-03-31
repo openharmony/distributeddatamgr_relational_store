@@ -41,7 +41,6 @@ ohos_unittest("NativeAppDataFwkTest") {
     "json:nlohmann_json_static",
     "googletest:gtest_main",
     "hilog:libhilog",
-    "relational_store:native_appdatafwk",
   ]
 
   deps = [
