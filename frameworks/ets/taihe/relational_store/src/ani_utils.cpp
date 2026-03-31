@@ -781,15 +781,17 @@ ani_status Convert2AniValue(ani_env *env, const std::map<std::string, int> &valu
     ANI_CHECK_RETURN(env->Array_New(mapSize, element, &res));
     int i = 0;
     for (const auto &[key, val] : value) {
-        ani_array arr = {};
-        ANI_CHECK_RETURN(env->Array_New(SYNC_RESULT_ELEMENT_NUM, element, &arr));
         ani_string aniKey = {};
         ANI_CHECK_RETURN(env->String_NewUTF8(key.c_str(), key.size(), &aniKey));
-        ANI_CHECK_RETURN(env->Array_Set(arr, 0, aniKey));
         ani_object aniVal = {};
         ANI_CHECK_RETURN(CreateAniObj(env, "std.core.Int", "<ctor>", "i:", &aniVal, static_cast<ani_int>(val)));
-        ANI_CHECK_RETURN(env->Array_Set(arr, 1, aniVal));
-        ANI_CHECK_RETURN(env->Array_Set(res, i++, arr));
+        ani_class tupleCls = {};
+        ani_method tupleCtorMethod = {};
+        ani_object tupleObj = {};
+        ANI_CHECK_RETURN(env->FindClass("std:core.Tuple2", &tupleCls));
+        ANI_CHECK_RETURN(env->Class_FindMethod(tupleCls, "<ctor>", nullptr, &tupleCtorMethod));
+        ANI_CHECK_RETURN(env->Object_New(tupleCls, tupleCtorMethod, &tupleObj, aniKey, aniVal));
+        ANI_CHECK_RETURN(env->Array_Set(res, i++, static_cast<ani_tuple_value>(tupleObj)));
     }
     result = res;
     return ANI_OK;

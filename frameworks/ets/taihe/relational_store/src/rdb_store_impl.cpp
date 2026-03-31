@@ -969,8 +969,7 @@ string RdbStoreImpl::ObtainDistributedTableNameSync(string_view device, string_v
     return distributedTableName;
 }
 
-void RdbStoreImpl::Sync(
-    SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise)
+void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise)
 {
     auto store = GetResource();
     ASSERT_RETURN_THROW_ERROR(store != nullptr,
@@ -990,22 +989,23 @@ void RdbStoreImpl::Sync(
         return;
     }
     promise = context->promise_;
+    ::taihe::env_guard gurd;
+    auto env = gurd.get_env();
     auto nativeSyncCallback = [context](const OHOS::DistributedRdb::SyncResult &data) {
-        {
-            ::taihe::env_guard gurd;
-            ani_object object = {};
-            ani_status status = ani_utils::Convert2AniValue(gurd.get_env(), data, object);
-            context->result_ = static_cast<ani_ref>(object);
-            if (status != ANI_OK || context->result_ == nullptr) {
-                context->error_ = std::make_shared<InnerError>(NativeRdb::E_ERROR);
-            }
+        ::taihe::env_guard gurd;
+        auto callbackEnv = gurd.get_env();
+        ani_object object = {};
+        ani_status status = ani_utils::Convert2AniValue(callbackEnv, data, object);
+        context->result_ = static_cast<ani_ref>(object);
+        if (status != ANI_OK || context->result_ == nullptr) {
+            context->error_ = std::make_shared<InnerError>(NativeRdb::E_ERROR);
         }
-        AniAsyncCall::ReturnResult(context);
+        AniAsyncCall::ReturnResult(context, callbackEnv);
     };
     int errCode = store->Sync(option, *rdbPredicateNative, nativeSyncCallback);
     if (errCode != OHOS::NativeRdb::E_OK) {
         context->error_ = std::make_shared<InnerError>(errCode);
-        AniAsyncCall::ReturnResult(context);
+        AniAsyncCall::ReturnResult(context, env);
         return;
     }
 }
