@@ -344,6 +344,7 @@ void CloudServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
 
 void CloudServiceProxy::OnSyncInfoNotify(const BatchQueryLastResults &data)
 {
+    LOG_INFO("OnSyncInfoNotify start size:%{public}zu", data.size());
     std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> observerData;
     for (const auto &bundleItem : data) {
         subObservers_.ComputeIfPresent(
@@ -354,7 +355,6 @@ void CloudServiceProxy::OnSyncInfoNotify(const BatchQueryLastResults &data)
     }
     for (auto &obsItem : observerData) {
         if (obsItem.first != nullptr && !obsItem.second.empty()) {
-            LOG_INFO("SyncInfoObserverManager::SyncInfoChanged: size:%{public}zu", obsItem.second.size());
             obsItem.first->OnSyncInfoChanged(obsItem.second);
         }
     }
@@ -365,6 +365,7 @@ void CloudServiceProxy::CollectObserverData(const std::string &bundleName,
     const std::map<std::string, std::list<SubObserverParam>> &storeMap,
     std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> &observerData)
 {
+    LOG_INFO("CollectObserverData: bundleName:%{public}s", bundleName.c_str());
     for (const auto &storeItem : storeResults) {
         auto obsIt = storeMap.find(storeItem.first);
         if (obsIt == storeMap.end()) {
@@ -373,6 +374,8 @@ void CloudServiceProxy::CollectObserverData(const std::string &bundleName,
         for (const auto &param : obsIt->second) {
             if (param.observer != nullptr) {
                 observerData[param.observer][bundleName][storeItem.first] = storeItem.second;
+                LOG_INFO("CollectObserverData: bundleName:%{public}s storeId:%{public}.3s", bundleName.c_str(),
+                    storeItem.first.c_str());
             }
         }
     }
@@ -383,6 +386,7 @@ void CloudServiceProxy::CollectObserverData(const std::string &bundleName,
     for (const auto &param : wildIt->second) {
         if (param.observer != nullptr) {
             observerData[param.observer][bundleName] = storeResults;
+            LOG_INFO("CollectObserverData: bundleName:%{public}s", bundleName.c_str());
         }
     }
 }
