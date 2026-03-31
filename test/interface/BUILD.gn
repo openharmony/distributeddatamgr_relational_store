@@ -65,6 +65,7 @@ ohos_unittest("RdbInterfaceTest") {
     "rdb_duplicate_column_data_test.cpp",
     "rdb_predicates_join_b_test.cpp",
     "rdb_predicates_join_test.cpp",
+    "rdb_predicates_test.cpp",
     "rdb_rd_data_aging_test.cpp",
     "rdb_read_only_test.cpp",
     "rdb_sql_utils_test.cpp",
