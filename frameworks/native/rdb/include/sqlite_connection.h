@@ -58,7 +58,7 @@ public:
     int LimitWalSize() override;
     int ConfigLocale(const std::string &localeStr) override;
     int32_t SetTokenizer(Tokenizer tokenizer) override;
-    int CleanDirtyData(const std::string &table, uint64_t cursor) override;
+    int CleanDirtyData(const std::string &table, uint64_t cursor, bool isCleanDevice = false) override;
     int ResetKey(const RdbStoreConfig &config) override;
     int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t GetJournalMode() override;

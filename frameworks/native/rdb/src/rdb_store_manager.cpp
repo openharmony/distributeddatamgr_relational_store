@@ -239,6 +239,7 @@ DistributedRdb::RdbSyncerParam RdbStoreManager::GetSyncParam(const RdbStoreConfi
     syncerParam.level_ = static_cast<int32_t>(config.GetSecurityLevel());
     syncerParam.isEncrypt_ = config.IsEncrypt();
     syncerParam.isAutoClean_ = config.GetAutoClean();
+    syncerParam.isAutoCleanDevice_ = config.GetAutoCleanDevice();
     syncerParam.isSearchable_ = config.IsSearchable();
     syncerParam.roleType_ = config.GetRoleType();
     syncerParam.haMode_ = config.GetHaMode();

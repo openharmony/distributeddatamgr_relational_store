@@ -53,7 +53,7 @@ public:
     int32_t LimitWalSize() override;
     int32_t ConfigLocale(const std::string &localeStr) override;
     int32_t SetTokenizer(Tokenizer tokenizer) override;
-    int32_t CleanDirtyData(const std::string &table, uint64_t cursor) override;
+    int32_t CleanDirtyData(const std::string &table, uint64_t cursor, bool isCleanDevice = false) override;
     int32_t SubscribeTableChanges(const Notifier &notifier) override;
     int32_t GetMaxVariable() const override;
     int32_t GetJournalMode() override;

@@ -534,6 +534,30 @@ void RdbStoreImpl::CleanDirtyDataWithOptionCursor(string_view table, optional_vi
     }
 }
 
+void RdbStoreImpl::CleanDeviceDirtyDataWithOptionCursor(string_view table, optional_view<uint64_t> cursor)
+{
+    if (!isSystemApp_) {
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_NON_SYSTEM_APP);
+        return;
+    }
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(
+        store != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    uint64_t nativeCursor = 0;
+    if (cursor.has_value()) {
+        ASSERT_RETURN_THROW_ERROR(
+            cursor.value() >= 0, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS), RDB_DO_NOTHING);
+        nativeCursor = cursor.value();
+    }
+    std::string nativeTable(table);
+    int32_t errCode = store->CleanDirtyData(nativeTable, nativeCursor, true);
+    if (errCode == OHOS::NativeRdb::E_OK) {
+        return;
+    }
+    errCode = errCode != OHOS::NativeRdb::E_NOT_SUPPORT ? errCode : OHOS::NativeRdb::E_NOT_SUPPORT_NEW;
+    ThrowInnerErrorExt(errCode);
+}
+
 ResultSet RdbStoreImpl::QuerySharingResourceWithOptionColumn(weak::RdbPredicates predicates,
     optional_view<array<string>> columns)
 {

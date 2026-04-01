@@ -59,6 +59,7 @@ struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
     bool isAutoClean = true;
+    bool isAutoCleanDevice = true;
     bool vector = false;
     bool allowRebuild = false;
     bool isReadOnly = false;

@@ -794,7 +794,7 @@ public:
      *
      * @param table Indicates the specified table.
      */
-    virtual int CleanDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX);
+    virtual int CleanDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX, bool isCleanDevice = false);
 
     /**
      * @brief Gets the rebuilt_ status of the database.

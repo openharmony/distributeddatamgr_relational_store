@@ -52,7 +52,8 @@ public:
     MOCK_METHOD(int32_t, LimitWalSize, (), (override));
     MOCK_METHOD(int32_t, ConfigLocale, (const std::string &localeStr), (override));
     MOCK_METHOD(int32_t, SetTokenizer, (Tokenizer tokenizer), (override));
-    MOCK_METHOD(int32_t, CleanDirtyData, (const std::string &table, uint64_t cursor), (override));
+    MOCK_METHOD(
+        int32_t, CleanDirtyData, (const std::string &table, uint64_t cursor, bool isCleanDevice), (override));
     MOCK_METHOD(int32_t, SubscribeTableChanges, (const Notifier &notifier), (override));
     MOCK_METHOD(int32_t, GetMaxVariable, (), (const, override));
     MOCK_METHOD(int32_t, GetJournalMode, (), (override));
