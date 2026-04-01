@@ -1323,7 +1323,7 @@ int32_t SqliteConnection::SetTokenizer(Tokenizer tokenizer)
     return SQLiteError::ErrNo(err == SQLITE_OK ? ret : err);
 }
 
-int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
+int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor, bool isCleanDevice)
 {
     if (table.empty()) {
         LOG_ERROR("table is empty");
@@ -1333,7 +1333,8 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
     auto status = DropLogicDeletedData(dbHandle_, table, tmpCursor);
     LOG_INFO("status:%{public}d, table:%{public}s, cursor:%{public}" PRIu64 "", status,
         SqliteUtils::Anonymous(table).c_str(), cursor);
-    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+    return status == DistributedDB::DBStatus::OK ? E_OK
+                                                 : isCleanDevice ? SqliteUtils::ConvertDBStatusNative(status) : E_ERROR;
 }
 
 int SqliteConnection::TryCheckPoint(bool timeout)
@@ -1531,6 +1532,7 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     param.type_ = config.GetDistributedType();
     param.isEncrypt_ = config.IsEncrypt();
     param.isAutoClean_ = config.GetAutoClean();
+    param.isAutoCleanDevice_ = config.GetAutoCleanDevice();
     param.isSearchable_ = config.IsSearchable();
     param.haMode_ = config.GetHaMode();
     param.password_ = {};

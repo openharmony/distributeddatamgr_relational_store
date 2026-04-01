@@ -676,6 +676,16 @@ public:
      */
     bool GetAutoClean() const;
 
+        /**
+     * @brief Sets the autoCleanDeviceDirtyData for the object.
+     */
+    void SetAutoCleanDevice(bool isAutoCleanDevice);
+
+        /**
+     * @brief Obtains the autoCleanDeviceDirtyData in this {@code StoreConfig} object.
+     */
+    bool GetAutoCleanDevice() const;
+
     /**
      * @brief Obtains the cryptoParam field in this {@code StoreConfig} object.
      */
@@ -869,6 +879,7 @@ private:
     bool isSearchable_ = false;
     bool autoCheck_;
     bool isAutoClean_ = true;
+    bool isAutoCleanDevice_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
     mutable bool customEncryptParam_ = false;

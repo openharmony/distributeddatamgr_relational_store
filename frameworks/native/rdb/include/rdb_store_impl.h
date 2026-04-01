@@ -134,7 +134,7 @@ public:
     ModifyTime GetModifyTime(
         const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) override;
     int GetRebuilt(RebuiltType &rebuilt) override;
-    int CleanDirtyData(const std::string &table, uint64_t cursor) override;
+    int CleanDirtyData(const std::string &table, uint64_t cursor, bool isCleanDevice = false) override;
     std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime) override;

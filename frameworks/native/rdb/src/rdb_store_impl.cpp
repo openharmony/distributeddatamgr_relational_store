@@ -107,6 +107,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.isAutoClean_ = config.GetAutoClean();
+    syncerParam_.isAutoCleanDevice_ = config.GetAutoCleanDevice();
     syncerParam_.isSearchable_ = config.IsSearchable();
     syncerParam_.password_ = config.GetEncryptKey();
     syncerParam_.haMode_ = config.GetHaMode();
@@ -334,7 +335,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
     return ModifyTime(resultSet, {}, true);
 }
 
-int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
+int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor, bool isCleanDevice)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
         LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
@@ -346,7 +347,7 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
         LOG_ERROR("The database is busy or closed.");
         return errCode;
     }
-    errCode = conn->CleanDirtyData(table, cursor);
+    errCode = conn->CleanDirtyData(table, cursor, isCleanDevice);
     return errCode;
 }
 

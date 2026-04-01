@@ -469,6 +469,16 @@ bool RdbStoreConfig::GetAutoClean() const
     return isAutoClean_;
 }
 
+void RdbStoreConfig::SetAutoCleanDevice(bool isAutoCleanDevice)
+{
+    isAutoCleanDevice_ = isAutoCleanDevice;
+}
+
+bool RdbStoreConfig::GetAutoCleanDevice() const
+{
+    return isAutoCleanDevice_;
+}
+
 void RdbStoreConfig::SetIsVector(bool isVector)
 {
     isVector_ = isVector;
