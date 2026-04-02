@@ -510,6 +510,19 @@ void RdbStoreConfig::SetSearchable(bool isSearchable)
     isSearchable_ = isSearchable;
 }
 
+SilentAccessibleStatus RdbStoreConfig::GetSilentAccessibleStatus() const
+{
+    if (!isSilentAccessible_.has_value()) {
+        return SilentAccessibleStatus::UNKNOWN;
+    }
+    return isSilentAccessible_.value() ? SilentAccessibleStatus::SUPPORT : SilentAccessibleStatus::NOSUPPORT;
+}
+
+void RdbStoreConfig::SetSilentAccessible(bool isSilentAccessible)
+{
+    isSilentAccessible_ = isSilentAccessible;
+}
+
 int RdbStoreConfig::GetWriteTime() const
 {
     return writeTimeout_;
