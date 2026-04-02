@@ -451,7 +451,7 @@ export default function CleanDeviceDirtyData() {
     /**
      * @tc.number CleanDeviceDirtyDataTest0011
      * @tc.name CleanDeviceDirtyData
-     * @tc.desc CleanDeviceDirtyData success
+     * @tc.desc CleanDeviceDirtyData fail due to invalid cursor parameter
      */
     it('CleanDeviceDirtyDataTest0011', 0, async () => {
       console.log(TAG + "************* CleanDeviceDirtyDataTest0011 start *************");
@@ -464,7 +464,7 @@ export default function CleanDeviceDirtyData() {
           console.error(`CleanDeviceDirtyDataTest0011 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
           expect(null).assertFail();
         }
-        console.log(`CleanDeviceDirtyDataTest0010 begin`);
+        console.log(`CleanDeviceDirtyDataTest0011 begin`);
         try {
           await rdbStore.cleanDeviceDirtyData("EMPLOYEE", -1);
           console.info(`CleanDeviceDirtyDataTest0011 success`);
@@ -475,6 +475,64 @@ export default function CleanDeviceDirtyData() {
         }
       }
       console.log(TAG + "************* CleanDeviceDirtyDataTest0011 end *************");
+    })
+
+    /**
+     * @tc.number CleanDeviceDirtyDataTest0012
+     * @tc.name CleanDeviceDirtyData
+     * @tc.desc CleanDeviceDirtyData fail due to invalid table name
+     */
+    it('CleanDeviceDirtyDataTest0012', 0, async () => {
+      console.log(TAG + "************* CleanDeviceDirtyDataTest0012 start *************");
+      if (rdbStore != undefined) {
+        console.info(`SetDistributedTables EMPLOYEE begin`);
+        try {
+          await rdbStore.setDistributedTables(["EMPLOYEE"]);
+          console.info('CleanDeviceDirtyDataTest0012 EMPLOYEE SINGLE_VERSION successfully.');
+        } catch (err) {
+          console.error(`CleanDeviceDirtyDataTest0012 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
+          expect(null).assertFail();
+        }
+        console.log(`CleanDeviceDirtyDataTest0012 begin`);
+        try {
+          await rdbStore.cleanDeviceDirtyData("***");
+          console.info(`CleanDeviceDirtyDataTest0012 success`);
+          expect(null).assertFail();
+        } catch (e) {
+          console.error(`CleanDeviceDirtyDataTest0012 failed, code is ${e.code},message is ${e.message}`);
+          expect(e.code).assertEqual(14800001);
+        }
+      }
+      console.log(TAG + "************* CleanDeviceDirtyDataTest0012 end *************");
+    })
+
+    /**
+     * @tc.number CleanDeviceDirtyDataTest0013
+     * @tc.name CleanDeviceDirtyData
+     * @tc.desc CleanDeviceDirtyData fail due to invalid table name and cursor parameter
+     */
+    it('CleanDeviceDirtyDataTest0013', 0, async () => {
+      console.log(TAG + "************* CleanDeviceDirtyDataTest0013 start *************");
+      if (rdbStore != undefined) {
+        console.info(`SetDistributedTables EMPLOYEE begin`);
+        try {
+          await rdbStore.setDistributedTables(["EMPLOYEE"]);
+          console.info('CleanDeviceDirtyDataTest0013 EMPLOYEE SINGLE_VERSION successfully.');
+        } catch (err) {
+          console.error(`CleanDeviceDirtyDataTest0013 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
+          expect(null).assertFail();
+        }
+        console.log(`CleanDeviceDirtyDataTest0013 begin`);
+        try {
+          await rdbStore.cleanDeviceDirtyData("***", 1);
+          console.info(`CleanDeviceDirtyDataTest0013 success`);
+          expect(null).assertFail();
+        } catch (e) {
+          console.error(`CleanDeviceDirtyDataTest0013 failed, code is ${e.code},message is ${e.message}`);
+          expect(e.code).assertEqual(14800001);
+        }
+      }
+      console.log(TAG + "************* CleanDeviceDirtyDataTest0013 end *************");
     })
     console.log(TAG + "*************Unit Test Begin*************");
   })

@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <unordered_map>
 #if !defined(CROSS_PLATFORM)
 #include <sqlite3.h>
 #include "relational/relational_store_sqlite_ext.h"
@@ -76,6 +77,15 @@ constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
 constexpr char const *DATABASE = "database";
 
+const std::unordered_map<int32_t, int> SqliteUtils::STATUS_MAP = {
+    { DBStatus::OK, E_OK },
+    { DBStatus::BUSY, E_SQLITE_BUSY },
+    { DBStatus::INVALID_ARGS, E_INVALID_ARGS },
+    { DBStatus::INVALID_PASSWD_OR_CORRUPTED_DB, E_SQLITE_CORRUPT },
+    { DBStatus::DB_ERROR, E_SQLITE_ERROR },
+    { DBStatus::NOT_SUPPORT, E_NOT_SUPPORT_NEW }
+};
+
 
 int SqliteUtils::ConvertRdbStatusNative(int32_t status)
 {
@@ -104,21 +114,9 @@ int SqliteUtils::ConvertRdbStatusNative(int32_t status)
 
 int SqliteUtils::ConvertDBStatusNative(int32_t status)
 {
-    switch (status) {
-        case DBStatus::OK:
-            return E_OK;
-        case DBStatus::BUSY:
-            return E_SQLITE_BUSY;
-        case DBStatus::INVALID_ARGS:
-            return E_INVALID_ARGS;
-        case DBStatus::INVALID_PASSWD_OR_CORRUPTED_DB:
-            return E_SQLITE_CORRUPT;
-        case DBStatus::DB_ERROR:
-            return E_SQLITE_ERROR;
-        case DBStatus::NOT_SUPPORT:
-            return E_NOT_SUPPORT_NEW;
-        default:
-            break;
+    auto it = STATUS_MAP.find(status);
+    if (it != STATUS_MAP.end()) {
+        return it->second;
     }
     return E_ERROR;
 }
