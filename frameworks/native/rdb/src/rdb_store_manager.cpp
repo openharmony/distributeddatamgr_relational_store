@@ -115,9 +115,15 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     if (rdbStore == nullptr) {
         return rdbStore;
     }
+    // Determine if ACL is needed based on searchable and silent accessible status
+    // If silent accessible status is UNKNOWN, use proxy manager's result
+    // If configured to SUPPORT, always need ACL
+    // If configured to NOSUPPORT, never need ACL
     bool isNeedAcl = config.GetRoleType() == OWNER &&
                     (config.IsSearchable() ||
-                    silentProxyManager_.IsSupportSilent(config.GetBundleName(), config.GetName()).second);
+                    (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::SUPPORT) ||
+                    (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::UNKNOWN &&
+                        silentProxyManager_.IsSupportSilent(config.GetBundleName(), config.GetName()).second));
     errCode = rdbStore->Init(version, openCallback, isNeedAcl);
     if (errCode != E_OK) {
         if (modifyConfig.IsEncrypt() != config.IsEncrypt()) {

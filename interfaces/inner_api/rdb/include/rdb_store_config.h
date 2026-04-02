@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstring>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -205,6 +206,18 @@ enum RegisterType : uint8_t { STORE_OBSERVER = 0, CLIENT_OBSERVER, OBSERVER_END 
 enum ConfigVersion : uint8_t {
     DEFAULT_VERSION = 0,
     INVALID_CONFIG_CHANGE_NOT_ALLOWED, // The database cannot be opened, if there is an illegal change in config
+};
+
+/**
+ * @brief Indicates the silent accessible status of the database.
+ */
+enum SilentAccessibleStatus : int32_t {
+    /** Silent accessible status is unknown. */
+    UNKNOWN = 0,
+    /** Silent accessible is supported. */
+    SUPPORT,
+    /** Silent accessible is not supported. */
+    NOSUPPORT
 };
 
 struct RegisterInfo {
@@ -751,6 +764,19 @@ public:
     void SetSearchable(bool searchable);
 
     /**
+     * @brief Gets the silent accessible status.
+     * @return Returns SilentAccessibleStatus::UNKNOWN if not configured,
+     *         SilentAccessibleStatus::SUPPORT if configured to true,
+     *         SilentAccessibleStatus::NOSUPPORT if configured to false.
+     */
+    SilentAccessibleStatus GetSilentAccessibleStatus() const;
+    /**
+     * @brief Sets whether the database is silent accessible.
+     * @param silentAccessible true to support silent access, false to not support.
+     */
+    void SetSilentAccessible(bool silentAccessible);
+
+    /**
      * @brief Gets the timeout to get write connection for the object.
      */
     int GetWriteTime() const;
@@ -867,6 +893,7 @@ private:
     mutable bool isEncrypt_ = false;
     bool isCreateNecessary_;
     bool isSearchable_ = false;
+    std::optional<bool> isSilentAccessible_;
     bool autoCheck_;
     bool isAutoClean_ = true;
     bool isVector_ = false;
