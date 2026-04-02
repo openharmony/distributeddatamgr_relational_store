@@ -695,7 +695,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('QueryLastSyncInfoBatch_NullBundleInfos fail' +
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 14800001).assertTrue();
+        expect(e.code == 401).assertTrue();
         done();
       }
     })
@@ -715,7 +715,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('QueryLastSyncInfoBatch_UndefinedBundleInfos fail' +
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 14800001).assertTrue();
+        expect(e.code == 401).assertTrue();
         done();
       }
     })
@@ -735,7 +735,7 @@ export default function CloudConfigEtsTest() {
       } catch (e) {
         console.error('QueryLastSyncInfoBatch_InvalidBundleInfosType fail' +
           `, error code is ${e.code}, message is ${e.message}`);
-        expect(e.code == 14800001).assertTrue();
+        expect(e.code == 401).assertTrue();
         done();
       }
     })
