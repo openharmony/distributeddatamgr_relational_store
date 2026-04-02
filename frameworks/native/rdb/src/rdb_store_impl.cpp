@@ -335,7 +335,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
     return ModifyTime(resultSet, {}, true);
 }
 
-int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor, bool isCleanDevice)
+int RdbStoreImpl::CleanDirtyDataInternal(const std::string &table, uint64_t cursor, bool isDevice)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
         LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
@@ -347,8 +347,17 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor, bool
         LOG_ERROR("The database is busy or closed.");
         return errCode;
     }
-    errCode = conn->CleanDirtyData(table, cursor, isCleanDevice);
-    return errCode;
+    return isDevice ? conn->CleanDirtyData(table, cursor, true) : conn->CleanDirtyData(table, cursor);
+}
+
+int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
+{
+    return CleanDirtyDataInternal(table, cursor, false);
+}
+
+int RdbStoreImpl::CleanDeviceDirtyData(const std::string &table, uint64_t cursor)
+{
+    return CleanDirtyDataInternal(table, cursor, true);
 }
 
 std::string RdbStoreImpl::GetLogTableName(const std::string &tableName)

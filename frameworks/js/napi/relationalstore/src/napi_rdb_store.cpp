@@ -1877,7 +1877,8 @@ struct CleanDeviceDirtyDataContext : public EnhancedContext {
             obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         rdbStore = obj->GetInstance();
         tableName = JSUtils::Convert2String(env, argv[0]);
-        ASSERT_RETURN_SET_ERROR(!tableName.empty(), std::make_shared<ParamNumError>("table must be not empty string."));
+        ASSERT_RETURN_SET_ERROR(
+            IsValidTableName(tableName), std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
         // parse waitTime when the number of parameters is 2
         if (argc == 2) {
             double cursorJsValue = 0;
@@ -1902,7 +1903,7 @@ napi_value RdbStoreProxy::CleanDeviceDirtyData(napi_env env, napi_callback_info 
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto result = context->rdbStore->CleanDirtyData(context->tableName, context->cursor, true);
+        auto result = context->rdbStore->CleanDeviceDirtyData(context->tableName, context->cursor);
         return result != E_NOT_SUPPORT ? result : E_NOT_SUPPORT_NEW;
     };
     auto output = [context](napi_env env, napi_value &result) {

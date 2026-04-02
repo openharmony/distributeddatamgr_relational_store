@@ -550,7 +550,11 @@ void RdbStoreImpl::CleanDeviceDirtyDataWithOptionCursor(string_view table, optio
         nativeCursor = cursor.value();
     }
     std::string nativeTable(table);
-    int32_t errCode = store->CleanDirtyData(nativeTable, nativeCursor, true);
+    if (!IsValidTableName(nativeTable)) {
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS);
+        return;
+    }
+    int32_t errCode = store->CleanDeviceDirtyData(nativeTable, nativeCursor);
     if (errCode == OHOS::NativeRdb::E_OK) {
         return;
     }

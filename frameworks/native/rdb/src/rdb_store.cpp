@@ -653,7 +653,14 @@ RdbStore::ModifyTime RdbStore::GetModifyTime(
     return {};
 }
 
-int RdbStore::CleanDirtyData(const std::string &table, uint64_t cursor, bool isCleanDevice)
+int RdbStore::CleanDirtyData(const std::string &table, uint64_t cursor)
+{
+    (void)table;
+    (void)cursor;
+    return E_NOT_SUPPORT;
+}
+
+int RdbStore::CleanDeviceDirtyData(const std::string &table, uint64_t cursor)
 {
     (void)table;
     (void)cursor;

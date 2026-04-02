@@ -134,7 +134,8 @@ public:
     ModifyTime GetModifyTime(
         const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) override;
     int GetRebuilt(RebuiltType &rebuilt) override;
-    int CleanDirtyData(const std::string &table, uint64_t cursor, bool isCleanDevice = false) override;
+    int CleanDirtyData(const std::string &table, uint64_t cursor) override;
+    int CleanDeviceDirtyData(const std::string &table, uint64_t cursor) override;
     std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime) override;
@@ -255,6 +256,7 @@ private:
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
     static void ReplayCallbackImpl(const RdbStoreConfig &config);
     std::pair<int32_t, std::vector<std::string>> ConvertToUuids(const std::vector<std::string> &devices);
+    int CleanDirtyDataInternal(const std::string &table, uint64_t cursor, bool isDevice);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
