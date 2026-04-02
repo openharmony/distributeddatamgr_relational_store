@@ -488,7 +488,7 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
         // 2 is The Number of parameters
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
         bool isArray = false;
-        napi_is_array(env, jsValue, &isArray);
+        napi_is_array(env, argv[1], &isArray);
         if (!isArray) {
             ctxt->isBatch = false;
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
