@@ -1349,3 +1349,56 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_041, TestSize.Level2)
     config.SetTransactionTime(transactionTime);
     EXPECT_EQ(transactionTime, config.GetTransactionTime());
 }
+
+/**
+ * @tc.name: RdbStoreConfigSetSilentAccessible_001
+ * @tc.desc: test RdbStoreConfig SetSilentAccessible and GetSilentAccessibleStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfigSetSilentAccessible_001, TestSize.Level2)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    SilentAccessibleStatus status = config.GetSilentAccessibleStatus();
+    EXPECT_EQ(status, SilentAccessibleStatus::UNKNOWN);
+
+    config.SetSilentAccessible(true);
+    status = config.GetSilentAccessibleStatus();
+    EXPECT_EQ(status, SilentAccessibleStatus::SUPPORT);
+
+    config.SetSilentAccessible(false);
+    status = config.GetSilentAccessibleStatus();
+    EXPECT_EQ(status, SilentAccessibleStatus::NOSUPPORT);
+}
+
+/**
+ * @tc.name: RdbStoreConfigSetSilentAccessible_002
+ * @tc.desc: test RdbStoreConfig with different silent accessible status
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfigSetSilentAccessible_002, TestSize.Level2)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    config.SetSilentAccessible(true);
+    ConfigTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    store = nullptr;
+
+    config.SetSilentAccessible(false);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    store = nullptr;
+
+    RdbStoreConfig config2(dbPath);
+    store = RdbHelper::GetRdbStore(config2, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    store = nullptr;
+}
