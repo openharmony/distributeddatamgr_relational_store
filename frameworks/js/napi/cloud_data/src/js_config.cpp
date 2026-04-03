@@ -504,7 +504,7 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
                 ASSERT_BUSINESS_ERR(
                     ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of storeId must be string.");
             }
-        } else if (isArray){
+        } else if (isArray) {
             ctxt->isBatch = true;
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
             ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT_V20,
