@@ -132,7 +132,7 @@ void OH_Data_Asset_SetStatusFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
-void OH_Data_Asset_GetNameFuzz(FuzzedDataProvider &provider)
+void OhDataAssetGetNameFuzz()
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     if (asset == nullptr) {
@@ -147,7 +147,7 @@ void OH_Data_Asset_GetNameFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
-void OH_Data_Asset_GetUriFuzz(FuzzedDataProvider &provider)
+void OhDataAssetGetUriFuzz()
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     if (asset == nullptr) {
@@ -162,7 +162,7 @@ void OH_Data_Asset_GetUriFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
-void OH_Data_Asset_GetPathFuzz(FuzzedDataProvider &provider)
+void OhDataAssetGetPathFuzz()
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     if (asset == nullptr) {
@@ -177,7 +177,7 @@ void OH_Data_Asset_GetPathFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
-void OH_Data_Asset_GetCreateTimeFuzz(FuzzedDataProvider &provider)
+void OhDataAssetGetCreateTimeFuzz()
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     if (asset == nullptr) {
@@ -191,7 +191,7 @@ void OH_Data_Asset_GetCreateTimeFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
-void OH_Data_Asset_GetModifyTimeFuzz(FuzzedDataProvider &provider)
+void OhDataAssetGetModifyTimeFuzz()
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     if (asset == nullptr) {
@@ -205,7 +205,7 @@ void OH_Data_Asset_GetModifyTimeFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
-void OH_Data_Asset_GetSizeFuzz(FuzzedDataProvider &provider)
+void OhDataAssetGetSizeFuzz()
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     if (asset == nullptr) {
@@ -219,7 +219,7 @@ void OH_Data_Asset_GetSizeFuzz(FuzzedDataProvider &provider)
     OH_Data_Asset_DestroyOne(nullptr);
 }
 
-void OH_Data_Asset_GetStatusFuzz(FuzzedDataProvider &provider)
+void OhDataAssetGetStatusFuzz()
 {
     Data_Asset *asset = OH_Data_Asset_CreateOne();
     if (asset == nullptr) {
@@ -246,12 +246,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::OH_Data_Asset_SetModifyTimeFuzz(provider);
     OHOS::OH_Data_Asset_SetSizeFuzz(provider);
     OHOS::OH_Data_Asset_SetStatusFuzz(provider);
-    OHOS::OH_Data_Asset_GetNameFuzz(provider);
-    OHOS::OH_Data_Asset_GetUriFuzz(provider);
-    OHOS::OH_Data_Asset_GetPathFuzz(provider);
-    OHOS::OH_Data_Asset_GetCreateTimeFuzz(provider);
-    OHOS::OH_Data_Asset_GetModifyTimeFuzz(provider);
-    OHOS::OH_Data_Asset_GetSizeFuzz(provider);
-    OHOS::OH_Data_Asset_GetStatusFuzz(provider);
+    OHOS::OhDataAssetGetNameFuzz();
+    OHOS::OhDataAssetGetUriFuzz();
+    OHOS::OhDataAssetGetPathFuzz();
+    OHOS::OhDataAssetGetCreateTimeFuzz();
+    OHOS::OhDataAssetGetModifyTimeFuzz();
+    OHOS::OhDataAssetGetSizeFuzz();
+    OHOS::OhDataAssetGetStatusFuzz();
     return 0;
 }

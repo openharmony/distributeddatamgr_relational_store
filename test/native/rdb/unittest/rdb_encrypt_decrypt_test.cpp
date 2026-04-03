@@ -98,305 +98,10 @@ void RdbEncryptTest::TearDown(void)
 }
 
 /**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_001
- * @tc.desc: test RdbStore Get Encrypt Store
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_01, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.TestEncrypt1");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_002
- * @tc.desc: test RdbStore Get Unencrypted Store
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_02, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::UNENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(false);
-    config.SetBundleName("com.example.TestEncrypt2");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_003
- * @tc.desc: test create encrypted Rdb and insert data ,then query
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_03, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.TestEncrypt3");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-
-    int64_t id;
-
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-
-    int columnIndex;
-    int intVal;
-    std::string strVal;
-
-    ret = resultSet->GetColumnIndex("id", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetInt(columnIndex, intVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, intVal);
-
-    ret = resultSet->GetColumnIndex("name", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetString(columnIndex, strVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ("zhangsan", strVal);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
-
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_004
- * @tc.desc: test RdbStore key file.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_04, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.TestEncrypt4");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    std::string keyPath = RDB_TEST_PATH + "key/encrypted.pub_key_v2";
-    int ret = access(keyPath.c_str(), F_OK);
-    EXPECT_EQ(ret, 0);
-
-    store = nullptr;
-    RdbHelper::DeleteRdbStore(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    ret = access(keyPath.c_str(), F_OK);
-    EXPECT_EQ(ret, -1);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_005
- * @tc.desc: test RdbStore Get Encrypted Store with empty boundlename
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_05, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_006
- * @tc.desc: test GetRdbStore with specified key
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_06, TestSize.Level1)
-{
-    std::vector<uint8_t> key{ 1, 2, 3 };
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptKey(key);
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-
-    std::string keyPath = RDB_TEST_PATH + "key/" + "encrypted.pub_key";
-    std::string newKeyPath = RDB_TEST_PATH + "key/" + +"encrypted.pub_key.new";
-    bool isFileExists = OHOS::FileExists(keyPath);
-    EXPECT_EQ(isFileExists, false);
-    isFileExists = OHOS::FileExists(newKeyPath);
-    EXPECT_EQ(isFileExists, false);
-
-    store.reset();
-    RdbHelper::ClearCache();
-
-    std::vector<uint8_t> wrongKey{ 4, 5, 6 };
-    config.SetEncryptKey(wrongKey);
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(store, nullptr);
-    EXPECT_EQ(errCode, E_SQLITE_CORRUPT);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_007
- * @tc.desc: test RemoveSuffix when pos == std::string::npos
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_07, TestSize.Level1)
-{
-    std::string path = RDB_TEST_PATH + "test";
-    RdbHelper::DeleteRdbStore(path);
-    RdbStoreConfig config(path);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.TestEncrypt7");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-
-    store = nullptr;
-    errCode = RdbHelper::DeleteRdbStore(path);
-    EXPECT_EQ(errCode, E_OK);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_008
- * @tc.desc: test RdbStore Get Encrypt Store without SetBundleName
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_008, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_Decrypt_Test_009
- * @tc.desc: test create encrypted Rdb and insert data ,then query
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_009, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.TestEncrypt9");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-
-    int64_t id;
-
-    int ret = store->Insert(id, "test", UTUtils::SetRowData(UTUtils::g_rowData[0]));
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(1, id);
-
-    std::shared_ptr<ResultSet> resultSet = store->QuerySql("SELECT * FROM test");
-    EXPECT_NE(resultSet, nullptr);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_OK);
-
-    int columnIndex;
-    double dVal;
-    std::vector<uint8_t> blob;
-
-    ret = resultSet->GetColumnIndex("salary", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetDouble(columnIndex, dVal);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(100.5, dVal);
-
-    ret = resultSet->GetColumnIndex("blobType", columnIndex);
-    EXPECT_EQ(ret, E_OK);
-    ret = resultSet->GetBlob(columnIndex, blob);
-    EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(3, static_cast<int>(blob.size()));
-    EXPECT_EQ(1, blob[0]);
-
-    ret = resultSet->GoToNextRow();
-    EXPECT_EQ(ret, E_ROW_OUT_RANGE);
-
-    ret = resultSet->Close();
-    EXPECT_EQ(ret, E_OK);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_010
- * @tc.desc: test create encrypted Rdb and open in non encrypted mode ,then E_OK
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_010, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    config.SetBundleName("com.example.TestEncrypt10");
-
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
-
-    std::string keyPath = RDB_TEST_PATH + "key/encrypted.pub_key_v2";
-    int ret = access(keyPath.c_str(), F_OK);
-    EXPECT_EQ(ret, 0);
-
-    config.SetEncryptStatus(false);
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_011
- * @tc.desc: test create unencrypted Rdb and open in encrypted mode ,then E_OK
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_011, TestSize.Level1)
-{
-    RdbStoreConfig config(RdbEncryptTest::UNENCRYPTED_DATABASE_NAME);
-    config.SetEncryptStatus(false);
-    config.SetBundleName("com.example.TestEncrypt11");
-    EncryptTestOpenCallback helper;
-    int errCode;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
-
-    std::string keyPath = RDB_TEST_PATH + "key/unencrypted.pub_key";
-    int ret = access(keyPath.c_str(), F_OK);
-    EXPECT_EQ(ret, -1);
-
-    config.SetEncryptStatus(true);
-    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
-}
-
-/**
- * @tc.name: RdbStore_Encrypt_012
- * @tc.desc: test key damage, open encrypted database ,then E_INVALID_SECRET_KEY
- * @tc.type: FUNC
- */
+  * @tc.name: RdbStore_Encrypt_012
+  * @tc.desc: test key damage, open encrypted database ,then E_INVALID_SECRET_KEY
+  * @tc.type: FUNC
+  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_012, TestSize.Level1)
 {
     RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
@@ -421,10 +126,10 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_012, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbStore_Encrypt_013
- * @tc.desc: test key damage, allowing rebuild and open encrypted database ,then E_OK
- * @tc.type: FUNC
- */
+  * @tc.name: RdbStore_Encrypt_013
+  * @tc.desc: test key damage, allowing rebuild and open encrypted database ,then E_OK
+  * @tc.type: FUNC
+  */
 HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_013, TestSize.Level1)
 {
     RdbStoreConfig config(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
@@ -466,10 +171,10 @@ HWTEST_F(RdbEncryptTest, RdbStore_Encrypt_013, TestSize.Level1)
 }
 
 /**
- * @tc.name: RdbStore_RdbPassword_001
- * @tc.desc: Abnomal test RdbStore RdbPassword class
- * @tc.type: FUNC
- */
+  * @tc.name: RdbStore_RdbPassword_001
+  * @tc.desc: Abnomal test RdbStore RdbPassword class
+  * @tc.type: FUNC
+  */
 HWTEST_F(RdbEncryptTest, AbnomalRdbStore_RdbPassword_001, TestSize.Level2)
 {
     RdbPassword password1;
@@ -496,46 +201,10 @@ HWTEST_F(RdbEncryptTest, AbnomalRdbStore_RdbPassword_001, TestSize.Level2)
 }
 
 /**
- * @tc.name: KeyFilePath_test_001, open different databases and obtain the corresponding key files
- * @tc.desc: 1.create db1
- *           2.create db2
- *           3.create table in the db2
- *           4.backup db1
- *           5.restore db1
- *
- * @tc.type: FUNC
- */
-HWTEST_F(RdbEncryptTest, KeyFilePath_test_001, TestSize.Level2)
-{
-    RdbStoreConfig config1(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
-    config1.SetEncryptStatus(true);
-    config1.SetBundleName("com.example.TestEncrypt1");
-    EncryptTestOpenCallback helper1;
-    int errCode = E_ERROR;
-    std::shared_ptr<RdbStore> store1 = RdbHelper::GetRdbStore(config1, 1, helper1, errCode);
-    EXPECT_NE(nullptr, store1);
-    EXPECT_EQ(E_OK, errCode);
-
-    RdbStoreConfig config2(RdbEncryptTest::ENCRYPTED_DATABASE_NAME2);
-    config2.SetEncryptStatus(true);
-    config2.SetBundleName("com.example.TestEncrypt1");
-    EncryptTestOpenCallback helper2;
-    std::shared_ptr<RdbStore> store2 = RdbHelper::GetRdbStore(config2, 1, helper2, errCode);
-    EXPECT_NE(nullptr, store2);
-    EXPECT_EQ(E_OK, errCode);
-
-    EXPECT_EQ(E_OK, store1->Backup(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME));
-    EXPECT_EQ(E_OK, store1->Restore(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME));
-
-    EXPECT_EQ(E_OK, store2->Backup(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME2));
-    EXPECT_EQ(E_OK, store2->Restore(RdbEncryptTest::ENCRYPTED_DATABASE_BACKUP_NAME2));
-}
-
-/**
- * @tc.name: KeyCorruptTest
- * @tc.desc: test key file corrupt readonly
- * @tc.type: FUNC
- */
+  * @tc.name: KeyCorruptTest
+  * @tc.desc: test key file corrupt readonly
+  * @tc.type: FUNC
+  */
 HWTEST_F(RdbEncryptTest, KeyCorruptTest_01, TestSize.Level1)
 {
     RdbStoreConfig config1(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
@@ -557,7 +226,7 @@ HWTEST_F(RdbEncryptTest, KeyCorruptTest_01, TestSize.Level1)
     ASSERT_TRUE(OHOS::FileExists(file));
     std::vector<char> keyfileData;
     ASSERT_TRUE(OHOS::LoadBufferFromFile(file, keyfileData));
-    
+
     std::vector<char> keyCorrupted = keyfileData;
     // fill bytes of keyfile index 10 to 19 with 0
     for (size_t i = 10; i < 20 && i < keyCorrupted.size(); ++i) {
@@ -586,10 +255,10 @@ HWTEST_F(RdbEncryptTest, KeyCorruptTest_01, TestSize.Level1)
 }
 
 /**
- * @tc.name: KeyCorruptTest
- * @tc.desc: test key file not exist when readonly
- * @tc.type: FUNC
- */
+  * @tc.name: KeyCorruptTest
+  * @tc.desc: test key file not exist when readonly
+  * @tc.type: FUNC
+  */
 HWTEST_F(RdbEncryptTest, KeyCorruptTest_02, TestSize.Level1)
 {
     RdbStoreConfig config1(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);
@@ -633,10 +302,10 @@ HWTEST_F(RdbEncryptTest, KeyCorruptTest_02, TestSize.Level1)
 }
 
 /**
- * @tc.name: KeyCorruptTest
- * @tc.desc: test save key data to file failed
- * @tc.type: FUNC
- */
+  * @tc.name: KeyCorruptTest
+  * @tc.desc: test save key data to file failed
+  * @tc.type: FUNC
+  */
 HWTEST_F(RdbEncryptTest, KeyCorruptTest_03, TestSize.Level0)
 {
     RdbStoreConfig config1(RdbEncryptTest::ENCRYPTED_DATABASE_NAME);

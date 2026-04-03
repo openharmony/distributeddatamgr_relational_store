@@ -14,18 +14,16 @@
  */
 
 #define LOG_TAG "TaiheRdbStoreObserver"
-#include "logger.h"
 #include "taihe_rdb_store_observer.h"
+
+#include "logger.h"
 
 namespace ani_rdbutils {
 using namespace OHOS::Rdb;
 
-TaiheRdbStoreObserver::TaiheRdbStoreObserver(
-    ani_env *env,
-    ani_object callbackObj,
-    std::shared_ptr<RdbStoreVarCallbackType> callbackPtr,
-    OHOS::DistributedRdb::SubscribeMode subscribeMode
-) : callbackPtr_(callbackPtr), subscribeMode_(subscribeMode)
+TaiheRdbStoreObserver::TaiheRdbStoreObserver(ani_env *env, ani_object callbackObj,
+    std::shared_ptr<RdbStoreVarCallbackType> callbackPtr, OHOS::DistributedRdb::SubscribeMode subscribeMode)
+    : callbackPtr_(callbackPtr), subscribeMode_(subscribeMode)
 {
     if (ANI_OK != env->GlobalReference_Create(callbackObj, &callbackRef_)) {
         LOG_ERROR("Call GlobalReference_Create failed");
@@ -82,9 +80,13 @@ void TaiheRdbStoreObserver::OnChange(const std::vector<std::string> &devices)
     }
 }
 
-void TaiheRdbStoreObserver::OnChange(const OHOS::DistributedRdb::Origin &origin,
-    const PrimaryFields &fields, OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo)
+void TaiheRdbStoreObserver::OnChange(const OHOS::DistributedRdb::Origin &origin, const PrimaryFields &fields,
+    OHOS::DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo)
 {
+    if (subscribeMode_ != DistributedRdb::CLOUD_DETAIL && subscribeMode_ != DistributedRdb::LOCAL_DETAIL) {
+        RdbStoreObserver::OnChange(origin, fields, std::move(changeInfo));
+        return;
+    }
     if (callbackPtr_ == nullptr) {
         LOG_ERROR("Js callback is nullptr.");
         return;
@@ -107,4 +109,4 @@ void TaiheRdbStoreObserver::OnChange()
         jsfunc();
     }
 }
-}
+} // namespace ani_rdbutils

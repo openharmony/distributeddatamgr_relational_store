@@ -144,6 +144,7 @@ ohos_unittest("DynamicLoadTest") {
   deps = [
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
     "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+    "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
   ]
 }
 

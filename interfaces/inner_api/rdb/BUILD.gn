@@ -96,6 +96,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+      "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
     ]
 
     external_deps = [
@@ -162,6 +163,7 @@ if (is_ohos && !build_ohos_sdk) {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+      "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
     ]
 
     external_deps = [

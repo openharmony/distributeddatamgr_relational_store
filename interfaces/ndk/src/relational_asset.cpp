@@ -158,9 +158,9 @@ int OH_Data_Asset_GetCreateTime(Data_Asset *asset, int64_t *createTime)
     if (asset == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    char *endPtr;
-    *createTime = strtol(asset->asset_.createTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
-    if (*endPtr != '\0') {
+    char *endPtr = nullptr;
+    *createTime = strtoll(asset->asset_.createTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
+    if (endPtr == nullptr || *endPtr != '\0') {
         LOG_ERROR("GetCreateTime failed.");
         return OH_Rdb_ErrCode::RDB_ERR;
     }
@@ -172,9 +172,9 @@ int OH_Data_Asset_GetModifyTime(Data_Asset *asset, int64_t *modifyTime)
     if (asset == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    char *endPtr;
-    *modifyTime = strtol(asset->asset_.modifyTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
-    if (*endPtr != '\0') {
+    char *endPtr = nullptr;
+    *modifyTime = strtoll(asset->asset_.modifyTime.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
+    if (endPtr == nullptr || *endPtr != '\0') {
         LOG_ERROR("GetModifyTime failed.");
         return OH_Rdb_ErrCode::RDB_ERR;
     }
@@ -186,9 +186,9 @@ int OH_Data_Asset_GetSize(Data_Asset *asset, size_t *size)
     if (asset == nullptr) {
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
-    char *endPtr;
+    char *endPtr = nullptr;
     *size = strtol(asset->asset_.size.c_str(), &endPtr, ASSET_TRANSFORM_BASE);
-    if (*endPtr != '\0') {
+    if (endPtr == nullptr || *endPtr != '\0') {
         LOG_ERROR("GetSize failed.");
         return OH_Rdb_ErrCode::RDB_ERR;
     }

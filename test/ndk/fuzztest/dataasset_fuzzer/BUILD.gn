@@ -17,7 +17,7 @@ import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("dataasset_fuzzer") {
+ohos_fuzztest("DataAssetFuzzTest") {
   module_out_path = "relational_store/relational_store"
 
   include_dirs = [
@@ -64,7 +64,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":dataasset_fuzzer",
+    ":DataAssetFuzzTest",
   ]
 }
 ###############################################################################

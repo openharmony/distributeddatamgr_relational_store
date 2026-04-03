@@ -18,6 +18,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <atomic>
+#include <vector>
 #include <fstream>
 #include <thread>
 
@@ -531,17 +532,17 @@ HWTEST_F(SilentProxyTest, Service_GetRdbService_NullService_013, TestSize.Level1
 }
 
 /**
- * @tc.name: Service_IsSupportSilent_ReturnError_014
- * @tc.desc: Test when service->IsSupportSilent returns error
+ * @tc.name: Service_ReturnError_021
+ * @tc.desc: Test when service->GetSilentAccessStores returns error
  * @tc.type: FUNC
  */
-HWTEST_F(SilentProxyTest, Service_IsSupportSilent_ReturnError_014, TestSize.Level1)
+HWTEST_F(SilentProxyTest, Service_ReturnError_021, TestSize.Level1)
 {
     SetupMock();
     EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
         .WillOnce(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
-        .WillOnce(Return(std::make_pair(-1, false)));
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_))
+        .WillOnce(Return(std::make_pair(-1, std::vector<std::string>())));
 
     SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
@@ -550,17 +551,41 @@ HWTEST_F(SilentProxyTest, Service_IsSupportSilent_ReturnError_014, TestSize.Leve
 }
 
 /**
- * @tc.name: Service_IsSupportSilent_ReturnTrue_015
- * @tc.desc: Test when service->IsSupportSilent returns true
+ * @tc.name: Service_PermissionDenied_022
+ * @tc.desc: Test when service->GetSilentAccessStores returns RDB_PERMISSION_DENIED
+ *           and verify cache is set correctly
  * @tc.type: FUNC
  */
-HWTEST_F(SilentProxyTest, Service_IsSupportSilent_ReturnTrue_015, TestSize.Level1)
+HWTEST_F(SilentProxyTest, Service_PermissionDenied_022, TestSize.Level1)
 {
     SetupMock();
     EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
         .WillOnce(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
-        .WillOnce(Return(std::make_pair(RDB_OK, true)));
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_))
+        .WillOnce(Return(std::make_pair(RDB_PERMISSION_DENIED, std::vector<std::string>())));
+
+    SilentProxyManager manager(TEST_CONFIG_PATH);
+    auto [err1, flag1] = manager.IsSupportSilent("com.example.test", "test.db");
+    EXPECT_EQ(err1, E_ERROR);
+    EXPECT_FALSE(flag1);
+
+    auto [err2, flag2] = manager.IsSupportSilent("com.example.test", "test.db");
+    EXPECT_EQ(err2, E_OK);
+    EXPECT_FALSE(flag2);
+}
+
+/**
+ * @tc.name: Service_ReturnTrue_023
+ * @tc.desc: Test when GetSilentAccessStores returns true
+ * @tc.type: FUNC
+ */
+HWTEST_F(SilentProxyTest, Service_ReturnTrue_023, TestSize.Level1)
+{
+    SetupMock();
+    EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
+        .WillOnce(Return(std::make_pair(E_OK, mockRdbService_)));
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_))
+        .WillOnce(Return(std::make_pair(RDB_OK, std::vector<std::string>{ "test" })));
 
     SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
@@ -569,17 +594,17 @@ HWTEST_F(SilentProxyTest, Service_IsSupportSilent_ReturnTrue_015, TestSize.Level
 }
 
 /**
- * @tc.name: Service_IsSupportSilent_ReturnFalse_016
- * @tc.desc: Test when service->IsSupportSilent returns false
+ * @tc.name: Service_ReturnFalse_024
+ * @tc.desc: Test when GetSilentAccessStores returns false
  * @tc.type: FUNC
  */
-HWTEST_F(SilentProxyTest, Service_IsSupportSilent_ReturnFalse_016, TestSize.Level1)
+HWTEST_F(SilentProxyTest, Service_ReturnFalse_024, TestSize.Level1)
 {
     SetupMock();
     EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
         .WillOnce(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
-        .WillOnce(Return(std::make_pair(RDB_OK, false)));
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_))
+        .WillOnce(Return(std::make_pair(RDB_OK, std::vector<std::string>{ "other" })));
 
     SilentProxyManager manager(TEST_CONFIG_PATH);
     auto [err, flag] = manager.IsSupportSilent("com.example.test", "test.db");
@@ -588,17 +613,17 @@ HWTEST_F(SilentProxyTest, Service_IsSupportSilent_ReturnFalse_016, TestSize.Leve
 }
 
 /**
- * @tc.name: Service_CacheHit_017
+ * @tc.name: Service_CacheHit_025
  * @tc.desc: Test Service cache hit scenario
  * @tc.type: FUNC
  */
-HWTEST_F(SilentProxyTest, Service_CacheHit_017, TestSize.Level1)
+HWTEST_F(SilentProxyTest, Service_CacheHit_025, TestSize.Level1)
 {
     SetupMock();
     EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
         .WillOnce(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
-        .WillOnce(Return(std::make_pair(RDB_OK, true)));
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_))
+        .WillOnce(Return(std::make_pair(RDB_OK, std::vector<std::string>{ "test" })));
 
     SilentProxyManager manager(TEST_CONFIG_PATH);
     // First call - should call service
@@ -696,18 +721,18 @@ HWTEST_F(SilentProxyTest, Proxy_DoubleCheck_Concurrent_Miss_019, TestSize.Level1
 }
 
 /**
- * @tc.name: Service_DoubleCheck_Concurrent_020
- * @tc.desc: Test Service double-check logic with concurrent calls
+ * @tc.name: Service_Concurrent_030
+ * @tc.desc: Test Service with concurrent calls
  * @tc.type: FUNC
  */
-HWTEST_F(SilentProxyTest, Service_DoubleCheck_Concurrent_020, TestSize.Level1)
+HWTEST_F(SilentProxyTest, Service_Concurrent_030, TestSize.Level1)
 {
     SetupMock();
     // Only expect one service call due to double-check and caching
     EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
         .WillOnce(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
-        .WillOnce(Return(std::make_pair(RDB_OK, true)));
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_))
+        .WillOnce(Return(std::make_pair(RDB_OK, std::vector<std::string>{ "test" })));
 
     SilentProxyManager manager(TEST_CONFIG_PATH);
     const int threadCount = 10;
@@ -734,47 +759,18 @@ HWTEST_F(SilentProxyTest, Service_DoubleCheck_Concurrent_020, TestSize.Level1)
 }
 
 /**
- * @tc.name: Service_DoubleCheck_CacheMiss_021
- * @tc.desc: Test Service double-check when dbName not in cache
- * @tc.type: FUNC
- */
-HWTEST_F(SilentProxyTest, Service_DoubleCheck_CacheMiss_021, TestSize.Level1)
-{
-    SetupMock();
-    // First call for one dbName, second call for different dbName
-    EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
-        .WillOnce(Return(std::make_pair(E_OK, mockRdbService_)))
-        .WillOnce(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
-        .WillOnce(Return(std::make_pair(RDB_OK, true)))
-        .WillOnce(Return(std::make_pair(RDB_OK, false)));
-
-    SilentProxyManager manager(TEST_CONFIG_PATH);
-
-    // First call with dbName1
-    auto [err1, flag1] = manager.IsSupportSilent("com.example.test", "db1.db");
-    EXPECT_EQ(err1, E_OK);
-    EXPECT_TRUE(flag1);
-
-    // Second call with dbName2 - cache miss for dbName, should call service again
-    auto [err2, flag2] = manager.IsSupportSilent("com.example.test", "db2.db");
-    EXPECT_EQ(err2, E_OK);
-    EXPECT_FALSE(flag2);
-}
-
-/**
- * @tc.name: Mixed_ProxyAndService_Concurrent_022
+ * @tc.name: Mixed_Concurrent_031
  * @tc.desc: Test concurrent access with mixed Proxy and Service paths
  * @tc.type: FUNC
  */
-HWTEST_F(SilentProxyTest, Mixed_ProxyAndService_Concurrent_022, TestSize.Level1)
+HWTEST_F(SilentProxyTest, Mixed_Concurrent_031, TestSize.Level1)
 {
     SetupMock();
     // For bundle not in proxy config, will call service
     EXPECT_CALL(*mockRdbManager_, GetRdbService(_))
         .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
-        .WillRepeatedly(Return(std::make_pair(RDB_OK, true)));
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_))
+        .WillRepeatedly(Return(std::make_pair(RDB_OK, std::vector<std::string>{ "test" })));
 
     SilentProxyManager manager(TEST_CONFIG_PATH);
     const int threadCount = 20;
@@ -832,16 +828,16 @@ public:
 };
 
 /**
- * @tc.name: Visitor_SkipIsSupportSilent_023
+ * @tc.name: RoleType_Visitor_032
  * @tc.desc: Test VISITOR role skips IsSupportSilent call
  * @tc.type: FUNC
  */
-HWTEST_F(SilentProxyTest, Visitor_SkipIsSupportSilent_023, TestSize.Level1)
+HWTEST_F(SilentProxyTest, RoleType_Visitor_032, TestSize.Level1)
 {
     SetupMock();
     ON_CALL(*mockRdbManager_, GetRdbService(_))
         .WillByDefault(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_)).Times(1);
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_)).Times(1);
 
     system(("mkdir -p " + RDB_VISITOR_TEST_PATH).c_str());
     const std::string dbPath = RDB_VISITOR_TEST_PATH + "visitor_test.db";
@@ -872,16 +868,16 @@ HWTEST_F(SilentProxyTest, Visitor_SkipIsSupportSilent_023, TestSize.Level1)
 }
 
 /**
- * @tc.name: VisitorWrite_SkipIsSupportSilent_024
+ * @tc.name: RoleType_VisitorWrite_033
  * @tc.desc: Test VISITOR_WRITE role skips IsSupportSilent call
  * @tc.type: FUNC
  */
-HWTEST_F(SilentProxyTest, VisitorWrite_SkipIsSupportSilent_024, TestSize.Level1)
+HWTEST_F(SilentProxyTest, RoleType_VisitorWrite_033, TestSize.Level1)
 {
     SetupMock();
     ON_CALL(*mockRdbManager_, GetRdbService(_))
         .WillByDefault(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_)).Times(1);
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_)).Times(1);
 
     system(("mkdir -p " + RDB_VISITOR_TEST_PATH).c_str());
     const std::string dbPath = RDB_VISITOR_TEST_PATH + "visitor_write_test.db";
@@ -920,17 +916,17 @@ HWTEST_F(SilentProxyTest, VisitorWrite_SkipIsSupportSilent_024, TestSize.Level1)
 }
 
 /**
- * @tc.name: Owner_TriggerIsSupportSilent_025
- * @tc.desc: Test OWNER role with Searchable=true triggers IsSupportSilent call
+ * @tc.name: RoleType_Owner_034
+ * @tc.desc: Test OWNER role triggers IsSupportSilent call
  * @tc.type: FUNC
  */
-HWTEST_F(SilentProxyTest, Owner_TriggerIsSupportSilent_025, TestSize.Level1)
+HWTEST_F(SilentProxyTest, RoleType_Owner_034, TestSize.Level1)
 {
     SetupMock();
     ON_CALL(*mockRdbManager_, GetRdbService(_))
         .WillByDefault(Return(std::make_pair(E_OK, mockRdbService_)));
-    EXPECT_CALL(*mockRdbService_, IsSupportSilent(_))
-        .WillOnce(Return(std::make_pair(RDB_OK, false)));
+    EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_))
+        .WillOnce(Return(std::make_pair(RDB_OK, std::vector<std::string>{ "other" })));
 
     system(("mkdir -p " + RDB_VISITOR_TEST_PATH).c_str());
     const std::string dbPath = RDB_VISITOR_TEST_PATH + "owner_test.db";
@@ -948,4 +944,38 @@ HWTEST_F(SilentProxyTest, Owner_TriggerIsSupportSilent_025, TestSize.Level1)
     RdbHelper::ClearCache();
     RdbHelper::DeleteRdbStore(dbPath);
     system(("rm -rf " + RDB_VISITOR_TEST_PATH).c_str());
+}
+
+/**
+ * @tc.name: ClearCache_035
+ * @tc.desc: Test SilentProxyManager::ClearCache functionality
+ * @tc.type: FUNC
+ */
+HWTEST_F(SilentProxyTest, ClearCache_035, TestSize.Level1)
+{
+    SilentProxyManager manager(TEST_CONFIG_PATH);
+    std::string config = R"({
+        "silentProxys": [
+            {
+                "bundleName": "com.example.cache",
+                "storeNames": ["store1", "store2"]
+            }
+        ]
+    })";
+    CreateConfigFile(config);
+    auto [err1, flag1] = manager.IsSupportSilent("com.example.cache", "store1.db");
+    EXPECT_EQ(err1, E_OK);
+    EXPECT_TRUE(flag1);
+    EXPECT_EQ(manager.silentCache_.Size(), 1);
+
+    manager.ClearCache();
+    EXPECT_EQ(manager.silentCache_.Size(), 0);
+
+    auto [err2, flag2] = manager.IsSupportSilent("com.example.cache", "store1.db");
+    EXPECT_EQ(err2, E_OK);
+    EXPECT_TRUE(flag2);
+    EXPECT_EQ(manager.silentCache_.Size(), 1);
+    auto [err3, flag3] = manager.IsSupportSilent("com.example.cache", "store2.db");
+    EXPECT_EQ(err3, E_OK);
+    EXPECT_TRUE(flag3);
 }
