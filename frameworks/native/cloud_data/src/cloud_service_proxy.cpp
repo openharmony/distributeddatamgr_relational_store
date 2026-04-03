@@ -15,7 +15,6 @@
 #define LOG_TAG "CloudServiceProxy"
 #include "cloud_service_proxy.h"
 
-#include <algorithm>
 #include "itypes_util.h"
 #include "logger.h"
 
@@ -367,11 +366,11 @@ void CloudServiceProxy::CollectObserverData(const std::string &bundleName,
 {
     LOG_INFO("CollectObserverData: bundleName:%{public}s", bundleName.c_str());
     for (const auto &storeItem : storeResults) {
-        auto obsIt = storeMap.find(storeItem.first);
-        if (obsIt == storeMap.end()) {
+        auto subStoreInfo = storeMap.find(storeItem.first);
+        if (subStoreInfo == storeMap.end()) {
             continue;
         }
-        for (const auto &param : obsIt->second) {
+        for (const auto &param : subStoreInfo->second) {
             if (param.observer != nullptr) {
                 observerData[param.observer][bundleName][storeItem.first] = storeItem.second;
                 LOG_INFO("CollectObserverData: bundleName:%{public}s storeId:%{public}.3s", bundleName.c_str(),
@@ -379,11 +378,11 @@ void CloudServiceProxy::CollectObserverData(const std::string &bundleName,
             }
         }
     }
-    auto wildIt = storeMap.find("");
-    if (wildIt == storeMap.end()) {
+    auto subStoreInfo = storeMap.find("");
+    if (subStoreInfo == storeMap.end()) {
         return;
     }
-    for (const auto &param : wildIt->second) {
+    for (const auto &param : subStoreInfo->second) {
         if (param.observer != nullptr) {
             observerData[param.observer][bundleName] = storeResults;
             LOG_INFO("CollectObserverData: bundleName:%{public}s", bundleName.c_str());
@@ -414,10 +413,10 @@ int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::s
 int32_t CloudServiceProxy::Subscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
     std::shared_ptr<ISyncInfoObserver> observer)
 {
-    if (bundleInfos.empty() || observer == nullptr) {
+    if (bundleInfos.empty() || observer == nullptr || type >= CloudSubscribeType::SUBSCRIBE_TYPE_MAX) {
         return INVALID_ARGUMENT_V20;
     }
-    
+
     int32_t status = DoSubscribe(type, bundleInfos);
     if (status != SUCCESS) {
         return status;
@@ -436,18 +435,21 @@ int32_t CloudServiceProxy::Subscribe(CloudSubscribeType type, const std::vector<
 int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
     std::shared_ptr<ISyncInfoObserver> observer)
 {
+    if (type >= CloudSubscribeType::SUBSCRIBE_TYPE_MAX) {
+        return INVALID_ARGUMENT_V20;
+    }
     if (observer != nullptr) {
         auto processStore = [&observer](auto &storeMap, const auto &info) {
-            auto obsIt = storeMap.find(info.storeId);
-            if (obsIt == storeMap.end()) {
+            auto listIter = storeMap.find(info.storeId);
+            if (listIter == storeMap.end()) {
                 return;
             }
-            auto &observerList = obsIt->second;
+            auto &observerList = listIter->second;
             observerList.remove_if([&observer](const auto &param) {
                 return param.observer.get() == observer.get();
             });
             if (observerList.empty()) {
-                storeMap.erase(obsIt);
+                storeMap.erase(listIter);
             }
         };
         for (const auto &info : bundleInfos) {

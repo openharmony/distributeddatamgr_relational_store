@@ -15,8 +15,6 @@
 #define LOG_TAG "CloudManager"
 #include "cloud_manager.h"
 
-#include <thread>
-
 #include "cloud_service_proxy.h"
 #include "icloud_service.h"
 #include "iservice_registry.h"
@@ -113,7 +111,6 @@ void CloudManager::OnRemoteDied()
 {
     LOG_INFO("Cloud service has dead!");
     if (cloudService_ == nullptr) {
-        ResetServiceHandle();
         return;
     }
 
