@@ -67,13 +67,6 @@ void AniAsyncCall::ReturnResult(std::shared_ptr<AniContext> ctx, ani_env *env)
         LOG_ERROR("Get env failed.");
         return;
     }
-    int32_t errCode = NativeRdb::E_OK;
-    if (resultSetter != nullptr) {
-        errCode = resultSetter(env, &ctx->result_);
-    }
-    if (errCode != NativeRdb::E_OK) {
-        ctx->error_ = std::make_shared<InnerError>(errCode);
-    }
     if (ctx->callbackRef_ == nullptr && ctx->deferred_ == nullptr) {
         return;
     }
