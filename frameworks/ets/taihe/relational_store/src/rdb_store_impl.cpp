@@ -972,8 +972,8 @@ string RdbStoreImpl::ObtainDistributedTableNameSync(string_view device, string_v
 void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise)
 {
     auto store = GetResource();
-    ASSERT_RETURN_THROW_ERROR(store != nullptr,
-        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    ASSERT_RETURN_THROW_ERROR(
+        store != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
         std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
