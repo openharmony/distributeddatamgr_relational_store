@@ -304,32 +304,50 @@ int64_t RdbStoreImpl::DeleteDataShareSync(::taihe::string_view table, uintptr_t 
 ResultSet RdbStoreImpl::QueryWithPredicate(weak::RdbPredicates predicates)
 {
     optional_view<array<string>> empty;
-    return QuerySync(predicates, empty);
+    return Query(predicates, empty);
 }
 
 ResultSet RdbStoreImpl::QueryWithColumn(weak::RdbPredicates predicates, array_view<string> columns)
 {
-    return QuerySync(predicates, optional<array<string>>::make(columns));
+    return Query(predicates, optional<array<string>>::make(columns));
 }
 
 ResultSet RdbStoreImpl::QueryWithOptionalColumn(weak::RdbPredicates predicates, optional_view<array<string>> columns)
 {
-    return QuerySync(predicates, columns);
+    return Query(predicates, columns);
 }
 
-ResultSet RdbStoreImpl::QuerySync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
+ResultSet RdbStoreImpl::Query(weak::RdbPredicates predicates, optional_view<array<string>> columns)
 {
     auto store = GetResource();
     ASSERT_RETURN_THROW_ERROR(store != nullptr,
         std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), (make_holder<ResultSetImpl, ResultSet>()));
-    std::vector<std::string> stdcolumns;
+    std::vector<std::string> columnNames;
     if (columns.has_value()) {
-        stdcolumns = std::vector<std::string>(columns.value().begin(), columns.value().end());
+        columnNames = std::vector<std::string>(columns.value().begin(), columns.value().end());
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
         std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
-    auto nativeResultSet = store->Query(*rdbPredicateNative, stdcolumns);
+    auto nativeResultSet = store->Query(*rdbPredicateNative, columnNames);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
+        (make_holder<ResultSetImpl, ResultSet>()));
+    return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
+}
+
+ResultSet RdbStoreImpl::QueryByStep(weak::RdbPredicates predicates, optional_view<array<string>> columns)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), (make_holder<ResultSetImpl, ResultSet>()));
+    std::vector<std::string> columnNames;
+    if (columns.has_value()) {
+        columnNames = std::vector<std::string>(columns.value().begin(), columns.value().end());
+    }
+    auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
+    auto nativeResultSet = store->QueryByStep(*rdbPredicateNative, columnNames);
     ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
         (make_holder<ResultSetImpl, ResultSet>()));
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
@@ -408,12 +426,12 @@ ResultSet RdbStoreImpl::QueryDataShareWithColumnSync(
         ani_utils::AniObjectUtils::Unwrap<OHOS::DataShare::DataShareAbsPredicates>(env, object);
     ASSERT_RETURN_THROW_ERROR(holder != nullptr, std::make_shared<ParamError>("predicates", "an DataShare Predicates."),
         (make_holder<ResultSetImpl, ResultSet>()));
-    std::vector<std::string> stdcolumns;
+    std::vector<std::string> columnNames;
     if (columns.has_value()) {
-        stdcolumns = std::vector<std::string>(columns.value().begin(), columns.value().end());
+        columnNames = std::vector<std::string>(columns.value().begin(), columns.value().end());
     }
     auto rdbPredicates = OHOS::RdbDataShareAdapter::RdbUtils::ToPredicates(*holder, std::string(table));
-    auto nativeResultSet = store->Query(rdbPredicates, stdcolumns);
+    auto nativeResultSet = store->Query(rdbPredicates, columnNames);
     ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
         (make_holder<ResultSetImpl, ResultSet>()));
     return taihe::make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
@@ -971,18 +989,23 @@ void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t
         return;
     }
     promise = context->promise_;
+    ::taihe::env_guard gurd;
+    auto env = gurd.get_env();
     auto nativeSyncCallback = [context](const OHOS::DistributedRdb::SyncResult &data) {
-        AniAsyncCall::ReturnResult(context, [data](ani_env *env, ani_ref *result) {
-            ani_object object = {};
-            ani_status status = ani_utils::Convert2AniValue(env, data, object);
-            *result = static_cast<ani_ref>(object);
-            return (status != ANI_OK || *result == nullptr) ? NativeRdb::E_ERROR : NativeRdb::E_OK;
-        });
+        ::taihe::env_guard gurd;
+        auto callbackEnv = gurd.get_env();
+        ani_object object = {};
+        ani_status status = ani_utils::Convert2AniValue(callbackEnv, data, object);
+        context->result_ = static_cast<ani_ref>(object);
+        if (status != ANI_OK || context->result_ == nullptr) {
+            context->error_ = std::make_shared<InnerError>(NativeRdb::E_ERROR);
+        }
+        AniAsyncCall::ReturnResult(context, callbackEnv);
     };
     int errCode = store->Sync(option, *rdbPredicateNative, nativeSyncCallback);
     if (errCode != OHOS::NativeRdb::E_OK) {
         context->error_ = std::make_shared<InnerError>(errCode);
-        AniAsyncCall::ReturnResult(context);
+        AniAsyncCall::ReturnResult(context, env);
         return;
     }
 }

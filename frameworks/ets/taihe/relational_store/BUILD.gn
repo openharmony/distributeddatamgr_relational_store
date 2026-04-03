@@ -97,6 +97,7 @@ taihe_shared_library("relationalstore_ani") {
     "ability_runtime:napi_common",
     "data_share:datashare_common_lite",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "kv_store:datamgr_common",
     "runtime_core:ani_helpers",
   ]

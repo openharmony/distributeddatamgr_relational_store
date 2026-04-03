@@ -33,6 +33,7 @@ enum RdbStatus {
     RDB_OK,
     RDB_ERROR,
     RDB_NO_META,
+    RDB_PERMISSION_DENIED,
     RDB_SQLITE_BUSY,
     RDB_INVALID_ARGS,
     RDB_DB_NOT_EXIST,

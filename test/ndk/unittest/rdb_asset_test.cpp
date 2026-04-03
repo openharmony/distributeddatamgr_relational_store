@@ -20,6 +20,7 @@
 #include <string>
 
 #include "common.h"
+#include "relational_asset.h"
 #include "relational_store.h"
 #include "relational_store_error_code.h"
 
@@ -302,4 +303,209 @@ HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getStatus, TestSize.
     Data_AssetStatus status = Data_AssetStatus::ASSET_NORMAL;
     int errCode = OH_Data_Asset_GetStatus(nullptr, &status);
     EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0012
+ * @tc.name: Normal testCase of asset for getCreateTime.
+ * @tc.desc: 1.Create asset
+ *           2.Set valid create time
+ *           3.Get create time successfully
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getCreateTime, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    int64_t testTime = 9876543210;
+    int errCode = OH_Data_Asset_SetCreateTime(asset, testTime);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    int64_t createTime = 0;
+    errCode = OH_Data_Asset_GetCreateTime(asset, &createTime);
+    EXPECT_EQ(errCode, RDB_OK);
+    EXPECT_EQ(createTime, testTime);
+
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0013
+ * @tc.name: Abnormal testCase of asset for getCreateTime with invalid string.
+ * @tc.desc: 1.Create asset
+ *           2.Set invalid create time string (contains non-digit characters)
+ *           3.Get create time should fail
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getCreateTime_invalid_string, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    asset->asset_.createTime = "123abc";
+
+    int64_t createTime = 0;
+    int errCode = OH_Data_Asset_GetCreateTime(asset, &createTime);
+    EXPECT_EQ(errCode, RDB_ERR);
+
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0014
+ * @tc.name: Normal testCase of asset for getModifyTime.
+ * @tc.desc: 1.Create asset
+ *           2.Set valid modify time
+ *           3.Get modify time successfully
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getModifyTime, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    int64_t testTime = 1234567890;
+    int errCode = OH_Data_Asset_SetModifyTime(asset, testTime);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    int64_t modifyTime = 0;
+    errCode = OH_Data_Asset_GetModifyTime(asset, &modifyTime);
+    EXPECT_EQ(errCode, RDB_OK);
+    EXPECT_EQ(modifyTime, testTime);
+
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0015
+ * @tc.name: Abnormal testCase of asset for getModifyTime with invalid string.
+ * @tc.desc: 1.Create asset
+ *           2.Set invalid modify time string (contains non-digit characters)
+ *           3.Get modify time should fail
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getModifyTime_invalid_string, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    asset->asset_.modifyTime = "456xyz";
+
+    int64_t modifyTime = 0;
+    int errCode = OH_Data_Asset_GetModifyTime(asset, &modifyTime);
+    EXPECT_EQ(errCode, RDB_ERR);
+
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0016
+ * @tc.name: Normal testCase of asset for getSize.
+ * @tc.desc: 1.Create asset
+ *           2.Set valid size
+ *           3.Get size successfully
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getSize, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    size_t testSize = 1024;
+    int errCode = OH_Data_Asset_SetSize(asset, testSize);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    size_t size = 0;
+    errCode = OH_Data_Asset_GetSize(asset, &size);
+    EXPECT_EQ(errCode, RDB_OK);
+    EXPECT_EQ(size, testSize);
+
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0017
+ * @tc.name: Abnormal testCase of asset for getSize with invalid string.
+ * @tc.desc: 1.Create asset
+ *           2.Set invalid size string (contains non-digit characters)
+ *           3.Get size should fail
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getSize_invalid_string, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    asset->asset_.size = "789def";
+
+    size_t size = 0;
+    int errCode = OH_Data_Asset_GetSize(asset, &size);
+    EXPECT_EQ(errCode, RDB_ERR);
+
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0018
+ * @tc.name: testCase of asset for getCreateTime with zero value.
+ * @tc.desc: 1.Create asset
+ *           2.Set zero create time
+ *           3.Get create time successfully
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getCreateTime_zero, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    int64_t testTime = 0;
+    int errCode = OH_Data_Asset_SetCreateTime(asset, testTime);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    int64_t createTime = 0;
+    errCode = OH_Data_Asset_GetCreateTime(asset, &createTime);
+    EXPECT_EQ(errCode, RDB_OK);
+    EXPECT_EQ(createTime, testTime);
+
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0019
+ * @tc.name: testCase of asset for getSize with zero value.
+ * @tc.desc: 1.Create asset
+ *           2.Set zero size
+ *           3.Get size successfully
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getSize_zero, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    size_t testSize = 0;
+    int errCode = OH_Data_Asset_SetSize(asset, testSize);
+    EXPECT_EQ(errCode, RDB_OK);
+
+    size_t size = 0;
+    errCode = OH_Data_Asset_GetSize(asset, &size);
+    EXPECT_EQ(errCode, RDB_OK);
+    EXPECT_EQ(size, testSize);
+
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0020
+ * @tc.name: Abnormal testCase of asset for getCreateTime with negative number in string.
+ * @tc.desc: 1.Create asset
+ *           2.Set negative number string
+ *           3.Get create time (should succeed with strtol parsing negative)
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getCreateTime_negative, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    asset->asset_.createTime = "-12345";
+
+    int64_t createTime = 0;
+    int errCode = OH_Data_Asset_GetCreateTime(asset, &createTime);
+    EXPECT_EQ(errCode, RDB_OK);
+    EXPECT_EQ(createTime, -12345);
+
+    OH_Data_Asset_DestroyOne(asset);
 }

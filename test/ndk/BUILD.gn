@@ -90,17 +90,16 @@ group("fuzztest") {
   deps += [
     "fuzztest/dataasset_fuzzer:fuzztest",
     "fuzztest/datavalue_fuzzer:fuzztest",
-    "fuzztest/oh_cursor_fuzzer:fuzztest",
-    "fuzztest/oh_data_value_fuzzer:fuzztest",
-    "fuzztest/oh_data_values_buckets_fuzzer:fuzztest",
-    "fuzztest/oh_data_values_fuzzer:fuzztest",
-    "fuzztest/oh_predicates_fuzzer:fuzztest",
-    "fuzztest/oh_rdb_crypto_param_fuzzer:fuzztest",
+    "fuzztest/ohcursor_fuzzer:fuzztest",
+    "fuzztest/ohdatavalue_fuzzer:fuzztest",
+    "fuzztest/ohdatavaluesbuckets_fuzzer:fuzztest",
+    "fuzztest/ohdatavalues_fuzzer:fuzztest",
     "fuzztest/ohpredicates_fuzzer:fuzztest",
+    "fuzztest/ohrdbcryptoparam_fuzzer:fuzztest",
     "fuzztest/ohrdbtransaction_fuzzer:fuzztest",
     "fuzztest/relationalstore_fuzzer:fuzztest",
     "fuzztest/relationalstorecapi_fuzzer:fuzztest",
     "fuzztest/valuebucket_fuzzer:fuzztest",
-    "fuzztest/valueobject_fuzzer:fuzztest",
+    "fuzztest/ohvalueobject_fuzzer:fuzztest",
   ]
 }

@@ -226,6 +226,7 @@
                 }
             ],
             "test": [
+                "//foundation/distributeddatamgr/relational_store/test/interface:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/dataability:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:performancetest",
                 "//foundation/distributeddatamgr/relational_store/test/js/rdb:unittest",
@@ -250,7 +251,8 @@
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_ability_adapter:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_share_adapter:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/native/rdb:distributedtest",
-                "//foundation/distributeddatamgr/relational_store/test/ets/relational_store:stage_unittest"
+                "//foundation/distributeddatamgr/relational_store/test/ets/relational_store:stage_unittest",
+                "//foundation/distributeddatamgr/relational_store/test/ets/relational_store_system:stage_unittest"
             ]
         }
     }

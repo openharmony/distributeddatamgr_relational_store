@@ -806,38 +806,43 @@ uintptr_t ColumnTypeToTaihe(const OHOS::DistributedRdb::ColumnType columnType)
         LOG_ERROR("Find enum failed.");
         return 0;
     }
-    ani_enum_item enumItem;
+    ani_enum_item enumItem = nullptr;
+    ani_status status = ANI_OK;
     switch (columnType) {
         case OHOS::DistributedRdb::ColumnType::TYPE_NULL:
-            env->Enum_GetEnumItemByName(enumType, "NULL", &enumItem);
+            status = env->Enum_GetEnumItemByName(enumType, "NULL", &enumItem);
             break;
         case OHOS::DistributedRdb::ColumnType::TYPE_INTEGER:
-            env->Enum_GetEnumItemByName(enumType, "INTEGER", &enumItem);
+            status = env->Enum_GetEnumItemByName(enumType, "INTEGER", &enumItem);
             break;
         case OHOS::DistributedRdb::ColumnType::TYPE_FLOAT:
-            env->Enum_GetEnumItemByName(enumType, "REAL", &enumItem);
+            status = env->Enum_GetEnumItemByName(enumType, "REAL", &enumItem);
             break;
         case OHOS::DistributedRdb::ColumnType::TYPE_STRING:
-            env->Enum_GetEnumItemByName(enumType, "TEXT", &enumItem);
+            status = env->Enum_GetEnumItemByName(enumType, "TEXT", &enumItem);
             break;
         case OHOS::DistributedRdb::ColumnType::TYPE_BLOB:
-            env->Enum_GetEnumItemByName(enumType, "BLOB", &enumItem);
+            status = env->Enum_GetEnumItemByName(enumType, "BLOB", &enumItem);
             break;
         case OHOS::DistributedRdb::ColumnType::TYPE_ASSET:
-            env->Enum_GetEnumItemByName(enumType, "ASSET", &enumItem);
+            status = env->Enum_GetEnumItemByName(enumType, "ASSET", &enumItem);
             break;
         case OHOS::DistributedRdb::ColumnType::TYPE_ASSETS:
-            env->Enum_GetEnumItemByName(enumType, "ASSETS", &enumItem);
+            status = env->Enum_GetEnumItemByName(enumType, "ASSETS", &enumItem);
             break;
         case OHOS::DistributedRdb::ColumnType::TYPE_FLOAT32_ARRAY:
-            env->Enum_GetEnumItemByName(enumType, "FLOAT_VECTOR", &enumItem);
+            status = env->Enum_GetEnumItemByName(enumType, "FLOAT_VECTOR", &enumItem);
             break;
         case OHOS::DistributedRdb::ColumnType::TYPE_BIGINT:
-            env->Enum_GetEnumItemByName(enumType, "UNLIMITED_INT", &enumItem);
+            status = env->Enum_GetEnumItemByName(enumType, "UNLIMITED_INT", &enumItem);
             break;
         default:
             LOG_ERROR("Invalid ColumnType value.");
             break;
+    }
+    if (status != ANI_OK) {
+        LOG_ERROR("Enum_GetEnumItemByName failed.");
+        return 0;
     }
     return reinterpret_cast<uintptr_t>(enumItem);
 }

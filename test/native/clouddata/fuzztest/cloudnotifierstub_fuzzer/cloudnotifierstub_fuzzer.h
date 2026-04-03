@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef CLOUD_NOTIFIER_STUB_FUZZER_H
-#define CLOUD_NOTIFIER_STUB_FUZZER_H
+#ifndef CLOUDNOTIFIERSTUB_FUZZER_H
+#define CLOUDNOTIFIERSTUB_FUZZER_H
 
 #define FUZZ_PROJECT_NAME "cloudnotifierstub_fuzzer"
 
-#endif // CLOUD_NOTIFIER_STUB_FUZZER_H
+#endif // CLOUDNOTIFIERSTUB_FUZZER_H

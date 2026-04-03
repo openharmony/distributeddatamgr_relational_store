@@ -45,7 +45,7 @@ public:
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     AniAsyncCall() = default;
     ~AniAsyncCall();
-    static void ReturnResult(std::shared_ptr<AniContext> ctx, ResultSetter resultSetter = nullptr);
+    static void ReturnResult(std::shared_ptr<AniContext> ctx, ani_env *env);
     static void CallPromise(ani_env *env, std::shared_ptr<AniContext> ctx);
     static void CallCallback(ani_env *env, std::shared_ptr<AniContext> ctx);
 };

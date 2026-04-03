@@ -967,7 +967,6 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
 
 napi_value RdbStoreProxy::QueryByStep(napi_env env, napi_callback_info info)
 {
-    REPORT();
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<RdbStoreContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {

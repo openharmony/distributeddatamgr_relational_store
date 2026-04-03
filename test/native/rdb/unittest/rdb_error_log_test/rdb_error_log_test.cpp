@@ -12,12 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "RdbErrorLogTest"
 #include <gtest/gtest.h>
 
 #include <string>
 
 #include "common.h"
 #include "block_data.h"
+#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -28,8 +30,10 @@
 #include "shared_block.h"
 #include "sqlite_shared_result_set.h"
 #include "step_result_set.h"
+#include "transaction_impl.h"
 
 using namespace testing::ext;
+using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::DistributedRdb;
 static constexpr int32_t MAX_THREAD = 5;
@@ -56,6 +60,12 @@ std::shared_ptr<RdbStore> RdbStoreLogSubTest::store = nullptr;
 void RdbStoreLogSubTest::SetUpTestCase(void)
 {
     RdbHelper::DeleteRdbStore(g_databaseName);
+    // Attempt to manually call LoadCreator to ensure that creator_ is set
+    auto creator = Transaction::RegisterCreator(TransactionImpl::Create);
+    // Verify if the creator has been registered
+    if (creator != E_OK) {
+        LOG_ERROR("Failed to register transaction creator");
+    }
     store = CreateRDB(1);
 }
 

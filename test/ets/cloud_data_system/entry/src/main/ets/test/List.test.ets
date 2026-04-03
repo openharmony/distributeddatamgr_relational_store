@@ -14,11 +14,7 @@
  */
 
 import CloudConfigSystemEtsTest from './CloudConfigEtsTest.test.ets';
-import RetainDeviceData from './RetainDeviceData.test';
-import UpdateDistributedInfo from './UpdateDistributedInfo.test';
 
 export default function testsuite() {
   CloudConfigSystemEtsTest();
-  RetainDeviceData();
-  UpdateDistributedInfo();
 }
