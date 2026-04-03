@@ -113,7 +113,7 @@ constexpr const char *DATA_CHANGE_EVENT_ID = "cloud_data_change";
 
 enum class CloudSubscribeType : int32_t {
     SYNC_INFO_CHANGED = 0,
-    SUBSCRIBE_TYPE_MAX
+    SUBSCRIBE_TYPE_MAX = 1
 };
 
 /**

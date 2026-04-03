@@ -487,9 +487,11 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
         // 2 is The Number of parameters
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        napi_valuetype type = napi_undefined;
+        napi_typeof(env, argv[1], &type);
         bool isArray = false;
         napi_is_array(env, argv[1], &isArray);
-        if (!isArray) {
+        if (type == napi_string) {
             ctxt->isBatch = false;
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
             ASSERT_BUSINESS_ERR(
@@ -502,7 +504,7 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
                 ASSERT_BUSINESS_ERR(
                     ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of storeId must be string.");
             }
-        } else {
+        } else if (isArray){
             ctxt->isBatch = true;
             int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
             ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT_V20,
@@ -515,6 +517,9 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
             //30 is max bundleInfos size
             ASSERT_BUSINESS_ERR(ctxt, ctxt->bundleInfos.size() <= 30, Status::INVALID_ARGUMENT_V20,
                 "The size of bundleInfos must be less than or equal to 30.");
+        } else {
+            ASSERT_BUSINESS_ERR(
+                ctxt, type == napi_string, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
         }
     });
 }
@@ -540,12 +545,14 @@ napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
         if (ctxt->isBatch) {
             auto [status, batchResults] = proxy->QueryLastSyncInfoBatch(ctxt->accountId, ctxt->bundleInfos);
             ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
-                               ? napi_ok : napi_generic_failure;
+                               ? napi_ok
+                               : napi_generic_failure;
             ctxt->batchResults = std::move(batchResults);
         } else {
             auto [status, results] = proxy->QueryLastSyncInfo(ctxt->accountId, ctxt->bundleName, ctxt->storeId);
             ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
-                               ? napi_ok : napi_generic_failure;
+                               ? napi_ok
+                               : napi_generic_failure;
             ctxt->results = std::move(results);
         }
     };
