@@ -110,11 +110,17 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
 void CloudManager::OnRemoteDied()
 {
     LOG_INFO("Cloud service has dead!");
-    if (cloudService_ == nullptr) {
+    std::shared_ptr<CloudService> serviceHandle;
+    {
+        std::lock_guard<decltype(mutex_)> lg(mutex_);
+        serviceHandle = cloudService_;
+    }
+    
+    if (serviceHandle == nullptr) {
         return;
     }
 
-    auto proxy = std::static_pointer_cast<CloudServiceProxy>(cloudService_);
+    auto proxy = std::static_pointer_cast<CloudServiceProxy>(serviceHandle);
     if (proxy == nullptr) {
         ResetServiceHandle();
         return;
