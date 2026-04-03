@@ -61,15 +61,12 @@ bool AniContext::Init(uintptr_t callback)
     return true;
 }
 
-void AniAsyncCall::ReturnResult(std::shared_ptr<AniContext> ctx)
+void AniAsyncCall::ReturnResult(std::shared_ptr<AniContext> ctx, ani_env *env)
 {
-    ::taihe::env_guard gurd;
-    auto env = gurd.get_env();
     if (env == nullptr) {
         LOG_ERROR("Get env failed.");
         return;
     }
-
     if (ctx->callbackRef_ == nullptr && ctx->deferred_ == nullptr) {
         return;
     }
