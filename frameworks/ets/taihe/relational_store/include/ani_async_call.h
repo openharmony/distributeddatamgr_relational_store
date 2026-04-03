@@ -23,7 +23,6 @@
 #include "napi_rdb_error.h"
 namespace OHOS {
 namespace RdbTaihe {
-using ResultSetter = std::function<int(ani_env *, ani_ref *)>;
 
 class AniContext {
 public:
