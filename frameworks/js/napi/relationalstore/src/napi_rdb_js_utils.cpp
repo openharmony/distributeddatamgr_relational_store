@@ -17,7 +17,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <regex>
 #include <string>
 #include <tuple>
 
@@ -368,15 +367,6 @@ bool IsNapiString(napi_env env, napi_value value)
     napi_valuetype type = napi_undefined;
     NAPI_CALL_BASE(env, napi_typeof(env, value, &type), false);
     return type == napi_string;
-}
-
-bool IsValidTableName(const std::string &tableName)
-{
-    if (tableName.empty()) {
-        return false;
-    }
-    std::regex pattern("^[a-zA-Z0-9_]+$");
-    return std::regex_match(tableName, pattern);
 }
 
 int32_t GetLevel(SecurityLevel level, SecurityLevel &out)

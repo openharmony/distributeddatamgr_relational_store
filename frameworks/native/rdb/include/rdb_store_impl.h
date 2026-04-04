@@ -256,7 +256,6 @@ private:
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
     static void ReplayCallbackImpl(const RdbStoreConfig &config);
     std::pair<int32_t, std::vector<std::string>> ConvertToUuids(const std::vector<std::string> &devices);
-    int CleanDirtyDataInternal(const std::string &table, uint64_t cursor, bool isDevice);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
