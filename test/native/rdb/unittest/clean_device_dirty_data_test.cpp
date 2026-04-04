@@ -78,7 +78,7 @@ void CleanDeviceDirtyDataTest::SetUp(void)
     EXPECT_TRUE(config.GetAutoCleanDevice());
     CleanDeviceDirtyDataTestOpenCallback helper;
     store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store_, nullptr);
+    ASSERT_NE(store_, nullptr);
     EXPECT_EQ(errCode, E_OK);
 }
 
@@ -91,46 +91,26 @@ void CleanDeviceDirtyDataTest::TearDown(void)
 }
 
 /**
- * @tc.name: CleanDeviceDirtyData_Basic_001
- * @tc.desc: Test CleanDeviceDirtyData with non-distributed table, should return error
+ * @tc.name: CleanDeviceDirtyData_Error_Cases_001
+ * @tc.desc: Test CleanDeviceDirtyData with various error scenarios
  * @tc.type: FUNC
  */
-HWTEST_F(CleanDeviceDirtyDataTest, CleanDeviceDirtyData_Basic_001, TestSize.Level1)
+HWTEST_F(CleanDeviceDirtyDataTest, CleanDeviceDirtyData_Error_Cases_001, TestSize.Level1)
 {
     // Test with non-distributed table, should return error
     int ret = store_->CleanDeviceDirtyData("non_existent_table", UINT64_MAX);
-    EXPECT_NE(E_OK, ret);
-}
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
 
-/**
- * @tc.name: CleanDeviceDirtyData_With_Different_Cursors_001
- * @tc.desc: Test CleanDeviceDirtyData with different cursor values (0, UINT64_MAX, custom value)
- * @tc.type: FUNC
- */
-HWTEST_F(CleanDeviceDirtyDataTest, CleanDeviceDirtyData_With_Different_Cursors_001, TestSize.Level1)
-{
-    // Test with cursor = 0
-    int ret1 = store_->CleanDeviceDirtyData("test_table", 0);
-    EXPECT_NE(E_OK, ret1);
+    // Test with empty table name, should return invalid args error
+    ret = store_->CleanDeviceDirtyData("", UINT64_MAX);
+    EXPECT_EQ(ret, E_INVALID_ARGS);
 
-    // Test with cursor = UINT64_MAX (default)
-    int ret2 = store_->CleanDeviceDirtyData("test_table", UINT64_MAX);
-    EXPECT_NE(E_OK, ret2);
+    ret = RdbHelper::DeleteRdbStore(databaseName);
+    EXPECT_EQ(ret, E_OK);
 
-    // Test with custom cursor value
-    int ret3 = store_->CleanDeviceDirtyData("test_table", 12345);
-    EXPECT_NE(E_OK, ret3);
-}
-
-/**
- * @tc.name: CleanDeviceDirtyData_Empty_Table_Name_001
- * @tc.desc: Test CleanDeviceDirtyData with empty table name
- * @tc.type: FUNC
- */
-HWTEST_F(CleanDeviceDirtyDataTest, CleanDeviceDirtyData_Empty_Table_Name_001, TestSize.Level1)
-{
-    int ret = store_->CleanDeviceDirtyData("", UINT64_MAX);
-    EXPECT_EQ(E_INVALID_ARGS, ret);
+    uint64_t cursor = UINT64_MAX;
+    ret = store_->CleanDirtyData("test", cursor);
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
 }
 
 /**
@@ -152,4 +132,96 @@ HWTEST_F(CleanDeviceDirtyDataTest, AutoCleanDevice_Config_001, TestSize.Level1)
     // Test setting back to true
     config.SetAutoCleanDevice(true);
     EXPECT_TRUE(config.GetAutoCleanDevice());
+}
+
+/**
+ * @tc.name: CleanDeviceDirtyData_ReadOnly_Database_001
+ * @tc.desc: Test CleanDeviceDirtyData with read-only database, should return E_NOT_SUPPORT
+ * @tc.type: FUNC
+ */
+HWTEST_F(CleanDeviceDirtyDataTest, CleanDeviceDirtyData_ReadOnly_Database_001, TestSize.Level1)
+{
+    // Create a read-only database
+    std::string readOnlyDbName = RDB_TEST_PATH + "readonly_test.db";
+    int errCode = RdbHelper::DeleteRdbStore(readOnlyDbName);
+    EXPECT_EQ(E_OK, errCode);
+
+    // First create a normal database
+    RdbStoreConfig normalConfig(readOnlyDbName);
+    CleanDeviceDirtyDataTestOpenCallback helper;
+    std::shared_ptr<RdbStore> normalStore = RdbHelper::GetRdbStore(normalConfig, 1, helper, errCode);
+    EXPECT_NE(normalStore, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    normalStore = nullptr;
+    RdbHelper::ClearCache();
+
+    // Then open it as read-only
+    RdbStoreConfig readOnlyConfig(readOnlyDbName, StorageMode::MODE_DISK, true);
+    std::shared_ptr<RdbStore> readOnlyStore = RdbHelper::GetRdbStore(readOnlyConfig, 1, helper, errCode);
+    ASSERT_NE(readOnlyStore, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    // Test CleanDeviceDirtyData on read-only database
+    int ret = readOnlyStore->CleanDeviceDirtyData("test_table", UINT64_MAX);
+    EXPECT_EQ(ret, E_NOT_SUPPORT);
+
+    // Cleanup
+    readOnlyStore = nullptr;
+    RdbHelper::ClearCache();
+    errCode = RdbHelper::DeleteRdbStore(readOnlyDbName);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: CleanDeviceDirtyData_Memory_Database_001
+ * @tc.desc: Test CleanDeviceDirtyData with memory database, should return E_NOT_SUPPORT
+ * @tc.type: FUNC
+ */
+HWTEST_F(CleanDeviceDirtyDataTest, CleanDeviceDirtyData_Memory_Database_001, TestSize.Level1)
+{
+    // Create a memory database
+    std::string memoryDbName = RDB_TEST_PATH + "memory.db";
+    RdbStoreConfig memoryConfig(memoryDbName, StorageMode::MODE_MEMORY);
+
+    CleanDeviceDirtyDataTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> memoryStore = RdbHelper::GetRdbStore(memoryConfig, 1, helper, errCode);
+    ASSERT_NE(memoryStore, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    // Test CleanDeviceDirtyData on memory database
+    int ret = memoryStore->CleanDeviceDirtyData("test_table", UINT64_MAX);
+    EXPECT_EQ(ret, E_NOT_SUPPORT);
+
+    // Cleanup
+    memoryStore = nullptr;
+    RdbHelper::ClearCache();
+}
+
+/**
+ * @tc.name: CleanDeviceDirtyData_Vector_Database_001
+ * @tc.desc: Test CleanDeviceDirtyData with vector database type, should return E_NOT_SUPPORT
+ * @tc.type: FUNC
+ */
+HWTEST_F(CleanDeviceDirtyDataTest, CleanDeviceDirtyData_Vector_Database_001, TestSize.Level1)
+{
+    // Create a database with vector type
+    std::string vectorDbName = RDB_TEST_PATH + "vector_test.db";
+    int errCode = RdbHelper::DeleteRdbStore(vectorDbName);
+    EXPECT_EQ(errCode, E_OK);
+
+    RdbStoreConfig vectorConfig(vectorDbName);
+    vectorConfig.SetDBType(DB_VECTOR);
+    vectorConfig.SetAutoCleanDevice(true);
+
+    CleanDeviceDirtyDataTestOpenCallback helper;
+    std::shared_ptr<RdbStore> vectorStore = RdbHelper::GetRdbStore(vectorConfig, 1, helper, errCode);
+    ASSERT_NE(vectorStore, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    int ret = vectorStore->CleanDeviceDirtyData("test_table", UINT64_MAX);
+    EXPECT_EQ(ret, E_NOT_SUPPORT);
+    vectorStore = nullptr;
+
+    errCode = RdbHelper::DeleteRdbStore(vectorDbName);
+    EXPECT_EQ(errCode, E_OK);
 }

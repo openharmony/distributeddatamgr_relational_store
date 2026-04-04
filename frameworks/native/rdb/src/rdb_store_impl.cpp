@@ -335,7 +335,7 @@ RdbStore::ModifyTime RdbStoreImpl::GetModifyTimeByRowId(const std::string &logTa
     return ModifyTime(resultSet, {}, true);
 }
 
-int RdbStoreImpl::CleanDirtyDataInternal(const std::string &table, uint64_t cursor, bool isDevice)
+int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
         LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
@@ -347,17 +347,33 @@ int RdbStoreImpl::CleanDirtyDataInternal(const std::string &table, uint64_t curs
         LOG_ERROR("The database is busy or closed.");
         return errCode;
     }
-    return isDevice ? conn->CleanDirtyData(table, cursor, true) : conn->CleanDirtyData(table, cursor);
-}
-
-int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
-{
-    return CleanDirtyDataInternal(table, cursor, false);
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    errCode = conn->CleanDirtyData(table, cursor);
+    return errCode == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 
 int RdbStoreImpl::CleanDeviceDirtyData(const std::string &table, uint64_t cursor)
 {
-    return CleanDirtyDataInternal(table, cursor, true);
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
+        return E_NOT_SUPPORT;
+    }
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK) {
+        LOG_ERROR("The database is busy or closed.");
+        return errCode;
+    }
+
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    errCode = conn->CleanDirtyData(table, cursor);
+    return errCode == DistributedDB::DBStatus::OK ? E_OK : SqliteUtils::ConvertDBStatusNative(errCode);
 }
 
 std::string RdbStoreImpl::GetLogTableName(const std::string &tableName)

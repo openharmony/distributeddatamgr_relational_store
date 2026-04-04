@@ -1878,11 +1878,11 @@ struct CleanDeviceDirtyDataContext : public EnhancedContext {
         rdbStore = obj->GetInstance();
         tableName = JSUtils::Convert2String(env, argv[0]);
         ASSERT_RETURN_SET_ERROR(
-            IsValidTableName(tableName), std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+            RdbSqlUtils::IsValidTableName(tableName), std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
         // parse waitTime when the number of parameters is 2
         if (argc == 2) {
-            double cursorJsValue = 0;
-            auto status = JSUtils::Convert2Value(env, argv[1], cursorJsValue);
+            int64_t cursorJsValue = 0;
+            auto status = JSUtils::Convert2ValueExt(env, argv[1], cursorJsValue);
             ASSERT_RETURN_SET_ERROR(status == napi_ok && cursorJsValue >= 0,
                 std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal cursor"));
             cursor = static_cast<uint64_t>(cursorJsValue);
@@ -1896,7 +1896,6 @@ struct CleanDeviceDirtyDataContext : public EnhancedContext {
 
 napi_value RdbStoreProxy::CleanDeviceDirtyData(napi_env env, napi_callback_info info)
 {
-    LOG_INFO("RdbStoreProxy::CleanDevice start.");
     auto context = std::make_shared<CleanDeviceDirtyDataContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);

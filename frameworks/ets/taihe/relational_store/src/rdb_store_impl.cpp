@@ -34,6 +34,7 @@
 #include "rdb_predicates_impl.h"
 #include "rdb_result_set_bridge.h"
 #include "rdb_sql_log.h"
+#include "rdb_sql_utils.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
 #include "rdb_utils.h"
@@ -550,7 +551,7 @@ void RdbStoreImpl::CleanDeviceDirtyDataWithOptionCursor(string_view table, optio
         nativeCursor = cursor.value();
     }
     std::string nativeTable(table);
-    if (!IsValidTableName(nativeTable)) {
+    if (!RdbSqlUtils::IsValidTableName(nativeTable)) {
         ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS);
         return;
     }

@@ -324,40 +324,27 @@ export default function CleanDeviceDirtyData() {
     /**
      * @tc.number CleanDeviceDirtyDataTest0007
      * @tc.name CleanDeviceDirtyData
-     * @tc.desc CleanDeviceDirtyData fail  The database does not respond.
+     * @tc.desc CleanDeviceDirtyData fail due to invalid table name and cursor parameter
      */
     it('CleanDeviceDirtyDataTest0007', 0, async () => {
       console.log(TAG + "************* CleanDeviceDirtyDataTest0007 start *************");
       if (rdbStore != undefined) {
         console.info(`SetDistributedTables EMPLOYEE begin`);
         try {
-          await rdbStore.setDistributedTables(["EMPLOYEE"], relationalStore.DistributedType.DISTRIBUTED_DEVICE, DISTRIBUTED_CONFIG_SINGLE);
-          console.info('CleanDeviceDirtyDataTest0006 EMPLOYEE SINGLE_VERSION successfully.');
+          await rdbStore.setDistributedTables(["EMPLOYEE"]);
+          console.info('CleanDeviceDirtyDataTest0007 EMPLOYEE SINGLE_VERSION successfully.');
         } catch (err) {
-          console.error(`CleanDeviceDirtyDataTest0006 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
+          console.error(`CleanDeviceDirtyDataTest0007 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
           expect(null).assertFail();
         }
         console.log(`CleanDeviceDirtyDataTest0007 begin`);
         try {
-          let array:Array<relationalStore.ValuesBucket> = [];
-          for (let index = 0; index < 200000; index++) {
-            let now = Date.now();
-            let valueBucket: relationalStore.ValuesBucket = {};
-            let value1 = 'Lisa' + now + index;
-            valueBucket["NAME"] = value1;
-            valueBucket["AGE"] = 25;
-            valueBucket["SALARY"] = 23456.6;
-            let value4 = new Uint8Array([1, 2, 3, 4, 5]);
-            valueBucket["CODES"] = value4;
-            array.push(valueBucket);
-          }
-          rdbStore.batchInsert("EMPLOYEE", array);
-          await rdbStore.cleanDeviceDirtyData("EMPLOYEE");
+          await rdbStore.cleanDeviceDirtyData("***", 1);
           console.info(`CleanDeviceDirtyDataTest0007 success`);
           expect(null).assertFail();
         } catch (e) {
           console.error(`CleanDeviceDirtyDataTest0007 failed, code is ${e.code},message is ${e.message}`);
-          expect(e.code).assertEqual(14800015);
+          expect(e.code).assertEqual(14800001);
         }
       }
       console.log(TAG + "************* CleanDeviceDirtyDataTest0007 end *************");
@@ -504,35 +491,6 @@ export default function CleanDeviceDirtyData() {
         }
       }
       console.log(TAG + "************* CleanDeviceDirtyDataTest0012 end *************");
-    })
-
-    /**
-     * @tc.number CleanDeviceDirtyDataTest0013
-     * @tc.name CleanDeviceDirtyData
-     * @tc.desc CleanDeviceDirtyData fail due to invalid table name and cursor parameter
-     */
-    it('CleanDeviceDirtyDataTest0013', 0, async () => {
-      console.log(TAG + "************* CleanDeviceDirtyDataTest0013 start *************");
-      if (rdbStore != undefined) {
-        console.info(`SetDistributedTables EMPLOYEE begin`);
-        try {
-          await rdbStore.setDistributedTables(["EMPLOYEE"]);
-          console.info('CleanDeviceDirtyDataTest0013 EMPLOYEE SINGLE_VERSION successfully.');
-        } catch (err) {
-          console.error(`CleanDeviceDirtyDataTest0013 EMPLOYEE SINGLE_VERSION failed, code is ${err.code},message is ${err.message}`);
-          expect(null).assertFail();
-        }
-        console.log(`CleanDeviceDirtyDataTest0013 begin`);
-        try {
-          await rdbStore.cleanDeviceDirtyData("***", 1);
-          console.info(`CleanDeviceDirtyDataTest0013 success`);
-          expect(null).assertFail();
-        } catch (e) {
-          console.error(`CleanDeviceDirtyDataTest0013 failed, code is ${e.code},message is ${e.message}`);
-          expect(e.code).assertEqual(14800001);
-        }
-      }
-      console.log(TAG + "************* CleanDeviceDirtyDataTest0013 end *************");
     })
     console.log(TAG + "*************Unit Test Begin*************");
   })

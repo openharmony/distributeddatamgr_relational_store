@@ -288,7 +288,7 @@ int32_t RdConnection::SetTokenizer(Tokenizer tokenizer)
     return E_NOT_SUPPORT;
 }
 
-int32_t RdConnection::CleanDirtyData(const std::string &table, uint64_t cursor, bool isCleanDevice)
+int32_t RdConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
     return E_NOT_SUPPORT;
 }
