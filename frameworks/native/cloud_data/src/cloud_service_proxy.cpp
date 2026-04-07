@@ -274,6 +274,19 @@ std::pair<int32_t, QueryLastResults> CloudServiceProxy::QueryLastSyncInfo(
     return { status, results };
 }
 
+std::pair<int32_t, BatchQueryLastResults> CloudServiceProxy::QueryLastSyncInfoBatch(
+    const std::string &id, const std::vector<BundleInfo> &bundleInfos)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_QUERY_LAST_SYNC_INFO_BATCH, reply, id, bundleInfos);
+    if (status != SUCCESS) {
+        LOG_ERROR("Status:0x%{public}x id:%{public}.6s size:%{public}zu", status, id.c_str(), bundleInfos.size());
+    }
+    BatchQueryLastResults results;
+    ITypesUtil::Unmarshal(reply, results);
+    return { status, results };
+}
+
 int32_t CloudServiceProxy::DoAsync(const std::string &bundleName, const std::string &storeId, Option option)
 {
     MessageParcel reply;
@@ -300,6 +313,9 @@ int32_t CloudServiceProxy::InitNotifier()
 {
     notifier_ = new (std::nothrow) CloudNotifierStub([this](uint32_t seqNum, Details &&result) {
         OnSyncComplete(seqNum, std::move(result));
+    },
+    [this](const BatchQueryLastResults &data) {
+        OnSyncInfoNotify(data);
     });
     if (notifier_ == nullptr) {
         LOG_ERROR("create notifier failed");
@@ -325,6 +341,55 @@ void CloudServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
     });
 }
 
+void CloudServiceProxy::OnSyncInfoNotify(const BatchQueryLastResults &data)
+{
+    LOG_INFO("OnSyncInfoNotify start size:%{public}zu", data.size());
+    std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> observerData;
+    for (const auto &bundleItem : data) {
+        subObservers_.ComputeIfPresent(
+            bundleItem.first, [&observerData, &bundleItem, this](const auto &, auto &storeMap) {
+                CollectObserverData(bundleItem.first, bundleItem.second, storeMap, observerData);
+                return true;
+            });
+    }
+    for (auto &obsItem : observerData) {
+        if (obsItem.first != nullptr && !obsItem.second.empty()) {
+            obsItem.first->OnSyncInfoChanged(obsItem.second);
+        }
+    }
+}
+
+void CloudServiceProxy::CollectObserverData(const std::string &bundleName,
+    const std::map<std::string, CloudSyncInfo> &storeResults,
+    const std::map<std::string, std::list<SubObserverParam>> &storeMap,
+    std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> &observerData)
+{
+    LOG_INFO("CollectObserverData: bundleName:%{public}s", bundleName.c_str());
+    for (const auto &storeItem : storeResults) {
+        auto subStoreInfo = storeMap.find(storeItem.first);
+        if (subStoreInfo == storeMap.end()) {
+            continue;
+        }
+        for (const auto &param : subStoreInfo->second) {
+            if (param.observer != nullptr) {
+                observerData[param.observer][bundleName][storeItem.first] = storeItem.second;
+                LOG_INFO("CollectObserverData: bundleName:%{public}s storeId:%{public}.3s", bundleName.c_str(),
+                    storeItem.first.c_str());
+            }
+        }
+    }
+    auto subStoreInfo = storeMap.find("");
+    if (subStoreInfo == storeMap.end()) {
+        return;
+    }
+    for (const auto &param : subStoreInfo->second) {
+        if (param.observer != nullptr) {
+            observerData[param.observer][bundleName] = storeResults;
+            LOG_INFO("CollectObserverData: bundleName:%{public}s", bundleName.c_str());
+        }
+    }
+}
+
 int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::string &storeId,
     const Option &option, const AsyncDetail &async)
 {
@@ -343,5 +408,91 @@ int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::s
         syncCallbacks_.Erase(option.seqNum);
     }
     return status;
+}
+
+int32_t CloudServiceProxy::Subscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
+    std::shared_ptr<ISyncInfoObserver> observer)
+{
+    if (bundleInfos.empty() || observer == nullptr || type >= CloudSubscribeType::SUBSCRIBE_TYPE_MAX) {
+        return INVALID_ARGUMENT_V20;
+    }
+
+    int32_t status = DoSubscribe(type, bundleInfos);
+    if (status != SUCCESS) {
+        return status;
+    }
+
+    for (const auto &info : bundleInfos) {
+        subObservers_.Compute(info.bundleName,
+            [&info, observer](const auto &key, auto &storeMap) {
+                storeMap[info.storeId].push_back({ observer });
+                return true;
+            });
+    }
+    return SUCCESS;
+}
+
+int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
+    std::shared_ptr<ISyncInfoObserver> observer)
+{
+    if (type >= CloudSubscribeType::SUBSCRIBE_TYPE_MAX) {
+        return INVALID_ARGUMENT_V20;
+    }
+    if (observer != nullptr) {
+        auto processStore = [&observer](auto &storeMap, const auto &info) {
+            auto listIter = storeMap.find(info.storeId);
+            if (listIter == storeMap.end()) {
+                return;
+            }
+            auto &observerList = listIter->second;
+            observerList.remove_if([&observer](const auto &param) {
+                return param.observer.get() == observer.get();
+            });
+            if (observerList.empty()) {
+                storeMap.erase(listIter);
+            }
+        };
+        for (const auto &info : bundleInfos) {
+            subObservers_.ComputeIfPresent(info.bundleName,
+                [&info, &processStore](const auto &key, auto &storeMap) {
+                    processStore(storeMap, info);
+                    return !storeMap.empty();
+                });
+        }
+    }
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_UNSUBSCRIBE, reply, type, bundleInfos);
+    if (status != SUCCESS) {
+        LOG_ERROR("Unsubscribe failed: status=0x%{public}x", status);
+    }
+    return status;
+}
+
+int32_t CloudServiceProxy::DoSubscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_SUBSCRIBE, reply, type, bundleInfos);
+    if (status != SUCCESS) {
+        LOG_ERROR("Subscribe failed: status=0x%{public}x", status);
+    }
+    return status;
+}
+
+CloudServiceProxy::SubObservers CloudServiceProxy::ExportSubObservers()
+{
+    return subObservers_;
+}
+
+void CloudServiceProxy::ImportSubObservers(SubObservers &observers)
+{
+    observers.ForEach([this](const std::string &bundleName,
+                             const std::map<std::string, std::list<SubObserverParam>> &storeMap) {
+        for (const auto &[storeId, observerList] : storeMap) {
+            std::vector<BundleInfo> bundleInfos = { BundleInfo{bundleName, storeId} };
+            DoSubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos);
+        }
+        return false;
+    });
+    subObservers_ = observers;
 }
 } // namespace OHOS::CloudData

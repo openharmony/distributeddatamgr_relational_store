@@ -15,6 +15,8 @@
 #ifndef OHOS_RELATION_STORE_ANI_CLOUD_DATA_CONFIG_H
 #define OHOS_RELATION_STORE_ANI_CLOUD_DATA_CONFIG_H
 #include <functional>
+#include <list>
+#include <mutex>
 #include "ohos.data.cloudData.proj.hpp"
 #include "ohos.data.cloudData.impl.hpp"
 #include "ohos.data.cloudData.sharing.proj.hpp"
@@ -33,6 +35,22 @@ using namespace ::ohos::data::relationalStore;
 using TaiHeStatisticInfo = ::ohos::data::cloudData::StatisticInfo;
 using TaiHeParticipant = ohos::data::cloudData::sharing::Participant;
 using TaiHeResult = ::ohos::data::cloudData::sharing::Result;
+using TaiheSyncInfoCallback = taihe::callback<void(map_view<string, map<string, SyncInfo>> data)>;
+
+class TaiheCloudSyncInfoObserver : public ISyncInfoObserver,
+    public std::enable_shared_from_this<TaiheCloudSyncInfoObserver> {
+public:
+    explicit TaiheCloudSyncInfoObserver(TaiheSyncInfoCallback callback);
+    ~TaiheCloudSyncInfoObserver() noexcept override = default;
+
+    void OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data) override;
+
+    bool operator==(const TaiheSyncInfoCallback &other) const;
+
+private:
+    TaiheSyncInfoCallback callback_;
+};
+
 class ConfigImpl {
 public:
     static void EnableCloudImpl(string_view accountId, map_view<string, bool> switches);
@@ -46,6 +64,8 @@ public:
         optional_view<string> storeId);
     static map<string, SyncInfo> QueryLastSyncInfoImpl(string_view accountId, string_view bundleName,
         optional_view<string> storeId);
+    static map<string, map<string, SyncInfo>> QueryLastSyncInfoBatchImpl(string_view accountId,
+        array_view<::ohos::data::cloudData::BundleInfo> bundleInfos);
     static void ClearImpl(string_view accountId, map_view<string, ClearAction> appActions);
     static void ChangeAppCloudSwitchImplWithConfig(string_view accountId, string_view bundleName, bool status,
         optional_view<::ohos::data::cloudData::SwitchConfig> config);
@@ -55,6 +75,22 @@ public:
         optional_view<array<::ohos::data::commonType::ValueType>> param);
     static void CloudSyncImpl(string_view bundleName, string_view storeId, SyncMode mode,
         callback_view<void(const ProgressDetails &data)> progress);
+    static void OnSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
+        callback_view<void(map_view<string, map<string, SyncInfo>> data)> progress);
+    static void OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
+        optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress);
+
+private:
+    using UnsubscribeInfoList = std::vector<std::pair<std::shared_ptr<TaiheCloudSyncInfoObserver>,
+        std::vector<OHOS::CloudData::BundleInfo>>>;
+    static UnsubscribeInfoList CollectUnsubscribeInfos(const std::vector<OHOS::CloudData::BundleInfo> &toUnsubscribe,
+        optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress);
+    struct SyncInfoObserverRecord {
+        std::vector<OHOS::CloudData::BundleInfo> bundleInfos;
+        std::shared_ptr<TaiheCloudSyncInfoObserver> observer;
+    };
+    static std::mutex syncInfoObserversMutex_;
+    static std::list<SyncInfoObserverRecord> syncInfoObservers_;
 };
 
 void SetCloudStrategyImpl(StrategyType strategy,

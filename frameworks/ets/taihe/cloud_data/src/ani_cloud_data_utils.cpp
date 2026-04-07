@@ -27,7 +27,7 @@ namespace AniCloudData {
 using namespace OHOS::Rdb;
 using Participant_INNER = OHOS::CloudData::Participant;
 
-bool WarpDate(double time, ani_object &outObj)
+bool WarpDate(int64_t time, ani_object &outObj)
 {
     ani_env *env = ::taihe::get_env();
     if (env == nullptr || time < 0) {
@@ -49,12 +49,12 @@ bool WarpDate(double time, ani_object &outObj)
         LOG_ERROR("Object_New failed, status:%{public}d", status);
         return false;
     }
-    ani_double msObj = 0;
-    if ((status = env->Object_CallMethodByName_Double(outObj, "setTime", "d:d", &msObj, time)) != ANI_OK) {
-        LOG_ERROR("Object_CallMethodByName_Double failed, status:%{public}d", status);
+    ani_long msObj = 0;
+    if ((status = env->Object_CallMethodByName_Long(outObj, "setTime", "l:l", &msObj, time)) != ANI_OK) {
+        LOG_ERROR("Object_CallMethodByName_Long failed, status:%{public}d", status);
         return false;
     }
-    LOG_INFO("Object_CallMethodByName_Double success, double:%{public}lf", msObj);
+    LOG_INFO("Object_CallMethodByName_Long success, msObj:%{public}" PRId64, msObj);
     return true;
 }
 
@@ -146,11 +146,11 @@ std::pair<bool, map<string, SyncInfo>> ConvertSyncInfo(const QueryLastResults &i
         info.code = ProgressCode::from_value(it.second.code);
         ani_object aniStartTime{};
         ani_object aniFinishTime{};
-        if (!WarpDate(static_cast<double>(it.second.startTime), aniStartTime)) {
+        if (!WarpDate(it.second.startTime, aniStartTime)) {
             out.clear();
             return std::make_pair(false, out);
         }
-        if (!WarpDate(static_cast<double>(it.second.finishTime), aniFinishTime)) {
+        if (!WarpDate(it.second.finishTime, aniFinishTime)) {
             out.clear();
             return std::make_pair(false, out);
         }
@@ -158,6 +158,20 @@ std::pair<bool, map<string, SyncInfo>> ConvertSyncInfo(const QueryLastResults &i
         info.finishTime = reinterpret_cast<uintptr_t>(aniFinishTime);
         info.syncStatus = optional<TaiheSyncStatus>(std::in_place, TaiheSyncStatus::from_value(it.second.syncStatus));
         out.emplace(it.first, info);
+    }
+    return std::make_pair(true, out);
+}
+
+std::pair<bool, map<string, map<string, SyncInfo>>> ConvertBatchSyncInfo(const BatchQueryLastResults &in)
+{
+    map<string, map<string, SyncInfo>> out;
+    for (auto &bundleIt : in) {
+        auto syncInfoResult = ConvertSyncInfo(bundleIt.second);
+        if (!syncInfoResult.first) {
+            out.clear();
+            return std::make_pair(false, out);
+        }
+        out.emplace(bundleIt.first, syncInfoResult.second);
     }
     return std::make_pair(true, out);
 }

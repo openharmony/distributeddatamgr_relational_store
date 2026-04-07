@@ -186,6 +186,24 @@ int32_t Convert2Value(napi_env env, napi_value input, ClearConfig &output)
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value input, BundleInfo &output)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, input, &type);
+    if (status != napi_ok || type != napi_object) {
+        LOG_ERROR("Invalid input type: status=%{public}d, type=%{public}d", status, type);
+        return napi_invalid_arg;
+    }
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "bundleName", output.bundleName), napi_invalid_arg);
+    if (output.bundleName.empty()) {
+        LOG_ERROR("bundleName is empty");
+        return napi_invalid_arg;
+    }
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "storeId", output.storeId, true), napi_invalid_arg);
+    return napi_ok;
+}
+
+template<>
 napi_value Convert2JSValue(napi_env env, const Participant &value)
 {
     napi_value jsValue = nullptr;

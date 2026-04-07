@@ -26,6 +26,7 @@ OHOS::CloudData::ClearConfig ConvertTaiheClearConfig(const ::ohos::data::cloudDa
 OHOS::CloudData::DBActionInfo ConvertTaiheDbActionInfo(const ::ohos::data::cloudData::DBActionInfo &in);
 map<string, array<TaiHeStatisticInfo>> ConvertStatisticInfo(const std::map<std::string, StatisticInfos> &in);
 std::pair<bool, map<string, SyncInfo>> ConvertSyncInfo(const QueryLastResults &in);
+std::pair<bool, map<string, map<string, SyncInfo>>> ConvertBatchSyncInfo(const BatchQueryLastResults &in);
 ProgressDetails ConvertProgressDetail(const OHOS::DistributedRdb::ProgressDetail &in);
 Participants ConvertParticipant(const array_view<TaiHeParticipant> &in);
 TaiHeResult ConvertResults(const Results &in);
