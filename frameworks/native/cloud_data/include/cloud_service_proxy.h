@@ -22,11 +22,19 @@
 #include "iremote_proxy.h"
 #include "cloud_notifier_stub.h"
 #include "cloud_types.h"
+#include <map>
+#include <memory>
+#include <mutex>
 
 namespace OHOS::CloudData {
 using namespace DistributedRdb;
 class CloudServiceProxy : public IRemoteProxy<ICloudService> {
 public:
+    struct SubObserverParam {
+        std::shared_ptr<ISyncInfoObserver> observer;
+    };
+    using SubObservers = ConcurrentMap<std::string, std::map<std::string, std::list<SubObserverParam>>>;
+
     explicit CloudServiceProxy(const sptr<IRemoteObject> &object);
     virtual ~CloudServiceProxy() = default;
     int32_t EnableCloud(const std::string &id, const std::map<std::string, int32_t> &switches) override;
@@ -58,17 +66,33 @@ public:
     int32_t SetCloudStrategy(Strategy strategy, const std::vector<CommonType::Value> &values) override;
     std::pair<int32_t, QueryLastResults> QueryLastSyncInfo(
         const std::string &id, const std::string &bundleName, const std::string &storeId) override;
+    std::pair<int32_t, BatchQueryLastResults> QueryLastSyncInfoBatch(
+        const std::string &id, const std::vector<BundleInfo> &bundleInfos) override;
     int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const AsyncDetail &async) override;
     int32_t InitNotifier(sptr<IRemoteObject> notifier) override;
     int32_t InitNotifier();
+    int32_t Subscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
+        std::shared_ptr<ISyncInfoObserver> observer) override;
+    int32_t Unsubscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
+        std::shared_ptr<ISyncInfoObserver> observer) override;
+
+    SubObservers ExportSubObservers();
+    void ImportSubObservers(SubObservers &observers);
 
 private:
     int32_t DoAsync(const std::string &bundleName, const std::string &storeId, Option option);
+    int32_t DoSubscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos);
     void OnSyncComplete(uint32_t seqNum, Details &&result);
+    void OnSyncInfoNotify(const BatchQueryLastResults &data);
+    void CollectObserverData(const std::string &bundleName, const std::map<std::string, CloudSyncInfo> &storeResults,
+        const std::map<std::string, std::list<SubObserverParam>> &storeMap,
+        std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> &observerData);
+
     sptr<IRemoteObject> remote_;
     sptr<CloudNotifierStub> notifier_;
     ConcurrentMap<uint32_t, AsyncDetail> syncCallbacks_;
+    SubObservers subObservers_;
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_SERVICE_PROXY_H

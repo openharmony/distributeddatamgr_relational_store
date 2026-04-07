@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 #include "cloud_manager.h"
 #include "cloud_service.h"
@@ -30,6 +31,8 @@
 using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 std::atomic<uint32_t> JsConfig::seqNum_{};
+std::mutex JsConfig::syncInfoObserversMutex_;
+std::list<JsConfig::SyncInfoObserverRecord> JsConfig::syncInfoObservers_;
 JsConfig::JsConfig()
 {
 }
@@ -479,34 +482,52 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
     return self;
 }
 
-napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
+void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shared_ptr<QueryLastSyncInfoContext> ctxt)
 {
-    struct QueryLastSyncInfoContext : public ContextBase {
-        std::string accountId;
-        std::string bundleName;
-        std::string storeId;
-        QueryLastResults results;
-    };
-    auto ctxt = std::make_shared<QueryLastSyncInfoContext>();
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
-        // less required 2 arguments :: <accountId> <bundleName> , <storeId> is optional
+        // 2 is The Number of parameters
         ASSERT_BUSINESS_ERR(ctxt, argc >= 2, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        // 0 is the index of argument accountId
-        int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
-        // 1 is the index of argument bundleName
-        status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
-        // 2 is the index of argument storeId
-        if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) {
-            // 2 is the index of argument storeId
-            status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId);
+        napi_valuetype type = napi_undefined;
+        napi_typeof(env, argv[1], &type);
+        bool isArray = false;
+        napi_is_array(env, argv[1], &isArray);
+        if (type == napi_string) {
+            ctxt->isBatch = false;
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
             ASSERT_BUSINESS_ERR(
-                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of storeId must be string.");
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleName);
+            ASSERT_BUSINESS_ERR(
+                ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
+            if (argc > 2 && !JSUtils::IsNull(ctxt->env, argv[2])) { // 2 is The third parameter
+                status = JSUtils::Convert2Value(env, argv[2], ctxt->storeId); // 2 is The third parameter
+                ASSERT_BUSINESS_ERR(
+                    ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of storeId must be string.");
+            }
+        } else if (isArray) {
+            ctxt->isBatch = true;
+            int status = JSUtils::Convert2Value(env, argv[0], ctxt->accountId);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->accountId.empty(), Status::INVALID_ARGUMENT_V20,
+                "The type of accountId must be string.");
+            status = JSUtils::Convert2Value(env, argv[1], ctxt->bundleInfos);
+            ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20,
+                "The type of bundleInfos must be Array<BundleInfo>.");
+            ASSERT_BUSINESS_ERR(ctxt, ctxt->bundleInfos.size() > 0, Status::INVALID_ARGUMENT_V20,
+                "The size of bundleInfos must be greater than 0.");
+            //30 is max bundleInfos size
+            ASSERT_BUSINESS_ERR(ctxt, ctxt->bundleInfos.size() <= 30, Status::INVALID_ARGUMENT_V20,
+                "The size of bundleInfos must be less than or equal to 30.");
+        } else {
+            ASSERT_BUSINESS_ERR(
+                ctxt, type == napi_string, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
         }
     });
+}
+
+napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
+{
+    auto ctxt = std::make_shared<QueryLastSyncInfoContext>();
+    ParseQueryParams(env, info, ctxt);
 
     ASSERT_NULL(!ctxt->isThrowError, "QueryLastSyncInfo exit");
 
@@ -521,13 +542,26 @@ napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
                                : napi_generic_failure;
             return;
         }
-        auto [status, results] = proxy->QueryLastSyncInfo(ctxt->accountId, ctxt->bundleName, ctxt->storeId);
-        ctxt->status =
-            (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
-        ctxt->results = std::move(results);
+        if (ctxt->isBatch) {
+            auto [status, batchResults] = proxy->QueryLastSyncInfoBatch(ctxt->accountId, ctxt->bundleInfos);
+            ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            ctxt->batchResults = std::move(batchResults);
+        } else {
+            auto [status, results] = proxy->QueryLastSyncInfo(ctxt->accountId, ctxt->bundleName, ctxt->storeId);
+            ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                               ? napi_ok
+                               : napi_generic_failure;
+            ctxt->results = std::move(results);
+        }
     };
     auto output = [env, ctxt](napi_value &result) {
-        result = JSUtils::Convert2JSValue(env, ctxt->results);
+        if (ctxt->isBatch) {
+            result = JSUtils::Convert2JSValue(env, ctxt->batchResults);
+        } else {
+            result = JSUtils::Convert2JSValue(env, ctxt->results);
+        }
         ASSERT_VALUE(ctxt, result != nullptr, napi_generic_failure, "output failed");
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
@@ -624,6 +658,133 @@ uint32_t JsConfig::GetSeqNum()
     return value;
 }
 
+napi_value JsConfig::OnSyncInfoChanged(napi_env env, napi_callback_info info)
+{
+    size_t argc = ARGC_MAX;
+    napi_value argv[ARGC_MAX] = { nullptr };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    struct SyncInfoContext : public ContextBase {
+        std::vector<CloudData::BundleInfo> bundleInfos;
+        napi_value callback = nullptr;
+        std::shared_ptr<UvQueue> queue;
+    };
+    auto ctxt = std::make_shared<SyncInfoContext>();
+    ctxt->queue = std::make_shared<UvQueue>(env);
+    // 2 is Number of parameters
+    ASSERT_ERR(env, argc >= 2, Status::INVALID_ARGUMENT_V20, "The number of parameters is incorrect.");
+    auto status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleInfos);
+    ASSERT_ERR(env, status == JSUtils::OK && !ctxt->bundleInfos.empty(),
+        Status::INVALID_ARGUMENT_V20, "The type of bundleInfos must be Array<BundleInfo>.");
+    napi_valuetype type = napi_undefined;
+    ASSERT_ERR(env, napi_typeof(env, argv[1], &type) == napi_ok && type == napi_function,
+        Status::INVALID_ARGUMENT_V20, "The type of callback must be function.");
+    ctxt->callback = argv[1];
+    {
+        std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+        bool isDuplicate = std::any_of(syncInfoObservers_.begin(), syncInfoObservers_.end(),
+            [&ctxt](const SyncInfoObserverRecord &record) {
+                return record.bundleInfos == ctxt->bundleInfos && (*record.observer == ctxt->callback);
+            });
+        if (isDuplicate) {
+            LOG_INFO("Duplicate subscribe for sync info changed.");
+            return nullptr;
+        }
+    }
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
+        }
+        ThrowNapiError(env, state, "");
+        return nullptr;
+    }
+    auto observer = std::make_shared<NapiCloudSyncInfoObserver>(env, ctxt->callback, ctxt->queue);
+    status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, ctxt->bundleInfos, observer);
+    if (status != CloudService::SUCCESS) {
+        observer->Clear();
+        ThrowNapiError(env, status, "");
+        return nullptr;
+    }
+    std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+    SyncInfoObserverRecord record{ctxt->bundleInfos, observer};
+    syncInfoObservers_.push_back(std::move(record));
+    return nullptr;
+}
+
+napi_value JsConfig::OffSyncInfoChanged(napi_env env, napi_callback_info info)
+{
+    size_t argc = ARGC_MAX;
+    napi_value argv[ARGC_MAX] = { nullptr };
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    struct UnsubscribeContext : public ContextBase {
+        std::vector<CloudData::BundleInfo> bundleInfos;
+        napi_value callback = nullptr;
+        bool hasCallback = false;
+    };
+    auto ctxt = std::make_shared<UnsubscribeContext>();
+    ASSERT_ERR(env, argc >= 1, Status::INVALID_ARGUMENT_V20, "The number of parameters is incorrect.");
+    int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleInfos);
+    ASSERT_ERR(env, status == JSUtils::OK && !ctxt->bundleInfos.empty(), Status::INVALID_ARGUMENT_V20,
+        "The type of bundleInfos must be Array<BundleInfo>.");
+    if (argc >= 2) { // 2 is Number of parameters
+        napi_valuetype type = napi_undefined;
+        if (napi_typeof(env, argv[1], &type) == napi_ok && type == napi_function) {
+            ctxt->callback = argv[1];
+            ctxt->hasCallback = true;
+        }
+    }
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
+        }
+        ThrowNapiError(env, state, "");
+        return nullptr;
+    }
+
+    auto unsubscribeInfos = CollectUnsubscribeInfos(ctxt->bundleInfos, ctxt->callback, ctxt->hasCallback);
+    for (const auto &[observer, bundleInfos] : unsubscribeInfos) {
+        proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    }
+    return nullptr;
+}
+
+JsConfig::UnsubscribeInfoList JsConfig::CollectUnsubscribeInfos(
+    const std::vector<CloudData::BundleInfo>& toUnsubscribe, napi_value callback, bool hasCallback)
+{
+    UnsubscribeInfoList unsubscribeInfos;
+    std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+    auto it = syncInfoObservers_.begin();
+    while (it != syncInfoObservers_.end()) {
+        std::vector<CloudData::BundleInfo> intersection;
+        for (const auto &info : toUnsubscribe) {
+            if (std::find(it->bundleInfos.begin(), it->bundleInfos.end(), info) != it->bundleInfos.end()) {
+                intersection.push_back(info);
+            }
+        }
+        
+        if (intersection.empty() || (hasCallback && !(*it->observer == callback))) {
+            ++it;
+            continue;
+        }
+        
+        for (const auto &info : intersection) {
+            auto removeIt = std::remove(it->bundleInfos.begin(), it->bundleInfos.end(), info);
+            it->bundleInfos.erase(removeIt, it->bundleInfos.end());
+        }
+        
+        unsubscribeInfos.emplace_back(it->observer, std::move(intersection));
+        
+        if (it->bundleInfos.empty()) {
+            it->observer->Clear();
+            it = syncInfoObservers_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    return unsubscribeInfos;
+}
+
 napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
 {
     auto lambda = []() -> std::vector<napi_property_descriptor> {
@@ -638,6 +799,8 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
             DECLARE_NAPI_STATIC_FUNCTION("setGlobalCloudStrategy", JsConfig::SetGlobalCloudStrategy),
             DECLARE_NAPI_STATIC_FUNCTION("queryLastSyncInfo", JsConfig::QueryLastSyncInfo),
             DECLARE_NAPI_STATIC_FUNCTION("cloudSync", JsConfig::CloudSync),
+            DECLARE_NAPI_STATIC_FUNCTION("onSyncInfoChanged", JsConfig::OnSyncInfoChanged),
+            DECLARE_NAPI_STATIC_FUNCTION("offSyncInfoChanged", JsConfig::OffSyncInfoChanged),
         };
         return properties;
     };
@@ -661,7 +824,7 @@ bool JsConfig::IsDbInfoValid(const std::map<std::string, CloudData::DBActionInfo
         if (!ValidSubscribeType(dbInfo.action)) {
             return false;
         }
-        
+
         if (!IsTablesValid(dbInfo.tableInfo)) {
             return false;
         }

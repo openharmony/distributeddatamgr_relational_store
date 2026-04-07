@@ -92,7 +92,29 @@ using Results = std::tuple<int32_t, std::string, std::vector<std::pair<int32_t, 
 using QueryResults = std::tuple<int32_t, std::string, Participants>;
 using QueryLastResults = std::map<std::string, CloudSyncInfo>;
 
+struct BundleInfo {
+    std::string bundleName;
+    std::string storeId;
+    bool operator==(const BundleInfo &info) const
+    {
+        return std::tie(bundleName, storeId) == std::tie(info.bundleName, info.storeId);
+    }
+};
+
+using BatchQueryLastResults = std::map<std::string, QueryLastResults>;
+
+class ISyncInfoObserver {
+public:
+    virtual ~ISyncInfoObserver() = default;
+    virtual void OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data) = 0;
+};
+
 constexpr const char *DATA_CHANGE_EVENT_ID = "cloud_data_change";
+
+enum class CloudSubscribeType : int32_t {
+    SYNC_INFO_CHANGED = 0,
+    SUBSCRIBE_TYPE_MAX
+};
 
 /**
  * Enumerates the error code of sharing invitation.

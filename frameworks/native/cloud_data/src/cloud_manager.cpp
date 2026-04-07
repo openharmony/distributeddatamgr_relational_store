@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -88,8 +88,7 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
     }
 
     cloudObject->AddDeathRecipient(new CloudDeath([this]() {
-        std::lock_guard<decltype(mutex_)> lg(mutex_);
-        cloudService_ = nullptr;
+        OnRemoteDied();
     }));
 
     sptr<CloudServiceProxy> proxy = new (std::nothrow) CloudServiceProxy(cloudObject);
@@ -106,6 +105,47 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
         return std::make_pair(CloudService::Status::FEATURE_UNAVAILABLE, nullptr);
     }
     return std::make_pair(CloudService::Status::SUCCESS, cloudService_);
+}
+
+void CloudManager::OnRemoteDied()
+{
+    LOG_INFO("Cloud service has dead!");
+    std::shared_ptr<CloudService> serviceHandle;
+    {
+        std::lock_guard<decltype(mutex_)> lg(mutex_);
+        serviceHandle = cloudService_;
+    }
+    
+    if (serviceHandle == nullptr) {
+        return;
+    }
+
+    auto proxy = std::static_pointer_cast<CloudServiceProxy>(serviceHandle);
+    if (proxy == nullptr) {
+        ResetServiceHandle();
+        return;
+    }
+
+    auto observers = proxy->ExportSubObservers();
+    ResetServiceHandle();
+
+    auto [errCode, service] = GetCloudService();
+    if (errCode != CloudService::Status::SUCCESS || service == nullptr) {
+        LOG_ERROR("Reconnect service failed");
+        return;
+    }
+
+    proxy = std::static_pointer_cast<CloudServiceProxy>(service);
+    if (proxy != nullptr) {
+        proxy->ImportSubObservers(observers);
+        LOG_INFO("Subscriptions restored successfully");
+    }
+}
+
+void CloudManager::ResetServiceHandle()
+{
+    std::lock_guard<decltype(mutex_)> lg(mutex_);
+    cloudService_ = nullptr;
 }
 
 DataMgrService::DataMgrService(const sptr<IRemoteObject> &impl) : IRemoteProxy<CloudData::IKvStoreDataService>(impl)

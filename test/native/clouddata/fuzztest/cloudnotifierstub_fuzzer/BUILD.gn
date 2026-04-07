@@ -39,7 +39,7 @@ ohos_fuzztest("CloudNotifierStubFuzzTest") {
 
   sources = [
     "${cloud_data_native_path}/src/cloud_notifier_stub.cpp",
-    "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
+    "${cloud_data_native_path}/src/cloud_types_util.cpp",
     "cloudnotifierstub_fuzzer.cpp"
   ]
 

@@ -19,6 +19,7 @@
 #include <ipc_skeleton.h>
 
 #include "cloud_service.h"
+#include "cloud_types_util.h"
 #include "itypes_util.h"
 #include "logger.h"
 
@@ -29,6 +30,11 @@ CloudNotifierStub::CloudNotifierStub(const SyncCompleteHandler &completeNotifier
 {
 }
 
+CloudNotifierStub::CloudNotifierStub(const SyncCompleteHandler &syncComplete,
+    const SyncInfoNotifyHandler &subscribeNotify)
+    : IRemoteStub<CloudNotifierStubBroker>(), completeNotifier_(syncComplete), syncInfoNotifier_(subscribeNotify)
+{
+}
 CloudNotifierStub::~CloudNotifierStub() noexcept
 {
 }
@@ -75,5 +81,23 @@ int32_t CloudNotifierStub::OnComplete(uint32_t seqNum, Details &&result)
         completeNotifier_(seqNum, std::move(result));
     }
     return CloudService::SUCCESS;
+}
+
+int32_t CloudNotifierStub::OnSyncInfoNotify(const BatchQueryLastResults &data)
+{
+    if (syncInfoNotifier_) {
+        syncInfoNotifier_(data);
+    }
+    return CloudService::SUCCESS;
+}
+
+int32_t CloudNotifierStub::OnSyncInfoNotifyInner(MessageParcel& data, MessageParcel& reply)
+{
+    BatchQueryLastResults notifyData;
+    if (!ITypesUtil::Unmarshal(data, notifyData)) {
+        LOG_ERROR("read subscribe notify data failed.");
+        return CloudService::IPC_PARCEL_ERROR;
+    }
+    return OnSyncInfoNotify(notifyData);
 }
 } // namespace OHOS::CloudData
