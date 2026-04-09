@@ -21,12 +21,21 @@
 #include "itypes_util.h"
 #include "logger.h"
 #include "system_ability_definition.h"
+#include "system_ability_load_callback_stub.h"
 
 namespace OHOS::CloudData {
 using namespace OHOS::Rdb;
 using namespace OHOS::DistributedRdb::RelationalStore;
 
-static constexpr int LOAD_SA_TIMEOUT_SECONDS = 1;
+class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
+public:
+    ServiceProxyLoadCallback() = default;
+    virtual ~ServiceProxyLoadCallback() = default;
+
+    void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
+    void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
+};
+
 class DataMgrService : public IRemoteProxy<CloudData::IKvStoreDataService> {
 public:
     explicit DataMgrService(const sptr<IRemoteObject> &impl);
@@ -67,14 +76,30 @@ std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::GetCloudService(
     }
     auto dataMgrObject = saMgr->CheckSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID);
     if (dataMgrObject == nullptr) {
-        LOG_WARN("Check distributed data manager failed");
-        dataMgrObject = saMgr->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, LOAD_SA_TIMEOUT_SECONDS);
-    }
-    if (dataMgrObject == nullptr) {
-        LOG_ERROR("Get distributed data manager failed.");
+        // check SA failed, try load SA
+        LOG_ERROR("Get distributed data manager CheckSystemAbility failed.");
+        // callback of load
+        sptr<ServiceProxyLoadCallback> loadCallback = new (std::nothrow) ServiceProxyLoadCallback();
+        if (loadCallback == nullptr) {
+            LOG_ERROR("Create load callback failed.");
+            return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
+        }
+        // The data management service process is asynchronously invoked, but the handle cannot be returned normally
+        // Therefore, the handle in the callback is not processed
+        int32_t errCode = saMgr->LoadSystemAbility(DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID, loadCallback);
+        // start load failed
+        if (errCode != ERR_OK) {
+            LOG_ERROR("Get distributed data manager LoadSystemAbility failed, err: %{public}d", errCode);
+        }
         return std::make_pair(CloudService::Status::SERVER_UNAVAILABLE, nullptr);
     }
 
+    return CreateCloudService(dataMgrObject);
+}
+
+std::pair<int32_t, std::shared_ptr<CloudService>> CloudManager::CreateCloudService(
+    const sptr<IRemoteObject> &dataMgrObject)
+{
     sptr<DataMgrService> dataMgr = new (std::nothrow) DataMgrService(dataMgrObject);
     if (dataMgr == nullptr) {
         LOG_ERROR("New CloudDataServiceProxy failed.");
@@ -181,5 +206,23 @@ sptr<IRemoteObject> DataMgrService::GetFeatureInterface(const std::string &name)
         return nullptr;
     }
     return remoteObject;
+}
+
+void ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
+    int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject)
+{
+    if (systemAbilityId != DISTRIBUTED_KV_DATA_SERVICE_ABILITY_ID) {
+        LOG_ERROR("Incorrect SA Id: %{public}d", systemAbilityId);
+        return;
+    }
+    if (remoteObject == nullptr) {
+        LOG_ERROR("remote object is nullptr");
+        return;
+    }
+}
+
+void ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
+{
+    LOG_ERROR("Load SA: %{public}d failed", systemAbilityId);
 }
 } // namespace OHOS::CloudData
