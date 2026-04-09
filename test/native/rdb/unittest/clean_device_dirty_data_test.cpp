@@ -18,6 +18,7 @@
 #include <string>
 
 #include "common.h"
+#include "grd_api_manager.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -205,6 +206,9 @@ HWTEST_F(CleanDeviceDirtyDataTest, CleanDeviceDirtyData_Memory_Database_001, Tes
  */
 HWTEST_F(CleanDeviceDirtyDataTest, CleanDeviceDirtyData_Vector_Database_001, TestSize.Level1)
 {
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
     // Create a database with vector type
     std::string vectorDbName = RDB_TEST_PATH + "vector_test.db";
     int errCode = RdbHelper::DeleteRdbStore(vectorDbName);
