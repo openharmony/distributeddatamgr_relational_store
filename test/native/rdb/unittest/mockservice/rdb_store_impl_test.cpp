@@ -752,7 +752,8 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_001, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(Return(RdbStatus::RDB_DB_NOT_EXIST));
+    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(
+        Return(std::make_pair(RdbStatus::RDB_DB_NOT_EXIST, 0)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -958,7 +959,7 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_009, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, 0)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);

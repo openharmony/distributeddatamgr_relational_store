@@ -200,17 +200,23 @@ int32_t RdbServiceProxy::SetDistributedTables(const RdbSyncerParam &param, const
     return status;
 }
 
-int32_t RdbServiceProxy::RetainDeviceData(
+std::pair<int32_t, int64_t> RdbServiceProxy::RetainDeviceData(
     const RdbSyncerParam &param, const std::map<std::string, std::vector<std::string>> &retainDevices)
 {
     MessageParcel reply;
+    int64_t changeRows = -1;
     int32_t status = IPC_SEND(
         static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REMOVE_REMOTE_DATA), reply, param, retainDevices);
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
             SqliteUtils::Anonymous(param.storeName_).c_str());
+        return { status, -1 };
     }
-    return status;
+    if (!ITypesUtil::Unmarshal(reply, changeRows)) {
+        LOG_ERROR("read result failed.");
+        return { RDB_ERROR, -1 };
+    }
+    return { status, changeRows };
 }
 
 std::pair<int32_t, std::vector<std::string>> RdbServiceProxy::ObtainUuid(

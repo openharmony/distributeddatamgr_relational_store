@@ -471,11 +471,14 @@ int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::
     if (errCode != E_OK || service == nullptr) {
         return errCode != E_OK ? errCode : E_ERROR;
     }
-    int32_t errorCode = service->RetainDeviceData(syncerParam_, retainDevices);
+    auto [errorCode, changeRows] = service->RetainDeviceData(syncerParam_, retainDevices);
     if (errorCode != RdbStatus::RDB_OK) {
         LOG_ERROR("Fail to remove except device data, error:%{public}d, name:%{public}s.", errorCode,
             SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
+    Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_RETAIN_DEVICE_DATA, config_.GetBundleName(),
+        config_.GetName() + " retain device data result:" + std::to_string(errorCode) +
+            ", remove data:" + std::to_string(changeRows)));
     return SqliteUtils::ConvertRdbStatusNative(errorCode);
 }
 
@@ -528,6 +531,13 @@ std::pair<int32_t, int32_t> RdbStoreImpl::UpdateDistributedInfo(
     }
     std::string sql = SqliteSqlBuilder::BuildUpdateLogString(predicates, logTable, distributedInfo);
     auto [code, result] = ExecuteForRow(sql, args);
+    if (code != RdbStatus::RDB_OK) {
+        LOG_ERROR("Fail to update distributed info, error:%{public}d, name:%{public}s.", code,
+            SqliteUtils::Anonymous(config_.GetName()).c_str());
+    }
+    Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_UPDATE_DISTRIBUTED_INFO, config_.GetBundleName(),
+        config_.GetName() + " update distributed info result:" + std::to_string(code) +
+            ", update data:" + std::to_string(result.changed)));
     return { code, result.changed };
 }
 
