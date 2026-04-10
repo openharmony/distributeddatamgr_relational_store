@@ -15,7 +15,7 @@
 #ifndef OHOS_RELATION_STORE_ANI_CLOUD_DATA_CONFIG_H
 #define OHOS_RELATION_STORE_ANI_CLOUD_DATA_CONFIG_H
 #include <functional>
-#include <list>
+#include <map>
 #include <mutex>
 #include "ohos.data.cloudData.proj.hpp"
 #include "ohos.data.cloudData.impl.hpp"
@@ -81,16 +81,15 @@ public:
         optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress);
 
 private:
-    using UnsubscribeInfoList = std::vector<std::pair<std::shared_ptr<TaiheCloudSyncInfoObserver>,
-        std::vector<OHOS::CloudData::BundleInfo>>>;
-    static UnsubscribeInfoList CollectUnsubscribeInfos(const std::vector<OHOS::CloudData::BundleInfo> &toUnsubscribe,
+    using UnsubscribeInfo = std::map<std::shared_ptr<TaiheCloudSyncInfoObserver>,
+        std::vector<OHOS::CloudData::BundleInfo>>;
+
+    static std::vector<OHOS::CloudData::BundleInfo> CollectSubscribeInfos(
+        const std::vector<OHOS::CloudData::BundleInfo> &toSubscribe, const TaiheSyncInfoCallback &callback);
+    static UnsubscribeInfo CollectUnsubscribeInfos(const std::vector<OHOS::CloudData::BundleInfo> &toUnsubscribe,
         optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress);
-    struct SyncInfoObserverRecord {
-        std::vector<OHOS::CloudData::BundleInfo> bundleInfos;
-        std::shared_ptr<TaiheCloudSyncInfoObserver> observer;
-    };
     static std::mutex syncInfoObserversMutex_;
-    static std::list<SyncInfoObserverRecord> syncInfoObservers_;
+    static std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>>>> syncInfoObservers_;
 };
 
 void SetCloudStrategyImpl(StrategyType strategy,

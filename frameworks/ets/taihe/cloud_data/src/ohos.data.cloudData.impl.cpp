@@ -24,7 +24,7 @@ namespace AniCloudData {
 using namespace OHOS::Rdb;
 static constexpr size_t MAX_ACTIONS = 1000;
 std::mutex ConfigImpl::syncInfoObserversMutex_;
-std::list<ConfigImpl::SyncInfoObserverRecord> ConfigImpl::syncInfoObservers_;
+std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>>>> ConfigImpl::syncInfoObservers_;
 
 bool VerifyExtraData(const ExtraData &data)
 {
@@ -419,9 +419,9 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
 void ConfigImpl::OnSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
     callback_view<void(map_view<string, map<string, SyncInfo>> data)> progress)
 {
-    if (bundleInfos.empty()) {
-        ThrowAniError(
-            CloudService::Status::INVALID_ARGUMENT_V20, "The type of bundleInfos must be array and not empty.");
+    if (bundleInfos.empty() || bundleInfos.size() > 30) { // 30 is max bundleInfos size
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT_V20,
+            "The size of bundleInfos must be less than or equal to 30 and greater than 0.");
         return;
     }
     std::vector<OHOS::CloudData::BundleInfo> nativeBundleInfos;
@@ -434,16 +434,10 @@ void ConfigImpl::OnSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInf
         nativeBundleInfos.push_back(nativeInfo);
     }
     TaiheSyncInfoCallback holder = progress;
-    {
-        std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
-        bool isDuplicate = std::any_of(syncInfoObservers_.begin(), syncInfoObservers_.end(),
-            [&nativeBundleInfos, &holder](const SyncInfoObserverRecord &record) {
-                return record.bundleInfos == nativeBundleInfos && (*record.observer == holder);
-            });
-        if (isDuplicate) {
-            LOG_DEBUG("Duplicate subscribe for sync info changed.");
-            return;
-        }
+    std::vector<OHOS::CloudData::BundleInfo> toSubscribe = CollectSubscribeInfos(nativeBundleInfos, holder);
+    if (toSubscribe.empty()) {
+        LOG_DEBUG("Duplicate subscribe for sync info changed.");
+        return;
     }
     auto observer = std::make_shared<TaiheCloudSyncInfoObserver>(holder);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
@@ -455,59 +449,55 @@ void ConfigImpl::OnSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInf
         ThrowAniError(state);
         return;
     }
-    auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, nativeBundleInfos, observer);
+    auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, toSubscribe, observer);
     if (status != CloudService::Status::SUCCESS) {
         LOG_ERROR("Subscribe failed, errcode = %{public}d", status);
         ThrowAniError(status);
         return;
     }
     std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
-    syncInfoObservers_.push_back({ nativeBundleInfos, observer });
+    for (auto &bundleInfo : toSubscribe) {
+        syncInfoObservers_[bundleInfo.bundleName][bundleInfo.storeId].push_back(observer);
+    }
 }
 
-ConfigImpl::UnsubscribeInfoList ConfigImpl::CollectUnsubscribeInfos(
-    const std::vector<OHOS::CloudData::BundleInfo> &toUnsubscribe,
-    optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress)
+std::vector<OHOS::CloudData::BundleInfo> ConfigImpl::CollectSubscribeInfos(
+    const std::vector<OHOS::CloudData::BundleInfo> &toSubscribe, const TaiheSyncInfoCallback &callback)
 {
-    bool hasCallback = progress.has_value();
-    UnsubscribeInfoList unsubscribeInfos;
     std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
-    auto it = syncInfoObservers_.begin();
-    while (it != syncInfoObservers_.end()) {
-        std::vector<OHOS::CloudData::BundleInfo> intersection;
-        for (const auto &info : toUnsubscribe) {
-            if (std::find(it->bundleInfos.begin(), it->bundleInfos.end(), info) != it->bundleInfos.end()) {
-                intersection.push_back(info);
-            }
+    std::vector<OHOS::CloudData::BundleInfo> result;
+    for (const auto &info : toSubscribe) {
+        auto bundleIt = syncInfoObservers_.find(info.bundleName);
+        if (bundleIt == syncInfoObservers_.end()) {
+            result.push_back(info);
+            continue;
         }
-
-        if (intersection.empty() || (hasCallback && !(*it->observer == progress.value()))) {
-            ++it;
+        auto storeIt = bundleIt->second.find(info.storeId);
+        if (storeIt == bundleIt->second.end()) {
+            result.push_back(info);
             continue;
         }
 
-        for (const auto &info : intersection) {
-            auto removeIt = std::remove(it->bundleInfos.begin(), it->bundleInfos.end(), info);
-            it->bundleInfos.erase(removeIt, it->bundleInfos.end());
+        bool isDuplicate = std::any_of(storeIt->second.begin(), storeIt->second.end(),
+            [&callback](const std::shared_ptr<TaiheCloudSyncInfoObserver> &observer) {
+                return *observer == callback;
+            });
+        if (isDuplicate) {
+            LOG_DEBUG("Duplicate subscribe for bundleName:%{public}s storeId:%{public}s",
+                info.bundleName.c_str(), info.storeId.c_str());
+            continue;
         }
-
-        unsubscribeInfos.emplace_back(it->observer, std::move(intersection));
-
-        if (it->bundleInfos.empty()) {
-            it = syncInfoObservers_.erase(it);
-        } else {
-            ++it;
-        }
+        result.push_back(info);
     }
-    return unsubscribeInfos;
+    return result;
 }
 
 void ConfigImpl::OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
     optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress)
 {
-    if (bundleInfos.empty()) {
-        ThrowAniError(
-            CloudService::Status::INVALID_ARGUMENT_V20, "The type of bundleInfos must be array and not empty.");
+    if (bundleInfos.empty() || bundleInfos.size() > 30) { // 30 is max bundleInfos size
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT_V20,
+            "The size of bundleInfos must be less than or equal to 30 and greater than 0.");
         return;
     }
 
@@ -521,8 +511,6 @@ void ConfigImpl::OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleIn
         nativeBundleInfos.push_back(nativeInfo);
     }
 
-    auto unsubscribeInfos = CollectUnsubscribeInfos(nativeBundleInfos, progress);
-
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     if (proxy == nullptr) {
         if (state != CloudService::SERVER_UNAVAILABLE) {
@@ -532,11 +520,46 @@ void ConfigImpl::OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleIn
         return;
     }
 
+    auto unsubscribeInfos = CollectUnsubscribeInfos(nativeBundleInfos, progress);
     for (const auto &[observer, infos] : unsubscribeInfos) {
         proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, infos, observer);
     }
 }
 
+ConfigImpl::UnsubscribeInfo ConfigImpl::CollectUnsubscribeInfos(
+    const std::vector<OHOS::CloudData::BundleInfo> &toUnsubscribe,
+    optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress)
+{
+    bool hasCallback = progress.has_value();
+    UnsubscribeInfo unsubscribeInfos;
+    std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+    for (const auto &info : toUnsubscribe) {
+        auto bundleIt = syncInfoObservers_.find(info.bundleName);
+        if (bundleIt == syncInfoObservers_.end()) {
+            continue;
+        }
+        auto storeIt = bundleIt->second.find(info.storeId);
+        if (storeIt == bundleIt->second.end()) {
+            continue;
+        }
+        auto obsIt = storeIt->second.begin();
+        while (obsIt != storeIt->second.end()) {
+            if (hasCallback && !(**obsIt == progress.value())) {
+                ++obsIt;
+                continue;
+            }
+            unsubscribeInfos[*obsIt].push_back(info);
+            obsIt = storeIt->second.erase(obsIt);
+        }
+        if (storeIt->second.empty()) {
+            bundleIt->second.erase(storeIt);
+        }
+        if (bundleIt->second.empty()) {
+            syncInfoObservers_.erase(bundleIt);
+        }
+    }
+    return unsubscribeInfos;
+}
 void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
 {
     if (strategy.get_key() != StrategyType::key_t::NETWORK) {
