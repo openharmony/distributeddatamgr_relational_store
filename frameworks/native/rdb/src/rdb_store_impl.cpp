@@ -352,7 +352,7 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
         return E_INVALID_ARGS;
     }
     errCode = conn->CleanDirtyData(table, cursor);
-    return errCode == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+    return errCode == E_OK ? E_OK : E_ERROR;
 }
 
 int RdbStoreImpl::CleanDeviceDirtyData(const std::string &table, uint64_t cursor)
@@ -362,18 +362,18 @@ int RdbStoreImpl::CleanDeviceDirtyData(const std::string &table, uint64_t cursor
             SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
         return E_NOT_SUPPORT;
     }
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
     auto [errCode, conn] = GetConn(false);
     if (errCode != E_OK) {
         LOG_ERROR("The database is busy or closed.");
         return errCode;
     }
 
-    if (table.empty()) {
-        LOG_ERROR("table is empty");
-        return E_INVALID_ARGS;
-    }
     errCode = conn->CleanDirtyData(table, cursor);
-    return errCode == DistributedDB::DBStatus::OK ? E_OK : SqliteUtils::ConvertDBStatusNative(errCode);
+    return errCode;
 }
 
 std::string RdbStoreImpl::GetLogTableName(const std::string &tableName)

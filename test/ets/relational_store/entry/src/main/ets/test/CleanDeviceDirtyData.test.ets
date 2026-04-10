@@ -90,6 +90,5 @@ export default function CleanDeviceDirtyData() {
       }
       console.log(TAG + "************* CleanDeviceDirtyDataTest0001 end *************");
     })
-    console.log(TAG + "*************Unit Test Begin*************");
   })
 }
