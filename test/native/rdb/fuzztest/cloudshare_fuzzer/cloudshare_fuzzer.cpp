@@ -35,6 +35,8 @@ using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 namespace OHOS {
 
+static constexpr size_t MAX_RANDOM_STR_LEN = 100;
+
 void AllocNormalHapToken(const HapPolicyParams &policy)
 {
     HapInfoParams info = { .userID = 100,
@@ -72,11 +74,11 @@ CloudData::Participants CreateParticipants(FuzzedDataProvider &fdp)
     privilege.shareable = fdp.ConsumeBool();
 
     Participant participant;
-    participant.identity = fdp.ConsumeRandomLengthString();
+    participant.identity = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
     participant.role = fdp.ConsumeIntegralInRange<int32_t>(Role::ROLE_NIL, Role::ROLE_BUTT);
     participant.state = fdp.ConsumeIntegralInRange<int32_t>(Confirmation::CFM_NIL, Confirmation::CFM_BUTT);
     participant.privilege = privilege;
-    participant.attachInfo = fdp.ConsumeRandomLengthString();
+    participant.attachInfo = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
 
     CloudData::Participants participants;
     participants.push_back(participant);
@@ -90,7 +92,7 @@ void CloudDataTestShare001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
+    std::string sharingRes = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
 
     CloudData::Participants participants = CreateParticipants(fdp);
     CloudData::Results results;
@@ -104,7 +106,7 @@ void CloudDataTestUnshare001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
+    std::string sharingRes = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
 
     CloudData::Participants participants = CreateParticipants(fdp);
     CloudData::Results results;
@@ -118,7 +120,7 @@ void CloudDataTestExit001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
+    std::string sharingRes = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
     std::pair<int32_t, std::string> result;
     proxy->Exit(sharingRes, result);
 }
@@ -130,7 +132,7 @@ void CloudDataTestChangePrivilege001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
+    std::string sharingRes = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
     CloudData::Participants participants = CreateParticipants(fdp);
     CloudData::Results results;
     proxy->ChangePrivilege(sharingRes, participants, results);

@@ -38,6 +38,7 @@ namespace OHOS {
 
 static constexpr const char *TEST_BUNDLE_NAME = "bundleName";
 static constexpr const char *TEST_ACCOUNT_ID = "testId";
+static constexpr size_t MAX_RANDOM_STR_LEN = 100;
 
 void AllocSystemHapToken(const HapPolicyParams &policy)
 {
@@ -72,15 +73,15 @@ CloudData::SwitchConfig CreateSwitchConfig(FuzzedDataProvider &fdp)
     DBSwitchInfo switchInfo;
     switchInfo.enable = fdp.ConsumeBool();
     std::map<std::string, bool> tableInfo;
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeBool());
     switchInfo.tableInfo = tableInfo;
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), switchInfo);
     return config;
 }
 
@@ -90,15 +91,15 @@ CloudData::ClearConfig CreateClearConfig(FuzzedDataProvider &fdp)
     DBActionInfo actionInfo;
     actionInfo.action = fdp.ConsumeIntegral<int32_t>();
     std::map<std::string, int32_t> tableInfo;
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeIntegral<int32_t>());
     actionInfo.tableInfo = tableInfo;
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), actionInfo);
     return config;
 }
 
@@ -134,7 +135,7 @@ void CloudDataTestClean001(FuzzedDataProvider &fdp)
     std::map<std::string, int32_t> actions;
     actions.emplace(TEST_BUNDLE_NAME, fdp.ConsumeIntegral<int32_t>());
     std::map<std::string, ClearConfig> configs;
-    configs.emplace(fdp.ConsumeRandomLengthString(10), CreateClearConfig(fdp));  // the string length is 10
+    configs.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), CreateClearConfig(fdp));
     proxy->Clean(TEST_ACCOUNT_ID, actions, configs);
 }
 
@@ -145,8 +146,8 @@ void CloudDataTestNotifyDataChange001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string eventId = fdp.ConsumeRandomLengthString();
-    std::string extraData = fdp.ConsumeRandomLengthString();
+    std::string eventId = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
+    std::string extraData = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
     int32_t userId = fdp.ConsumeIntegral<int32_t>();
     proxy->NotifyDataChange(eventId, extraData, userId);
 }

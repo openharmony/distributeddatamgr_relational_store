@@ -35,6 +35,8 @@ using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 namespace OHOS {
 
+static constexpr size_t MAX_RANDOM_STR_LEN = 100;
+
 void AllocNormalHapToken(const HapPolicyParams &policy)
 {
     HapInfoParams info = { .userID = 100,
@@ -69,7 +71,7 @@ void CloudDataTestQuery001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
+    std::string sharingRes = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
     CloudData::QueryResults result;
     proxy->Query(sharingRes, result);
 }
@@ -81,7 +83,7 @@ void CloudDataTestQueryByInvitation001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string invitation = fdp.ConsumeRandomLengthString();
+    std::string invitation = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
     CloudData::QueryResults result;
     proxy->QueryByInvitation(invitation, result);
 }
@@ -93,7 +95,7 @@ void CloudDataTestConfirmInvitation001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
+    std::string sharingRes = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
     int32_t confirmation = fdp.ConsumeIntegral<int32_t>();
     std::tuple<int32_t, std::string, std::string> result;
     proxy->ConfirmInvitation(sharingRes, confirmation, result);
@@ -106,7 +108,7 @@ void CloudDataTestChangeConfirmation001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
+    std::string sharingRes = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
     int32_t confirmation = fdp.ConsumeIntegral<int32_t>();
     std::pair<int32_t, std::string> result;
     proxy->ChangeConfirmation(sharingRes, confirmation, result);
