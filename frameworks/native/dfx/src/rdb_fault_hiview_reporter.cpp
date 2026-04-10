@@ -93,11 +93,6 @@ RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
     { E_DFX_INTERFACE_USED, 0 }
 };
 
-RdbFaultCode RdbFaultHiViewReporter::faultNoLimitCounters_[] = {
-    { E_DFX_RETAIN_DEVICE_DATA, 0 },
-    { E_DFX_UPDATE_DISTRIBUTED_INFO, 0 }
-};
-
 RdbFaultEvent::~RdbFaultEvent() = default;
 
 bool RdbFaultHiViewReporter::memCorruptReportedFlg_ = false;
@@ -304,24 +299,12 @@ uint8_t *RdbFaultHiViewReporter::GetFaultCounter(int32_t errCode)
     return nullptr;
 }
 
-uint8_t *RdbFaultHiViewReporter::GetFaultNoLimitCounter(int32_t errCode)
-{
-    auto it = std::lower_bound(faultNoLimitCounters_, faultNoLimitCounters_ + sizeof(faultNoLimitCounters_) / sizeof(RdbFaultCode), errCode,
-        [](const RdbFaultCode& faultCode, int32_t code) {
-            return faultCode.nativeCode < code;
-        });
-    if (it != faultNoLimitCounters_ + sizeof(faultNoLimitCounters_) / sizeof(RdbFaultCode) && it->nativeCode == errCode) {
-        return &it->faultCounter;
-    }
-    return nullptr;
-}
-
 bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_t errCode)
 {
     if (bundleName.empty()) {
         return false;
     }
-    if (GetFaultNoLimitCounter(errCode) != nullptr) {
+    if ((errCode == E_DFX_RETAIN_DEVICE_DATA) || (errCode == E_DFX_UPDATE_DISTRIBUTED_INFO)) {
         return true;
     }
     uint8_t *counter = GetFaultCounter(errCode);

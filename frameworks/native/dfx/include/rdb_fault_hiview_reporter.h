@@ -129,10 +129,8 @@ private:
     static void DeleteCorruptedFlag(const std::string &dbPath);
     static bool IsReportFault(const std::string &bundleName, int32_t errCode);
     static uint8_t *GetFaultCounter(int32_t errCode);
-    static uint8_t *GetFaultNoLimitCounter(int32_t errCode);
     static Collector collector_;
     static RdbFaultCode faultCounters_[];
-    static RdbFaultCode faultNoLimitCounters_[];
     static bool memCorruptReportedFlg_;
 };
 } // namespace OHOS::NativeRdb
