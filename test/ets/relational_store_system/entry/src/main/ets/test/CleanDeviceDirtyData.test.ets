@@ -432,7 +432,7 @@ export default function CleanDeviceDirtyData() {
           expect(e.code).assertEqual(14800021);
         }
       }
-      console.log(TAG + "************* CleanDeviceDirtyDataTest0009 end *************");
+      console.log(TAG + "************* CleanDeviceDirtyDataTest0010 end *************");
     })
 
     /**

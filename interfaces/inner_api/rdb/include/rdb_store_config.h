@@ -676,12 +676,12 @@ public:
      */
     bool GetAutoClean() const;
 
-        /**
+    /**
      * @brief Sets the autoCleanDeviceDirtyData for the object.
      */
     void SetAutoCleanDevice(bool isAutoCleanDevice);
 
-        /**
+    /**
      * @brief Obtains the autoCleanDeviceDirtyData in this {@code StoreConfig} object.
      */
     bool GetAutoCleanDevice() const;

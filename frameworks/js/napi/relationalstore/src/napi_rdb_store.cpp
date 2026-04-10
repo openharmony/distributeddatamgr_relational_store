@@ -1873,9 +1873,9 @@ struct CleanDeviceDirtyDataContext : public EnhancedContext {
         RdbStoreProxy *obj = GetNativeInstance(env, self);
         ASSERT_RETURN_SET_ERROR(obj != nullptr, std::make_shared<ParamNumError>("RdbStore must be not nullptr."));
         ASSERT_RETURN_SET_ERROR(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
-        ASSERT_RETURN_SET_ERROR(
-            obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         rdbStore = obj->GetInstance();
+        ASSERT_RETURN_SET_ERROR(
+            rdbStore != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         tableName = JSUtils::Convert2String(env, argv[0]);
         ASSERT_RETURN_SET_ERROR(
             RdbSqlUtils::IsValidTableName(tableName), std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
@@ -1888,6 +1888,12 @@ struct CleanDeviceDirtyDataContext : public EnhancedContext {
             cursor = static_cast<uint64_t>(cursorJsValue);
         }
         return OK;
+    }
+    std::shared_ptr<NativeRdb::RdbStore> StealRdbStore()
+    {
+        auto rdb = std::move(rdbStore);
+        rdbStore = nullptr;
+        return rdb;
     }
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
     uint64_t cursor = UINT64_MAX;
@@ -1902,7 +1908,7 @@ napi_value RdbStoreProxy::CleanDeviceDirtyData(napi_env env, napi_callback_info 
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto result = context->rdbStore->CleanDeviceDirtyData(context->tableName, context->cursor);
+        auto result = context->StealRdbStore()->CleanDeviceDirtyData(context->tableName, context->cursor);
         return result != E_NOT_SUPPORT ? result : E_NOT_SUPPORT_NEW;
     };
     auto output = [context](napi_env env, napi_value &result) {

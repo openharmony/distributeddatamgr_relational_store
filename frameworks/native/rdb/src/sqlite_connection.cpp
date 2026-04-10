@@ -1329,7 +1329,7 @@ int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
     auto status = DropLogicDeletedData(dbHandle_, table, tmpCursor);
     LOG_INFO("status:%{public}d, table:%{public}s, cursor:%{public}" PRIu64 "", status,
         SqliteUtils::Anonymous(table).c_str(), cursor);
-    return status;
+    return SqliteUtils::ConvertDBStatusNative(status);
 }
 
 int SqliteConnection::TryCheckPoint(bool timeout)
