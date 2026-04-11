@@ -89,7 +89,8 @@ private:
     static UnsubscribeInfo CollectUnsubscribeInfos(const std::vector<OHOS::CloudData::BundleInfo> &toUnsubscribe,
         optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress);
     static std::mutex syncInfoObserversMutex_;
-    static std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>>>> syncInfoObservers_;
+    static std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>>>>
+        syncInfoObservers_;
 };
 
 void SetCloudStrategyImpl(StrategyType strategy,

@@ -32,7 +32,8 @@ using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 std::atomic<uint32_t> JsConfig::seqNum_{};
 std::mutex JsConfig::syncInfoObserversMutex_;
-std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>>>> JsConfig::syncInfoObservers_;
+std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>>>>
+    JsConfig::syncInfoObservers_;
 JsConfig::JsConfig()
 {
 }
