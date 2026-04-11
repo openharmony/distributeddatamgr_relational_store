@@ -705,7 +705,7 @@ napi_value JsConfig::OnSyncInfoChanged(napi_env env, napi_callback_info info)
     }
     std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
     for (auto &bundleInfo : toSubscribe) {
-         syncInfoObservers_[bundleInfo.bundleName][bundleInfo.storeId].push_back(observer);
+        syncInfoObservers_[bundleInfo.bundleName][bundleInfo.storeId].push_back(observer);
     }
     return nullptr;
 }
