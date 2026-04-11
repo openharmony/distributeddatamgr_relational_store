@@ -281,8 +281,10 @@ ohos_unittest("NativeRdbTest") {
   sources = [
     "unittest/big_integer_test.cpp",
     "unittest/cache_block_test.cpp",
+    "unittest/clean_device_dirty_data_test.cpp",
     "unittest/common.cpp",
     "unittest/connection_test.cpp",
+    "unittest/convert_db_status_native_test.cpp",
     "unittest/delay_notify_test.cpp",
     "unittest/raw_data_parser_test.cpp",
     "unittest/rd_utils_test.cpp",

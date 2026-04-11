@@ -183,6 +183,10 @@ static napi_value ExportDistributedField(napi_env env)
     SET_NAPI_PROPERTY(distributedField, "ORIGIN", std::string(DistributedRdb::DistributedField::ORIGIN));
     SET_NAPI_PROPERTY(
         distributedField, "ORIGIN_ORIDEVICE", std::string(DistributedRdb::DistributedField::ORIGIN_ORIDEVICE));
+    SET_NAPI_PROPERTY(
+        distributedField, "CURSOR_FIELD", std::string(DistributedRdb::DistributedField::CURSOR_FIELD));
+    SET_NAPI_PROPERTY(
+        distributedField, "DELETED_FLAG_FIELD", std::string(DistributedRdb::DistributedField::DELETED_FLAG_FIELD));
     napi_object_freeze(env, distributedField);
     return distributedField;
 }

@@ -387,6 +387,9 @@ OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(const ohos::data::rela
     if (storeConfig.autoCleanDirtyData.has_value()) {
         rdbConfig.isAutoClean = storeConfig.autoCleanDirtyData.value();
     }
+    if (storeConfig.autoCleanDeviceDirtyData.has_value()) {
+        rdbConfig.isAutoCleanDevice = storeConfig.autoCleanDeviceDirtyData.value();
+    }
     rdbConfig.name = std::string(storeConfig.name);
     if (storeConfig.customDir.has_value()) {
         rdbConfig.customDir = std::string(storeConfig.customDir.value());
@@ -478,6 +481,7 @@ void InitRdbStoreConfig(OHOS::NativeRdb::RdbStoreConfig &nativeStoreConfig,
     nativeStoreConfig.SetDBType(rdbConfig.vector ? DB_VECTOR : DB_SQLITE);
     nativeStoreConfig.SetStorageMode(rdbConfig.persist ? StorageMode::MODE_DISK : StorageMode::MODE_MEMORY);
     nativeStoreConfig.SetAutoClean(rdbConfig.isAutoClean);
+    nativeStoreConfig.SetAutoCleanDevice(rdbConfig.isAutoCleanDevice);
     nativeStoreConfig.SetSecurityLevel(rdbConfig.securityLevel);
     nativeStoreConfig.SetDataGroupId(rdbConfig.dataGroupId);
     nativeStoreConfig.SetName(rdbConfig.name);

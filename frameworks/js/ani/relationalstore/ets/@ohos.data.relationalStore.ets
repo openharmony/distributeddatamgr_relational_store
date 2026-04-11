@@ -131,6 +131,7 @@ export default namespace relationalStore {
     dataGroupId?: string;
     customDir?: string;
     autoCleanDirtyData?: boolean;
+    autoCleanDeviceDirtyData?: boolean;
     isSearchable?: boolean;
     allowRebuild?: boolean;
     vector?: boolean;

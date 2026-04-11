@@ -1516,6 +1516,7 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
     properties.push_back(DECLARE_NAPI_FUNCTION("cloudSync", CloudSync));
     properties.push_back(DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime));
     properties.push_back(DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData));
+    properties.push_back(DECLARE_NAPI_FUNCTION("cleanDeviceDirtyData", CleanDeviceDirtyData));
     properties.push_back(DECLARE_NAPI_FUNCTION("emit", Notify));
     properties.push_back(DECLARE_NAPI_FUNCTION("querySharingResource", QuerySharingResource));
     properties.push_back(DECLARE_NAPI_FUNCTION("lockRow", LockRow));
@@ -1860,6 +1861,61 @@ napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct CleanDeviceDirtyDataContext : public EnhancedContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        ASSERT_RETURN_SET_ERROR(argc < 3 && argc > 0, std::make_shared<ParamNumError>("1 - 2"));
+        RdbStoreProxy *obj = GetNativeInstance(env, self);
+        ASSERT_RETURN_SET_ERROR(obj != nullptr, std::make_shared<ParamNumError>("RdbStore must be not nullptr."));
+        ASSERT_RETURN_SET_ERROR(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
+        rdbStore = obj->GetInstance();
+        ASSERT_RETURN_SET_ERROR(
+            rdbStore != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        tableName = JSUtils::Convert2String(env, argv[0]);
+        ASSERT_RETURN_SET_ERROR(
+            RdbSqlUtils::IsValidTableName(tableName), std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+        // parse waitTime when the number of parameters is 2
+        if (argc == 2) {
+            int64_t cursorJsValue = 0;
+            auto status = JSUtils::Convert2ValueExt(env, argv[1], cursorJsValue);
+            ASSERT_RETURN_SET_ERROR(status == napi_ok && cursorJsValue >= 0,
+                std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal cursor"));
+            cursor = static_cast<uint64_t>(cursorJsValue);
+        }
+        return OK;
+    }
+    std::shared_ptr<NativeRdb::RdbStore> StealRdbStore()
+    {
+        auto rdb = std::move(rdbStore);
+        rdbStore = nullptr;
+        return rdb;
+    }
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
+    uint64_t cursor = UINT64_MAX;
+    std::string tableName;
+};
+
+napi_value RdbStoreProxy::CleanDeviceDirtyData(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<CleanDeviceDirtyDataContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto result = context->StealRdbStore()->CleanDeviceDirtyData(context->tableName, context->cursor);
+        return result != E_NOT_SUPPORT ? result : E_NOT_SUPPORT_NEW;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerErrorExt>(E_ERROR));
+    };
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
