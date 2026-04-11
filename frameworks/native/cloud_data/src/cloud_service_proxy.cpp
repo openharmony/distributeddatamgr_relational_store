@@ -440,7 +440,7 @@ int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vecto
     }
     std::vector<BundleInfo> unsubInfos;
     if (observer != nullptr) {
-        auto processStore = [&observer](auto &storeMap, const auto &info) {
+        auto processStore = [&observer, &unsubInfos](auto &storeMap, const auto &info) {
             auto listIter = storeMap.find(info.storeId);
             if (listIter == storeMap.end()) {
                 return;
