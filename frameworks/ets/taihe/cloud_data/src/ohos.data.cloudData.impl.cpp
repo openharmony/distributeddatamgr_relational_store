@@ -24,7 +24,8 @@ namespace AniCloudData {
 using namespace OHOS::Rdb;
 static constexpr size_t MAX_ACTIONS = 1000;
 std::mutex ConfigImpl::syncInfoObserversMutex_;
-std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>>>> ConfigImpl::syncInfoObservers_;
+std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>>>>
+    ConfigImpl::syncInfoObservers_;
 
 bool VerifyExtraData(const ExtraData &data)
 {

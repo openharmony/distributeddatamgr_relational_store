@@ -438,6 +438,7 @@ int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vecto
     if (type >= CloudSubscribeType::SUBSCRIBE_TYPE_MAX) {
         return INVALID_ARGUMENT_V20;
     }
+    std::vector<BundleInfo> unsubInfos;
     if (observer != nullptr) {
         auto processStore = [&observer](auto &storeMap, const auto &info) {
             auto listIter = storeMap.find(info.storeId);
@@ -451,6 +452,9 @@ int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vecto
             if (observerList.empty()) {
                 storeMap.erase(listIter);
             }
+            if (storeMap.empty()) {
+                unsubInfos.push_back(info);
+            }
         };
         for (const auto &info : bundleInfos) {
             subObservers_.ComputeIfPresent(info.bundleName,
@@ -460,8 +464,11 @@ int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vecto
                 });
         }
     }
+    if (unsubInfos.empty()) {
+        return SUCCESS;
+    }
     MessageParcel reply;
-    int32_t status = IPC_SEND(TRANS_UNSUBSCRIBE, reply, type, bundleInfos);
+    int32_t status = IPC_SEND(TRANS_UNSUBSCRIBE, reply, type, unsubInfos);
     if (status != SUCCESS) {
         LOG_ERROR("Unsubscribe failed: status=0x%{public}x", status);
     }

@@ -99,7 +99,8 @@ private:
         const std::vector<CloudData::BundleInfo> &toUnsubscribe, napi_value callback, bool hasCallback);
 
     static std::mutex syncInfoObserversMutex_;
-    static std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>>>> syncInfoObservers_;
+    static std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>>>>
+        syncInfoObservers_;
 };
 
 } // namespace OHOS::CloudData
