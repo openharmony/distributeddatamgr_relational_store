@@ -153,6 +153,7 @@ public:
         ohos::data::relationalStore::ConflictResolution conflict);
     void RekeySync(taihe::optional_view<ohos::data::relationalStore::CryptoParam> cryptoParam);
     void RekeyExSync(ohos::data::relationalStore::CryptoParam const& cryptoParam);
+    void RekeySyncWithEncryptionKey(taihe::array_view<uint8_t> encryptKey);
     void SetLocaleSync(taihe::string_view locale);
 
 private:
