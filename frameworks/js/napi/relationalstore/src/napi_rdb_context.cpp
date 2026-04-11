@@ -64,6 +64,15 @@ int ParseCryptoParam(const napi_env env, const napi_value arg, std::shared_ptr<R
     return OK;
 }
 
+int ParseEncryptionkey(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
+{
+    auto status = JSUtils::Convert2Value(env, arg, context->encryptionKey);
+    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("encryptionKey", "valid encryptionKey."));
+
+    context->cryptoParam.encryptKey_ = context->encryptionKey;
+    return OK;
+}
+
 int ParseColumnName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     context->columnName = JSUtils::Convert2String(env, arg);

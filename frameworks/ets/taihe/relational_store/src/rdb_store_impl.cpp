@@ -1731,6 +1731,22 @@ void RdbStoreImpl::RekeySync(taihe::optional_view<ohos::data::relationalStore::C
     }
 }
 
+void RdbStoreImpl::RekeySyncWithEncryptionKey(taihe::array_view<uint8_t> encryptKey)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    std::vector<uint8_t> key(encryptKey.begin(), encryptKey.end());
+    NativeRdb::RdbStoreConfig::CryptoParam cryptoParamNative = ani_rdbutils::Uint8ArrayParamToNative(key);
+
+    ASSERT_RETURN_THROW_ERROR(cryptoParamNative.IsValid(),
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal EncryptKey."), RDB_REVT_NOTHING);
+    auto errCode = store->Rekey(cryptoParamNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
+    }
+}
+
 void RdbStoreImpl::RekeyExSync(ohos::data::relationalStore::CryptoParam const& cryptoParam)
 {
     auto store = GetResource();
