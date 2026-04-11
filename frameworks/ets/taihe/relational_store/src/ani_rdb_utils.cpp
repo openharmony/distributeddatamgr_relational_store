@@ -64,6 +64,8 @@ OHOS::NativeRdb::AssetValue::Status AssetStatusToNative(ohos::data::relationalSt
             return OHOS::NativeRdb::AssetValue::Status::STATUS_ABNORMAL;
         case ohos::data::relationalStore::AssetStatus::key_t::ASSET_DOWNLOADING:
             return OHOS::NativeRdb::AssetValue::Status::STATUS_DOWNLOADING;
+        case ohos::data::relationalStore::AssetStatus::key_t::ASSET_TO_DOWNLOAD:
+            return OHOS::NativeRdb::AssetValue::Status::STATUS_TO_DOWNLOAD;
         default:
             LOG_ERROR("Invalid AssetStatus value.");
             return OHOS::NativeRdb::AssetValue::Status::STATUS_UNKNOWN;
@@ -85,9 +87,27 @@ ohos::data::relationalStore::AssetStatus AssetStatusToAni(OHOS::NativeRdb::Asset
             return ohos::data::relationalStore::AssetStatus::key_t::ASSET_ABNORMAL;
         case OHOS::NativeRdb::AssetValue::Status::STATUS_DOWNLOADING:
             return ohos::data::relationalStore::AssetStatus::key_t::ASSET_DOWNLOADING;
+        case OHOS::NativeRdb::AssetValue::Status::STATUS_TO_DOWNLOAD:
+            return ohos::data::relationalStore::AssetStatus::key_t::ASSET_TO_DOWNLOAD;
         default:
             LOG_ERROR("Invalid AssetStatus value.");
             return ohos::data::relationalStore::AssetStatus::key_t::ASSET_NORMAL;
+    }
+}
+
+OHOS::DistributedRdb::AssetConflictPolicy AssetConflictPolicyToNative(
+    ohos::data::relationalStore::AssetConflictPolicy policy)
+{
+    switch (policy.get_key()) {
+        case ohos::data::relationalStore::AssetConflictPolicy::key_t::CONFLICT_POLICY_DEFAULT:
+            return OHOS::DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_DEFAULT;
+        case ohos::data::relationalStore::AssetConflictPolicy::key_t::CONFLICT_POLICY_TIME_FIRST:
+            return OHOS::DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_TIME_FIRST;
+        case ohos::data::relationalStore::AssetConflictPolicy::key_t::CONFLICT_POLICY_TEMP_PATH:
+            return OHOS::DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_TEMP_PATH;
+        default:
+            LOG_ERROR("Invalid AssetConflictPolicy value.");
+            return OHOS::DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_DEFAULT;
     }
 }
 
@@ -599,6 +619,18 @@ std::pair<bool, NativeDistributedConfig> DistributedConfigToNative(
     if (config.enableCloud.has_value()) {
         nativeConfig.enableCloud = config.enableCloud.value();
     }
+    if (config.assetConflictPolicy.has_value()) {
+        nativeConfig.assetConflictPolicy = AssetConflictPolicyToNative(config.assetConflictPolicy.value());
+    }
+    if (config.assetTempPath.has_value()) {
+        nativeConfig.assetTempPath = std::string(config.assetTempPath.value());
+    }
+    if (config.assetDownloadOnDemand.has_value()) {
+        nativeConfig.assetDownloadOnDemand = config.assetDownloadOnDemand.value();
+    }
+    if (config.autoSyncSwitch.has_value()) {
+        nativeConfig.autoSyncSwitch = config.autoSyncSwitch.value();
+    }
     if (!config.tableType.has_value()) {
         return { true, nativeConfig };
     }
@@ -664,7 +696,8 @@ ohos::data::relationalStore::ProgressDetails ProgressDetailToTaihe(
     return ohos::data::relationalStore::ProgressDetails {
         ohos::data::relationalStore::Progress::from_value(OrgDetails.progress),
         ohos::data::relationalStore::ProgressCode::from_value(OrgDetails.code),
-        mapTableDetail
+        mapTableDetail,
+        ::taihe::optional<::taihe::string>::make(OrgDetails.message)
     };
 }
 

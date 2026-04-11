@@ -70,8 +70,11 @@ public:
         const std::string &id, const std::vector<BundleInfo> &bundleInfos) override;
     int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const AsyncDetail &async) override;
+    int32_t StopCloudSyncTask(const std::vector<BundleInfo> &bundleInfos) override;
     int32_t InitNotifier(sptr<IRemoteObject> notifier) override;
     int32_t InitNotifier();
+    int32_t SubscribeCloudSyncTrigger(std::shared_ptr<ISyncInfoObserver> observer) override;
+    int32_t UnSubscribeCloudSyncTrigger(std::shared_ptr<ISyncInfoObserver> observer) override;
     int32_t Subscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
         std::shared_ptr<ISyncInfoObserver> observer) override;
     int32_t Unsubscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
@@ -81,14 +84,18 @@ public:
     void ImportSubObservers(SubObservers &observers);
 
 private:
+    using CloudSyncTriggerObservers = std::vector<std::shared_ptr<ISyncInfoObserver>>;
     int32_t DoAsync(const std::string &bundleName, const std::string &storeId, Option option);
     int32_t DoSubscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos);
     void OnSyncComplete(uint32_t seqNum, Details &&result);
+    CloudSyncTriggerObservers cloudSyncTriggerObservers_;
     void OnSyncInfoNotify(const BatchQueryLastResults &data);
     void CollectObserverData(const std::string &bundleName, const std::map<std::string, CloudSyncInfo> &storeResults,
         const std::map<std::string, std::list<SubObserverParam>> &storeMap,
         std::map<std::shared_ptr<ISyncInfoObserver>, BatchQueryLastResults> &observerData);
-
+    void OnCloudSyncTrigger(const int32_t triggerMode);
+    int32_t DoSubscribeCloudSyncTrigger();
+    int32_t DoUnSubscribeCloudSyncTrigger();
     sptr<IRemoteObject> remote_;
     sptr<CloudNotifierStub> notifier_;
     ConcurrentMap<uint32_t, AsyncDetail> syncCallbacks_;

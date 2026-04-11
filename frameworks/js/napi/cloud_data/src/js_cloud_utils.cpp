@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cstdint>
 #define LOG_TAG "JSCloudUtils"
 #include "js_cloud_utils.h"
 
@@ -204,6 +205,42 @@ int32_t Convert2Value(napi_env env, napi_value input, BundleInfo &output)
 }
 
 template<>
+int32_t Convert2Value(napi_env env, napi_value input, CloudSyncConfig &output)
+{
+    napi_valuetype type = napi_undefined;
+    napi_status status = napi_typeof(env, input, &type);
+    if (status != napi_ok || type != napi_object) {
+        LOG_ERROR("Invalid input type: status=%{public}d, type=%{public}d", status, type);
+        return napi_invalid_arg;
+    }
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "mode", output.mode), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "downloadOnly", output.isDownloadOnly, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "enablePredicate", output.isEnablePredicate, true),
+        napi_invalid_arg);
+
+    napi_value predicatesValue = nullptr;
+    status = napi_get_named_property(env, input, "predicates", &predicatesValue);
+    if (status == napi_ok && !JSUtils::IsNull(env, predicatesValue)) {
+        std::shared_ptr<RdbPredicates> predicates = nullptr;
+        auto ret = Convert2Value(env, predicatesValue, predicates);
+        if (ret == napi_ok && predicates != nullptr) {
+            output.predicates = predicates;
+            output.isEnablePredicate = true;
+        }
+    }
+
+    if (output.isEnablePredicate && output.predicates == nullptr) {
+        LOG_ERROR("isEnablePredicate is true but predicates is null");
+        return napi_invalid_arg;
+    }
+    if (!output.isEnablePredicate && output.predicates != nullptr) {
+        LOG_ERROR("isEnablePredicate is false but predicates is not null");
+        return napi_invalid_arg;
+    }
+    return napi_ok;
+}
+
+template<>
 napi_value Convert2JSValue(napi_env env, const Participant &value)
 {
     napi_value jsValue = nullptr;
@@ -351,6 +388,18 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::Statistic &value)
         DECLARE_JS_PROPERTY(env, "successful", value.success),
         DECLARE_JS_PROPERTY(env, "failed", value.failed),
         DECLARE_JS_PROPERTY(env, "remained", value.untreated),
+    };
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
+    return object;
+}
+
+template<>
+napi_value Convert2JSValue(napi_env env, const int32_t &value)
+{
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "mode", value),
     };
     napi_value object = nullptr;
     NAPI_CALL_RETURN_ERR(

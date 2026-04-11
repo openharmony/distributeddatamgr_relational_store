@@ -36,6 +36,8 @@ public:
         bool isAsync = false;
         bool isAutoSync = false;
         bool isCompensation = false;
+        bool isEnablePredicate = false;
+        bool isDownloadOnly = false;
     };
     using ResultSet = NativeRdb::ResultSet;
     inline static constexpr const char *SERVICE_NAME = "relational_store";
@@ -54,6 +56,8 @@ public:
 
     virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) = 0;
+
+    virtual int32_t StopCloudSync(const RdbSyncerParam &param) = 0;
 
     virtual int32_t Subscribe(
         const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) = 0;

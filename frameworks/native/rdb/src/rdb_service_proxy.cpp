@@ -178,8 +178,8 @@ int32_t RdbServiceProxy::DoAsync(
             return RDB_ERROR;
         }
     }
-    LOG_INFO("bundleName:%{public}s, storeName:%{public}s, num=%{public}u, start DoAsync", param.bundleName_.c_str(),
-        SqliteUtils::Anonymous(param.storeName_).c_str(), asyncOption.seqNum);
+    LOG_INFO("bundleName:%{public}s, storeName:%{public}s, num=%{public}u, start DoAsync",
+        param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(), asyncOption.seqNum);
     if (DoAsync(param, asyncOption, predicates) != RDB_OK) {
         syncCallbacks_.Erase(asyncOption.seqNum);
         return RDB_ERROR;
@@ -245,6 +245,17 @@ int32_t RdbServiceProxy::Sync(
         return DoAsync(param, option, predicates, async);
     }
     return DoSync(param, option, predicates, async);
+}
+
+int32_t RdbServiceProxy::StopCloudSync(const RdbSyncerParam &param)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_STOP_CLOUD_SYNC), reply, param);
+    if (status != RDB_OK) {
+        LOG_ERROR("StopCloudSync failed, status:%{public}d, bundleName:%{public}s, storeName:%{public}s",
+            status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
 }
 
 int32_t RdbServiceProxy::Subscribe(

@@ -87,6 +87,18 @@ struct ExtraData {
     extraData: String;
 }
 
+enum AutoSyncTriggerMode: i32 {
+    ACCOUNT_LOGIN = 0,
+    CLOUD_SWITCH_ON = 1,
+    NETWORK_RECOVER = 2,
+    CLOUD_DATA_CHANGE = 3,
+    USER_CHANGE = 4
+}
+
+struct AutoSyncTriggerInfo {
+    mode: AutoSyncTriggerMode;
+}
+
 @class
 interface Config {
 }
@@ -162,6 +174,14 @@ function OnSyncInfoChanged(bundleInfos: Array<BundleInfo>, progress: (data: @rec
 @static("Config")
 function OffSyncInfoChanged(bundleInfos: Array<BundleInfo>, progress: Optional<(data: @record Map<String, @record Map<String, SyncInfo>>)=> void>): void;
 
+@static("Config")
+@gen_promise("stopCloudSync")
+function StopCloudSyncImpl(bundleInfos: Array<BundleInfo>): void;
+
 @gen_promise("setCloudStrategy")
 function SetCloudStrategyImpl(strategy: StrategyType, param: Optional<Array<ValueType>>): void;
 
+function OnAutoSyncTrigger(observer: (data: AutoSyncTriggerInfo) => void): void;
+
+function OffAutoSyncTrigger(observer: Optional<(data: AutoSyncTriggerInfo) => void>): void;
+ 	 

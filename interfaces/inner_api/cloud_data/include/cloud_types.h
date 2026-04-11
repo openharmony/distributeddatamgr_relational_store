@@ -106,7 +106,8 @@ using BatchQueryLastResults = std::map<std::string, QueryLastResults>;
 class ISyncInfoObserver {
 public:
     virtual ~ISyncInfoObserver() = default;
-    virtual void OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data) = 0;
+    virtual void OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data) {};
+    virtual void OnSyncInfoChanged(const int32_t mode) {};
 };
 
 constexpr const char *DATA_CHANGE_EVENT_ID = "cloud_data_change";
@@ -220,5 +221,88 @@ struct DBActionInfo {
 struct ClearConfig {
     std::map<std::string, DBActionInfo> dbInfo;
 };
+enum CloudSyncScene : int32_t {
+    /**
+    * @brief Enable cloud sync
+    */
+    ENABLE_CLOUD = 0,
+    
+    /**
+    * @brief Disable cloud sync
+    */
+    DISABLE_CLOUD = 1,
+    
+    /**
+    * @brief Switch on app cloud sync
+    */
+    SWITCH_ON = 2,
+    
+    /**
+    * @brief Switch off app cloud sync
+    */
+    SWITCH_OFF = 3,
+    
+    /**
+    * @brief Query sync info
+    */
+    QUERY_SYNC_INFO = 4,
+    
+    /**
+    * @brief User change
+    */
+    USER_CHANGE = 5,
+    
+    /**
+    * @brief User unlock
+    */
+    USER_UNLOCK = 6,
+    
+    /**
+    * @brief Network recovery
+    */
+    NETWORK_RECOVERY = 7,
+    
+    /**
+    * @brief Service initialization
+    */
+    SERVICE_INIT = 8,
+    
+    /**
+    * @brief Account stop
+    */
+    ACCOUNT_STOP = 9,
+    /**
+    * @brief Push from server
+    */
+    PUSH = 10,
+};
+
+enum TriggerScene : int32_t {
+    /**
+    * @brief Trigger when enable cloud sync
+    */
+    TRIGGER_ENABLE_CLOUD = 0,
+    
+    /**
+    * @brief Trigger when switch on app cloud sync
+    */
+    TRIGGER_SWITCH_ON = 1,
+
+    /**
+    * @brief Trigger when network recovery
+    */
+    TRIGGER_NETWORK_RECOVERY = 2,
+   
+    /**
+    * @brief Trigger when p from server
+    */
+    TRIGGER_PUSH = 3,
+
+    /**
+    * @brief Trigger when user change
+    */
+    TRIGGER_USER_CHANGE = 4,
+};
+
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_H
