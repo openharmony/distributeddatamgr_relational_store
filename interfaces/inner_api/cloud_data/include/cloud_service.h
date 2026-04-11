@@ -47,6 +47,7 @@ public:
         TRANS_QUERY_LAST_SYNC_INFO_BATCH,
         TRANS_SET_GLOBAL_CLOUD_STRATEGY,
         TRANS_CLOUD_SYNC,
+        TRANS_STOP_CLOUD_SYNC,
         TRANS_SUBSCRIBE,
         TRANS_UNSUBSCRIBE,
         TRANS_CONFIG_BUTT,
@@ -64,6 +65,8 @@ public:
         TRANS_CLIENT_HEAD = TRANS_SHARE_BUTT,
         TRANS_SET_CLOUD_STRATEGY = TRANS_CLIENT_HEAD,
         TRANS_INIT_NOTIFIER,
+        TRANS_SUBSCRIBE_CLOUD_SYNC_TRIGGER,
+        TRANS_UNSUBSCRIBE_CLOUD_SYNC_TRIGGER,
         TRANS_CLIENT_BUTT,
         TRANS_BUTT = TRANS_CLIENT_BUTT,
     };
@@ -106,6 +109,7 @@ public:
     struct Option {
         int32_t syncMode;
         uint32_t seqNum = 0;
+        bool isDownloadOnly = false;
     };
 
     static const int INVALID_USER_ID = -1;
@@ -145,7 +149,10 @@ public:
         const std::string &id, const std::vector<BundleInfo> &bundleInfos) = 0;
     virtual int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const DistributedRdb::AsyncDetail &async) = 0;
+    virtual int32_t StopCloudSyncTask(const std::vector<BundleInfo> &bundleInfos) = 0;
     virtual int32_t InitNotifier(sptr<IRemoteObject> notifier) = 0;
+    virtual int32_t SubscribeCloudSyncTrigger(std::shared_ptr<ISyncInfoObserver> observer) = 0;
+    virtual int32_t UnSubscribeCloudSyncTrigger(std::shared_ptr<ISyncInfoObserver> observer) = 0;
 
     virtual int32_t Subscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
         std::shared_ptr<ISyncInfoObserver> observer) = 0;

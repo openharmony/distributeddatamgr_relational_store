@@ -17,14 +17,19 @@
 #define CLOUD_DATA_JS_CLIENT_H
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "cloud_types.h"
+#include "js_uv_queue.h"
 
 namespace OHOS::CloudData {
+using namespace OHOS::AppDataMgrJsKit;
+
 napi_value InitClient(napi_env env, napi_value info);
 }
 

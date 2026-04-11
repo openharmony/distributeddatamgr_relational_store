@@ -1758,7 +1758,10 @@ HWTEST_F(RdbPredicatesInterfaceTest, RdbStore_GetDistributedPredicates_027, Test
     EXPECT_EQ(distributedRdbPredicates.operations_.size(), 3UL);
     EXPECT_EQ(distributedRdbPredicates.operations_[0].operator_, OHOS::DistributedRdb::EQUAL_TO);
     EXPECT_EQ(distributedRdbPredicates.operations_[0].field_, "stringValue");
-    EXPECT_EQ(distributedRdbPredicates.operations_[0].values_[0], "ABCDEFGHIJKLMN");
+    if (auto val = std::get_if<std::string>(&distributedRdbPredicates.operations_[0].values_[0])) {
+        std::string valString = *val;
+        EXPECT_EQ(valString, std::string("ABCDEFGHIJKLMN"));
+    }
 }
 
 /* *

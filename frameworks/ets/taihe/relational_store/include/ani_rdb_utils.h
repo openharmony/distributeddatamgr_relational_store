@@ -80,6 +80,8 @@ OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalSt
 std::pair<bool, NativeDistributedTableType> DistributedTableTypeToNative(TaiheDistributedType type);
 std::pair<bool, NativeDistributedConfig> DistributedConfigToNative(
     const TaiheDistributedConfig &config, NativeDistributedTableType &nativeType);
+OHOS::DistributedRdb::AssetConflictPolicy AssetConflictPolicyToNative(
+    ohos::data::relationalStore::AssetConflictPolicy policy);
 std::pair<bool, NativeDistributedInfo> DistributedInfoToNative(const TaiheDistributedInfo &info);
 OHOS::DistributedRdb::Reference ReferenceToNative(
     const ohos::data::relationalStore::Reference &reference);

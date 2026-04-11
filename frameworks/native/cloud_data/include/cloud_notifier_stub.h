@@ -33,17 +33,21 @@ class CloudNotifierStub : public IRemoteStub<CloudNotifierStubBroker> {
 public:
     using SyncCompleteHandler = std::function<void(uint32_t, Details &&)>;
     using SyncInfoNotifyHandler = std::function<void(const BatchQueryLastResults &)>;
-    explicit CloudNotifierStub(const SyncCompleteHandler &syncComplete);
-    explicit CloudNotifierStub(const SyncCompleteHandler &syncComplete, const SyncInfoNotifyHandler &subscribeNotify);
+    using CloudSyncTriggerHandler = std::function<void(int32_t)>;
+    explicit CloudNotifierStub(const SyncCompleteHandler &syncComplet);
+    explicit CloudNotifierStub(const SyncCompleteHandler &syncComplete, const SyncInfoNotifyHandler &subscribeNotify,
+        const CloudSyncTriggerHandler &triggerHandler = nullptr);
     virtual ~CloudNotifierStub() noexcept;
 
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
     int32_t OnComplete(uint32_t seqNum, Details &&result) override;
+    int32_t OnCloudSyncTrigger(const int32_t triggerMode) override;
     int32_t OnSyncInfoNotify(const BatchQueryLastResults &data) override;
 
 private:
     int32_t OnCompleteInner(MessageParcel& data, MessageParcel& reply);
     int32_t OnSyncInfoNotifyInner(MessageParcel& data, MessageParcel& reply);
+    int32_t OnCloudSyncTriggerInner(MessageParcel& data, MessageParcel& reply);
     bool CheckInterfaceToken(MessageParcel& data);
 
     using RequestHandle = int32_t (CloudNotifierStub::*)(MessageParcel&, MessageParcel&);
@@ -51,10 +55,13 @@ private:
         [static_cast<uint32_t>(NotifierCode::CLOUD_NOTIFIER_CMD_SYNC_COMPLETE)] = &CloudNotifierStub::OnCompleteInner,
         [static_cast<uint32_t>(NotifierCode::CLOUD_NOTIFIER_CMD_SYNC_INFO_NOTIFY)] =
             &CloudNotifierStub::OnSyncInfoNotifyInner,
+        [static_cast<uint32_t>(NotifierCode::CLOUD_NOTIFIER_CMD_SYNC_TRIGGER)] =
+            &CloudNotifierStub::OnCloudSyncTriggerInner,
     };
 
     SyncCompleteHandler completeNotifier_;
     SyncInfoNotifyHandler syncInfoNotifier_;
+    CloudSyncTriggerHandler triggerHandler_;
 };
 } // namespace OHOS::CloudData
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_NOTIFIER_STUB_H
