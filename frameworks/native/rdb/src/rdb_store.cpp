@@ -660,6 +660,13 @@ int RdbStore::CleanDirtyData(const std::string &table, uint64_t cursor)
     return E_NOT_SUPPORT;
 }
 
+int RdbStore::CleanDeviceDirtyData(const std::string &table, uint64_t cursor)
+{
+    (void)table;
+    (void)cursor;
+    return E_NOT_SUPPORT;
+}
+
 int RdbStore::GetRebuilt(RebuiltType &rebuilt)
 {
     (void)rebuilt;

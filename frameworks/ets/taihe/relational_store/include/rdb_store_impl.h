@@ -72,6 +72,7 @@ public:
     void CleanDirtyDataWithCursor(string_view table, uint64_t cursor);
     void CleanDirtyDataWithTable(string_view table);
     void CleanDirtyDataWithOptionCursor(string_view table, optional_view<uint64_t> cursor);
+    void CleanDeviceDirtyDataWithOptionCursor(string_view table, optional_view<uint64_t> cursor);
     ResultSet QuerySharingResourceWithOptionColumn(weak::RdbPredicates predicates,
         optional_view<array<string>> columns);
     ResultSet QuerySharingResourceWithPredicate(weak::RdbPredicates predicates);

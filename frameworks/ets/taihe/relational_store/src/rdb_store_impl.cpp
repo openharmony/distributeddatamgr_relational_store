@@ -34,6 +34,7 @@
 #include "rdb_predicates_impl.h"
 #include "rdb_result_set_bridge.h"
 #include "rdb_sql_log.h"
+#include "rdb_sql_utils.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
 #include "rdb_utils.h"
@@ -532,6 +533,34 @@ void RdbStoreImpl::CleanDirtyDataWithOptionCursor(string_view table, optional_vi
     } else {
         CleanDirtyDataWithTable(table);
     }
+}
+
+void RdbStoreImpl::CleanDeviceDirtyDataWithOptionCursor(string_view table, optional_view<uint64_t> cursor)
+{
+    if (!isSystemApp_) {
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_NON_SYSTEM_APP);
+        return;
+    }
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(
+        store != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    uint64_t nativeCursor = 0;
+    if (cursor.has_value()) {
+        ASSERT_RETURN_THROW_ERROR(
+            cursor.value() >= 0, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS), RDB_DO_NOTHING);
+        nativeCursor = cursor.value();
+    }
+    std::string nativeTable(table);
+    if (!RdbSqlUtils::IsValidTableName(nativeTable)) {
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS);
+        return;
+    }
+    int32_t errCode = store->CleanDeviceDirtyData(nativeTable, nativeCursor);
+    if (errCode == OHOS::NativeRdb::E_OK) {
+        return;
+    }
+    errCode = errCode != OHOS::NativeRdb::E_NOT_SUPPORT ? errCode : OHOS::NativeRdb::E_NOT_SUPPORT_NEW;
+    ThrowInnerErrorExt(errCode);
 }
 
 ResultSet RdbStoreImpl::QuerySharingResourceWithOptionColumn(weak::RdbPredicates predicates,

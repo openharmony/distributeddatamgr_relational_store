@@ -73,6 +73,8 @@ struct RdbDebugInfo {
 struct DistributedField {
     static constexpr const char *ORIGIN = "#_origin";
     static constexpr const char *ORIGIN_ORIDEVICE = "#_ori_device";
+    static constexpr const char *CURSOR_FIELD = "#_cursor";
+    static constexpr const char *DELETED_FLAG_FIELD = "#_deleted_flag";
 };
 
 enum DistributedOrigin {
@@ -109,6 +111,7 @@ struct RdbSyncerParam {
     uint32_t roleType_ = 0;
     bool isEncrypt_ = false;
     bool isAutoClean_ = true;
+    bool isAutoCleanDevice_ = true;
     bool isSearchable_ = false;
     std::vector<uint8_t> password_;
     std::map<std::string, RdbDebugInfo> infos_;

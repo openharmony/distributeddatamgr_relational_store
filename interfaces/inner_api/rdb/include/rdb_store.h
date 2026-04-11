@@ -797,6 +797,16 @@ public:
     virtual int CleanDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX);
 
     /**
+     * @brief Cleans dirty data of device deleted in the cloud.
+     *
+     * If a cursor is specified, data with a cursor smaller than the specified cursor will be cleaned up.
+     * otherwise clean all.
+     *
+     * @param table Indicates the specified table.
+     */
+    virtual int CleanDeviceDirtyData(const std::string &table, uint64_t cursor = UINT64_MAX);
+
+    /**
      * @brief Gets the rebuilt_ status of the database.
      */
     virtual int GetRebuilt(RebuiltType &rebuilt);

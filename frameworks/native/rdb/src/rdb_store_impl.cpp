@@ -107,6 +107,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.isAutoClean_ = config.GetAutoClean();
+    syncerParam_.isAutoCleanDevice_ = config.GetAutoCleanDevice();
     syncerParam_.isSearchable_ = config.IsSearchable();
     syncerParam_.password_ = config.GetEncryptKey();
     syncerParam_.haMode_ = config.GetHaMode();
@@ -346,6 +347,31 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
         LOG_ERROR("The database is busy or closed.");
         return errCode;
     }
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    errCode = conn->CleanDirtyData(table, cursor);
+    return errCode == E_OK ? E_OK : E_ERROR;
+}
+
+int RdbStoreImpl::CleanDeviceDirtyData(const std::string &table, uint64_t cursor)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
+        return E_NOT_SUPPORT;
+    }
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK) {
+        LOG_ERROR("The database is busy or closed.");
+        return errCode;
+    }
+
     errCode = conn->CleanDirtyData(table, cursor);
     return errCode;
 }

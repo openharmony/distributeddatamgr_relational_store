@@ -79,6 +79,7 @@ struct StoreConfig {
     customDir: Optional<String>;
     rootDir: Optional<String>;
     autoCleanDirtyData: Optional<bool>;
+    autoCleanDeviceDirtyData: Optional<bool>;
     isSearchable: Optional<bool>;
     allowRebuild: Optional<bool>;
     vector: Optional<bool>;
@@ -213,7 +214,9 @@ enum DistributedTableType : i32 {
 
 enum DistributedField : String {
     ORIGIN = "#_origin",
-    ORIGIN_ORIDEVICE = "#_ori_device"
+    ORIGIN_ORIDEVICE = "#_ori_device",
+    CURSOR_FIELD = "#_cursor",
+    DELETED_FLAG_FIELD = "#_deleted_flag"
 }
  
 enum DistributedOrigin : i32 {
@@ -780,6 +783,9 @@ interface RdbStore {
 
     @gen_promise("cleanDirtyData")
     CleanDirtyDataWithOptionCursor(table: String, cursor: Optional<u64>): void;
+
+    @gen_promise("cleanDeviceDirtyData")
+    CleanDeviceDirtyDataWithOptionCursor(table: String, cursor: Optional<u64>): void;
 
     @gen_promise("querySharingResource")
     QuerySharingResourceWithOptionColumn(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
