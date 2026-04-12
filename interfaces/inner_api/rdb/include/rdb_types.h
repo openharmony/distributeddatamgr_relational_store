@@ -124,6 +124,7 @@ struct RdbSyncerParam {
     int32_t subUser_ = 0;
     RdbDfxInfo dfxInfo_;
     int32_t distributedTableMode_ = DEVICE_COLLABORATION;
+    bool customSwitch_ = false;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
@@ -142,6 +143,8 @@ enum SyncMode {
     TIME_FIRST = 4,
     NATIVE_FIRST,
     CLOUD_FIRST,
+    CLOUD_CUSTOM_PUSH, //only upload
+    CLOUD_CUSTOM_PULL, //only download
 };
 
 struct SyncOption {
@@ -199,6 +202,7 @@ struct DistributedConfig {
     bool asyncDownloadAsset = false;
     bool enableCloud = true;
     int32_t tableType = DEVICE_COLLABORATION;
+    bool customSwitch = false;
 };
 
 enum Progress {
@@ -216,6 +220,7 @@ enum ProgressCode {
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
     BLOCKED_BY_NETWORK_STRATEGY,
+    CLOUD_TASK_INTERRUPTED,
 };
 
 struct Statistic {
