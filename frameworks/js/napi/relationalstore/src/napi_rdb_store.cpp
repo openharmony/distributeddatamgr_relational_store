@@ -1765,7 +1765,6 @@ void ParseNotObjectParams(napi_env env, size_t argc, napi_value *argv, std::shar
             CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
             context->rdbPredicates = context->predicatesProxy->GetPredicates();
             index++;
-            }
         }
     }
     CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index++], context));
