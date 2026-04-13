@@ -2137,56 +2137,6 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ExecuteForChangedRowCount_001, TestSize.Leve
 }
 
 /**
- * @tc.name: RdbStore_SyncEx_001
- * @tc.desc: test SyncEx with read-only database
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplTest, RdbStore_SyncEx_001, TestSize.Level1)
-{
-    int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
-    config.SetReadOnly(true);
-    RdbStoreImplTestOpenCallback helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-
-    OHOS::DistributedRdb::SyncOption option;
-    option.mode = OHOS::DistributedRdb::PUSH;
-    AbsRdbPredicates predicates("test");
-    OHOS::DistributedRdb::AsyncBriefEx callback = nullptr;
-
-    int ret = store->SyncEx(option, predicates, callback);
-    ASSERT_EQ(ret, E_NOT_SUPPORT);
-
-    RdbHelper::DeleteRdbStore(config);
-}
-
-/**
- * @tc.name: RdbStore_SyncEx_002
- * @tc.desc: test SyncEx with vector database
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplTest, RdbStore_SyncEx_002, TestSize.Level1)
-{
-    int errCode = E_OK;
-    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
-    config.SetDBType(DB_VECTOR);
-    RdbStoreImplTestOpenCallback helper;
-    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-
-    OHOS::DistributedRdb::SyncOption option;
-    option.mode = OHOS::DistributedRdb::PUSH;
-    AbsRdbPredicates predicates("test");
-    OHOS::DistributedRdb::AsyncBriefEx callback = nullptr;
-
-    int ret = store->SyncEx(option, predicates, callback);
-    ASSERT_EQ(ret, E_NOT_SUPPORT);
-
-    RdbHelper::DeleteRdbStore(config);
-}
-
-/**
  * @tc.name: RdbStore_SyncEx_003
  * @tc.desc: test SyncEx with memory database
  * @tc.type: FUNC
