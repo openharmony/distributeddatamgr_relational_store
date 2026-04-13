@@ -102,6 +102,7 @@ public:
     [[deprecated("Use In(const std::string &, const std::vector<ValueObject> &) instead.")]]
     API_EXPORT virtual AbsPredicates *In(const std::string &field, const std::vector<std::string> &values);
     API_EXPORT virtual AbsPredicates *In(const std::string &field, const std::vector<ValueObject> &values);
+
     [[deprecated("Use NotIn(const std::string &, const std::vector<ValueObject> &) instead.")]]
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<std::string> &values);
     API_EXPORT virtual AbsPredicates *NotIn(const std::string &field, const std::vector<ValueObject> &values);

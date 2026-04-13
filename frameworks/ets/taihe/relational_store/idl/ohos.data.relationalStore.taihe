@@ -31,7 +31,14 @@ enum AssetStatus: i32 {
     ASSET_UPDATE,
     ASSET_DELETE,
     ASSET_ABNORMAL,
-    ASSET_DOWNLOADING
+    ASSET_DOWNLOADING,
+    ASSET_TO_DOWNLOAD
+}
+
+enum AssetConflictPolicy: i32 {
+    CONFLICT_POLICY_DEFAULT = 0,
+    CONFLICT_POLICY_TIME_FIRST = 1,
+    CONFLICT_POLICY_TEMP_PATH = 2
 }
 
 struct Asset {
@@ -150,13 +157,15 @@ enum ProgressCode: i32 {
     LOCKED_BY_OTHERS,
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
-    BLOCKED_BY_NETWORK_STRATEGY
+    BLOCKED_BY_NETWORK_STRATEGY,
+    STOP_CLOUD_SYNC
 }
 
 struct ProgressDetails {
     schedule: Progress;
     code: ProgressCode;
     details: @record Map<String, TableDetails>;
+    messge: Optional<String>;
 }
 
 struct SqlExecutionInfo {
@@ -231,12 +240,23 @@ struct Reference {
     refFields: @record Map<String, String>;
 }
 
+struct CloudSyncConfig {
+    mode: i32;
+    downloadOnly: Optional<bool>;
+    enablePredicate: Optional<bool>;
+    predicates: Optional<RdbPredicates>;
+}
+
 struct DistributedConfig {
     autoSync: bool;
     references: Optional<Array<Reference>>;
     asyncDownloadAsset: Optional<bool>;
     enableCloud: Optional<bool>;
     tableType: Optional<DistributedTableType>;
+    autoSyncSwitch: Optional<bool>;
+    assetConflictPolicy: Optional<AssetConflictPolicy>;
+    assetTempPath: Optional<String>;
+    assetDownloadOnDemand: Optional<bool>;
 }
 
 struct DistributedInfo {
@@ -906,6 +926,13 @@ interface RdbStore {
     @gen_async("cloudSync")
     @gen_promise("cloudSync")
     CloudSyncWithPredicates(mode: SyncMode, predicates: RdbPredicates, progress: (p : ProgressDetails) => void): void;
+
+    @gen_async("cloudSync")
+    @gen_promise("cloudSync")
+    CloudSyncWithConfig(config: CloudSyncConfig, progress: (p : ProgressDetails) => void): void;
+
+    @gen_promise("stopCloudSync")
+    StopCloudSyncPromise(): void;
 
     @gen_async("remoteQuery")
     @gen_promise("remoteQuery")

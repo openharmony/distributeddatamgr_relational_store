@@ -28,6 +28,9 @@
 #include "values_buckets.h"
 
 namespace OHOS {
+namespace NativeRdb {
+class RdbPredicates;
+}
 namespace DistributedRdb {
 enum RdbStatus {
     RDB_OK,
@@ -99,6 +102,12 @@ struct QueryOptions {
     bool isGotoNextRowReturnLastError = false;
 };
 
+enum AssetConflictPolicy {
+    CONFLICT_POLICY_DEFAULT = 0,
+    CONFLICT_POLICY_TIME_FIRST = 1,
+    CONFLICT_POLICY_TEMP_PATH = 2
+};
+
 struct RdbSyncerParam {
     std::string bundleName_;
     std::string hapName_;
@@ -125,6 +134,10 @@ struct RdbSyncerParam {
     RdbDfxInfo dfxInfo_;
     int32_t distributedTableMode_ = DEVICE_COLLABORATION;
     bool customSwitch_ = false;
+    bool autoSyncSwitch_ = true;
+    int32_t assetConflictPolicy_ = CONFLICT_POLICY_DEFAULT;
+    std::string assetTempPath_ = {};
+    bool assetDownloadOnDemand_ = false;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
@@ -151,6 +164,15 @@ struct SyncOption {
     SyncMode mode;
     bool isBlock;
     bool enableErrorDetail;
+    bool isDownloadOnly = false;
+    bool isEnablePredicate = false;
+};
+
+struct CloudSyncConfig {
+    int32_t mode = 0;
+    bool isDownloadOnly = false;
+    bool isEnablePredicate = false;
+    std::shared_ptr<NativeRdb::RdbPredicates> predicates = nullptr;
 };
 
 enum DistributedTableType {
@@ -204,6 +226,10 @@ struct DistributedConfig {
     bool enableCloud = true;
     int32_t tableType = DEVICE_COLLABORATION;
     bool customSwitch = false;
+    bool autoSyncSwitch = true;
+    int32_t assetConflictPolicy = CONFLICT_POLICY_DEFAULT;
+    std::string assetTempPath = {};
+    bool assetDownloadOnDemand = false;
 };
 
 enum Progress {
@@ -221,7 +247,7 @@ enum ProgressCode {
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
     BLOCKED_BY_NETWORK_STRATEGY,
-    CLOUD_TASK_INTERRUPTED,
+    STOP_CLOUD_SYNC,
 };
 
 struct Statistic {
@@ -243,6 +269,7 @@ struct ProgressDetail {
     int32_t code;
     std::string message;
     TableDetails details;
+    std::string message;
 };
 
 enum class SyncResultCode {
@@ -312,11 +339,11 @@ enum RdbPredicateOperator {
     NOT_GLOB,
     OPERATOR_MAX
 };
-
+using DataValue = std::variant<int64_t, std::string>;
 struct RdbPredicateOperation {
     RdbPredicateOperator operator_;
     std::string field_;
-    std::vector<std::string> values_;
+    std::vector<DataValue> values_;
 };
 
 struct PredicatesMemo {
@@ -324,10 +351,26 @@ struct PredicatesMemo {
     {
         operations_.push_back({ op, field, { value } });
     }
+    inline void AddOperation(const RdbPredicateOperator op, const std::string &field, const int64_t &value)
+    {
+        operations_.push_back({ op, field, { value } });
+    }
     inline void AddOperation(
         const RdbPredicateOperator op, const std::string &field, const std::vector<std::string> &values)
     {
-        operations_.push_back({ op, field, values });
+        std::vector<DataValue> values_;
+        values_.reserve(values.size());
+        std::copy(values.begin(), values.end(), std::back_inserter(values_));
+        operations_.push_back({ op, field, values_ });
+    }
+
+    inline void AddOperation(
+        const RdbPredicateOperator op, const std::string &field, const std::vector<int64_t> &values)
+    {
+        std::vector<DataValue> values_;
+        values_.reserve(values.size());
+        std::copy(values.begin(), values.end(), std::back_inserter(values_));
+        operations_.push_back({ op, field, values_ });
     }
 
     std::vector<std::string> tables_;

@@ -124,6 +124,7 @@ public:
     int SyncEx(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBriefEx &callback) override;
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async) override;
+    int StopCloudSync() override;
     int Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) override;
     int UnSubscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) override;
     int SubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer) override;
@@ -252,6 +253,7 @@ private:
     int StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatus);
     int RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
         std::shared_ptr<ConnectionPool> pool);
+    bool IsInvalidDistributedConfig(const DistributedRdb::DistributedConfig &distributedConfig);
     static int32_t RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path);
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
