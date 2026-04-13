@@ -499,6 +499,11 @@ static constexpr int E_NON_SYSTEM_APP = (E_BASE + 0x5b);
 * @brief The error code for the database does not support this scenario.
 */
 static constexpr int E_NOT_SUPPORT_NEW = (E_BASE + 0x5c);
+
+/**
+* @brief The error code for permission denied.
+*/
+static constexpr int E_SYNC_PERMISSION_DENIED = (E_BASE + 0x5d);
 } // namespace NativeRdb
 } // namespace OHOS
 

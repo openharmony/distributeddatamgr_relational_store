@@ -718,12 +718,37 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     return Sync(option, predicate, [callback](Details &&details) {
         Briefs briefs;
         for (auto &[key, value] : details) {
-            briefs.insert_or_assign(key, value.code);
+            briefs.insert_or_assign(key, value.code == 0 ? 0 : 1);
         }
         if (callback != nullptr) {
             callback(briefs);
         }
     });
+}
+
+int RdbStoreImpl::SyncEx(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBriefEx &callback)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        return E_NOT_SUPPORT;
+    }
+    auto errorCode = Sync(option, predicate, [callback](Details &&details) {
+        if (callback != nullptr) {
+            BriefsEx briefsEx;
+            for (auto &[key, value] : details) {
+                SyncResultInfo syncResultInfo;
+                syncResultInfo.code = static_cast<uint32_t>(value.code);
+                syncResultInfo.device = std::move(key);
+                syncResultInfo.message = std::move(value.message);
+                briefsEx.emplace_back(std::move(syncResultInfo));
+            }
+            callback(briefsEx);
+        }
+    });
+    if (errorCode == RdbStatus::RDB_PERMISSION_DENIED) {
+        return E_SYNC_PERMISSION_DENIED;
+    }
+    return errorCode;
 }
 
 int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async)
@@ -740,6 +765,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
+    rdbOption.enableErrorDetail = option.enableErrorDetail;
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
     ret = InnerSync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), async);
     return ret;
@@ -1153,7 +1179,7 @@ int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLo
     int errCode = statement->ModifyLockStatus(predicates.GetTableName(), hashKeys, isLock);
     if (errCode == E_WAIT_COMPENSATED_SYNC) {
         LOG_DEBUG("Start compensation sync.");
-        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true, true };
+        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true, true, false};
         auto memo = AbsRdbPredicates(predicates.GetTableName()).GetDistributedPredicates();
         InnerSync(syncerParam_, option, memo, nullptr);
         return E_OK;
@@ -2736,7 +2762,7 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
         if (tables.empty()) {
             return;
         }
-        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true };
+        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true, false, false };
         auto memo = AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
         InnerSync(param, option, memo, nullptr);
     });

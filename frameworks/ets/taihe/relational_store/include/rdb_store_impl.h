@@ -102,6 +102,7 @@ public:
     int64_t UpdateDistributedInfoAsync(DistributedInfo info, weak::RdbPredicates predicates);
     string ObtainDistributedTableNameSync(string_view device, string_view table);
     void SyncAsync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback);
+    uintptr_t SyncExPromise(SyncMode mode, weak::RdbPredicates predicates);
     uintptr_t SyncPromise(SyncMode mode, weak::RdbPredicates predicates);
     void CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const &)> progress);
     void CloudSyncWithTable(
@@ -158,6 +159,7 @@ public:
 
 private:
     void Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise);
+    void SyncEx(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise);
     template<class FuncType>
     void OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode, FuncType callback, uintptr_t opq);
     void OffDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode, taihe::optional_view<uintptr_t> opq);

@@ -544,6 +544,14 @@ std::string RdbStore::ObtainDistributedTableName(const std::string &device, cons
     return table + "_" + device;
 }
 
+int RdbStore::SyncEx(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBriefEx &callback)
+{
+    (void)option;
+    (void)predicate;
+    (void)callback;
+    return 0;
+}
+
 int RdbStore::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async)
 {
     (void)option;

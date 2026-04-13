@@ -150,6 +150,7 @@ enum SyncMode {
 struct SyncOption {
     SyncMode mode;
     bool isBlock;
+    bool enableErrorDetail;
 };
 
 enum DistributedTableType {
@@ -240,7 +241,29 @@ using TableDetails = std::map<std::string, TableDetail>;
 struct ProgressDetail {
     int32_t progress;
     int32_t code;
+    std::string message;
     TableDetails details;
+};
+
+enum class SyncResultCode {
+    SUCCESS = 0,
+    FAIL,
+    OFFLINE,
+    INVALID_ARGS,
+    DISTRIBUTED_TABLE_NOT_SET,
+    TABLE_FIELD_MISMATCH,
+    DISTRIBUTED_SCHEMA_MISMATCH,
+    BUSY,
+    CORRUPTED,
+    TIMEOUT,
+    SCHEMA_CHANGED,
+    CONSTRAINT_VIOLATION,
+};
+
+struct SyncResultInfo {
+    std::string device;
+    uint32_t code = static_cast<uint32_t>(SyncResultCode::SUCCESS);
+    std::string message;
 };
 
 using Briefs = std::map<std::string, int>;
@@ -250,6 +273,12 @@ using AsyncDetail = std::function<void(Details &&)>;
 
 using SyncResult = Briefs;
 using SyncCallback = AsyncBrief;
+
+using BriefsEx = std::vector<SyncResultInfo>;
+using AsyncBriefEx = std::function<void(const BriefsEx &)>;
+
+using SyncResultEx = BriefsEx;
+using SyncCallbackEx = AsyncBriefEx;
 
 enum RdbPredicateOperator {
     EQUAL_TO,
