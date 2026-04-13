@@ -1720,8 +1720,6 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
                     enumArg = context->enumArg]() mutable {
         SyncOption option{ static_cast<DistributedRdb::SyncMode>(enumArg), false, false };
         auto ret = rdbStore->Sync(option, predicates, [queue, defer, callback](const SyncResult &result) {
-
-            LOG_ERROR("LYY_DEV RdbStoreProxy::Sync 111 ");
             auto args = [result](napi_env env, int &argc, napi_value *argv) {
                 argv[1] = JSUtils::Convert2JSValue(env, result);
             };
@@ -1729,7 +1727,6 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
                 queue->AsyncPromise({ defer }, args, "DistributedSync::OnComplete");
         });
         if (ret != NativeRdb::E_OK) {
-            LOG_ERROR("LYY_DEV RdbStoreProxy::Sync 222 ");
             auto args = [ret](napi_env env, int &argc, napi_value *argv) mutable {
                 SetBusinessError(env, std::make_shared<InnerError>(ret), &argv[0]);
             };
