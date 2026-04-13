@@ -267,7 +267,6 @@ using TableDetails = std::map<std::string, TableDetail>;
 struct ProgressDetail {
     int32_t progress;
     int32_t code;
-    std::string message;
     TableDetails details;
     std::string message;
 };
