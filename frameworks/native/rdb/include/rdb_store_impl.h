@@ -121,6 +121,7 @@ public:
     int32_t RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     std::string ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async) override;
+    int SyncEx(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBriefEx &callback) override;
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async) override;
     int Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) override;

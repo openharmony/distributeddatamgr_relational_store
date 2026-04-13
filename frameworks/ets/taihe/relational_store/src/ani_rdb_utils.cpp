@@ -917,6 +917,43 @@ OHOS::NativeRdb::Tokenizer TokenizerToNative(ohos::data::relationalStore::Tokeni
     }
 }
 
+ani_ref SyncResultCodeToAni(ani_env *env, uint32_t code)
+{
+    static constexpr uint32_t ANI_SYNC_RESULT_CODE[] = {
+        0,  // SUCCESS
+        1,  // FAIL
+        3,  // OFFLINE (native=2 -> ani=3)
+        2,  // INVALID_ARGS (native=3 -> ani=2)
+        4,  // DISTRIBUTED_TABLE_NOE_SET
+        5,  // TABLE_FIELD_MISMATCH
+        6,  // DISTRIBUTED_SCHEMA_MISMATCH
+        7,  // BUSY
+        8,  // CORRUPTED
+        9,  // TIME_OUT
+        10, // SCHEMA_CHANGED
+        11, // CONSTRAINT_VIOLATION
+    };
+
+    if (code >= sizeof(ANI_SYNC_RESULT_CODE) / sizeof(ANI_SYNC_RESULT_CODE[0])) {
+        LOG_ERROR("Invalid SyncResultCode value: %{public}u.", code);
+        code = static_cast<uint32_t>(OHOS::DistributedRdb::SyncResultCode::FAIL);
+    }
+
+    ani_enum enumType;
+    if (ANI_OK != env->FindEnum("@ohos.data.relationalStore.relationalStore.SyncResultCode", &enumType)) {
+        LOG_ERROR("Find SyncResultCode enum failed.");
+        return nullptr;
+    }
+
+    ani_enum_item enumItem = nullptr;
+    if (ANI_OK != env->Enum_GetEnumItemByIndex(enumType, ANI_SYNC_RESULT_CODE[code], &enumItem)) {
+        LOG_ERROR("Enum_GetEnumItemByIndex failed, code: %{public}u.", code);
+        return nullptr;
+    }
+
+    return static_cast<ani_ref>(enumItem);
+}
+
 ohos::data::relationalStore::SqlInfo SqlInfoToTaihe(const OHOS::NativeRdb::SqlInfo &sqlInfo)
 {
     std::vector<ohos::data::relationalStore::ValueType> argsTaihe;
@@ -1083,5 +1120,49 @@ bool WarpDate(double time, ani_object &outObj)
     }
     LOG_ERROR("Object_CallMethodByName_Double success, double:%{public}lf", msObj);
     return true;
+}
+
+ani_status ConvertSyncResultInfos2AniValue(
+    ani_env *env, const std::vector<OHOS::DistributedRdb::SyncResultInfo> &values, ani_object &result)
+{
+    if (env == nullptr) {
+        LOG_ERROR("[ANI] env is nullptr.");
+        return ANI_ERROR;
+    }
+    size_t vectorSize = values.size();
+    ani_array resArray = {};
+    ani_ref element = {};
+    ANI_CHECK_RETURN(env->GetUndefined(&element));
+    ANI_CHECK_RETURN(env->Array_New(vectorSize, element, &resArray));
+
+    int i = 0;
+    for (const auto &value : values) {
+        ani_object syncResultObj = {};
+        if (ani_utils::CreateAniObj(env, "@ohos.data.relationalStore.SyncResult", "<ctor>", ":", &syncResultObj) !=
+            ANI_OK) {
+            LOG_ERROR("[ANI] Create SyncResultInfo object failed.");
+            return ANI_ERROR;
+        }
+
+        ani_string deviceStr = {};
+        ANI_CHECK_RETURN(env->String_NewUTF8(value.device.c_str(), value.device.size(), &deviceStr));
+        ANI_CHECK_RETURN(env->Object_SetPropertyByName_Ref(syncResultObj, "device", deviceStr));
+
+        ani_ref codeRef = SyncResultCodeToAni(env, value.code);
+        if (codeRef == nullptr) {
+            LOG_ERROR("[ANI] SyncResultCodeToAni failed.");
+            return ANI_ERROR;
+        }
+        ANI_CHECK_RETURN(env->Object_SetPropertyByName_Ref(syncResultObj, "code", codeRef));
+
+        ani_string messageStr = {};
+        ANI_CHECK_RETURN(env->String_NewUTF8(value.message.c_str(), value.message.size(), &messageStr));
+        ANI_CHECK_RETURN(env->Object_SetPropertyByName_Ref(syncResultObj, "message", messageStr));
+
+        ANI_CHECK_RETURN(env->Array_Set(resArray, i++, static_cast<ani_ref>(syncResultObj)));
+    }
+
+    result = resArray;
+    return ANI_OK;
 }
 } //namespace ani_rdbutils

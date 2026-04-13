@@ -68,6 +68,16 @@
                     ],
                     "when": "inuse"
                 }
+            },
+            {
+                "name": "ohos.permission.DISTRIBUTED_DATASYNC",
+                "reason": "$string:permission_reason",
+                "usedScene": {
+                    "abilities": [
+                        "MainAbility"
+                    ],
+                    "when": "inuse"
+                }
             }
         ]
     }

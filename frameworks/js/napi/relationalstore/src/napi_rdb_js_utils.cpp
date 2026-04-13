@@ -629,5 +629,23 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetVersion(rdbConfig.version);
     return rdbStoreConfig;
 }
+
+template<>
+napi_value Convert2JSValue(napi_env env, const SyncResultInfo &syncResultInfo)
+{
+    auto outputCode = syncResultInfo.code;
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "device", syncResultInfo.device),
+        DECLARE_JS_PROPERTY(env, "code", outputCode),
+        DECLARE_JS_PROPERTY(env, "message", syncResultInfo.message),
+    };
+
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
+    return object;
+}
+
+
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit

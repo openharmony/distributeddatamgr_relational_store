@@ -131,7 +131,7 @@ std::pair<int32_t, Details> RdbServiceProxy::DoSync(
         return result;
     }
 
-    if (!ITypesUtil::Unmarshal(reply, details)) {
+    if (!ITypesUtil::Unmarshal(reply, status, details)) {
         LOG_ERROR("read result failed.");
         status = RDB_ERROR;
         return result;

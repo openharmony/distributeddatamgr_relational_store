@@ -244,6 +244,27 @@ struct DistributedInfo {
     oriDevice: Optional<String>;
 }
 
+enum SyncResultCode : i32 {
+    SUCCESS = 0,
+    FAIL,
+    OFFLINE,
+    INVALID_ARGS,
+    DISTRIBUTED_TABLE_NOE_SET,
+    TABLE_FIELD_MISMATCH,
+    DISTRIBUTED_SCHEMA_MISMATCH,
+    BUSY,
+    CORRUPTED,
+    TIME_OUT,
+    SCHEMA_CHANGED,
+    CONSTRAINT_VIOLATION,
+}
+
+struct SyncResult {
+    device: String;
+    code: SyncResultCode;
+    message: String;
+}
+
 enum ConflictResolution  : i32 {
     ON_CONFLICT_NONE = 0,
     ON_CONFLICT_ROLLBACK = 1,
@@ -865,6 +886,9 @@ interface RdbStore {
     @gen_async("obtainDistributedTableName")
     @gen_promise("obtainDistributedTableName")
     ObtainDistributedTableNameSync(device: String, table: String): String;
+
+    @rename("syncEx")
+    SyncExPromise(mode: SyncMode, predicates: RdbPredicates): @sts_type("Promise<Array<SyncResult>>") Opaque;
 
     @rename("sync")
     SyncPromise(mode: SyncMode, predicates: RdbPredicates): @sts_type("Promise<Array<[string, int]>>") Opaque;

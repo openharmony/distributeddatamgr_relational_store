@@ -43,7 +43,8 @@ bool Marshalling(const NotifyConfig &input, MessageParcel &data)
 template<>
 bool Marshalling(const Option &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.mode, input.seqNum, input.isAsync, input.isAutoSync, input.isCompensation);
+    return ITypesUtil::Marshal(
+        data, input.mode, input.seqNum, input.isAsync, input.isAutoSync, input.isCompensation, input.enableErrorDetail);
 }
 
 template<>
@@ -113,12 +114,12 @@ bool Unmarshalling(Asset &output, MessageParcel &data)
 template<>
 bool Marshalling(const ProgressDetail &input, MessageParcel &data)
 {
-    return Marshal(data, input.progress, input.code, input.details);
+    return Marshal(data, input.progress, input.code, input.details, input.message);
 }
 template<>
 bool Unmarshalling(ProgressDetail &output, MessageParcel &data)
 {
-    return Unmarshal(data, output.progress, output.code, output.details);
+    return Unmarshal(data, output.progress, output.code, output.details, output.message);
 }
 template<>
 bool Marshalling(const TableDetail &input, MessageParcel &data)
