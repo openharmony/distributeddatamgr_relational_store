@@ -1011,7 +1011,7 @@ void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t
         ThrowParamError("mode must be a SyncMode of device.");
         return;
     }
-    OHOS::DistributedRdb::SyncOption option{ nativeMode, false };
+    OHOS::DistributedRdb::SyncOption option{ nativeMode, false, false };
     std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
     if (!context->Init(callback)) {
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
@@ -1039,6 +1039,48 @@ void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t
     }
 }
 
+void RdbStoreImpl::SyncEx(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
+    auto nativeMode = ani_rdbutils::SyncModeToNative(mode);
+    if (nativeMode != OHOS::DistributedRdb::SyncMode::PUSH && nativeMode != OHOS::DistributedRdb::SyncMode::PULL) {
+        ThrowParamError("mode must be a SyncMode of device.");
+        return;
+    }
+
+    OHOS::DistributedRdb::SyncOption option{ nativeMode, false, true};
+    std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
+    if (!context->Init(callback)) {
+        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
+        return;
+    }
+    promise = context->promise_;
+    ::taihe::env_guard gurd;
+    auto env = gurd.get_env();
+    auto nativeSyncCallback = [context](const OHOS::DistributedRdb::SyncResultEx &data) {
+        ::taihe::env_guard gurd;
+        auto callbackEnv = gurd.get_env();
+        ani_object object = {};
+        ani_status status = ani_rdbutils::ConvertSyncResultInfos2AniValue(callbackEnv, data, object);
+        context->result_ = static_cast<ani_ref>(object);
+        if (status != ANI_OK || context->result_ == nullptr) {
+            context->error_ = std::make_shared<InnerError>(NativeRdb::E_ERROR);
+        }
+        AniAsyncCall::ReturnResult(context, callbackEnv);
+    };
+    int errCode = store->SyncEx(option, *rdbPredicateNative, nativeSyncCallback);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        context->error_ = std::make_shared<InnerError>(errCode);
+        AniAsyncCall::ReturnResult(context, env);
+        return;
+    }
+}
+
 void RdbStoreImpl::SyncAsync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback)
 {
     ani_object promise = nullptr;
@@ -1049,6 +1091,13 @@ uintptr_t RdbStoreImpl::SyncPromise(SyncMode mode, weak::RdbPredicates predicate
 {
     ani_object promise = nullptr;
     Sync(mode, predicates, 0, promise);
+    return reinterpret_cast<uintptr_t>(promise);
+}
+
+uintptr_t RdbStoreImpl::SyncExPromise(SyncMode mode, weak::RdbPredicates predicates)
+{
+    ani_object promise = nullptr;
+    SyncEx(mode, predicates, 0, promise);
     return reinterpret_cast<uintptr_t>(promise);
 }
 

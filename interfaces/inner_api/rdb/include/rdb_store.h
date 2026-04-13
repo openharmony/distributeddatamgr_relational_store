@@ -48,6 +48,7 @@ public:
      */
     using Briefs = DistributedRdb::Briefs;
     using AsyncBrief = DistributedRdb::AsyncBrief;
+    using AsyncBriefEx = DistributedRdb::AsyncBriefEx;
 
     /**
      * @brief Use AsyncBrief replace DistributedRdb::AsyncBrief namespace.
@@ -700,6 +701,14 @@ public:
      * @return Returns the distributed table name.
      */
     virtual std::string ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode);
+
+    /**
+     * @brief SyncEx data between devices.
+     *
+     * @param device Indicates the remote device.
+     * @param predicate Indicates the AbsRdbPredicates {@link AbsRdbPredicates} object.
+     */
+    virtual int SyncEx(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBriefEx &callback);
 
     /**
      * @brief Sync data between devices or cloud.

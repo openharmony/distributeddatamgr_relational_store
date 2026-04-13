@@ -36,6 +36,7 @@ public:
         bool isAsync = false;
         bool isAutoSync = false;
         bool isCompensation = false;
+        bool enableErrorDetail = false;
         bool isEnablePredicate = false;
         bool isDownloadOnly = false;
     };

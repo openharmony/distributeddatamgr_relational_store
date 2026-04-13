@@ -55,8 +55,10 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_INVALID_SECRET_KEY, 14800020, "The secret key is corrupted or lost." },
     { NativeRdb::E_SQLITE_IOERR_FULL, 14800028, "SQLite: Some kind of disk I/O error occurred." },
     { NativeRdb::E_INVALID_ARGS_NEW, 14800001, "Invalid args." },
+    { NativeRdb::E_SYNC_PERMISSION_DENIED, 201, "Permission denied." },
     { NativeRdb::E_NOT_SUPPORT, 801, "Capability not support." },
 };
+
 
 // Error codes that cannot be thrown in some old scenarios need to be converted in new scenarios.
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS_EXT[] = {
