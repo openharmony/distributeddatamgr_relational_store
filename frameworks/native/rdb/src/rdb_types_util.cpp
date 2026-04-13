@@ -22,7 +22,8 @@ bool Marshalling(const SyncerParam &input, MessageParcel &data)
         input.type_, input.isEncrypt_, input.password_, input.customDir_, input.isAutoClean_, input.isSearchable_,
         input.haMode_, input.infos_, input.tokenIds_, input.uids_, input.user_, input.permissionNames_,
         input.asyncDownloadAsset_, input.enableCloud_, input.subUser_, input.dfxInfo_, input.distributedTableMode_,
-        input.isAutoCleanDevice_, input.customSwitch_);
+        input.isAutoCleanDevice_, input.customSwitch_, input.autoSyncSwitch_, input.assetConflictPolicy_,
+        input.assetTempPath_, input.assetDownloadOnDemand_);
 }
 template<>
 bool Unmarshalling(SyncerParam &output, MessageParcel &data)
@@ -31,7 +32,8 @@ bool Unmarshalling(SyncerParam &output, MessageParcel &data)
         output.level_, output.type_, output.isEncrypt_, output.password_, output.customDir_, output.isAutoClean_,
         output.isSearchable_, output.haMode_, output.infos_, output.tokenIds_, output.uids_, output.user_,
         output.permissionNames_, output.asyncDownloadAsset_, output.enableCloud_, output.subUser_, output.dfxInfo_,
-        output.distributedTableMode_, output.isAutoCleanDevice_, output.customSwitch_);
+        output.distributedTableMode_, output.isAutoCleanDevice_, output.customSwitch_, output.autoSyncSwitch_,
+        output.assetConflictPolicy_, output.assetTempPath_, output.assetDownloadOnDemand_);
 }
 
 template<>
@@ -43,7 +45,8 @@ bool Marshalling(const NotifyConfig &input, MessageParcel &data)
 template<>
 bool Marshalling(const Option &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.mode, input.seqNum, input.isAsync, input.isAutoSync, input.isCompensation);
+    return ITypesUtil::Marshal(data, input.mode, input.seqNum, input.isAsync, input.isAutoSync, input.isCompensation,
+        input.isEnablePredicate, input.isDownloadOnly);
 }
 
 template<>

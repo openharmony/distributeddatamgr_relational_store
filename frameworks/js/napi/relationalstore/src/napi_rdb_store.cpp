@@ -1522,6 +1522,7 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
     properties.push_back(DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName));
     properties.push_back(DECLARE_NAPI_FUNCTION("sync", Sync));
     properties.push_back(DECLARE_NAPI_FUNCTION("cloudSync", CloudSync));
+    properties.push_back(DECLARE_NAPI_FUNCTION("stopCloudSync", StopCloudSync));
     properties.push_back(DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime));
     properties.push_back(DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData));
     properties.push_back(DECLARE_NAPI_FUNCTION("cleanDeviceDirtyData", CleanDeviceDirtyData));
@@ -1745,32 +1746,50 @@ void RdbStoreProxy::SetBusinessError(napi_env env, std::shared_ptr<Error> error,
     }
 }
 
+void ParseNotObjectParams(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context)
+{
+    // The number of parameters should be in range (1, 5)
+    CHECK_RETURN_SET_E(argc > 1 && argc < 5, std::make_shared<ParamNumError>("2 - 4"));
+    JSUtils::Convert2ValueExt(env, argv[0], context->syncMode);
+    CHECK_RETURN(OK == ParseCloudSyncModeArg(env, argv[0], context));
+    uint32_t index = 1;
+    bool isArray = false;
+    napi_is_array(env, argv[index], &isArray);
+    if (isArray) {
+        CHECK_RETURN(OK == ParseTablesName(env, argv[index], context));
+        index++;
+    } else {
+        auto status = napi_unwrap(env, argv[index], reinterpret_cast<void **>(&context->predicatesProxy));
+        if (status == napi_ok && context->predicatesProxy != nullptr) {
+            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+            CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
+            context->rdbPredicates = context->predicatesProxy->GetPredicates();
+            index++;
+        }
+    }
+    CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index++], context));
+    CHECK_RETURN_SET_E(index == argc - 1 || index == argc, std::make_shared<ParamNumError>("2 - 4"));
+    if (index == argc - 1) {
+        CHECK_RETURN(OK == ParseCallback(env, argv[index], context));
+    }
+}
+
 InputAction GetCloudSyncInput(std::shared_ptr<RdbStoreContext> context)
 {
     return [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         // The number of parameters should be in range (1, 5)
         CHECK_RETURN_SET_E(argc > 1 && argc < 5, std::make_shared<ParamNumError>("2 - 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
-        CHECK_RETURN(OK == ParseCloudSyncModeArg(env, argv[0], context));
-        uint32_t index = 1;
-        bool isArray = false;
-        napi_is_array(env, argv[index], &isArray);
-        if (isArray) {
-            CHECK_RETURN(OK == ParseTablesName(env, argv[index], context));
-            index++;
+        napi_valuetype arg0Type = napi_undefined;
+        napi_typeof(env, argv[0], &arg0Type);
+        
+        if (arg0Type == napi_object) {
+            // The number of parameters should be 2
+            CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2"));
+            CHECK_RETURN(OK == ParseCloudSyncConfig(env, argv[0], context));
+            CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[1], context));
         } else {
-            auto status = napi_unwrap(env, argv[index], reinterpret_cast<void **>(&context->predicatesProxy));
-            if (status == napi_ok && context->predicatesProxy != nullptr) {
-                RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
-                context->rdbPredicates = context->predicatesProxy->GetPredicates();
-                index++;
-            }
-        }
-        CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index++], context));
-        CHECK_RETURN_SET_E(index == argc - 1 || index == argc, std::make_shared<ParamNumError>("2 - 4"));
-        if (index == argc - 1) {
-            CHECK_RETURN(OK == ParseCallback(env, argv[index], context));
+            ParseNotObjectParams(env, argc, argv, context);
         }
     };
 }
@@ -1784,6 +1803,8 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         SyncOption option;
         option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
+        option.isDownloadOnly = context->cloudSyncConfig.isDownloadOnly;
+        option.isEnablePredicate = context->cloudSyncConfig.isEnablePredicate;
         option.isBlock = false;
         CHECK_RETURN_ERR(obj != nullptr && context->rdbStore != nullptr);
         auto rdbStore = context->StealRdbStore();
@@ -1813,6 +1834,26 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAll(env, info, input, exec, output);
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value RdbStoreProxy::StopCloudSync(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+    };
+    auto exec = [context]() -> int {
+        LOG_DEBUG("RdbStoreProxy::StopCloudSync Async.");
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        return context->StealRdbStore()->StopCloudSync();
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        auto status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }

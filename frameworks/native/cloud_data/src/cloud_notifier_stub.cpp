@@ -31,8 +31,9 @@ CloudNotifierStub::CloudNotifierStub(const SyncCompleteHandler &completeNotifier
 }
 
 CloudNotifierStub::CloudNotifierStub(const SyncCompleteHandler &syncComplete,
-    const SyncInfoNotifyHandler &subscribeNotify)
-    : IRemoteStub<CloudNotifierStubBroker>(), completeNotifier_(syncComplete), syncInfoNotifier_(subscribeNotify)
+    const SyncInfoNotifyHandler &subscribeNotify, const CloudSyncTriggerHandler &triggerHandler)
+    : IRemoteStub<CloudNotifierStubBroker>(), completeNotifier_(syncComplete), syncInfoNotifier_(subscribeNotify),
+    triggerHandler_(triggerHandler)
 {
 }
 CloudNotifierStub::~CloudNotifierStub() noexcept
@@ -89,6 +90,24 @@ int32_t CloudNotifierStub::OnSyncInfoNotify(const BatchQueryLastResults &data)
         syncInfoNotifier_(data);
     }
     return CloudService::SUCCESS;
+}
+
+int32_t CloudNotifierStub::OnCloudSyncTrigger(const int32_t triggerMode)
+{
+    if (triggerHandler_) {
+        triggerHandler_(triggerMode);
+    }
+    return CloudService::SUCCESS;
+}
+
+int32_t CloudNotifierStub::OnCloudSyncTriggerInner(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t triggerMode = 0;
+    if (!ITypesUtil::Unmarshal(data, triggerMode)) {
+        LOG_ERROR("read cloud sync trigger params failed.");
+        return CloudService::ERROR;
+    }
+    return OnCloudSyncTrigger(triggerMode);
 }
 
 int32_t CloudNotifierStub::OnSyncInfoNotifyInner(MessageParcel& data, MessageParcel& reply)
