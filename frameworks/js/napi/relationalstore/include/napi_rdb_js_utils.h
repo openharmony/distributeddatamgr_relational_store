@@ -55,6 +55,8 @@ using KdfAlgo = NativeRdb::KdfAlgo;
 using EncryptAlgo = NativeRdb::EncryptAlgo;
 using CryptoParam = NativeRdb::RdbStoreConfig::CryptoParam;
 using ConfigVersion = NativeRdb::ConfigVersion;
+using SyncResultInfo = OHOS::DistributedRdb::SyncResultInfo;
+
 struct RdbConfig {
     bool isEncrypt = false;
     bool isSearchable = false;
@@ -166,6 +168,9 @@ template<>
 napi_value Convert2JSValue(napi_env env, const ReturningResult &value);
 std::shared_ptr<Error> GetRealPath(napi_env env, napi_value jsValue, const ContextParam &param, RdbConfig &rdbConfig);
 RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam &param);
+template<>
+napi_value Convert2JSValue(napi_env env, const SyncResultInfo &syncResultInfo);
+
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit
 #endif // RDB_JSKIT_NAPI_RDB_JS_UTILS_H
