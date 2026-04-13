@@ -568,6 +568,11 @@ int RdbStore::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, 
     return E_NOT_SUPPORT;
 }
 
+int RdbStore::StopCloudSync()
+{
+    return E_NOT_SUPPORT;
+}
+
 int RdbStore::Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer)
 {
     (void)option;

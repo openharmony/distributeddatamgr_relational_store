@@ -119,6 +119,7 @@ static napi_value ExportProgressCode(napi_env env)
     SET_NAPI_PROPERTY(progressCode, "RECORD_LIMIT_EXCEEDED", int32_t(ProgressCode::RECORD_LIMIT_EXCEEDED));
     SET_NAPI_PROPERTY(progressCode, "NO_SPACE_FOR_ASSET", int32_t(ProgressCode::NO_SPACE_FOR_ASSET));
     SET_NAPI_PROPERTY(progressCode, "BLOCKED_BY_NETWORK_STRATEGY", int32_t(ProgressCode::BLOCKED_BY_NETWORK_STRATEGY));
+    SET_NAPI_PROPERTY(progressCode, "STOP_CLOUD_SYNC", int32_t(ProgressCode::STOP_CLOUD_SYNC));
     napi_object_freeze(env, progressCode);
     return progressCode;
 }
@@ -248,6 +249,7 @@ static napi_value ExportAssetStatus(napi_env env)
     SET_NAPI_PROPERTY(assetStatus, "ASSET_DELETE", int32_t(NativeRdb::AssetValue::STATUS_DELETE));
     SET_NAPI_PROPERTY(assetStatus, "ASSET_ABNORMAL", int32_t(NativeRdb::AssetValue::STATUS_ABNORMAL));
     SET_NAPI_PROPERTY(assetStatus, "ASSET_DOWNLOADING", int32_t(NativeRdb::AssetValue::STATUS_DOWNLOADING));
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_TO_DOWNLOAD", int32_t(NativeRdb::AssetValue::STATUS_TO_DOWNLOAD));
     napi_object_freeze(env, assetStatus);
     return assetStatus;
 }
@@ -269,6 +271,25 @@ static napi_value ExportConflictResolution(napi_env env)
 
     napi_object_freeze(env, conflictResolution);
     return conflictResolution;
+}
+
+static napi_value ExportAssetConflictPolicy(napi_env env)
+{
+    napi_value assetConflictPolicy = nullptr;
+    napi_status status = napi_create_object(env, &assetConflictPolicy);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    SET_NAPI_PROPERTY(assetConflictPolicy, "CONFLICT_POLICY_DEFAULT",
+        int32_t(DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_DEFAULT));
+    SET_NAPI_PROPERTY(assetConflictPolicy, "CONFLICT_POLICY_TIME_FIRST",
+        int32_t(DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_TIME_FIRST));
+    SET_NAPI_PROPERTY(assetConflictPolicy, "CONFLICT_POLICY_TEMP_PATH",
+        int32_t(DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_TEMP_PATH));
+
+    napi_object_freeze(env, assetConflictPolicy);
+    return assetConflictPolicy;
 }
 
 static napi_value ExportRebuiltType(napi_env env)
@@ -410,6 +431,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("DistributedType", ExportDistributedType(env)),
         DECLARE_NAPI_PROPERTY("DistributedTableType", ExportDistributedTableType(env)),
         DECLARE_NAPI_PROPERTY("AssetStatus", ExportAssetStatus(env)),
+        DECLARE_NAPI_PROPERTY("AssetConflictPolicy", ExportAssetConflictPolicy(env)),
         DECLARE_NAPI_PROPERTY("ChangeType", ExportChangeType(env)),
         DECLARE_NAPI_PROPERTY("Origin", ExportOrigin(env)),
         DECLARE_NAPI_PROPERTY("Field", ExportField(env)),

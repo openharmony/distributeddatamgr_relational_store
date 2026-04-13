@@ -46,6 +46,11 @@ public:
         called_ = true;
         data_ = data;
     }
+    void OnSyncInfoChanged(const int32_t triggerMode) override
+    {
+        called_ = true;
+        triggerMode_ = triggerMode;
+    }
     bool IsCalled() const
     {
         return called_;
@@ -53,6 +58,10 @@ public:
     const std::map<std::string, QueryLastResults> &GetData() const
     {
         return data_;
+    }
+    const int32_t &GetTriggerMode() const
+    {
+        return triggerMode_;
     }
     void Reset()
     {
@@ -63,6 +72,7 @@ public:
 private:
     bool called_ = false;
     std::map<std::string, QueryLastResults> data_;
+    int32_t triggerMode_;
 };
 
 void AllocSystemHapToken(const HapPolicyParams &policy)
@@ -335,6 +345,8 @@ HWTEST_F(CloudDataTest, ChangeAppSwitch001, TestSize.Level0)
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
     SwitchConfig config;
     auto status = proxy->ChangeAppSwitch(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, 0, config);
+    EXPECT_NE(status, CloudService::SUCCESS);
+    status = proxy->ChangeAppSwitch(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, 1, config);
     EXPECT_NE(status, CloudService::SUCCESS);
 }
 
@@ -811,7 +823,7 @@ HWTEST_F(CloudDataTest, InitNotifier002, TestSize.Level1)
 {
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
-    sptr<CloudNotifierStub> notifier = new (std::nothrow) CloudNotifierStub(nullptr);
+    sptr<CloudNotifierStub> notifier = new (std::nothrow) CloudNotifierStub(nullptr, nullptr);
     auto status = proxy->InitNotifier(notifier);
     EXPECT_EQ(status, CloudService::SUCCESS);
     LOG_INFO("InitNotifier002 test end.");
@@ -1528,5 +1540,32 @@ HWTEST_F(CloudDataTest, OnSyncInfoNotify_ObserverDataVerification, TestSize.Leve
     EXPECT_EQ(receivedData.count(TEST_BUNDLE_NAME), 1u);
     EXPECT_EQ(receivedData.at(TEST_BUNDLE_NAME).at(TEST_STORE_ID).code, 100);
     EXPECT_EQ(receivedData.at(TEST_BUNDLE_NAME).at(TEST_STORE_ID).syncStatus, SyncStatus::FINISHED);
+}
+
+/**
+ * @tc.name: OnSyncInfoNotify_ObserverDataVerification
+ * @tc.desc: Test OnSyncInfoNotify verifies correct data passed to observer
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotify_ObserverDataVerification001, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+ 
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    proxy->SubscribeCloudSyncTrigger(observer);
+ 
+    BatchQueryLastResults data;
+    QueryLastResults storeResults;
+    int32_t triggerMode = 1;
+ 
+    cloudServiceProxy->OnCloudSyncTrigger(triggerMode);
+    EXPECT_TRUE(observer->IsCalled());
+    EXPECT_EQ(observer->GetTriggerMode(), triggerMode);
+    proxy->UnSubscribeCloudSyncTrigger(observer);
 }
 }

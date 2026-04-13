@@ -446,6 +446,9 @@ int RdbStoreImpl::SetDistributedTables(
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
+    if (IsInvalidDistributedConfig(distributedConfig)) {
+        return E_INVALID_ARGS;
+    }
     isNeedSetAcl_ = true;
     SetFileGid(config_, SERVICE_GID);
     if (tables.empty()) {
@@ -460,6 +463,10 @@ int RdbStoreImpl::SetDistributedTables(
     syncerParam_.enableCloud_ = distributedConfig.enableCloud;
     syncerParam_.customSwitch_ = distributedConfig.customSwitch;
     syncerParam_.distributedTableMode_ = distributedConfig.tableType;
+    syncerParam_.autoSyncSwitch_ = distributedConfig.autoSyncSwitch;
+    syncerParam_.assetConflictPolicy_ = distributedConfig.assetConflictPolicy;
+    syncerParam_.assetTempPath_ = distributedConfig.assetTempPath;
+    syncerParam_.assetDownloadOnDemand_ = distributedConfig.assetDownloadOnDemand;
     int32_t errorCode = service->SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
     if (errorCode != E_OK) {
@@ -740,6 +747,8 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
+    rdbOption.isDownloadOnly = option.isDownloadOnly;
+    rdbOption.isEnablePredicate = option.isEnablePredicate;
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
     ret = InnerSync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), async);
     return ret;
@@ -763,6 +772,25 @@ int RdbStoreImpl::InnerSync(
         return errCode;
     }
     return E_OK;
+}
+
+int RdbStoreImpl::StopCloudSync()
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (config_.IsVector() || isMemoryRdb_ || isReadOnly_) {
+        return E_NOT_SUPPORT;
+    }
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK || service == nullptr) {
+        LOG_ERROR("GetRdbService failed when stop cloud sync, err is %{public}d.", errCode);
+        return errCode;
+    }
+    errCode = service->StopCloudSync(syncerParam_);
+    if (errCode != E_OK) {
+        LOG_ERROR("StopCloudSync failed, storeName: %{public}s errCode:0x%{public}x.",
+            SqliteUtils::Anonymous(name_).c_str(), errCode);
+    }
+    return errCode;
 }
 
 std::string RdbStoreImpl::GetUri(const std::string &event)
@@ -3388,5 +3416,13 @@ void RdbStoreImpl::ReplayCallbackImpl(const RdbStoreConfig &config)
         LOG_WARN("start task failed, remove lock for %{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
         readLock->Unlock();
     }
+}
+
+bool RdbStoreImpl::IsInvalidDistributedConfig(const DistributedRdb::DistributedConfig &distributedConfig)
+{
+    if (distributedConfig.assetConflictPolicy != DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_TEMP_PATH) {
+        return false;
+    }
+    return distributedConfig.assetTempPath.empty() || distributedConfig.assetTempPath.find("../") != std::string::npos;
 }
 } // namespace OHOS::NativeRdb
