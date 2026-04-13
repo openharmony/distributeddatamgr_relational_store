@@ -26,6 +26,7 @@ struct AssetValue {
         STATUS_DELETE,
         STATUS_ABNORMAL,
         STATUS_DOWNLOADING,
+        STATUS_TO_DOWNLOAD,
         STATUS_BUTT
     };
     static constexpr uint64_t NO_EXPIRES_TIME = 0;

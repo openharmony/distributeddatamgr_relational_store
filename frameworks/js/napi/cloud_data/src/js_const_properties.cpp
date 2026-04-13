@@ -148,6 +148,21 @@ napi_status InitSharingConstProperties(napi_env env, napi_value exports)
     return napi_define_properties(env, exports, count, properties);
 }
 
+static napi_value ExportAutoSyncTriggerMode(napi_env env)
+{
+    napi_value mode = nullptr;
+    napi_create_object(env, &mode);
+
+    SetNamedProperty(env, mode, "ACCOUNT_LOGIN", TriggerScene::TRIGGER_ENABLE_CLOUD);
+    SetNamedProperty(env, mode, "CLOUD_SWITCH_ON", TriggerScene::TRIGGER_SWITCH_ON);
+    SetNamedProperty(env, mode, "NETWORK_RECOVER", TriggerScene::TRIGGER_NETWORK_RECOVERY);
+    SetNamedProperty(env, mode, "CLOUD_DATA_CHANGE", TriggerScene::TRIGGER_PUSH);
+    SetNamedProperty(env, mode, "USER_CHANGE", TriggerScene::TRIGGER_USER_CHANGE);
+    
+    napi_object_freeze(env, mode);
+    return mode;
+}
+
 napi_status InitClientProperties(napi_env env, napi_value exports)
 {
     if (exports == nullptr) {
@@ -156,6 +171,7 @@ napi_status InitClientProperties(napi_env env, napi_value exports)
     const napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("StrategyType", ExportStrategy(env)),
         DECLARE_NAPI_PROPERTY("NetWorkStrategy", ExportNetWorkStrategy(env)),
+        DECLARE_NAPI_PROPERTY("AutoSyncTriggerMode", ExportAutoSyncTriggerMode(env)),
     };
     size_t count = sizeof(properties) / sizeof(properties[0]);
 

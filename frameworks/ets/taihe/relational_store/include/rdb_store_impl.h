@@ -107,6 +107,9 @@ public:
     void CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const &)> progress);
     void CloudSyncWithTable(
         SyncMode mode, array_view<string> tables, callback_view<void(ProgressDetails const &)> progress);
+    void CloudSyncWithConfig(
+ 	    CloudSyncConfig const &config, callback_view<void(ProgressDetails const &)> progress);
+    void StopCloudSyncPromise();
     void CloudSyncWithPredicates(
         SyncMode mode, weak::RdbPredicates predicates, callback_view<void(ProgressDetails const &)> progress);
     ResultSet RemoteQuerySync(

@@ -16,6 +16,8 @@
 #include "js_client.h"
 
 #include <functional>
+#include <algorithm>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -32,6 +34,12 @@
 namespace OHOS {
 namespace CloudData {
 using namespace OHOS::AppDataMgrJsKit;
+
+namespace {
+std::mutex g_observerMutex;
+std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>> g_observers;
+}
+
 /*
  * [JS API Prototype]
  *     function setCloudStrategy(strategy: StrategyType, param?: Array<commonType.ValueType>): Promise<void>;
@@ -79,9 +87,103 @@ napi_value SetCloudStrategy(napi_env env, napi_callback_info info)
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
 }
 
+napi_value OnAutoSyncTrigger(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value argv[1] = { nullptr };
+    napi_value self = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    ASSERT_ERR(env, status == napi_ok && argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, argv[0], &type);
+    ASSERT_ERR(env, type == napi_function, Status::INVALID_ARGUMENT, "The type of observer must be Callback.");
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
+        }
+        ThrowNapiError(env, state, "");
+        return nullptr;
+    }
+    std::lock_guard<std::mutex> lock(g_observerMutex);
+    // 检查是否已存在相同的observer
+    auto it = std::find_if(g_observers.begin(), g_observers.end(),
+        [&argv](const std::shared_ptr<NapiCloudSyncInfoObserver> &obs) {
+            return *obs == argv[0];
+        });
+    if (it != g_observers.end()) {
+        LOG_WARN("Observer already registered");
+        napi_value result = nullptr;
+        napi_get_undefined(env, &result);
+        return result;
+    }
+    std::shared_ptr<UvQueue> queue = std::make_shared<UvQueue>(env);
+    auto observer = std::make_shared<NapiCloudSyncInfoObserver>(env, argv[0], queue);
+    g_observers.push_back(observer);
+    proxy->SubscribeCloudSyncTrigger(observer);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_value OffAutoSyncTrigger(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value argv[1] = { nullptr };
+    napi_value self = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
+    ASSERT_ERR(env, status == napi_ok, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
+        }
+        ThrowNapiError(env, state, "");
+        return nullptr;
+    }
+    std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>> toRemoveObservers;
+    std::lock_guard<std::mutex> lock(g_observerMutex);
+    if (argc == 0 || argv[0] == nullptr) {
+        // 无参数：清空全部observer
+        for (auto &obs : g_observers) {
+            toRemoveObservers.push_back(obs);
+        }
+        g_observers.clear();
+    } else {
+        // 有参数：移除匹配的observer
+        napi_valuetype type = napi_undefined;
+        napi_typeof(env, argv[0], &type);
+        if (type != napi_function) {
+            ASSERT_ERR(env, false, Status::INVALID_ARGUMENT, "The type of observer must be Callback.");
+        }
+        napi_value callback = argv[0];
+        for (auto obs = g_observers.begin(); obs != g_observers.end();) {
+            if (**obs == callback) {
+                toRemoveObservers.push_back(*obs);
+                obs = g_observers.erase(obs);
+            } else {
+                obs++;
+            }
+        }
+    }
+    for (const auto &observer : toRemoveObservers) {
+        proxy->UnSubscribeCloudSyncTrigger(observer);
+        observer->Clear();
+    }
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
 napi_value InitClient(napi_env env, napi_value exports)
 {
-    napi_property_descriptor properties[] = { DECLARE_NAPI_FUNCTION("setCloudStrategy", SetCloudStrategy) };
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("setCloudStrategy", SetCloudStrategy),
+        DECLARE_NAPI_FUNCTION("onAutoSyncTrigger", OnAutoSyncTrigger),
+        DECLARE_NAPI_FUNCTION("offAutoSyncTrigger", OffAutoSyncTrigger),
+    };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(*properties), properties));
     return exports;
 }

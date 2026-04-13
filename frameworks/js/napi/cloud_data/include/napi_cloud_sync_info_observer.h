@@ -30,6 +30,7 @@ public:
     virtual ~NapiCloudSyncInfoObserver() noexcept;
 
     void OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data) override;
+    void OnSyncInfoChanged(const int32_t mode) override;
 
     bool operator==(napi_value value);
 

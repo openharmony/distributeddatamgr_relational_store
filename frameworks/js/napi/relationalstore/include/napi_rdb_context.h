@@ -90,7 +90,7 @@ struct RdbStoreContext : public RdbStoreContextBase {
     NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
     std::shared_ptr<NapiRdbStoreData> napiRdbStoreData = nullptr;
     std::vector<uint8_t> encryptionKey{};
-
+    DistributedRdb::CloudSyncConfig cloudSyncConfig;
     RdbStoreContext()
         : predicatesProxy(nullptr), int64Output(0), intOutput(0), enumArg(-1),
           distributedType(DistributedRdb::DistributedTableType::DISTRIBUTED_DEVICE),
@@ -138,6 +138,8 @@ int ParseCloudSyncModeArg(const napi_env env, const napi_value arg, std::shared_
 int ParseCallback(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 
 int ParseCloudSyncCallback(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
+
+int ParseCloudSyncConfig(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 
 int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context);
 

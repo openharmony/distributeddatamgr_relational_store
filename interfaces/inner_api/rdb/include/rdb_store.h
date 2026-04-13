@@ -735,6 +735,11 @@ public:
     virtual int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async);
 
     /**
+     * @brief Stop syncing data to the cloud.
+     */
+    virtual int StopCloudSync();
+    
+    /**
      * @brief Subscribe to event changes.
      */
     virtual int Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);

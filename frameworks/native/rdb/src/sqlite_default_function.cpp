@@ -135,7 +135,7 @@ void SqliteFunctionRegistry::MergeAsset(ValueObject::Asset &oldAsset, ValueObjec
         oldAsset.size = "";
         return;
     }
-    auto status = static_cast<int32_t>(oldAsset.status);
+    auto status = static_cast<int32_t>(oldAsset.status & ~0xF0000000);
     switch (status) {
         case Status::STATUS_UNKNOWN:  // fallthrough
         case Status::STATUS_NORMAL:   // fallthrough

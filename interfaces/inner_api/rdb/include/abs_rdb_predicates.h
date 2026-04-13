@@ -97,6 +97,54 @@ public:
     API_EXPORT AbsRdbPredicates *EqualTo(const std::string &field, const ValueObject &value) override;
 
     /**
+     * @brief Restricts the value of the field to be equal to the specified value to the remote AbsRdbPredicates.
+     *
+     * This method is similar to > of the SQL statement.
+     *
+     * @param field Indicates the column name in the database table.
+     * @param value Indicates the value to match with the {@link RdbPredicates}.
+     *
+     * @return Returns the self.
+     */
+    API_EXPORT AbsRdbPredicates *GreaterThan(const std::string &field, const ValueObject &value) override;
+
+    /**
+     * @brief Restricts the value of the field to be equal to the specified value to the remote AbsRdbPredicates.
+     *
+     * This method is similar to < of the SQL statement.
+     *
+     * @param field Indicates the column name in the database table.
+     * @param value Indicates the value to match with the {@link RdbPredicates}.
+     *
+     * @return Returns the self.
+     */
+    API_EXPORT AbsRdbPredicates *LessThan(const std::string &field, const ValueObject &value) override;
+
+    /**
+     * @brief Restricts the value of the field to be equal to the specified value to the remote AbsRdbPredicates.
+     *
+     * This method is similar to <= of the SQL statement.
+     *
+     * @param field Indicates the column name in the database table.
+     * @param value Indicates the value to match with the {@link RdbPredicates}.
+     *
+     * @return Returns the self.
+     */
+    API_EXPORT AbsRdbPredicates *LessThanOrEqualTo(const std::string &field, const ValueObject &value) override;
+
+    /**
+     * @brief Restricts the value of the field to be equal to the specified value to the remote AbsRdbPredicates.
+     *
+     * This method is similar to >= of the SQL statement.
+     *
+     * @param field Indicates the column name in the database table.
+     * @param value Indicates the value to match with the {@link RdbPredicates}.
+     *
+     * @return Returns the self.
+     */
+    API_EXPORT AbsRdbPredicates *GreaterThanOrEqualTo(const std::string &field, const ValueObject &value) override;
+ 
+    /**
      * @brief Restricts the value of the field to be not equal to the specified value to the remote AbsRdbPredicates.
      *
      * This method is similar to != of the SQL statement.
