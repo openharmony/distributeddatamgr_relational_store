@@ -36,6 +36,9 @@ public:
         bool isAsync = false;
         bool isAutoSync = false;
         bool isCompensation = false;
+        bool enableErrorDetail = false;
+        bool isEnablePredicate = false;
+        bool isDownloadOnly = false;
     };
     using ResultSet = NativeRdb::ResultSet;
     inline static constexpr const char *SERVICE_NAME = "relational_store";
@@ -46,7 +49,7 @@ public:
     virtual int32_t SetDistributedTables(const RdbSyncerParam &param, const std::vector<std::string> &tables,
         const std::vector<Reference> &references, bool isRebuild, int32_t type = DISTRIBUTED_DEVICE) = 0;
 
-    virtual int32_t RetainDeviceData(
+    virtual std::pair<int32_t, int64_t> RetainDeviceData(
         const RdbSyncerParam &param, const std::map<std::string, std::vector<std::string>> &retainDevices) = 0;
 
     virtual std::pair<int32_t, std::vector<std::string>> ObtainUuid(
@@ -54,6 +57,8 @@ public:
 
     virtual int32_t Sync(const RdbSyncerParam &param, const Option &option, const PredicatesMemo &predicates,
         const AsyncDetail &async) = 0;
+
+    virtual int32_t StopCloudSync(const RdbSyncerParam &param) = 0;
 
     virtual int32_t Subscribe(
         const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) = 0;

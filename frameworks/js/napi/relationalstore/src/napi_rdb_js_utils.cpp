@@ -105,6 +105,14 @@ int32_t Convert2Value(napi_env env, napi_value input, DistributedRdb::Distribute
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, input, "enableCloud", output.enableCloud, true), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(
         GetNamedProperty(env, input, "tableType", output.tableType, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(
+ 	         GetNamedProperty(env, input, "autoSyncSwitch", output.autoSyncSwitch, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(
+        GetNamedProperty(env, input, "assetConflictPolicy", output.assetConflictPolicy, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(
+        GetNamedProperty(env, input, "assetTempPath", output.assetTempPath, true), napi_invalid_arg);
+    NAPI_CALL_RETURN_ERR(
+        GetNamedProperty(env, input, "assetDownloadOnDemand", output.assetDownloadOnDemand, true), napi_invalid_arg);
     return napi_ok;
 }
 
@@ -423,6 +431,9 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, RdbConfig &rdbConfig)
     status = GetNamedProperty(env, jsValue, "autoCleanDirtyData", rdbConfig.isAutoClean, true);
     ASSERT(OK == status, "get autoCleanDirtyData failed.", napi_invalid_arg);
 
+    status = GetNamedProperty(env, jsValue, "autoCleanDeviceDirtyData", rdbConfig.isAutoCleanDevice, true);
+    ASSERT(OK == status, "get autoCleanDeviceDirtyData failed.", napi_invalid_arg);
+
     status = GetNamedProperty(env, jsValue, "name", rdbConfig.name);
     ASSERT(OK == status, "get name failed.", napi_invalid_arg);
 
@@ -602,6 +613,7 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetDBType(rdbConfig.vector ? DB_VECTOR : DB_SQLITE);
     rdbStoreConfig.SetStorageMode(rdbConfig.persist ? StorageMode::MODE_DISK : StorageMode::MODE_MEMORY);
     rdbStoreConfig.SetAutoClean(rdbConfig.isAutoClean);
+    rdbStoreConfig.SetAutoCleanDevice(rdbConfig.isAutoCleanDevice);
     rdbStoreConfig.SetSecurityLevel(rdbConfig.securityLevel);
     rdbStoreConfig.SetDataGroupId(rdbConfig.dataGroupId);
     rdbStoreConfig.SetName(rdbConfig.name);
@@ -625,5 +637,23 @@ RdbStoreConfig GetRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam 
     rdbStoreConfig.SetVersion(rdbConfig.version);
     return rdbStoreConfig;
 }
+
+template<>
+napi_value Convert2JSValue(napi_env env, const SyncResultInfo &syncResultInfo)
+{
+    auto outputCode = syncResultInfo.code;
+    std::vector<napi_property_descriptor> descriptors = {
+        DECLARE_JS_PROPERTY(env, "device", syncResultInfo.device),
+        DECLARE_JS_PROPERTY(env, "code", outputCode),
+        DECLARE_JS_PROPERTY(env, "message", syncResultInfo.message),
+    };
+
+    napi_value object = nullptr;
+    NAPI_CALL_RETURN_ERR(
+        napi_create_object_with_properties(env, &object, descriptors.size(), descriptors.data()), object);
+    return object;
+}
+
+
 }; // namespace JSUtils
 } // namespace OHOS::AppDataMgrJsKit

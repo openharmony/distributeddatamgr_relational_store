@@ -17,6 +17,7 @@ import RdbPredicatesPrefEtsTest from './RdbPredicatesPerfEts.test.ets';
 import RelationalStoreDataGroupId from './RdbGroupIdEts.test.ets';
 import PerfStatEtsTest from './RdbstorePerfStatEts.test.ets';
 import RdbRekeyEtsTest from './RdbstoreRekeyEts.test.ets';
+import RdbRekeyVectorEtsTest from './RdbstoreRekeyVectorEts.test.ets';
 import RdbQueryWithDuplicate from './RdbQueryWithDuplicate.test';
 import RdbStoreErrorlogTest from './RdbOnErrorLog.test.ets';
 import RDBstoreGetSqlInfoTest from './RdbstoreGetSqlInfoEts.test.ets';
@@ -41,6 +42,7 @@ import RdbStoreUndefinedTest from './RdbStoreUndefined.test';
 import RdbStoreGetRdbStoreSyncEtsTest from './RdbStoreGetRdbStoreSyncEts.test';
 import RetainDeviceData from './RetainDeviceData.test';
 import UpdateDistributedInfo from './UpdateDistributedInfo.test';
+import CleanDeviceDirtyData from './CleanDeviceDirtyData.test';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -48,6 +50,7 @@ export default function testsuite() {
   PerfStatEtsTest();
   RdbQueryWithDuplicate();
   RdbRekeyEtsTest();
+  RdbRekeyVectorEtsTest();
   RdbStoreErrorlogTest();
   RDBstoreGetSqlInfoTest();
   RdbStoreTransactionTest();
@@ -71,4 +74,5 @@ export default function testsuite() {
   RdbStoreGetRdbStoreSyncEtsTest();
   RetainDeviceData();
   UpdateDistributedInfo();
+  CleanDeviceDirtyData();
 }

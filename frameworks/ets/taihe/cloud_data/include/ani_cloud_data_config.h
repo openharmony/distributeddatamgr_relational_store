@@ -36,6 +36,8 @@ using TaiHeStatisticInfo = ::ohos::data::cloudData::StatisticInfo;
 using TaiHeParticipant = ohos::data::cloudData::sharing::Participant;
 using TaiHeResult = ::ohos::data::cloudData::sharing::Result;
 using TaiheSyncInfoCallback = taihe::callback<void(map_view<string, map<string, SyncInfo>> data)>;
+using TaiheCloudSyncTriggerInfo = ::ohos::data::cloudData::AutoSyncTriggerInfo;
+using TaiheSyncTriggerCallback = taihe::callback<void(TaiheCloudSyncTriggerInfo const& data)>;
 
 class TaiheCloudSyncInfoObserver : public ISyncInfoObserver,
     public std::enable_shared_from_this<TaiheCloudSyncInfoObserver> {
@@ -44,11 +46,27 @@ public:
     ~TaiheCloudSyncInfoObserver() noexcept override = default;
 
     void OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data) override;
+    void OnSyncInfoChanged(const int32_t triggerMode) override;
 
     bool operator==(const TaiheSyncInfoCallback &other) const;
 
 private:
     TaiheSyncInfoCallback callback_;
+};
+
+class TaiheCloudSyncTriggerObserver : public ISyncInfoObserver,
+    public std::enable_shared_from_this<TaiheCloudSyncTriggerObserver> {
+public:
+    explicit TaiheCloudSyncTriggerObserver(TaiheSyncTriggerCallback callback);
+    ~TaiheCloudSyncTriggerObserver() noexcept override = default;
+
+    void OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data) override;
+    void OnSyncInfoChanged(const int32_t triggerMode) override;
+
+    bool operator==(const TaiheSyncTriggerCallback &other) const;
+
+private:
+    TaiheSyncTriggerCallback callback_;
 };
 
 class ConfigImpl {
@@ -79,7 +97,10 @@ public:
         callback_view<void(map_view<string, map<string, SyncInfo>> data)> progress);
     static void OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
         optional_view<callback<void(map_view<string, map<string, SyncInfo>> data)>> progress);
-
+    static void OnAutoSyncTrigger(::taihe::callback_view<void(TaiheCloudSyncTriggerInfo const& data)> observer);
+    static void OffAutoSyncTrigger(
+        ::taihe::optional_view<::taihe::callback<void(TaiheCloudSyncTriggerInfo const& data)>> observer);
+    static void StopCloudSyncImpl(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos);
 private:
     using UnsubscribeInfo = std::map<std::shared_ptr<TaiheCloudSyncInfoObserver>,
         std::vector<OHOS::CloudData::BundleInfo>>;
@@ -91,6 +112,8 @@ private:
     static std::mutex syncInfoObserversMutex_;
     static std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>>>>
         syncInfoObservers_;
+    static std::mutex autoSyncTriggerObserversMutex_;
+    static std::vector<std::shared_ptr<TaiheCloudSyncTriggerObserver>> autoSyncTriggerObservers_;
 };
 
 void SetCloudStrategyImpl(StrategyType strategy,

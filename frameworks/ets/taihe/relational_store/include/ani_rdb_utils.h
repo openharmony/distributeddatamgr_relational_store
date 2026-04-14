@@ -63,6 +63,7 @@ OHOS::NativeRdb::ValuesBuckets BucketValuesToNative(
 OHOS::NativeRdb::ValuesBuckets ValueBucketsToNative(
     taihe::array_view<::ohos::data::relationalStore::ValuesBucket> const &values);
 OHOS::NativeRdb::ValuesBucket ValueBucketToNative(::ohos::data::relationalStore::ValuesBucket const &value);
+OHOS::NativeRdb::RdbStoreConfig::CryptoParam Uint8ArrayParamToNative(std::vector<uint8_t> const &param);
 OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
     ::ohos::data::relationalStore::CryptoParam const &param);
 void AniGetRdbConfigAppend(const ohos::data::relationalStore::StoreConfig &storeConfig,
@@ -79,6 +80,8 @@ OHOS::DistributedRdb::SubscribeMode SubscribeTypeToMode(ohos::data::relationalSt
 std::pair<bool, NativeDistributedTableType> DistributedTableTypeToNative(TaiheDistributedType type);
 std::pair<bool, NativeDistributedConfig> DistributedConfigToNative(
     const TaiheDistributedConfig &config, NativeDistributedTableType &nativeType);
+OHOS::DistributedRdb::AssetConflictPolicy AssetConflictPolicyToNative(
+    ohos::data::relationalStore::AssetConflictPolicy policy);
 std::pair<bool, NativeDistributedInfo> DistributedInfoToNative(const TaiheDistributedInfo &info);
 OHOS::DistributedRdb::Reference ReferenceToNative(
     const ohos::data::relationalStore::Reference &reference);
@@ -103,6 +106,7 @@ ohos::data::relationalStore::SqlExecutionInfo SqlExecutionToTaihe(
 ohos::data::relationalStore::Statistic StatisticToTaihe(const OHOS::DistributedRdb::Statistic &statistic);
 
 uintptr_t ColumnTypeToTaihe(const OHOS::DistributedRdb::ColumnType columnType);
+ani_ref SyncResultCodeToAni(ani_env *env, uint32_t code);
 OHOS::DistributedRdb::SyncMode SyncModeToNative(ohos::data::relationalStore::SyncMode syncMode);
 OHOS::NativeRdb::ConflictResolution ConflictResolutionToNative(
     ohos::data::relationalStore::ConflictResolution conflictResolution);
@@ -123,6 +127,8 @@ std::shared_ptr<OHOS::NativeRdb::RdbPredicates> GetNativePredicatesFromTaihe(
 
 std::pair<int, std::vector<RowEntity>> GetRows(
     OHOS::NativeRdb::ResultSet &resultSet, int32_t maxCount, int32_t position);
+ani_status ConvertSyncResultInfos2AniValue(ani_env *env,
+    const std::vector<OHOS::DistributedRdb::SyncResultInfo> &values, ani_object &result);
 bool WarpDate(double time, ani_object &outObj);
 } // namespace ani_rdbutils
 

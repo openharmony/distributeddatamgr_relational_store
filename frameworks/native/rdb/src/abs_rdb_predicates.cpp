@@ -99,6 +99,62 @@ std::vector<std::string> AbsRdbPredicates::GetJoinConditions()
 }
 
 /**
+ * Restricts the value of the field to be greater than the specified value.
+ */
+AbsRdbPredicates *AbsRdbPredicates::GreaterThan(const std::string &field, const ValueObject &value)
+{
+    if (auto pval = std::get_if<double>(&value.value)) {
+        int64_t intVal = static_cast<int64_t>(*pval);
+        predicates_.AddOperation(DistributedRdb::GREATER_THAN, field, intVal);
+    } else if (auto pval = std::get_if<int64_t>(&value.value)) {
+        predicates_.AddOperation(DistributedRdb::GREATER_THAN, field, *pval);
+    }
+    return (AbsRdbPredicates *)AbsPredicates::GreaterThan(field, value);
+}
+
+/**
+ * Restricts the value of the field to be less than the specified value.
+ */
+AbsRdbPredicates *AbsRdbPredicates::LessThan(const std::string &field, const ValueObject &value)
+{
+    if (auto pval = std::get_if<double>(&value.value)) {
+        int64_t intVal = static_cast<int64_t>(*pval);
+        predicates_.AddOperation(DistributedRdb::LESS_THAN, field, intVal);
+    } else if (auto pval = std::get_if<int64_t>(&value.value)) {
+        predicates_.AddOperation(DistributedRdb::LESS_THAN, field, *pval);
+    }
+    return (AbsRdbPredicates *)AbsPredicates::LessThan(field, value);
+}
+
+/**
+ * Restricts the value of the field to be less than or equal to the specified value.
+ */
+AbsRdbPredicates *AbsRdbPredicates::LessThanOrEqualTo(const std::string &field, const ValueObject &value)
+{
+    if (auto pval = std::get_if<double>(&value.value)) {
+        int64_t intVal = static_cast<int64_t>(*pval);
+        predicates_.AddOperation(DistributedRdb::LESS_THAN_OR_EQUAL, field, intVal);
+    } else if (auto pval = std::get_if<int64_t>(&value.value)) {
+        predicates_.AddOperation(DistributedRdb::LESS_THAN_OR_EQUAL, field, *pval);
+    }
+    return (AbsRdbPredicates *)AbsPredicates::LessThanOrEqualTo(field, value);
+}
+
+/**
+ * Restricts the value of the field to be greater than or equal to the specified value.
+ */
+AbsRdbPredicates *AbsRdbPredicates::GreaterThanOrEqualTo(const std::string &field, const ValueObject &value)
+{
+    if (auto pval = std::get_if<double>(&value.value)) {
+        int64_t intVal = static_cast<int64_t>(*pval);
+        predicates_.AddOperation(DistributedRdb::GREATER_THAN_OR_EQUAL, field, intVal);
+    } else if (auto pval = std::get_if<int64_t>(&value.value)) {
+        predicates_.AddOperation(DistributedRdb::GREATER_THAN_OR_EQUAL, field, *pval);
+    }
+    return (AbsRdbPredicates *)AbsPredicates::GreaterThanOrEqualTo(field, value);
+}
+
+/**
  * Sets the join conditions required in the predicates.
  */
 void AbsRdbPredicates::SetJoinConditions(const std::vector<std::string> &joinConditions)
@@ -177,8 +233,12 @@ AbsRdbPredicates *AbsRdbPredicates::EqualTo(const std::string &field, const Valu
 {
     if (auto pval = std::get_if<std::string>(&value.value)) {
         predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, *pval);
-    }
-    if (auto pval = std::get_if<ValueObject::Asset>(&value.value)) {
+    } else if (auto pval = std::get_if<double>(&value.value)) {
+        int64_t intVal = static_cast<int64_t>(*pval);
+        predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, intVal);
+    } else if (auto pval = std::get_if<int64_t>(&value.value)) {
+        predicates_.AddOperation(DistributedRdb::EQUAL_TO, field, *pval);
+    } else if (auto pval = std::get_if<ValueObject::Asset>(&value.value)) {
         predicates_.AddOperation(DistributedRdb::RdbPredicateOperator::ASSETS_ONLY, field, (*pval).name);
     }
     if (auto pval = std::get_if<ValueObject::Assets>(&value.value)) {
@@ -194,6 +254,11 @@ AbsRdbPredicates *AbsRdbPredicates::EqualTo(const std::string &field, const Valu
 AbsRdbPredicates *AbsRdbPredicates::NotEqualTo(const std::string &field, const ValueObject &value)
 {
     if (auto pval = std::get_if<std::string>(&value.value)) {
+        predicates_.AddOperation(DistributedRdb::NOT_EQUAL_TO, field, *pval);
+    } else if (auto pval = std::get_if<double>(&value.value)) {
+        int64_t intVal = static_cast<int64_t>(*pval);
+        predicates_.AddOperation(DistributedRdb::NOT_EQUAL_TO, field, intVal);
+    } else if (auto pval = std::get_if<int64_t>(&value.value)) {
         predicates_.AddOperation(DistributedRdb::NOT_EQUAL_TO, field, *pval);
     }
     return (AbsRdbPredicates *)AbsPredicates::NotEqualTo(field, value);
@@ -239,16 +304,30 @@ AbsPredicates *AbsRdbPredicates::EndWrap()
 
 AbsPredicates *AbsRdbPredicates::In(const std::string &field, const std::vector<ValueObject> &values)
 {
-    std::vector<std::string> vals;
-    vals.reserve(values.size());
+    std::vector<std::string> vals_string;
+    std::vector<int64_t> vals_int;
+    vals_string.reserve(values.size());
+    vals_int.reserve(values.size());
+    bool isString = false;
     for (const auto &value : values) {
-        auto val = std::get_if<std::string>(&value.value);
-        if (val == nullptr) {
+        if (auto pval = std::get_if<std::string>(&value.value)) {
+            vals_string.emplace_back(*pval);
+            isString = true;
+        } else if (auto pval = std::get_if<double>(&value.value)) {
+            int64_t intVal = static_cast<int64_t>(*pval);
+            vals_int.emplace_back(intVal);
+        } else if (auto pval = std::get_if<int64_t>(&value.value)) {
+            vals_int.emplace_back(*pval);
+        } else {
             return (AbsRdbPredicates *)AbsPredicates::In(field, values);
         }
-        vals.emplace_back(std::move(*val));
     }
-    predicates_.AddOperation(DistributedRdb::IN, field, vals);
+    if (isString) {
+        predicates_.AddOperation(DistributedRdb::IN, field, vals_string);
+    } else {
+        predicates_.AddOperation(DistributedRdb::IN, field, vals_int);
+    }
+    
     return (AbsRdbPredicates *)AbsPredicates::In(field, values);
 }
 
@@ -327,16 +406,24 @@ AbsRdbPredicates *AbsRdbPredicates::NotIn(const std::string &field, const std::v
 }
 AbsRdbPredicates *AbsRdbPredicates::NotIn(const std::string &field, const std::vector<ValueObject> &values)
 {
-    std::vector<std::string> vals;
-    vals.reserve(values.size());
+    std::vector<std::string> vals_string;
+    std::vector<int64_t> vals_int;
+    vals_string.reserve(values.size());
+    vals_int.reserve(values.size());
+    bool isString = false;
     for (const auto &value : values) {
-        auto val = std::get_if<std::string>(&value.value);
-        if (val == nullptr) {
+        if (auto pval = std::get_if<std::string>(&value.value)) {
+            vals_string.emplace_back(*pval);
+            isString = true;
+        } else if (auto pval = std::get_if<double>(&value.value)) {
+            int64_t intVal = static_cast<int64_t>(*pval);
+            vals_int.emplace_back(intVal);
+        } else if (auto pval = std::get_if<int64_t>(&value.value)) {
+            vals_int.emplace_back(*pval);
+        } else {
             return (AbsRdbPredicates *)AbsPredicates::NotIn(field, values);
         }
-        vals.emplace_back(std::move(*val));
     }
-    predicates_.AddOperation(DistributedRdb::NOT_IN, field, vals);
     return (AbsRdbPredicates *)AbsPredicates::NotIn(field, values);
 }
 std::string AbsRdbPredicates::GetStatement() const

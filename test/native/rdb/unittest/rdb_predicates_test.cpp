@@ -815,6 +815,152 @@ HWTEST_F(RdbStorePredicateTest, RdbStore_LessThan_001, TestSize.Level1)
 }
 
 /* *
+ * @tc.name: RdbStore_RdbPredicates_003
+ * @tc.desc: AbsRdbPredicates equal to double
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_003, TestSize.Level1)
+{
+    std::vector<std::string> tableEmpty;
+    std::vector<std::string> tables({"person"});
+    AbsRdbPredicates predicates(tables);
+    double id = 1;
+    ValueObject test = ValueObject(id);
+    predicates.EqualTo("id", test);
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+}
+ 
+/* *
+ * @tc.name: RdbStore_RdbPredicates_004
+ * @tc.desc: AbsRdbPredicates not equal to double
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_004, TestSize.Level1)
+{
+    std::vector<std::string> tables({"person"});
+ 
+    AbsRdbPredicates predicates(tables);
+    double id = 1;
+    ValueObject test = ValueObject(id);
+    predicates.NotEqualTo("id", test);
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+}
+ 
+/* *
+ * @tc.name: RdbStore_RdbPredicates_005
+ * @tc.desc: AbsRdbPredicates greater less to double
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_005, TestSize.Level1)
+{
+    std::vector<std::string> tables({"person"});
+    double id = 1;
+    ValueObject test = ValueObject(id);
+    AbsRdbPredicates predicates(tables);
+    std::vector<std::string> columns;
+    predicates.GreaterThan("id", test);
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+    predicates.LessThan("id", test);
+    allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+    predicates.GreaterThanOrEqualTo("id", test);
+    allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+    predicates.LessThanOrEqualTo("id", test);
+    allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+    int64_t id1 = 1;
+    ValueObject test1 = ValueObject(id1);
+    predicates.GreaterThan("id", test1);
+    allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+    predicates.LessThan("id", test1);
+    allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+    predicates.GreaterThanOrEqualTo("id", test1);
+    allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+    predicates.LessThanOrEqualTo("id", test1);
+    allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+}
+ 
+/* *
+ * @tc.name: RdbStore_RdbPredicates_006
+ * @tc.desc: AbsRdbPredicates in double
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_006, TestSize.Level1)
+{
+    std::vector<std::string> tables({"person"});
+    AbsRdbPredicates predicates(tables);
+    double id1 = 1;
+    double id2 = 2;
+    std::vector<ValueObject> doubleVec;
+    doubleVec.push_back(ValueObject(id1));
+    doubleVec.push_back(ValueObject(id2));
+    predicates.In("id", doubleVec);
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+    int64_t id3 = 1;
+    int64_t id4 = 2;
+    std::vector<ValueObject> intVec;
+    intVec.push_back(ValueObject(id3));
+    intVec.push_back(ValueObject(id4));
+    predicates.In("id", intVec);
+    allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+}
+ 
+/* *
+ * @tc.name: RdbStore_RdbPredicates_007
+ * @tc.desc: AbsRdbPredicates notIn  double
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStorePredicateTest, RdbStore_RdbPredicates_007, TestSize.Level1)
+{
+    std::vector<std::string> tables({"person"});
+    AbsRdbPredicates predicates(tables);
+    double id1 = 1;
+    double id2 = 2;
+    std::vector<ValueObject> doubleVec;
+    doubleVec.push_back(ValueObject(id1));
+    doubleVec.push_back(ValueObject(id2));
+    predicates.NotIn("id", doubleVec);
+    std::vector<std::string> columns;
+    std::shared_ptr<ResultSet> allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+    int64_t id3 = 1;
+    int64_t id4 = 2;
+    std::vector<ValueObject> intVec;
+    intVec.push_back(ValueObject(id3));
+    intVec.push_back(ValueObject(id4));
+    predicates.NotIn("id", intVec);
+    allDataTypes = RdbStorePredicateTest::store->Query(predicates, columns);
+    EXPECT_EQ(0, ResultSize(allDataTypes));
+    allDataTypes->Close();
+}
+
+/* *
  * @tc.name: RdbStore_GreaterThanOrEqualTo_001
  * @tc.desc: Abnormal testCase of RdbPredicates for GreaterThanOrEqualTo, if field is ''
  * @tc.type: FUNC

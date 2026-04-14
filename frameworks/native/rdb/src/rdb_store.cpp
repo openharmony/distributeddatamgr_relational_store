@@ -544,6 +544,14 @@ std::string RdbStore::ObtainDistributedTableName(const std::string &device, cons
     return table + "_" + device;
 }
 
+int RdbStore::SyncEx(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBriefEx &callback)
+{
+    (void)option;
+    (void)predicate;
+    (void)callback;
+    return 0;
+}
+
 int RdbStore::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async)
 {
     (void)option;
@@ -565,6 +573,11 @@ int RdbStore::Sync(const SyncOption &option, const AbsRdbPredicates &predicate, 
     (void)option;
     (void)predicate;
     (void)async;
+    return E_NOT_SUPPORT;
+}
+
+int RdbStore::StopCloudSync()
+{
     return E_NOT_SUPPORT;
 }
 
@@ -654,6 +667,13 @@ RdbStore::ModifyTime RdbStore::GetModifyTime(
 }
 
 int RdbStore::CleanDirtyData(const std::string &table, uint64_t cursor)
+{
+    (void)table;
+    (void)cursor;
+    return E_NOT_SUPPORT;
+}
+
+int RdbStore::CleanDeviceDirtyData(const std::string &table, uint64_t cursor)
 {
     (void)table;
     (void)cursor;

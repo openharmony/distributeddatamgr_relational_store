@@ -258,9 +258,71 @@ int32_t RdConnection::ResetKey(const RdbStoreConfig &config)
     return E_OK;
 }
 
+std::pair<int32_t, std::vector<uint8_t>> RdConnection::GetRekeyNewKey(const RdbStoreConfig::CryptoParam &cryptoParam)
+{
+    std::vector<uint8_t> key;
+    RdbPassword rdbPwd;
+    if (cryptoParam.encryptKey_.empty()) {
+        rdbPwd = RdbSecurityManager::GetInstance().GetRdbPassword(
+            config_.GetPath(), RdbSecurityManager::PUB_KEY_FILE_NEW_KEY);
+        if (!rdbPwd.IsValid()) {
+            LOG_ERROR("key is invalid");
+            return { E_ERROR, {} };
+        }
+        key = std::vector<uint8_t>(rdbPwd.GetData(), rdbPwd.GetData() + rdbPwd.GetSize());
+        rdbPwd.Clear();
+    } else {
+        key = cryptoParam.encryptKey_;
+    }
+    if (key.empty()) {
+        LOG_ERROR("key is empty");
+        return { E_ERROR, {} };
+    }
+    return { E_OK, key };
+}
+
 int32_t RdConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
-    return E_NOT_SUPPORT;
+    std::string dbPath = "";
+    int errCode = SqliteGlobalConfig::GetDbPath(config_, dbPath);
+    if (errCode != E_OK) {
+        LOG_ERROR("Can not get db path, errCode = %{public}d, errno = %{public}d", errCode, errno);
+        return errCode;
+    }
+
+    auto [ret, key] = GetRekeyNewKey(cryptoParam);
+    if (ret != E_OK) {
+        LOG_ERROR("Can not get encryption key, ret = %{public}d, errno = %{public}d", ret, errno);
+        key.assign(key.size(), 0);
+        return ret;
+    }
+
+    errCode = RdUtils::RdDbClose(dbHandle_, 0);
+    if (errCode != E_OK) {
+        LOG_ERROR("Close db failed, errCode = %{public}d, errno = %{public}d", errCode, errno);
+        key.assign(key.size(), 0);
+        return errCode;
+    }
+    dbHandle_ = nullptr;
+
+    std::string configStr = GetConfigStr(config_.GetEncryptKey(), config_.IsEncrypt());
+    errCode = RdUtils::RdDbRekey(dbPath.c_str(), configStr.c_str(), key);
+    RdUtils::ClearAndZeroString(configStr);
+    if (errCode != E_OK) {
+        LOG_ERROR("Rekey failed, errCode = %{public}d, errno = %{public}d", errCode, errno);
+        key.assign(key.size(), 0);
+        return errCode;
+    }
+
+    if (cryptoParam.encryptKey_.empty()) {
+        RdbSecurityManager::GetInstance().ChangeKeyFile(config_.GetPath());
+    }
+    config_.ResetEncryptKey(key);
+    LOG_INFO("Rekey successful, bundleName is %{public}s, store is %{public}s.",
+        config_.GetBundleName().c_str(), SqliteUtils::Anonymous(config_.GetName()).c_str());
+    key.assign(key.size(), 0);
+
+    return E_OK;
 }
 
 int32_t RdConnection::RekeyEx(const RdbStoreConfig &config, const RdbStoreConfig::CryptoParam &cryptoParam)

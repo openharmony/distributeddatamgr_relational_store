@@ -28,6 +28,9 @@
 #include "values_buckets.h"
 
 namespace OHOS {
+namespace NativeRdb {
+class RdbPredicates;
+}
 namespace DistributedRdb {
 enum RdbStatus {
     RDB_OK,
@@ -73,6 +76,8 @@ struct RdbDebugInfo {
 struct DistributedField {
     static constexpr const char *ORIGIN = "#_origin";
     static constexpr const char *ORIGIN_ORIDEVICE = "#_ori_device";
+    static constexpr const char *CURSOR_FIELD = "#_cursor";
+    static constexpr const char *DELETED_FLAG_FIELD = "#_deleted_flag";
 };
 
 enum DistributedOrigin {
@@ -97,6 +102,12 @@ struct QueryOptions {
     bool isGotoNextRowReturnLastError = false;
 };
 
+enum AssetConflictPolicy {
+    CONFLICT_POLICY_DEFAULT = 0,
+    CONFLICT_POLICY_TIME_FIRST = 1,
+    CONFLICT_POLICY_TEMP_PATH = 2
+};
+
 struct RdbSyncerParam {
     std::string bundleName_;
     std::string hapName_;
@@ -109,6 +120,7 @@ struct RdbSyncerParam {
     uint32_t roleType_ = 0;
     bool isEncrypt_ = false;
     bool isAutoClean_ = true;
+    bool isAutoCleanDevice_ = true;
     bool isSearchable_ = false;
     std::vector<uint8_t> password_;
     std::map<std::string, RdbDebugInfo> infos_;
@@ -121,6 +133,11 @@ struct RdbSyncerParam {
     int32_t subUser_ = 0;
     RdbDfxInfo dfxInfo_;
     int32_t distributedTableMode_ = DEVICE_COLLABORATION;
+    bool customSwitch_ = false;
+    bool autoSyncSwitch_ = true;
+    int32_t assetConflictPolicy_ = CONFLICT_POLICY_DEFAULT;
+    std::string assetTempPath_ = {};
+    bool assetDownloadOnDemand_ = false;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
@@ -139,11 +156,23 @@ enum SyncMode {
     TIME_FIRST = 4,
     NATIVE_FIRST,
     CLOUD_FIRST,
+    CLOUD_CUSTOM_PUSH, //only upload
+    CLOUD_CUSTOM_PULL, //only download
 };
 
 struct SyncOption {
     SyncMode mode;
     bool isBlock;
+    bool enableErrorDetail;
+    bool isDownloadOnly = false;
+    bool isEnablePredicate = false;
+};
+
+struct CloudSyncConfig {
+    int32_t mode = 0;
+    bool isDownloadOnly = false;
+    bool isEnablePredicate = false;
+    std::shared_ptr<NativeRdb::RdbPredicates> predicates = nullptr;
 };
 
 enum DistributedTableType {
@@ -196,6 +225,11 @@ struct DistributedConfig {
     bool asyncDownloadAsset = false;
     bool enableCloud = true;
     int32_t tableType = DEVICE_COLLABORATION;
+    bool customSwitch = false;
+    bool autoSyncSwitch = true;
+    int32_t assetConflictPolicy = CONFLICT_POLICY_DEFAULT;
+    std::string assetTempPath = {};
+    bool assetDownloadOnDemand = false;
 };
 
 enum Progress {
@@ -213,6 +247,7 @@ enum ProgressCode {
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
     BLOCKED_BY_NETWORK_STRATEGY,
+    STOP_CLOUD_SYNC,
 };
 
 struct Statistic {
@@ -233,6 +268,28 @@ struct ProgressDetail {
     int32_t progress;
     int32_t code;
     TableDetails details;
+    std::string message;
+};
+
+enum class SyncResultCode {
+    SUCCESS = 0,
+    FAIL,
+    OFFLINE,
+    INVALID_ARGS,
+    DISTRIBUTED_TABLE_NOT_SET,
+    TABLE_FIELD_MISMATCH,
+    DISTRIBUTED_SCHEMA_MISMATCH,
+    BUSY,
+    CORRUPTED,
+    TIMEOUT,
+    SCHEMA_CHANGED,
+    CONSTRAINT_VIOLATION,
+};
+
+struct SyncResultInfo {
+    std::string device;
+    uint32_t code = static_cast<uint32_t>(SyncResultCode::SUCCESS);
+    std::string message;
 };
 
 using Briefs = std::map<std::string, int>;
@@ -242,6 +299,12 @@ using AsyncDetail = std::function<void(Details &&)>;
 
 using SyncResult = Briefs;
 using SyncCallback = AsyncBrief;
+
+using BriefsEx = std::vector<SyncResultInfo>;
+using AsyncBriefEx = std::function<void(const BriefsEx &)>;
+
+using SyncResultEx = BriefsEx;
+using SyncCallbackEx = AsyncBriefEx;
 
 enum RdbPredicateOperator {
     EQUAL_TO,
@@ -275,11 +338,11 @@ enum RdbPredicateOperator {
     NOT_GLOB,
     OPERATOR_MAX
 };
-
+using DataValue = std::variant<int64_t, std::string>;
 struct RdbPredicateOperation {
     RdbPredicateOperator operator_;
     std::string field_;
-    std::vector<std::string> values_;
+    std::vector<DataValue> values_;
 };
 
 struct PredicatesMemo {
@@ -287,10 +350,26 @@ struct PredicatesMemo {
     {
         operations_.push_back({ op, field, { value } });
     }
+    inline void AddOperation(const RdbPredicateOperator op, const std::string &field, const int64_t &value)
+    {
+        operations_.push_back({ op, field, { value } });
+    }
     inline void AddOperation(
         const RdbPredicateOperator op, const std::string &field, const std::vector<std::string> &values)
     {
-        operations_.push_back({ op, field, values });
+        std::vector<DataValue> values_;
+        values_.reserve(values.size());
+        std::copy(values.begin(), values.end(), std::back_inserter(values_));
+        operations_.push_back({ op, field, values_ });
+    }
+
+    inline void AddOperation(
+        const RdbPredicateOperator op, const std::string &field, const std::vector<int64_t> &values)
+    {
+        std::vector<DataValue> values_;
+        values_.reserve(values.size());
+        std::copy(values.begin(), values.end(), std::back_inserter(values_));
+        operations_.push_back({ op, field, values_ });
     }
 
     std::vector<std::string> tables_;

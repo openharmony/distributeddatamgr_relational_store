@@ -66,6 +66,7 @@ public:
     static napi_value CloudSync(napi_env env, napi_callback_info info);
     static napi_value OnSyncInfoChanged(napi_env env, napi_callback_info info);
     static napi_value OffSyncInfoChanged(napi_env env, napi_callback_info info);
+    static napi_value StopCloudSync(napi_env env, napi_callback_info info);
 
 private:
     struct QueryLastSyncInfoContext : public ContextBase {
@@ -82,10 +83,16 @@ private:
         std::string bundleName;
         std::string storeId;
         int32_t syncMode;
+        bool downloadOnly = false;
         napi_ref asyncHolder = nullptr;
         std::shared_ptr<UvQueue> queue;
     };
-    static void HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::shared_ptr<CloudSyncContext> ctxt);
+    static void HandleCloudSyncArgs(napi_env env, napi_callback_info info,
+        std::shared_ptr<CloudSyncContext> ctxt);
+    static void ParseCloudSyncArgs(napi_env env, size_t argc, napi_value *argv,
+        std::shared_ptr<CloudSyncContext> ctxt);
+    static void ParseCloudSyncArgsWithConfig(napi_env env, size_t argc, napi_value *argv,
+        std::shared_ptr<CloudSyncContext> ctxt);
     static uint32_t GetSeqNum();
     static bool ValidClearConfig(const std::map<std::string, CloudData::ClearConfig> &configs);
     static bool IsDbInfoValid(const std::map<std::string, CloudData::DBActionInfo> &dbInfos);

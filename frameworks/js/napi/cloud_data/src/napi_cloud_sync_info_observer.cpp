@@ -40,11 +40,31 @@ void NapiCloudSyncInfoObserver::OnSyncInfoChanged(const std::map<std::string, Qu
     if (uvQueue == nullptr) {
         return;
     }
-    LOG_INFO("OnSyncInfoChanged size:%{public}zu", data.size());
     uvQueue->AsyncCallInOrder({ callback_, true },
         [observer = shared_from_this(), data](napi_env env, int &argc, napi_value *argv) {
             argc = 1;
             argv[0] = JSUtils::Convert2JSValue(env, data);
+        });
+}
+
+void NapiCloudSyncInfoObserver::OnSyncInfoChanged(const int32_t mode)
+{
+    auto uvQueue = uvQueue_;
+    if (uvQueue == nullptr) {
+        return;
+    }
+    uvQueue->AsyncCallInOrder({ callback_, true },
+        [observer = shared_from_this(), mode](napi_env env, int &argc, napi_value *argv) {
+            argc = 1;
+            napi_value jsValue = nullptr;
+            napi_status status = napi_create_object(env, &jsValue);
+            if (status != napi_ok) {
+                argv[0] = nullptr;
+                return;
+            }
+            napi_value modeValue = JSUtils::Convert2JSValue(env, mode);
+            napi_set_named_property(env, jsValue, "mode", modeValue);
+            argv[0] = jsValue;
         });
 }
 

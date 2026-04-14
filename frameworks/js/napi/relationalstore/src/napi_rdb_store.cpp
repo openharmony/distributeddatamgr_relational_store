@@ -1142,7 +1142,15 @@ napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(argc >= 0 && argc <= 1, std::make_shared<ParamNumError>("0 - 1"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (argc == 1 && !JSUtils::IsNull(env, argv[0])) {
-            CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
+            bool isArray = false;
+            napi_status status = napi_is_typedarray(env, argv[0], &isArray);
+            CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+            context->cryptoParam.isVectorRekey = isArray;
+            if (isArray) {
+                CHECK_RETURN(OK == ParseEncryptionkey(env, argv[0], context));
+            } else {
+                CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
+            }
         }
         CHECK_RETURN_SET_E(context->cryptoParam.IsValid(),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."));
@@ -1513,9 +1521,12 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
     properties.push_back(DECLARE_NAPI_FUNCTION("updateDistributedInfo", UpdateDistributedInfo));
     properties.push_back(DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName));
     properties.push_back(DECLARE_NAPI_FUNCTION("sync", Sync));
+    properties.push_back(DECLARE_NAPI_FUNCTION("syncEx", SyncEx));
     properties.push_back(DECLARE_NAPI_FUNCTION("cloudSync", CloudSync));
+    properties.push_back(DECLARE_NAPI_FUNCTION("stopCloudSync", StopCloudSync));
     properties.push_back(DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime));
     properties.push_back(DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData));
+    properties.push_back(DECLARE_NAPI_FUNCTION("cleanDeviceDirtyData", CleanDeviceDirtyData));
     properties.push_back(DECLARE_NAPI_FUNCTION("emit", Notify));
     properties.push_back(DECLARE_NAPI_FUNCTION("querySharingResource", QuerySharingResource));
     properties.push_back(DECLARE_NAPI_FUNCTION("lockRow", LockRow));
@@ -1701,10 +1712,14 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
     } else {
         napi_get_undefined(env, &promise);
     }
+    RDB_NAPI_ASSERT_BASE(env, context->predicatesProxy != nullptr,
+        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS), nullptr);
+    RDB_NAPI_ASSERT_BASE(env, context->predicatesProxy->GetPredicates() != nullptr,
+        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS), nullptr);
     auto predicates = *context->predicatesProxy->GetPredicates();
     auto exec = [queue, defer, callback, predicates, rdbStore = context->StealRdbStore(),
                     enumArg = context->enumArg]() mutable {
-        SyncOption option{ static_cast<DistributedRdb::SyncMode>(enumArg), false };
+        SyncOption option{ static_cast<DistributedRdb::SyncMode>(enumArg), false, false };
         auto ret = rdbStore->Sync(option, predicates, [queue, defer, callback](const SyncResult &result) {
             auto args = [result](napi_env env, int &argc, napi_value *argv) {
                 argv[1] = JSUtils::Convert2JSValue(env, result);
@@ -1736,32 +1751,51 @@ void RdbStoreProxy::SetBusinessError(napi_env env, std::shared_ptr<Error> error,
     }
 }
 
+void ParseNotObjectParams(napi_env env, size_t argc, napi_value *argv, std::shared_ptr<RdbStoreContext> context)
+{
+    // The number of parameters should be in range (1, 5)
+    CHECK_RETURN_SET_E(argc > 1 && argc < 5, std::make_shared<ParamNumError>("2 - 4"));
+    JSUtils::Convert2ValueExt(env, argv[0], context->syncMode);
+    CHECK_RETURN(OK == ParseCloudSyncModeArg(env, argv[0], context));
+    uint32_t index = 1;
+    bool isArray = false;
+    napi_is_array(env, argv[index], &isArray);
+    if (isArray) {
+        CHECK_RETURN(OK == ParseTablesName(env, argv[index], context));
+        index++;
+    } else {
+        auto status = napi_unwrap(env, argv[index], reinterpret_cast<void **>(&context->predicatesProxy));
+        if (status == napi_ok && context->predicatesProxy != nullptr) {
+            RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+            if (obj != nullptr) {
+                context->rdbPredicates = context->predicatesProxy->GetPredicates();
+            }
+            index++;
+        }
+    }
+    CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index++], context));
+    CHECK_RETURN_SET_E(index == argc - 1 || index == argc, std::make_shared<ParamNumError>("2 - 4"));
+    if (index == argc - 1) {
+        CHECK_RETURN(OK == ParseCallback(env, argv[index], context));
+    }
+}
+
 InputAction GetCloudSyncInput(std::shared_ptr<RdbStoreContext> context)
 {
     return [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         // The number of parameters should be in range (1, 5)
         CHECK_RETURN_SET_E(argc > 1 && argc < 5, std::make_shared<ParamNumError>("2 - 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
-        CHECK_RETURN(OK == ParseCloudSyncModeArg(env, argv[0], context));
-        uint32_t index = 1;
-        bool isArray = false;
-        napi_is_array(env, argv[index], &isArray);
-        if (isArray) {
-            CHECK_RETURN(OK == ParseTablesName(env, argv[index], context));
-            index++;
+        napi_valuetype arg0Type = napi_undefined;
+        napi_typeof(env, argv[0], &arg0Type);
+        
+        if (arg0Type == napi_object) {
+            // The number of parameters should be 2
+            CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2"));
+            CHECK_RETURN(OK == ParseCloudSyncConfig(env, argv[0], context));
+            CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[1], context));
         } else {
-            auto status = napi_unwrap(env, argv[index], reinterpret_cast<void **>(&context->predicatesProxy));
-            if (status == napi_ok && context->predicatesProxy != nullptr) {
-                RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-                CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
-                context->rdbPredicates = context->predicatesProxy->GetPredicates();
-                index++;
-            }
-        }
-        CHECK_RETURN(OK == ParseCloudSyncCallback(env, argv[index++], context));
-        CHECK_RETURN_SET_E(index == argc - 1 || index == argc, std::make_shared<ParamNumError>("2 - 4"));
-        if (index == argc - 1) {
-            CHECK_RETURN(OK == ParseCallback(env, argv[index], context));
+            ParseNotObjectParams(env, argc, argv, context);
         }
     };
 }
@@ -1775,6 +1809,8 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         auto *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
         SyncOption option;
         option.mode = static_cast<DistributedRdb::SyncMode>(context->syncMode);
+        option.isDownloadOnly = context->cloudSyncConfig.isDownloadOnly;
+        option.isEnablePredicate = context->cloudSyncConfig.isEnablePredicate;
         option.isBlock = false;
         CHECK_RETURN_ERR(obj != nullptr && context->rdbStore != nullptr);
         auto rdbStore = context->StealRdbStore();
@@ -1804,6 +1840,26 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAll(env, info, input, exec, output);
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value RdbStoreProxy::StopCloudSync(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+    };
+    auto exec = [context]() -> int {
+        LOG_DEBUG("RdbStoreProxy::StopCloudSync Async.");
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        return context->StealRdbStore()->StopCloudSync();
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        auto status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
 }
@@ -1860,6 +1916,61 @@ napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct CleanDeviceDirtyDataContext : public EnhancedContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        ASSERT_RETURN_SET_ERROR(argc < 3 && argc > 0, std::make_shared<ParamNumError>("1 - 2"));
+        RdbStoreProxy *obj = GetNativeInstance(env, self);
+        ASSERT_RETURN_SET_ERROR(obj != nullptr, std::make_shared<ParamNumError>("RdbStore must be not nullptr."));
+        ASSERT_RETURN_SET_ERROR(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
+        rdbStore = obj->GetInstance();
+        ASSERT_RETURN_SET_ERROR(
+            rdbStore != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        tableName = JSUtils::Convert2String(env, argv[0]);
+        ASSERT_RETURN_SET_ERROR(
+            RdbSqlUtils::IsValidTableName(tableName), std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+        // parse waitTime when the number of parameters is 2
+        if (argc == 2) {
+            int64_t cursorJsValue = 0;
+            auto status = JSUtils::Convert2ValueExt(env, argv[1], cursorJsValue);
+            ASSERT_RETURN_SET_ERROR(status == napi_ok && cursorJsValue >= 0,
+                std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal cursor"));
+            cursor = static_cast<uint64_t>(cursorJsValue);
+        }
+        return OK;
+    }
+    std::shared_ptr<NativeRdb::RdbStore> StealRdbStore()
+    {
+        auto rdb = std::move(rdbStore);
+        rdbStore = nullptr;
+        return rdb;
+    }
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
+    uint64_t cursor = UINT64_MAX;
+    std::string tableName;
+};
+
+napi_value RdbStoreProxy::CleanDeviceDirtyData(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<CleanDeviceDirtyDataContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto result = context->StealRdbStore()->CleanDeviceDirtyData(context->tableName, context->cursor);
+        return result != E_NOT_SUPPORT ? result : E_NOT_SUPPORT_NEW;
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerErrorExt>(E_ERROR));
+    };
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -2217,6 +2328,82 @@ struct RdbContext : public RdbStoreContextBase {
         return OK;
     }
 };
+
+struct RdbStoreSyncExContext : public RdbContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        const size_t argNum = 2;
+        ASSERT_RETURN_SET_ERROR(argc == argNum, std::make_shared<ParamNumError>("2 or 3"));
+        CHECK_RETURN_ERR(OK == ParsedInstance(self));
+
+        // Use a temporary RdbStoreContext for parsing
+        auto parseContext = std::make_shared<RdbStoreContext>();
+        parseContext->env_ = env_;
+        parseContext->boundObj = boundObj;
+        parseContext->rdbStore = rdbStore;
+
+        CHECK_RETURN_ERR(OK == ParseSyncModeArg(env, argv[0], parseContext));
+        CHECK_RETURN_ERR(OK == ParsePredicates(env, argv[1], parseContext));
+
+        // Copy the parsed values to this context
+        enumArg = parseContext->enumArg;
+        predicatesProxy = parseContext->predicatesProxy;
+        return OK;
+    }
+
+    int32_t enumArg;
+    RdbPredicatesProxy *predicatesProxy;
+};
+
+napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreSyncExContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        context->Parse(env, argc, argv, self);
+    };
+    context->SetAction(env, info, std::move(input), nullptr, nullptr);
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+    auto queue = obj->queue_;
+    napi_value promise = nullptr;
+    auto defer = context->defer_;
+    auto callback = context->callback_;
+    context->callback_ = nullptr;
+    if (callback == nullptr) {
+        napi_status status = napi_create_promise(env, &defer, &promise);
+        RDB_NAPI_ASSERT_BASE(env, status == napi_ok,
+            std::make_shared<InnerError>("failed(" + std::to_string(status) + ") to create promise"), nullptr);
+    } else {
+        napi_get_undefined(env, &promise);
+    }
+    RDB_NAPI_ASSERT_BASE(env, context->predicatesProxy != nullptr,
+        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS), nullptr);
+    RDB_NAPI_ASSERT_BASE(env, context->predicatesProxy->GetPredicates() != nullptr,
+        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS), nullptr);
+    auto predicates = *context->predicatesProxy->GetPredicates();
+    auto syncCallback = [queue, defer, callback](const SyncResultEx &result) {
+        auto args = [result](napi_env env, int &argc, napi_value *argv) {
+            argv[1] = JSUtils::Convert2JSValue(env, result);
+        };
+        callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnCompleteEx")
+                 : queue->AsyncPromise({ defer }, args, "DistributedSync::OnCompleteEx");
+    };
+    auto exec = [queue, defer, callback, predicates, rdbStore = context->StealRdbStore(), enumArg = context->enumArg,
+                    syncCallback]() mutable {
+        SyncOption option{ static_cast<DistributedRdb::SyncMode>(enumArg), false, true };
+        auto ret = rdbStore->SyncEx(option, predicates, syncCallback);
+        if (ret != NativeRdb::E_OK) {
+            auto args = [ret](napi_env env, int &argc, napi_value *argv) mutable {
+                SetBusinessError(env, std::make_shared<InnerErrorExt>(ret), &argv[0]);
+            };
+            callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnErrorEx")
+                     : queue->AsyncPromise({ defer }, args, "DistributedSync::OnErrorEx");
+        }
+    };
+    queue->Execute(std::move(exec), "DistributedSync::ExecuteEx");
+    context = nullptr;
+    return promise;
+}
 
 struct RdbBatchInsertWithReturningContext : public RdbContext {
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)

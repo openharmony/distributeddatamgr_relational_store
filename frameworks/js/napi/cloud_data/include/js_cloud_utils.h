@@ -37,6 +37,7 @@ using SwitchConfig = OHOS::CloudData::SwitchConfig;
 using DBActionInfo = OHOS::CloudData::DBActionInfo;
 using ClearConfig = OHOS::CloudData::ClearConfig;
 using BundleInfo = OHOS::CloudData::BundleInfo;
+using CloudSyncConfig = DistributedRdb::CloudSyncConfig;
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, ExtraData &output);
@@ -67,6 +68,9 @@ int32_t Convert2Value(napi_env env, napi_value input, ClearConfig &output);
 
 template<>
 int32_t Convert2Value(napi_env env, napi_value input, BundleInfo &output);
+
+template<>
+int32_t Convert2Value(napi_env env, napi_value input, CloudSyncConfig &output);
 
 template<>
 napi_value Convert2JSValue(napi_env env, const Participant &value);

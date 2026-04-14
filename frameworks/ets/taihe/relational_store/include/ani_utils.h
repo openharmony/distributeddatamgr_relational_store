@@ -29,6 +29,14 @@
 #include <variant>
 #include <vector>
 
+#define ANI_CHECK_RETURN(call)       \
+    do {                             \
+        ani_status _status = (call); \
+        if (_status != ANI_OK) {     \
+            return _status;          \
+        }                            \
+    } while (0)
+
 namespace ani_utils {
 enum class ErrorHandling {
     STRICT,  // Strict mode: All errors are returned.
@@ -239,7 +247,7 @@ ani_status AniGetPropertyImpl(ani_env *env, ani_object ani_obj, const char *prop
 }
 
 ani_status CreateAniObj(ani_env *env, const std::string &className, const std::string &methodName,
-    const std::string &signature, ani_object &obj, ...);
+    const std::string &signature, ani_object *obj, ...);
 ani_method FindClassMethod(
     ani_env *env, const std::string &className, const std::string &methodName, const std::string &signature);
 ani_status Convert2AniValue(ani_env *env, const std::map<std::string, int> &value, ani_object &result);

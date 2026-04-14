@@ -107,6 +107,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.type_ = config.GetDistributedType();
     syncerParam_.isEncrypt_ = config.IsEncrypt();
     syncerParam_.isAutoClean_ = config.GetAutoClean();
+    syncerParam_.isAutoCleanDevice_ = config.GetAutoCleanDevice();
     syncerParam_.isSearchable_ = config.IsSearchable();
     syncerParam_.password_ = config.GetEncryptKey();
     syncerParam_.haMode_ = config.GetHaMode();
@@ -346,6 +347,31 @@ int RdbStoreImpl::CleanDirtyData(const std::string &table, uint64_t cursor)
         LOG_ERROR("The database is busy or closed.");
         return errCode;
     }
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    errCode = conn->CleanDirtyData(table, cursor);
+    return errCode == E_OK ? E_OK : E_ERROR;
+}
+
+int RdbStoreImpl::CleanDeviceDirtyData(const std::string &table, uint64_t cursor)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
+        return E_NOT_SUPPORT;
+    }
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK) {
+        LOG_ERROR("The database is busy or closed.");
+        return errCode;
+    }
+
     errCode = conn->CleanDirtyData(table, cursor);
     return errCode;
 }
@@ -420,6 +446,9 @@ int RdbStoreImpl::SetDistributedTables(
     if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
         return E_NOT_SUPPORT;
     }
+    if (IsInvalidDistributedConfig(distributedConfig)) {
+        return E_INVALID_ARGS;
+    }
     isNeedSetAcl_ = true;
     SetFileGid(config_, SERVICE_GID);
     if (tables.empty()) {
@@ -432,7 +461,12 @@ int RdbStoreImpl::SetDistributedTables(
     }
     syncerParam_.asyncDownloadAsset_ = distributedConfig.asyncDownloadAsset;
     syncerParam_.enableCloud_ = distributedConfig.enableCloud;
+    syncerParam_.customSwitch_ = distributedConfig.customSwitch;
     syncerParam_.distributedTableMode_ = distributedConfig.tableType;
+    syncerParam_.autoSyncSwitch_ = distributedConfig.autoSyncSwitch;
+    syncerParam_.assetConflictPolicy_ = distributedConfig.assetConflictPolicy;
+    syncerParam_.assetTempPath_ = distributedConfig.assetTempPath;
+    syncerParam_.assetDownloadOnDemand_ = distributedConfig.assetDownloadOnDemand;
     int32_t errorCode = service->SetDistributedTables(
         syncerParam_, tables, distributedConfig.references, distributedConfig.isRebuild, type);
     if (errorCode != E_OK) {
@@ -471,11 +505,14 @@ int RdbStoreImpl::RetainDeviceData(const std::map<std::string, std::vector<std::
     if (errCode != E_OK || service == nullptr) {
         return errCode != E_OK ? errCode : E_ERROR;
     }
-    int32_t errorCode = service->RetainDeviceData(syncerParam_, retainDevices);
+    auto [errorCode, changeRows] = service->RetainDeviceData(syncerParam_, retainDevices);
     if (errorCode != RdbStatus::RDB_OK) {
         LOG_ERROR("Fail to remove except device data, error:%{public}d, name:%{public}s.", errorCode,
             SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
+    Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_RETAIN_DEVICE_DATA, config_.GetBundleName(),
+        config_.GetName() + " retain device data result:" + std::to_string(errorCode) +
+            ", remove data:" + std::to_string(changeRows)));
     return SqliteUtils::ConvertRdbStatusNative(errorCode);
 }
 
@@ -528,13 +565,20 @@ std::pair<int32_t, int32_t> RdbStoreImpl::UpdateDistributedInfo(
     }
     std::string sql = SqliteSqlBuilder::BuildUpdateLogString(predicates, logTable, distributedInfo);
     auto [code, result] = ExecuteForRow(sql, args);
+    if (code != RdbStatus::RDB_OK) {
+        LOG_ERROR("Fail to update distributed info, error:%{public}d, name:%{public}s.", code,
+            SqliteUtils::Anonymous(config_.GetName()).c_str());
+    }
+    Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, E_DFX_UPDATE_DISTRIBUTED_INFO, config_.GetBundleName(),
+        config_.GetName() + " update distributed info result:" + std::to_string(code) +
+            ", update data:" + std::to_string(result.changed)));
     return { code, result.changed };
 }
 
 int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+    if (isReadOnly_ || isMemoryRdb_ || (!cryptoParam.isVectorRekey && config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     if (!cryptoParam.IsValid()) {
@@ -681,12 +725,37 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     return Sync(option, predicate, [callback](Details &&details) {
         Briefs briefs;
         for (auto &[key, value] : details) {
-            briefs.insert_or_assign(key, value.code);
+            briefs.insert_or_assign(key, value.code == 0 ? 0 : 1);
         }
         if (callback != nullptr) {
             callback(briefs);
         }
     });
+}
+
+int RdbStoreImpl::SyncEx(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBriefEx &callback)
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        return E_NOT_SUPPORT;
+    }
+    auto errorCode = Sync(option, predicate, [callback](Details &&details) {
+        if (callback != nullptr) {
+            BriefsEx briefsEx;
+            for (auto &[key, value] : details) {
+                SyncResultInfo syncResultInfo;
+                syncResultInfo.code = static_cast<uint32_t>(value.code);
+                syncResultInfo.device = std::move(key);
+                syncResultInfo.message = std::move(value.message);
+                briefsEx.emplace_back(std::move(syncResultInfo));
+            }
+            callback(briefsEx);
+        }
+    });
+    if (errorCode == RdbStatus::RDB_PERMISSION_DENIED) {
+        return E_SYNC_PERMISSION_DENIED;
+    }
+    return errorCode;
 }
 
 int RdbStoreImpl::Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async)
@@ -703,6 +772,9 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     DistributedRdb::RdbService::Option rdbOption;
     rdbOption.mode = option.mode;
     rdbOption.isAsync = !option.isBlock;
+    rdbOption.enableErrorDetail = option.enableErrorDetail;
+    rdbOption.isDownloadOnly = option.isDownloadOnly;
+    rdbOption.isEnablePredicate = option.isEnablePredicate;
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
     ret = InnerSync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), async);
     return ret;
@@ -726,6 +798,25 @@ int RdbStoreImpl::InnerSync(
         return errCode;
     }
     return E_OK;
+}
+
+int RdbStoreImpl::StopCloudSync()
+{
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    if (config_.IsVector() || isMemoryRdb_ || isReadOnly_) {
+        return E_NOT_SUPPORT;
+    }
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK || service == nullptr) {
+        LOG_ERROR("GetRdbService failed when stop cloud sync, err is %{public}d.", errCode);
+        return errCode;
+    }
+    errCode = service->StopCloudSync(syncerParam_);
+    if (errCode != E_OK) {
+        LOG_ERROR("StopCloudSync failed, storeName: %{public}s errCode:0x%{public}x.",
+            SqliteUtils::Anonymous(name_).c_str(), errCode);
+    }
+    return errCode;
 }
 
 std::string RdbStoreImpl::GetUri(const std::string &event)
@@ -1116,7 +1207,7 @@ int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLo
     int errCode = statement->ModifyLockStatus(predicates.GetTableName(), hashKeys, isLock);
     if (errCode == E_WAIT_COMPENSATED_SYNC) {
         LOG_DEBUG("Start compensation sync.");
-        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true, true };
+        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true, true, false};
         auto memo = AbsRdbPredicates(predicates.GetTableName()).GetDistributedPredicates();
         InnerSync(syncerParam_, option, memo, nullptr);
         return E_OK;
@@ -2699,7 +2790,7 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
         if (tables.empty()) {
             return;
         }
-        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true };
+        DistributedRdb::RdbService::Option option = { DistributedRdb::TIME_FIRST, 0, true, true, false, false };
         auto memo = AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
         InnerSync(param, option, memo, nullptr);
     });
@@ -3351,5 +3442,13 @@ void RdbStoreImpl::ReplayCallbackImpl(const RdbStoreConfig &config)
         LOG_WARN("start task failed, remove lock for %{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
         readLock->Unlock();
     }
+}
+
+bool RdbStoreImpl::IsInvalidDistributedConfig(const DistributedRdb::DistributedConfig &distributedConfig)
+{
+    if (distributedConfig.assetConflictPolicy != DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_TEMP_PATH) {
+        return false;
+    }
+    return distributedConfig.assetTempPath.empty() || distributedConfig.assetTempPath.find("../") != std::string::npos;
 }
 } // namespace OHOS::NativeRdb
