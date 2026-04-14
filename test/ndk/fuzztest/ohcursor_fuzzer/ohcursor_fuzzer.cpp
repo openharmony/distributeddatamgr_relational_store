@@ -28,7 +28,6 @@
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
 
-
 #define COLUMN_INDEX_MIN 0
 #define COLUMN_INDEX_MAX 10
 static constexpr const char *RDB_TEST_PATH = "/data/storage/el2/database/com.ohos.example.distributedndk/entry/";
@@ -235,11 +234,8 @@ void OH_Cursor_GetFloatVectorFuzz(FuzzedDataProvider &provider)
 }
 } // namespace OHOS
 
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+void OH_Cursor_Part1Fuzz(FuzzedDataProvider &provider)
 {
-    // Run your code on data
-    FuzzedDataProvider provider(data, size);
     OHOS::OH_Cursor_GetColumnCountFuzz(provider);
     OHOS::OH_Cursor_GetColumnTypeFuzz(provider);
     OHOS::OH_Cursor_GetColumnIndexFuzz(provider);
@@ -248,6 +244,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::OhCursorGoToNextRowFuzz();
     OHOS::OH_Cursor_GetSizeFuzz(provider);
     OHOS::OH_Cursor_GetTextFuzz(provider);
+}
+
+void OH_Cursor_Part2Fuzz(FuzzedDataProvider &provider)
+{
     OHOS::OH_Cursor_GetInt64Fuzz(provider);
     OHOS::OH_Cursor_GetRealFuzz(provider);
     OHOS::OH_Cursor_GetBlobFuzz(provider);
@@ -257,5 +257,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::OH_Cursor_GetAssetsCountFuzz(provider);
     OHOS::OH_Cursor_GetFloatVectorCountFuzz(provider);
     OHOS::OH_Cursor_GetFloatVectorFuzz(provider);
+}
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+    // Run your code on data
+    FuzzedDataProvider provider(data, size);
+    OH_Cursor_Part1Fuzz(provider);
+    OH_Cursor_Part1Fuzz(provider);
     return 0;
 }
