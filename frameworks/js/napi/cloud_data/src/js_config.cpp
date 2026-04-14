@@ -520,7 +520,7 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
                 "The size of bundleInfos must be less than or equal to 30.");
         } else {
             ASSERT_BUSINESS_ERR(
-                ctxt, type == napi_string, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+                ctxt, type == napi_string, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
         }
     });
 }
