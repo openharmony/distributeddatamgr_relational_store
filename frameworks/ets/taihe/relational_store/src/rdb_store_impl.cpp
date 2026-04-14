@@ -18,6 +18,7 @@
 
 #include <future>
 #include <memory>
+#include <regex>
 
 #include "ani.h"
 #include "ani_async_call.h"
@@ -51,6 +52,7 @@ namespace RdbTaihe {
 static constexpr int WAIT_TIME_DEFAULT = 2;
 static constexpr int WAIT_TIME_MIN = 1;
 static constexpr int WAIT_TIME_MAX = 300;
+static constexpr int TABLE_NAME_MAX = 256;
 
 class DefaultOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
 public:
@@ -547,11 +549,16 @@ void RdbStoreImpl::CleanDeviceDirtyDataWithOptionCursor(string_view table, optio
     uint64_t nativeCursor = 0;
     if (cursor.has_value()) {
         ASSERT_RETURN_THROW_ERROR(
-            cursor.value() >= 0, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS), RDB_DO_NOTHING);
+            cursor.value() > 0, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS), RDB_DO_NOTHING);
         nativeCursor = cursor.value();
     }
     std::string nativeTable(table);
-    if (!RdbSqlUtils::IsValidTableName(nativeTable)) {
+    if (nativeTable.empty() || nativeTable.length() > TABLE_NAME_MAX) {
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS);
+        return;
+    }
+    std::regex validName("^[a-zA-Z0-9_]*$");
+    if (!std::regex_match(nativeTable, validName)) {
         ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS);
         return;
     }
