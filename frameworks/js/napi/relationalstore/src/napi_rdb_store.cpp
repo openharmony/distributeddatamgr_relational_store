@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <cstdint>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -1922,6 +1923,15 @@ napi_value RdbStoreProxy::CleanDirtyData(napi_env env, napi_callback_info info)
 }
 
 struct CleanDeviceDirtyDataContext : public EnhancedContext {
+    bool IsValidTableName(const std::string &table)
+    {
+        // table name length max is 256
+        if (table.empty() || table.length() > 256) {
+            return false;
+        }
+        std::regex validName("^[a-zA-Z0-9_]*$");
+        return std::regex_match(table, validName);
+    }
     int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
     {
         ASSERT_RETURN_SET_ERROR(argc < 3 && argc > 0, std::make_shared<ParamNumError>("1 - 2"));
@@ -1932,13 +1942,13 @@ struct CleanDeviceDirtyDataContext : public EnhancedContext {
         ASSERT_RETURN_SET_ERROR(
             rdbStore != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         tableName = JSUtils::Convert2String(env, argv[0]);
-        ASSERT_RETURN_SET_ERROR(
-            RdbSqlUtils::IsValidTableName(tableName), std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+        ASSERT_RETURN_SET_ERROR(IsValidTableName(tableName),
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal tableName"));
         // parse waitTime when the number of parameters is 2
         if (argc == 2) {
             int64_t cursorJsValue = 0;
             auto status = JSUtils::Convert2ValueExt(env, argv[1], cursorJsValue);
-            ASSERT_RETURN_SET_ERROR(status == napi_ok && cursorJsValue >= 0,
+            ASSERT_RETURN_SET_ERROR(status == napi_ok && cursorJsValue > 0,
                 std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal cursor"));
             cursor = static_cast<uint64_t>(cursorJsValue);
         }
