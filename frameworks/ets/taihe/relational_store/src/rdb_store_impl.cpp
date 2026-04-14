@@ -34,6 +34,7 @@
 #include "rdb_predicates_impl.h"
 #include "rdb_result_set_bridge.h"
 #include "rdb_sql_log.h"
+#include "rdb_sql_utils.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
 #include "rdb_utils.h"
@@ -534,6 +535,34 @@ void RdbStoreImpl::CleanDirtyDataWithOptionCursor(string_view table, optional_vi
     }
 }
 
+void RdbStoreImpl::CleanDeviceDirtyDataWithOptionCursor(string_view table, optional_view<uint64_t> cursor)
+{
+    if (!isSystemApp_) {
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_NON_SYSTEM_APP);
+        return;
+    }
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(
+        store != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    uint64_t nativeCursor = 0;
+    if (cursor.has_value()) {
+        ASSERT_RETURN_THROW_ERROR(
+            cursor.value() >= 0, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS), RDB_DO_NOTHING);
+        nativeCursor = cursor.value();
+    }
+    std::string nativeTable(table);
+    if (!RdbSqlUtils::IsValidTableName(nativeTable)) {
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_INVALID_ARGS);
+        return;
+    }
+    int32_t errCode = store->CleanDeviceDirtyData(nativeTable, nativeCursor);
+    if (errCode == OHOS::NativeRdb::E_OK) {
+        return;
+    }
+    errCode = errCode != OHOS::NativeRdb::E_NOT_SUPPORT ? errCode : OHOS::NativeRdb::E_NOT_SUPPORT_NEW;
+    ThrowInnerErrorExt(errCode);
+}
+
 ResultSet RdbStoreImpl::QuerySharingResourceWithOptionColumn(weak::RdbPredicates predicates,
     optional_view<array<string>> columns)
 {
@@ -982,7 +1011,7 @@ void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t
         ThrowParamError("mode must be a SyncMode of device.");
         return;
     }
-    OHOS::DistributedRdb::SyncOption option{ nativeMode, false };
+    OHOS::DistributedRdb::SyncOption option{ nativeMode, false, false };
     std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
     if (!context->Init(callback)) {
         ThrowInnerError(OHOS::NativeRdb::E_ERROR);
@@ -1010,6 +1039,48 @@ void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t
     }
 }
 
+void RdbStoreImpl::SyncEx(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
+    ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
+        std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
+    auto nativeMode = ani_rdbutils::SyncModeToNative(mode);
+    if (nativeMode != OHOS::DistributedRdb::SyncMode::PUSH && nativeMode != OHOS::DistributedRdb::SyncMode::PULL) {
+        ThrowParamError("mode must be a SyncMode of device.");
+        return;
+    }
+
+    OHOS::DistributedRdb::SyncOption option{ nativeMode, false, true};
+    std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
+    if (!context->Init(callback)) {
+        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
+        return;
+    }
+    promise = context->promise_;
+    ::taihe::env_guard gurd;
+    auto env = gurd.get_env();
+    auto nativeSyncCallback = [context](const OHOS::DistributedRdb::SyncResultEx &data) {
+        ::taihe::env_guard gurd;
+        auto callbackEnv = gurd.get_env();
+        ani_object object = {};
+        ani_status status = ani_rdbutils::ConvertSyncResultInfos2AniValue(callbackEnv, data, object);
+        context->result_ = static_cast<ani_ref>(object);
+        if (status != ANI_OK || context->result_ == nullptr) {
+            context->error_ = std::make_shared<InnerError>(NativeRdb::E_ERROR);
+        }
+        AniAsyncCall::ReturnResult(context, callbackEnv);
+    };
+    int errCode = store->SyncEx(option, *rdbPredicateNative, nativeSyncCallback);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        context->error_ = std::make_shared<InnerError>(errCode);
+        AniAsyncCall::ReturnResult(context, env);
+        return;
+    }
+}
+
 void RdbStoreImpl::SyncAsync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback)
 {
     ani_object promise = nullptr;
@@ -1020,6 +1091,13 @@ uintptr_t RdbStoreImpl::SyncPromise(SyncMode mode, weak::RdbPredicates predicate
 {
     ani_object promise = nullptr;
     Sync(mode, predicates, 0, promise);
+    return reinterpret_cast<uintptr_t>(promise);
+}
+
+uintptr_t RdbStoreImpl::SyncExPromise(SyncMode mode, weak::RdbPredicates predicates)
+{
+    ani_object promise = nullptr;
+    SyncEx(mode, predicates, 0, promise);
     return reinterpret_cast<uintptr_t>(promise);
 }
 
@@ -1098,6 +1176,59 @@ void RdbStoreImpl::CloudSyncWithPredicates(
             }
         };
     int errCode = store->Sync(option, *rdbPredicateNative, nativeProgressCallback);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
+    }
+}
+void RdbStoreImpl::CloudSyncWithConfig(
+    CloudSyncConfig const &config, callback_view<void(ProgressDetails const &)> progress)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    
+    if (config.enablePredicate.has_value() && config.enablePredicate.value() &&
+        !config.predicates.has_value()) {
+        ThrowParamError("predicates cannot be empty when enablePredicate is true");
+        return;
+    }
+    
+    OHOS::DistributedRdb::SyncOption option {
+        .mode = static_cast<OHOS::DistributedRdb::SyncMode>(config.mode),
+        .isBlock = false,
+        .isDownloadOnly = config.downloadOnly.has_value() ? config.downloadOnly.value() : false,
+        .isEnablePredicate = config.enablePredicate.has_value() ? config.enablePredicate.value() : false
+    };
+    
+    std::shared_ptr<OHOS::NativeRdb::RdbPredicates> nativePredicates;
+    if (config.predicates.has_value()) {
+        nativePredicates = ani_rdbutils::GetNativePredicatesFromTaihe(config.predicates.value());
+        ASSERT_RETURN_THROW_ERROR(nativePredicates != nullptr,
+            std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
+        if (config.enablePredicate.has_value() && config.enablePredicate.value()) {
+            if (!isSystemApp_) {
+                ThrowNonSystemError();
+                return;
+            }
+        }
+    }
+    
+    callback<void(ProgressDetails const &)> holder = progress;
+    auto nativeProgressCallback =
+        [holder](std::map<std::string, OHOS::DistributedRdb::ProgressDetail> &&nativeProgressMap) {
+            for (auto &[key, nativeProgress] : nativeProgressMap) {
+                auto taiheProgress = ani_rdbutils::ProgressDetailToTaihe(nativeProgress);
+                holder(taiheProgress);
+            }
+        };
+    
+    int errCode = OHOS::NativeRdb::E_OK;
+    if (nativePredicates != nullptr) {
+        errCode = store->Sync(option, *nativePredicates, nativeProgressCallback);
+    } else {
+        std::vector<std::string> emptyTables;
+        errCode = store->Sync(option, emptyTables, nativeProgressCallback);
+    }
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }
@@ -1702,6 +1833,22 @@ void RdbStoreImpl::RekeySync(taihe::optional_view<ohos::data::relationalStore::C
     }
 }
 
+void RdbStoreImpl::RekeySyncWithEncryptionKey(taihe::array_view<uint8_t> encryptKey)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    std::vector<uint8_t> key(encryptKey.begin(), encryptKey.end());
+    NativeRdb::RdbStoreConfig::CryptoParam cryptoParamNative = ani_rdbutils::Uint8ArrayParamToNative(key);
+
+    ASSERT_RETURN_THROW_ERROR(cryptoParamNative.IsValid(),
+        std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal EncryptKey."), RDB_REVT_NOTHING);
+    auto errCode = store->Rekey(cryptoParamNative);
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode);
+    }
+}
+
 void RdbStoreImpl::RekeyExSync(ohos::data::relationalStore::CryptoParam const& cryptoParam)
 {
     auto store = GetResource();
@@ -1714,6 +1861,21 @@ void RdbStoreImpl::RekeyExSync(ohos::data::relationalStore::CryptoParam const& c
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }
+}
+
+void RdbStoreImpl::StopCloudSyncPromise()
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
+    
+    LOG_DEBUG("RdbStoreImpl::StopCloudSync start.");
+    auto errCode = store->StopCloudSync();
+    if (errCode != OHOS::NativeRdb::E_OK) {
+        LOG_ERROR("StopCloudSync failed, errCode = %{public}d", errCode);
+        ThrowInnerError(errCode);
+    }
+    LOG_DEBUG("RdbStoreImpl::StopCloudSync success.");
 }
 
 void RdbStoreImpl::SetLocaleSync(taihe::string_view locale)

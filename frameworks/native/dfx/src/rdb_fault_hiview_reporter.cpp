@@ -304,6 +304,9 @@ bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_
     if (bundleName.empty()) {
         return false;
     }
+    if ((errCode == E_DFX_RETAIN_DEVICE_DATA) || (errCode == E_DFX_UPDATE_DISTRIBUTED_INFO)) {
+        return true;
+    }
     uint8_t *counter = GetFaultCounter(errCode);
     if (counter == nullptr) {
         return false;

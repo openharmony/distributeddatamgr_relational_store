@@ -121,8 +121,10 @@ public:
     int32_t RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     std::string ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async) override;
+    int SyncEx(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBriefEx &callback) override;
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail &async) override;
+    int StopCloudSync() override;
     int Subscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) override;
     int UnSubscribe(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) override;
     int SubscribeObserver(const SubscribeOption &option, const std::shared_ptr<RdbStoreObserver> &observer) override;
@@ -135,6 +137,7 @@ public:
         const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) override;
     int GetRebuilt(RebuiltType &rebuilt) override;
     int CleanDirtyData(const std::string &table, uint64_t cursor) override;
+    int CleanDeviceDirtyData(const std::string &table, uint64_t cursor) override;
     std::pair<int32_t, int32_t> Attach(
         const RdbStoreConfig &config, const std::string &attachName, int32_t waitTime) override;
     std::pair<int32_t, int32_t> Detach(const std::string &attachName, int32_t waitTime) override;
@@ -250,6 +253,7 @@ private:
     int StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatus);
     int RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
         std::shared_ptr<ConnectionPool> pool);
+    bool IsInvalidDistributedConfig(const DistributedRdb::DistributedConfig &distributedConfig);
     static int32_t RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path);
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);

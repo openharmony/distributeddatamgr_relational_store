@@ -122,6 +122,16 @@ static constexpr int E_DFX_SILENT_PROXY_QUERY = (E_DFX_BASE + 0x13);
  * @brief Only use for dfx, interface is used.
  */
 static constexpr int E_DFX_INTERFACE_USED = (E_DFX_BASE + 0x14);
+
+/**
+ * @brief Only use for dfx, the interface of retainning device data is used.
+ */
+static constexpr int E_DFX_RETAIN_DEVICE_DATA = (E_DFX_BASE + 0x15);
+
+/**
+ * @brief Only use for dfx, the interface of updating distributed info is used.
+ */
+static constexpr int E_DFX_UPDATE_DISTRIBUTED_INFO = (E_DFX_BASE + 0x16);
 } // namespace NativeRdb
 } // namespace OHOS
 

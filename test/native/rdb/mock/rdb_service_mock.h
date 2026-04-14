@@ -33,7 +33,7 @@ public:
         (const RdbSyncerParam &param, const std::vector<std::string> &tables, const std::vector<Reference> &references,
             bool isRebuild, int32_t type),
         (override));
-    MOCK_METHOD(int32_t, RetainDeviceData,
+    MOCK_METHOD((std::pair<int32_t, int64_t>), RetainDeviceData,
         (const RdbSyncerParam &param, (const std::map<std::string, std::vector<std::string>> &retainDevices)),
         (override));
     MOCK_METHOD((std::pair<int32_t, std::vector<std::string>>), ObtainUuid,
@@ -95,6 +95,8 @@ public:
     MOCK_METHOD(int32_t, VerifyPromiseInfo, (const RdbSyncerParam &param), (override));
 
     MOCK_METHOD(int32_t, ReportStatistic, (const RdbSyncerParam &param, const RdbStatEvent &statEvent), (override));
+
+    MOCK_METHOD(int32_t, StopCloudSync, (const RdbSyncerParam &param), (override));
 };
 } // namespace DistributedRdb
 } // namespace OHOS

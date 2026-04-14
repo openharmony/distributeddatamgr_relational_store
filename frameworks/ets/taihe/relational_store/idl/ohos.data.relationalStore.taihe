@@ -31,7 +31,14 @@ enum AssetStatus: i32 {
     ASSET_UPDATE,
     ASSET_DELETE,
     ASSET_ABNORMAL,
-    ASSET_DOWNLOADING
+    ASSET_DOWNLOADING,
+    ASSET_TO_DOWNLOAD
+}
+
+enum AssetConflictPolicy: i32 {
+    CONFLICT_POLICY_DEFAULT = 0,
+    CONFLICT_POLICY_TIME_FIRST = 1,
+    CONFLICT_POLICY_TEMP_PATH = 2
 }
 
 struct Asset {
@@ -79,6 +86,7 @@ struct StoreConfig {
     customDir: Optional<String>;
     rootDir: Optional<String>;
     autoCleanDirtyData: Optional<bool>;
+    autoCleanDeviceDirtyData: Optional<bool>;
     isSearchable: Optional<bool>;
     allowRebuild: Optional<bool>;
     vector: Optional<bool>;
@@ -149,13 +157,15 @@ enum ProgressCode: i32 {
     LOCKED_BY_OTHERS,
     RECORD_LIMIT_EXCEEDED,
     NO_SPACE_FOR_ASSET,
-    BLOCKED_BY_NETWORK_STRATEGY
+    BLOCKED_BY_NETWORK_STRATEGY,
+    STOP_CLOUD_SYNC
 }
 
 struct ProgressDetails {
     schedule: Progress;
     code: ProgressCode;
     details: @record Map<String, TableDetails>;
+    messge: Optional<String>;
 }
 
 struct SqlExecutionInfo {
@@ -213,7 +223,9 @@ enum DistributedTableType : i32 {
 
 enum DistributedField : String {
     ORIGIN = "#_origin",
-    ORIGIN_ORIDEVICE = "#_ori_device"
+    ORIGIN_ORIDEVICE = "#_ori_device",
+    CURSOR_FIELD = "#_cursor",
+    DELETED_FLAG_FIELD = "#_deleted_flag"
 }
  
 enum DistributedOrigin : i32 {
@@ -228,17 +240,49 @@ struct Reference {
     refFields: @record Map<String, String>;
 }
 
+struct CloudSyncConfig {
+    mode: i32;
+    downloadOnly: Optional<bool>;
+    enablePredicate: Optional<bool>;
+    predicates: Optional<RdbPredicates>;
+}
+
 struct DistributedConfig {
     autoSync: bool;
     references: Optional<Array<Reference>>;
     asyncDownloadAsset: Optional<bool>;
     enableCloud: Optional<bool>;
     tableType: Optional<DistributedTableType>;
+    autoSyncSwitch: Optional<bool>;
+    assetConflictPolicy: Optional<AssetConflictPolicy>;
+    assetTempPath: Optional<String>;
+    assetDownloadOnDemand: Optional<bool>;
 }
 
 struct DistributedInfo {
     flag: Optional<DistributedOrigin>;
     oriDevice: Optional<String>;
+}
+
+enum SyncResultCode : i32 {
+    SUCCESS = 0,
+    FAIL,
+    OFFLINE,
+    INVALID_ARGS,
+    DISTRIBUTED_TABLE_NOE_SET,
+    TABLE_FIELD_MISMATCH,
+    DISTRIBUTED_SCHEMA_MISMATCH,
+    BUSY,
+    CORRUPTED,
+    TIME_OUT,
+    SCHEMA_CHANGED,
+    CONSTRAINT_VIOLATION,
+}
+
+struct SyncResult {
+    device: String;
+    code: SyncResultCode;
+    message: String;
 }
 
 enum ConflictResolution  : i32 {
@@ -781,6 +825,9 @@ interface RdbStore {
     @gen_promise("cleanDirtyData")
     CleanDirtyDataWithOptionCursor(table: String, cursor: Optional<u64>): void;
 
+    @gen_promise("cleanDeviceDirtyData")
+    CleanDeviceDirtyDataWithOptionCursor(table: String, cursor: Optional<u64>): void;
+
     @gen_promise("querySharingResource")
     QuerySharingResourceWithOptionColumn(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
 
@@ -860,6 +907,9 @@ interface RdbStore {
     @gen_promise("obtainDistributedTableName")
     ObtainDistributedTableNameSync(device: String, table: String): String;
 
+    @rename("syncEx")
+    SyncExPromise(mode: SyncMode, predicates: RdbPredicates): @sts_type("Promise<Array<SyncResult>>") Opaque;
+
     @rename("sync")
     SyncPromise(mode: SyncMode, predicates: RdbPredicates): @sts_type("Promise<Array<[string, int]>>") Opaque;
     @rename("sync")
@@ -876,6 +926,13 @@ interface RdbStore {
     @gen_async("cloudSync")
     @gen_promise("cloudSync")
     CloudSyncWithPredicates(mode: SyncMode, predicates: RdbPredicates, progress: (p : ProgressDetails) => void): void;
+
+    @gen_async("cloudSync")
+    @gen_promise("cloudSync")
+    CloudSyncWithConfig(config: CloudSyncConfig, progress: (p : ProgressDetails) => void): void;
+
+    @gen_promise("stopCloudSync")
+    StopCloudSyncPromise(): void;
 
     @gen_async("remoteQuery")
     @gen_promise("remoteQuery")
@@ -1053,6 +1110,9 @@ interface RdbStore {
 
     @gen_promise("rekey")
     RekeySync(cryptoParam: Optional<CryptoParam>): void;
+
+    @gen_promise("rekey")
+    RekeySyncWithEncryptionKey(encryptionKey: Array<u8>): void;
 
     @gen_promise("rekeyEx")
     RekeyExSync(cryptoParam: CryptoParam): void;

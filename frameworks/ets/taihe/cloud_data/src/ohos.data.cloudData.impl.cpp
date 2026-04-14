@@ -26,6 +26,8 @@ static constexpr size_t MAX_ACTIONS = 1000;
 std::mutex ConfigImpl::syncInfoObserversMutex_;
 std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<TaiheCloudSyncInfoObserver>>>>
     ConfigImpl::syncInfoObservers_;
+std::mutex ConfigImpl::autoSyncTriggerObserversMutex_;
+std::vector<std::shared_ptr<TaiheCloudSyncTriggerObserver>> ConfigImpl::autoSyncTriggerObservers_;
 
 bool VerifyExtraData(const ExtraData &data)
 {
@@ -46,7 +48,35 @@ void TaiheCloudSyncInfoObserver::OnSyncInfoChanged(const std::map<std::string, Q
     }
 }
 
+void TaiheCloudSyncInfoObserver::OnSyncInfoChanged(const int32_t triggerMode)
+{
+    LOG_INFO("OnSyncInfoChanged triggerMode: %{public}d", triggerMode);
+}
+
 bool TaiheCloudSyncInfoObserver::operator==(const TaiheSyncInfoCallback &other) const
+{
+    return callback_ == other;
+}
+
+TaiheCloudSyncTriggerObserver::TaiheCloudSyncTriggerObserver(TaiheSyncTriggerCallback callback)
+    : callback_(std::move(callback))
+{
+}
+
+void TaiheCloudSyncTriggerObserver::OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data)
+{
+}
+
+void TaiheCloudSyncTriggerObserver::OnSyncInfoChanged(const int32_t triggerMode)
+{
+    auto mode = ::ohos::data::cloudData::AutoSyncTriggerMode::from_value(triggerMode);
+    TaiheCloudSyncTriggerInfo triggerInfo = {
+        .mode = mode
+    };
+    callback_(triggerInfo);
+}
+
+bool TaiheCloudSyncTriggerObserver::operator==(const TaiheSyncTriggerCallback &other) const
 {
     return callback_ == other;
 }
@@ -561,6 +591,35 @@ ConfigImpl::UnsubscribeInfo ConfigImpl::CollectUnsubscribeInfos(
     }
     return unsubscribeInfos;
 }
+
+void ConfigImpl::StopCloudSyncImpl(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos)
+{
+    if (bundleInfos.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+            "The type of bundleInfos must be Array<BundleInfo> and not empty.");
+        return;
+    }
+
+    std::vector<OHOS::CloudData::BundleInfo> nativeBundleInfos;
+    for (const auto &info : bundleInfos) {
+        OHOS::CloudData::BundleInfo nativeInfo;
+        nativeInfo.bundleName = std::string(info.bundleName);
+        if (info.storeId.has_value()) {
+            nativeInfo.storeId = std::string(info.storeId.value());
+        }
+        nativeBundleInfos.push_back(std::move(nativeInfo));
+    }
+
+    auto work = [&nativeBundleInfos](std::shared_ptr<CloudService> proxy) {
+        int32_t code = proxy->StopCloudSyncTask(nativeBundleInfos);
+        LOG_DEBUG("StopCloudSyncTask return %{public}d", code);
+        if (code != CloudService::Status::SUCCESS) {
+            ThrowAniError(code);
+        }
+    };
+    RequestIPC(work);
+}
+
 void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::data::commonType::ValueType>> param)
 {
     if (strategy.get_key() != StrategyType::key_t::NETWORK) {
@@ -593,6 +652,79 @@ void SetCloudStrategyImpl(StrategyType strategy, optional_view<array<::ohos::dat
     };
     RequestIPC(work);
 }
+
+void ConfigImpl::OnAutoSyncTrigger(::taihe::callback_view<void(TaiheCloudSyncTriggerInfo const& data)> observer)
+{
+    TaiheSyncTriggerCallback holder = observer;
+    {
+        std::lock_guard<std::mutex> lock(autoSyncTriggerObserversMutex_);
+        bool isDuplicate = std::any_of(autoSyncTriggerObservers_.begin(), autoSyncTriggerObservers_.end(),
+            [&holder](const std::shared_ptr<TaiheCloudSyncTriggerObserver> &obs) {
+                return *obs == holder;
+            });
+        if (isDuplicate) {
+            LOG_DEBUG("Duplicate subscribe for auto sync trigger.");
+            return;
+        }
+    }
+
+    auto obs = std::make_shared<TaiheCloudSyncTriggerObserver>(observer);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
+        }
+        LOG_ERROR("proxy is NULL");
+        ThrowAniError(state);
+        return;
+    }
+    auto status = proxy->SubscribeCloudSyncTrigger(obs);
+    if (status != CloudService::Status::SUCCESS) {
+        LOG_ERROR("SubscribeCloudSyncTrigger failed, errcode = %{public}d", status);
+        ThrowAniError(status);
+        return;
+    }
+    std::lock_guard<std::mutex> lock(autoSyncTriggerObserversMutex_);
+    autoSyncTriggerObservers_.push_back(obs);
+}
+
+void ConfigImpl::OffAutoSyncTrigger(
+    ::taihe::optional_view<::taihe::callback<void(TaiheCloudSyncTriggerInfo const& data)>> observer)
+{
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    if (proxy == nullptr) {
+        if (state != CloudService::SERVER_UNAVAILABLE) {
+            state = CloudService::NOT_SUPPORT;
+        }
+        ThrowAniError(state);
+        return;
+    }
+
+    if (!observer.has_value()) {
+        proxy->UnSubscribeCloudSyncTrigger(nullptr);
+        std::lock_guard<std::mutex> lock(autoSyncTriggerObserversMutex_);
+        autoSyncTriggerObservers_.clear();
+        return;
+    }
+
+    TaiheSyncTriggerCallback holder = observer.value();
+    std::shared_ptr<TaiheCloudSyncTriggerObserver> targetObserver;
+    {
+        std::lock_guard<std::mutex> lock(autoSyncTriggerObserversMutex_);
+        auto it = std::find_if(autoSyncTriggerObservers_.begin(), autoSyncTriggerObservers_.end(),
+            [&holder](const std::shared_ptr<TaiheCloudSyncTriggerObserver> &obs) {
+                return *obs == holder;
+            });
+        if (it != autoSyncTriggerObservers_.end()) {
+            targetObserver = *it;
+            autoSyncTriggerObservers_.erase(it);
+        }
+    }
+
+    if (targetObserver != nullptr) {
+        proxy->UnSubscribeCloudSyncTrigger(targetObserver);
+    }
+}
 }
 
 // Since these macros are auto-generate, lint will cause false positive.
@@ -615,5 +747,8 @@ TH_EXPORT_CPP_API_CloudSyncImpl(AniCloudData::ConfigImpl::CloudSyncImpl);
 TH_EXPORT_CPP_API_OnSyncInfoChanged(AniCloudData::ConfigImpl::OnSyncInfoChanged);
 TH_EXPORT_CPP_API_OffSyncInfoChanged(AniCloudData::ConfigImpl::OffSyncInfoChanged);
 TH_EXPORT_CPP_API_SetCloudStrategyImpl(AniCloudData::SetCloudStrategyImpl);
+TH_EXPORT_CPP_API_OnAutoSyncTrigger(AniCloudData::ConfigImpl::OnAutoSyncTrigger);
+TH_EXPORT_CPP_API_OffAutoSyncTrigger(AniCloudData::ConfigImpl::OffAutoSyncTrigger);
+TH_EXPORT_CPP_API_StopCloudSyncImpl(AniCloudData::ConfigImpl::StopCloudSyncImpl);
 
 // NOLINTEND

@@ -14,7 +14,9 @@
  */
 import RetainDeviceData from './RetainDeviceData.test';
 import UpdateDistributedInfo from './UpdateDistributedInfo.test';
+import CleanDeviceDirtyData from './CleanDeviceDirtyData.test';
 export default function testsuite() {
   RetainDeviceData();
   UpdateDistributedInfo();
+  CleanDeviceDirtyData();
 }

@@ -31,6 +31,7 @@ using OHOS::DistributedRdb::ProgressCode;
 using OHOS::NativeRdb::ConflictResolution;
 using OHOS::NativeRdb::SecurityLevel;
 using OHOS::DistributedRdb::ColumnType;
+using OHOS::DistributedRdb::SyncResultCode;
 
 #define SET_NAPI_PROPERTY(object, prop, value) \
     napi_set_named_property((env), (object), (prop), AppDataMgrJsKit::JSUtils::Convert2JSValue((env), (value)))
@@ -119,6 +120,7 @@ static napi_value ExportProgressCode(napi_env env)
     SET_NAPI_PROPERTY(progressCode, "RECORD_LIMIT_EXCEEDED", int32_t(ProgressCode::RECORD_LIMIT_EXCEEDED));
     SET_NAPI_PROPERTY(progressCode, "NO_SPACE_FOR_ASSET", int32_t(ProgressCode::NO_SPACE_FOR_ASSET));
     SET_NAPI_PROPERTY(progressCode, "BLOCKED_BY_NETWORK_STRATEGY", int32_t(ProgressCode::BLOCKED_BY_NETWORK_STRATEGY));
+    SET_NAPI_PROPERTY(progressCode, "STOP_CLOUD_SYNC", int32_t(ProgressCode::STOP_CLOUD_SYNC));
     napi_object_freeze(env, progressCode);
     return progressCode;
 }
@@ -183,6 +185,10 @@ static napi_value ExportDistributedField(napi_env env)
     SET_NAPI_PROPERTY(distributedField, "ORIGIN", std::string(DistributedRdb::DistributedField::ORIGIN));
     SET_NAPI_PROPERTY(
         distributedField, "ORIGIN_ORIDEVICE", std::string(DistributedRdb::DistributedField::ORIGIN_ORIDEVICE));
+    SET_NAPI_PROPERTY(
+        distributedField, "CURSOR_FIELD", std::string(DistributedRdb::DistributedField::CURSOR_FIELD));
+    SET_NAPI_PROPERTY(
+        distributedField, "DELETED_FLAG_FIELD", std::string(DistributedRdb::DistributedField::DELETED_FLAG_FIELD));
     napi_object_freeze(env, distributedField);
     return distributedField;
 }
@@ -244,6 +250,7 @@ static napi_value ExportAssetStatus(napi_env env)
     SET_NAPI_PROPERTY(assetStatus, "ASSET_DELETE", int32_t(NativeRdb::AssetValue::STATUS_DELETE));
     SET_NAPI_PROPERTY(assetStatus, "ASSET_ABNORMAL", int32_t(NativeRdb::AssetValue::STATUS_ABNORMAL));
     SET_NAPI_PROPERTY(assetStatus, "ASSET_DOWNLOADING", int32_t(NativeRdb::AssetValue::STATUS_DOWNLOADING));
+    SET_NAPI_PROPERTY(assetStatus, "ASSET_TO_DOWNLOAD", int32_t(NativeRdb::AssetValue::STATUS_TO_DOWNLOAD));
     napi_object_freeze(env, assetStatus);
     return assetStatus;
 }
@@ -265,6 +272,25 @@ static napi_value ExportConflictResolution(napi_env env)
 
     napi_object_freeze(env, conflictResolution);
     return conflictResolution;
+}
+
+static napi_value ExportAssetConflictPolicy(napi_env env)
+{
+    napi_value assetConflictPolicy = nullptr;
+    napi_status status = napi_create_object(env, &assetConflictPolicy);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    SET_NAPI_PROPERTY(assetConflictPolicy, "CONFLICT_POLICY_DEFAULT",
+        int32_t(DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_DEFAULT));
+    SET_NAPI_PROPERTY(assetConflictPolicy, "CONFLICT_POLICY_TIME_FIRST",
+        int32_t(DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_TIME_FIRST));
+    SET_NAPI_PROPERTY(assetConflictPolicy, "CONFLICT_POLICY_TEMP_PATH",
+        int32_t(DistributedRdb::AssetConflictPolicy::CONFLICT_POLICY_TEMP_PATH));
+
+    napi_object_freeze(env, assetConflictPolicy);
+    return assetConflictPolicy;
 }
 
 static napi_value ExportRebuiltType(napi_env env)
@@ -392,6 +418,31 @@ static napi_value ExportColumnType(napi_env env)
     return columnType;
 }
 
+static napi_value ExportSyncResultCode(napi_env env)
+{
+    napi_value syncResultCode = nullptr;
+    napi_status status = napi_create_object(env, &syncResultCode);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    SET_NAPI_PROPERTY(syncResultCode, "SUCCESS", int32_t(SyncResultCode::SUCCESS));
+    SET_NAPI_PROPERTY(syncResultCode, "FAIL", int32_t(SyncResultCode::FAIL));
+    SET_NAPI_PROPERTY(syncResultCode, "OFFLINE", int32_t(SyncResultCode::OFFLINE));
+    SET_NAPI_PROPERTY(syncResultCode, "INVALID_ARGS", int32_t(SyncResultCode::INVALID_ARGS));
+    SET_NAPI_PROPERTY(syncResultCode, "DISTRIBUTED_TABLE_NOT_SET", int32_t(SyncResultCode::DISTRIBUTED_TABLE_NOT_SET));
+    SET_NAPI_PROPERTY(syncResultCode, "TABLE_FIELD_MISMATCH", int32_t(SyncResultCode::TABLE_FIELD_MISMATCH));
+    SET_NAPI_PROPERTY(
+        syncResultCode, "DISTRIBUTED_SCHEMA_MISMATCH", int32_t(SyncResultCode::DISTRIBUTED_SCHEMA_MISMATCH));
+    SET_NAPI_PROPERTY(syncResultCode, "BUSY", int32_t(SyncResultCode::BUSY));
+    SET_NAPI_PROPERTY(syncResultCode, "CORRUPTED", int32_t(SyncResultCode::CORRUPTED));
+    SET_NAPI_PROPERTY(syncResultCode, "TIMEOUT", int32_t(SyncResultCode::TIMEOUT));
+    SET_NAPI_PROPERTY(syncResultCode, "SCHEMA_CHANGED", int32_t(SyncResultCode::SCHEMA_CHANGED));
+    SET_NAPI_PROPERTY(syncResultCode, "CONSTRAINT_VIOLATION", int32_t(SyncResultCode::CONSTRAINT_VIOLATION));
+    napi_object_freeze(env, syncResultCode);
+    return syncResultCode;
+}
+
 napi_status InitConstProperties(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -406,6 +457,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("DistributedType", ExportDistributedType(env)),
         DECLARE_NAPI_PROPERTY("DistributedTableType", ExportDistributedTableType(env)),
         DECLARE_NAPI_PROPERTY("AssetStatus", ExportAssetStatus(env)),
+        DECLARE_NAPI_PROPERTY("AssetConflictPolicy", ExportAssetConflictPolicy(env)),
         DECLARE_NAPI_PROPERTY("ChangeType", ExportChangeType(env)),
         DECLARE_NAPI_PROPERTY("Origin", ExportOrigin(env)),
         DECLARE_NAPI_PROPERTY("Field", ExportField(env)),
@@ -419,6 +471,7 @@ napi_status InitConstProperties(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("TransactionType", ExportTransactionType(env)),
         DECLARE_NAPI_PROPERTY("Tokenizer", ExportTokenizer(env)),
         DECLARE_NAPI_PROPERTY("ColumnType", ExportColumnType(env)),
+        DECLARE_NAPI_PROPERTY("SyncResultCode", ExportSyncResultCode(env)),
     };
 
     size_t count = sizeof(properties) / sizeof(properties[0]);

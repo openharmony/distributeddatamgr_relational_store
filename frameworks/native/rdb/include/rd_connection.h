@@ -87,6 +87,7 @@ private:
     static std::string GetConfigStr(const std::vector<uint8_t> &keys, bool isEncrypt);
     std::string GetConfigStr(const std::vector<uint8_t> &keys);
     int InnerOpen(const RdbStoreConfig &config);
+    std::pair<int32_t, std::vector<uint8_t>> GetRekeyNewKey(const RdbStoreConfig::CryptoParam &cryptoParam);
     bool isWriter_ = false;
     GRD_DB *dbHandle_ = nullptr;
     const RdbStoreConfig config_;

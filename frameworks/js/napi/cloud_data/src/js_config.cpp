@@ -571,30 +571,82 @@ napi_value JsConfig::QueryLastSyncInfo(napi_env env, napi_callback_info info)
 void JsConfig::HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::shared_ptr<CloudSyncContext> ctxt)
 {
     ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
-        // less required 4 arguments :: <bundleName> <storeId> <mode> <progress>
-        ASSERT_BUSINESS_ERR(ctxt, argc >= 4, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
-        // 0 is the index of argument bundleName
-        int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleName);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-            "The type of bundleName must be string and not empty.");
-        // 1 is the index of argument storeId
-        status = JSUtils::Convert2Value(env, argv[1], ctxt->storeId);
-        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
-            "The type of storeId must be string and not empty.");
-        // 2 is the index of argument syncMode
-        status = JSUtils::Convert2ValueExt(env, argv[2], ctxt->syncMode);
-        ASSERT_BUSINESS_ERR(
-            ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT, "The type of syncMode must be number.");
-        // 3 is the index of argument progress, it should be a founction
-        napi_valuetype valueType = napi_undefined;
-        napi_status ret = napi_typeof(env, argv[3], &valueType);
-        ASSERT_BUSINESS_ERR(
-            ctxt, ret == napi_ok && valueType == napi_function, Status::INVALID_ARGUMENT,
-            "The type of progress should be function.");
-        ASSERT_BUSINESS_ERR(
-            ctxt, napi_create_reference(env, argv[3], 1, &ctxt->asyncHolder) == napi_ok,    // 3 means the progress
-            Status::INVALID_ARGUMENT, "create refrence failed.");
+        napi_valuetype arg0Type = napi_undefined;
+        napi_status ret = napi_typeof(env, argv[0], &arg0Type);
+        ASSERT_BUSINESS_ERR(ctxt, ret == napi_ok, Status::INVALID_ARGUMENT,
+                            "Invalid first argument type");
+        
+        if (arg0Type == napi_string) {
+            ParseCloudSyncArgs(env, argc, argv, ctxt);
+        } else if (arg0Type == napi_object) {
+            ParseCloudSyncArgsWithConfig(env, argc, argv, ctxt);
+        }
     }, true);
+}
+
+void JsConfig::ParseCloudSyncArgs(napi_env env, size_t argc, napi_value *argv,
+    std::shared_ptr<CloudSyncContext> ctxt)
+{
+    size_t argumentsNum = 4;
+    ASSERT_BUSINESS_ERR(ctxt, argc >= argumentsNum, Status::INVALID_ARGUMENT,
+                        "Old interface requires 4 arguments");
+    
+    int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleName);
+    ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->bundleName.empty(),
+                        Status::INVALID_ARGUMENT, "bundleName cannot be empty");
+    
+    status = JSUtils::Convert2Value(env, argv[1], ctxt->storeId);
+    ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                        "Invalid storeId");
+    
+    // parse argv 2 to syncMode
+    status = JSUtils::Convert2ValueExt(env, argv[2], ctxt->syncMode);
+    ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT,
+                        "Invalid syncMode");
+    
+    napi_valuetype progressType = napi_undefined;
+    napi_status ret = napi_typeof(env, argv[3], &progressType);
+    ASSERT_BUSINESS_ERR(ctxt, ret == napi_ok && progressType == napi_function,
+        Status::INVALID_ARGUMENT, "progress must be function");
+
+    // parse argv 3 to asyncHolder
+    ASSERT_BUSINESS_ERR(ctxt, napi_create_reference(env, argv[3], 1,
+        &ctxt->asyncHolder) == napi_ok, Status::INVALID_ARGUMENT, "create reference failed");
+    
+    ctxt->downloadOnly = false;
+}
+
+void JsConfig::ParseCloudSyncArgsWithConfig(napi_env env, size_t argc, napi_value *argv,
+    std::shared_ptr<CloudSyncContext> ctxt)
+{
+    // argc must be greater than or equal to 3 to be valid
+    ASSERT_BUSINESS_ERR(ctxt, argc >= 3, Status::INVALID_ARGUMENT,
+                        "New interface requires 3 arguments");
+
+    BundleInfo bundleInfo;
+    int32_t ret = JSUtils::Convert2Value(env, argv[0], bundleInfo);
+    ASSERT_BUSINESS_ERR(ctxt, ret == JSUtils::OK && !bundleInfo.bundleName.empty(),
+                        Status::INVALID_ARGUMENT, "bundleName cannot be empty");
+
+    ctxt->bundleName = bundleInfo.bundleName;
+    ctxt->storeId = bundleInfo.storeId;
+
+    DistributedRdb::CloudSyncConfig config;
+    ret = JSUtils::Convert2Value(env, argv[1], config);
+    ASSERT_BUSINESS_ERR(ctxt, ret == JSUtils::OK, Status::INVALID_ARGUMENT,
+                        "config must be CloudSyncConfig");
+
+    ctxt->syncMode = config.mode;
+    ctxt->downloadOnly = config.isDownloadOnly;
+
+    napi_valuetype progressType = napi_undefined;
+    napi_status status = napi_typeof(env, argv[2], &progressType);
+    ASSERT_BUSINESS_ERR(ctxt, status == napi_ok && progressType == napi_function,
+                        Status::INVALID_ARGUMENT, "progress must be function");
+    // parse argv 2 to asyncHolder
+    ASSERT_BUSINESS_ERR(ctxt, napi_create_reference(env, argv[2], 1, &ctxt->asyncHolder) == napi_ok,
+                        Status::INVALID_ARGUMENT,
+                        "create reference failed");
 }
 
 /*
@@ -633,6 +685,7 @@ napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
         };
         CloudService::Option option;
         option.syncMode = ctxt->syncMode;
+        option.isDownloadOnly = ctxt->downloadOnly;
         option.seqNum = GetSeqNum();
         auto status = proxy->CloudSync(ctxt->bundleName, ctxt->storeId, option, async);
         if (status == Status::INVALID_ARGUMENT) {
@@ -648,6 +701,45 @@ napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
         napi_get_undefined(env, &result);
     };
     return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute, output);
+}
+
+/*
+ * [JS API Prototype]
+ * [Promise]
+ *   stopCloudSync(bundleInfos: Array<BundleInfo>): Promise<void>;
+ */
+napi_value JsConfig::StopCloudSync(napi_env env, napi_callback_info info)
+{
+    struct StopCloudSyncInfoContext : public ContextBase {
+        std::vector<BundleInfo> bundleInfos;
+    };
+    auto ctxt = std::make_shared<StopCloudSyncInfoContext>();
+    ctxt->GetCbInfo(env, info, [env, ctxt](size_t argc, napi_value *argv) {
+        // required parameter, param 1 Optional parameter
+        ASSERT_BUSINESS_ERR(ctxt, argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+        int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleInfos);
+        ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->bundleInfos.empty(), Status::INVALID_ARGUMENT,
+            "The type of bundleInfos must be string and not empty.");
+    });
+    ASSERT_NULL(!ctxt->isThrowError, "StopCloudSync exit");
+    auto execute = [env, ctxt]() {
+        auto [status, proxy] = CloudManager::GetInstance().GetCloudService();
+        if (proxy == nullptr) {
+            if (status != CloudService::SERVER_UNAVAILABLE) {
+                status = CloudService::NOT_SUPPORT;
+            }
+            ctxt->status = (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                            ? napi_ok
+                            : napi_generic_failure;
+            return;
+        }
+        int res = proxy->StopCloudSyncTask(ctxt->bundleInfos);
+        LOG_DEBUG("StopCloudSync return %{public}d", res);
+        ctxt->status = (GenerateNapiError(res, ctxt->jsCode, ctxt->error) == Status::SUCCESS)
+                        ? napi_ok
+                        : napi_generic_failure;
+    };
+    return NapiQueue::AsyncWork(env, ctxt, std::string(__FUNCTION__), execute);
 }
 
 uint32_t JsConfig::GetSeqNum()
@@ -831,6 +923,7 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
             DECLARE_NAPI_STATIC_FUNCTION("cloudSync", JsConfig::CloudSync),
             DECLARE_NAPI_STATIC_FUNCTION("onSyncInfoChanged", JsConfig::OnSyncInfoChanged),
             DECLARE_NAPI_STATIC_FUNCTION("offSyncInfoChanged", JsConfig::OffSyncInfoChanged),
+            DECLARE_NAPI_STATIC_FUNCTION("stopCloudSync", JsConfig::StopCloudSync),
         };
         return properties;
     };
