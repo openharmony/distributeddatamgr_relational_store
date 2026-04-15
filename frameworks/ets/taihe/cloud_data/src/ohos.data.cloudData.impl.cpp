@@ -511,6 +511,9 @@ std::vector<OHOS::CloudData::BundleInfo> ConfigImpl::CollectSubscribeInfos(
 
         bool isDuplicate = std::any_of(storeIt->second.begin(), storeIt->second.end(),
             [&callback](const std::shared_ptr<TaiheCloudSyncInfoObserver> &observer) {
+                if (observer == nullptr) {
+                    return false;
+                }
                 return *observer == callback;
             });
         if (isDuplicate) {
@@ -575,6 +578,10 @@ ConfigImpl::UnsubscribeInfo ConfigImpl::CollectUnsubscribeInfos(
         }
         auto obsIt = storeIt->second.begin();
         while (obsIt != storeIt->second.end()) {
+            if (*obsIt == nullptr) {
+                obsIt = storeIt->second.erase(obsIt);
+                continue;
+            }
             if (hasCallback && !(**obsIt == progress.value())) {
                 ++obsIt;
                 continue;

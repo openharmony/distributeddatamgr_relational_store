@@ -862,6 +862,9 @@ std::vector<OHOS::CloudData::BundleInfo> JsConfig::CollectSubscribeInfos(
 
         bool isDuplicate = std::any_of(storeIt->second.begin(), storeIt->second.end(),
         [&callback](const std::shared_ptr<NapiCloudSyncInfoObserver> &observer) {
+            if (observer == nullptr) {
+                return false;
+            }
             return *observer == callback;
         });
         if (isDuplicate) {
@@ -890,6 +893,10 @@ JsConfig::UnsubscribeInfo JsConfig::CollectUnsubscribeInfos(
         }
         auto obsIt = storeIt->second.begin();
         while (obsIt != storeIt->second.end()) {
+            if (*obsIt == nullptr) {
+                obsIt = storeIt->second.erase(obsIt);
+                continue;
+            }
             if (hasCallback && !(**obsIt == callback)) {
                 ++obsIt;
                 continue;
