@@ -1768,9 +1768,8 @@ void ParseNotObjectParams(napi_env env, size_t argc, napi_value *argv, std::shar
         auto status = napi_unwrap(env, argv[index], reinterpret_cast<void **>(&context->predicatesProxy));
         if (status == napi_ok && context->predicatesProxy != nullptr) {
             RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-            if (obj != nullptr) {
-                context->rdbPredicates = context->predicatesProxy->GetPredicates();
-            }
+            CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
+            context->rdbPredicates = context->predicatesProxy->GetPredicates();
             index++;
         }
     }
