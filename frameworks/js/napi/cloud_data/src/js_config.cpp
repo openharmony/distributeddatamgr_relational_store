@@ -32,7 +32,8 @@ using namespace OHOS::Rdb;
 using namespace OHOS::CloudData;
 std::atomic<uint32_t> JsConfig::seqNum_{};
 std::mutex JsConfig::syncInfoObserversMutex_;
-std::list<JsConfig::SyncInfoObserverRecord> JsConfig::syncInfoObservers_;
+std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>>>>
+    JsConfig::syncInfoObservers_;
 JsConfig::JsConfig()
 {
 }
@@ -519,7 +520,7 @@ void JsConfig::ParseQueryParams(napi_env env, napi_callback_info info, std::shar
                 "The size of bundleInfos must be less than or equal to 30.");
         } else {
             ASSERT_BUSINESS_ERR(
-                ctxt, type == napi_string, Status::INVALID_ARGUMENT, "The type of accountId must be string.");
+                ctxt, type == napi_string, Status::INVALID_ARGUMENT, "The type of bundleName must be string.");
         }
     });
 }
@@ -765,22 +766,20 @@ napi_value JsConfig::OnSyncInfoChanged(napi_env env, napi_callback_info info)
     // 2 is Number of parameters
     ASSERT_ERR(env, argc >= 2, Status::INVALID_ARGUMENT_V20, "The number of parameters is incorrect.");
     auto status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleInfos);
-    ASSERT_ERR(env, status == JSUtils::OK && !ctxt->bundleInfos.empty(),
-        Status::INVALID_ARGUMENT_V20, "The type of bundleInfos must be Array<BundleInfo>.");
+    ASSERT_ERR(env, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20,
+        "The type of bundleInfos must be Array<BundleInfo>.");
+    // 30 is max bundleInfos size
+    ASSERT_ERR(env, !ctxt->bundleInfos.empty() && ctxt->bundleInfos.size() <= 30, Status::INVALID_ARGUMENT_V20,
+        "The size of bundleInfos must be less than or equal to 30 and greater than 0.");
+
     napi_valuetype type = napi_undefined;
     ASSERT_ERR(env, napi_typeof(env, argv[1], &type) == napi_ok && type == napi_function,
         Status::INVALID_ARGUMENT_V20, "The type of callback must be function.");
     ctxt->callback = argv[1];
-    {
-        std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
-        bool isDuplicate = std::any_of(syncInfoObservers_.begin(), syncInfoObservers_.end(),
-            [&ctxt](const SyncInfoObserverRecord &record) {
-                return record.bundleInfos == ctxt->bundleInfos && (*record.observer == ctxt->callback);
-            });
-        if (isDuplicate) {
-            LOG_INFO("Duplicate subscribe for sync info changed.");
-            return nullptr;
-        }
+    std::vector<CloudData::BundleInfo> toSubscribe = CollectSubscribeInfos(ctxt->bundleInfos, ctxt->callback);
+    if (toSubscribe.empty()) {
+        LOG_INFO("Duplicate subscribe for sync info changed.");
+        return nullptr;
     }
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     if (proxy == nullptr) {
@@ -791,15 +790,15 @@ napi_value JsConfig::OnSyncInfoChanged(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto observer = std::make_shared<NapiCloudSyncInfoObserver>(env, ctxt->callback, ctxt->queue);
-    status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, ctxt->bundleInfos, observer);
+    status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, toSubscribe, observer);
     if (status != CloudService::SUCCESS) {
-        observer->Clear();
         ThrowNapiError(env, status, "");
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
-    SyncInfoObserverRecord record{ctxt->bundleInfos, observer};
-    syncInfoObservers_.push_back(std::move(record));
+    for (auto &bundleInfo : toSubscribe) {
+        syncInfoObservers_[bundleInfo.bundleName][bundleInfo.storeId].push_back(observer);
+    }
     return nullptr;
 }
 
@@ -816,8 +815,11 @@ napi_value JsConfig::OffSyncInfoChanged(napi_env env, napi_callback_info info)
     auto ctxt = std::make_shared<UnsubscribeContext>();
     ASSERT_ERR(env, argc >= 1, Status::INVALID_ARGUMENT_V20, "The number of parameters is incorrect.");
     int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleInfos);
-    ASSERT_ERR(env, status == JSUtils::OK && !ctxt->bundleInfos.empty(), Status::INVALID_ARGUMENT_V20,
+    ASSERT_ERR(env, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20,
         "The type of bundleInfos must be Array<BundleInfo>.");
+    // 30 is max bundleInfos size
+    ASSERT_ERR(env, !ctxt->bundleInfos.empty() && ctxt->bundleInfos.size() <= 30, Status::INVALID_ARGUMENT_V20,
+        "The size of bundleInfos must be less than or equal to 30 and greater than 0.");
     if (argc >= 2) { // 2 is Number of parameters
         napi_valuetype type = napi_undefined;
         if (napi_typeof(env, argv[1], &type) == napi_ok && type == napi_function) {
@@ -841,37 +843,72 @@ napi_value JsConfig::OffSyncInfoChanged(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
-JsConfig::UnsubscribeInfoList JsConfig::CollectUnsubscribeInfos(
-    const std::vector<CloudData::BundleInfo>& toUnsubscribe, napi_value callback, bool hasCallback)
+std::vector<OHOS::CloudData::BundleInfo> JsConfig::CollectSubscribeInfos(
+    const std::vector<OHOS::CloudData::BundleInfo> &toSubscribe, napi_value callback)
 {
-    UnsubscribeInfoList unsubscribeInfos;
     std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
-    auto it = syncInfoObservers_.begin();
-    while (it != syncInfoObservers_.end()) {
-        std::vector<CloudData::BundleInfo> intersection;
-        for (const auto &info : toUnsubscribe) {
-            if (std::find(it->bundleInfos.begin(), it->bundleInfos.end(), info) != it->bundleInfos.end()) {
-                intersection.push_back(info);
-            }
-        }
-        
-        if (intersection.empty() || (hasCallback && !(*it->observer == callback))) {
-            ++it;
+    std::vector<OHOS::CloudData::BundleInfo> result;
+    for (const auto &info : toSubscribe) {
+        auto bundleIt = syncInfoObservers_.find(info.bundleName);
+        if (bundleIt == syncInfoObservers_.end()) {
+            result.push_back(info);
             continue;
         }
-        
-        for (const auto &info : intersection) {
-            auto removeIt = std::remove(it->bundleInfos.begin(), it->bundleInfos.end(), info);
-            it->bundleInfos.erase(removeIt, it->bundleInfos.end());
+        auto storeIt = bundleIt->second.find(info.storeId);
+        if (storeIt == bundleIt->second.end()) {
+            result.push_back(info);
+            continue;
         }
-        
-        unsubscribeInfos.emplace_back(it->observer, std::move(intersection));
-        
-        if (it->bundleInfos.empty()) {
-            it->observer->Clear();
-            it = syncInfoObservers_.erase(it);
-        } else {
-            ++it;
+
+        bool isDuplicate = std::any_of(storeIt->second.begin(), storeIt->second.end(),
+        [&callback](const std::shared_ptr<NapiCloudSyncInfoObserver> &observer) {
+            if (observer == nullptr) {
+                return false;
+            }
+            return *observer == callback;
+        });
+        if (isDuplicate) {
+            LOG_INFO("Duplicate subscribe for bundleName:%{public}s storeId:%{public}.3s",
+                info.bundleName.c_str(), info.storeId.c_str());
+            continue;
+        }
+        result.push_back(info);
+    }
+    return result;
+}
+
+JsConfig::UnsubscribeInfo JsConfig::CollectUnsubscribeInfos(
+    const std::vector<CloudData::BundleInfo>& toUnsubscribe, napi_value callback, bool hasCallback)
+{
+    UnsubscribeInfo unsubscribeInfos;
+    std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
+    for (const auto &info : toUnsubscribe) {
+        auto bundleIt = syncInfoObservers_.find(info.bundleName);
+        if (bundleIt == syncInfoObservers_.end()) {
+            continue;
+        }
+        auto storeIt = bundleIt->second.find(info.storeId);
+        if (storeIt == bundleIt->second.end()) {
+            continue;
+        }
+        auto obsIt = storeIt->second.begin();
+        while (obsIt != storeIt->second.end()) {
+            if (*obsIt == nullptr) {
+                obsIt = storeIt->second.erase(obsIt);
+                continue;
+            }
+            if (hasCallback && !(**obsIt == callback)) {
+                ++obsIt;
+                continue;
+            }
+            unsubscribeInfos[*obsIt].push_back(info);
+            obsIt = storeIt->second.erase(obsIt);
+        }
+        if (storeIt->second.empty()) {
+            bundleIt->second.erase(storeIt);
+        }
+        if (bundleIt->second.empty()) {
+            syncInfoObservers_.erase(bundleIt);
         }
     }
     return unsubscribeInfos;

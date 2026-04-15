@@ -31,6 +31,7 @@ NapiCloudSyncInfoObserver::NapiCloudSyncInfoObserver(napi_env env, napi_value ca
 
 NapiCloudSyncInfoObserver::~NapiCloudSyncInfoObserver() noexcept
 {
+    Clear();
 }
 
 void NapiCloudSyncInfoObserver::OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data)

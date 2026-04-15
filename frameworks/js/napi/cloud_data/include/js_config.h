@@ -21,7 +21,7 @@
 #include "js_uv_queue.h"
 #include "napi_cloud_sync_info_observer.h"
 #include "napi_queue.h"
-#include <list>
+#include <map>
 #include <mutex>
 
 namespace OHOS::CloudData {
@@ -98,18 +98,16 @@ private:
     static bool IsDbInfoValid(const std::map<std::string, CloudData::DBActionInfo> &dbInfos);
     static bool IsTablesValid(const std::map<std::string, int32_t> &tableInfo);
     static std::atomic<uint32_t> seqNum_;
-    using UnsubscribeInfo = std::pair<std::shared_ptr<NapiCloudSyncInfoObserver>, std::vector<CloudData::BundleInfo>>;
-    using UnsubscribeInfoList = std::vector<UnsubscribeInfo>;
+    using UnsubscribeInfo = std::map<std::shared_ptr<NapiCloudSyncInfoObserver>, std::vector<CloudData::BundleInfo>>;
 
-    static UnsubscribeInfoList CollectUnsubscribeInfos(
+    static std::vector<CloudData::BundleInfo> CollectSubscribeInfos(
+        const std::vector<CloudData::BundleInfo> &toSubscribe, napi_value callback);
+    static UnsubscribeInfo CollectUnsubscribeInfos(
         const std::vector<CloudData::BundleInfo> &toUnsubscribe, napi_value callback, bool hasCallback);
 
-    struct SyncInfoObserverRecord {
-        std::vector<CloudData::BundleInfo> bundleInfos;
-        std::shared_ptr<NapiCloudSyncInfoObserver> observer;
-    };
     static std::mutex syncInfoObserversMutex_;
-    static std::list<SyncInfoObserverRecord> syncInfoObservers_;
+    static std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>>>>
+        syncInfoObservers_;
 };
 
 } // namespace OHOS::CloudData

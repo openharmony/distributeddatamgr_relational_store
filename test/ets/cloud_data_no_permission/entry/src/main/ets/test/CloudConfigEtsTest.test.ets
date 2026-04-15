@@ -98,5 +98,109 @@ export default function CloudConfigNoPermissionEtsTest() {
         done();
       }
     });
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_NoPermission201_SingleBundle
+     * @tc.desc Test queryLastSyncInfo with no 201 permission for single bundle
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('QueryLastSyncInfoBatch_NoPermission201_SingleBundle', 0, async (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1" }
+      ];
+
+      try {
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('QueryLastSyncInfoBatch_NoPermission201_SingleBundle fail' +
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 201).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name QueryLastSyncInfoBatch_NoPermission201_MultipleBundles
+     * @tc.desc Test queryLastSyncInfo with no 201 permission for multiple bundles
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('QueryLastSyncInfoBatch_NoPermission201_MultipleBundles', 0, async (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1", storeId: "db1" },
+        { bundleName: "com.example.app2" }
+      ];
+
+      try {
+        await cloudData.Config.queryLastSyncInfo("test_account", bundleInfos);
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('QueryLastSyncInfoBatch_NoPermission201_MultipleBundles fail' +
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 201).assertTrue();
+        done();
+      }
+    });
+
+    // ==================== onSyncInfoChanged Tests ====================
+
+    /**
+     * @tc.name OnSyncInfoChanged_NoPermission201_SingleBundle
+     * @tc.desc Test onSyncInfoChanged with no 201 permission (single BundleInfo)
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_NoPermission201_SingleBundle', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OnSyncInfoChanged_NoPermission201_SingleBundle callback: ' + JSON.stringify(data));
+        });
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_NoPermission201_SingleBundle fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 201).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name OnSyncInfoChanged_NoPermission201_MultipleBundles
+     * @tc.desc Test onSyncInfoChanged with no 201 permission (multiple BundleInfo objects)
+     * @tc.type: FUNC
+     * @tc.require:
+     */
+    it('OnSyncInfoChanged_NoPermission201_MultipleBundles', 0, (done: () => void) => {
+      let bundleInfos: cloudData.BundleInfo[] = [
+        { bundleName: "com.example.app1" },
+        { bundleName: "com.example.app2" }
+      ];
+
+      try {
+        cloudData.Config.onSyncInfoChanged(bundleInfos, (data) => {
+          console.info('OnSyncInfoChanged_NoPermission201_MultipleBundles callback: ' + JSON.stringify(data));
+        });
+        expect(false).assertTrue();
+        done();
+      } catch (e) {
+        let error = e as BusinessError;
+        console.error('OnSyncInfoChanged_NoPermission201_MultipleBundles fail' + 
+          `, error code is ${error.code}, message is ${error.message}`);
+        expect(error.code == 201).assertTrue();
+        done();
+      }
+    });
   })
 }
