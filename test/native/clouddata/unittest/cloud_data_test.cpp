@@ -901,6 +901,8 @@ HWTEST_F(CloudDataTest, Subscribe_SystemPermission, TestSize.Level1)
     auto observer = std::make_shared<MockSyncInfoObserver>();
     auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
     EXPECT_EQ(status, CloudService::SUCCESS);
+    status = proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::SUCCESS);
 }
 
 /**
@@ -996,11 +998,13 @@ HWTEST_F(CloudDataTest, Unsubscribe_SystemPermission, TestSize.Level1)
  */
 HWTEST_F(CloudDataTest, Unsubscribe_NormalHapPermission, TestSize.Level1)
 {
-    AllocNormalHapToken(g_normalPolicy);
+    AllocSystemHapToken(g_systemPolicy);
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
     std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, TEST_STORE_ID}};
     auto observer = std::make_shared<MockSyncInfoObserver>();
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    AllocNormalHapToken(g_normalPolicy);
     auto status = proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
     EXPECT_EQ(status, CloudService::PERMISSION_DENIED);
 }
