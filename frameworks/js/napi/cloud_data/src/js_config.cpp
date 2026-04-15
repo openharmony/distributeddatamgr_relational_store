@@ -793,6 +793,7 @@ napi_value JsConfig::OnSyncInfoChanged(napi_env env, napi_callback_info info)
     status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, toSubscribe, observer);
     if (status != CloudService::SUCCESS) {
         ThrowNapiError(env, status, "");
+        observer->Clear();
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(syncInfoObserversMutex_);
@@ -839,6 +840,7 @@ napi_value JsConfig::OffSyncInfoChanged(napi_env env, napi_callback_info info)
     auto unsubscribeInfos = CollectUnsubscribeInfos(ctxt->bundleInfos, ctxt->callback, ctxt->hasCallback);
     for (const auto &[observer, bundleInfos] : unsubscribeInfos) {
         proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+        observer->Clear();
     }
     return nullptr;
 }
