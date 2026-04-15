@@ -517,7 +517,7 @@ std::vector<OHOS::CloudData::BundleInfo> ConfigImpl::CollectSubscribeInfos(
                 return *observer == callback;
             });
         if (isDuplicate) {
-            LOG_DEBUG("Duplicate subscribe for bundleName:%{public}s storeId:%{public}s",
+            LOG_DEBUG("Duplicate subscribe for bundleName:%{public}s storeId:%{public}.3s",
                 info.bundleName.c_str(), info.storeId.c_str());
             continue;
         }
