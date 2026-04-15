@@ -31,6 +31,7 @@ NapiCloudSyncInfoObserver::NapiCloudSyncInfoObserver(napi_env env, napi_value ca
 
 NapiCloudSyncInfoObserver::~NapiCloudSyncInfoObserver() noexcept
 {
+    Clear();
 }
 
 void NapiCloudSyncInfoObserver::OnSyncInfoChanged(const std::map<std::string, QueryLastResults> &data)
@@ -39,18 +40,11 @@ void NapiCloudSyncInfoObserver::OnSyncInfoChanged(const std::map<std::string, Qu
     if (uvQueue == nullptr) {
         return;
     }
-    auto getter = [observer = shared_from_this()](napi_env env) {
-        napi_value callback = nullptr;
-        if (observer->callback_ == nullptr) {
-            return callback;
-        }
-        napi_get_reference_value(env, observer->callback_, &callback);
-        return callback;
-    };
-    uvQueue->AsyncCallInOrder({ getter, nullptr, true }, [data](napi_env env, int &argc, napi_value *argv) {
-        argc = 1;
-        argv[0] = JSUtils::Convert2JSValue(env, data);
-    });
+    uvQueue->AsyncCallInOrder({ callback_, true },
+        [observer = shared_from_this(), data](napi_env env, int &argc, napi_value *argv) {
+            argc = 1;
+            argv[0] = JSUtils::Convert2JSValue(env, data);
+        });
 }
 
 void NapiCloudSyncInfoObserver::OnSyncInfoChanged(const int32_t mode)
