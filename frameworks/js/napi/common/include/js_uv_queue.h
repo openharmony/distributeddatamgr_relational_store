@@ -40,7 +40,10 @@ public:
         bool repeat_ = false;
         UvCallback(napi_ref callback, bool repeat = false) : callback_(callback), repeat_(repeat) { }
         UvCallback(napi_ref object, napi_ref callback) : object_(object), callback_(callback) { }
-        UvCallback(Callbacker getter, napi_ref object = nullptr) : object_(object), getter_(std::move(getter)) { }
+        UvCallback(Callbacker getter, napi_ref object = nullptr, bool repeat = false)
+            : object_(object), getter_(std::move(getter)), repeat_(repeat)
+        {
+        }
         bool IsNull()
         {
             return (callback_ == nullptr && getter_ == nullptr);

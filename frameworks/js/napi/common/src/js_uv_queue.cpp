@@ -93,6 +93,7 @@ void UvQueue::AsyncCallInOrder(UvCallback callback, Args args, Result result, co
     entry->env_ = env_;
     entry->callback_ = callback.callback_;
     entry->repeat_ = callback.repeat_;
+    entry->getter_ = std::move(callback.getter_);
     entry->args_ = std::move(args);
     entry->isValid_ = isValid_;
     if (handler_ != nullptr) {
