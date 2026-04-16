@@ -2551,3 +2551,125 @@ HWTEST_F(RdbStoreImplConditionTest, Dump_003, TestSize.Level2)
     auto errCode = storeImpl->GetPool()->Dump(false, "INSERT");
     EXPECT_EQ(errCode, E_OK);
 }
+
+/**
+ * @tc.name: RdbStore_SyncEx_011
+ * @tc.desc: test SyncEx when RdbService returns RDB_PERMISSION_DENIED
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_015, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+
+    EXPECT_CALL(*mockRdbService, Sync(_, _, _, _))
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            async({});
+            return RdbStatus::RDB_PERMISSION_DENIED;
+        });
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetBundleName("com.example.test");
+    config.SetName("test_db");
+    RdbStoreImplConditionTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(E_SYNC_PERMISSION_DENIED, store->SyncEx({OHOS::DistributedRdb::PUSH}, AbsRdbPredicates("test"), nullptr));
+
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: RdbStore_SyncEx_012
+ * @tc.desc: test SyncEx when RdbService returns other error codes
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_016, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+
+    EXPECT_CALL(*mockRdbService, Sync(_, _, _, _))
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            async({});
+            return E_ERROR;
+        });
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetBundleName("com.example.test");
+    config.SetName("test_db");
+    RdbStoreImplConditionTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(E_ERROR, store->SyncEx({OHOS::DistributedRdb::PUSH}, AbsRdbPredicates("test"), nullptr));
+
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: RdbStore_SyncEx_013
+ * @tc.desc: test SyncEx callback with empty and non-empty details
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_017, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+
+    EXPECT_CALL(*mockRdbService, Sync(_, _, _, _))
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            async({});
+            return E_OK;
+        })
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            OHOS::DistributedRdb::Details details;
+            OHOS::DistributedRdb::ProgressDetail detail1;
+            detail1.progress = 100;
+            detail1.code = 0;
+            detail1.message = "success";
+            details["device1"] = std::move(detail1);
+
+            OHOS::DistributedRdb::ProgressDetail detail2;
+            detail2.progress = 0;
+            detail2.code = 1;
+            detail2.message = "error";
+            details["device2"] = std::move(detail2);
+
+            async(std::move(details));
+            return E_OK;
+        });
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetBundleName("com.example.test");
+    config.SetName("test_db");
+    RdbStoreImplConditionTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    OHOS::DistributedRdb::SyncOption option;
+    option.mode = OHOS::DistributedRdb::PUSH;
+    AbsRdbPredicates predicates("test");
+
+    OHOS::DistributedRdb::AsyncBriefEx callbackEmpty = [](const OHOS::DistributedRdb::BriefsEx &briefsEx) {
+        ASSERT_TRUE(briefsEx.empty());
+    };
+    EXPECT_EQ(store->SyncEx(option, predicates, callbackEmpty), E_OK);
+
+    OHOS::DistributedRdb::AsyncBriefEx callbackNonEmpty = [](const OHOS::DistributedRdb::BriefsEx &briefsEx) {
+        EXPECT_FALSE(briefsEx.empty());
+        EXPECT_EQ(briefsEx.size(), 2u);
+        for (const auto &result : briefsEx) {
+            EXPECT_FALSE(result.device.empty());
+            EXPECT_GE(result.code, 0u);
+        }
+    };
+    EXPECT_EQ(store->SyncEx(option, predicates, callbackNonEmpty), E_OK);
+
+    RdbHelper::DeleteRdbStore(config);
+}
