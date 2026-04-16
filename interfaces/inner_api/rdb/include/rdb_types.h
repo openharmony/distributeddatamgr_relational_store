@@ -44,6 +44,7 @@ enum RdbStatus {
     RDB_SQLITE_ERROR,
     RDB_NOT_SUPPORT,
     RDB_NON_SYSTEM_APP,
+    RDB_NO_SYNC_PERMISSION,
 };
 
 enum RdbDistributedType {
