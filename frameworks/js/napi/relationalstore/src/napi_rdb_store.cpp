@@ -1806,14 +1806,9 @@ napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
         callback ? queue->AsyncCall({callback}, args, {}, "DistributedSync::OnCompleteEx")
                  : queue->AsyncPromise({defer}, args, "DistributedSync::OnCompleteEx");
     };
-    auto exec = [queue,
-                    defer,
-                    callback,
-                    predicates,
-                    rdbStore = context->StealRdbStore(),
-                    enumArg = context->syncMode,
+    auto exec = [queue, defer, callback, predicates, rdbStore = context->StealRdbStore(), enumArg = context->syncMode,
                     syncCallback]() mutable {
-        SyncOption option{static_cast<DistributedRdb::SyncMode>(enumArg), false, true};
+        SyncOption option{ static_cast<DistributedRdb::SyncMode>(enumArg), false, true };
         auto ret = rdbStore->SyncEx(option, predicates, syncCallback);
         if (ret != NativeRdb::E_OK) {
             auto args = [ret](napi_env env, int &argc, napi_value *argv) mutable {
