@@ -614,6 +614,40 @@ bool RdbRegisterAlgoFuzz(FuzzedDataProvider &provider)
     }
     return result;
 }
+
+bool RdbSyncExFuzz(FuzzedDataProvider &provider)
+{
+    if (RdbStoreFuzzTest::store_ == nullptr) {
+        return false;
+    }
+    bool result = true;
+
+    // Construct SyncOption
+    RdbStore::SyncOption syncOption;
+    DistributedRdb::SyncMode minMode = DistributedRdb::SyncMode::PUSH;
+    DistributedRdb::SyncMode maxMode = DistributedRdb::SyncMode::CLOUD_CUSTOM_PULL;
+    syncOption.mode = static_cast<DistributedRdb::SyncMode>(
+        provider.ConsumeIntegralInRange<int>(static_cast<int>(minMode), static_cast<int>(maxMode)));
+    syncOption.isBlock = provider.ConsumeBool();
+    syncOption.enableErrorDetail = provider.ConsumeBool();
+    syncOption.isDownloadOnly = provider.ConsumeBool();
+    syncOption.isEnablePredicate = provider.ConsumeBool();
+
+    std::string tableName = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    AbsRdbPredicates predicates(tableName);
+    std::string valName = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    predicates.EqualTo("name", ValueObject(valName));
+
+    RdbStore::AsyncBriefEx callback = [](const DistributedRdb::BriefsEx &briefsEx) {
+        (void)briefsEx;
+    };
+
+    int errCode = RdbStoreFuzzTest::store_->SyncEx(syncOption, predicates, callback);
+    if (errCode != E_OK) {
+        result = false;
+    }
+    return result;
+}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -643,5 +677,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::RdbInitKnowledgeSchemaFuzz(provider);
     OHOS::RdbRegisterAlgoFuzz(provider);
     OHOS::RdbRekeyExFuzz(provider);
+    OHOS::RdbSyncExFuzz(provider);
     return 0;
 }
