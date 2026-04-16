@@ -1749,9 +1749,12 @@ struct RdbStoreSyncExContext : public EnhancedContext {
         ASSERT_RETURN_SET_ERROR(obj != nullptr, std::make_shared<ParamError>("RdbStore", "not nullptr."));
         ASSERT_RETURN_SET_ERROR(
             obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        boundObj = obj;
         rdbStore = obj->GetInstance();
         auto status = JSUtils::Convert2ValueExt(env, argv[0], syncMode);
-        ASSERT_RETURN_SET_ERROR(status == napi_ok && (syncMode == 0 || syncMode == 1),
+        ASSERT_RETURN_SET_ERROR(
+            status == napi_ok && (syncMode == static_cast<uint32_t>(DistributedRdb::SyncMode::PUSH) ||
+                                     syncMode == static_cast<uint32_t>(DistributedRdb::SyncMode::PULL)),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "syncmode is invalid args"));
         RdbPredicatesProxy *predicatesProxy = nullptr;
         status = napi_unwrap(env, argv[1], reinterpret_cast<void **>(&predicatesProxy));
@@ -1818,7 +1821,7 @@ napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
                      : queue->AsyncPromise({defer}, args, "DistributedSync::OnErrorEx");
         }
     };
-    queue->Execute(std::move(exec), "DistributedSync::ExecuteEx");
+    queue->Execute(std::move(exec), "DistributedSyncEx::Execute");
     context = nullptr;
     return promise;
 }
