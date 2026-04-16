@@ -752,7 +752,7 @@ int RdbStoreImpl::SyncEx(const SyncOption &option, const AbsRdbPredicates &predi
             callback(briefsEx);
         }
     });
-    if (errorCode == RdbStatus::RDB_PERMISSION_DENIED) {
+    if (errorCode == RdbStatus::RDB_NO_SYNC_PERMISSION) {
         return E_SYNC_PERMISSION_DENIED;
     }
     return errorCode;
