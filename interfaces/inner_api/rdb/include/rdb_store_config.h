@@ -344,7 +344,7 @@ public:
         int32_t kdfAlgo = KdfAlgo::KDF_SHA256;
         uint32_t cryptoPageSize = RdbStoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
         mutable std::vector<uint8_t> encryptKey_{};
-        bool isVectorRekey = false;
+
         API_EXPORT CryptoParam();
         API_EXPORT ~CryptoParam();
         API_EXPORT bool IsValid() const;

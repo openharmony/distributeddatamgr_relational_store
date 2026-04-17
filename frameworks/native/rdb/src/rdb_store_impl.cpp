@@ -577,8 +577,13 @@ std::pair<int32_t, int32_t> RdbStoreImpl::UpdateDistributedInfo(
 
 int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
+    return Rekey(cryptoParam, false);
+}
+
+int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam, bool isVectorRekey)
+{
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    if (isReadOnly_ || isMemoryRdb_ || (!cryptoParam.isVectorRekey && config_.GetDBType() == DB_VECTOR)) {
+    if (isReadOnly_ || isMemoryRdb_ || (!isVectorRekey && config_.GetDBType() == DB_VECTOR)) {
         return E_NOT_SUPPORT;
     }
     if (!cryptoParam.IsValid()) {

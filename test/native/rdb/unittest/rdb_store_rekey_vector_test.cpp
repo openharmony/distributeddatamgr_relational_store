@@ -65,13 +65,11 @@ class VectorRekeyOpenCallback : public RdbOpenCallback {
 public:
     int OnCreate(RdbStore &store) override;
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override;
-    static const std::string createTableTest;
+    static constexpr const char* createTableTest = "CREATE TABLE IF NOT EXISTS test "
+                                                    "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                                    "name TEXT NOT NULL, age INTEGER, "
+                                                    "salary REAL);";
 };
-
-std::string const VectorRekeyOpenCallback::createTableTest = "CREATE TABLE IF NOT EXISTS test "
-                                                             "(id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                                             "name TEXT NOT NULL, age INTEGER, "
-                                                             "salary REAL);";
 
 int VectorRekeyOpenCallback::OnCreate(RdbStore &store)
 {
@@ -167,8 +165,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_001, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 5, 4, 3, 2, 1 };
-    newCryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam);
+    errCode = store->Rekey(newCryptoParam, true);
     ASSERT_EQ(errCode, E_OK);
     CheckQueryData(store);
 }
@@ -189,8 +186,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_002, TestSize.Level1)
     InsertData(store);
 
     RdbStoreConfig::CryptoParam cryptoParam;
-    cryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(cryptoParam);
+    errCode = store->Rekey(cryptoParam, true);
     ASSERT_EQ(errCode, E_OK);
     CheckQueryData(store);
 }
@@ -211,8 +207,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_003, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam cryptoParam;
     cryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
-    cryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(cryptoParam);
+    errCode = store->Rekey(cryptoParam, true);
     ASSERT_EQ(errCode, E_NOT_SUPPORT);
 }
 
@@ -232,8 +227,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_004, TestSize.Level1)
     ASSERT_EQ(errCode, E_OK);
 
     RdbStoreConfig::CryptoParam cryptoParam;
-    cryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(cryptoParam);
+    errCode = store->Rekey(cryptoParam, true);
     ASSERT_EQ(errCode, E_NOT_SUPPORT);
 }
 
@@ -257,14 +251,12 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_005, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newCryptoParam1;
     newCryptoParam1.encryptKey_ = std::vector<uint8_t>{ 2, 3, 4, 5, 6, 7 };
-    newCryptoParam1.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam1);
+    errCode = store->Rekey(newCryptoParam1, true);
     ASSERT_EQ(errCode, E_OK);
 
     RdbStoreConfig::CryptoParam newCryptoParam2;
     newCryptoParam2.encryptKey_ = std::vector<uint8_t>{ 3, 4, 5, 6, 7, 8 };
-    newCryptoParam2.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam2);
+    errCode = store->Rekey(newCryptoParam2, true);
     ASSERT_EQ(errCode, E_OK);
     CheckQueryData(store);
 }
@@ -289,8 +281,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_006, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 5, 4, 3, 2, 1 };
-    newCryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam);
+    errCode = store->Rekey(newCryptoParam, true);
     ASSERT_EQ(errCode, E_OK);
 
     store = nullptr;
@@ -321,8 +312,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_007, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam invalidParam;
     invalidParam.iterNum = -1;
-    invalidParam.isVectorRekey = true;
-    errCode = store->Rekey(invalidParam);
+    errCode = store->Rekey(invalidParam, true);
     ASSERT_EQ(errCode, E_INVALID_ARGS_NEW);
 }
 
@@ -349,8 +339,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_008, TestSize.Level1)
     std::thread rekeyThread([store, blockResult, &successCount]() {
         RdbStoreConfig::CryptoParam param;
         param.encryptKey_ = std::vector<uint8_t>{ 6, 5, 4, 3, 2, 1 };
-        param.isVectorRekey = true;
-        int ret = store->Rekey(param);
+        int ret = store->Rekey(param, true);
         if (ret == E_OK) {
             successCount++;
         }
@@ -361,8 +350,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_008, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam mainParam;
     mainParam.encryptKey_ = std::vector<uint8_t>{ 6, 5, 3, 4, 2, 1 };
-    mainParam.isVectorRekey = true;
-    int ret = store->Rekey(mainParam);
+    int ret = store->Rekey(mainParam, true);
     if (ret == E_OK) {
         successCount++;
     }
@@ -400,8 +388,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_009, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newParam;
     newParam.encryptKey_ = std::vector<uint8_t>{ 6, 5, 4, 3, 2, 1 };
-    newParam.isVectorRekey = true;
-    errCode = store->Rekey(newParam);
+    errCode = store->Rekey(newParam, true);
     LOG_INFO("Vector_Rekey_009 main Rekey finish, code:%{public}d", errCode);
     EXPECT_TRUE(blockResult->GetValue());
 }
@@ -426,8 +413,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_010, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 8, 7, 6, 5, 4, 3, 2, 1 };
-    newCryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam);
+    errCode = store->Rekey(newCryptoParam, true);
     ASSERT_EQ(errCode, E_OK);
     CheckQueryData(store);
 }
@@ -452,8 +438,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_011, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
-    newCryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam);
+    errCode = store->Rekey(newCryptoParam, true);
     ASSERT_EQ(errCode, E_OK);
     CheckQueryData(store);
 }
@@ -478,8 +463,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_012, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 5, 4, 3, 2, 1 };
-    newCryptoParam.isVectorRekey = false;
-    errCode = store->Rekey(newCryptoParam);
+    errCode = store->Rekey(newCryptoParam, false);
     ASSERT_EQ(errCode, E_NOT_SUPPORT);
 }
 
@@ -504,8 +488,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_013, TestSize.Level1)
     }
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
-    newCryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam);
+    errCode = store->Rekey(newCryptoParam, true);
     ASSERT_EQ(errCode, E_NOT_SUPPORT);
 }
 
@@ -529,8 +512,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_014, TestSize.Level1)
     ASSERT_EQ(errCode, E_OK);
 
     RdbStoreConfig::CryptoParam emptyKeyParam;
-    emptyKeyParam.isVectorRekey = true;
-    errCode = store->Rekey(emptyKeyParam);
+    errCode = store->Rekey(emptyKeyParam, true);
     ASSERT_EQ(errCode, E_NOT_SUPPORT);
 }
 
@@ -552,8 +534,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_015, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 1, 2, 3, 4, 5, 6 };
-    newCryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam);
+    errCode = store->Rekey(newCryptoParam, true);
     ASSERT_EQ(errCode, E_NOT_SUPPORT);
 }
 
@@ -575,8 +556,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_016, TestSize.Level1)
     InsertData(store);
 
     RdbStoreConfig::CryptoParam emptyCryptoParam;
-    emptyCryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(emptyCryptoParam);
+    errCode = store->Rekey(emptyCryptoParam, true);
     ASSERT_EQ(errCode, E_OK);
     CheckQueryData(store);
 }
@@ -602,8 +582,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_017, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
-    newCryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam);
+    errCode = store->Rekey(newCryptoParam, true);
     ASSERT_EQ(errCode, E_OK);
     CheckQueryData(store);
 }
@@ -628,8 +607,7 @@ HWTEST_F(RdbRekeyVectorTest, Vector_Rekey_018, TestSize.Level1)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = std::vector<uint8_t>{ 6, 5, 4, 3, 2, 1 };
-    newCryptoParam.isVectorRekey = true;
-    errCode = store->Rekey(newCryptoParam);
+    errCode = store->Rekey(newCryptoParam, true);
     ASSERT_EQ(errCode, E_OK);
 
     InsertData(store);
