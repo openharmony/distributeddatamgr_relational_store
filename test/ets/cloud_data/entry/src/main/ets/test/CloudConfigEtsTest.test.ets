@@ -120,7 +120,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync004 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -166,7 +166,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync006 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -189,7 +189,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync007 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -212,7 +212,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync008 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -304,7 +304,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync012 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -327,7 +327,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync013 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -350,7 +350,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync014 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -396,7 +396,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync016 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -419,7 +419,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync017 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -442,7 +442,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync018 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -462,7 +462,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync019 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -482,7 +482,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync020 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })
@@ -502,7 +502,7 @@ export default function CloudConfigEtsTest() {
             done();
         } catch (e) {
             console.error('CloudSync021 fail' + `, error code is ${e.code}, message is ${e.message}`);
-            expect(e.code == 401).assertTrue();
+            expect(e.code == 14800001).assertTrue();
             done();
         }
     })

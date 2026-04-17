@@ -423,6 +423,19 @@ void ConfigImpl::SetGlobalCloudStrategyImpl(
 void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, SyncMode mode,
     callback_view<void(const ProgressDetails &data)> progress)
 {
+    if (bundleName.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT_V20, "bundleName cannot be empty.");
+        return;
+    }
+    if (storeId.empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT_V20, "Invalid storeId.");
+        return;
+    }
+    if (mode < OHOS::DistributedRdb::TIME_FIRST || mode > OHOS::DistributedRdb::CLOUD_FIRST) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT_V20,
+            "mode must be between TIME_FIRST and CLOUD_FIRST.");
+        return;
+    }
     auto work = [&bundleName, &storeId, &mode, progress](std::shared_ptr<CloudService> proxy) {
         auto async = [progress](const OHOS::DistributedRdb::Details &details) {
             if (details.empty()) {
@@ -570,7 +583,7 @@ void ConfigImpl::OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleIn
 void ConfigImpl::StopCloudSyncImpl(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos)
 {
     if (bundleInfos.empty()) {
-        ThrowAniError(CloudService::Status::INVALID_ARGUMENT,
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT_V20,
             "The type of bundleInfos must be Array<BundleInfo> and not empty.");
         return;
     }
@@ -587,7 +600,7 @@ void ConfigImpl::StopCloudSyncImpl(array_view<::ohos::data::cloudData::BundleInf
 
     auto work = [&nativeBundleInfos](std::shared_ptr<CloudService> proxy) {
         int32_t code = proxy->StopCloudSyncTask(nativeBundleInfos);
-        LOG_DEBUG("StopCloudSyncTask return %{public}d", code);
+        LOG_INFO("StopCloudSyncTask return %{public}d", code);
         if (code != CloudService::Status::SUCCESS) {
             ThrowAniError(code);
         }
