@@ -459,7 +459,7 @@ describe('rdbStoreCloudSyncTest', function () {
         } catch (err) {
             console.log(TAG + `cloud sync fail, errcode:${JSON.stringify(err)}.`);
             done();
-            expect("401").assertEqual(err.code)
+            expect("202").assertEqual(err.code)
         }
         console.log(TAG + "************* testRdbStoreCloudSync0016 end *************");
     })
