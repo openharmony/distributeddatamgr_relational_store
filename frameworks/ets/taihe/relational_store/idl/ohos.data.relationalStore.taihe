@@ -241,7 +241,7 @@ struct Reference {
 }
 
 struct CloudSyncConfig {
-    mode: i32;
+    mode: SyncMode;
     downloadOnly: Optional<bool>;
     enablePredicate: Optional<bool>;
     predicates: Optional<RdbPredicates>;
@@ -927,7 +927,6 @@ interface RdbStore {
     @gen_promise("cloudSync")
     CloudSyncWithPredicates(mode: SyncMode, predicates: RdbPredicates, progress: (p : ProgressDetails) => void): void;
 
-    @gen_async("cloudSync")
     @gen_promise("cloudSync")
     CloudSyncWithConfig(config: CloudSyncConfig, progress: (p : ProgressDetails) => void): void;
 

@@ -1201,7 +1201,7 @@ void RdbStoreImpl::CloudSyncWithConfig(
     }
     
     OHOS::DistributedRdb::SyncOption option {
-        .mode = static_cast<OHOS::DistributedRdb::SyncMode>(config.mode),
+        .mode = ani_rdbutils::SyncModeToNative(config.mode),
         .isBlock = false,
         .isDownloadOnly = config.downloadOnly.has_value() ? config.downloadOnly.value() : false,
         .isEnablePredicate = config.enablePredicate.has_value() ? config.enablePredicate.value() : false
