@@ -1850,7 +1850,7 @@ void RdbStoreImpl::RekeySyncWithEncryptionKey(taihe::array_view<uint8_t> encrypt
 
     ASSERT_RETURN_THROW_ERROR(cryptoParamNative.IsValid(),
         std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal EncryptKey."), RDB_REVT_NOTHING);
-    auto errCode = store->Rekey(cryptoParamNative);
+    auto errCode = store->Rekey(cryptoParamNative, true);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode);
     }

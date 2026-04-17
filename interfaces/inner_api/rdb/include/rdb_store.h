@@ -647,6 +647,14 @@ public:
     virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam);
 
     /**
+     * @brief Changes the key used to encrypt the database.
+     *
+     * @param Crypto parameters
+     * @param isVectorRekey Indicates whether a vector database rekey
+     */
+    virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam, bool isVectorRekey);
+
+    /**
      * @brief Changes the cryptoParam used to encrypt the database.
      *
      * @param Crypto parameters

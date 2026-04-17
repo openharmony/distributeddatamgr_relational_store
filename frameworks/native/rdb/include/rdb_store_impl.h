@@ -118,6 +118,7 @@ public:
     std::pair<int32_t, int32_t> UpdateDistributedInfo(
         const DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates) override;
     int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
+    int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam, bool isVectorRekey) override;
     int32_t RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     std::string ObtainDistributedTableName(const std::string &device, const std::string &table, int &errCode) override;
     int Sync(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief &async) override;

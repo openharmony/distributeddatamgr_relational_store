@@ -1112,7 +1112,7 @@ interface RdbStore {
     RekeySync(cryptoParam: Optional<CryptoParam>): void;
 
     @gen_promise("rekey")
-    RekeySyncWithEncryptionKey(encryptionKey: Array<u8>): void;
+    RekeySyncWithEncryptionKey(encryptionKey: @typedarray Array<u8>): void;
 
     @gen_promise("rekeyEx")
     RekeyExSync(cryptoParam: CryptoParam): void;

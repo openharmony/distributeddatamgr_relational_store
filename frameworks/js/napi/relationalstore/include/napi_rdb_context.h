@@ -88,6 +88,8 @@ struct RdbStoreContext : public RdbStoreContextBase {
     bool isQuerySql = false;
     uint32_t expiredTime = 0;
     NativeRdb::RdbStoreConfig::CryptoParam cryptoParam;
+    bool isVectorRekey = false;
+
     std::shared_ptr<NapiRdbStoreData> napiRdbStoreData = nullptr;
     std::vector<uint8_t> encryptionKey{};
     DistributedRdb::CloudSyncConfig cloudSyncConfig;
