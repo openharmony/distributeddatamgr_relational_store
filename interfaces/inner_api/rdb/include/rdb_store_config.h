@@ -736,6 +736,16 @@ public:
     API_EXPORT std::string GetVisitorDir() const;
 
     /**
+     * @brief Sets the db path for sa.
+     */
+    API_EXPORT void SetSaDbPath(std::string saDbPath);
+    
+    /**
+     * @brief Sets the db path for sa.
+     */
+    API_EXPORT std::string GetSaDbPath() const;
+
+    /**
      * @brief Overload the line number operator.
      */
     bool operator==(const RdbStoreConfig &config) const
@@ -754,7 +764,8 @@ public:
         if (storageMode_ != config.storageMode_ || journalMode_ != config.journalMode_ ||
             syncMode_ != config.syncMode_ || databaseFileType != config.databaseFileType ||
             journalSize_ != config.journalSize_ || pageSize_ != config.pageSize_ || dbType_ != config.dbType_ ||
-            customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_) {
+            customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_ ||
+            saDbPath_ != config.saDbPath_) {
             return false;
         }
 
@@ -896,6 +907,8 @@ public:
     void SetVersion(ConfigVersion version);
 
     ConfigVersion GetVersion() const;
+    
+    
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
@@ -955,6 +968,8 @@ private:
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
     ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;
+
+    std::string saDbPath_ = "";
 };
 } // namespace OHOS::NativeRdb
 #endif

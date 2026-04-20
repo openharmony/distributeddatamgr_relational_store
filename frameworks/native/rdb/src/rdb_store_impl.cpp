@@ -118,6 +118,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.permissionNames_ = config.GetPromiseInfo().permissionNames_;
     syncerParam_.subUser_ = config.GetSubUser();
     syncerParam_.dfxInfo_.lastOpenTime_ = RdbTimeUtils::GetCurSysTimeWithMs();
+    syncerParam_.dbPath_ = config.GetSaDbPath();
     if (created) {
         syncerParam_.infos_ = Connection::Collect(config);
     }
@@ -211,7 +212,8 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::GetConn(bool isRea
 
 bool RdbStoreImpl::SetFileGid(const RdbStoreConfig &config, int32_t gid)
 {
-    bool setDir = SqliteUtils::SetDbDirGid(config.GetPath(), gid, false);
+    SaConfig saConfig = { !config.GetSaDbPath().empty(), config.GetBundleName() };
+    bool setDir = SqliteUtils::SetDbDirGid(config.GetPath(), gid, false, saConfig);
     if (!setDir) {
         LOG_ERROR("SetDbDir fail, bundleName is %{public}s, store is %{public}s.",
             config.GetBundleName().c_str(),
