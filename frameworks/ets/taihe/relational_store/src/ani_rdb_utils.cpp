@@ -1170,29 +1170,30 @@ ani_status ConvertSyncResultInfos2AniValue(
 
     int i = 0;
     for (const auto &value : values) {
-        ani_object syncResultObj = {};
-        if (ani_utils::CreateAniObj(env, "@ohos.data.relationalStore.SyncResult", "<ctor>", ":", &syncResultObj) !=
-            ANI_OK) {
-            LOG_ERROR("[ANI] Create SyncResultInfo object failed.");
-            return ANI_ERROR;
-        }
+        // 为每个 SyncResult 创建一个包含3个元素的数组: [device, code, message]
+        ani_array itemArray = {};
+        ANI_CHECK_RETURN(env->Array_New(3, element, &itemArray));
 
+        // 索引 0: device (string)
         ani_string deviceStr = {};
         ANI_CHECK_RETURN(env->String_NewUTF8(value.device.c_str(), value.device.size(), &deviceStr));
-        ANI_CHECK_RETURN(env->Object_SetPropertyByName_Ref(syncResultObj, "device", deviceStr));
+        ANI_CHECK_RETURN(env->Array_Set(itemArray, 0, deviceStr));
 
+        // 索引 1: code (enum)
         ani_ref codeRef = SyncResultCodeToAni(env, value.code);
         if (codeRef == nullptr) {
             LOG_ERROR("[ANI] SyncResultCodeToAni failed.");
             return ANI_ERROR;
         }
-        ANI_CHECK_RETURN(env->Object_SetPropertyByName_Ref(syncResultObj, "code", codeRef));
+        ANI_CHECK_RETURN(env->Array_Set(itemArray, 1, codeRef));
 
+        // 索引 2: message (string)
         ani_string messageStr = {};
         ANI_CHECK_RETURN(env->String_NewUTF8(value.message.c_str(), value.message.size(), &messageStr));
-        ANI_CHECK_RETURN(env->Object_SetPropertyByName_Ref(syncResultObj, "message", messageStr));
+        ANI_CHECK_RETURN(env->Array_Set(itemArray, 2, messageStr));
 
-        ANI_CHECK_RETURN(env->Array_Set(resArray, i++, static_cast<ani_ref>(syncResultObj)));
+        // 将包含3个元素的数组添加到结果数组中
+        ANI_CHECK_RETURN(env->Array_Set(resArray, i++, static_cast<ani_ref>(itemArray)));
     }
 
     result = resArray;

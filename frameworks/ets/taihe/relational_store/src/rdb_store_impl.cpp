@@ -1053,17 +1053,16 @@ void RdbStoreImpl::SyncEx(SyncMode mode, weak::RdbPredicates predicates, uintptr
         std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), RDB_DO_NOTHING);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_RETURN_THROW_ERROR(rdbPredicateNative != nullptr,
-        std::make_shared<ParamError>("predicates", "an RdbPredicates."), RDB_REVT_NOTHING);
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW), RDB_DO_NOTHING);
     auto nativeMode = ani_rdbutils::SyncModeToNative(mode);
-    if (nativeMode != OHOS::DistributedRdb::SyncMode::PUSH && nativeMode != OHOS::DistributedRdb::SyncMode::PULL) {
-        ThrowParamError("mode must be a SyncMode of device.");
-        return;
-    }
-
+    ASSERT_RETURN_THROW_ERROR(
+        (nativeMode == OHOS::DistributedRdb::SyncMode::PUSH) || (nativeMode == OHOS::DistributedRdb::SyncMode::PULL),
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_INVALID_ARGS_NEW),
+        RDB_DO_NOTHING);
     OHOS::DistributedRdb::SyncOption option{ nativeMode, false, true};
     std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
     if (!context->Init(callback)) {
-        ThrowInnerError(OHOS::NativeRdb::E_ERROR);
+        ThrowInnerErrorExt(OHOS::NativeRdb::E_ERROR);  // 错误码存在问题
         return;
     }
     promise = context->promise_;
@@ -1079,8 +1078,9 @@ void RdbStoreImpl::SyncEx(SyncMode mode, weak::RdbPredicates predicates, uintptr
             context->error_ = std::make_shared<InnerError>(NativeRdb::E_ERROR);
         }
         AniAsyncCall::ReturnResult(context, callbackEnv);
-    };
+    }; 
     int errCode = store->SyncEx(option, *rdbPredicateNative, nativeSyncCallback);
+    LOG_ERROR("---dj--- taihe SyncEx ddddddddddd errCode:%{public}d.", errCode);
     if (errCode != OHOS::NativeRdb::E_OK) {
         context->error_ = std::make_shared<InnerError>(errCode);
         AniAsyncCall::ReturnResult(context, env);
