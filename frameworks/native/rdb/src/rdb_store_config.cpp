@@ -853,8 +853,8 @@ std::string RdbStoreConfig::FormatCfg(const RdbStoreConfig &first, const RdbStor
     oss << " haMode:" << first.haMode_ << "->" << second.haMode_ << ",";
     oss << " pluginLibs size:" << first.pluginLibs_.size() << "->" << second.pluginLibs_.size() << ",";
     oss << " area:" << first.area_ << "->" << second.area_ << ",";
-    oss << " serverPath:" << SqliteUtils::Anonymous(first.serverPath_) << "->" << SqliteUtils::Anonymous(second.serverPath_)
-        << ",";
+    oss << " serverPath:" << SqliteUtils::Anonymous(first.serverPath_) << "->"
+        << SqliteUtils::Anonymous(second.serverPath_) << ",";
     return oss.str();
 }
 

@@ -2411,7 +2411,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SyncEx_010, TestSize.Level1)
  * @tc.desc: test sa open db with serverpath
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplTest, RdbStore_SyncEx_010, TestSize.Level1)
+HWTEST_F(RdbStoreImplTest, InitSaDb001, TestSize.Level1)
 {
     int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
