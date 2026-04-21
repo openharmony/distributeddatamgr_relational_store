@@ -510,7 +510,7 @@ std::string RdbStoreConfig::GetVisitorDir() const
     return visitorDir_;
 }
 
-void RdbStoreConfig::SetServerPath(std::string serverPath)
+void RdbStoreConfig::SetServerPath(const std::string &serverPath)
 {
     serverPath_ = serverPath;
 }

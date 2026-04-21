@@ -93,7 +93,7 @@ static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
 static constexpr const char *ASYNC_RESTORE = "-async.restore";
 constexpr char const *SUFFIX_BINLOG = "_binlog/";
-constexpr char const *DATABASE = "database";
+constexpr char const *INVALID_PATH_PART = "..";
 constexpr int32_t SERVICE_GID = 3012;
 constexpr int64_t TIME_OUT = 1500;
 
@@ -120,7 +120,8 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.subUser_ = config.GetSubUser();
     syncerParam_.dfxInfo_.lastOpenTime_ = RdbTimeUtils::GetCurSysTimeWithMs();
     std::string serverPath = config.GetServerPath();
-    if (!serverPath.empty() && (serverPath.find(syncerParam_.bundleName_) != std::string::npos)) {
+    if (!serverPath.empty() && (serverPath.find(syncerParam_.bundleName_) != std::string::npos) &&
+        (serverPath.find(INVALID_PATH_PART) == std::string::npos)) {
         syncerParam_.dbPath_ = serverPath;
     }
     if (created) {
@@ -216,8 +217,8 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::GetConn(bool isRea
 
 bool RdbStoreImpl::SetFileGid(const RdbStoreConfig &config, int32_t gid)
 {
-    std::string index = config.GetServerPath().empty() ? DATABASE : config.GetBundleName();
-    bool setDir = SqliteUtils::SetDbDirGid(config.GetPath(), gid, false, index);
+    std::string bundleName = config.GetServerPath().empty() ? "" : config.GetBundleName();
+    bool setDir = SqliteUtils::SetDbDirGid(config.GetPath(), gid, false, bundleName);
     if (!setDir) {
         LOG_ERROR("SetDbDir fail, bundleName is %{public}s, store is %{public}s.",
             config.GetBundleName().c_str(),

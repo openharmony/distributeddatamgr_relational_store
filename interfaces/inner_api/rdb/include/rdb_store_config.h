@@ -738,7 +738,7 @@ public:
     /**
      * @brief Sets the db path for sa.
      */
-    API_EXPORT void SetServerPath(std::string saDbPath);
+    API_EXPORT void SetServerPath(const std::string &serverPath);
     
     /**
      * @brief Sets the db path for sa.
