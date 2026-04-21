@@ -287,7 +287,7 @@ std::string RdbFaultHiViewReporter::GetBundleName(const std::string &bundleName)
     return RdbHelper::GetSelfBundleName();
 }
 
-uint8_t *RdbFaultHiViewReporter::GetFaultCounter(int32_t errCode)
+std::atomic<uint8_t> *RdbFaultHiViewReporter::GetFaultCounter(int32_t errCode)
 {
     auto it = std::lower_bound(faultCounters_, faultCounters_ + sizeof(faultCounters_) / sizeof(RdbFaultCode), errCode,
         [](const RdbFaultCode& faultCode, int32_t code) {
@@ -307,14 +307,17 @@ bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_
     if ((errCode == E_DFX_RETAIN_DEVICE_DATA) || (errCode == E_DFX_UPDATE_DISTRIBUTED_INFO)) {
         return true;
     }
-    uint8_t *counter = GetFaultCounter(errCode);
+    auto *counter = GetFaultCounter(errCode);
     if (counter == nullptr) {
         return false;
     }
-    if (*counter < UINT8_MAX) {
-        (*counter)++;
+    uint8_t old = counter->load();
+    while (old < UINT8_MAX) {
+        if (counter->compare_exchange_weak(old, old + 1)) {
+            break;
+        }
     }
-    return *counter <= MAX_FAULT_TIMES;
+    return old < MAX_FAULT_TIMES;
 }
 
 void RdbFaultHiViewReporter::ReportFault(const RdbFaultEvent &faultEvent)
