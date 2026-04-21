@@ -114,7 +114,7 @@ public:
     static bool HasAccessAcl(const std::string &path, int32_t gid);
     static bool SetDbFileGid(const std::string &path, const std::vector<std::string> &files, int32_t gid);
     static bool SetDbDirGid(
-        const std::string &path, int32_t gid, bool isDefault = false, const std::string &index = "");
+        const std::string &path, int32_t gid, bool isDefault = false, const std::string &bundleName = "");
     static bool IsUseAsyncRestore(const RdbStoreConfig &config, const std::string &newPath,
         const std::string &backupPath);
     static int ConvertRdbStatusNative(int32_t status);
