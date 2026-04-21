@@ -510,14 +510,14 @@ std::string RdbStoreConfig::GetVisitorDir() const
     return visitorDir_;
 }
 
-void RdbStoreConfig::SetSaDbPath(std::string saDbPath)
+void RdbStoreConfig::SetServerPath(std::string serverPath)
 {
-    saDbPath_ = saDbPath;
+    serverPath_ = serverPath;
 }
 
-std::string RdbStoreConfig::GetSaDbPath() const
+std::string RdbStoreConfig::GetServerPath() const
 {
-    return saDbPath_;
+    return serverPath_;
 }
 
 bool RdbStoreConfig::IsSearchable() const
@@ -828,7 +828,7 @@ std::string RdbStoreConfig::ToString() const
     oss << " haMode:" << haMode_ << ",";
     oss << " pluginLibs size:" << pluginLibs_.size() << ",";
     oss << " area:" << area_ << ",";
-    oss << " saDbPath:" << SqliteUtils::Anonymous(saDbPath_) << ",";
+    oss << " serverPath:" << SqliteUtils::Anonymous(serverPath_) << ",";
     return oss.str();
 }
 
@@ -853,7 +853,7 @@ std::string RdbStoreConfig::FormatCfg(const RdbStoreConfig &first, const RdbStor
     oss << " haMode:" << first.haMode_ << "->" << second.haMode_ << ",";
     oss << " pluginLibs size:" << first.pluginLibs_.size() << "->" << second.pluginLibs_.size() << ",";
     oss << " area:" << first.area_ << "->" << second.area_ << ",";
-    oss << " saDbPath:" << SqliteUtils::Anonymous(first.saDbPath_) << "->" << SqliteUtils::Anonymous(second.saDbPath_)
+    oss << " serverPath:" << SqliteUtils::Anonymous(first.serverPath_) << "->" << SqliteUtils::Anonymous(second.serverPath_)
         << ",";
     return oss.str();
 }

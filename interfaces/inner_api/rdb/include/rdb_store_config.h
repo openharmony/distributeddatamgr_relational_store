@@ -738,12 +738,12 @@ public:
     /**
      * @brief Sets the db path for sa.
      */
-    API_EXPORT void SetSaDbPath(std::string saDbPath);
+    API_EXPORT void SetServerPath(std::string saDbPath);
     
     /**
      * @brief Sets the db path for sa.
      */
-    API_EXPORT std::string GetSaDbPath() const;
+    API_EXPORT std::string GetServerPath() const;
 
     /**
      * @brief Overload the line number operator.
@@ -765,7 +765,7 @@ public:
             syncMode_ != config.syncMode_ || databaseFileType != config.databaseFileType ||
             journalSize_ != config.journalSize_ || pageSize_ != config.pageSize_ || dbType_ != config.dbType_ ||
             customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_ ||
-            saDbPath_ != config.saDbPath_) {
+            serverPath_ != config.serverPath_) {
             return false;
         }
 
@@ -969,7 +969,7 @@ private:
     mutable RegisterInfo registerInfo_;
     ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;
 
-    std::string saDbPath_ = "";
+    std::string serverPath_ = "";
 };
 } // namespace OHOS::NativeRdb
 #endif
