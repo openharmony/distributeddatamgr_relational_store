@@ -33,11 +33,6 @@ struct ErrMsgState {
     bool isRenamed = false;
 };
 
-struct SaConfig {
-    bool isSa = false;
-    std::string bundleName;
-};
-
 using DebugInfo = OHOS::DistributedRdb::RdbDebugInfo;
 using DfxInfo = OHOS::DistributedRdb::RdbDfxInfo;
 class SqliteUtils {

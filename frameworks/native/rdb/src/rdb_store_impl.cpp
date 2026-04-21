@@ -216,7 +216,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::GetConn(bool isRea
 
 bool RdbStoreImpl::SetFileGid(const RdbStoreConfig &config, int32_t gid)
 {
-    std::string index = config.GetSaDbPath().empty() ? DATABASE : config.GetBundleName();
+    std::string index = config.GetServerPath().empty() ? DATABASE : config.GetBundleName();
     bool setDir = SqliteUtils::SetDbDirGid(config.GetPath(), gid, false, index);
     if (!setDir) {
         LOG_ERROR("SetDbDir fail, bundleName is %{public}s, store is %{public}s.",

@@ -907,8 +907,6 @@ public:
     void SetVersion(ConfigVersion version);
 
     ConfigVersion GetVersion() const;
-    
-    
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
