@@ -2557,7 +2557,7 @@ HWTEST_F(RdbStoreImplConditionTest, Dump_003, TestSize.Level2)
  * @tc.desc: test SyncEx when RdbService returns RDB_PERMISSION_DENIED
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_015, TestSize.Level2)
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_011, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
@@ -2576,7 +2576,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_015, TestSize.Level2)
     RdbStoreImplConditionTestOpenCallback helper;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
     ASSERT_NE(store, nullptr);
-    EXPECT_EQ(E_SYNC_PERMISSION_DENIED, store->SyncEx({OHOS::DistributedRdb::PUSH}, AbsRdbPredicates("test"), nullptr));
+    EXPECT_EQ(RDB_PERMISSION_DENIED, store->SyncEx({OHOS::DistributedRdb::PUSH}, AbsRdbPredicates("test"), nullptr));
 
     RdbHelper::DeleteRdbStore(config);
 }
@@ -2586,7 +2586,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_015, TestSize.Level2)
  * @tc.desc: test SyncEx when RdbService returns other error codes
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_016, TestSize.Level2)
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_012, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
@@ -2615,7 +2615,7 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_016, TestSize.Level2)
  * @tc.desc: test SyncEx callback with empty and non-empty details
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_017, TestSize.Level2)
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_013, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))

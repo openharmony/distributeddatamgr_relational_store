@@ -93,11 +93,12 @@ napi_value OnAutoSyncTrigger(napi_env env, napi_callback_info info)
     napi_value argv[1] = { nullptr };
     napi_value self = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
-    ASSERT_ERR(env, status == napi_ok && argc >= 1, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+    ASSERT_ERR(env, status == napi_ok && argc >= 1, Status::INVALID_ARGUMENT_V20,
+        "The number of parameters is incorrect.");
 
     napi_valuetype type = napi_undefined;
     napi_typeof(env, argv[0], &type);
-    ASSERT_ERR(env, type == napi_function, Status::INVALID_ARGUMENT, "The type of observer must be Callback.");
+    ASSERT_ERR(env, type == napi_function, Status::INVALID_ARGUMENT_V20, "The type of observer must be Callback.");
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     if (proxy == nullptr) {
         if (state != CloudService::SERVER_UNAVAILABLE) {
@@ -133,7 +134,7 @@ napi_value OffAutoSyncTrigger(napi_env env, napi_callback_info info)
     napi_value argv[1] = { nullptr };
     napi_value self = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
-    ASSERT_ERR(env, status == napi_ok, Status::INVALID_ARGUMENT, "The number of parameters is incorrect.");
+    ASSERT_ERR(env, status == napi_ok, Status::INVALID_ARGUMENT_V20, "The number of parameters is incorrect.");
 
     auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
     if (proxy == nullptr) {
@@ -156,7 +157,7 @@ napi_value OffAutoSyncTrigger(napi_env env, napi_callback_info info)
         napi_valuetype type = napi_undefined;
         napi_typeof(env, argv[0], &type);
         if (type != napi_function) {
-            ASSERT_ERR(env, false, Status::INVALID_ARGUMENT, "The type of observer must be Callback.");
+            ASSERT_ERR(env, false, Status::INVALID_ARGUMENT_V20, "The type of observer must be Callback.");
         }
         napi_value callback = argv[0];
         for (auto obs = g_observers.begin(); obs != g_observers.end();) {
