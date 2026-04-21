@@ -75,7 +75,6 @@ constexpr const unsigned char MAX_PRINTABLE_BYTE = 0x7F;
 
 constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
-constexpr char const *DATABASE = "database";
 
 const std::unordered_map<int32_t, int> SqliteUtils::STATUS_MAP = {
     { DBStatus::OK, E_OK },
@@ -215,9 +214,8 @@ bool SqliteUtils::SetDbFileGid(const std::string &path, const std::vector<std::s
     return ret;
 }
 
-bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefault, const SaConfig &saConfig)
+bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefault, const std::string &index)
 {
-    std::string index = saConfig.isSa ? saConfig.bundleName : DATABASE;
     if (path.empty()) {
         return false;
     }
@@ -228,6 +226,9 @@ bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefau
     }
     if (isDefault) {
         return SetDefaultGid(realPath, gid);
+    }
+    if (index.empty()) {
+        return false;
     }
     bool ret = true;
     uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;

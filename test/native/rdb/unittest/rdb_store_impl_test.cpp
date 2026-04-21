@@ -2405,3 +2405,21 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SyncEx_010, TestSize.Level1)
 
     RdbHelper::DeleteRdbStore(config);
 }
+
+/**
+ * @tc.name: InitSaDb001
+ * @tc.desc: test sa open db with serverpath
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_SyncEx_010, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    config.SetBundleName("test");
+    config.SetServerPath(RdbStoreImplTest::DATABASE_NAME);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    RdbHelper::DeleteRdbStore(config);
+}
