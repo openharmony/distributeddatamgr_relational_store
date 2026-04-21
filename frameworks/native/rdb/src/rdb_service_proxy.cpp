@@ -131,7 +131,7 @@ std::pair<int32_t, Details> RdbServiceProxy::DoSync(
         return result;
     }
 
-    if (!ITypesUtil::Unmarshal(reply, status, details)) {
+    if (!ITypesUtil::Unmarshal(reply, details)) {
         LOG_ERROR("read result failed.");
         status = RDB_ERROR;
         return result;
@@ -180,9 +180,10 @@ int32_t RdbServiceProxy::DoAsync(
     }
     LOG_INFO("bundleName:%{public}s, storeName:%{public}s, num=%{public}u, start DoAsync",
         param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str(), asyncOption.seqNum);
-    if (DoAsync(param, asyncOption, predicates) != RDB_OK) {
+    auto ret = DoAsync(param, asyncOption, predicates);
+    if (ret != RDB_OK) {
         syncCallbacks_.Erase(asyncOption.seqNum);
-        return RDB_ERROR;
+        return asyncOption.enableErrorDetail ? ret : RDB_ERROR;
     }
     return RDB_OK;
 }
