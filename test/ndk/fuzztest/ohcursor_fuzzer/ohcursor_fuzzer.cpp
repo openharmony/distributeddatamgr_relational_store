@@ -234,7 +234,7 @@ void OH_Cursor_GetFloatVectorFuzz(FuzzedDataProvider &provider)
 }
 } // namespace OHOS
 
-void OH_Cursor_Part1Fuzz(FuzzedDataProvider &provider)
+void OH_Cursor_MetaDataFuzz(FuzzedDataProvider &provider)
 {
     OHOS::OH_Cursor_GetColumnCountFuzz(provider);
     OHOS::OH_Cursor_GetColumnTypeFuzz(provider);
@@ -243,15 +243,19 @@ void OH_Cursor_Part1Fuzz(FuzzedDataProvider &provider)
     OHOS::OH_Cursor_GetRowCountFuzz(provider);
     OHOS::OhCursorGoToNextRowFuzz();
     OHOS::OH_Cursor_GetSizeFuzz(provider);
-    OHOS::OH_Cursor_GetTextFuzz(provider);
 }
 
-void OH_Cursor_Part2Fuzz(FuzzedDataProvider &provider)
+void OH_Cursor_GetBasicFuzz(FuzzedDataProvider &provider)
 {
+    OHOS::OH_Cursor_GetTextFuzz(provider);
     OHOS::OH_Cursor_GetInt64Fuzz(provider);
     OHOS::OH_Cursor_GetRealFuzz(provider);
     OHOS::OH_Cursor_GetBlobFuzz(provider);
     OHOS::OH_Cursor_IsNullFuzz(provider);
+}
+
+void OH_Cursor_GetComplexFuzz(FuzzedDataProvider &provider)
+{
     OHOS::OH_Cursor_GetAssetFuzz(provider);
     OHOS::OH_Cursor_GetAssetsFuzz(provider);
     OHOS::OH_Cursor_GetAssetsCountFuzz(provider);
@@ -264,7 +268,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     // Run your code on data
     FuzzedDataProvider provider(data, size);
-    OH_Cursor_Part1Fuzz(provider);
-    OH_Cursor_Part2Fuzz(provider);
+    OH_Cursor_MetaDataFuzz(provider);
+    OH_Cursor_GetBasicFuzz(provider);
+    OH_Cursor_GetComplexFuzz(provider);
     return 0;
 }

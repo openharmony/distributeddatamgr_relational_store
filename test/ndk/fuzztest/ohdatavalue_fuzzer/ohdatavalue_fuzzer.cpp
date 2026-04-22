@@ -389,22 +389,26 @@ void OH_Value_GetUnlimitedIntFuzz(FuzzedDataProvider &provider)
 }
 } // namespace OHOS
 
-void OH_Value_Part1Fuzz(FuzzedDataProvider &provider)
+void OH_Value_DestroyAndPutBasicFuzz(FuzzedDataProvider &provider)
 {
     OHOS::OH_Value_DestroyFuzz(provider);
     OHOS::OH_Value_PutNullFuzz(provider);
     OHOS::OH_Value_PutIntFuzz(provider);
     OHOS::OH_Value_PutRealFuzz(provider);
     OHOS::OH_Value_PutTextFuzz(provider);
+}
+
+void OH_Value_PutComplexFuzz(FuzzedDataProvider &provider)
+{
     OHOS::OH_Value_PutBlobFuzz(provider);
     OHOS::OH_Value_PutAssetFuzz(provider);
     OHOS::OH_Value_PutAssetsFuzz(provider);
-}
-
-void OH_Value_Part2Fuzz(FuzzedDataProvider &provider)
-{
     OHOS::OH_Value_PutFloatVectorFuzz(provider);
     OHOS::OH_Value_PutUnlimitedIntFuzz(provider);
+}
+
+void OH_Value_GetBasicFuzz(FuzzedDataProvider &provider)
+{
     OHOS::OH_Value_GetTypeFuzz(provider);
     OHOS::OH_Value_IsNullFuzz(provider);
     OHOS::OH_Value_GetIntFuzz(provider);
@@ -413,7 +417,7 @@ void OH_Value_Part2Fuzz(FuzzedDataProvider &provider)
     OHOS::OH_Value_GetBlobFuzz(provider);
 }
 
-void OH_Value_Part3Fuzz(FuzzedDataProvider &provider)
+void OH_Value_GetComplexFuzz(FuzzedDataProvider &provider)
 {
     OHOS::OH_Value_GetAssetFuzz(provider);
     OHOS::OH_Value_GetAssetsCountFuzz(provider);
@@ -428,8 +432,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     // Run your code on data
     FuzzedDataProvider provider(data, size);
-    OH_Value_Part1Fuzz(provider);
-    OH_Value_Part2Fuzz(provider);
-    OH_Value_Part3Fuzz(provider);
+    OH_Value_DestroyAndPutBasicFuzz(provider);
+    OH_Value_PutComplexFuzz(provider);
+    OH_Value_GetBasicFuzz(provider);
+    OH_Value_GetComplexFuzz(provider);
     return 0;
 }
