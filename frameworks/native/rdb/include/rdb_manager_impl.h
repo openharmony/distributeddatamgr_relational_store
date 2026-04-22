@@ -69,6 +69,7 @@ private:
     std::shared_ptr<RdbService> rdbService_;
     RdbSyncerParam param_;
     std::string bundleName_;
+    bool isProxy_ = true;
 };
 } // namespace OHOS::DistributedRdb
 #endif
