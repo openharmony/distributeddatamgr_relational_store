@@ -139,6 +139,7 @@ struct RdbSyncerParam {
     int32_t assetConflictPolicy_ = CONFLICT_POLICY_DEFAULT;
     std::string assetTempPath_ = {};
     bool assetDownloadOnDemand_ = false;
+    std::string dbPath_ = "";
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);

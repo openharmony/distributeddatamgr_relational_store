@@ -736,6 +736,16 @@ public:
     API_EXPORT std::string GetVisitorDir() const;
 
     /**
+     * @brief Sets the db path for sa.
+     */
+    API_EXPORT void SetServerPath(const std::string &serverPath);
+    
+    /**
+     * @brief Sets the db path for sa.
+     */
+    API_EXPORT std::string GetServerPath() const;
+
+    /**
      * @brief Overload the line number operator.
      */
     bool operator==(const RdbStoreConfig &config) const
@@ -754,7 +764,8 @@ public:
         if (storageMode_ != config.storageMode_ || journalMode_ != config.journalMode_ ||
             syncMode_ != config.syncMode_ || databaseFileType != config.databaseFileType ||
             journalSize_ != config.journalSize_ || pageSize_ != config.pageSize_ || dbType_ != config.dbType_ ||
-            customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_) {
+            customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_ ||
+            serverPath_ != config.serverPath_) {
             return false;
         }
 
@@ -955,6 +966,8 @@ private:
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
     ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;
+
+    std::string serverPath_ = "";
 };
 } // namespace OHOS::NativeRdb
 #endif

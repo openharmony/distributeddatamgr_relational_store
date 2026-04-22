@@ -215,8 +215,9 @@ bool SqliteUtils::SetDbFileGid(const std::string &path, const std::vector<std::s
     return ret;
 }
 
-bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefault)
+bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefault, const std::string &bundleName)
 {
+    std::string index = bundleName.empty() ? DATABASE : bundleName;
     if (path.empty()) {
         return false;
     }
@@ -229,7 +230,7 @@ bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefau
         return SetDefaultGid(realPath, gid);
     }
     bool ret = true;
-    uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
+    uint16_t mode = bundleName.empty() ? Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT : Acl::R_RIGHT | Acl::E_RIGHT;
     std::string filePath = StringUtils::ExtractFilePath(realPath);
     std::string dbDir = "/";
     bool isSetAcl = false;
@@ -241,7 +242,7 @@ bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefau
         if (directory.empty()) {
             continue;
         }
-        if (directory == DATABASE) {
+        if (directory == index) {
             isSetAcl = true;
         }
         dbDir = dbDir + directory + "/";

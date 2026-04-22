@@ -23,7 +23,7 @@ bool Marshalling(const SyncerParam &input, MessageParcel &data)
         input.haMode_, input.infos_, input.tokenIds_, input.uids_, input.user_, input.permissionNames_,
         input.asyncDownloadAsset_, input.enableCloud_, input.subUser_, input.dfxInfo_, input.distributedTableMode_,
         input.isAutoCleanDevice_, input.customSwitch_, input.autoSyncSwitch_, input.assetConflictPolicy_,
-        input.assetTempPath_, input.assetDownloadOnDemand_);
+        input.assetTempPath_, input.assetDownloadOnDemand_, input.dbPath_);
 }
 template<>
 bool Unmarshalling(SyncerParam &output, MessageParcel &data)
@@ -33,7 +33,7 @@ bool Unmarshalling(SyncerParam &output, MessageParcel &data)
         output.isSearchable_, output.haMode_, output.infos_, output.tokenIds_, output.uids_, output.user_,
         output.permissionNames_, output.asyncDownloadAsset_, output.enableCloud_, output.subUser_, output.dfxInfo_,
         output.distributedTableMode_, output.isAutoCleanDevice_, output.customSwitch_, output.autoSyncSwitch_,
-        output.assetConflictPolicy_, output.assetTempPath_, output.assetDownloadOnDemand_);
+        output.assetConflictPolicy_, output.assetTempPath_, output.assetDownloadOnDemand_, output.dbPath_);
 }
 
 template<>
