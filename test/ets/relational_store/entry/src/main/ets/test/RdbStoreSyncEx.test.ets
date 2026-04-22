@@ -121,6 +121,279 @@ export default function RdbStoreSyncEx() {
       }
       console.log(TAG + "************* syncExTest0003 end *************");
     })
-    console.log(TAG + "*************Unit Test End*************");
+
+    /**
+     * @tc.number syncExTest0004
+     * @tc.name mode is null
+     * @tc.desc mode is null and syncEx returns 14800001
+     */
+    it('syncExTest0004', 0, async () => {
+      console.log(TAG + "************* syncExTest0004 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0004 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(null as any, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(14800001);
+      }
+      console.log(TAG + "************* syncExTest0004 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0005
+     * @tc.name mode is undefined
+     * @tc.desc mode is undefined and syncEx returns 14800001
+     */
+    it('syncExTest0005', 0, async () => {
+      console.log(TAG + "************* syncExTest0005 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0005 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(undefined as any, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(14800001);
+      }
+      console.log(TAG + "************* syncExTest0005 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0008
+     * @tc.name mode is invalid number
+     * @tc.desc mode is invalid number (999) and syncEx returns 14800001
+     */
+    it('syncExTest0008', 0, async () => {
+      console.log(TAG + "************* syncExTest0008 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0008 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(999 as any, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(14800001);
+      }
+      console.log(TAG + "************* syncExTest0008 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0010
+     * @tc.name SYNC_MODE_PUSH
+     * @tc.desc sync with SYNC_MODE_PUSH, expect 201 due to no permission
+     */
+    it('syncExTest0010', 0, async () => {
+      console.log(TAG + "************* syncExTest0010 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0010 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(relationalStore.SyncMode.SYNC_MODE_PUSH, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(201);
+      }
+      console.log(TAG + "************* syncExTest0010 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0011
+     * @tc.name SYNC_MODE_PULL
+     * @tc.desc sync with SYNC_MODE_PULL, expect 201 due to no permission
+     */
+    it('syncExTest0011', 0, async () => {
+      console.log(TAG + "************* syncExTest0011 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0011 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(relationalStore.SyncMode.SYNC_MODE_PULL, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(201);
+      }
+      console.log(TAG + "************* syncExTest0011 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0012
+     * @tc.name SYNC_MODE_TIME_FIRST
+     * @tc.desc sync with SYNC_MODE_TIME_FIRST, expect 14800001
+     */
+    it('syncExTest0012', 0, async () => {
+      console.log(TAG + "************* syncExTest0012 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0012 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(relationalStore.SyncMode.SYNC_MODE_TIME_FIRST, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(14800001);
+      }
+      console.log(TAG + "************* syncExTest0012 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0013
+     * @tc.name SYNC_MODE_NATIVE_FIRST
+     * @tc.desc sync with SYNC_MODE_NATIVE_FIRST, expect 14800001
+     */
+    it('syncExTest0013', 0, async () => {
+      console.log(TAG + "************* syncExTest0013 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0013 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(relationalStore.SyncMode.SYNC_MODE_NATIVE_FIRST, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(14800001);
+      }
+      console.log(TAG + "************* syncExTest0013 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0014
+     * @tc.name SYNC_MODE_CLOUD_FIRST not supported
+     * @tc.desc SYNC_MODE_CLOUD_FIRST and syncEx returns 14800001
+     */
+    it('syncExTest0014', 0, async () => {
+      console.log(TAG + "************* syncExTest0014 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0014 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(relationalStore.SyncMode.SYNC_MODE_CLOUD_FIRST, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(14800001);
+      }
+      console.log(TAG + "************* syncExTest0014 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0015
+     * @tc.name predicates with non-existent table
+     * @tc.desc predicates with non-existent table, expect 201 due to no permission
+     */
+    it('syncExTest0015', 0, async () => {
+      console.log(TAG + "************* syncExTest0015 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0015 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('NON_EXISTENT_TABLE');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(relationalStore.SyncMode.SYNC_MODE_PUSH, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(201);
+      }
+      console.log(TAG + "************* syncExTest0015 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0016
+     * @tc.name predicates with where condition
+     * @tc.desc sync with predicates containing where condition, expect 201 due to no permission
+     */
+    it('syncExTest0016', 0, async () => {
+      console.log(TAG + "************* syncExTest0016 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0016 setDistributedTables successfully.');
+
+        // Insert test data first
+        const valueBucket: relationalStore.ValuesBucket = {
+          'name': 'TestEmployee',
+          'age': 30
+        };
+        await rdbStore?.insert('EMPLOYEE', valueBucket);
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        predicates.equalTo('age', 30);
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(relationalStore.SyncMode.SYNC_MODE_PUSH, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(201);
+      }
+      console.log(TAG + "************* syncExTest0016 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0017
+     * @tc.name predicates with limit
+     * @tc.desc sync with predicates containing limit, expect 201 due to no permission
+     */
+    it('syncExTest0017', 0, async () => {
+      console.log(TAG + "************* syncExTest0017 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0017 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        predicates.limitAs(10);
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(relationalStore.SyncMode.SYNC_MODE_PUSH, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(201);
+      }
+      console.log(TAG + "************* syncExTest0017 end *************");
+    })
+
+    /**
+     * @tc.number syncExTest0018
+     * @tc.name predicates with orderBy
+     * @tc.desc sync with predicates containing orderBy, expect 201 due to no permission
+     */
+    it('syncExTest0018', 0, async () => {
+      console.log(TAG + "************* syncExTest0018 start *************");
+      try {
+        console.info(TAG + `SetDistributedTable EMPLOYEE begin`);
+        await rdbStore?.setDistributedTables(["EMPLOYEE"]);
+        console.info(TAG + 'syncExTest0018 setDistributedTables successfully.');
+
+        const predicates: relationalStore.RdbPredicates = new relationalStore.RdbPredicates('EMPLOYEE');
+        predicates.orderByDesc('age');
+        const result: Array<relationalStore.SyncResult> = await rdbStore.syncEx(relationalStore.SyncMode.SYNC_MODE_PUSH, predicates);
+        expect(null).assertFail();
+      } catch (err) {
+        console.error(TAG + `syncEx is failed, code is ${err.code}, message is ${err.message}`);
+        expect(err.code).assertEqual(201);
+      }
+      console.log(TAG + "************* syncExTest0018 end *************");
+    })
   })
 }
