@@ -56,8 +56,8 @@ protected:
  */
 HWTEST_F(RdbManagerTest, GetInstance_001, TestSize.Level1)
 {
-    auto &instance1 = RdbManager::GetInstance();
-    auto &instance2 = RdbManager::GetInstance();
+    auto& instance1 = RdbManager::GetInstance();
+    auto& instance2 = RdbManager::GetInstance();
 
     EXPECT_EQ(&instance1, &instance2);
 }
@@ -69,7 +69,7 @@ HWTEST_F(RdbManagerTest, GetInstance_001, TestSize.Level1)
  */
 HWTEST_F(RdbManagerTest, GetRdbService_EmptyBundleName_001, TestSize.Level1)
 {
-    auto &manager = RdbManager::GetInstance();
+    auto& manager = RdbManager::GetInstance();
     RdbSyncerParam param;
     param.bundleName_ = "";
     param.storeName_ = "test.db";
@@ -87,7 +87,7 @@ HWTEST_F(RdbManagerTest, GetRdbService_EmptyBundleName_001, TestSize.Level1)
  */
 HWTEST_F(RdbManagerTest, GetRdbService_ValidParam_002, TestSize.Level1)
 {
-    auto &manager = RdbManager::GetInstance();
+    auto& manager = RdbManager::GetInstance();
     auto param = CreateValidParam();
 
     auto [status, service] = manager.GetRdbService(param);
@@ -123,7 +123,7 @@ HWTEST_F(RdbManagerTest, RegisterInstance_001, TestSize.Level1)
     EXPECT_FALSE(result);
 
     // Verify the registered instance is used
-    auto &instance = RdbManager::GetInstance();
+    auto& instance = RdbManager::GetInstance();
     EXPECT_NE(&instance, &mockInstance);
 }
 
@@ -139,7 +139,57 @@ HWTEST_F(RdbManagerTest, RegisterInstance_Nullptr_002, TestSize.Level2)
 
     EXPECT_FALSE(result);
 
-    // GetInstance should still work
-    auto &instance = RdbManager::GetInstance();
-    EXPECT_NE(&instance, nullptr);
+    // GetInstance should still work and return same instance
+    auto& instance1 = RdbManager::GetInstance();
+    auto& instance2 = RdbManager::GetInstance();
+    EXPECT_EQ(&instance1, &instance2);
+}
+
+/**
+ * @tc.name: RdbManagerTest_GetRdbService_ConsistentResult_003
+ * @tc.desc: Verify GetRdbService returns consistent results across multiple calls
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbManagerTest, GetRdbService_ConsistentResult_003, TestSize.Level1)
+{
+    auto& manager = RdbManager::GetInstance();
+    auto param = CreateValidParam();
+
+    auto [status1, service1] = manager.GetRdbService(param);
+    auto [status2, service2] = manager.GetRdbService(param);
+
+    // Multiple calls should return consistent status
+    EXPECT_EQ(status1, status2);
+}
+
+/**
+ * @tc.name: RdbManagerTest_GetRdbService_ThreadSafety_004
+ * @tc.desc: Verify GetRdbService is thread-safe
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbManagerTest, GetRdbService_ThreadSafety_004, TestSize.Level1)
+{
+    auto& manager = RdbManager::GetInstance();
+    auto param = CreateValidParam();
+
+    std::vector<int32_t> results;
+    std::mutex resultsMutex;
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < 10; ++i) {
+        threads.emplace_back([&]() {
+            auto [status, service] = manager.GetRdbService(param);
+            std::lock_guard<std::mutex> lock(resultsMutex);
+            results.push_back(status);
+        });
+    }
+
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    // All results should be consistent
+    for (const auto& result : results) {
+        EXPECT_EQ(result, results[0]);
+    }
 }
