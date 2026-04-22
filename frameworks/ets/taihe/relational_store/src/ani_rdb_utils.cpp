@@ -1170,27 +1170,26 @@ ani_status ConvertSyncResultInfos2AniValue(
 
     int i = 0;
     for (const auto &value : values) {
-        ani_object syncResultObj = {};
-        if (ani_utils::CreateAniObj(env, "@ohos.data.relationalStore.SyncResult", "<ctor>", ":", &syncResultObj) !=
-            ANI_OK) {
-            LOG_ERROR("[ANI] Create SyncResultInfo object failed.");
-            return ANI_ERROR;
-        }
-
         ani_string deviceStr = {};
         ANI_CHECK_RETURN(env->String_NewUTF8(value.device.c_str(), value.device.size(), &deviceStr));
-        ANI_CHECK_RETURN(env->Object_SetPropertyByName_Ref(syncResultObj, "device", deviceStr));
 
         ani_ref codeRef = SyncResultCodeToAni(env, value.code);
         if (codeRef == nullptr) {
             LOG_ERROR("[ANI] SyncResultCodeToAni failed.");
             return ANI_ERROR;
         }
-        ANI_CHECK_RETURN(env->Object_SetPropertyByName_Ref(syncResultObj, "code", codeRef));
 
         ani_string messageStr = {};
         ANI_CHECK_RETURN(env->String_NewUTF8(value.message.c_str(), value.message.size(), &messageStr));
-        ANI_CHECK_RETURN(env->Object_SetPropertyByName_Ref(syncResultObj, "message", messageStr));
+        ani_object syncResultObj = {};
+        ani_status status = ani_utils::CreateAniObj(env, "@ohos.data.relationalStore.relationalStore.SyncResultInner",
+            "<ctor>",
+            "C{std.core.String}C{@ohos.data.relationalStore.relationalStore.SyncResultCode}C{std.core.String}:",
+            &syncResultObj, deviceStr, codeRef, messageStr);
+        if (status != ANI_OK) {
+            LOG_ERROR("[ANI] CreateAniObj SyncResult failed, status:%{public}d", status);
+            return status;
+        }
 
         ANI_CHECK_RETURN(env->Array_Set(resArray, i++, static_cast<ani_ref>(syncResultObj)));
     }
