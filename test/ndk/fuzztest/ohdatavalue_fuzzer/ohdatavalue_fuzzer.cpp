@@ -25,7 +25,6 @@
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
 
-
 #define BLOBSIZE_MIN 1
 #define BLOBSIZE_MAX 10
 
@@ -390,27 +389,36 @@ void OH_Value_GetUnlimitedIntFuzz(FuzzedDataProvider &provider)
 }
 } // namespace OHOS
 
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+void OH_Value_DestroyAndPutBasicFuzz(FuzzedDataProvider &provider)
 {
-    // Run your code on data
-    FuzzedDataProvider provider(data, size);
     OHOS::OH_Value_DestroyFuzz(provider);
     OHOS::OH_Value_PutNullFuzz(provider);
     OHOS::OH_Value_PutIntFuzz(provider);
     OHOS::OH_Value_PutRealFuzz(provider);
     OHOS::OH_Value_PutTextFuzz(provider);
+}
+
+void OH_Value_PutComplexFuzz(FuzzedDataProvider &provider)
+{
     OHOS::OH_Value_PutBlobFuzz(provider);
     OHOS::OH_Value_PutAssetFuzz(provider);
     OHOS::OH_Value_PutAssetsFuzz(provider);
     OHOS::OH_Value_PutFloatVectorFuzz(provider);
     OHOS::OH_Value_PutUnlimitedIntFuzz(provider);
+}
+
+void OH_Value_GetBasicFuzz(FuzzedDataProvider &provider)
+{
     OHOS::OH_Value_GetTypeFuzz(provider);
     OHOS::OH_Value_IsNullFuzz(provider);
     OHOS::OH_Value_GetIntFuzz(provider);
     OHOS::OH_Value_GetRealFuzz(provider);
     OHOS::OH_Value_GetTextFuzz(provider);
     OHOS::OH_Value_GetBlobFuzz(provider);
+}
+
+void OH_Value_GetComplexFuzz(FuzzedDataProvider &provider)
+{
     OHOS::OH_Value_GetAssetFuzz(provider);
     OHOS::OH_Value_GetAssetsCountFuzz(provider);
     OHOS::OH_Value_GetAssetsFuzz(provider);
@@ -418,5 +426,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::OH_Value_GetFloatVectorFuzz(provider);
     OHOS::OH_Value_GetUnlimitedIntBandFuzz(provider);
     OHOS::OH_Value_GetUnlimitedIntFuzz(provider);
+}
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+    // Run your code on data
+    FuzzedDataProvider provider(data, size);
+    OH_Value_DestroyAndPutBasicFuzz(provider);
+    OH_Value_PutComplexFuzz(provider);
+    OH_Value_GetBasicFuzz(provider);
+    OH_Value_GetComplexFuzz(provider);
     return 0;
 }
