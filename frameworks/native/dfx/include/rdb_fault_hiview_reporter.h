@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <atomic>
 #include <ctime>
 #include <string>
 
@@ -51,7 +52,7 @@ struct RdbCorruptedEvent {
 
 struct RdbFaultCode {
     int nativeCode;
-    uint8_t faultCounter;
+    std::atomic<uint8_t> faultCounter;
 };
 
 // Fault Type Define
@@ -128,7 +129,7 @@ private:
     static void CreateCorruptedFlag(const std::string &dbPath);
     static void DeleteCorruptedFlag(const std::string &dbPath);
     static bool IsReportFault(const std::string &bundleName, int32_t errCode);
-    static uint8_t *GetFaultCounter(int32_t errCode);
+    static std::atomic<uint8_t> *GetFaultCounter(int32_t errCode);
     static Collector collector_;
     static RdbFaultCode faultCounters_[];
     static bool memCorruptReportedFlg_;
