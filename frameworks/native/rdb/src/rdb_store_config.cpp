@@ -510,6 +510,16 @@ std::string RdbStoreConfig::GetVisitorDir() const
     return visitorDir_;
 }
 
+void RdbStoreConfig::SetServerPath(const std::string &serverPath)
+{
+    serverPath_ = serverPath;
+}
+
+std::string RdbStoreConfig::GetServerPath() const
+{
+    return serverPath_;
+}
+
 bool RdbStoreConfig::IsSearchable() const
 {
     return isSearchable_;
@@ -818,6 +828,7 @@ std::string RdbStoreConfig::ToString() const
     oss << " haMode:" << haMode_ << ",";
     oss << " pluginLibs size:" << pluginLibs_.size() << ",";
     oss << " area:" << area_ << ",";
+    oss << " serverPath:" << SqliteUtils::Anonymous(serverPath_) << ",";
     return oss.str();
 }
 
@@ -842,6 +853,8 @@ std::string RdbStoreConfig::FormatCfg(const RdbStoreConfig &first, const RdbStor
     oss << " haMode:" << first.haMode_ << "->" << second.haMode_ << ",";
     oss << " pluginLibs size:" << first.pluginLibs_.size() << "->" << second.pluginLibs_.size() << ",";
     oss << " area:" << first.area_ << "->" << second.area_ << ",";
+    oss << " serverPath:" << SqliteUtils::Anonymous(first.serverPath_) << "->"
+        << SqliteUtils::Anonymous(second.serverPath_) << ",";
     return oss.str();
 }
 
