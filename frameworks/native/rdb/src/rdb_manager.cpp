@@ -24,12 +24,11 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
 std::mutex RdbManager::mutex_;
 RdbManager* RdbManager::instance_ = nullptr;
-bool RdbManager::registered_ = false;
 
 RdbManager &RdbManager::GetInstance()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (instance_ == nullptr && !registered_) {
+    if (instance_ == nullptr) {
         static RdbManager defaultInstance;
         instance_ = &defaultInstance;
     }
@@ -42,11 +41,10 @@ bool RdbManager::RegisterInstance(RdbManager *instance)
         return false;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    if (registered_) {
+    if (instance_ != nullptr) {
         return false;
     }
     instance_ = instance;
-    registered_ = true;
     return true;
 }
 
