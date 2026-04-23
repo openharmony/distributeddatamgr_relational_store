@@ -54,8 +54,8 @@ namespace cloudExtension {
   export interface ServiceInfo {
     enableCloud: boolean;
     id: string;
-    totalSpace: int;
-    remainingSpace: int;
+    totalSpace: long;
+    remainingSpace: long;
     user: int;
   }
 
@@ -110,7 +110,7 @@ namespace cloudExtension {
 
   export interface LockInfo {
     interval: int;
-    sessionId: int;
+    lockId: int;
   }
 
   export interface CloudService {
@@ -122,7 +122,7 @@ namespace cloudExtension {
 
     subscribe(
       subInfo: Record<string, Array<Database>>,
-      expirationTime: int
+      expirationTime: long
     ): Promise<Result<SubscribeInfo>>;
 
     unsubscribe(unsubscribeInfo: Record<string, Array<string>>): Promise<int>;
@@ -329,7 +329,7 @@ namespace cloudExtension {
           }
           return true;
         case ServiceOperation.Subscribe.valueOf():
-          let expirationTime: int = data.readInt();
+          let expirationTime: long = data.readLong();
           let subInfo: Record<string, cloudExtension.Database[]> = this.unMarshallingSubInfo(data);
           let subscribeResult: Result<SubscribeInfo> = await this.cloudService.subscribe(subInfo, expirationTime);
           reply.writeInt(subscribeResult.code);
@@ -381,8 +381,8 @@ namespace cloudExtension {
     }
 
     marshallingAppBriefInfo(reply: rpc.MessageSequence, appBriefInfo: Record<string, AppBriefInfo>): void {
-      let keys = appBriefInfo.keySet();
-      reply.writeInt(keys.size);
+      let keys = Array.from(appBriefInfo.keys());
+      reply.writeInt(keys.length);
       keys.forEach(key => {
         reply.writeString(key);
         let appInfo: AppBriefInfo | undefined = appBriefInfo[key];
@@ -476,8 +476,8 @@ namespace cloudExtension {
       subscribeInfo: cloudExtension.SubscribeInfo | undefined): void {
       if (subscribeInfo !== undefined) {
         reply.writeLong((subscribeInfo as cloudExtension.SubscribeInfo)?.expirationTime as long);
-        let keys = subscribeInfo.subscribe.keySet();
-        reply.writeInt(keys.size);
+        let keys = Array.from(subscribeInfo.subscribe.keys());
+        reply.writeInt(keys.length);
         keys.forEach(key => {
           reply.writeString(key);
           let subscribeDatabase: cloudExtension.SubscribeId[] =
@@ -602,7 +602,7 @@ namespace cloudExtension {
           reply.writeInt(lockResult.code);
           if (lockResult.code === 0) {
             reply.writeInt(lockResult.value?.interval as int);
-            reply.writeInt(lockResult.value?.sessionId as int);
+            reply.writeInt(lockResult.value?.lockId as int);
           }
           return true;
         case DatabaseOperation.Heartbeat.valueOf():
@@ -611,7 +611,7 @@ namespace cloudExtension {
           reply.writeInt(date.code);
           if (date.code === 0) {
             reply.writeInt((date as Result<LockInfo>).value?.interval as int);
-            reply.writeInt((date as Result<LockInfo>).value?.sessionId as int);
+            reply.writeInt((date as Result<LockInfo>).value?.lockId as int);
           }
           return true;
         case DatabaseOperation.Unlock.valueOf():
@@ -650,7 +650,8 @@ namespace cloudExtension {
       valueBucket: Record<string, cloudExtension.CloudType> | undefined): void {
       if (valueBucket !== undefined) {
         let keys = valueBucket.keySet();
-        reply.writeInt(keys.size as int);
+        let keys = Array.from(valueBucket.keys());
+        reply.writeInt(keys.length as int);
         keys.forEach(key => {
           reply.writeString(key);
           let value: cloudExtension.CloudType = valueBucket[key] as cloudExtension.CloudType;
@@ -1199,19 +1200,19 @@ namespace cloudExtension {
     }
   }
 
-  export async function createCloudServiceStub(cloudService: CloudService): Promise<CloudServiceStub> {
+  export async function createCloudServiceStub(cloudService: CloudService): Promise<rpc.RemoteObject> {
     return new CloudServiceStub("CloudServiceStub", cloudService);
   }
 
-  export async function createCloudDBStub(cloudDb: cloudExtension.CloudDB): Promise<CloudDbStub> {
+  export async function createCloudDBStub(cloudDb: cloudExtension.CloudDB): Promise<rpc.RemoteObject> {
     return new CloudDbStub("CloudDbProxy", cloudDb);
   }
 
-  export async function createAssetLoaderStub(assetLoader: cloudExtension.AssetLoader): Promise<AssetLoaderStub> {
+  export async function createAssetLoaderStub(assetLoader: cloudExtension.AssetLoader): Promise<rpc.RemoteObject> {
     return new AssetLoaderStub("AssetLoaderProxy", assetLoader);
   }
 
-  export async function createShareServiceStub(shareCenter: ShareCenter): Promise<ShareCenterProxy> {
+  export async function createShareServiceStub(shareCenter: ShareCenter): Promise<rpc.RemoteObject> {
     return new ShareCenterProxy('ShareCenterProxy', shareCenter);
   }
 
