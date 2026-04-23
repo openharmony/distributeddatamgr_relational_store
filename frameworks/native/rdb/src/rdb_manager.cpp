@@ -29,8 +29,8 @@ RdbManager &RdbManager::GetInstance()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (instance_ == nullptr) {
-        static RdbManager defaultInstance;
-        instance_ = &defaultInstance;
+        static RdbManager instance;
+        return instance;
     }
     return *instance_;
 }
