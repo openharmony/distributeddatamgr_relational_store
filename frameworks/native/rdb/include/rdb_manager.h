@@ -40,7 +40,6 @@ protected:
 private:
     static std::mutex mutex_;
     static RdbManager* instance_;
-    static bool registered_;
 };
 } // namespace OHOS::DistributedRdb
 #endif
