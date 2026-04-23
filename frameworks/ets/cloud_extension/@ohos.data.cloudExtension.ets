@@ -150,9 +150,9 @@ namespace cloudExtension {
 
     lock(): Promise<Result<LockInfo>>;
 
-    heartbeat(sessionId: int): Promise<Result<LockInfo>>;
+    heartbeat(lockId: int): Promise<Result<LockInfo>>;
 
-    unlock(sessionId: int): Promise<Result<boolean>>;
+    unlock(lockId: int): Promise<Result<boolean>>;
   }
 
   export interface AssetLoader {
@@ -649,7 +649,6 @@ namespace cloudExtension {
     marshallingValueBucket(reply: rpc.MessageSequence,
       valueBucket: Record<string, cloudExtension.CloudType> | undefined): void {
       if (valueBucket !== undefined) {
-        let keys = valueBucket.keySet();
         let keys = Array.from(valueBucket.keys());
         reply.writeInt(keys.length as int);
         keys.forEach(key => {
