@@ -121,7 +121,8 @@ HWTEST_F(RdbServiceProxyTest, OnRemoteDeadSyncComplete, TestSize.Level1)
     RdbSyncerParam param;
     param.bundleName_ = "com.example.test";
     param.storeName_ = "test.db";
-    auto [status, service] = RdbManagerImpl::GetInstance().GetRdbService(param);
+    auto& manager = RdbManager::GetInstance();
+    auto [status, service] = manager.GetRdbService(param);
     ASSERT_NE(service, nullptr);
 
     auto callback = [](const Details &details) {
