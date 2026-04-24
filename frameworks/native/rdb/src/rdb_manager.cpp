@@ -22,10 +22,12 @@
 namespace OHOS::DistributedRdb {
 using namespace OHOS::NativeRdb;
 using namespace OHOS::Rdb;
-std::once_flag RdbManager::onceFlag_;
-RdbManager *RdbManager::instance_ = nullptr;
+std::mutex RdbManager::mutex_;
+RdbManager* RdbManager::instance_ = nullptr;
+
 RdbManager &RdbManager::GetInstance()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (instance_ == nullptr) {
         static RdbManager instance;
         return instance;
@@ -35,17 +37,15 @@ RdbManager &RdbManager::GetInstance()
 
 bool RdbManager::RegisterInstance(RdbManager *instance)
 {
-    if (instance_ != nullptr || instance == nullptr) {
+    if (instance == nullptr) {
         return false;
     }
-    bool ret = false;
-    std::call_once(onceFlag_, [instance, &ret]() {
-        if (instance_ == nullptr) {
-            instance_ = instance;
-            ret = true;
-        }
-    });
-    return ret;
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (instance_ != nullptr) {
+        return false;
+    }
+    instance_ = instance;
+    return true;
 }
 
 RdbManager::RdbManager()
