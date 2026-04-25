@@ -955,8 +955,8 @@ ani_ref SyncResultCodeToAni(ani_env *env, uint32_t code)
     static constexpr uint32_t ANI_SYNC_RESULT_CODE[] = {
         0,  // SUCCESS
         1,  // FAIL
-        3,  // OFFLINE (native=2 -> ani=3)
-        2,  // INVALID_ARGS (native=3 -> ani=2)
+        2,  // OFFLINE
+        3,  // INVALID_ARGS
         4,  // DISTRIBUTED_TABLE_NOE_SET
         5,  // TABLE_FIELD_MISMATCH
         6,  // DISTRIBUTED_SCHEMA_MISMATCH
