@@ -338,7 +338,7 @@ ResultSet RdbStoreImpl::Query(weak::RdbPredicates predicates, optional_view<arra
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }
 
-ResultSet RdbStoreImpl::QueryByStep(weak::RdbPredicates predicates, optional_view<array<string>> columns)
+ResultSet RdbStoreImpl::QueryByStepPredicatesSync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
 {
     auto store = GetResource();
     ASSERT_RETURN_THROW_ERROR(store != nullptr,
@@ -352,6 +352,27 @@ ResultSet RdbStoreImpl::QueryByStep(weak::RdbPredicates predicates, optional_vie
         std::make_shared<ParamError>("predicates", "an RdbPredicates."), (make_holder<ResultSetImpl, ResultSet>()));
     auto nativeResultSet = store->QueryByStep(*rdbPredicateNative, columnNames);
     ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr, std::make_shared<InnerError>(NativeRdb::E_ERROR),
+        (make_holder<ResultSetImpl, ResultSet>()));
+    return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
+}
+
+ResultSet RdbStoreImpl::QueryByStepSqlSync(string_view sql, optional_view<array<ValueType>> bindArgs)
+{
+    auto store = GetResource();
+    ASSERT_RETURN_THROW_ERROR(store != nullptr,
+        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED),
+        (make_holder<ResultSetImpl, ResultSet>()));
+    ASSERT_RETURN_THROW_ERROR(!sql.empty(),
+        std::make_shared<ParamError>("sql", "not empty"), (make_holder<ResultSetImpl, ResultSet>()));
+    std::vector<OHOS::NativeRdb::ValueObject> para;
+    if (bindArgs.has_value()) {
+        std::transform(bindArgs.value().begin(), bindArgs.value().end(),
+            std::back_inserter(para),
+            [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
+    }
+    auto nativeResultSet = store->QueryByStep(std::string(sql), para);
+    ASSERT_RETURN_THROW_ERROR(nativeResultSet != nullptr,
+        std::make_shared<InnerError>(NativeRdb::E_ERROR),
         (make_holder<ResultSetImpl, ResultSet>()));
     return make_holder<ResultSetImpl, ResultSet>(nativeResultSet);
 }

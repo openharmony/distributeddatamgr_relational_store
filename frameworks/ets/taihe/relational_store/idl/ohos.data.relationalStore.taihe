@@ -813,7 +813,11 @@ interface RdbStore {
       columns: Optional<Array<String>>) : ResultSet;
 
     @rename("querySync")
-    QueryByStep(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
+    @gen_promise("queryByStep")
+    QueryByStepPredicatesSync(predicates: RdbPredicates, columns: Optional<Array<String>>): ResultSet;
+
+    @gen_promise("queryByStep")
+    QueryByStepSqlSync(sql: String, bindArgs: Optional<Array<ValueType>>): ResultSet;
 
     @gen_async("querySql")
     QuerySqlWithSql(sql: String) : ResultSet;
