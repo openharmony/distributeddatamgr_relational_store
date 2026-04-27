@@ -1146,7 +1146,7 @@ napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
             bool isArray = false;
             napi_status status = napi_is_typedarray(env, argv[0], &isArray);
             CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-            context->cryptoParam.isVectorRekey = isArray;
+            context->isVectorRekey = isArray;
             if (isArray) {
                 CHECK_RETURN(OK == ParseEncryptionkey(env, argv[0], context));
             } else {
@@ -1158,7 +1158,7 @@ napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        return context->StealRdbStore()->Rekey(context->cryptoParam);
+        return context->StealRdbStore()->Rekey(context->cryptoParam, context->isVectorRekey);
     };
 
     auto output = [context](napi_env env, napi_value &result) {
