@@ -1759,7 +1759,7 @@ struct RdbStoreSyncExContext : public EnhancedContext {
         RdbPredicatesProxy *predicatesProxy = nullptr;
         status = napi_unwrap(env, argv[1], reinterpret_cast<void **>(&predicatesProxy));
         ASSERT_RETURN_SET_ERROR(status == napi_ok && predicatesProxy != nullptr,
-            std::make_shared<ParamError>("predicates", "an RdbPredicates."));
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "predicates is nullptr"));
         rdbPredicates = predicatesProxy->GetPredicates();
         ASSERT_RETURN_SET_ERROR(rdbPredicates != nullptr,
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "RdbPredicates is nullptr"));
