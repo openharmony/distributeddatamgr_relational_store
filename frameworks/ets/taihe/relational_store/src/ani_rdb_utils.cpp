@@ -349,7 +349,6 @@ OHOS::NativeRdb::RdbStoreConfig::CryptoParam Uint8ArrayParamToNative(std::vector
 {
     OHOS::NativeRdb::RdbStoreConfig::CryptoParam value;
     value.encryptKey_ = param;
-    value.isVectorRekey = true;
 
     return value;
 }
@@ -374,7 +373,6 @@ OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
     if (param.cryptoPageSize.has_value()) {
         value.cryptoPageSize = param.cryptoPageSize.value();
     }
-    value.isVectorRekey = false;
     return value;
 }
 
