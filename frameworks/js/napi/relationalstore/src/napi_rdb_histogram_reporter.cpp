@@ -47,7 +47,7 @@ static constexpr JsErrMap JS_ERR_TO_HISTOGRAM[] = {
     { 401,      HistogramErrCode::ERR_INVALID_ARGS },
     { 801,      HistogramErrCode::ERR_NOT_SUPPORT },
     { 14800000, HistogramErrCode::ERR_INNER_ERROR },
-    { 14800001, HistogramErrCode::ERR_INVALID_ARGS },
+    { 14800001, HistogramErrCode::ERR_INVALID_ARGS_NEW },
     { 14800010, HistogramErrCode::ERR_INVALID_FILE_PATH },
     { 14800011, HistogramErrCode::ERR_SQLITE_CORRUPT },
     { 14800012, HistogramErrCode::ERR_ROW_OUT_RANGE },
