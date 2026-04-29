@@ -92,8 +92,8 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
     do {                                                                                                              \
         if (!(assertion)) {                                                                                           \
             auto _hvrErr = (errorExpr);                                                                               \
-            if ((histogram).has_value() && _hvrErr != nullptr) {                                                      \
-                (histogram)->SetErrCode(_hvrErr->GetCode());                                                          \
+            if (_hvrErr != nullptr) {                                                                                 \
+                (histogram).SetErrCode(_hvrErr->GetCode());                                                           \
             }                                                                                                         \
             RDB_NAPI_ASSERT_INT_BASE(env, false, _hvrErr, nullptr);                                                   \
         }                                                                                                             \
