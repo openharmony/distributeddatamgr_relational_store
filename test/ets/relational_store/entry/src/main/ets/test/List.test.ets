@@ -44,6 +44,7 @@ import RetainDeviceData from './RetainDeviceData.test';
 import UpdateDistributedInfo from './UpdateDistributedInfo.test';
 import CleanDeviceDirtyData from './CleanDeviceDirtyData.test';
 import RdbStoreSyncEx from './RdbStoreSyncEx.test'
+import RdbQueryByStep from './RdbQueryByStep.test';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -77,4 +78,5 @@ export default function testsuite() {
   UpdateDistributedInfo();
   CleanDeviceDirtyData();
   RdbStoreSyncEx();
+  RdbQueryByStep();
 }
