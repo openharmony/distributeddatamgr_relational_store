@@ -95,10 +95,16 @@ int32_t MapErrCode(int32_t errCode, bool useExtLookup)
     return MapJsCodeToHistogram(jsErr.value().jsCode);
 }
 
-HistogramReporter::HistogramReporter(std::string name, HistogramType type, bool useExtLookup)
-    : name_(std::move(name)), start_(std::chrono::steady_clock::now()),
+HistogramReporter::HistogramReporter(std::string name, HistogramType type,
+    std::chrono::steady_clock::time_point start, bool useExtLookup)
+    : name_(std::move(name)), start_(start),
       errCode_(MapErrCode(E_OK, useExtLookup)), type_(type), useExtLookup_(useExtLookup)
 {
+}
+
+void HistogramReporter::SetName(const std::string &name)
+{
+    name_ = name;
 }
 
 HistogramReporter::~HistogramReporter() noexcept

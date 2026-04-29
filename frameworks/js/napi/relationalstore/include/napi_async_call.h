@@ -20,6 +20,7 @@
 #include <cinttypes>
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include "js_utils.h"
 #include "logger.h"
@@ -27,6 +28,7 @@
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "napi_rdb_error.h"
+#include "napi_rdb_histogram_reporter.h"
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
@@ -80,6 +82,9 @@ public:
     ExecuteAction exec_ = nullptr;
     napi_value result_ = nullptr;
     std::shared_ptr<ContextBase> keep_;
+    std::optional<NativeRdb::HistogramReporter> histogram;
+    void FinishHistogram(const char *asyncName, const char *syncName);
+    void FinishHistogram(const char *name);
 };
 
 class EnhancedContext : public ContextBase {
