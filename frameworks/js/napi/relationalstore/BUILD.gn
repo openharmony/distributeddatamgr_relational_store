@@ -114,7 +114,12 @@ if (is_ohos) {
       "API_EXPORT=__declspec(dllimport)",
     ]
 
-    sources += [ "${relational_store_js_common_path}/mock/src/js_ability.cpp" ]
+    sources += [
+      "${relational_store_js_common_path}/mock/src/js_ability.cpp",
+      "src/napi_rdb_histogram_reporter.cpp",
+    ]
+
+    include_dirs += [ "${relational_store_mock_path}/frameworks/native/rdb" ]
 
     deps = [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
@@ -159,7 +164,10 @@ if (is_ohos) {
     sources += [
       "${relational_store_js_common_path}/mock/src/mock.cpp",
       "${relational_store_js_common_path}/mock/src/js_ability.cpp",
+      "src/napi_rdb_histogram_reporter.cpp",
     ]
+
+    include_dirs += [ "${relational_store_mock_path}/frameworks/native/rdb" ]
 
     deps = [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_${buildos}",
@@ -204,9 +212,12 @@ if (is_ohos) {
 
     sources += [
       "src/napi_rdb_store_observer.cpp",
+      "src/napi_rdb_histogram_reporter.cpp",
       "${relational_store_js_common_path}/mock/src/js_ability.cpp",
       "//foundation/appframework/ability/ability_runtime/cross_platform/interfaces/inner_api/napi_base_context/src/napi_base_context.cpp",
     ]
+
+    include_dirs += [ "${relational_store_mock_path}/frameworks/native/rdb" ]
 
     deps = [
       "${kvstore_path}/common:datamgr_common",
@@ -248,8 +259,11 @@ if (is_ohos) {
     sources += [
       "${relational_store_js_common_path}/mock/src/mock.cpp",
       "src/napi_rdb_store_observer.cpp",
+      "src/napi_rdb_histogram_reporter.cpp",
       "${relational_store_js_common_path}/mock/src/js_ability.cpp",
     ]
+
+    include_dirs += [ "${relational_store_mock_path}/frameworks/native/rdb" ]
 
     deps = [
       "${kvstore_path}/common:datamgr_common",
