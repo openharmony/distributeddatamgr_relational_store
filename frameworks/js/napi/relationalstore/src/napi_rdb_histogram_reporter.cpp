@@ -42,7 +42,6 @@ struct JsErrMap {
 };
 
 static constexpr JsErrMap JS_ERR_TO_HISTOGRAM[] = {
-    { 0,        HistogramErrCode::ERR_OK },
     { 201,      HistogramErrCode::ERR_PERMISSION_DENIED },
     { 202,      HistogramErrCode::ERR_NON_SYSTEM_APP },
     { 401,      HistogramErrCode::ERR_INVALID_ARGS },
