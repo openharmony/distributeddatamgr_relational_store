@@ -77,6 +77,7 @@ struct GetRdbStoreContext : public ContextBase {
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<GetRdbStoreContext>();
+    context->histogram.emplace("", HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM);
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         int errCode = Convert2Value(env, argv[0], context->param);
@@ -102,10 +103,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(err == nullptr, err);
     };
     auto exec = [context]() -> int {
-        const char *hName = context->isAsync_
-                                            ? "Arkdata.Rdb.RdbStore.getRdbStore"
-                                            : "Arkdata.Rdb.RdbStore.getRdbStoreSync";
-        HistogramReporter guard(hName, HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM);
         int errCode = OK;
         DefaultOpenCallback callback;
         context->proxy =
@@ -114,7 +111,6 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         if (errCode == E_INVALID_SECRET_KEY && JSUtils::GetHapVersion() < 14) {
             errCode = E_INVALID_ARGS;
         }
-        guard.SetErrCode(errCode);
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -122,6 +118,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.RdbStore.getRdbStore", "Arkdata.Rdb.RdbStore.getRdbStoreSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -169,7 +166,8 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
     DefaultOpenCallback callback;
     {
         HistogramReporter guard("Arkdata.Rdb.RdbStore.getRdbStoreSync",
-            HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM, true);
+            HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM,
+            std::chrono::steady_clock::now(), true);
         context->proxy =
             RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
         guard.SetErrCode(errCode);
