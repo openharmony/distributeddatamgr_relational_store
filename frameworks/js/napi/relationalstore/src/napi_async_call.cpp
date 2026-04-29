@@ -283,6 +283,7 @@ void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
         SetBusinessError(env, context->error, &result[ARG_ERROR]);
         napi_get_undefined(env, &result[ARG_DATA]);
     }
+    context->histogram = nullptr;
     if (context->defer_ != nullptr) {
         // promise
         if (status == napi_ok && (context->error == nullptr)) {
