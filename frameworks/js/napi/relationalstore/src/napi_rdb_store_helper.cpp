@@ -31,6 +31,7 @@
 #include "rdb_errno.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
+#include "napi_rdb_histogram_reporter.h"
 #include "rdb_sql_utils.h"
 #include "sqlite_sql_builder.h"
 #include "unistd.h"
@@ -101,6 +102,10 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(err == nullptr, err);
     };
     auto exec = [context]() -> int {
+        const char *hName = context->isAsync_
+                                            ? "Arkdata.Rdb.RdbStore.getRdbStore"
+                                            : "Arkdata.Rdb.RdbStore.getRdbStoreSync";
+        HistogramReporter guard(hName, HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM);
         int errCode = OK;
         DefaultOpenCallback callback;
         context->proxy =
@@ -109,6 +114,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         if (errCode == E_INVALID_SECRET_KEY && JSUtils::GetHapVersion() < 14) {
             errCode = E_INVALID_ARGS;
         }
+        guard.SetErrCode(errCode);
         return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -161,7 +167,13 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
     }
 
     DefaultOpenCallback callback;
-    context->proxy = RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
+    {
+        HistogramReporter guard("Arkdata.Rdb.RdbStore.getRdbStoreSync",
+            HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM, true);
+        context->proxy =
+            RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
+        guard.SetErrCode(errCode);
+    }
     RDB_NAPI_ASSERT_INT(env, errCode == OK, std::make_shared<InnerErrorExt>(errCode));
 
     napi_value result = RdbStoreProxy::NewInstance(env, context->proxy, context->param.isSystemApp);

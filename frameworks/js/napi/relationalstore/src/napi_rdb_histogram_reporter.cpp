@@ -1,0 +1,129 @@
+/*
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "napi_rdb_histogram_reporter.h"
+
+#include <algorithm>
+
+#include "histogram_plugin_macros.h"
+#include "napi_rdb_error.h"
+
+namespace OHOS::NativeRdb {
+
+void ReportHistogramBoolean(const std::string &name, int32_t sample)
+{
+    HISTOGRAM_BOOLEAN(name.c_str(), sample);
+}
+
+void ReportHistogramEnumeration(const std::string &name, int32_t sample, int32_t boundary)
+{
+    HISTOGRAM_ENUMERATION(name.c_str(), sample, boundary);
+}
+
+void ReportHistogramTimes(const std::string &name, int32_t duration)
+{
+    HISTOGRAM_TIMES(name.c_str(), duration);
+}
+
+struct JsErrMap {
+    int32_t jsCode;
+    HistogramErrCode code;
+};
+
+static constexpr JsErrMap JS_ERR_TO_HISTOGRAM[] = {
+    { 401,      HistogramErrCode::ERR_INVALID_ARGS },
+    { 801,      HistogramErrCode::ERR_NOT_SUPPORT },
+    { 14800001, HistogramErrCode::ERR_INVALID_ARGS },
+    { 14800010, HistogramErrCode::ERR_INVALID_FILE_PATH },
+    { 14800011, HistogramErrCode::ERR_SQLITE_CORRUPT },
+    { 14800014, HistogramErrCode::ERR_ALREADY_CLOSED },
+    { 14800015, HistogramErrCode::ERR_DATABASE_BUSY },
+    { 14800020, HistogramErrCode::ERR_INVALID_SECRET_KEY },
+    { 14800021, HistogramErrCode::ERR_SQLITE_ERROR },
+    { 14800024, HistogramErrCode::ERR_SQLITE_BUSY },
+    { 14800025, HistogramErrCode::ERR_SQLITE_LOCKED },
+    { 14800028, HistogramErrCode::ERR_SQLITE_IOERR },
+    { 14800029, HistogramErrCode::ERR_SQLITE_FULL },
+    { 14800032, HistogramErrCode::ERR_SQLITE_CONSTRAINT },
+};
+static constexpr size_t JS_ERR_MAP_SIZE = std::size(JS_ERR_TO_HISTOGRAM);
+
+static constexpr bool IsJsErrMapIncreasing()
+{
+    for (size_t i = 1; i < JS_ERR_MAP_SIZE; i++) {
+        if (JS_ERR_TO_HISTOGRAM[i].jsCode <= JS_ERR_TO_HISTOGRAM[i - 1].jsCode) {
+            return false;
+        }
+    }
+    return true;
+}
+static_assert(IsJsErrMapIncreasing());
+
+static int32_t MapJsCodeToHistogram(int32_t jsCode)
+{
+    auto target = JsErrMap{ jsCode, HistogramErrCode::ERR_OTHER };
+    auto *end = JS_ERR_TO_HISTOGRAM + JS_ERR_MAP_SIZE;
+    auto iter = std::lower_bound(JS_ERR_TO_HISTOGRAM, end, target,
+        [](const JsErrMap &lhs, const JsErrMap &rhs) { return lhs.jsCode < rhs.jsCode; });
+    if (iter != end && iter->jsCode == jsCode) {
+        return static_cast<int32_t>(iter->code);
+    }
+    return static_cast<int32_t>(HistogramErrCode::ERR_OTHER);
+}
+
+int32_t MapErrCode(int32_t errCode, bool useExtLookup)
+{
+    if (errCode == E_OK) {
+        return static_cast<int32_t>(HistogramErrCode::ERR_OK);
+    }
+    auto jsErr = useExtLookup ? GetJsErrorCodeExt(errCode) : GetJsErrorCode(errCode);
+    if (!jsErr.has_value()) {
+        return static_cast<int32_t>(HistogramErrCode::ERR_OTHER);
+    }
+    return MapJsCodeToHistogram(jsErr.value().jsCode);
+}
+
+HistogramReporter::HistogramReporter(std::string name, HistogramType type, bool useExtLookup)
+    : name_(std::move(name)), start_(std::chrono::steady_clock::now()),
+      errCode_(MapErrCode(E_OK, useExtLookup)), type_(type), useExtLookup_(useExtLookup)
+{
+}
+
+HistogramReporter::~HistogramReporter() noexcept
+{
+    if (type_ & HistogramType::TIME) {
+        auto elapsed = std::chrono::steady_clock::now() - start_;
+        int32_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+        if (duration < 0) {
+            duration = 0;
+        }
+        ReportHistogramTimes(name_ + ".Time", duration);
+    }
+    if (type_ & HistogramType::BOOL) {
+        ReportHistogramBoolean(name_ + ".Bool",
+            errCode_ == static_cast<int32_t>(HistogramErrCode::ERR_OK) ? 1 : 0);
+    }
+    if (type_ & HistogramType::ENUM) {
+        ReportHistogramEnumeration(
+            name_ + ".Enum", errCode_, static_cast<int32_t>(HistogramErrCode::ERR_BOUNDARY));
+    }
+}
+
+void HistogramReporter::SetErrCode(int32_t errCode)
+{
+    errCode_ = MapErrCode(errCode, useExtLookup_);
+}
+
+} // namespace OHOS::NativeRdb
