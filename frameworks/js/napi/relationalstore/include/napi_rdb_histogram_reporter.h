@@ -79,10 +79,10 @@ public:
     HistogramReporter &operator=(const HistogramReporter &) = delete;
 
 private:
-    std::string name_;
-    std::chrono::steady_clock::time_point start_;
-    int32_t errCode_;
-    HistogramType type_;
+    std::string name;
+    std::chrono::steady_clock::time_point start;
+    int32_t errCode;
+    HistogramType type;
 };
 
 } // namespace OHOS::NativeRdb
