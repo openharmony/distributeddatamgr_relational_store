@@ -72,7 +72,8 @@
                 "file_api",
                 "json",
                 "runtime_core",
-                "ets_frontend"
+                "ets_frontend",
+                "api_metrics"
             ],
             "third_party": [ "sqlite" ]
         },

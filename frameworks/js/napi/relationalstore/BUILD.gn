@@ -59,6 +59,7 @@ if (is_ohos) {
     sources += [
       "${relational_store_js_common_path}/src/js_ability.cpp",
       "src/napi_rdb_store_observer.cpp",
+      "src/napi_rdb_histogram_reporter.cpp",
     ]
 
     deps = [
@@ -72,6 +73,7 @@ if (is_ohos) {
       "ability_runtime:extensionkit_native",
       "ability_runtime:napi_base_context",
       "ability_runtime:napi_common",
+      "api_metrics:histogrammanager",
       "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
