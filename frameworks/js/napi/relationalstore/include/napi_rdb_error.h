@@ -91,11 +91,11 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
 #define RDB_NAPI_ASSERT_HV(env, assertion, histogram, errorExpr)                                                    \
     do {                                                                                                              \
         if (!(assertion)) {                                                                                           \
-            auto _hvrErr = (errorExpr);                                                                               \
-            if (_hvrErr != nullptr) {                                                                                 \
-                (histogram).SetErrCode(_hvrErr->GetCode());                                                           \
+            auto hvrErr = (errorExpr);                                                                                \
+            if (hvrErr != nullptr) {                                                                                  \
+                (histogram).SetErrCode(hvrErr->GetCode());                                                            \
             }                                                                                                         \
-            RDB_NAPI_ASSERT_INT_BASE(env, false, _hvrErr, nullptr);                                                   \
+            RDB_NAPI_ASSERT_INT_BASE(env, false, hvrErr, nullptr);                                                    \
         }                                                                                                             \
     } while (0)
 
