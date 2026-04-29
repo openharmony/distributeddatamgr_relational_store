@@ -302,13 +302,7 @@ void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
 
 void ContextBase::FinishHistogram(const char *asyncName, const char *syncName)
 {
-    if (!histogram.has_value()) {
-        return;
-    }
-    histogram->SetName(isAsync_ ? asyncName : syncName);
-    if (error != nullptr && error->GetCode() != OK) {
-        histogram->SetErrCode(error->GetCode());
-    }
+    FinishHistogram(isAsync_ ? asyncName : syncName);
 }
 
 void ContextBase::FinishHistogram(const char *name)
