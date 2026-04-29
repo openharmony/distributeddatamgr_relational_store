@@ -118,7 +118,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.getRdbStore", "Arkdata.Rdb.RdbStore.getRdbStoreSync");
+    context->FinishHistogram("Arkdata.Rdb.RdbStore.getRdbStore");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
