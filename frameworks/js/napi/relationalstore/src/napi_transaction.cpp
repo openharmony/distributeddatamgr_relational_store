@@ -573,8 +573,7 @@ napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
         context->resultSet = context->StealTransaction()->QueryByStep(*(context->rdbPredicates), context->columns);
-        int errCode = (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
-        return errCode;
+        return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -604,8 +603,7 @@ napi_value TransactionProxy::QueryWithoutRowCount(napi_env env, napi_callback_in
         DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet =
             context->StealTransaction()->QueryByStep(*(context->rdbPredicates), context->columns, options);
-        int errCode = (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
-        return errCode;
+        return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -653,8 +651,7 @@ napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
         context->resultSet = context->StealTransaction()->QueryByStep(context->sql, context->bindArgs);
-        int errCode = (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
-        return errCode;
+        return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -686,8 +683,7 @@ napi_value TransactionProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
         DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet = context->StealTransaction()->QueryByStep(context->sql, context->bindArgs, options);
-        int errCode = (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
-        return errCode;
+        return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
