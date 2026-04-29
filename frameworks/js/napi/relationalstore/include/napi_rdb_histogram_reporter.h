@@ -20,8 +20,6 @@
 #include <cstdint>
 #include <string>
 
-#include "rdb_errno.h"
-
 namespace OHOS::NativeRdb {
 
 void ReportHistogramBoolean(const std::string &name, int32_t sample);
@@ -73,8 +71,6 @@ enum class HistogramErrCode : int32_t {
     ERR_BOUNDARY
 };
 
-int32_t MapErrCode(int32_t errCode);
-
 enum class HistogramType : uint8_t {
     NONE = 0,
     TIME = 1 << 0,
@@ -94,7 +90,7 @@ inline constexpr bool operator&(HistogramType lhs, HistogramType rhs)
 
 class HistogramReporter {
 public:
-    explicit HistogramReporter(std::string name, HistogramType type,
+    HistogramReporter(std::string name, HistogramType type,
         std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now());
     ~HistogramReporter() noexcept;
 

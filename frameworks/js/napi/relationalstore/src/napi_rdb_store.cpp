@@ -337,7 +337,7 @@ int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<RdbS
 napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -353,9 +353,8 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        int errCode = rdbStore->InsertWithConflictResolution(
+        return rdbStore->InsertWithConflictResolution(
             context->int64Output, context->tableName, context->valuesBucket, context->conflictResolution);
-        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->int64Output, &result);
@@ -371,7 +370,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -401,7 +400,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::BatchInsertWithConflictResolution(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 3, std::make_shared<ParamNumError>("3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -455,7 +454,7 @@ int ParseDataSharePredicates(const napi_env env, const napi_value arg, std::shar
 napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -469,8 +468,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        int errCode = rdbStore->Delete(context->intOutput, *(context->rdbPredicates));
-        return errCode;
+        return rdbStore->Delete(context->intOutput, *(context->rdbPredicates));
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->intOutput, &result);
@@ -486,7 +484,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (IsNapiTypeString(env, argc, argv, 0)) {
@@ -509,10 +507,9 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        int errCode = rdbStore->UpdateWithConflictResolution(context->intOutput, context->tableName,
+        return rdbStore->UpdateWithConflictResolution(context->intOutput, context->tableName,
             context->valuesBucket, context->rdbPredicates->GetWhereClause(),
             context->rdbPredicates->GetBindArgs(), context->conflictResolution);
-        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->intOutput, &result);
@@ -528,7 +525,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (IsNapiTypeString(env, argc, argv, 0)) {
@@ -604,7 +601,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -618,15 +615,14 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
         CHECK_RETURN_ERR(obj != nullptr && context->rdbStore != nullptr);
         if (obj->dbType == DB_VECTOR) {
             context->resultSet = context->rdbStore->QueryByStep(context->sql, context->bindArgs);
-        } else {
-#if defined(CROSS_PLATFORM)
-            context->resultSet = context->StealRdbStore()->QueryByStep(context->sql, context->bindArgs, false);
-#else
-            context->resultSet = context->StealRdbStore()->QuerySql(context->sql, context->bindArgs);
-#endif
+            return (context->resultSet != nullptr) ? E_OK : E_ERROR;
         }
-        int errCode = (context->resultSet != nullptr) ? E_OK : E_ERROR;
-        return errCode;
+#if defined(CROSS_PLATFORM)
+        context->resultSet = context->StealRdbStore()->QueryByStep(context->sql, context->bindArgs, false);
+#else
+        context->resultSet = context->StealRdbStore()->QuerySql(context->sql, context->bindArgs);
+#endif
+        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -642,7 +638,7 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -656,8 +652,7 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        int errCode = context->StealRdbStore()->ExecuteSql(context->sql, context->bindArgs);
-        return errCode;
+        return context->StealRdbStore()->ExecuteSql(context->sql, context->bindArgs);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -673,7 +668,7 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2 || argc == 3, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -719,7 +714,7 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
 {
     REPORT();
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -1037,7 +1032,7 @@ napi_value RdbStoreProxy::QueryWithoutRowCount(napi_env env, napi_callback_info 
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -1069,7 +1064,7 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -2426,7 +2421,7 @@ napi_value RdbStoreProxy::Close(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<CreateTransactionContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         CHECK_RETURN(OK == ParseTransactionOptions(env, argc, argv, context));
@@ -2515,7 +2510,7 @@ struct RdbBatchInsertWithReturningContext : public RdbContext {
 napi_value RdbStoreProxy::BatchInsertWithReturning(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbBatchInsertWithReturningContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -2590,7 +2585,7 @@ struct RdbUpdateWithReturningContext : public RdbContext {
 napi_value RdbStoreProxy::UpdateWithReturning(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbUpdateWithReturningContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -2651,7 +2646,7 @@ struct RdbDeleteWithReturningContext : public RdbContext {
 napi_value RdbStoreProxy::DeleteWithReturning(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbDeleteWithReturningContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };

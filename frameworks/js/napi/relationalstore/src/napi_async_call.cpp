@@ -267,7 +267,7 @@ void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
         LOG_ERROR("context is nullptr.");
         return;
     }
-    if (context->histogram.has_value() && context->error != nullptr) {
+    if (context->histogram != nullptr && context->error != nullptr) {
         context->histogram->SetErrCode(context->error->GetCode());
     }
     napi_value result[ARG_BUTT] = { 0 };
@@ -307,7 +307,7 @@ void ContextBase::FinishHistogram(const char *asyncName, const char *syncName)
 
 void ContextBase::FinishHistogram(const char *name)
 {
-    if (!histogram.has_value()) {
+    if (histogram == nullptr) {
         return;
     }
     histogram->SetName(name);

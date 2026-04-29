@@ -42,6 +42,7 @@ struct JsErrMap {
 };
 
 static constexpr JsErrMap JS_ERR_TO_HISTOGRAM[] = {
+    { 0,        HistogramErrCode::ERR_OK },
     { 201,      HistogramErrCode::ERR_PERMISSION_DENIED },
     { 202,      HistogramErrCode::ERR_NON_SYSTEM_APP },
     { 401,      HistogramErrCode::ERR_INVALID_ARGS },
@@ -107,18 +108,10 @@ static int32_t MapJsCodeToHistogram(int32_t jsCode)
     return static_cast<int32_t>(HistogramErrCode::ERR_OTHER);
 }
 
-int32_t MapErrCode(int32_t jsCode)
-{
-    if (jsCode == E_OK) {
-        return static_cast<int32_t>(HistogramErrCode::ERR_OK);
-    }
-    return MapJsCodeToHistogram(jsCode);
-}
-
 HistogramReporter::HistogramReporter(std::string name, HistogramType type,
     std::chrono::steady_clock::time_point start)
     : name_(std::move(name)), start_(start),
-      errCode_(MapErrCode(E_OK)), type_(type)
+      errCode_(static_cast<int32_t>(HistogramErrCode::ERR_OK)), type_(type)
 {
 }
 
@@ -149,7 +142,7 @@ HistogramReporter::~HistogramReporter() noexcept
 
 void HistogramReporter::SetErrCode(int32_t newErrCode)
 {
-    errCode_ = MapErrCode(newErrCode);
+    errCode_ = MapJsCodeToHistogram(newErrCode);
 }
 
 } // namespace OHOS::NativeRdb

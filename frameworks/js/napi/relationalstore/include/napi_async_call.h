@@ -20,7 +20,6 @@
 #include <cinttypes>
 #include <functional>
 #include <memory>
-#include <optional>
 
 #include "js_utils.h"
 #include "logger.h"
@@ -82,7 +81,7 @@ public:
     ExecuteAction exec_ = nullptr;
     napi_value result_ = nullptr;
     std::shared_ptr<ContextBase> keep_;
-    std::optional<NativeRdb::HistogramReporter> histogram;
+    std::unique_ptr<NativeRdb::HistogramReporter> histogram;
     void FinishHistogram(const char *asyncName, const char *syncName);
     void FinishHistogram(const char *name);
 };
