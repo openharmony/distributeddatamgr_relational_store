@@ -126,11 +126,11 @@ HistogramReporter::~HistogramReporter() noexcept
         ReportHistogramBoolean(name_ + ".Bool",
             errCode_ == static_cast<int32_t>(HistogramErrCode::ERR_OK) ? 1 : 0);
     }
-    if (type_ & HistogramType::ENUM) {
-        ReportHistogramEnumeration(
-            name_ + ".Enum", errCode_, static_cast<int32_t>(HistogramErrCode::ERR_BOUNDARY));
-    }
     if (errCode_ != static_cast<int32_t>(HistogramErrCode::ERR_OK)) {
+        if (type_ & HistogramType::ENUM) {
+            ReportHistogramEnumeration(
+                name_ + ".Enum", errCode_, static_cast<int32_t>(HistogramErrCode::ERR_BOUNDARY));
+        }
         return;
     }
     if (type_ & HistogramType::TIME) {
