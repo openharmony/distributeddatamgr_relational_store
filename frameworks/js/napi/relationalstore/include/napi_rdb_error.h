@@ -88,6 +88,17 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
 
 #define RDB_NAPI_ASSERT_INT(env, assertion, error) RDB_NAPI_ASSERT_INT_BASE(env, assertion, error, nullptr)
 
+#define RDB_NAPI_ASSERT_HV(env, assertion, histogram, errorExpr)                                                    \
+    do {                                                                                                              \
+        if (!(assertion)) {                                                                                           \
+            auto _hvrErr = (errorExpr);                                                                               \
+            if ((histogram).has_value() && _hvrErr != nullptr) {                                                      \
+                (histogram)->SetErrCode(_hvrErr->GetCode());                                                          \
+            }                                                                                                         \
+            RDB_NAPI_ASSERT_INT_BASE(env, false, _hvrErr, nullptr);                                                   \
+        }                                                                                                             \
+    } while (0)
+
 #define CHECK_RETURN_CORE(assertion, theCall, revt) \
     do {                                            \
         if (!(assertion)) {                         \
