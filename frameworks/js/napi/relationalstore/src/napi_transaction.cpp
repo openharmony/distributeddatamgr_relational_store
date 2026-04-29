@@ -232,14 +232,13 @@ struct CommitContext : public TransactionContext {
 napi_value TransactionProxy::Commit(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<CommitContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
-        int errCode = context->StealTransaction()->Commit();
-        return errCode;
+        return context->StealTransaction()->Commit();
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -269,14 +268,13 @@ struct RollbackContext : public TransactionContext {
 napi_value TransactionProxy::Rollback(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RollbackContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
-        int errCode = context->StealTransaction()->Rollback();
-        return errCode;
+        return context->StealTransaction()->Rollback();
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -311,7 +309,7 @@ struct DeleteContext : public TransactionContext {
 napi_value TransactionProxy::Delete(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<DeleteContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -362,7 +360,7 @@ struct UpdateContext : public TransactionContext {
 napi_value TransactionProxy::Update(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<UpdateContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -414,7 +412,7 @@ struct InsertContext : public TransactionContext {
 napi_value TransactionProxy::Insert(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<InsertContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -463,7 +461,7 @@ struct BatchInsertContext : public TransactionContext {
 napi_value TransactionProxy::BatchInsert(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<BatchInsertContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -517,7 +515,7 @@ struct BatchInsertWithConflictResolutionContext : public TransactionContext {
 napi_value TransactionProxy::BatchInsertWithConflictResolution(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<BatchInsertWithConflictResolutionContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -568,7 +566,7 @@ struct QueryContext : public TransactionContext {
 napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<QueryContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -597,7 +595,7 @@ napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
 napi_value TransactionProxy::QueryWithoutRowCount(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<QueryContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -648,7 +646,7 @@ struct QuerySqlContext : public TransactionContext {
 napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<QuerySqlContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -677,7 +675,7 @@ napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
 napi_value TransactionProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<QuerySqlContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(context->Parse(env, argc, argv, self) == OK);
         // ParamError is reported only when the parameter type is incorrect.
@@ -729,7 +727,7 @@ struct ExecuteContext : public TransactionContext {
 napi_value TransactionProxy::Execute(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<ExecuteContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -799,7 +797,7 @@ struct TransBatchInsertWithReturningContext : public TransactionContext {
 napi_value TransactionProxy::BatchInsertWithReturning(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<TransBatchInsertWithReturningContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -874,7 +872,7 @@ struct TransUpdateWithReturningContext : public TransactionContext {
 napi_value TransactionProxy::UpdateWithReturning(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<TransUpdateWithReturningContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -935,7 +933,7 @@ struct TransDeleteWithReturningContext : public TransactionContext {
 napi_value TransactionProxy::DeleteWithReturning(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<TransDeleteWithReturningContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };

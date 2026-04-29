@@ -77,7 +77,7 @@ struct GetRdbStoreContext : public ContextBase {
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<GetRdbStoreContext>();
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM);
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM);
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         int errCode = Convert2Value(env, argv[0], context->param);

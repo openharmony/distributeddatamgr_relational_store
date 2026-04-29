@@ -16,10 +16,24 @@
 #ifndef HISTOGRAM_PLUGIN_MACROS_H
 #define HISTOGRAM_PLUGIN_MACROS_H
 
+#ifndef HISTOGRAM_BOOLEAN
 #define HISTOGRAM_BOOLEAN(name, sample)
+#endif
+
+#ifndef HISTOGRAM_ENUMERATION
 #define HISTOGRAM_ENUMERATION(name, sample, boundary)
+#endif
+
+#ifndef HISTOGRAM_CUSTOM_COUNTS
 #define HISTOGRAM_CUSTOM_COUNTS(name, sample, min, max, bucket_count)
+#endif
+
+#ifndef HISTOGRAM_TIMES
 #define HISTOGRAM_TIMES(name, sample)
+#endif
+
+#ifndef HISTOGRAM_PERCENTAGE
 #define HISTOGRAM_PERCENTAGE(name, sample)
+#endif
 
 #endif // HISTOGRAM_PLUGIN_MACROS_H
