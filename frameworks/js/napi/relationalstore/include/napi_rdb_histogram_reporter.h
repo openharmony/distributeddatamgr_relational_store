@@ -90,8 +90,10 @@ inline constexpr bool operator&(HistogramType lhs, HistogramType rhs)
 
 class HistogramReporter {
 public:
+    HistogramReporter(std::string name, HistogramType type)
+        : HistogramReporter(std::move(name), type, std::chrono::steady_clock::now()) {}
     HistogramReporter(std::string name, HistogramType type,
-        std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now());
+        std::chrono::steady_clock::time_point start);
     ~HistogramReporter() noexcept;
 
     void SetErrCode(int32_t errCode);
