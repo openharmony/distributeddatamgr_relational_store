@@ -68,10 +68,13 @@ inline constexpr bool operator&(HistogramType lhs, HistogramType rhs)
 
 class HistogramReporter {
 public:
-    explicit HistogramReporter(std::string name, HistogramType type, bool useExtLookup = false);
+    explicit HistogramReporter(std::string name, HistogramType type,
+        std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now(),
+        bool useExtLookup = false);
     ~HistogramReporter() noexcept;
 
     void SetErrCode(int32_t errCode);
+    void SetName(const std::string &name);
 
     HistogramReporter(const HistogramReporter &) = delete;
     HistogramReporter &operator=(const HistogramReporter &) = delete;
