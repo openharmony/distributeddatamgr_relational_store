@@ -550,8 +550,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 #else
         context->resultSet = context->StealRdbStore()->Query(*(context->rdbPredicates), context->columns);
 #endif
-        int errCode = (context->resultSet != nullptr) ? E_OK : E_ERROR;
-        return errCode;
+        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = ResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -725,9 +724,8 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        int errCode =
-            context->StealRdbStore()->Replace(context->int64Output, context->tableName, context->valuesBucket);
-        return errCode;
+        return context->StealRdbStore()->Replace(
+            context->int64Output, context->tableName, context->valuesBucket);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->int64Output, &result);
@@ -1046,8 +1044,7 @@ napi_value RdbStoreProxy::QueryWithoutRowCount(napi_env env, napi_callback_info 
         auto rdbStore = std::move(context->rdbStore);
         DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet = rdbStore->QueryByStep(*(context->rdbPredicates), context->columns, options);
-        int errCode = (context->resultSet != nullptr) ? E_OK : E_ERROR;
-        return errCode;
+        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -1082,8 +1079,7 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
         auto rdbStore = std::move(context->rdbStore);
         DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet = rdbStore->QueryByStep(context->sql, context->bindArgs, options);
-        int errCode = (context->resultSet != nullptr) ? E_OK : E_ERROR;
-        return errCode;
+        return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = LiteResultSetProxy::NewInstance(env, std::move(context->resultSet));
@@ -2435,8 +2431,7 @@ napi_value RdbStoreProxy::CreateTransaction(napi_env env, napi_callback_info inf
             context->transaction = nullptr;
             return code;
         }
-        int errCode = context->transaction != nullptr ? OK : E_ERROR;
-        return errCode;
+        return context->transaction != nullptr ? OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
         result = TransactionProxy::NewInstance(env, context->transaction);
