@@ -767,6 +767,9 @@ int RdbStoreImpl::SyncEx(const SyncOption &option, const AbsRdbPredicates &predi
     if (errorCode == RdbStatus::RDB_NO_SYNC_PERMISSION) {
         return E_SYNC_PERMISSION_DENIED;
     }
+    if (errorCode == RdbStatus::RDB_INVALID_ARGS) {
+        return E_INVALID_ARGS;
+    }
     return errorCode;
 }
 
