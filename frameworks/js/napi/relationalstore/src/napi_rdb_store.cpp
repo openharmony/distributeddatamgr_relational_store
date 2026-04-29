@@ -1738,8 +1738,6 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         CHECK_RETURN(OK == ParsePredicates(env, argv[1], context));
     };
     context->SetAction(env, info, std::move(input), nullptr, nullptr);
-    context->histogram.emplace("", HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.sync");
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
     auto queue = obj->queue_;
@@ -1760,7 +1758,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS), nullptr);
     auto predicates = *context->predicatesProxy->GetPredicates();
     auto exec = [queue, defer, callback, predicates, rdbStore = context->StealRdbStore(),
-                    enumArg = context->enumArg, ctx = context]() mutable {
+                    enumArg = context->enumArg]() mutable {
         SyncOption option{ static_cast<DistributedRdb::SyncMode>(enumArg), false, false };
         auto ret = rdbStore->Sync(option, predicates, [queue, defer, callback](const SyncResult &result) {
             auto args = [result](napi_env env, int &argc, napi_value *argv) {
@@ -1770,7 +1768,6 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
                 queue->AsyncPromise({ defer }, args, "DistributedSync::OnComplete");
         });
         if (ret != NativeRdb::E_OK) {
-            ctx->histogram->SetErrCode(ret);
             auto args = [ret](napi_env env, int &argc, napi_value *argv) mutable {
                 SetBusinessError(env, std::make_shared<InnerError>(ret), &argv[0]);
             };
