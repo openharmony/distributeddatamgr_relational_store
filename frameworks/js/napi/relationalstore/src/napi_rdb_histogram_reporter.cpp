@@ -98,39 +98,39 @@ int32_t MapErrCode(int32_t errCode)
 
 HistogramReporter::HistogramReporter(std::string name, HistogramType type,
     std::chrono::steady_clock::time_point start)
-    : name_(std::move(name)), start_(start),
-      errCode_(MapErrCode(E_OK)), type_(type)
+    : name(std::move(name)), start(start),
+      errCode(MapErrCode(E_OK)), type(type)
 {
 }
 
-void HistogramReporter::SetName(const std::string &name)
+void HistogramReporter::SetName(const std::string &newName)
 {
-    name_ = name;
+    name = newName;
 }
 
 HistogramReporter::~HistogramReporter() noexcept
 {
-    if (type_ & HistogramType::TIME) {
-        auto elapsed = std::chrono::steady_clock::now() - start_;
+    if (type & HistogramType::TIME) {
+        auto elapsed = std::chrono::steady_clock::now() - start;
         int32_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
         if (duration < 0) {
             duration = 0;
         }
-        ReportHistogramTimes(name_ + ".Time", duration);
+        ReportHistogramTimes(name + ".Time", duration);
     }
-    if (type_ & HistogramType::BOOL) {
-        ReportHistogramBoolean(name_ + ".Bool",
-            errCode_ == static_cast<int32_t>(HistogramErrCode::ERR_OK) ? 1 : 0);
+    if (type & HistogramType::BOOL) {
+        ReportHistogramBoolean(name + ".Bool",
+            errCode == static_cast<int32_t>(HistogramErrCode::ERR_OK) ? 1 : 0);
     }
-    if (type_ & HistogramType::ENUM) {
+    if (type & HistogramType::ENUM) {
         ReportHistogramEnumeration(
-            name_ + ".Enum", errCode_, static_cast<int32_t>(HistogramErrCode::ERR_BOUNDARY));
+            name + ".Enum", errCode, static_cast<int32_t>(HistogramErrCode::ERR_BOUNDARY));
     }
 }
 
-void HistogramReporter::SetErrCode(int32_t errCode)
+void HistogramReporter::SetErrCode(int32_t newErrCode)
 {
-    errCode_ = MapErrCode(errCode);
+    errCode = MapErrCode(newErrCode);
 }
 
 } // namespace OHOS::NativeRdb
