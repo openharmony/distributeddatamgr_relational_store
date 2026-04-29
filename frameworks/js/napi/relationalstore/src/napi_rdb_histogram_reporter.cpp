@@ -88,6 +88,8 @@ int32_t MapErrCode(int32_t errCode, bool useExtLookup)
     if (errCode == E_OK) {
         return static_cast<int32_t>(HistogramErrCode::ERR_OK);
     }
+    using RelationalStoreJsKit::GetJsErrorCode;
+    using RelationalStoreJsKit::GetJsErrorCodeExt;
     auto jsErr = useExtLookup ? GetJsErrorCodeExt(errCode) : GetJsErrorCode(errCode);
     if (!jsErr.has_value()) {
         return static_cast<int32_t>(HistogramErrCode::ERR_OTHER);
