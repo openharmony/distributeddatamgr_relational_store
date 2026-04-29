@@ -18,7 +18,6 @@
 #include <algorithm>
 
 #include "histogram_plugin_macros.h"
-#include "napi_rdb_error.h"
 
 namespace OHOS::NativeRdb {
 
@@ -83,17 +82,12 @@ static int32_t MapJsCodeToHistogram(int32_t jsCode)
     return static_cast<int32_t>(HistogramErrCode::ERR_OTHER);
 }
 
-int32_t MapErrCode(int32_t errCode)
+int32_t MapErrCode(int32_t jsCode)
 {
-    if (errCode == E_OK) {
+    if (jsCode == E_OK) {
         return static_cast<int32_t>(HistogramErrCode::ERR_OK);
     }
-    using RelationalStoreJsKit::GetJsErrorCodeExt;
-    auto jsErr = GetJsErrorCodeExt(errCode);
-    if (!jsErr.has_value()) {
-        return static_cast<int32_t>(HistogramErrCode::ERR_OTHER);
-    }
-    return MapJsCodeToHistogram(jsErr.value().jsCode);
+    return MapJsCodeToHistogram(jsCode);
 }
 
 HistogramReporter::HistogramReporter(std::string name, HistogramType type,
