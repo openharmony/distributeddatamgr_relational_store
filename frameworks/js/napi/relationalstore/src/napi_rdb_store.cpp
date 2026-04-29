@@ -1051,7 +1051,8 @@ napi_value RdbStoreProxy::QueryWithoutRowCount(napi_env env, napi_callback_info 
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.queryWithoutRowCount", "Arkdata.Rdb.RdbStore.queryWithoutRowCountSync");
+    context->FinishHistogram("Arkdata.Rdb.RdbStore.queryWithoutRowCount",
+        "Arkdata.Rdb.RdbStore.queryWithoutRowCountSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -1086,7 +1087,8 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.querySqlWithoutRowCount", "Arkdata.Rdb.RdbStore.querySqlWithoutRowCountSync");
+    context->FinishHistogram("Arkdata.Rdb.RdbStore.querySqlWithoutRowCount",
+        "Arkdata.Rdb.RdbStore.querySqlWithoutRowCountSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -2524,7 +2526,8 @@ napi_value RdbStoreProxy::BatchInsertWithReturning(napi_env env, napi_callback_i
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.batchInsertWithReturning", "Arkdata.Rdb.RdbStore.batchInsertWithReturningSync");
+    context->FinishHistogram("Arkdata.Rdb.RdbStore.batchInsertWithReturning",
+        "Arkdata.Rdb.RdbStore.batchInsertWithReturningSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -2599,7 +2602,8 @@ napi_value RdbStoreProxy::UpdateWithReturning(napi_env env, napi_callback_info i
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.updateWithReturning", "Arkdata.Rdb.RdbStore.updateWithReturningSync");
+    context->FinishHistogram("Arkdata.Rdb.RdbStore.updateWithReturning",
+        "Arkdata.Rdb.RdbStore.updateWithReturningSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -2659,7 +2663,8 @@ napi_value RdbStoreProxy::DeleteWithReturning(napi_env env, napi_callback_info i
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.deleteWithReturning", "Arkdata.Rdb.RdbStore.deleteWithReturningSync");
+    context->FinishHistogram("Arkdata.Rdb.RdbStore.deleteWithReturning",
+        "Arkdata.Rdb.RdbStore.deleteWithReturningSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
