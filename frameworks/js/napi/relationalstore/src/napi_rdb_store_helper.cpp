@@ -127,8 +127,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
 {
     NativeRdb::HistogramReporter histogram("Arkdata.Rdb.RdbStore.getRdbStoreSync",
-        HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM,
-        std::chrono::steady_clock::now(), true);
+        HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM);
     auto context = std::make_shared<GetRdbStoreContext>();
     context->config.version = ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED;
     size_t argc = 2;

@@ -83,14 +83,13 @@ static int32_t MapJsCodeToHistogram(int32_t jsCode)
     return static_cast<int32_t>(HistogramErrCode::ERR_OTHER);
 }
 
-int32_t MapErrCode(int32_t errCode, bool useExtLookup)
+int32_t MapErrCode(int32_t errCode)
 {
     if (errCode == E_OK) {
         return static_cast<int32_t>(HistogramErrCode::ERR_OK);
     }
-    using RelationalStoreJsKit::GetJsErrorCode;
     using RelationalStoreJsKit::GetJsErrorCodeExt;
-    auto jsErr = useExtLookup ? GetJsErrorCodeExt(errCode) : GetJsErrorCode(errCode);
+    auto jsErr = GetJsErrorCodeExt(errCode);
     if (!jsErr.has_value()) {
         return static_cast<int32_t>(HistogramErrCode::ERR_OTHER);
     }
@@ -98,9 +97,9 @@ int32_t MapErrCode(int32_t errCode, bool useExtLookup)
 }
 
 HistogramReporter::HistogramReporter(std::string name, HistogramType type,
-    std::chrono::steady_clock::time_point start, bool useExtLookup)
+    std::chrono::steady_clock::time_point start)
     : name_(std::move(name)), start_(start),
-      errCode_(MapErrCode(E_OK, useExtLookup)), type_(type), useExtLookup_(useExtLookup)
+      errCode_(MapErrCode(E_OK)), type_(type)
 {
 }
 
@@ -131,7 +130,7 @@ HistogramReporter::~HistogramReporter() noexcept
 
 void HistogramReporter::SetErrCode(int32_t errCode)
 {
-    errCode_ = MapErrCode(errCode, useExtLookup_);
+    errCode_ = MapErrCode(errCode);
 }
 
 } // namespace OHOS::NativeRdb

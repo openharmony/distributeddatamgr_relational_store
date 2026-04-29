@@ -47,7 +47,7 @@ enum class HistogramErrCode : int32_t {
     ERR_BOUNDARY
 };
 
-int32_t MapErrCode(int32_t errCode, bool useExtLookup);
+int32_t MapErrCode(int32_t errCode);
 
 enum class HistogramType : uint8_t {
     NONE = 0,
@@ -69,8 +69,7 @@ inline constexpr bool operator&(HistogramType lhs, HistogramType rhs)
 class HistogramReporter {
 public:
     explicit HistogramReporter(std::string name, HistogramType type,
-        std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now(),
-        bool useExtLookup = false);
+        std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now());
     ~HistogramReporter() noexcept;
 
     void SetErrCode(int32_t errCode);
@@ -84,7 +83,6 @@ private:
     std::chrono::steady_clock::time_point start_;
     int32_t errCode_;
     HistogramType type_;
-    bool useExtLookup_;
 };
 
 } // namespace OHOS::NativeRdb
