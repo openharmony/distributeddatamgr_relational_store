@@ -17,7 +17,15 @@
 
 #include <algorithm>
 
+#ifdef RELATIONAL_STORE_API_METRICS_ENABLED
 #include "histogram_plugin_macros.h"
+#else
+#define HISTOGRAM_BOOLEAN(name, sample) ((void)0)
+#define HISTOGRAM_ENUMERATION(name, sample, boundary) ((void)0)
+#define HISTOGRAM_CUSTOM_COUNTS(name, sample, min, max, bucket_count) ((void)0)
+#define HISTOGRAM_TIMES(name, duration) ((void)0)
+#define HISTOGRAM_PERCENTAGE(name, sample) ((void)0)
+#endif
 
 namespace OHOS::NativeRdb {
 
