@@ -26,6 +26,12 @@ declare_args() {
     } else {
         relational_store_dm_part_is_enabled = false
     }
+
+    relational_store_api_metrics_enabled = true
+    if (defined(global_parts_info) &&
+        !defined(global_parts_info.hiviewdfx_api_metrics_ext)) {
+        relational_store_api_metrics_enabled = false
+    }
 }
 
 common_tool_path = "//foundation/distributeddatamgr/kv_store/frameworks/common"

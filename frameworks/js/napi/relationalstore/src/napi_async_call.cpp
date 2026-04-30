@@ -267,6 +267,9 @@ void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
         LOG_ERROR("context is nullptr.");
         return;
     }
+    if (context->histogram != nullptr && context->error != nullptr) {
+        context->histogram->SetErrCode(context->error->GetCode());
+    }
     napi_value result[ARG_BUTT] = { 0 };
     // if out function status is ok then async renturn output data, else return error.
     if (context->error == nullptr) {
@@ -280,6 +283,7 @@ void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
         SetBusinessError(env, context->error, &result[ARG_ERROR]);
         napi_get_undefined(env, &result[ARG_DATA]);
     }
+    context->histogram = nullptr;
     if (context->defer_ != nullptr) {
         // promise
         if (status == napi_ok && (context->error == nullptr)) {
@@ -295,6 +299,22 @@ void AsyncCall::OnReturn(napi_env env, napi_status status, void *data)
         napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
     }
     context->keep_.reset();
+}
+
+void ContextBase::FinishHistogram(const char *asyncName, const char *syncName)
+{
+    FinishHistogram(isAsync_ ? asyncName : syncName);
+}
+
+void ContextBase::FinishHistogram(const char *name)
+{
+    if (histogram == nullptr) {
+        return;
+    }
+    histogram->SetName(name);
+    if (error != nullptr && error->GetCode() != OK) {
+        histogram->SetErrCode(error->GetCode());
+    }
 }
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

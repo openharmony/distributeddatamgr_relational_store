@@ -31,6 +31,7 @@
 #include "rdb_errno.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
+#include "napi_rdb_histogram_reporter.h"
 #include "rdb_sql_utils.h"
 #include "sqlite_sql_builder.h"
 #include "unistd.h"
@@ -76,6 +77,8 @@ struct GetRdbStoreContext : public ContextBase {
 napi_value GetRdbStore(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<GetRdbStoreContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("",
+        HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM);
     auto input = [context, info](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2 or 3"));
         int errCode = Convert2Value(env, argv[0], context->param);
@@ -116,6 +119,7 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.RdbStore.getRdbStore");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -123,6 +127,8 @@ napi_value GetRdbStore(napi_env env, napi_callback_info info)
 
 napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
 {
+    NativeRdb::HistogramReporter histogram("Arkdata.Rdb.RdbStore.getRdbStoreSync",
+        HistogramType::TIME | HistogramType::BOOL | HistogramType::ENUM);
     auto context = std::make_shared<GetRdbStoreContext>();
     context->config.version = ConfigVersion::INVALID_CONFIG_CHANGE_NOT_ALLOWED;
     size_t argc = 2;
@@ -130,23 +136,23 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
     napi_value argv[2]{};
     napi_value self = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &self, nullptr);
-    RDB_NAPI_ASSERT_INT(env, argc == argcMax, std::make_shared<ParamNumError>("2"));
+    RDB_NAPI_ASSERT_HV(env, argc == argcMax, histogram, std::make_shared<ParamNumError>("2"));
     int errCode = Convert2Value(env, argv[0], context->param);
-    RDB_NAPI_ASSERT_INT(env, OK == errCode, std::make_shared<ParamError>("Illegal context."));
+    RDB_NAPI_ASSERT_HV(env, OK == errCode, histogram, std::make_shared<ParamError>("Illegal context."));
 
     errCode = Convert2Value(env, argv[1], context->config);
-    RDB_NAPI_ASSERT_INT(env, OK == errCode, std::make_shared<ParamError>("Illegal StoreConfig or name."));
+    RDB_NAPI_ASSERT_HV(env, OK == errCode, histogram, std::make_shared<ParamError>("Illegal StoreConfig or name."));
 
-    RDB_NAPI_ASSERT_INT(env, context->config.cryptoParam.IsValid(),
+    RDB_NAPI_ASSERT_HV(env, context->config.cryptoParam.IsValid(), histogram,
         std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal CryptoParam."));
-    RDB_NAPI_ASSERT_INT(env, context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
-        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal tokenizer."));
+    RDB_NAPI_ASSERT_HV(env, context->config.tokenizer >= NONE_TOKENIZER && context->config.tokenizer < TOKENIZER_END,
+        histogram, std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal tokenizer."));
 
-    RDB_NAPI_ASSERT_INT(env, RdbHelper::IsSupportedTokenizer(context->config.tokenizer),
+    RDB_NAPI_ASSERT_HV(env, RdbHelper::IsSupportedTokenizer(context->config.tokenizer), histogram,
         std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
     if (!context->config.persist) {
-        RDB_NAPI_ASSERT_INT(
-            env, context->config.rootDir.empty(), std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
+        RDB_NAPI_ASSERT_HV(env, context->config.rootDir.empty(), histogram,
+            std::make_shared<InnerError>(NativeRdb::E_NOT_SUPPORT));
     }
 
     auto err = GetRealPath(env, argv[0], context->param, context->config);
@@ -155,17 +161,19 @@ napi_value GetRdbStoreSync(napi_env env, napi_callback_info info)
     }
 
     if (err != nullptr && err->GetCode() == E_PARAM_ERROR) {
-        RDB_NAPI_ASSERT_INT(env, err == nullptr, std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+        RDB_NAPI_ASSERT_HV(env, err == nullptr, histogram,
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
     } else {
-        RDB_NAPI_ASSERT_INT(env, err == nullptr, err);
+        RDB_NAPI_ASSERT_HV(env, err == nullptr, histogram, err);
     }
 
     DefaultOpenCallback callback;
-    context->proxy = RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
-    RDB_NAPI_ASSERT_INT(env, errCode == OK, std::make_shared<InnerErrorExt>(errCode));
+    context->proxy =
+        RdbHelper::GetRdbStore(GetRdbStoreConfig(context->config, context->param), -1, callback, errCode);
+    RDB_NAPI_ASSERT_HV(env, errCode == OK, histogram, std::make_shared<InnerErrorExt>(errCode));
 
     napi_value result = RdbStoreProxy::NewInstance(env, context->proxy, context->param.isSystemApp);
-    RDB_NAPI_ASSERT_INT(env, result != nullptr, std::make_shared<InnerError>(E_ERROR));
+    RDB_NAPI_ASSERT_HV(env, result != nullptr, histogram, std::make_shared<InnerError>(E_ERROR));
     return result;
 }
 
