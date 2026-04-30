@@ -18,7 +18,7 @@
 @!sts_inject_into_module("""
 import BaseContext from 'application.BaseContext';
 import dataSharePredicates from '@ohos.data.dataSharePredicates';
-import { AsyncCallback } from '@ohos.base';
+import { AsyncCallback, Callback } from '@ohos.base';
 """)
 
 @!sts_inject("""
@@ -965,18 +965,18 @@ interface RdbStore {
     DeleteWithReturningSync(predicates: RdbPredicates, config: ReturningConfig): Result;
 
     @!sts_inject_into_interface("""
-        onDataChange(type: SubscribeType, callback: (((info: Array<ChangeInfo>) => void) | ((info: Array<String>) => void))): void;
-        onAutoSyncProgress(callback: (info: ProgressDetails) => void): void;
-        onStatistics(callback: (info: SqlExecutionInfo) => void): void;
-        on(event: string, interProcess: boolean, callback: (arg: undefined) => void): void;
-        onSqliteErrorOccurred(observer: (info: ExceptionMessage) => void): void;
-        onPerfStat(observer: (info: SqlExecutionInfo) => void): void;
-        offDataChange(type: SubscribeType, callback?: (info: Array<String> | Array<ChangeInfo>) => void): void;
-        offAutoSyncProgress(callback?: (info: ProgressDetails) => void): void;
-        offStatistics(callback?: (info: SqlExecutionInfo) => void): void;
-        off(event: string, interProcess: boolean, callback?: (arg: undefined) => void): void;
-        offSqliteErrorOccurred(observer?: (info: ExceptionMessage) => void): void;
-        offPerfStat(observer?: (info: SqlExecutionInfo) => void): void;
+        onDataChange(type: SubscribeType, observer: Callback<Array<string>> | Callback<Array<ChangeInfo>>): void;
+        onAutoSyncProgress(progress: Callback<ProgressDetails>): void;
+        onStatistics(observer: Callback<SqlExecutionInfo>): void;
+        on(event: string, interProcess: boolean, observer: Callback<void>): void;
+        onSqliteErrorOccurred(observer: Callback<ExceptionMessage>): void;
+        onPerfStat(observer: Callback<SqlExecutionInfo>): void;
+        offDataChange(type: SubscribeType, observer?: Callback<Array<string>> | Callback<Array<ChangeInfo>>): void;
+        offAutoSyncProgress(progress?: Callback<ProgressDetails>): void;
+        offStatistics(observer?: Callback<SqlExecutionInfo>): void;
+        off(event: string, interProcess: boolean, observer?: Callback<void>): void;
+        offSqliteErrorOccurred(observer?: Callback<ExceptionMessage>): void;
+        offPerfStat(observer?: Callback<SqlExecutionInfo>): void;
     """)
 
     @!sts_inject_into_class("""
@@ -1009,7 +1009,7 @@ interface RdbStore {
             return this.createTransactionSync(undefined);
         }
 
-        onDataChange(type: SubscribeType, cb: Object) : void {
+        onDataChange(type: SubscribeType, cb: Callback<Array<string>> | Callback<Array<ChangeInfo>>) : void {
             switch (type) {
                 case SubscribeType.SUBSCRIBE_TYPE_CLOUD_DETAILS:
                 case SubscribeType.SUBSCRIBE_TYPE_LOCAL_DETAILS:
@@ -1021,42 +1021,42 @@ interface RdbStore {
             }
         }
 
-        offDataChange(type: SubscribeType, cb?: Object) : void {
+        offDataChange(type: SubscribeType, cb?: Callback<Array<string>> | Callback<Array<ChangeInfo>>) : void {
             return this.offDataChangeInner(type, cb);
         }
 
-        onAutoSyncProgress(cb: Object) : void {
+        onAutoSyncProgress(cb: Callback<ProgressDetails>) : void {
             this.onAutoSyncProgressInner(cb as (info: ProgressDetails) => void, cb);
         }
-        onStatistics(cb: Object) : void {
+        onStatistics(cb: Callback<SqlExecutionInfo>) : void {
             return this.onStatisticsInner(cb as (info: SqlExecutionInfo) => void, cb);
         }
-        offAutoSyncProgress(cb?: Object) : void {
+        offAutoSyncProgress(cb?: Callback<ProgressDetails>) : void {
             return this.offAutoSyncProgressInner(cb);
         }
-        offStatistics(cb?: Object) : void {
+        offStatistics(cb?: Callback<SqlExecutionInfo>) : void {
             return this.offStatisticsInner(cb);
         }
 
-        on(event: String, interProcess: boolean, cb: Object) : void {
+        on(event: String, interProcess: boolean, cb: Callback<void>) : void {
           return this.onCommon(event, interProcess, cb as () => void, cb);
         }
 
-        off(event: String, interProcess: boolean, cb?: Object) : void {
+        off(event: String, interProcess: boolean, cb?: Callback<void>) : void {
           return this.offCommon(event, interProcess, cb);
         }
 
-        onSqliteErrorOccurred(observer: Object): void {
+        onSqliteErrorOccurred(observer: Callback<ExceptionMessage>): void {
             this.onSqliteErrorOccurredInner(observer as (info: ExceptionMessage) => void, observer);
         }
-        offSqliteErrorOccurred(observer?: Object): void {
+        offSqliteErrorOccurred(observer?: Callback<ExceptionMessage>): void {
             return this.offSqliteErrorOccurredInner(observer);
         }
 
-        onPerfStat(observer: Object): void {
+        onPerfStat(observer: Callback<SqlExecutionInfo>): void {
             this.onPerfStatInner(observer as (info: SqlExecutionInfo) => void, observer);
         }
-        offPerfStat(observer?: Object): void {
+        offPerfStat(observer?: Callback<SqlExecutionInfo>): void {
             return this.offPerfStatInner(observer);
         }
 
