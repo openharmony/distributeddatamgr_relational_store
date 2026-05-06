@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ const STORE_CONFIG: relationalStore.StoreConfig = {
 async function checkResultSetForNormalGet(resultSet : relationalStore.ResultSet){
   let count = 0;
   try {
-    while(resultSet?.goToNextRow()) {
+    while(resultSet.goToNextRow()) {
       count++;
       if(count === 1) {
         let index = resultSet.getColumnIndex("id");
@@ -59,19 +59,19 @@ async function checkResultSetForNormalGet(resultSet : relationalStore.ResultSet)
       if(count === 2) {
         let index = resultSet.getColumnIndex("id");
         expect(index).assertEqual(0);
-        let id = resultSet?.getLong(index);
+        let id = resultSet.getLong(index);
         expect(id).assertEqual(2);
         index = resultSet.getColumnIndex("data1");
-        let data1 = resultSet?.getString(index);
+        let data1 = resultSet.getString(index);
         expect(data1).assertEqual('lisi');
         index = resultSet.getColumnIndex("data2");
-        let data2 = resultSet?.getLong(index);
+        let data2 = resultSet.getLong(index);
         expect(data2).assertEqual(20);
         index = resultSet.getColumnIndex("data3");
-        let data3 = resultSet?.getDouble(index);
+        let data3 = resultSet.getDouble(index);
         expect(data3).assertEqual(20000.0);
         index = resultSet.getColumnIndex("data4");
-        let data4 = resultSet?.getBlob(index);
+        let data4 = resultSet.getBlob(index);
         expect(data4[0]).assertEqual(1);
         expect(data4[1]).assertEqual(2);
         expect(data4[2]).assertEqual(3);
@@ -83,8 +83,6 @@ async function checkResultSetForNormalGet(resultSet : relationalStore.ResultSet)
   } catch(e) {
     console.error(`checkResultSetForNormalGet failed message:${e.message} code:${e.code}`);
     expect().assertFail();
-  } finally {
-    resultSet.close();
   }
 }
 
@@ -158,7 +156,7 @@ export default function RdbQueryByStep() {
       try {
         resultSet = await rdbStore?.queryByStep(predicates, ["data1"]);
         resultSet?.goToNextRow();
-        let data1 = resultSet?.getString(resultSet.getColumnIndex("data1"));
+        let data1 = resultSet?.getString(resultSet?.getColumnIndex("data1"));
         expect(data1).assertEqual('zhangsan');
       } catch(e) {
         console.error(`queryByStep_001_normal_columns failed message:${e.message} code:${e.code}`);
@@ -276,7 +274,7 @@ export default function RdbQueryByStep() {
       try {
         resultSet = await rdbStore?.queryByStep(predicates, ["", "data1"]);
         resultSet?.goToNextRow();
-        let data1 = resultSet?.getString(resultSet.getColumnIndex("data1"));
+        let data1 = resultSet?.getString(resultSet?.getColumnIndex("data1"));
         expect(data1).assertEqual('zhangsan');
       } catch(e) {
         console.error(`queryByStep_004_Abnormal_columns failed message:${e.message} code:${e.code}`);
@@ -349,7 +347,7 @@ export default function RdbQueryByStep() {
      *          3.Set bindArgs to [18], sql is select * from test where data2 = ?
      */
     it('queryByStep_001_normal_bindArgs',  0, async  () => {
-      console.log(TAG + "************* queryByStep_0001 start *************");
+      console.log(TAG + "************* queryByStep_001_normal_bindArgs start *************");
       let resultSet : relationalStore.ResultSet | undefined = undefined;
       const sql = "select * from test";
       try {
@@ -371,7 +369,7 @@ export default function RdbQueryByStep() {
         let data1 = resultSet?.getString(resultSet?.getColumnIndex("data1"));
         expect("lisi").assertEqual(data1);
       } catch(e) {
-        console.error(`queryByStep failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_001_normal_bindArgs failed message:${e.message} code:${e.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -381,20 +379,20 @@ export default function RdbQueryByStep() {
       try {
         resultSet = await rdbStore?.queryByStep(sql2, [18]);
         resultSet?.goToNextRow();
-        let data2 : number = resultSet?.getLong(resultSet.getColumnIndex("data2"));
+        let data2 : number = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
         expect(18).assertEqual(data2);
       } catch(e) {
-        console.error(`queryByStep_0001 failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_001_normal_bindArgs failed message:${e.message} code:${e.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
       }
-      console.log(TAG + "************* queryByStep_0001 end *************");
+      console.log(TAG + "************* queryByStep_001_normal_bindArgs end *************");
     })
 
     /**
      * @tc.number queryByStep_002_Abnormal_bindArgs
-     * @tc.name Normal test case of queryByStep
+     * @tc.name Abnormal test case of queryByStep
      * @tc.desc 1.sql is select * from test where data2 = ?
      *          2.Set bindArgs to [null]
      *          3.Set bindArgs to [undefined]
@@ -414,10 +412,10 @@ export default function RdbQueryByStep() {
         let res = resultSet?.goToNextRow();
         expect(res).assertFalse();
         // goToNextRow does not throw error codes, SQL statement error, so getString throws out of bounds line
-        let data2 : number = resultSet?.getLong(resultSet.getColumnIndex("data2"));
+        let data2 : number = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
         expect().assertFail();
       } catch (e) {
-        console.error(`queryByStep_002 failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_002_Abnormal_bindArgs failed message:${e.message} code:${e.code}`);
         expect(e.code).assertEqual("14800012");
       } finally {
         resultSet?.close();
@@ -427,7 +425,7 @@ export default function RdbQueryByStep() {
         resultSet = await rdbStore?.queryByStep(sql, [undefined]);
         expect().assertFail();
       } catch (e) {
-        console.error(`queryByStep_002 failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_002_Abnormal_bindArgs failed message:${e.message} code:${e.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -438,10 +436,10 @@ export default function RdbQueryByStep() {
         let res = resultSet?.goToNextRow();
         expect(res).assertFalse();
         // goToNextRow does not throw error codes, SQL statement error, so getString throws out of bounds line
-        let data2 : number = resultSet?.getLong(resultSet.getColumnIndex("data2"));
+        let data2 : number = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
         expect().assertFail();
       } catch (e) {
-        console.error(`queryByStep_002 failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_002_Abnormal_bindArgs failed message:${e.message} code:${e.code}`);
         expect(e.code).assertEqual("14800012");
       } finally {
         resultSet?.close();
@@ -452,7 +450,7 @@ export default function RdbQueryByStep() {
         predicates.equalTo('data1', 'wangwu');
         await rdbStore?.delete(predicates);
       } catch (e) {
-        console.error(`queryByStep_002 delete failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_002_Abnormal_bindArgs delete failed message:${e.message} code:${e.code}`);
         expect().assertFail();
       }
 
@@ -461,7 +459,7 @@ export default function RdbQueryByStep() {
 
     /**
      * @tc.number queryByStep_003_Abnormal_sql
-     * @tc.name Normal test case of queryByStep
+     * @tc.name Abnormal test case of queryByStep
      * @tc.desc 1.sql is undefined
      *          2.sql is null
      *          3.sql is ""
@@ -473,7 +471,7 @@ export default function RdbQueryByStep() {
         resultSet = await rdbStore?.queryByStep(undefined);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_003 failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_003_Abnormal_sql failed message:${e.message} code:${e.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -483,7 +481,7 @@ export default function RdbQueryByStep() {
         resultSet = await rdbStore?.queryByStep(null);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_003 failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_003_Abnormal_sql failed message:${e.message} code:${e.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -493,7 +491,7 @@ export default function RdbQueryByStep() {
         resultSet = await rdbStore?.queryByStep("");
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_003 failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_003_Abnormal_sql failed message:${e.message} code:${e.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -515,7 +513,7 @@ export default function RdbQueryByStep() {
         resultSet = await rdbStore?.queryByStep(sql);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_004 failed message:${e.message} code:${e.code}`);
+        console.error(`queryByStep_004_abnormal_rdbStoreIsClose failed message:${e.message} code:${e.code}`);
         expect(e.code).assertEqual("14800014");
         rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
       } finally {
