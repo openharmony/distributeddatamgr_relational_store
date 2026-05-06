@@ -405,7 +405,13 @@ export default function RdbQueryByStep() {
         'data1': "wangwu",
         'data2': null,
       };
-      await rdbStore?.insert('test', valueBucket);
+
+      try {
+        await rdbStore?.insert('test', valueBucket);
+      } catch (e) {
+        console.error(`queryByStep_002_Abnormal_bindArgs insert failed message:${e.message} code:${e.code}`);
+        expect().assertFail();
+      }
 
       const sql = "select * from test where data2 = ?";
       try {
