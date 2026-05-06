@@ -18,7 +18,7 @@ import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry
 import relationalStore from '@ohos.data.relationalStore';
 
 const TAG = "[RELATIONAL_STORE_TEST]";
-let rdbStore:relationalStore.RdbStore | undefined = undefined;
+let rdbStore : relationalStore.RdbStore | undefined = undefined;
 const delegator = AbilityDelegatorRegistry.getAbilityDelegator();
 const context = delegator.getAppContext().getApplicationContext();
 
@@ -264,6 +264,7 @@ export default function RdbQueryByStep() {
         expect(res).assertFalse();
         // goToNextRow does not throw error codes, SQL statement error, so getString throws out of bounds line
         let data1 = resultSet?.getString(0);
+        expect().assertFail();
       } catch(e) {
         console.error(`queryByStep_004_Abnormal_columns failed message:${e.message} code:${e.code}`);
         expect(e.code).assertEqual("14800012");
@@ -331,10 +332,10 @@ export default function RdbQueryByStep() {
         expect().assertFail();
       } catch(e) {
         console.error(`queryByStep_006_abnormal_rdbStoreIsClose failed message:${e.message} code:${e.code}`);
-        rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
         expect(e.code).assertEqual("14800014");
       } finally {
         resultSet?.close();
+        rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
       }
       console.log(TAG + "************* queryByStep_006_abnormal_rdbStoreIsClose end *************");
     })
