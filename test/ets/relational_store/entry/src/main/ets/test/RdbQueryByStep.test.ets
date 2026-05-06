@@ -31,7 +31,7 @@ const STORE_CONFIG: relationalStore.StoreConfig = {
 }
 
 
-async function checkResultSetForNormalGet(resultSet : relationalStore.ResultSet){
+function checkResultSetForNormalGet(resultSet : relationalStore.ResultSet){
   let count = 0;
   try {
     while(resultSet.goToNextRow()) {
@@ -335,9 +335,7 @@ export default function RdbQueryByStep() {
         expect(e.code).assertEqual("14800014");
       } finally {
         resultSet?.close();
-        if (!rdbStore) {
-          rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
-        }
+        rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
       }
       console.log(TAG + "************* queryByStep_006_abnormal_rdbStoreIsClose end *************");
     })
