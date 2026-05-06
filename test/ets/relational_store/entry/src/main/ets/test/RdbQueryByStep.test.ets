@@ -335,7 +335,9 @@ export default function RdbQueryByStep() {
         expect(e.code).assertEqual("14800014");
       } finally {
         resultSet?.close();
-        rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
+        if (!rdbStore) {
+          rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
+        }
       }
       console.log(TAG + "************* queryByStep_006_abnormal_rdbStoreIsClose end *************");
     })
