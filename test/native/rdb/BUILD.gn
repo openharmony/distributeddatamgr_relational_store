@@ -258,6 +258,7 @@ ohos_unittest("SilentProxyTest") {
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",
+    "openssl:libcrypto_shared",
     "samgr:samgr_proxy",
     "sqlite:sqlite",
     "sqlite:sqliteicu",
@@ -384,6 +385,7 @@ ohos_unittest("NativeRdbTest") {
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",
+    "openssl:libcrypto_shared",
     "samgr:samgr_proxy",
     "sqlite:sqlite",
   ]
