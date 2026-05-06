@@ -237,7 +237,7 @@ export default function RdbQueryByStep() {
 
     /**
      * @tc.number queryByStep_004_Abnormal_columns
-     * @tc.name Normal test case of queryByStep
+     * @tc.name Abnormal test case of queryByStep
      * @tc.desc 1.Set columns to [].
      *          2.Set columns to [""].
      *          3.Set columns to ["", "data1"].
