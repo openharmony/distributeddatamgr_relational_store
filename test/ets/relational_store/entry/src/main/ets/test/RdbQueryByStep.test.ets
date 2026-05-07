@@ -199,7 +199,7 @@ export default function RdbQueryByStep() : void {
       try {
         resultSet = await rdbStore?.queryByStep(predicates, undefined);
         if (resultSet) {
-          checkResultSetForNormalGet(resultSet)
+          checkResultSetForNormalGet(resultSet);
         }
       } catch(e) {
         const err = e as BusinessError;
