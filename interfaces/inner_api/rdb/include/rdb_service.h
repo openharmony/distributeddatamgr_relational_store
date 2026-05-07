@@ -60,6 +60,8 @@ public:
 
     virtual int32_t StopCloudSync(const RdbSyncerParam &param) = 0;
 
+    virtual int32_t EnableSearchBinlog(const RdbSyncerParam &param, bool enabled, bool isFull) = 0;
+
     virtual int32_t Subscribe(
         const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) = 0;
 

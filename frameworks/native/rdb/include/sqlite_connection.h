@@ -68,6 +68,7 @@ public:
         const std::string &sql, SConn conn, const std::string &returningSql = "") override;
     int CheckReplicaForRestore() override;
     bool IsWriter() const override;
+    bool IsSlaveConnEnabled() const override;
     int SubscribeTableChanges(const Notifier &notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;

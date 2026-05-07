@@ -205,6 +205,7 @@ private:
         const AsyncDetail &async);
     int InnerBackup(const std::string &databasePath,
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>(), bool verifyDb = true);
+    int BackupForHaSlave(const std::string &databasePath, bool verifyDb);
     ModifyTime GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys);
     std::string GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
@@ -260,6 +261,7 @@ private:
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
     static void ReplayCallbackImpl(const RdbStoreConfig &config);
     std::pair<int32_t, std::vector<std::string>> ConvertToUuids(const std::vector<std::string> &devices);
+    void EnableSearchBinlogIfNeeded(bool enabled, bool isFull);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
