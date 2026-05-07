@@ -112,7 +112,8 @@ export default function RdbQueryByStep() : void {
         await rdbStore?.insert('test', valueBucket);
         await rdbStore?.insert('test', valueBucket1);
       } catch(error) {
-        console.error(TAG + 'beforeEach failed');
+        const err = error as BusinessError;
+        console.error(`beforeEach failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       }
     })
@@ -128,7 +129,8 @@ export default function RdbQueryByStep() : void {
         await rdbStore?.close();
         await relationalStore.deleteRdbStore(context, STORE_CONFIG);
       } catch(error) {
-        console.error(TAG + 'afterAll failed');
+        const err = error as BusinessError;
+        console.error(`afterAll failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       }
     })
