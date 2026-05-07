@@ -43,7 +43,7 @@ static __attribute__((constructor)) void RegisterModule()
         .nm_filename = nullptr,
         .nm_register_func = Init,
         .nm_modname = "data.cloudData",
-        .nm_priv = ((void *)0),
+        .nm_priv = nullptr,
         .reserved = { 0 } };
     napi_module_register(&module);
     LOG_INFO("Module register data.cloudData");
