@@ -39,7 +39,7 @@ static __attribute__((constructor)) void CloudExtensionRegisterModule(void)
         .nm_flags = 0,
         .nm_filename = nullptr,
         .nm_modname = "data.cloudExtension",
-        .nm_priv = ((void *)0),
+        .nm_priv = nullptr,
         .reserved = { 0 },
     };
     napi_module_register(&cloudExtensionModule);

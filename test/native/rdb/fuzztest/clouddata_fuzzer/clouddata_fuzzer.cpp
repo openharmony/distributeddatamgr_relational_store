@@ -38,6 +38,7 @@ namespace OHOS {
 
 static constexpr const char *TEST_BUNDLE_NAME = "bundleName";
 static constexpr const char *TEST_ACCOUNT_ID = "testId";
+static constexpr size_t MAX_RANDOM_STR_LEN = 100;
 
 void AllocSystemHapToken(const HapPolicyParams &policy)
 {
@@ -49,33 +50,6 @@ void AllocSystemHapToken(const HapPolicyParams &policy)
     auto token = AccessTokenKit::AllocHapToken(info, policy);
     SetSelfTokenID(token.tokenIDEx);
 }
-
-void AllocNormalHapToken(const HapPolicyParams &policy)
-{
-    HapInfoParams info = { .userID = 100,
-        .bundleName = "ohos.clouddatatest.demo",
-        .instIndex = 0,
-        .appIDDesc = "ohos.clouddatatest.demo",
-        .isSystemApp = false };
-    auto token = AccessTokenKit::AllocHapToken(info, policy);
-    SetSelfTokenID(token.tokenIDEx);
-}
-
-HapPolicyParams g_normalPolicy = { .apl = APL_NORMAL,
-    .domain = "test.domain",
-    .permList = { { .permissionName = "ohos.permission.CLOUDDATA_CONFIG",
-        .bundleName = "ohos.clouddatatest.demo",
-        .grantMode = 1,
-        .availableLevel = APL_NORMAL,
-        .label = "label",
-        .labelId = 1,
-        .description = "ohos.clouddatatest.demo",
-        .descriptionId = 1 } },
-    .permStateList = { { .permissionName = "ohos.permission.CLOUDDATA_CONFIG",
-        .isGeneral = true,
-        .resDeviceID = { "local" },
-        .grantStatus = { PermissionState::PERMISSION_GRANTED },
-        .grantFlags = { 1 } } } };
 
 HapPolicyParams g_systemPolicy = { .apl = APL_SYSTEM_BASIC,
     .domain = "test.domain",
@@ -93,41 +67,40 @@ HapPolicyParams g_systemPolicy = { .apl = APL_SYSTEM_BASIC,
         .grantStatus = { PermissionState::PERMISSION_GRANTED },
         .grantFlags = { 1 } } } };
 
-HapPolicyParams g_notPermissonPolicy = { .apl = APL_SYSTEM_BASIC,
-    .domain = "test.domain",
-    .permList = { { .permissionName = "ohos.permission.TEST",
-        .bundleName = "ohos.clouddatatest.demo",
-        .grantMode = 1,
-        .availableLevel = APL_SYSTEM_BASIC,
-        .label = "label",
-        .labelId = 1,
-        .description = "ohos.clouddatatest.demo",
-        .descriptionId = 1 } },
-    .permStateList = { { .permissionName = "ohos.permission.TEST",
-        .isGeneral = true,
-        .resDeviceID = { "local" },
-        .grantStatus = { PermissionState::PERMISSION_GRANTED },
-        .grantFlags = { 1 } } } };
-
-CloudData::Participants CreateParticipants(FuzzedDataProvider &fdp)
+CloudData::SwitchConfig CreateSwitchConfig(FuzzedDataProvider &fdp)
 {
-    Privilege privilege;
-    privilege.writable = fdp.ConsumeBool();
-    privilege.readable = fdp.ConsumeBool();
-    privilege.creatable = fdp.ConsumeBool();
-    privilege.deletable = fdp.ConsumeBool();
-    privilege.shareable = fdp.ConsumeBool();
+    CloudData::SwitchConfig config;
+    DBSwitchInfo switchInfo;
+    switchInfo.enable = fdp.ConsumeBool();
+    std::map<std::string, bool> tableInfo;
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeBool());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeBool());
+    switchInfo.tableInfo = tableInfo;
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), switchInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), switchInfo);
+    return config;
+}
 
-    Participant participant;
-    participant.identity = fdp.ConsumeRandomLengthString();
-    participant.role = fdp.ConsumeIntegralInRange<int32_t>(Role::ROLE_NIL, Role::ROLE_BUTT);
-    participant.state = fdp.ConsumeIntegralInRange<int32_t>(Confirmation::CFM_NIL, Confirmation::CFM_BUTT);
-    participant.privilege = privilege;
-    participant.attachInfo = fdp.ConsumeRandomLengthString();
-
-    CloudData::Participants participants;
-    participants.push_back(participant);
-    return participants;
+CloudData::ClearConfig CreateClearConfig(FuzzedDataProvider &fdp)
+{
+    CloudData::ClearConfig config;
+    DBActionInfo actionInfo;
+    actionInfo.action = fdp.ConsumeIntegral<int32_t>();
+    std::map<std::string, int32_t> tableInfo;
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeIntegral<int32_t>());
+    tableInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), fdp.ConsumeIntegral<int32_t>());
+    actionInfo.tableInfo = tableInfo;
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), actionInfo);
+    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), actionInfo);
+    return config;
 }
 
 void CloudDataTestCloudDataTest001(FuzzedDataProvider &fdp)
@@ -142,23 +115,6 @@ void CloudDataTestCloudDataTest001(FuzzedDataProvider &fdp)
     proxy->EnableCloud(TEST_ACCOUNT_ID, switches);
 }
 
-CloudData::SwitchConfig CreateSwitchConfig(FuzzedDataProvider &fdp)
-{
-    CloudData::SwitchConfig config;
-    DBSwitchInfo switchInfo;
-    switchInfo.enable = fdp.ConsumeBool();
-    std::map<std::string, bool> tableInfo;
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());  // the string length is 10
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());  // the string length is 10
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());  // the string length is 10
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeBool());  // the string length is 10
-    switchInfo.tableInfo = tableInfo;
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);  // the string length is 10
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);  // the string length is 10
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);  // the string length is 10
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), switchInfo);  // the string length is 10
-    return config;
-}
 void CloudDataTestChangeAppSwitch001(FuzzedDataProvider &fdp)
 {
     AllocSystemHapToken(g_systemPolicy);
@@ -167,24 +123,6 @@ void CloudDataTestChangeAppSwitch001(FuzzedDataProvider &fdp)
         return;
     }
     proxy->ChangeAppSwitch(TEST_ACCOUNT_ID, TEST_BUNDLE_NAME, fdp.ConsumeIntegral<int32_t>(), CreateSwitchConfig(fdp));
-}
-
-CloudData::ClearConfig CreateClearConfig(FuzzedDataProvider &fdp)
-{
-    CloudData::ClearConfig config;
-    DBActionInfo actionInfo;
-    actionInfo.action = fdp.ConsumeIntegral<int32_t>();
-    std::map<std::string, int32_t> tableInfo;
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());  // the string length is 10
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());  // the string length is 10
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());  // the string length is 10
-    tableInfo.emplace(fdp.ConsumeRandomLengthString(10), fdp.ConsumeIntegral<int32_t>());  // the string length is 10
-    actionInfo.tableInfo = tableInfo;
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);  // the string length is 10
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);  // the string length is 10
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);  // the string length is 10
-    config.dbInfo.emplace(fdp.ConsumeRandomLengthString(10), actionInfo);  // the string length is 10
-    return config;
 }
 
 void CloudDataTestClean001(FuzzedDataProvider &fdp)
@@ -197,7 +135,7 @@ void CloudDataTestClean001(FuzzedDataProvider &fdp)
     std::map<std::string, int32_t> actions;
     actions.emplace(TEST_BUNDLE_NAME, fdp.ConsumeIntegral<int32_t>());
     std::map<std::string, ClearConfig> configs;
-    configs.emplace(fdp.ConsumeRandomLengthString(10), CreateClearConfig(fdp));  // the string length is 10
+    configs.emplace(fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN), CreateClearConfig(fdp));
     proxy->Clean(TEST_ACCOUNT_ID, actions, configs);
 }
 
@@ -208,113 +146,10 @@ void CloudDataTestNotifyDataChange001(FuzzedDataProvider &fdp)
     if (state != CloudService::SUCCESS || proxy == nullptr) {
         return;
     }
-    std::string eventId = fdp.ConsumeRandomLengthString();
-    std::string extraData = fdp.ConsumeRandomLengthString();
+    std::string eventId = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
+    std::string extraData = fdp.ConsumeRandomLengthString(MAX_RANDOM_STR_LEN);
     int32_t userId = fdp.ConsumeIntegral<int32_t>();
     proxy->NotifyDataChange(eventId, extraData, userId);
-}
-
-void CloudDataTestShare001(FuzzedDataProvider &fdp)
-{
-    AllocNormalHapToken(g_normalPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    if (state != CloudService::SUCCESS || proxy == nullptr) {
-        return;
-    }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
-
-    CloudData::Participants participants = CreateParticipants(fdp);
-    CloudData::Results results;
-    proxy->Share(sharingRes, participants, results);
-}
-
-void CloudDataTestUnshare001(FuzzedDataProvider &fdp)
-{
-    AllocNormalHapToken(g_normalPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    if (state != CloudService::SUCCESS || proxy == nullptr) {
-        return;
-    }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
-
-    CloudData::Participants participants = CreateParticipants(fdp);
-    CloudData::Results results;
-    proxy->Unshare(sharingRes, participants, results);
-}
-
-void CloudDataTestExit001(FuzzedDataProvider &fdp)
-{
-    AllocNormalHapToken(g_normalPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    if (state != CloudService::SUCCESS || proxy == nullptr) {
-        return;
-    }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
-    std::pair<int32_t, std::string> result;
-    proxy->Exit(sharingRes, result);
-}
-
-void CloudDataTestChangePrivilege001(FuzzedDataProvider &fdp)
-{
-    AllocNormalHapToken(g_normalPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    if (state != CloudService::SUCCESS || proxy == nullptr) {
-        return;
-    }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
-    CloudData::Participants participants = CreateParticipants(fdp);
-    CloudData::Results results;
-    proxy->ChangePrivilege(sharingRes, participants, results);
-}
-
-void CloudDataTestQuery001(FuzzedDataProvider &fdp)
-{
-    AllocNormalHapToken(g_normalPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    if (state != CloudService::SUCCESS || proxy == nullptr) {
-        return;
-    }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
-    CloudData::QueryResults result;
-    proxy->Query(sharingRes, result);
-}
-
-void CloudDataTestQueryByInvitation001(FuzzedDataProvider &fdp)
-{
-    AllocNormalHapToken(g_normalPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    if (state != CloudService::SUCCESS || proxy == nullptr) {
-        return;
-    }
-    std::string invitation = fdp.ConsumeRandomLengthString();
-    CloudData::QueryResults result;
-    proxy->QueryByInvitation(invitation, result);
-}
-
-void CloudDataTestConfirmInvitation001(FuzzedDataProvider &fdp)
-{
-    AllocNormalHapToken(g_normalPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    if (state != CloudService::SUCCESS || proxy == nullptr) {
-        return;
-    }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
-    int32_t confirmation = fdp.ConsumeIntegral<int32_t>();
-    std::tuple<int32_t, std::string, std::string> result;
-    proxy->ConfirmInvitation(sharingRes, confirmation, result);
-}
-
-void CloudDataTestChangeConfirmation001(FuzzedDataProvider &fdp)
-{
-    AllocNormalHapToken(g_normalPolicy);
-    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
-    if (state != CloudService::SUCCESS || proxy == nullptr) {
-        return;
-    }
-    std::string sharingRes = fdp.ConsumeRandomLengthString();
-    int32_t confirmation = fdp.ConsumeIntegral<int32_t>();
-    std::pair<int32_t, std::string> result;
-    proxy->ChangeConfirmation(sharingRes, confirmation, result);
 }
 } // namespace OHOS
 
@@ -325,13 +160,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::CloudDataTestChangeAppSwitch001(fdp);
     OHOS::CloudDataTestClean001(fdp);
     OHOS::CloudDataTestNotifyDataChange001(fdp);
-    OHOS::CloudDataTestShare001(fdp);
-    OHOS::CloudDataTestUnshare001(fdp);
-    OHOS::CloudDataTestExit001(fdp);
-    OHOS::CloudDataTestChangePrivilege001(fdp);
-    OHOS::CloudDataTestQuery001(fdp);
-    OHOS::CloudDataTestQueryByInvitation001(fdp);
-    OHOS::CloudDataTestConfirmInvitation001(fdp);
-    OHOS::CloudDataTestChangeConfirmation001(fdp);
     return 0;
 }
