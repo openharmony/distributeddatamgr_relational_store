@@ -16,6 +16,7 @@
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect, Level, Size, TestType } from "@ohos/hypium";
 import AbilityDelegatorRegistry from '@ohos.app.ability.abilityDelegatorRegistry';
 import relationalStore from '@ohos.data.relationalStore';
+import { BusinessError } from '@ohos.base';
 
 const TAG = "[RELATIONAL_STORE_TEST]";
 let rdbStore : relationalStore.RdbStore | undefined = undefined;
@@ -81,7 +82,8 @@ function checkResultSetForNormalGet(resultSet : relationalStore.ResultSet){
       }
     }
   } catch(e) {
-    console.error(`checkResultSetForNormalGet failed message:${e.message} code:${e.code}`);
+    const err = e as BusinessError;
+    console.error(`checkResultSetForNormalGet failed message:${err.message} code:${err.code}`);
     expect().assertFail();
   }
 }
@@ -147,7 +149,8 @@ export default function RdbQueryByStep() : void {
           checkResultSetForNormalGet(resultSet);
         }
       } catch(e) {
-        console.error(`queryByStep_001_normal_columns failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_001_normal_columns failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -159,7 +162,8 @@ export default function RdbQueryByStep() : void {
         let data1 = resultSet?.getString(resultSet?.getColumnIndex("data1"));
         expect(data1).assertEqual('zhangsan');
       } catch(e) {
-        console.error(`queryByStep_001_normal_columns failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_001_normal_columns failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -183,7 +187,8 @@ export default function RdbQueryByStep() : void {
           checkResultSetForNormalGet(resultSet);
         }
       } catch(e) {
-        console.error(`queryByStep_002_normal_columns failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_002_normal_columns failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -195,7 +200,8 @@ export default function RdbQueryByStep() : void {
           checkResultSetForNormalGet(resultSet)
         }
       } catch(e) {
-        console.error(`queryByStep_002_normal_columns failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_002_normal_columns failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -217,7 +223,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep(predicates, [null]);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_003_Abnormal_columns failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_003_Abnormal_columns failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -227,7 +234,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep(predicates, [undefined]);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_003_Abnormal_columns failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_003_Abnormal_columns failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -252,7 +260,8 @@ export default function RdbQueryByStep() : void {
           checkResultSetForNormalGet(resultSet);
         }
       } catch(e) {
-        console.error(`queryByStep_004_Abnormal_columns failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_004_Abnormal_columns failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -266,7 +275,8 @@ export default function RdbQueryByStep() : void {
         let data1 = resultSet?.getString(0);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_004_Abnormal_columns failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_004_Abnormal_columns failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("14800012");
       } finally {
         resultSet?.close();
@@ -278,7 +288,8 @@ export default function RdbQueryByStep() : void {
         let data1 = resultSet?.getString(resultSet?.getColumnIndex("data1"));
         expect(data1).assertEqual('zhangsan');
       } catch(e) {
-        console.error(`queryByStep_004_Abnormal_columns failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_004_Abnormal_columns failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -299,7 +310,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep(undefined);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_005_abnormal_predicates failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_005_abnormal_predicates failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -309,7 +321,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep(null);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_005_abnormal_predicates failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_005_abnormal_predicates failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -331,7 +344,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep(predicates);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_006_abnormal_rdbStoreIsClose failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_006_abnormal_rdbStoreIsClose failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("14800014");
       } finally {
         resultSet?.close();
@@ -357,7 +371,8 @@ export default function RdbQueryByStep() : void {
           checkResultSetForNormalGet(resultSet);
         }
       } catch(e) {
-        console.error(`queryByStep failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_001_normal_bindArgs failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -370,7 +385,8 @@ export default function RdbQueryByStep() : void {
         let data1 = resultSet?.getString(resultSet?.getColumnIndex("data1"));
         expect("lisi").assertEqual(data1);
       } catch(e) {
-        console.error(`queryByStep_001_normal_bindArgs failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_001_normal_bindArgs failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -383,7 +399,8 @@ export default function RdbQueryByStep() : void {
         let data2 : number | undefined = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
         expect(18).assertEqual(data2);
       } catch(e) {
-        console.error(`queryByStep_001_normal_bindArgs failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_001_normal_bindArgs failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       } finally {
         resultSet?.close();
@@ -409,7 +426,8 @@ export default function RdbQueryByStep() : void {
       try {
         await rdbStore?.insert('test', valueBucket);
       } catch (e) {
-        console.error(`queryByStep_002_Abnormal_bindArgs insert failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_002_Abnormal_bindArgs insert failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       }
 
@@ -422,7 +440,8 @@ export default function RdbQueryByStep() : void {
         let data2 : number | undefined = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
         expect().assertFail();
       } catch (e) {
-        console.error(`queryByStep_002_Abnormal_bindArgs failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_002_Abnormal_bindArgs failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("14800012");
       } finally {
         resultSet?.close();
@@ -432,7 +451,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep(sql, [undefined]);
         expect().assertFail();
       } catch (e) {
-        console.error(`queryByStep_002_Abnormal_bindArgs failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_002_Abnormal_bindArgs failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -446,7 +466,8 @@ export default function RdbQueryByStep() : void {
         let data2 : number | undefined = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
         expect().assertFail();
       } catch (e) {
-        console.error(`queryByStep_002_Abnormal_bindArgs failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_002_Abnormal_bindArgs failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("14800012");
       } finally {
         resultSet?.close();
@@ -457,7 +478,8 @@ export default function RdbQueryByStep() : void {
         predicates.equalTo('data1', 'wangwu');
         await rdbStore?.delete(predicates);
       } catch (e) {
-        console.error(`queryByStep_002_Abnormal_bindArgs delete failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_002_Abnormal_bindArgs delete failed message:${err.message} code:${err.code}`);
         expect().assertFail();
       }
 
@@ -478,7 +500,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep(undefined);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_003_Abnormal_sql failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_003_Abnormal_sql failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -488,7 +511,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep(null);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_003_Abnormal_sql failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_003_Abnormal_sql failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -498,7 +522,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep("");
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_003_Abnormal_sql failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_003_Abnormal_sql failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("401");
       } finally {
         resultSet?.close();
@@ -520,7 +545,8 @@ export default function RdbQueryByStep() : void {
         resultSet = await rdbStore?.queryByStep(sql);
         expect().assertFail();
       } catch(e) {
-        console.error(`queryByStep_004_abnormal_rdbStoreIsClose failed message:${e.message} code:${e.code}`);
+        const err = e as BusinessError;
+        console.error(`queryByStep_004_abnormal_rdbStoreIsClose failed message:${err.message} code:${err.code}`);
         expect(e.code).assertEqual("14800014");
         rdbStore = await relationalStore.getRdbStore(context, STORE_CONFIG);
       } finally {
