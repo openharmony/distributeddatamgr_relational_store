@@ -86,7 +86,7 @@ function checkResultSetForNormalGet(resultSet : relationalStore.ResultSet){
   }
 }
 
-export default function RdbQueryByStep() {
+export default function RdbQueryByStep() : void {
   describe('rdbQueryByStep', () => {
     beforeAll(async () => {
       console.info(TAG + 'beforeAll')
@@ -180,7 +180,7 @@ export default function RdbQueryByStep() {
       try {
         resultSet = await rdbStore?.queryByStep(predicates, null);
         if (resultSet) {
-          checkResultSetForNormalGet(resultSet)
+          checkResultSetForNormalGet(resultSet);
         }
       } catch(e) {
         console.error(`queryByStep_002_normal_columns failed message:${e.message} code:${e.code}`);
@@ -380,7 +380,7 @@ export default function RdbQueryByStep() {
       try {
         resultSet = await rdbStore?.queryByStep(sql2, [18]);
         resultSet?.goToNextRow();
-        let data2 : number = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
+        let data2 : number | undefined = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
         expect(18).assertEqual(data2);
       } catch(e) {
         console.error(`queryByStep_001_normal_bindArgs failed message:${e.message} code:${e.code}`);
@@ -419,7 +419,7 @@ export default function RdbQueryByStep() {
         let res = resultSet?.goToNextRow();
         expect(res).assertFalse();
         // goToNextRow does not throw error codes, SQL statement error, so getString throws out of bounds line
-        let data2 : number = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
+        let data2 : number | undefined = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
         expect().assertFail();
       } catch (e) {
         console.error(`queryByStep_002_Abnormal_bindArgs failed message:${e.message} code:${e.code}`);
@@ -443,7 +443,7 @@ export default function RdbQueryByStep() {
         let res = resultSet?.goToNextRow();
         expect(res).assertFalse();
         // goToNextRow does not throw error codes, SQL statement error, so getString throws out of bounds line
-        let data2 : number = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
+        let data2 : number | undefined = resultSet?.getLong(resultSet?.getColumnIndex("data2"));
         expect().assertFail();
       } catch (e) {
         console.error(`queryByStep_002_Abnormal_bindArgs failed message:${e.message} code:${e.code}`);
