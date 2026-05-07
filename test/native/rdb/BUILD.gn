@@ -95,6 +95,7 @@ ohos_unittest("NativeRdbMultiProcessTest") {
     "kv_store:datamgr_common",
     "kv_store:distributeddb",
     "kv_store:distributeddb_client",
+    "openssl:libcrypto_shared",
     "sqlite:sqlite",
   ]
 
