@@ -465,7 +465,8 @@ napi_value JSUtils::Convert2JSValue(napi_env env, const std::vector<float> &valu
     napi_value jsValue = nullptr;
     float *native = nullptr;
     napi_value buffer = nullptr;
-    napi_status status = napi_create_arraybuffer(env, value.size() * sizeof(float), (void **)&native, &buffer);
+    napi_status status =
+        napi_create_arraybuffer(env, value.size() * sizeof(float), reinterpret_cast<void **>(&native), &buffer);
     if (status != napi_ok) {
         return nullptr;
     }
@@ -701,7 +702,7 @@ napi_value JSUtils::ToJsTypedArray(napi_env env, napi_value sendableValue)
     napi_value jsTypedArray = nullptr;
     void *native = nullptr;
     napi_value buffer = nullptr;
-    status = napi_create_arraybuffer(env, length, (void **)&native, &buffer);
+    status = napi_create_arraybuffer(env, length, &native, &buffer);
     ASSERT(status == napi_ok, "napi_create_arraybuffer failed", nullptr);
     if (length > 0) {
         ASSERT(native != nullptr && tmp != nullptr, "native is nullptr.", nullptr);
