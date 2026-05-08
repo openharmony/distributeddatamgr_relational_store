@@ -138,6 +138,7 @@ ohos_unittest("SqliteStatementTest") {
     "kv_store:datamgr_common",
     "kv_store:distributeddata_inner",
     "kv_store:distributeddb_client",
+    "openssl:libcrypto_shared",
     "samgr:samgr_proxy",
     "sqlite:sqlite",
     "sqlite:sqliteicu",

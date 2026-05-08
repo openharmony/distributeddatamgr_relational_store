@@ -73,7 +73,8 @@
                 "json",
                 "runtime_core",
                 "ets_frontend",
-                "api_metrics"
+                "api_metrics",
+                "openssl"
             ],
             "third_party": [ "sqlite" ]
         },
