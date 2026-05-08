@@ -22,7 +22,7 @@ from ohos.data.relationalStore use ResultSet;
 
 @!sts_inject("""
 static { loadLibraryWithPermissionCheck("cloud_data_taihe.z", "@ohos.data.cloudData"); }
-export const DATA_CHANGE_EVENT_ID = 'cloud_data_change';
+export const DATA_CHANGE_EVENT_ID: string = 'cloud_data_change';
 """)
 
 enum SyncStatus: i32 {

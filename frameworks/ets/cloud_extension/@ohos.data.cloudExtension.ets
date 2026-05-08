@@ -272,7 +272,7 @@ namespace cloudExtension {
     Upload = 1
   }
 
-  const toFieldType = (value: int): cloudExtension.FieldType => {
+  const toFieldType: (value: int) => cloudExtension.FieldType = (value: int): cloudExtension.FieldType => {
     switch (value) {
       case 0:
         return cloudExtension.FieldType.NULL;
