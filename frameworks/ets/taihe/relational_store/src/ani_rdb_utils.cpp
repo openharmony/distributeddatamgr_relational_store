@@ -362,13 +362,13 @@ OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
         value.iterNum = param.iterationCount.value();
     }
     if (param.encryptionAlgo.has_value()) {
-        value.encryptAlgo = (int32_t)param.encryptionAlgo.value();
+        value.encryptAlgo = static_cast<int32_t>(param.encryptionAlgo.value());
     }
     if (param.hmacAlgo.has_value()) {
-        value.hmacAlgo = (int32_t)param.hmacAlgo.value();
+        value.hmacAlgo = static_cast<int32_t>(param.hmacAlgo.value());
     }
     if (param.kdfAlgo.has_value()) {
-        value.kdfAlgo = (int32_t)param.kdfAlgo.value();
+        value.kdfAlgo = static_cast<int32_t>(param.kdfAlgo.value());
     }
     if (param.cryptoPageSize.has_value()) {
         value.cryptoPageSize = param.cryptoPageSize.value();
@@ -402,12 +402,12 @@ OHOS::AppDataMgrJsKit::JSUtils::RdbConfig AniGetRdbConfig(const ohos::data::rela
     if (storeConfig.encrypt.has_value()) {
         rdbConfig.isEncrypt = storeConfig.encrypt.value();
     }
-    int32_t securityLevel = (int32_t)storeConfig.securityLevel;
-    if (securityLevel == (int32_t)OHOS::NativeRdb::SecurityLevel::S1 ||
-        securityLevel == (int32_t)OHOS::NativeRdb::SecurityLevel::S2 ||
-        securityLevel == (int32_t)OHOS::NativeRdb::SecurityLevel::S3 ||
-        securityLevel == (int32_t)OHOS::NativeRdb::SecurityLevel::S4) {
-        rdbConfig.securityLevel = (OHOS::NativeRdb::SecurityLevel)securityLevel;
+    int32_t securityLevel = static_cast<int32_t>(storeConfig.securityLevel);
+    if (securityLevel == static_cast<int32_t>(OHOS::NativeRdb::SecurityLevel::S1) ||
+        securityLevel == static_cast<int32_t>(OHOS::NativeRdb::SecurityLevel::S2) ||
+        securityLevel == static_cast<int32_t>(OHOS::NativeRdb::SecurityLevel::S3) ||
+        securityLevel == static_cast<int32_t>(OHOS::NativeRdb::SecurityLevel::S4)) {
+        rdbConfig.securityLevel = static_cast<OHOS::NativeRdb::SecurityLevel>(securityLevel);
     }
     if (storeConfig.dataGroupId.has_value()) {
         rdbConfig.dataGroupId = std::string(storeConfig.dataGroupId.value());
