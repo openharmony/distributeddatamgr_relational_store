@@ -1958,3 +1958,23 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Report_001, TestSize.Level3)
     ASSERT_TRUE(isBinlogExist);
     WaitForBinlogReplayFinish();
 }
+
+/**
+ * @tc.name: RdbStore_Binlog_033
+ * @tc.desc: test the backup in MANUAL_TRIGGER mode
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_033, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
+    if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
+        RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
+    }
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    int errCode = E_OK;
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    errCode = store->Backup(RdbDoubleWriteBinlogTest::slaveDatabaseName, {}, false);
+    EXPECT_EQ(errCode, E_OK);
+}

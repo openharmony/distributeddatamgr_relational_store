@@ -1094,5 +1094,20 @@ bool SqliteUtils::IsUseAsyncRestore(const RdbStoreConfig &config, const std::str
     }
     return true;
 }
+
+bool SqliteUtils::IsSupportBinlog(const RdbStoreConfig &config)
+{
+#if !defined(CROSS_PLATFORM)
+    if (sqlite3_is_support_binlog == nullptr) {
+        return false;
+    }
+    if (sqlite3_is_support_binlog(config.GetName().c_str()) != SQLITE_OK) {
+        return false;
+    }
+    return !config.IsEncrypt() && !config.IsMemoryRdb();
+#else
+    return false;
+#endif
+}
 } // namespace NativeRdb
 } // namespace OHOS

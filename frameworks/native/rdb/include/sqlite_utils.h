@@ -119,6 +119,7 @@ public:
         const std::string &backupPath);
     static int ConvertRdbStatusNative(int32_t status);
     static int ConvertDBStatusNative(int32_t status);
+    static bool IsSupportBinlog(const RdbStoreConfig &config);
 
 private:
     struct SqlType {

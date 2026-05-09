@@ -230,6 +230,11 @@ bool RdConnection::IsWriter() const
     return isWriter_;
 }
 
+bool RdConnection::IsSlaveConnEnabled() const
+{
+    return false;
+}
+
 int32_t RdConnection::ResetKey(const RdbStoreConfig &config)
 {
     if (!IsWriter()) {

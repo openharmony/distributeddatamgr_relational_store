@@ -636,6 +636,11 @@ bool SqliteConnection::IsWriter() const
     return isWriter_;
 }
 
+bool SqliteConnection::IsSlaveConnEnabled() const
+{
+    return slaveConnection_ != nullptr && slaveConnection_->dbHandle_ != nullptr;
+}
+
 int SqliteConnection::SubscribeTableChanges(const Connection::Notifier &notifier)
 {
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
@@ -2163,17 +2168,7 @@ void SqliteConnection::SetIsSupportBinlog(bool isSupport)
 
 bool SqliteConnection::IsSupportBinlog(const RdbStoreConfig &config)
 {
-#if !defined(CROSS_PLATFORM)
-    if (sqlite3_is_support_binlog == nullptr) {
-        return false;
-    }
-    if (sqlite3_is_support_binlog(config.GetName().c_str()) != SQLITE_OK) {
-        return false;
-    }
-    return !config.IsEncrypt() && !config.IsMemoryRdb();
-#else
-    return false;
-#endif
+    return SqliteUtils::IsSupportBinlog(config);
 }
 
 std::string SqliteConnection::GetBinlogFolderPath(const std::string &dbPath)
