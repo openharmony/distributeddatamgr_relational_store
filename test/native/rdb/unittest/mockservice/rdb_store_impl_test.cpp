@@ -2673,3 +2673,32 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_013, TestSize.Level2)
 
     RdbHelper::DeleteRdbStore(config);
 }
+
+/**
+ * @tc.name: RdbStore_SyncEx_014
+ * @tc.desc: test SyncEx when RdbService returns RDB_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_014, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+
+    EXPECT_CALL(*mockRdbService, Sync(_, _, _, _))
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            async({});
+            return RdbStatus::RDB_INVALID_ARGS;
+        });
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetBundleName("com.example.test");
+    config.SetName("test_db");
+    RdbStoreImplConditionTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(E_INVALID_ARGS, store->SyncEx({OHOS::DistributedRdb::PUSH}, AbsRdbPredicates("test"), nullptr));
+
+    RdbHelper::DeleteRdbStore(config);
+}
