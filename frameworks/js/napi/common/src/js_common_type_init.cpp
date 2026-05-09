@@ -67,7 +67,7 @@ static napi_module storageModule = {
     .nm_filename = nullptr,
     .nm_register_func = CommonTypeExport,
     .nm_modname = "data.commonType",
-    .nm_priv = ((void *)0),
+    .nm_priv = nullptr,
     .reserved = { 0 },
 };
 

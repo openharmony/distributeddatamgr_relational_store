@@ -20,6 +20,7 @@ group("fuzztest") {
   deps += [
     "rdbhelper_fuzzer:fuzztest",
     "rdbimpl_fuzzer:fuzztest",
+    "rdbrekeyvector_fuzzer:fuzztest",
     "rdbrdutils_fuzzer:fuzztest",
     "rdbstore_fuzzer:fuzztest",
     "rdstatement_fuzzer:fuzztest",

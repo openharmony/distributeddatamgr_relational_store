@@ -1325,15 +1325,11 @@ int32_t SqliteConnection::SetTokenizer(Tokenizer tokenizer)
 
 int SqliteConnection::CleanDirtyData(const std::string &table, uint64_t cursor)
 {
-    if (table.empty()) {
-        LOG_ERROR("table is empty");
-        return E_INVALID_ARGS;
-    }
     uint64_t tmpCursor = cursor == UINT64_MAX ? 0 : cursor;
     auto status = DropLogicDeletedData(dbHandle_, table, tmpCursor);
     LOG_INFO("status:%{public}d, table:%{public}s, cursor:%{public}" PRIu64 "", status,
         SqliteUtils::Anonymous(table).c_str(), cursor);
-    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+    return SqliteUtils::ConvertDBStatusNative(status);
 }
 
 int SqliteConnection::TryCheckPoint(bool timeout)
@@ -1531,6 +1527,7 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     param.type_ = config.GetDistributedType();
     param.isEncrypt_ = config.IsEncrypt();
     param.isAutoClean_ = config.GetAutoClean();
+    param.isAutoCleanDevice_ = config.GetAutoCleanDevice();
     param.isSearchable_ = config.IsSearchable();
     param.haMode_ = config.GetHaMode();
     param.password_ = {};

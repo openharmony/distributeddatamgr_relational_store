@@ -15,6 +15,7 @@
 
 #include "napi_rdb_context.h"
 #include "napi_rdb_error.h"
+#include "napi_rdb_store.h"
 
 using namespace OHOS::RelationalStoreJsKit;
 namespace OHOS {
@@ -61,6 +62,15 @@ int ParseCryptoParam(const napi_env env, const napi_value arg, std::shared_ptr<R
 {
     auto status = JSUtils::Convert2Value(env, arg, context->cryptoParam);
     CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("cryptoParam", "valid cryptoParam."));
+    return OK;
+}
+
+int ParseEncryptionkey(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
+{
+    auto status = JSUtils::Convert2Value(env, arg, context->encryptionKey);
+    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("encryptionKey", "valid encryptionKey."));
+
+    context->cryptoParam.encryptKey_ = context->encryptionKey;
     return OK;
 }
 
@@ -156,8 +166,8 @@ int ParseDistributedConfigArg(
 int ParseCloudSyncModeArg(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     auto status = JSUtils::Convert2ValueExt(env, arg, context->syncMode);
-    bool checked = (status == napi_ok && context->syncMode >= DistributedRdb::TIME_FIRST &&
-                    context->syncMode <= DistributedRdb::CLOUD_FIRST);
+    bool checked = (status == napi_ok && context->syncMode >= DistributedRdb::SyncMode::TIME_FIRST &&
+                    context->syncMode <= DistributedRdb::SyncMode::CLOUD_FIRST);
     CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a SyncMode of cloud."));
     return OK;
 }
@@ -180,6 +190,61 @@ int ParseCloudSyncCallback(const napi_env env, const napi_value arg, std::shared
     NAPI_CALL_BASE(env, napi_create_reference(env, arg, 1, &context->asyncHolder), ERR);
     return OK;
 }
+
+int ParseCloudSyncConfig(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
+{
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, arg, &type);
+    CHECK_RETURN_SET(type == napi_object, std::make_shared<ParamError>("config", "a CloudSyncConfig object."));
+    
+    // 解析 mode（必填）
+    napi_value modeValue = nullptr;
+    napi_status status = napi_get_named_property(env, arg, "mode", &modeValue);
+    CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("mode", "a SyncMode."));
+    
+    int32_t mode = 0;
+    int32_t ret = JSUtils::Convert2ValueExt(env, modeValue, mode);
+    CHECK_RETURN_SET(ret == JSUtils::OK, std::make_shared<ParamError>("mode", "a SyncMode."));
+    bool checked = (mode >= DistributedRdb::SyncMode::TIME_FIRST && mode <= DistributedRdb::SyncMode::CLOUD_FIRST);
+    CHECK_RETURN_SET(checked, std::make_shared<ParamError>("mode", "a SyncMode of cloud."));
+    context->cloudSyncConfig.mode = mode;
+    context->syncMode = mode;
+    // 解析 downloadOnly（系统接口，需要判断是否为系统应用）
+    napi_value downloadOnlyValue = nullptr;
+    status = napi_get_named_property(env, arg, "downloadOnly", &downloadOnlyValue);
+    if (status == napi_ok && !JSUtils::IsNull(env, downloadOnlyValue)) {
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        if (obj != nullptr && obj->IsSystemAppCalled()) {
+            ret = JSUtils::Convert2Value(env, downloadOnlyValue, context->cloudSyncConfig.isDownloadOnly);
+            if (ret != JSUtils::OK) {
+                return ERR;
+            }
+        }
+        // 非系统应用：不解析，使用默认值 false，不抛异常
+    }
+    
+    // 解析 enablePredicate（可选）
+    napi_value enablePredicateValue = nullptr;
+    status = napi_get_named_property(env, arg, "enablePredicate", &enablePredicateValue);
+    if (status == napi_ok && !JSUtils::IsNull(env, enablePredicateValue)) {
+        ret = JSUtils::Convert2Value(env, enablePredicateValue, context->cloudSyncConfig.isEnablePredicate);
+        CHECK_RETURN_SET(ret == JSUtils::OK, std::make_shared<ParamError>("enablePredicate", "a boolean."));
+    }
+    
+    // 解析 predicates（可选）
+    napi_value predicatesValue = nullptr;
+    status = napi_get_named_property(env, arg, "predicate", &predicatesValue);
+    if (status == napi_ok && !JSUtils::IsNull(env, predicatesValue)) {
+        auto err = ParseRdbPredicatesProxy(env, predicatesValue, context->rdbPredicates);
+        if (err == nullptr && context->rdbPredicates != nullptr) {
+            context->cloudSyncConfig.predicates = context->rdbPredicates;
+            context->cloudSyncConfig.isEnablePredicate = true;
+        }
+    }
+    
+    return OK;
+}
+
 
 int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {

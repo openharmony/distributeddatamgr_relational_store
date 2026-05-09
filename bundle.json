@@ -71,7 +71,10 @@
                 "sqlite",
                 "file_api",
                 "json",
-                "runtime_core"
+                "runtime_core",
+                "ets_frontend",
+                "api_metrics",
+                "openssl"
             ],
             "third_party": [ "sqlite" ]
         },

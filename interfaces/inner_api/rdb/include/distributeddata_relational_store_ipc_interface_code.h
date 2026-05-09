@@ -71,6 +71,7 @@ enum class CloudKvStoreInterfaceCode {
 enum class ICloudNotifierInterfaceCode {
     CLOUD_NOTIFIER_CMD_SYNC_COMPLETE = 0,
     CLOUD_NOTIFIER_CMD_SYNC_INFO_NOTIFY = 1,
+    CLOUD_NOTIFIER_CMD_SYNC_TRIGGER,
     CLOUD_NOTIFIER_CMD_MAX
 };
 
@@ -103,6 +104,7 @@ enum class RdbServiceInterfaceCode {
     RDB_SERVICE_CMD_GET_ISSILENT,
     RDB_SERVICE_CMD_REMOVE_REMOTE_DATA,
     RDB_SERVICE_CMD_OBTAIN_UUID,
+    RDB_SERVICE_CMD_STOP_CLOUD_SYNC,
     RDB_SERVICE_CMD_MAX
 };
 } // namespace RelationalStore

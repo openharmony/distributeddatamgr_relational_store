@@ -344,6 +344,7 @@ public:
         int32_t kdfAlgo = KdfAlgo::KDF_SHA256;
         uint32_t cryptoPageSize = RdbStoreConfig::DB_DEFAULT_CRYPTO_PAGE_SIZE;
         mutable std::vector<uint8_t> encryptKey_{};
+
         API_EXPORT CryptoParam();
         API_EXPORT ~CryptoParam();
         API_EXPORT bool IsValid() const;
@@ -690,6 +691,16 @@ public:
     bool GetAutoClean() const;
 
     /**
+     * @brief Sets the autoCleanDeviceDirtyData for the object.
+     */
+    void SetAutoCleanDevice(bool isAutoCleanDevice);
+
+    /**
+     * @brief Obtains the autoCleanDeviceDirtyData in this {@code StoreConfig} object.
+     */
+    bool GetAutoCleanDevice() const;
+
+    /**
      * @brief Obtains the cryptoParam field in this {@code StoreConfig} object.
      */
     bool IsCustomEncryptParam() const;
@@ -725,6 +736,16 @@ public:
     API_EXPORT std::string GetVisitorDir() const;
 
     /**
+     * @brief Sets the db path for sa.
+     */
+    API_EXPORT void SetServerPath(const std::string &serverPath);
+    
+    /**
+     * @brief Sets the db path for sa.
+     */
+    API_EXPORT std::string GetServerPath() const;
+
+    /**
      * @brief Overload the line number operator.
      */
     bool operator==(const RdbStoreConfig &config) const
@@ -743,7 +764,8 @@ public:
         if (storageMode_ != config.storageMode_ || journalMode_ != config.journalMode_ ||
             syncMode_ != config.syncMode_ || databaseFileType != config.databaseFileType ||
             journalSize_ != config.journalSize_ || pageSize_ != config.pageSize_ || dbType_ != config.dbType_ ||
-            customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_) {
+            customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_ ||
+            serverPath_ != config.serverPath_) {
             return false;
         }
 
@@ -896,6 +918,7 @@ private:
     std::optional<bool> isSilentAccessible_;
     bool autoCheck_;
     bool isAutoClean_ = true;
+    bool isAutoCleanDevice_ = true;
     bool isVector_ = false;
     bool autoRekey_ = false;
     mutable bool customEncryptParam_ = false;
@@ -943,6 +966,8 @@ private:
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
     ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;
+
+    std::string serverPath_ = "";
 };
 } // namespace OHOS::NativeRdb
 #endif

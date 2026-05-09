@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,20 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ANI_RDB_STORE_HELPER_H
-#define ANI_RDB_STORE_HELPER_H
 
-#include <ani.h>
-#include <ani_rdb_store.h>
+#include "system_ability_manager_mock.h"
+#include "iservice_registry.h"
 
 namespace OHOS {
-namespace RelationalStoreAniKit {
-
-using namespace OHOS::NativeRdb;
-
-ani_status RdbStoreHelperInit(ani_env *env);
-
-} // namespace RelationalStoreAniKit
+sptr<ISystemAbilityManager> SystemAbilityManagerClient::GetSystemAbilityManager()
+{
+    return ISystemAbilityBase::sab->GetSystemAbilityManager();
+}
 } // namespace OHOS
-#endif // ANI_RDB_STORE_HELPER_H
-

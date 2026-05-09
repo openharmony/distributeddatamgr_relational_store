@@ -316,7 +316,10 @@ int32_t CloudServiceProxy::InitNotifier()
     },
     [this](const BatchQueryLastResults &data) {
         OnSyncInfoNotify(data);
-    });
+    },
+    [this](int32_t triggerMode) {
+            OnCloudSyncTrigger(triggerMode);
+        });
     if (notifier_ == nullptr) {
         LOG_ERROR("create notifier failed");
         return ERROR;
@@ -339,6 +342,78 @@ void CloudServiceProxy::OnSyncComplete(uint32_t seqNum, Details &&result)
         }
         return !finished;
     });
+}
+
+void CloudServiceProxy::OnCloudSyncTrigger(int32_t triggerMode)
+{
+    if (triggerMode > TriggerScene::TRIGGER_USER_CHANGE) {
+        LOG_ERROR("No need to notify, triggerMode:%{public}d", triggerMode);
+    }
+    CloudSyncScene scene = static_cast<CloudSyncScene>(triggerMode);
+    
+    std::vector<std::shared_ptr<ISyncInfoObserver>> notifyObservers;
+    for (const auto &obs : cloudSyncTriggerObservers_) {
+        if (obs != nullptr) {
+            notifyObservers.push_back(obs);
+        }
+    }
+    for (const auto &obs : notifyObservers) {
+        obs->OnSyncInfoChanged(scene);
+    }
+}
+
+int32_t CloudServiceProxy::DoSubscribeCloudSyncTrigger()
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_SUBSCRIBE_CLOUD_SYNC_TRIGGER, reply);
+    if (status != SUCCESS) {
+        LOG_ERROR("SubscribeCloudSyncTrigger failed, status:0x%{public}x", status);
+    }
+    return status;
+}
+
+int32_t CloudServiceProxy::DoUnSubscribeCloudSyncTrigger()
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_UNSUBSCRIBE_CLOUD_SYNC_TRIGGER, reply);
+    if (status != SUCCESS) {
+        LOG_ERROR("UnSubscribeCloudSyncTrigger failed, status:0x%{public}x", status);
+    }
+    return status;
+}
+
+int32_t CloudServiceProxy::SubscribeCloudSyncTrigger(std::shared_ptr<ISyncInfoObserver> observer)
+{
+    if (observer == nullptr) {
+        LOG_ERROR("invalid args, observer is null");
+        return ERROR;
+    }
+
+    if (DoSubscribeCloudSyncTrigger() != SUCCESS) {
+        return ERROR;
+    }
+    cloudSyncTriggerObservers_.push_back(observer);
+    return SUCCESS;
+}
+
+int32_t CloudServiceProxy::UnSubscribeCloudSyncTrigger(std::shared_ptr<ISyncInfoObserver> observer)
+{
+    if (observer == nullptr) {
+        LOG_ERROR("invalid args, observer is null");
+        return ERROR;
+    }
+    if (DoUnSubscribeCloudSyncTrigger() != SUCCESS) {
+        return ERROR;
+    }
+
+    for (auto obs = cloudSyncTriggerObservers_.begin(); obs != cloudSyncTriggerObservers_.end();) {
+        if (obs->get() == observer.get()) {
+            obs = cloudSyncTriggerObservers_.erase(obs);
+        } else {
+            ++obs;
+        }
+    }
+    return SUCCESS;
 }
 
 void CloudServiceProxy::OnSyncInfoNotify(const BatchQueryLastResults &data)
@@ -410,6 +485,16 @@ int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::s
     return status;
 }
 
+int32_t CloudServiceProxy::StopCloudSyncTask(const std::vector<BundleInfo> &bundleInfos)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(TRANS_STOP_CLOUD_SYNC, reply, bundleInfos);
+    if (status != SUCCESS) {
+        LOG_ERROR("Status:0x%{public}x size:%{public}zu", status, bundleInfos.size());
+    }
+    return status;
+}
+
 int32_t CloudServiceProxy::Subscribe(CloudSubscribeType type, const std::vector<BundleInfo> &bundleInfos,
     std::shared_ptr<ISyncInfoObserver> observer)
 {
@@ -438,8 +523,9 @@ int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vecto
     if (type >= CloudSubscribeType::SUBSCRIBE_TYPE_MAX) {
         return INVALID_ARGUMENT_V20;
     }
+    std::vector<BundleInfo> unsubInfos;
     if (observer != nullptr) {
-        auto processStore = [&observer](auto &storeMap, const auto &info) {
+        auto processStore = [&observer, &unsubInfos](auto &storeMap, const auto &info) {
             auto listIter = storeMap.find(info.storeId);
             if (listIter == storeMap.end()) {
                 return;
@@ -451,6 +537,9 @@ int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vecto
             if (observerList.empty()) {
                 storeMap.erase(listIter);
             }
+            if (storeMap.empty()) {
+                unsubInfos.push_back(info);
+            }
         };
         for (const auto &info : bundleInfos) {
             subObservers_.ComputeIfPresent(info.bundleName,
@@ -460,8 +549,11 @@ int32_t CloudServiceProxy::Unsubscribe(CloudSubscribeType type, const std::vecto
                 });
         }
     }
+    if (unsubInfos.empty()) {
+        return SUCCESS;
+    }
     MessageParcel reply;
-    int32_t status = IPC_SEND(TRANS_UNSUBSCRIBE, reply, type, bundleInfos);
+    int32_t status = IPC_SEND(TRANS_UNSUBSCRIBE, reply, type, unsubInfos);
     if (status != SUCCESS) {
         LOG_ERROR("Unsubscribe failed: status=0x%{public}x", status);
     }

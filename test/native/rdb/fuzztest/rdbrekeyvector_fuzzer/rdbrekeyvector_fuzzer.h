@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,24 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef ANI_RESULT_SET_H
-#define ANI_RESULT_SET_H
+#ifndef RDBREKEYVECTOR_FUZZER_H
+#define RDBREKEYVECTOR_FUZZER_H
 
-#include "ani_utils.h"
-#include "rdb_helper.h"
+#define FUZZ_PROJECT_NAME "rdbrekeyvector_fuzzer"
 
-namespace OHOS {
-namespace RelationalStoreAniKit {
-
-class ResultSetProxy : public NativeObject {
-public:
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> resultset;
-};
-
-ani_status ResultSetInit(ani_env *env);
-
-} // namespace RelationalStoreAniKit
-} // namespace OHOS
-
-#endif //ANI_RESULT_SET_H
-
+#endif // RDBREKEYVECTOR_FUZZER_H

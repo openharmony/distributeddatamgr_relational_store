@@ -31,6 +31,10 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
+    if (!support_jsapi) {
+      include_dirs += [ "${relational_store_mock_path}/frameworks/native/rdb/mock_security" ]
+    }
+
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
@@ -110,13 +114,18 @@ if (is_ohos && !build_ohos_sdk) {
       "kv_store:database_utils",
       "kv_store:datamgr_common",
       "kv_store:distributeddb_client",
+      "openssl:libcrypto_shared",
       "samgr:samgr_proxy",
       "sqlite:sqlite",
       "sqlite:sqliteicu",
     ]
 
+    defines = []
     if (arkdata_db_core_is_exists) {
-      defines = [ "ARKDATA_DB_CORE_IS_EXISTS" ]
+      defines += [ "ARKDATA_DB_CORE_IS_EXISTS" ]
+    }
+    if (!support_jsapi) {
+      external_deps -= [ "file_api:securitylabel" ]
     }
 
     public_configs = [ ":native_rdb_public_config" ]
@@ -177,10 +186,14 @@ if (is_ohos && !build_ohos_sdk) {
       "kv_store:database_utils",
       "kv_store:datamgr_common",
       "kv_store:distributeddb_client",
+      "openssl:libcrypto_shared",
       "samgr:samgr_proxy",
       "sqlite:sqlite",
       "sqlite:sqliteicu",
     ]
+    if (!support_jsapi) {
+      external_deps -= [ "file_api:securitylabel" ]
+    }
 
     public_configs = [ ":native_rdb_public_config" ]
 

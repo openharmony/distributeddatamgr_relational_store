@@ -38,7 +38,7 @@ using namespace OHOS::RdbNdk;
 
 namespace OHOS {
 
-OH_VBucket *CreateRandomVBucket(FuzzedDataProvider &provider)
+OH_VBucket *CreateVBucket(FuzzedDataProvider &provider)
 {
     OH_VBucket *vBucket = OH_Rdb_CreateValuesBucket();
     if (vBucket == nullptr) {
@@ -54,13 +54,13 @@ OH_VBucket *CreateRandomVBucket(FuzzedDataProvider &provider)
     return vBucket;
 }
 
-OH_Data_VBuckets *CreateRandomVBuckets(FuzzedDataProvider &provider)
+OH_Data_VBuckets *CreateVBuckets(FuzzedDataProvider &provider)
 {
     OH_Data_VBuckets *vBuckets = OH_VBuckets_Create();
     if (vBuckets == nullptr) {
         return nullptr;
     }
-    OH_VBucket *vBucket = CreateRandomVBucket(provider);
+    OH_VBucket *vBucket = CreateVBucket(provider);
     if (vBucket != nullptr) {
         OH_VBuckets_PutRow(vBuckets, vBucket);
     }
@@ -74,7 +74,7 @@ void OH_VBuckets_PutRowFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    OH_VBucket *vBucket = CreateRandomVBucket(provider);
+    OH_VBucket *vBucket = CreateVBucket(provider);
     if (vBucket != nullptr) {
         OH_VBuckets_PutRow(vBuckets, vBucket);
         vBucket->destroy(vBucket);
@@ -91,7 +91,7 @@ void OH_VBuckets_PutRowsFuzz(FuzzedDataProvider &provider)
         return;
     }
 
-    OH_Data_VBuckets *rows = CreateRandomVBuckets(provider);
+    OH_Data_VBuckets *rows = CreateVBuckets(provider);
     if (rows != nullptr) {
         OH_VBuckets_PutRows(vBuckets, rows);
         OH_VBuckets_Destroy(rows);
@@ -102,7 +102,7 @@ void OH_VBuckets_PutRowsFuzz(FuzzedDataProvider &provider)
 
 void OH_VBuckets_RowCountFuzz(FuzzedDataProvider &provider)
 {
-    OH_Data_VBuckets *vBuckets = CreateRandomVBuckets(provider);
+    OH_Data_VBuckets *vBuckets = CreateVBuckets(provider);
     if (vBuckets == nullptr) {
         return;
     }

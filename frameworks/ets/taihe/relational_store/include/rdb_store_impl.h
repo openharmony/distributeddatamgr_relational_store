@@ -58,7 +58,8 @@ public:
     ResultSet QueryWithColumn(weak::RdbPredicates predicates, array_view<string> columns);
     ResultSet QueryWithOptionalColumn(weak::RdbPredicates predicates, optional_view<array<string>> columns);
     ResultSet Query(weak::RdbPredicates predicates, optional_view<array<string>> columns);
-    ResultSet QueryByStep(weak::RdbPredicates predicates, optional_view<array<string>> columns);
+    ResultSet QueryByStepPredicatesSync(weak::RdbPredicates predicates, optional_view<array<string>> columns);
+    ResultSet QueryByStepSqlSync(string_view sql, optional_view<array<ValueType>> bindArgs);
     LiteResultSet QueryWithoutRowCountSync(weak::RdbPredicates predicates, optional_view<array<string>> columns);
     LiteResultSet QuerySqlWithoutRowCountSync(string_view sql, optional_view<array<ValueType>> bindArgs);
     ResultSet QueryDataShareSync(::taihe::string_view table, uintptr_t predicates);
@@ -72,6 +73,7 @@ public:
     void CleanDirtyDataWithCursor(string_view table, uint64_t cursor);
     void CleanDirtyDataWithTable(string_view table);
     void CleanDirtyDataWithOptionCursor(string_view table, optional_view<uint64_t> cursor);
+    void CleanDeviceDirtyDataWithOptionCursor(string_view table, optional_view<uint64_t> cursor);
     ResultSet QuerySharingResourceWithOptionColumn(weak::RdbPredicates predicates,
         optional_view<array<string>> columns);
     ResultSet QuerySharingResourceWithPredicate(weak::RdbPredicates predicates);
@@ -101,10 +103,14 @@ public:
     int64_t UpdateDistributedInfoAsync(DistributedInfo info, weak::RdbPredicates predicates);
     string ObtainDistributedTableNameSync(string_view device, string_view table);
     void SyncAsync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback);
+    uintptr_t SyncExPromise(SyncMode mode, weak::RdbPredicates predicates);
     uintptr_t SyncPromise(SyncMode mode, weak::RdbPredicates predicates);
     void CloudSyncWithProgress(SyncMode mode, callback_view<void(ProgressDetails const &)> progress);
     void CloudSyncWithTable(
         SyncMode mode, array_view<string> tables, callback_view<void(ProgressDetails const &)> progress);
+    void CloudSyncWithConfig(
+ 	    CloudSyncConfig const &config, callback_view<void(ProgressDetails const &)> progress);
+    void StopCloudSyncPromise();
     void CloudSyncWithPredicates(
         SyncMode mode, weak::RdbPredicates predicates, callback_view<void(ProgressDetails const &)> progress);
     ResultSet RemoteQuerySync(
@@ -152,10 +158,12 @@ public:
         ohos::data::relationalStore::ConflictResolution conflict);
     void RekeySync(taihe::optional_view<ohos::data::relationalStore::CryptoParam> cryptoParam);
     void RekeyExSync(ohos::data::relationalStore::CryptoParam const& cryptoParam);
+    void RekeySyncWithEncryptionKey(taihe::array_view<uint8_t> encryptKey);
     void SetLocaleSync(taihe::string_view locale);
 
 private:
     void Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise);
+    void SyncEx(SyncMode mode, weak::RdbPredicates predicates, uintptr_t callback, ani_object &promise);
     template<class FuncType>
     void OnDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode, FuncType callback, uintptr_t opq);
     void OffDataChangeCommon(OHOS::DistributedRdb::SubscribeMode subscribeMode, taihe::optional_view<uintptr_t> opq);

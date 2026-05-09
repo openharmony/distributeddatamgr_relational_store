@@ -28,7 +28,6 @@
 #include "relational_store_error_code.h"
 #include "relational_store_impl.h"
 
-
 #define COLUMN_INDEX_MIN 0
 #define COLUMN_INDEX_MAX 10
 static constexpr const char *RDB_TEST_PATH = "/data/storage/el2/database/com.ohos.example.distributedndk/entry/";
@@ -235,11 +234,8 @@ void OH_Cursor_GetFloatVectorFuzz(FuzzedDataProvider &provider)
 }
 } // namespace OHOS
 
-/* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+void OH_Cursor_MetaDataFuzz(FuzzedDataProvider &provider)
 {
-    // Run your code on data
-    FuzzedDataProvider provider(data, size);
     OHOS::OH_Cursor_GetColumnCountFuzz(provider);
     OHOS::OH_Cursor_GetColumnTypeFuzz(provider);
     OHOS::OH_Cursor_GetColumnIndexFuzz(provider);
@@ -247,15 +243,33 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::OH_Cursor_GetRowCountFuzz(provider);
     OHOS::OhCursorGoToNextRowFuzz();
     OHOS::OH_Cursor_GetSizeFuzz(provider);
+}
+
+void OH_Cursor_GetBasicFuzz(FuzzedDataProvider &provider)
+{
     OHOS::OH_Cursor_GetTextFuzz(provider);
     OHOS::OH_Cursor_GetInt64Fuzz(provider);
     OHOS::OH_Cursor_GetRealFuzz(provider);
     OHOS::OH_Cursor_GetBlobFuzz(provider);
     OHOS::OH_Cursor_IsNullFuzz(provider);
+}
+
+void OH_Cursor_GetComplexFuzz(FuzzedDataProvider &provider)
+{
     OHOS::OH_Cursor_GetAssetFuzz(provider);
     OHOS::OH_Cursor_GetAssetsFuzz(provider);
     OHOS::OH_Cursor_GetAssetsCountFuzz(provider);
     OHOS::OH_Cursor_GetFloatVectorCountFuzz(provider);
     OHOS::OH_Cursor_GetFloatVectorFuzz(provider);
+}
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+    // Run your code on data
+    FuzzedDataProvider provider(data, size);
+    OH_Cursor_MetaDataFuzz(provider);
+    OH_Cursor_GetBasicFuzz(provider);
+    OH_Cursor_GetComplexFuzz(provider);
     return 0;
 }

@@ -19,6 +19,7 @@
 #include <map>
 #include <string>
 #include <sys/stat.h>
+#include <unordered_map>
 
 #include "rdb_types.h"
 #include "rdb_store_config.h"
@@ -112,10 +113,12 @@ public:
     static bool HasDefaultAcl(const std::string &path, int32_t gid);
     static bool HasAccessAcl(const std::string &path, int32_t gid);
     static bool SetDbFileGid(const std::string &path, const std::vector<std::string> &files, int32_t gid);
-    static bool SetDbDirGid(const std::string &path, int32_t gid, bool isDefault = false);
+    static bool SetDbDirGid(
+        const std::string &path, int32_t gid, bool isDefault = false, const std::string &bundleName = "");
     static bool IsUseAsyncRestore(const RdbStoreConfig &config, const std::string &newPath,
         const std::string &backupPath);
     static int ConvertRdbStatusNative(int32_t status);
+    static int ConvertDBStatusNative(int32_t status);
 
 private:
     struct SqlType {
@@ -143,6 +146,7 @@ private:
     static constexpr size_t TYPE_SIZE = sizeof(SQL_TYPE_MAP) / sizeof(SqlType);
     static constexpr const char *ON_CONFLICT_CLAUSE[CONFLICT_CLAUSE_COUNT] = { "", " OR ROLLBACK", " OR ABORT",
         " OR FAIL", " OR IGNORE", " OR REPLACE" };
+    static const std::unordered_map<int32_t, int> STATUS_MAP;
 
     static std::string GetAnonymousName(const std::string &fileName);
     static std::string AnonymousDigits(const std::string &digits, bool fullyAnonymize);

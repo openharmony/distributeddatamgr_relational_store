@@ -21,7 +21,7 @@
 #include "js_uv_queue.h"
 #include "napi_cloud_sync_info_observer.h"
 #include "napi_queue.h"
-#include <list>
+#include <map>
 #include <mutex>
 
 namespace OHOS::CloudData {
@@ -66,6 +66,7 @@ public:
     static napi_value CloudSync(napi_env env, napi_callback_info info);
     static napi_value OnSyncInfoChanged(napi_env env, napi_callback_info info);
     static napi_value OffSyncInfoChanged(napi_env env, napi_callback_info info);
+    static napi_value StopCloudSync(napi_env env, napi_callback_info info);
 
 private:
     struct QueryLastSyncInfoContext : public ContextBase {
@@ -82,27 +83,31 @@ private:
         std::string bundleName;
         std::string storeId;
         int32_t syncMode;
+        bool downloadOnly = false;
         napi_ref asyncHolder = nullptr;
         std::shared_ptr<UvQueue> queue;
     };
-    static void HandleCloudSyncArgs(napi_env env, napi_callback_info info, std::shared_ptr<CloudSyncContext> ctxt);
+    static void HandleCloudSyncArgs(napi_env env, napi_callback_info info,
+        std::shared_ptr<CloudSyncContext> ctxt);
+    static void ParseCloudSyncArgs(napi_env env, size_t argc, napi_value *argv,
+        std::shared_ptr<CloudSyncContext> ctxt);
+    static void ParseCloudSyncArgsWithConfig(napi_env env, size_t argc, napi_value *argv,
+        std::shared_ptr<CloudSyncContext> ctxt);
     static uint32_t GetSeqNum();
     static bool ValidClearConfig(const std::map<std::string, CloudData::ClearConfig> &configs);
     static bool IsDbInfoValid(const std::map<std::string, CloudData::DBActionInfo> &dbInfos);
     static bool IsTablesValid(const std::map<std::string, int32_t> &tableInfo);
     static std::atomic<uint32_t> seqNum_;
-    using UnsubscribeInfo = std::pair<std::shared_ptr<NapiCloudSyncInfoObserver>, std::vector<CloudData::BundleInfo>>;
-    using UnsubscribeInfoList = std::vector<UnsubscribeInfo>;
+    using UnsubscribeInfo = std::map<std::shared_ptr<NapiCloudSyncInfoObserver>, std::vector<CloudData::BundleInfo>>;
 
-    static UnsubscribeInfoList CollectUnsubscribeInfos(
+    static std::vector<CloudData::BundleInfo> CollectSubscribeInfos(
+        const std::vector<CloudData::BundleInfo> &toSubscribe, napi_value callback);
+    static UnsubscribeInfo CollectUnsubscribeInfos(
         const std::vector<CloudData::BundleInfo> &toUnsubscribe, napi_value callback, bool hasCallback);
 
-    struct SyncInfoObserverRecord {
-        std::vector<CloudData::BundleInfo> bundleInfos;
-        std::shared_ptr<NapiCloudSyncInfoObserver> observer;
-    };
     static std::mutex syncInfoObserversMutex_;
-    static std::list<SyncInfoObserverRecord> syncInfoObservers_;
+    static std::map<std::string, std::map<std::string, std::vector<std::shared_ptr<NapiCloudSyncInfoObserver>>>>
+        syncInfoObservers_;
 };
 
 } // namespace OHOS::CloudData

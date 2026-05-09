@@ -198,3 +198,40 @@ HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_006, TestSize.Level2
     ret = SqliteUtils::HasAccessAcl(pathAcl + "-wal", SERVICE_GID);
     EXPECT_EQ(ret, true);
 }
+
+/**
+ * @tc.name: RdbStore_Distributed_Test_007
+ * @tc.desc: Normal testCase of Sync
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreDistributedTest, RdbStore_Distributed_Test_007, TestSize.Level2)
+{
+    int errCode;
+    OHOS::DistributedRdb::SyncOption option = { OHOS::DistributedRdb::TIME_FIRST, false };
+    AbsRdbPredicates predicate("employee");
+    std::vector<std::string> tables;
+
+    // get rdb service succeeded, if configuration file has already been configured
+    errCode = rdbStore->Sync(option, predicate, OHOS::DistributedRdb::AsyncBrief());
+    EXPECT_EQ(E_OK, errCode);
+
+    errCode = rdbStore->Sync(option, tables, OHOS::DistributedRdb::AsyncDetail());
+    EXPECT_EQ(E_OK, errCode);
+
+    errCode = rdbStore->Sync(option, predicate, OHOS::DistributedRdb::AsyncDetail());
+    EXPECT_EQ(E_OK, errCode);
+
+    std::string path = RdbStoreDistributedTest::DRDB_PATH + "test.db";
+    RdbStoreConfig config(path);
+    TestOpenCallback callback;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, callback, errCode);
+    EXPECT_NE(nullptr, store);
+
+    // get rdb service failed, if not configured
+    errCode = store->Sync(option, predicate, OHOS::DistributedRdb::AsyncBrief());
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+    errCode = store->Sync(option, tables, nullptr);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+
+    RdbHelper::DeleteRdbStore(path);
+}

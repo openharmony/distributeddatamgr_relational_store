@@ -27,6 +27,7 @@
 #include "napi_result_set.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
+#include "napi_rdb_histogram_reporter.h"
 #include "rdb_types.h"
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
@@ -231,6 +232,7 @@ struct CommitContext : public TransactionContext {
 napi_value TransactionProxy::Commit(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<CommitContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -243,6 +245,7 @@ napi_value TransactionProxy::Commit(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.Transaction.commit", "Arkdata.Rdb.Transaction.commitSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -265,6 +268,7 @@ struct RollbackContext : public TransactionContext {
 napi_value TransactionProxy::Rollback(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RollbackContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -277,6 +281,7 @@ napi_value TransactionProxy::Rollback(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.Transaction.rollback", "Arkdata.Rdb.Transaction.rollbackSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -304,6 +309,7 @@ struct DeleteContext : public TransactionContext {
 napi_value TransactionProxy::Delete(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<DeleteContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -318,6 +324,7 @@ napi_value TransactionProxy::Delete(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.Transaction.delete", "Arkdata.Rdb.Transaction.deleteSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -353,6 +360,7 @@ struct UpdateContext : public TransactionContext {
 napi_value TransactionProxy::Update(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<UpdateContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -368,6 +376,7 @@ napi_value TransactionProxy::Update(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.Transaction.update", "Arkdata.Rdb.Transaction.updateSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -403,6 +412,7 @@ struct InsertContext : public TransactionContext {
 napi_value TransactionProxy::Insert(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<InsertContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -418,6 +428,7 @@ napi_value TransactionProxy::Insert(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.Transaction.insert", "Arkdata.Rdb.Transaction.insertSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -450,6 +461,7 @@ struct BatchInsertContext : public TransactionContext {
 napi_value TransactionProxy::BatchInsert(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<BatchInsertContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -464,6 +476,7 @@ napi_value TransactionProxy::BatchInsert(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.Transaction.batchInsert", "Arkdata.Rdb.Transaction.batchInsertSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -502,6 +515,7 @@ struct BatchInsertWithConflictResolutionContext : public TransactionContext {
 napi_value TransactionProxy::BatchInsertWithConflictResolution(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<BatchInsertWithConflictResolutionContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -517,6 +531,9 @@ napi_value TransactionProxy::BatchInsertWithConflictResolution(napi_env env, nap
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram(
+        "Arkdata.Rdb.Transaction.batchInsertWithConflictResolution",
+        "Arkdata.Rdb.Transaction.batchInsertWithConflictResolutionSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -549,6 +566,7 @@ struct QueryContext : public TransactionContext {
 napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<QueryContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -562,6 +580,7 @@ napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.Transaction.query", "Arkdata.Rdb.Transaction.querySync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -575,6 +594,7 @@ napi_value TransactionProxy::Query(napi_env env, napi_callback_info info)
 napi_value TransactionProxy::QueryWithoutRowCount(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<QueryContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -590,6 +610,8 @@ napi_value TransactionProxy::QueryWithoutRowCount(napi_env env, napi_callback_in
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
+    context->FinishHistogram(
+        "Arkdata.Rdb.Transaction.queryWithoutRowCount", "Arkdata.Rdb.Transaction.queryWithoutRowCountSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -622,6 +644,7 @@ struct QuerySqlContext : public TransactionContext {
 napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<QuerySqlContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -635,6 +658,7 @@ napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.Transaction.querySql", "Arkdata.Rdb.Transaction.querySqlSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -648,6 +672,7 @@ napi_value TransactionProxy::QuerySql(napi_env env, napi_callback_info info)
 napi_value TransactionProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<QuerySqlContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(context->Parse(env, argc, argv, self) == OK);
         // ParamError is reported only when the parameter type is incorrect.
@@ -665,6 +690,8 @@ napi_value TransactionProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
+    context->FinishHistogram(
+        "Arkdata.Rdb.Transaction.querySqlWithoutRowCount", "Arkdata.Rdb.Transaction.querySqlWithoutRowCountSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -696,6 +723,7 @@ struct ExecuteContext : public TransactionContext {
 napi_value TransactionProxy::Execute(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<ExecuteContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -710,6 +738,7 @@ napi_value TransactionProxy::Execute(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+    context->FinishHistogram("Arkdata.Rdb.Transaction.execute", "Arkdata.Rdb.Transaction.executeSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -764,6 +793,7 @@ struct TransBatchInsertWithReturningContext : public TransactionContext {
 napi_value TransactionProxy::BatchInsertWithReturning(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<TransBatchInsertWithReturningContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -782,6 +812,8 @@ napi_value TransactionProxy::BatchInsertWithReturning(napi_env env, napi_callbac
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
+    context->FinishHistogram(
+        "Arkdata.Rdb.Transaction.batchInsertWithReturning", "Arkdata.Rdb.Transaction.batchInsertWithReturningSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -836,6 +868,7 @@ struct TransUpdateWithReturningContext : public TransactionContext {
 napi_value TransactionProxy::UpdateWithReturning(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<TransUpdateWithReturningContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -854,6 +887,8 @@ napi_value TransactionProxy::UpdateWithReturning(napi_env env, napi_callback_inf
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
+    context->FinishHistogram(
+        "Arkdata.Rdb.Transaction.updateWithReturning", "Arkdata.Rdb.Transaction.updateWithReturningSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -894,6 +929,7 @@ struct TransDeleteWithReturningContext : public TransactionContext {
 napi_value TransactionProxy::DeleteWithReturning(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<TransDeleteWithReturningContext>();
+    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         context->Parse(env, argc, argv, self);
     };
@@ -911,6 +947,8 @@ napi_value TransactionProxy::DeleteWithReturning(napi_env env, napi_callback_inf
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
+    context->FinishHistogram(
+        "Arkdata.Rdb.Transaction.deleteWithReturning", "Arkdata.Rdb.Transaction.deleteWithReturningSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);

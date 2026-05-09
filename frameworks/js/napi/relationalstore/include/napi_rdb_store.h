@@ -83,9 +83,12 @@ private:
     static napi_value UpdateDistributedInfo(napi_env env, napi_callback_info info);
     static napi_value ObtainDistributedTableName(napi_env env, napi_callback_info info);
     static napi_value Sync(napi_env env, napi_callback_info info);
+    static napi_value SyncEx(napi_env env, napi_callback_info info);
     static napi_value CloudSync(napi_env env, napi_callback_info info);
+    static napi_value StopCloudSync(napi_env env, napi_callback_info info);
     static napi_value GetModifyTime(napi_env env, napi_callback_info info);
     static napi_value CleanDirtyData(napi_env env, napi_callback_info info);
+    static napi_value CleanDeviceDirtyData(napi_env env, napi_callback_info info);
     static napi_value Rekey(napi_env env, napi_callback_info info);
     static napi_value RekeyEx(napi_env env, napi_callback_info info);
     static napi_value OnEvent(napi_env env, napi_callback_info info);

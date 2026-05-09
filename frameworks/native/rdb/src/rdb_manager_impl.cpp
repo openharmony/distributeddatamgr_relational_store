@@ -177,6 +177,10 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
         return { E_OK, rdbService_ };
     }
 
+    if (!isProxy_) {
+        return { E_NOT_SUPPORT, nullptr };
+    }
+
     if (distributedDataMgr_ == nullptr) {
         distributedDataMgr_ = GetDistributedDataManager(param.bundleName_);
     }
@@ -192,6 +196,7 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
     }
 
     if (!remote->IsProxyObject()) {
+        isProxy_ = false;
         return { E_NOT_SUPPORT, nullptr };
     }
 
@@ -256,7 +261,7 @@ void RdbManagerImpl::OnRemoteDied()
     ResetServiceHandle();
 
     std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    auto [errCode, service] = DistributedRdb::RdbManagerImpl::GetInstance().GetRdbService(param_);
+    auto [errCode, service] = DistributedRdb::RdbManager::GetInstance().GetRdbService(param_);
     if (errCode != E_OK) {
         return;
     }
@@ -273,6 +278,7 @@ void RdbManagerImpl::ResetServiceHandle()
     std::lock_guard<std::mutex> lock(mutex_);
     distributedDataMgr_ = nullptr;
     rdbService_ = nullptr;
+    isProxy_ = true;
 }
 
 int32_t RdbManagerImpl::CleanUp()

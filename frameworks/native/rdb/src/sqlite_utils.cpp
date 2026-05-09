@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <unordered_map>
 #if !defined(CROSS_PLATFORM)
 #include <sqlite3.h>
 #include "relational/relational_store_sqlite_ext.h"
@@ -76,6 +77,15 @@ constexpr SqliteUtils::SqlType SqliteUtils::SQL_TYPE_MAP[];
 constexpr const char *SqliteUtils::ON_CONFLICT_CLAUSE[];
 constexpr char const *DATABASE = "database";
 
+const std::unordered_map<int32_t, int> SqliteUtils::STATUS_MAP = {
+    { DBStatus::OK, E_OK },
+    { DBStatus::BUSY, E_SQLITE_BUSY },
+    { DBStatus::INVALID_ARGS, E_INVALID_ARGS },
+    { DBStatus::INVALID_PASSWD_OR_CORRUPTED_DB, E_SQLITE_CORRUPT },
+    { DBStatus::DB_ERROR, E_SQLITE_ERROR },
+    { DBStatus::NOT_SUPPORT, E_NOT_SUPPORT_NEW }
+};
+
 
 int SqliteUtils::ConvertRdbStatusNative(int32_t status)
 {
@@ -98,6 +108,15 @@ int SqliteUtils::ConvertRdbStatusNative(int32_t status)
             return E_NON_SYSTEM_APP;
         default:
             break;
+    }
+    return E_ERROR;
+}
+
+int SqliteUtils::ConvertDBStatusNative(int32_t status)
+{
+    auto it = STATUS_MAP.find(status);
+    if (it != STATUS_MAP.end()) {
+        return it->second;
     }
     return E_ERROR;
 }
@@ -196,8 +215,9 @@ bool SqliteUtils::SetDbFileGid(const std::string &path, const std::vector<std::s
     return ret;
 }
 
-bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefault)
+bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefault, const std::string &bundleName)
 {
+    std::string index = bundleName.empty() ? DATABASE : bundleName;
     if (path.empty()) {
         return false;
     }
@@ -210,7 +230,7 @@ bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefau
         return SetDefaultGid(realPath, gid);
     }
     bool ret = true;
-    uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
+    uint16_t mode = bundleName.empty() ? Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT : Acl::R_RIGHT | Acl::E_RIGHT;
     std::string filePath = StringUtils::ExtractFilePath(realPath);
     std::string dbDir = "/";
     bool isSetAcl = false;
@@ -222,7 +242,7 @@ bool SqliteUtils::SetDbDirGid(const std::string &path, int32_t gid, bool isDefau
         if (directory.empty()) {
             continue;
         }
-        if (directory == DATABASE) {
+        if (directory == index) {
             isSetAcl = true;
         }
         dbDir = dbDir + directory + "/";

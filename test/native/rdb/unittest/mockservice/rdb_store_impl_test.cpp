@@ -744,6 +744,35 @@ HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_007, TestSize.Leve
 }
 
 /**
+ * @tc.name: SetDistributedTables_Test_008
+ * @tc.desc: Abnormal testCase of SetDistributedTables
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, SetDistributedTables_Test_008, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, SetDistributedTables(_, _, _, _, _)).WillOnce(Return(E_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetRegisterInfo(RegisterType::STORE_OBSERVER, true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::vector<std::string> tables;
+    OHOS::DistributedRdb::DistributedConfig distributedConfig;
+    distributedConfig.enableCloud = false;
+    distributedConfig.autoSync = true;
+    distributedConfig.autoSyncSwitch = false;
+    tables.push_back("employee");
+    errCode = store->SetDistributedTables(tables, DISTRIBUTED_CLOUD, distributedConfig);
+    EXPECT_EQ(E_OK, errCode);
+}
+
+/**
  * @tc.name: RetainDeviceData_Test_001
  * @tc.desc: Abnormal testCase of RetainDeviceData file service return RDB_DB_NOT_EXIST
  * @tc.type: FUNC
@@ -752,7 +781,8 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_001, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(Return(RdbStatus::RDB_DB_NOT_EXIST));
+    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(
+        Return(std::make_pair(RdbStatus::RDB_DB_NOT_EXIST, 0)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -958,7 +988,7 @@ HWTEST_F(RdbStoreImplConditionTest, RetainDeviceData_Test_009, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
-    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(Return(RdbStatus::RDB_OK));
+    EXPECT_CALL(*mockRdbService, RetainDeviceData(_, _)).WillOnce(Return(std::make_pair(RdbStatus::RDB_OK, 0)));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
@@ -2520,4 +2550,155 @@ HWTEST_F(RdbStoreImplConditionTest, Dump_003, TestSize.Level2)
     EXPECT_EQ(ret.first, E_OK);
     auto errCode = storeImpl->GetPool()->Dump(false, "INSERT");
     EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_SyncEx_011
+ * @tc.desc: test SyncEx when RdbService returns RDB_PERMISSION_DENIED
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_011, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+
+    EXPECT_CALL(*mockRdbService, Sync(_, _, _, _))
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            async({});
+            return RdbStatus::RDB_PERMISSION_DENIED;
+        });
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetBundleName("com.example.test");
+    config.SetName("test_db");
+    RdbStoreImplConditionTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(RDB_PERMISSION_DENIED, store->SyncEx({OHOS::DistributedRdb::PUSH}, AbsRdbPredicates("test"), nullptr));
+
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: RdbStore_SyncEx_012
+ * @tc.desc: test SyncEx when RdbService returns other error codes
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_012, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+
+    EXPECT_CALL(*mockRdbService, Sync(_, _, _, _))
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            async({});
+            return E_ERROR;
+        });
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetBundleName("com.example.test");
+    config.SetName("test_db");
+    RdbStoreImplConditionTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(E_ERROR, store->SyncEx({OHOS::DistributedRdb::PUSH}, AbsRdbPredicates("test"), nullptr));
+
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: RdbStore_SyncEx_013
+ * @tc.desc: test SyncEx callback with empty and non-empty details
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_013, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+
+    EXPECT_CALL(*mockRdbService, Sync(_, _, _, _))
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            async({});
+            return E_OK;
+        })
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            OHOS::DistributedRdb::Details details;
+            OHOS::DistributedRdb::ProgressDetail detail1;
+            detail1.progress = 100;
+            detail1.code = 0;
+            detail1.message = "success";
+            details["device1"] = std::move(detail1);
+
+            OHOS::DistributedRdb::ProgressDetail detail2;
+            detail2.progress = 0;
+            detail2.code = 1;
+            detail2.message = "error";
+            details["device2"] = std::move(detail2);
+
+            async(std::move(details));
+            return E_OK;
+        });
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetBundleName("com.example.test");
+    config.SetName("test_db");
+    RdbStoreImplConditionTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr);
+
+    OHOS::DistributedRdb::SyncOption option;
+    option.mode = OHOS::DistributedRdb::PUSH;
+    AbsRdbPredicates predicates("test");
+
+    OHOS::DistributedRdb::AsyncBriefEx callbackEmpty = [](const OHOS::DistributedRdb::BriefsEx &briefsEx) {
+        ASSERT_TRUE(briefsEx.empty());
+    };
+    EXPECT_EQ(store->SyncEx(option, predicates, callbackEmpty), E_OK);
+
+    OHOS::DistributedRdb::AsyncBriefEx callbackNonEmpty = [](const OHOS::DistributedRdb::BriefsEx &briefsEx) {
+        EXPECT_FALSE(briefsEx.empty());
+        EXPECT_EQ(briefsEx.size(), 2u);
+        for (const auto &result : briefsEx) {
+            EXPECT_FALSE(result.device.empty());
+            EXPECT_GE(result.code, 0u);
+        }
+    };
+    EXPECT_EQ(store->SyncEx(option, predicates, callbackNonEmpty), E_OK);
+
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: RdbStore_SyncEx_014
+ * @tc.desc: test SyncEx when RdbService returns RDB_INVALID_ARGS
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_014, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+
+    EXPECT_CALL(*mockRdbService, Sync(_, _, _, _))
+        .WillOnce([](const auto&, const auto&, const auto&, const auto& async) {
+            async({});
+            return RdbStatus::RDB_INVALID_ARGS;
+        });
+
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetBundleName("com.example.test");
+    config.SetName("test_db");
+    RdbStoreImplConditionTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(E_INVALID_ARGS, store->SyncEx({OHOS::DistributedRdb::PUSH}, AbsRdbPredicates("test"), nullptr));
+
+    RdbHelper::DeleteRdbStore(config);
 }

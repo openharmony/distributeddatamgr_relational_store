@@ -984,7 +984,7 @@ Rdb_TableDetails *RelationalProgressDetails::GetTableDetails(int paraVersion)
     switch (paraVersion) {
         case TABLE_DETAIL_V0: {
             auto length = sizeof(TableDetailsV0) * (tableLength + 1);
-            auto *detailsV0 = (TableDetailsV0 *)ResizeBuff(length);
+            auto *detailsV0 = reinterpret_cast<TableDetailsV0 *>(ResizeBuff(length));
             if (detailsV0 == nullptr) {
                 return nullptr;
             }
@@ -1034,7 +1034,7 @@ static std::pair<int, RelationalProgressDetails *> GetDetails(Rdb_ProgressDetail
     if (progress->version != DISTRIBUTED_PROGRESS_DETAIL_VERSION) {
         return { -1, nullptr };
     }
-    return { 0, (RelationalProgressDetails *)progress };
+    return { 0, static_cast<RelationalProgressDetails *>(progress) };
 }
 
 Rdb_TableDetails *OH_Rdb_GetTableDetails(Rdb_ProgressDetails *progress, int32_t version)

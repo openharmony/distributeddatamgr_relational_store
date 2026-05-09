@@ -225,6 +225,7 @@ enum AssetStatus : uint32_t {
     INSERT, // INSERT/DELETE/UPDATE are for client use
     DELETE,
     UPDATE,
+    TO_DOWNLOAD,
     // high 16 bit USE WITH BIT MASK
     HIDDEN = 0x20000000,
     DOWNLOAD_WITH_NULL = 0x40000000,

@@ -722,18 +722,22 @@ ani_status CreateAniObj(ani_env *env, const std::string &className, const std::s
         return ANI_ERROR;
     }
     ani_class cls;
-    if (env->FindClass(className.c_str(), &cls) != ANI_OK) {
+    ani_status status = env->FindClass(className.c_str(), &cls);
+    if (status != ANI_OK) {
         va_end(args);
-        LOG_ERROR("[ANI] FindClass failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
-            className.c_str(), methodName.c_str(), signature.c_str());
-        return ANI_ERROR;
+        LOG_ERROR("[ANI] FindClass failed. className:%{public}s, methodName:%{public}s, "
+                  "signature:%{public}s,ani_status:%{public}d",
+            className.c_str(), methodName.c_str(), signature.c_str(), status);
+        return status;
     }
     ani_method method;
-    if (env->Class_FindMethod(cls, methodName.c_str(), signature.c_str(), &method) != ANI_OK) {
+    status = env->Class_FindMethod(cls, methodName.c_str(), signature.c_str(), &method);
+    if (status != ANI_OK) {
         va_end(args);
-        LOG_ERROR("[ANI] Class_FindMethod failed. className:%{public}s, methodName:%{public}s, signature:%{public}s",
-            className.c_str(), methodName.c_str(), signature.c_str());
-        return ANI_ERROR;
+        LOG_ERROR("[ANI] Class_FindMethod failed. className:%{public}s, methodName:%{public}s, "
+                  "signature:%{public}s,ani_status:%{public}d",
+            className.c_str(), methodName.c_str(), signature.c_str(), status);
+        return status;
     }
 
     if (env->Object_New_V(cls, method, obj, args) != ANI_OK) {
