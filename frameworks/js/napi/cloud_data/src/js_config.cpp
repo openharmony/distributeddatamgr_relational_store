@@ -922,7 +922,6 @@ napi_value JsConfig::InitConfig(napi_env env, napi_value exports)
             DECLARE_NAPI_STATIC_FUNCTION("disableCloud", JsConfig::DisableCloud),
             DECLARE_NAPI_STATIC_FUNCTION("changeAppCloudSwitch", JsConfig::ChangeAppCloudSwitch),
             DECLARE_NAPI_STATIC_FUNCTION("clear", JsConfig::Clean),
-            DECLARE_NAPI_STATIC_FUNCTION("clean", JsConfig::Clean),
             DECLARE_NAPI_STATIC_FUNCTION("notifyDataChange", JsConfig::NotifyDataChange),
             DECLARE_NAPI_STATIC_FUNCTION("queryStatistics", JsConfig::QueryStatistics),
             DECLARE_NAPI_STATIC_FUNCTION("setGlobalCloudStrategy", JsConfig::SetGlobalCloudStrategy),
