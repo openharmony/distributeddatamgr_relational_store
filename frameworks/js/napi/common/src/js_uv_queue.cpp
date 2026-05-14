@@ -117,22 +117,22 @@ void UvQueue::AsyncPromise(UvPromise promise, UvQueue::Args args, const char* ta
     }
 }
 
-void UvQueue::Execute(UvQueue::Task task, const char* taskName)
+bool UvQueue::Execute(UvQueue::Task task, const char* taskName)
 {
     if (loop_ == nullptr || !task) {
         LOG_ERROR("loop_ or task is nullptr.");
-        return;
+        return false;
     }
     uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
         LOG_ERROR("No memory for uv_work_t.");
-        return;
+        return false;
     }
     auto entry = new (std::nothrow) Task();
     if (entry == nullptr) {
         delete work;
         LOG_ERROR("No memory for Task.");
-        return;
+        return false;
     }
     *entry = task;
     work->data = entry;
@@ -142,7 +142,9 @@ void UvQueue::Execute(UvQueue::Task task, const char* taskName)
         LOG_ERROR("uv_queue_work_internal failed, errCode:%{public}d", ret);
         delete entry;
         delete work;
+        return false;
     }
+    return true;
 }
 
 napi_env UvQueue::GetEnv()

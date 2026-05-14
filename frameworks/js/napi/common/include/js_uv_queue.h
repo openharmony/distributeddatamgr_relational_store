@@ -63,7 +63,7 @@ public:
     void AsyncCall(UvCallback callback, Args args = Args(), Result result = Result(), const char* taskName = "");
     void AsyncCallInOrder(UvCallback callback, Args args = Args(), Result result = Result(), const char* taskName = "");
     void AsyncPromise(UvPromise promise, Args args = Args(), const char* taskName = "");
-    void Execute(Task task, const char* taskName = "");
+    bool Execute(Task task, const char* taskName = "");
 
 private:
     static constexpr char RESOLVED[] = "resolved";

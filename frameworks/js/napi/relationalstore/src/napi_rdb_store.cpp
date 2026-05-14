@@ -1737,7 +1737,6 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
     napi_value promise = nullptr;
     auto defer = context->defer_;
     auto callback = context->callback_;
-    context->callback_ = nullptr;
     if (callback == nullptr) {
         napi_status status = napi_create_promise(env, &defer, &promise);
         RDB_NAPI_ASSERT_BASE(env, status == napi_ok,
@@ -1768,7 +1767,10 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
                 queue->AsyncPromise({ defer }, args, "DistributedSync::OnError");
         }
     };
-    queue->Execute(std::move(exec), "DistributedSync::Execute");
+    auto execResult = queue->Execute(std::move(exec), "DistributedSync::Execute");
+    if (execResult) {
+        context->callback_ = nullptr;
+    }
     context = nullptr;
     return promise;
 }
@@ -1823,7 +1825,6 @@ napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
     napi_value promise = nullptr;
     auto defer = context->defer_;
     auto callback = context->callback_;
-    context->callback_ = nullptr;
     if (callback == nullptr) {
         napi_status status = napi_create_promise(env, &defer, &promise);
         RDB_NAPI_ASSERT_BASE(env,
@@ -1853,7 +1854,10 @@ napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
                      : queue->AsyncPromise({defer}, args, "DistributedSync::OnErrorEx");
         }
     };
-    queue->Execute(std::move(exec), "DistributedSyncEx::Execute");
+    auto execResult = queue->Execute(std::move(exec), "DistributedSyncEx::Execute");
+    if (execResult) {
+        context->callback_ = nullptr;
+    }
     context = nullptr;
     return promise;
 }
