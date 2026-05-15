@@ -1978,3 +1978,54 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_033, TestSize.Level1)
     errCode = store->Backup(RdbDoubleWriteBinlogTest::slaveDatabaseName, {}, false);
     EXPECT_EQ(errCode, E_OK);
 }
+
+/**
+ * @tc.name: RdbStore_Binlog_034
+ * @tc.desc: test slave checkpoint does not block writes in MANUAL_TRIGGER mode with binlog
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_034, TestSize.Level1)
+{
+    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    int errCode = E_OK;
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+
+    errCode = store->Backup(std::string(""), {});
+    EXPECT_EQ(errCode, E_OK);
+
+    int ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+    int64_t id = 1;
+    int batchCount = 5000;
+    int dataSize = 10000;
+    Insert(id, batchCount, false, dataSize);
+    ret = store->Commit();
+    EXPECT_EQ(ret, E_OK);
+
+    int intervalCount = 100;
+    int64_t totalCost = 0;
+    ValuesBucket values;
+    values.PutString("name", std::string(dataSize, 'b'));
+    values.PutInt("age", CHECKAGE);
+    values.PutDouble("salary", CHECKCOLUMN);
+    values.PutBlob("blobType", std::vector<uint8_t>{ 1, 2, 3 });
+    for (id = 10000; id < 10000 + intervalCount; id++) {
+        ValueObject valueId(id);
+        values.Put("id", valueId);
+        auto begin = std::chrono::high_resolution_clock::now();
+        ret = store->Insert(id, "test", values);
+        EXPECT_EQ(ret, E_OK);
+        usleep(5000);
+        auto stop = std::chrono::high_resolution_clock::now();
+        totalCost += std::chrono::duration_cast<std::chrono::microseconds>(stop - begin).count();
+    }
+
+    int64_t fiveSecondsUs = 5 * 1000 * 1000;
+    EXPECT_LT(totalCost, fiveSecondsUs);
+    LOG_INFO("RdbStore_Binlog_034 total insert cost: %{public}" PRId64 " us", totalCost);
+    WaitForBinlogReplayFinish();
+}

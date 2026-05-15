@@ -1370,7 +1370,7 @@ int SqliteConnection::TryCheckPoint(bool timeout)
         return E_INNER_WARNING;
     }
 
-    (void)sqlite3_busy_timeout(dbHandle_, CHECKPOINT_TIME);
+    (void)sqlite3_busy_timeout(dbHandle_, isSlave_ && isSupportBinlog_ ? 0 : CHECKPOINT_TIME);
     int errCode = sqlite3_wal_checkpoint_v2(dbHandle_, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
     (void)sqlite3_busy_timeout(dbHandle_, DEFAULT_BUSY_TIMEOUT_MS);
     if (errCode != SQLITE_OK) {
