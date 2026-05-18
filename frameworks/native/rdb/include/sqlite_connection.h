@@ -154,7 +154,7 @@ private:
     static void BinlogCloseHandle(sqlite3 *dbHandle);
     static int CheckPathExist(const std::string &dbPath);
     static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb);
-    static void BinlogSetConfig(sqlite3 *dbHandle);
+    static void BinlogSetConfig(sqlite3 *dbHandle, Sqlite3BinlogMode binlogMode);
     static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath);
     static int ReplayBinlogSqlite(sqlite3 *dbFrom, sqlite3 *slaveDb, const RdbStoreConfig &config);
     static void ReplayBinlog(const std::string &dbPath,
@@ -166,6 +166,7 @@ private:
      */
     static CodecConfig ConvertCryptoParamToCodecConfig(const RdbStoreConfig::CryptoParam &param);
     static CodecConfig CreateCodecConfig();
+    static Sqlite3BinlogMode GetBinlogMode(const RdbStoreConfig &config);
     static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
