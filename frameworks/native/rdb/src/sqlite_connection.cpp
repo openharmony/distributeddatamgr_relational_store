@@ -1981,10 +1981,10 @@ int SqliteConnection::CheckPathExist(const std::string &dbPath)
     return E_OK;
 }
 
-void SqliteConnection::BinlogSetConfig(sqlite3 *dbHandle)
+void SqliteConnection::BinlogSetConfig(sqlite3 *dbHandle, Sqlite3BinlogMode binlogMode)
 {
     Sqlite3BinlogConfig binLogConfig = {
-        .mode = Sqlite3BinlogMode::ROW,
+        .mode = binlogMode,
         .fullCallbackThreshold = BINLOG_FILE_NUMS_LIMIT,
         .maxFileSize = BINLOG_FILE_SIZE_LIMIT,
         .xErrorCallback = &BinlogOnErrFunc,
@@ -2065,7 +2065,7 @@ int SqliteConnection::SetBinlog()
         return E_OK;
     }
     Sqlite3BinlogConfig binLogConfig = {
-        .mode = Sqlite3BinlogMode::ROW,
+        .mode = GetBinlogMode(config_),
         .fullCallbackThreshold = BINLOG_FILE_NUMS_LIMIT,
         .maxFileSize = BINLOG_FILE_SIZE_LIMIT,
         .xErrorCallback = &BinlogOnErrFunc,
@@ -2120,7 +2120,7 @@ void SqliteConnection::ReplayBinlog(const std::string &dbPath,
     if (errCode != E_OK) {
         return;
     }
-    SqliteConnection::BinlogSetConfig(dbFrom);
+    SqliteConnection::BinlogSetConfig(dbFrom, GetBinlogMode(slaveConn->config_));
     errCode = SqliteConnection::ReplayBinlogSqlite(dbFrom, slaveConn->dbHandle_, slaveConn->config_);
     if (errCode != E_OK) {
         LOG_WARN("async replay err:%{public}d", errCode);
@@ -2254,6 +2254,14 @@ int32_t SqliteConnection::OpenSSLCleanUp()
 {
     Clean(true);
     return E_OK;
+}
+
+Sqlite3BinlogMode SqliteConnection::GetBinlogMode(const RdbStoreConfig &config)
+{
+    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER) {
+        return Sqlite3BinlogMode::ROW_FOR_SEARCH;
+    }
+    return Sqlite3BinlogMode::ROW;
 }
 } // namespace NativeRdb
 } // namespace OHOS
