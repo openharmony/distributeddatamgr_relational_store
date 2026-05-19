@@ -33,10 +33,17 @@ ohos_shared_library("cj_relational_store_ffi") {
 
   if (product_name != "ohos-sdk") {
     sources = [
-      "src/relational_store_ffi.cpp",
-      "src/relational_store_impl_rdbpredicatesproxy.cpp",
-      "src/relational_store_impl_rdbstore.cpp",
-      "src/relational_store_impl_resultsetproxy.cpp",
+      "src/relational_store_core_ffi.cpp",
+      "src/relational_store_predicates_ffi.cpp",
+      "src/relational_store_store_ffi.cpp",
+      "src/relational_store_resultset_ffi.cpp",
+      "src/relational_store_impl_rdbpredicatesproxy_core.cpp",
+      "src/relational_store_impl_rdbpredicatesproxy_comparison.cpp",
+      "src/relational_store_impl_rdbstore_observer.cpp",
+      "src/relational_store_impl_rdbstore_core.cpp",
+      "src/relational_store_impl_rdbstore_config.cpp",
+      "src/relational_store_impl_resultsetproxy_core.cpp",
+      "src/relational_store_impl_resultsetproxy_extended.cpp",
       "src/relational_store_utils.cpp",
     ]
 
