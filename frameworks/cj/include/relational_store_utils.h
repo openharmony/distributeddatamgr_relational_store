@@ -24,6 +24,9 @@
 namespace OHOS {
 namespace Relational {
 #define ERROR_VALUE (-1)
+#define TYPE_BUTT_TAG 128
+#define MAX_CUSTOM_DIR_LENGTH 128
+#define MAX_DATABASE_PATH_LENGTH 1024
 
 char *MallocCString(const std::string &origin);
 
