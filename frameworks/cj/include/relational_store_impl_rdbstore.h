@@ -17,6 +17,7 @@
 #define RELATIONAL_STORE_IMPL_RDBSTORE_FFI_H
 
 #include <list>
+#include <mutex>
 
 #include "cj_lambda.h"
 #include "ffi_remote_data.h"
@@ -111,6 +112,7 @@ public:
     int32_t SetDistributedTables(
         char **tables, int64_t tablesSize, int32_t type, DistributedRdb::DistributedConfig &distributedConfig);
     int32_t Commit();
+    int32_t Commit(int64_t txId);
     int32_t RollBack();
     int32_t BeginTransaction();
     int32_t Backup(const char *destName);
@@ -159,12 +161,25 @@ public:
     std::shared_ptr<NativeRdb::ResultSet> QuerySqlEx(const char *sql, ValueTypeEx *bindArgs, int64_t size);
     void ExecuteSqlEx(const char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize, int32_t *errCode);
 
+    int64_t BatchInsertWithConflictResolution(const char *tableName, ValuesBucketEx *valuesBuckets,
+        int64_t valuesSize, int32_t conflict, int32_t *errCode);
+    ValueTypeEx Execute(const char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize, int32_t *errCode);
+    ValueTypeEx Execute(const char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize, int64_t txId, int32_t *errCode);
+    int64_t BeginTrans(int32_t *errCode);
+    int32_t Close();
+
+    int32_t Attach(const char *fullPath, const char *attachName, int32_t waitTime, int32_t *errCode);
+    int32_t AttachConfig(OHOS::AbilityRuntime::Context *context, StoreConfigEx *config,
+        const char *attachName, int32_t waitTime, int32_t *errCode);
+    int32_t Detach(const char *attachName, int32_t waitTime, int32_t *errCode);
+
 private:
     friend class OHOS::FFI::RuntimeType;
     friend class OHOS::FFI::TypeBase;
     static OHOS::FFI::RuntimeType *GetClassType();
     std::vector<OHOS::NativeRdb::ValueObject> bindArgs;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
+    std::mutex observerMutex_;
     std::vector<uint8_t> newKey;
     std::list<std::shared_ptr<RdbStoreObserverImpl>> observers_[DistributedRdb::SUBSCRIBE_MODE_MAX];
     std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> localObservers_;

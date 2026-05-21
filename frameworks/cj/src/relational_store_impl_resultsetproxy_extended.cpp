@@ -14,6 +14,7 @@
  */
 
 #include "native_log.h"
+#include "napi_rdb_error.h"
 #include "rdb_errno.h"
 #include "relational_store_impl_resultsetproxy.h"
 #include "relational_store_utils.h"
@@ -23,6 +24,7 @@ namespace OHOS {
 namespace Relational {
 static const int E_OK = 0;
 static constexpr size_t MAX_COLUMNS = 2000;
+static constexpr int32_t MAX_ROWS_COUNT = 32766;
 
 ValuesBucket ResultSetImpl::GetRow(int32_t* rtnCode)
 {
@@ -106,5 +108,56 @@ ValueTypeEx ResultSetImpl::GetValue(int32_t columnIndex, int32_t* rtnCode)
     }
     return ValueObjectToValueTypeEx(object);
 }
+
+int32_t ResultSetImpl::GetColumnType(int32_t columnIndex, int32_t *rtnCode)
+{
+    NativeRdb::ColumnType columnType = NativeRdb::ColumnType::TYPE_NULL;
+    *rtnCode = NativeRdb::E_ALREADY_CLOSED;
+    if (resultSetValue != nullptr) {
+        *rtnCode = resultSetValue->GetColumnType(columnIndex, columnType);
+    }
+    if (*rtnCode != NativeRdb::E_OK) {
+        return -1;
+    }
+    return static_cast<int32_t>(columnType);
 }
+
+RowDataEx ResultSetImpl::GetCurrentRowData(int32_t *rtnCode)
+{
+    *rtnCode = NativeRdb::E_ALREADY_CLOSED;
+    if (resultSetValue == nullptr) {
+        return RowDataEx{ nullptr, 0 };
+    }
+
+    auto [errCode, rowData] = resultSetValue->GetRowData();
+    *rtnCode = errCode;
+    if (errCode != NativeRdb::E_OK) {
+        return RowDataEx{ nullptr, 0 };
+    }
+
+    return ValueObjectVectorToRowDataEx(rowData);
 }
+
+RowsDataEx ResultSetImpl::GetRowsData(int32_t maxCount, int32_t position, int32_t *rtnCode)
+{
+    *rtnCode = NativeRdb::E_ALREADY_CLOSED;
+    if (resultSetValue == nullptr) {
+        return RowsDataEx{ nullptr, 0 };
+    }
+
+    auto [errCode, rowsData] = resultSetValue->GetRowsData(maxCount, position);
+    *rtnCode = errCode;
+    if (errCode != NativeRdb::E_OK) {
+        return RowsDataEx{ nullptr, 0 };
+    }
+    if (rowsData.size() > MAX_ROWS_COUNT) {
+        LOGE("GetRowsData size %{public}zu exceeds limit %{public}d", rowsData.size(), MAX_ROWS_COUNT);
+        *rtnCode = ERROR_VALUE;
+        return RowsDataEx{ nullptr, 0 };
+    }
+
+    return RowDataExVectorToRowsDataEx(rowsData);
+}
+
+} // namespace Relational
+} // namespace OHOS

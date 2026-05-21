@@ -13,19 +13,11 @@
  * limitations under the License.
  */
 
-#include "abs_rdb_predicates.h"
-#include "ffi_remote_data.h"
-#include "logger.h"
-#include "napi_base_context.h"
-#include "napi_rdb_js_utils.h"
-#include "rdb_common.h"
-#include "rdb_errno.h"
-#include "rdb_store.h"
-#include "relational_store_impl_rdbpredicatesproxy.h"
-#include "relational_store_impl_rdbstore.h"
-#include "relational_store_impl_resultsetproxy.h"
 #include "relational_store_utils.h"
-#include "value_object.h"
+#include "rdb_store.h"
+#include "rdb_errno.h"
+#include "native_log.h"
+#include "relational_store_impl_rdbstore.h"
 
 using namespace OHOS::FFI;
 
@@ -68,7 +60,7 @@ NativeRdb::ValuesBucket ConvertFromValueBucketEx(ValuesBucketEx valuesBucket)
     return nativeValuesBucket;
 }
 
-std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::Query(RdbPredicatesImpl &predicates, char** column,
+std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::Query(RdbPredicatesImpl &predicates, char **column,
     int64_t columnSize)
 {
     std::vector<std::string> columnsVector = std::vector<std::string>();
@@ -79,8 +71,8 @@ std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::Query(RdbPredicatesImpl &pre
     return resultSet;
 }
 
-std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::RemoteQuery(char* device, RdbPredicatesImpl &predicates,
-    char** column, int64_t columnSize)
+std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::RemoteQuery(char *device, RdbPredicatesImpl &predicates,
+    char **column, int64_t columnSize)
 {
     std::vector<std::string> columnsVector;
     for (int64_t i = 0; i < columnSize; i++) {
@@ -121,7 +113,7 @@ int RdbStoreImpl::Delete(RdbPredicatesImpl &predicates, int32_t *errCode)
     return deletedRows;
 }
 
-int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize)
+int32_t RdbStoreImpl::SetDistributedTables(char **tables, int64_t tablesSize)
 {
     std::vector<std::string> tablesVector;
     for (int64_t i = 0; i < tablesSize; i++) {
@@ -131,7 +123,7 @@ int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize)
         DistributedRdb::DistributedConfig{false});
 }
 
-int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize, int32_t type)
+int32_t RdbStoreImpl::SetDistributedTables(char **tables, int64_t tablesSize, int32_t type)
 {
     std::vector<std::string> tablesVector;
     for (int64_t i = 0; i < tablesSize; i++) {
@@ -140,7 +132,7 @@ int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize, in
     return rdbStore_->SetDistributedTables(tablesVector, type, DistributedRdb::DistributedConfig{false});
 }
 
-int32_t RdbStoreImpl::SetDistributedTables(char** tables, int64_t tablesSize, int32_t type,
+int32_t RdbStoreImpl::SetDistributedTables(char **tables, int64_t tablesSize, int32_t type,
     DistributedRdb::DistributedConfig &distributedConfig)
 {
     std::vector<std::string> tablesVector;
@@ -160,34 +152,39 @@ int32_t RdbStoreImpl::Commit()
     return rdbStore_->Commit();
 }
 
+int32_t RdbStoreImpl::Commit(int64_t txId)
+{
+    return rdbStore_->Commit(txId);
+}
+
 int32_t RdbStoreImpl::BeginTransaction()
 {
     return rdbStore_->BeginTransaction();
 }
 
-int32_t RdbStoreImpl::Backup(const char* destName)
+int32_t RdbStoreImpl::Backup(const char *destName)
 {
     return rdbStore_->Backup(destName, newKey);
 }
 
-int32_t RdbStoreImpl::Restore(const char* srcName)
+int32_t RdbStoreImpl::Restore(const char *srcName)
 {
     return rdbStore_->Restore(srcName, newKey);
 }
 
-char* RdbStoreImpl::ObtainDistributedTableName(const char* device, const char* table)
+char *RdbStoreImpl::ObtainDistributedTableName(const char *device, const char *table)
 {
     int errCode = RelationalStoreJsKit::E_INNER_ERROR;
     std::string tableName = rdbStore_->ObtainDistributedTableName(device, table, errCode);
     return MallocCString(tableName);
 }
 
-int32_t RdbStoreImpl::Emit(const char* event)
+int32_t RdbStoreImpl::Emit(const char *event)
 {
     return rdbStore_->Notify(event);
 }
 
-int64_t RdbStoreImpl::Insert(const char* table, ValuesBucket valuesBucket, int32_t conflict, int32_t *errCode)
+int64_t RdbStoreImpl::Insert(const char *table, ValuesBucket valuesBucket, int32_t conflict, int32_t *errCode)
 {
     std::string tableName = table;
     int64_t result;
@@ -197,7 +194,7 @@ int64_t RdbStoreImpl::Insert(const char* table, ValuesBucket valuesBucket, int32
     return result;
 }
 
-int64_t RdbStoreImpl::InsertEx(const char* table, ValuesBucketEx valuesBucket, int32_t conflict, int32_t *errCode)
+int64_t RdbStoreImpl::InsertEx(const char *table, ValuesBucketEx valuesBucket, int32_t conflict, int32_t *errCode)
 {
     std::string tableName = table;
     int64_t result;
@@ -207,18 +204,18 @@ int64_t RdbStoreImpl::InsertEx(const char* table, ValuesBucketEx valuesBucket, i
     return result;
 }
 
-void RdbStoreImpl::ExecuteSql(const char* sql, int32_t *errCode)
+void RdbStoreImpl::ExecuteSql(const char *sql, int32_t *errCode)
 {
     *errCode = rdbStore_->ExecuteSql(sql, std::vector<OHOS::NativeRdb::ValueObject>());
 }
 
-int32_t RdbStoreImpl::CleanDirtyData(const char* tableName, uint64_t cursor)
+int32_t RdbStoreImpl::CleanDirtyData(const char *tableName, uint64_t cursor)
 {
     int32_t rtnCode = rdbStore_->CleanDirtyData(tableName, cursor);
     return rtnCode;
 }
 
-int32_t RdbStoreImpl::BatchInsert(int64_t &insertNum, const char* tableName, ValuesBucket* valuesBuckets,
+int32_t RdbStoreImpl::BatchInsert(int64_t &insertNum, const char *tableName, ValuesBucket *valuesBuckets,
     int64_t valuesSize)
 {
     std::vector<NativeRdb::ValuesBucket> valuesVector;
@@ -234,7 +231,7 @@ int32_t RdbStoreImpl::BatchInsert(int64_t &insertNum, const char* tableName, Val
     return rtnCode;
 }
 
-int32_t RdbStoreImpl::BatchInsertEx(int64_t &insertNum, const char* tableName, ValuesBucketEx* valuesBuckets,
+int32_t RdbStoreImpl::BatchInsertEx(int64_t &insertNum, const char *tableName, ValuesBucketEx *valuesBuckets,
     int64_t valuesSize)
 {
     std::vector<NativeRdb::ValuesBucket> valuesVector;
@@ -259,14 +256,14 @@ CArrSyncResult RdbStoreImpl::Sync(int32_t mode, RdbPredicatesImpl &predicates)
     rdbStore_->Sync(option, *(predicates.GetPredicates()),
         [&resMap](const DistributedRdb::SyncResult &result) { resMap = result; });
     if (resMap.size() == 0) {
-        return CArrSyncResult{nullptr, nullptr, -1};
+        return CArrSyncResult{ nullptr, nullptr, -1 };
     }
-    char** resultStr = static_cast<char**>(malloc(resMap.size() * sizeof(char*)));
-    int32_t* resultNum = static_cast<int32_t*>(malloc(resMap.size() * sizeof(int32_t)));
+    char **resultStr = static_cast<char**>(malloc(resMap.size() * sizeof(char*)));
+    int32_t *resultNum = static_cast<int32_t*>(malloc(resMap.size() * sizeof(int32_t)));
     if (resultStr == nullptr || resultNum == nullptr) {
         free(resultStr);
         free(resultNum);
-        return CArrSyncResult{nullptr, nullptr, -1};
+        return CArrSyncResult{ nullptr, nullptr, -1 };
     }
     size_t i = 0;
     for (auto it = resMap.begin(); it != resMap.end(); ++it) {
@@ -299,7 +296,7 @@ std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::QuerySqlEx(const char *sql, 
     return result;
 }
 
-void RdbStoreImpl::ExecuteSql(const char* sql, ValueType* bindArgs, int64_t bindArgsSize, int32_t *errCode)
+void RdbStoreImpl::ExecuteSql(const char *sql, ValueType *bindArgs, int64_t bindArgsSize, int32_t *errCode)
 {
     std::vector<NativeRdb::ValueObject> bindArgsObjects = std::vector<NativeRdb::ValueObject>();
     for (int64_t i = 0; i < bindArgsSize; i++) {
@@ -308,13 +305,26 @@ void RdbStoreImpl::ExecuteSql(const char* sql, ValueType* bindArgs, int64_t bind
     *errCode = rdbStore_->ExecuteSql(sql, bindArgsObjects);
 }
 
-void RdbStoreImpl::ExecuteSqlEx(const char* sql, ValueTypeEx* bindArgs, int64_t bindArgsSize, int32_t *errCode)
+void RdbStoreImpl::ExecuteSqlEx(const char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize, int32_t *errCode)
 {
     std::vector<NativeRdb::ValueObject> bindArgsObjects = std::vector<NativeRdb::ValueObject>();
     for (int64_t i = 0; i < bindArgsSize; i++) {
         bindArgsObjects.push_back(ValueTypeExToValueObject(bindArgs[i]));
     }
     *errCode = rdbStore_->ExecuteSql(sql, bindArgsObjects);
+}
+
+int32_t RdbStoreImpl::CloudSync(int32_t mode, CArrStr tables, int64_t callbackId)
+{
+    DistributedRdb::SyncOption option;
+    option.mode = static_cast<DistributedRdb::SyncMode>(mode);
+    option.isBlock = false;
+    std::vector<std::string> arr = CArrStrToVector(tables);
+    auto cFunc = reinterpret_cast<void(*)(CProgressDetails details)>(callbackId);
+    auto async = [ lambda = CJLambda::Create(cFunc)](const DistributedRdb::Details &details) ->
+        void { lambda(ToCProgressDetails(details)); };
+    int32_t errCode = rdbStore_->Sync(option, arr, async);
+    return errCode;
 }
 
 int32_t RdbStoreImpl::GetVersion(int32_t& errCode)
@@ -339,7 +349,7 @@ ModifyTime RdbStoreImpl::GetModifyTime(char *cTables, char *cColumnName, CArrPRI
         rdbStore_->GetModifyTime(tableName, columnName, keys);
     if (map.empty()) {
         errCode = NativeRdb::E_ERROR;
-        return ModifyTime{0};
+        return ModifyTime{ 0 };
     }
     return MapToModifyTime(map, errCode);
 }

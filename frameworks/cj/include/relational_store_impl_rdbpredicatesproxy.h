@@ -97,9 +97,9 @@ public:
 
     void NotEqualTo(const char *field, ValueType value);
 
-    void NotContains(const char* field, const char* value);
+    void NotContains(const char *field, const char *value);
 
-    void NotLike(const char* field, const char* value);
+    void NotLike(const char *field, const char *value);
 
     std::shared_ptr<NativeRdb::RdbPredicates> GetPredicates();
 

@@ -44,6 +44,7 @@ ohos_shared_library("cj_relational_store_ffi") {
       "src/relational_store_impl_rdbstore_config.cpp",
       "src/relational_store_impl_resultsetproxy_core.cpp",
       "src/relational_store_impl_resultsetproxy_extended.cpp",
+      "src/relational_store_impl_rdbstore_extensions.cpp",
       "src/relational_store_utils.cpp",
     ]
 
