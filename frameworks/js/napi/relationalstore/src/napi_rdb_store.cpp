@@ -1744,9 +1744,8 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
     } else {
         napi_get_undefined(env, &promise);
     }
-    RDB_NAPI_ASSERT_BASE(env, context->predicatesProxy != nullptr,
-        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS), nullptr);
-    RDB_NAPI_ASSERT_BASE(env, context->predicatesProxy->GetPredicates() != nullptr,
+    RDB_NAPI_ASSERT_BASE(env,
+        context->predicatesProxy != nullptr && context->predicatesProxy->GetPredicates() != nullptr,
         std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS), nullptr);
     auto predicates = *context->predicatesProxy->GetPredicates();
     auto exec = [queue, defer, callback, predicates, rdbStore = context->StealRdbStore(),
@@ -1767,8 +1766,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
                 queue->AsyncPromise({ defer }, args, "DistributedSync::OnError");
         }
     };
-    auto execResult = queue->Execute(std::move(exec), "DistributedSync::Execute");
-    if (execResult) {
+    if (queue->Execute(std::move(exec), "DistributedSync::Execute")) {
         context->callback_ = nullptr;
     }
     context = nullptr;
@@ -1854,8 +1852,7 @@ napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
                      : queue->AsyncPromise({defer}, args, "DistributedSync::OnErrorEx");
         }
     };
-    auto execResult = queue->Execute(std::move(exec), "DistributedSyncEx::Execute");
-    if (execResult) {
+    if (queue->Execute(std::move(exec), "DistributedSyncEx::Execute")) {
         context->callback_ = nullptr;
     }
     context = nullptr;
