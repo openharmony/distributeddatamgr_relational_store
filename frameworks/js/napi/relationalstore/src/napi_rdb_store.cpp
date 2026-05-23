@@ -1556,6 +1556,7 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
     properties.push_back(DECLARE_NAPI_FUNCTION("sync", Sync));
     properties.push_back(DECLARE_NAPI_FUNCTION("syncEx", SyncEx));
     properties.push_back(DECLARE_NAPI_FUNCTION("cloudSync", CloudSync));
+    properties.push_back(DECLARE_NAPI_FUNCTION("cloudSyncEx", CloudSync));
     properties.push_back(DECLARE_NAPI_FUNCTION("stopCloudSync", StopCloudSync));
     properties.push_back(DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime));
     properties.push_back(DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData));
