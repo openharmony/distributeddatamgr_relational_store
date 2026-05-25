@@ -34,14 +34,37 @@
 
 ### 构建与测试命令
 
+#### 源码/库构建（全量构建）
+
+| 命令 | 用途 | 产物路径 |
+|------|------|----------|
+| `./build.sh --product-name rk3568 --build-target relational_store` | 构建整个组件 | `out/rk3568/innerkits/ohos-arm/relational_store/` |
+| `./build.sh --product-name rk3568 --build-target //foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb` | 构建原生核心库 | `out/rk3568/innerkits/ohos-arm/relational_store/native_rdb/` |
+
+#### 源码/库构建（独立编译 indep build）
+
+| 命令 | 用途 | 产物路径 |
+|------|------|----------|
+| `python3 -m hb build relational_store -i --skip-prebuilts` | 独立编译源码/库 | `out/standard/src/distributeddatamgr/relational_store/` |
+
+#### 测试构建（独立编译 indep build）
+
+| 命令 | 用途 | 产物路径 |
+|------|------|----------|
+| `python3 -m hb build relational_store -t --skip-prebuilts` | 构建全部测试（单元+模糊） | `out/standard/test/tests/` |
+
+单元测试产物：`out/standard/test/tests/unittest/relational_store/relational_store/native_rdb/` 下可执行文件（如 `NativeRdbTest`）
+模糊测试产物：`out/standard/test/tests/fuzztest/relational_store/relational_store/` 下可执行文件（如 `RelationalStoreFuzzTest`）
+
+#### 格式化
+
 | 命令 | 用途 | 备注 |
 |------|------|------|
-| `./build.sh --product-name <产品名> --build-target relational_store` | 构建整个组件 | 构建时间较长 |
-| `./build.sh --product-name <产品名> --build-target //foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb` | 构建原生核心库 | |
-| `./build.sh --product-name <产品名> --build-target //foundation/distributeddatamgr/relational_store/test/native/rdb:unittest` | 构建原生测试 | |
 | `clang-format -i <file>` | 格式化单个文件（依赖仓库根目录 `.clang-format` 配置） | 提交前 **MUST** 格式化 |
 
-测试运行路径：`/data/test/relational_store/relational_store/native_rdb/`
+设备端测试运行路径：`/data/test/relational_store/relational_store/native_rdb/`
+
+> **注意**：`./build.sh --build-target` 使用全量构建模式，不产出测试可执行文件；测试可执行文件 **MUST** 使用独立编译 `python3 -m hb build relational_store -t`。
 
 ### Mock 与 TDD
 
@@ -55,9 +78,9 @@
 
 | CI 任务 | 本地等价命令 |
 |---------|-------------|
-| 单元测试 | `./build.sh --product-name <产品名> --build-target //foundation/distributeddatamgr/relational_store/test/native/rdb:unittest` |
+| 单元测试 | `python3 -m hb build relational_store -t --skip-prebuilts` |
 | 格式化检查 | `clang-format -i <file>` |
-| 编译检查 | `./build.sh --product-name <产品名> --build-target //foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb` |
+| 编译检查 | `./build.sh --product-name rk3568 --build-target //foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb` |
 
 提交前必跑：格式化 + 编译构建 + 单元测试
 
