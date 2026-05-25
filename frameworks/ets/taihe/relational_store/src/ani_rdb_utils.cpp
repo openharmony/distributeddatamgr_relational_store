@@ -345,14 +345,6 @@ OHOS::NativeRdb::ValuesBucket ValueBucketToNative(::ohos::data::relationalStore:
     return OHOS::NativeRdb::ValuesBucket(std::move(valueMap));
 }
 
-OHOS::NativeRdb::RdbStoreConfig::CryptoParam Uint8ArrayParamToNative(std::vector<uint8_t> const &param)
-{
-    OHOS::NativeRdb::RdbStoreConfig::CryptoParam value;
-    value.encryptKey_ = param;
-
-    return value;
-}
-
 OHOS::NativeRdb::RdbStoreConfig::CryptoParam CryptoParamToNative(
     ::ohos::data::relationalStore::CryptoParam const &param)
 {
