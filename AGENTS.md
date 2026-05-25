@@ -36,8 +36,8 @@
 
 | 命令 | 用途 | 产物路径 |
 |------|------|----------|
-| `./build.sh --product-name rk3568 --build-target relational_store` | 构建整个组件 | `out/rk3568/innerkits/ohos-arm/relational_store/` |
-| `./build.sh --product-name rk3568 --build-target relational_store_test` | 构建全部测试 | `out/rk3568/exe.unstripped/tests/` |
+| `./build.sh --product-name rk3568 --build-target relational_store` | 构建整个组件 | `out/rk3568/distributeddatamgr/relational_store/` |
+| `./build.sh --product-name rk3568 --build-target relational_store_test` | 构建全部测试 | `out/rk3568/tests/unittest/relational_store/` |
 | `./build.sh --product-name rk3568 --build-target //foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb` | 构建原生核心库 | `out/rk3568/innerkits/ohos-arm/relational_store/native_rdb/` |
 | `${OHOS_ROOT}/prebuilts/clang/ohos/linux-x86_64/llvm/bin/clang-format --style=file -i <file>` | 格式化单个文件（使用仓库 `.clang-format` 配置） | `${OHOS_ROOT}` 为 OpenHarmony 源码根目录；提交前 **MUST** 格式化 |
 
