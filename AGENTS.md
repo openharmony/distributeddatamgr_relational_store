@@ -56,7 +56,7 @@
 | CI 任务 | 本地等价命令 |
 |---------|-------------|
 | 单元测试 | `./build.sh --product-name rk3568 --build-target relational_store_test` |
-| 格式化检查 | `clang-format -i <file>` |
+| 格式化检查 | `${OHOS_ROOT}/prebuilts/clang/ohos/linux-x86_64/llvm/bin/clang-format --style=file -i <file>` |
 | 编译检查 | `./build.sh --product-name rk3568 --build-target relational_store` |
 
 提交前必跑：格式化 + 编译构建 + 单元测试
