@@ -95,6 +95,9 @@ int32_t RdbStoreImpl::RegisteredObserver(
     int64_t callback, const std::function<void()>& callbackRef)
 {
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     observers.try_emplace(option.event);
     if (!HasRegisteredObserver(callback, observers[option.event])) {
         auto localObserver = std::make_shared<RdbStoreObserverImpl>(callback, callbackRef);
@@ -130,6 +133,9 @@ int32_t RdbStoreImpl::RegisterObserverArrStr(int32_t subscribeType, int64_t call
     option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
     option.event = "dataChange";
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto observer = std::make_shared<RdbStoreObserverImpl>(callbackId, RdbStoreObserverImpl::ParamArrStr, mode);
     int32_t errCode = NativeRdb::E_OK;
     if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
@@ -151,6 +157,9 @@ int32_t RdbStoreImpl::RegisterObserverChangeInfo(int32_t subscribeType, int64_t 
     option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
     option.event = "dataChange";
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto observer = std::make_shared<RdbStoreObserverImpl>(callbackId, RdbStoreObserverImpl::ParamChangeInfo, mode);
     int32_t errCode = NativeRdb::E_OK;
     if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
@@ -168,6 +177,9 @@ int32_t RdbStoreImpl::RegisterObserverChangeInfo(int32_t subscribeType, int64_t 
 int32_t RdbStoreImpl::RegisterObserverProgressDetails(int64_t callbackId)
 {
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto observer = std::make_shared<SyncObserverImpl>(callbackId);
     int errCode = rdbStore_->RegisterAutoSyncCallback(observer);
     if (errCode == NativeRdb::E_OK) {
@@ -194,6 +206,9 @@ int32_t RdbStoreImpl::UnRegisteredObserver(DistributedRdb::SubscribeOption optio
     int64_t callback)
 {
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto obs = observers.find(option.event);
     if (obs == observers.end()) {
         LOGI("observer not found, event: %{public}s", option.event.c_str());
@@ -234,6 +249,9 @@ int32_t RdbStoreImpl::UnRegisteredAllObserver(DistributedRdb::SubscribeOption op
     std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers)
 {
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto obs = observers.find(option.event);
     if (obs == observers.end()) {
         LOGI("observer not found, event: %{public}s", option.event.c_str());
@@ -256,6 +274,9 @@ int32_t RdbStoreImpl::UnRegisterObserverArrStrChangeInfo(int32_t subscribeType, 
     option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
     option.event = "dataChange";
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
         if (*it == nullptr) {
             it = observers_[mode].erase(it);
@@ -286,6 +307,9 @@ int32_t RdbStoreImpl::UnRegisterObserverArrStrChangeInfoAll(int32_t subscribeTyp
     option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
     option.event = "dataChange";
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
         if (*it == nullptr) {
             it = observers_[mode].erase(it);
@@ -308,6 +332,9 @@ int32_t RdbStoreImpl::UnRegisterObserverArrStrChangeInfoAll(int32_t subscribeTyp
 int32_t RdbStoreImpl::UnRegisterObserverProgressDetails(int64_t callbackId)
 {
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     for (auto it = syncObservers_.begin(); it != syncObservers_.end();) {
         if (*it == nullptr) {
             it = syncObservers_.erase(it);
@@ -330,6 +357,9 @@ int32_t RdbStoreImpl::UnRegisterObserverProgressDetails(int64_t callbackId)
 int32_t RdbStoreImpl::UnRegisterObserverProgressDetailsAll()
 {
     std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     for (auto it = syncObservers_.begin(); it != syncObservers_.end();) {
         if (*it == nullptr) {
             it = syncObservers_.erase(it);

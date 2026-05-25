@@ -20,10 +20,6 @@
 #include "rdb_errno.h"
 #include "relational_store_impl_rdbstore.h"
 
-#ifndef PATH_SPLIT
-#define PATH_SPLIT '/'
-#endif
-
 using ContextParam = OHOS::AppDataMgrJsKit::JSUtils::ContextParam;
 using RdbConfig = OHOS::AppDataMgrJsKit::JSUtils::RdbConfig;
 

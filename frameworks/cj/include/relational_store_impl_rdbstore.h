@@ -27,7 +27,9 @@
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "rdb_types.h"
+#include "relational_store_impl_literesultset.h"
 #include "relational_store_impl_resultsetproxy.h"
+#include "relational_store_impl_transaction.h"
 #include "relational_store_utils.h"
 
 namespace OHOS {
@@ -168,16 +170,28 @@ public:
     int64_t BeginTrans(int32_t *errCode);
     int32_t Close();
 
+    ReturningResult BatchInsertWithReturning(const char *tableName, ValuesBucketEx *valuesBuckets,
+        int64_t valuesSize, ReturningConfig config, int32_t conflict, int32_t *errCode);
+    ReturningResult UpdateWithReturning(ValuesBucketEx valuesBucket, RdbPredicatesImpl &predicates,
+        ReturningConfig config, int32_t conflict, int32_t *errCode);
+    ReturningResult DeleteWithReturning(RdbPredicatesImpl &predicates, ReturningConfig config, int32_t *errCode);
+
+    int64_t QueryWithoutRowCount(RdbPredicatesImpl &predicates, char **columns, int64_t columnsSize, int32_t *errCode);
+    int64_t QuerySqlWithoutRowCount(const char *sql, ValueTypeEx *bindArgs, int64_t size, int32_t *errCode);
+
     int32_t Attach(const char *fullPath, const char *attachName, int32_t waitTime, int32_t *errCode);
     int32_t AttachConfig(OHOS::AbilityRuntime::Context *context, StoreConfigEx *config,
         const char *attachName, int32_t waitTime, int32_t *errCode);
     int32_t Detach(const char *attachName, int32_t waitTime, int32_t *errCode);
+
+    int64_t CreateTransaction(int32_t transactionType, int32_t *errCode);
 
 private:
     friend class OHOS::FFI::RuntimeType;
     friend class OHOS::FFI::TypeBase;
     static OHOS::FFI::RuntimeType *GetClassType();
     std::vector<OHOS::NativeRdb::ValueObject> bindArgs;
+    std::shared_ptr<OHOS::NativeRdb::RdbStore> GetRdbStore();
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
     std::mutex observerMutex_;
     std::vector<uint8_t> newKey;

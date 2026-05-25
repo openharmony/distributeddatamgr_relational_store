@@ -18,6 +18,8 @@
 #include "rdb_errno.h"
 #include "native_log.h"
 #include "relational_store_impl_rdbstore.h"
+#include "relational_store_impl_literesultset.h"
+#include "relational_store_impl_transaction.h"
 
 using namespace OHOS::FFI;
 
@@ -27,7 +29,8 @@ namespace Relational {
 int64_t RdbStoreImpl::BatchInsertWithConflictResolution(const char *tableName, ValuesBucketEx *valuesBuckets,
     int64_t valuesSize, int32_t conflict, int32_t *errCode)
 {
-    if (rdbStore_ == nullptr || tableName == nullptr || valuesBuckets == nullptr) {
+    auto store = GetRdbStore();
+    if (store == nullptr || tableName == nullptr || valuesBuckets == nullptr) {
         *errCode = NativeRdb::E_ERROR;
         return -1;
     }
@@ -42,7 +45,7 @@ int64_t RdbStoreImpl::BatchInsertWithConflictResolution(const char *tableName, V
         buckets.push_back(std::move(bucket));
     }
     auto conflictResolution = static_cast<NativeRdb::ConflictResolution>(conflict);
-    auto [ret, output] = rdbStore_->BatchInsert(tableName, buckets, conflictResolution);
+    auto [ret, output] = store->BatchInsert(tableName, buckets, conflictResolution);
     *errCode = ret;
     return output;
 }
@@ -50,7 +53,8 @@ int64_t RdbStoreImpl::BatchInsertWithConflictResolution(const char *tableName, V
 ValueTypeEx RdbStoreImpl::Execute(const char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize,
     int32_t *errCode)
 {
-    if (rdbStore_ == nullptr || sql == nullptr) {
+    auto store = GetRdbStore();
+    if (store == nullptr || sql == nullptr) {
         *errCode = NativeRdb::E_ERROR;
         return ValueTypeEx{};
     }
@@ -63,7 +67,7 @@ ValueTypeEx RdbStoreImpl::Execute(const char *sql, ValueTypeEx *bindArgs, int64_
     }
     int32_t status = NativeRdb::E_ERROR;
     NativeRdb::ValueObject output;
-    std::tie(status, output) = rdbStore_->Execute(sql, args);
+    std::tie(status, output) = store->Execute(sql, args);
     *errCode = status;
     if (status != NativeRdb::E_OK) {
         return ValueTypeEx{};
@@ -74,7 +78,8 @@ ValueTypeEx RdbStoreImpl::Execute(const char *sql, ValueTypeEx *bindArgs, int64_
 ValueTypeEx RdbStoreImpl::Execute(const char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize,
     int64_t txId, int32_t *errCode)
 {
-    if (rdbStore_ == nullptr || sql == nullptr) {
+    auto store = GetRdbStore();
+    if (store == nullptr || sql == nullptr) {
         *errCode = NativeRdb::E_ERROR;
         return ValueTypeEx{};
     }
@@ -87,7 +92,7 @@ ValueTypeEx RdbStoreImpl::Execute(const char *sql, ValueTypeEx *bindArgs, int64_
     }
     int32_t status = NativeRdb::E_ERROR;
     NativeRdb::ValueObject output;
-    std::tie(status, output) = rdbStore_->Execute(sql, args, txId);
+    std::tie(status, output) = store->Execute(sql, args, txId);
     *errCode = status;
     if (status != NativeRdb::E_OK) {
         return ValueTypeEx{};
@@ -97,23 +102,24 @@ ValueTypeEx RdbStoreImpl::Execute(const char *sql, ValueTypeEx *bindArgs, int64_
 
 int64_t RdbStoreImpl::BeginTrans(int32_t *errCode)
 {
-    if (rdbStore_ == nullptr) {
+    auto store = GetRdbStore();
+    if (store == nullptr) {
         *errCode = NativeRdb::E_ERROR;
         return -1;
     }
     int32_t status = NativeRdb::E_ERROR;
     int64_t txId = 0;
-    std::tie(status, txId) = rdbStore_->BeginTrans();
+    std::tie(status, txId) = store->BeginTrans();
     *errCode = status;
     return txId;
 }
 
 int32_t RdbStoreImpl::Close()
 {
+    std::unique_lock<std::mutex> lock(observerMutex_);
     if (rdbStore_ == nullptr) {
         return NativeRdb::E_ALREADY_CLOSED;
     }
-    std::unique_lock<std::mutex> lock(observerMutex_);
     for (int32_t mode = DistributedRdb::REMOTE; mode < DistributedRdb::SUBSCRIBE_MODE_MAX; mode++) {
         for (auto &obs : observers_[mode]) {
             if (obs == nullptr) {
@@ -156,14 +162,196 @@ int32_t RdbStoreImpl::Close()
     return NativeRdb::E_OK;
 }
 
+ReturningResult RdbStoreImpl::BatchInsertWithReturning(const char *tableName, ValuesBucketEx *valuesBuckets,
+    int64_t valuesSize, ReturningConfig config, int32_t conflict, int32_t *errCode)
+{
+    ReturningResult result = { 0, 0, NativeRdb::E_ERROR };
+    auto store = GetRdbStore();
+    if (store == nullptr || tableName == nullptr || valuesBuckets == nullptr) {
+        *errCode = NativeRdb::E_ERROR;
+        return result;
+    }
+    if (!IsValidTableName(tableName)) {
+        *errCode = NativeRdb::E_INVALID_ARGS_NEW;
+        return result;
+    }
+    NativeRdb::ValuesBuckets rows;
+    rows.Reserve(valuesSize);
+    for (int64_t i = 0; i < valuesSize; ++i) {
+        NativeRdb::ValuesBucket bucket;
+        for (int64_t j = 0; j < valuesBuckets[i].size; ++j) {
+            NativeRdb::ValueObject valueObj = ValueTypeExToValueObject(valuesBuckets[i].value[j]);
+            bucket.Put(valuesBuckets[i].key[j], std::move(valueObj));
+        }
+        rows.Put(std::move(bucket));
+    }
+    auto nativeConfig = CReturningConfigToNative(config);
+    auto conflictResolution = static_cast<NativeRdb::ConflictResolution>(conflict);
+    auto [ret, results] = store->BatchInsert(tableName, rows, nativeConfig, conflictResolution);
+    *errCode = ret;
+    if (ret != NativeRdb::E_OK) {
+        return result;
+    }
+    result.changed = results.changed;
+    if (results.results != nullptr) {
+        auto liteResultSet = FFIData::Create<LiteResultSetImpl>(results.results);
+        if (liteResultSet != nullptr) {
+            result.resultSetId = liteResultSet->GetID();
+        }
+    }
+    result.errCode = NativeRdb::E_OK;
+    return result;
+}
+
+ReturningResult RdbStoreImpl::UpdateWithReturning(ValuesBucketEx valuesBucket, RdbPredicatesImpl &predicates,
+    ReturningConfig config, int32_t conflict, int32_t *errCode)
+{
+    ReturningResult result = { 0, 0, NativeRdb::E_ERROR };
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ERROR;
+        return result;
+    }
+    NativeRdb::ValuesBucket row;
+    for (int64_t i = 0; i < valuesBucket.size; ++i) {
+        NativeRdb::ValueObject valueObj = ValueTypeExToValueObject(valuesBucket.value[i]);
+        row.Put(valuesBucket.key[i], std::move(valueObj));
+    }
+    auto nativeConfig = CReturningConfigToNative(config);
+    auto conflictResolution = static_cast<NativeRdb::ConflictResolution>(conflict);
+    auto [ret, results] = store->Update(row, *predicates.GetPredicates(), nativeConfig, conflictResolution);
+    *errCode = ret;
+    if (ret != NativeRdb::E_OK) {
+        return result;
+    }
+    result.changed = results.changed;
+    if (results.results != nullptr) {
+        auto liteResultSet = FFIData::Create<LiteResultSetImpl>(results.results);
+        if (liteResultSet != nullptr) {
+            result.resultSetId = liteResultSet->GetID();
+        }
+    }
+    result.errCode = NativeRdb::E_OK;
+    return result;
+}
+
+ReturningResult RdbStoreImpl::DeleteWithReturning(RdbPredicatesImpl &predicates, ReturningConfig config,
+    int32_t *errCode)
+{
+    ReturningResult result = { 0, 0, NativeRdb::E_ERROR };
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ERROR;
+        return result;
+    }
+    auto nativeConfig = CReturningConfigToNative(config);
+    auto [ret, results] = store->Delete(*predicates.GetPredicates(), nativeConfig);
+    *errCode = ret;
+    if (ret != NativeRdb::E_OK) {
+        return result;
+    }
+    result.changed = results.changed;
+    if (results.results != nullptr) {
+        auto liteResultSet = FFIData::Create<LiteResultSetImpl>(results.results);
+        if (liteResultSet != nullptr) {
+            result.resultSetId = liteResultSet->GetID();
+        }
+    }
+    result.errCode = NativeRdb::E_OK;
+    return result;
+}
+
+int64_t RdbStoreImpl::QueryWithoutRowCount(RdbPredicatesImpl &predicates, char **columns,
+    int64_t columnsSize, int32_t *errCode)
+{
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    std::vector<std::string> cols;
+    if (columns != nullptr && columnsSize > 0) {
+        cols.reserve(columnsSize);
+        for (int64_t i = 0; i < columnsSize; ++i) {
+            cols.push_back(columns[i]);
+        }
+    }
+    DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+    auto resultSet = store->QueryByStep(*predicates.GetPredicates(), cols, options);
+    if (resultSet == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
+        return -1;
+    }
+    auto liteResultSet = FFIData::Create<LiteResultSetImpl>(resultSet);
+    if (liteResultSet == nullptr) {
+        *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    *errCode = NativeRdb::E_OK;
+    return liteResultSet->GetID();
+}
+
+int64_t RdbStoreImpl::QuerySqlWithoutRowCount(const char *sql, ValueTypeEx *bindArgs,
+    int64_t size, int32_t *errCode)
+{
+    auto store = GetRdbStore();
+    if (store == nullptr || sql == nullptr) {
+        *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    std::vector<NativeRdb::ValueObject> args;
+    if (bindArgs != nullptr && size > 0) {
+        args.reserve(size);
+        for (int64_t i = 0; i < size; ++i) {
+            args.push_back(ValueTypeExToValueObject(bindArgs[i]));
+        }
+    }
+    DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+    auto resultSet = store->QueryByStep(sql, args, options);
+    if (resultSet == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
+        return -1;
+    }
+    auto liteResultSet = FFIData::Create<LiteResultSetImpl>(resultSet);
+    if (liteResultSet == nullptr) {
+        *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    *errCode = NativeRdb::E_OK;
+    return liteResultSet->GetID();
+}
+
+int64_t RdbStoreImpl::CreateTransaction(int32_t transactionType, int32_t *errCode)
+{
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
+        return -1;
+    }
+    int32_t code = NativeRdb::E_ERROR;
+    std::shared_ptr<NativeRdb::Transaction> transaction;
+    std::tie(code, transaction) = store->CreateTransaction(transactionType);
+    *errCode = code;
+    if (code != NativeRdb::E_OK || transaction == nullptr) {
+        return -1;
+    }
+    auto transactionImpl = FFIData::Create<TransactionImpl>(transaction);
+    if (transactionImpl == nullptr) {
+        *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    return transactionImpl->GetID();
+}
+
 int32_t RdbStoreImpl::Attach(const char *fullPath, const char *attachName, int32_t waitTime, int32_t *errCode)
 {
-    if (rdbStore_ == nullptr || fullPath == nullptr || attachName == nullptr) {
+    auto store = GetRdbStore();
+    if (store == nullptr || fullPath == nullptr || attachName == nullptr) {
         *errCode = NativeRdb::E_ERROR;
         return -1;
     }
     NativeRdb::RdbStoreConfig storeConfig(fullPath);
-    auto [ret, attachedNum] = rdbStore_->Attach(storeConfig, attachName, waitTime);
+    auto [ret, attachedNum] = store->Attach(storeConfig, attachName, waitTime);
     *errCode = ret;
     return attachedNum;
 }
@@ -171,7 +359,8 @@ int32_t RdbStoreImpl::Attach(const char *fullPath, const char *attachName, int32
 int32_t RdbStoreImpl::AttachConfig(OHOS::AbilityRuntime::Context *context, StoreConfigEx *config,
     const char *attachName, int32_t waitTime, int32_t *errCode)
 {
-    if (rdbStore_ == nullptr || context == nullptr || config == nullptr || attachName == nullptr) {
+    auto store = GetRdbStore();
+    if (store == nullptr || context == nullptr || config == nullptr || attachName == nullptr) {
         *errCode = NativeRdb::E_ERROR;
         return -1;
     }
@@ -187,18 +376,19 @@ int32_t RdbStoreImpl::AttachConfig(OHOS::AbilityRuntime::Context *context, Store
         return -1;
     }
     NativeRdb::RdbStoreConfig storeConfig = getRdbStoreConfigEx(rdbConfig, param);
-    auto [ret, attachedNum] = rdbStore_->Attach(storeConfig, attachName, waitTime);
+    auto [ret, attachedNum] = store->Attach(storeConfig, attachName, waitTime);
     *errCode = ret;
     return attachedNum;
 }
 
 int32_t RdbStoreImpl::Detach(const char *attachName, int32_t waitTime, int32_t *errCode)
 {
-    if (rdbStore_ == nullptr || attachName == nullptr) {
+    auto store = GetRdbStore();
+    if (store == nullptr || attachName == nullptr) {
         *errCode = NativeRdb::E_ERROR;
         return -1;
     }
-    auto [ret, attachedNum] = rdbStore_->Detach(attachName, waitTime);
+    auto [ret, attachedNum] = store->Detach(attachName, waitTime);
     *errCode = ret;
     return attachedNum;
 }
