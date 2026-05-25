@@ -37,11 +37,11 @@
 | 命令 | 用途 | 产物路径 |
 |------|------|----------|
 | `./build.sh --product-name rk3568 --build-target relational_store` | 构建整个组件 | `out/rk3568/innerkits/ohos-arm/relational_store/` |
+| `./build.sh --product-name rk3568 --build-target relational_store_test` | 构建全部测试 | `out/rk3568/exe.unstripped/tests/` |
 | `./build.sh --product-name rk3568 --build-target //foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb` | 构建原生核心库 | `out/rk3568/innerkits/ohos-arm/relational_store/native_rdb/` |
-| `./build.sh --product-name rk3568 --build-target //foundation/distributeddatamgr/relational_store/test/native/rdb:unittest` | 构建原生单元测试 | `out/rk3568/exe.unstripped/tests/unittest/relational_store/relational_store/native_rdb/` |
 | `clang-format -i <file>` | 格式化单个文件（依赖仓库根目录 `.clang-format` 配置） | 提交前 **MUST** 格式化 |
 
-测试用例完整列表见 `bundle.json` 的 `test` 字段。设备端测试运行路径：`/data/test/relational_store/relational_store/native_rdb/`
+模块名 `relational_store` / `relational_store_test` 为 `ohos_part` / `ohos_part_test` 组，可直接用作 `--build-target`；子目标（如 `native_rdb`）需绝对 GN 路径。测试用例完整列表见 `bundle.json` 的 `test` 字段。设备端测试运行路径：`/data/test/relational_store/relational_store/native_rdb/`
 
 ### Mock 与 TDD
 
@@ -55,9 +55,9 @@
 
 | CI 任务 | 本地等价命令 |
 |---------|-------------|
-| 单元测试 | `./build.sh --product-name rk3568 --build-target //foundation/distributeddatamgr/relational_store/test/native/rdb:unittest` |
+| 单元测试 | `./build.sh --product-name rk3568 --build-target relational_store_test` |
 | 格式化检查 | `clang-format -i <file>` |
-| 编译检查 | `./build.sh --product-name rk3568 --build-target //foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb` |
+| 编译检查 | `./build.sh --product-name rk3568 --build-target relational_store` |
 
 提交前必跑：格式化 + 编译构建 + 单元测试
 
