@@ -460,6 +460,55 @@ void ConfigImpl::CloudSyncImpl(string_view bundleName, string_view storeId, Sync
     RequestIPC(work);
 }
 
+void ConfigImpl::CloudSyncWithConfigImpl(::ohos::data::cloudData::BundleInfo bundleInfo,
+    CloudSyncConfig config, callback_view<void(const ProgressDetails &data)> progress)
+{
+    if (std::string(bundleInfo.bundleName).empty()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT_V20,
+            "The type of bundleName must be string and not empty.");
+        return;
+    }
+    SyncMode mode = config.mode;
+    if (mode < OHOS::DistributedRdb::TIME_FIRST || mode > OHOS::DistributedRdb::CLOUD_FIRST) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT_V20,
+            "mode must be between TIME_FIRST and CLOUD_FIRST.");
+        return;
+    }
+    bool downloadOnly = config.downloadOnly.has_value() ? config.downloadOnly.value() : false;
+    bool enablePredicate = config.enablePredicate.has_value() ? config.enablePredicate.value() : false;
+    if (enablePredicate && !config.predicates.has_value()) {
+        ThrowAniError(CloudService::Status::INVALID_ARGUMENT_V20,
+            "predicates cannot be null when enablePredicate is true.");
+        return;
+    }
+
+    auto work = [bundleInfo, mode, downloadOnly, progress](std::shared_ptr<CloudService> proxy) {
+        auto async = [progress](const OHOS::DistributedRdb::Details &details) {
+            if (details.empty()) {
+                LOG_ERROR("details is nullptr");
+                return;
+            }
+            progress(ConvertProgressDetail(details.begin()->second));
+        };
+        CloudService::Option option;
+        option.syncMode = ani_rdbutils::SyncModeToNative(mode);
+        option.isDownloadOnly = downloadOnly;
+        option.seqNum = GetSeqNum();
+        auto status = proxy->CloudSync(
+            std::string(bundleInfo.bundleName),
+            bundleInfo.storeId.has_value() ? std::string(bundleInfo.storeId.value()) : "",
+            option, async);
+        if (status == CloudService::Status::INVALID_ARGUMENT) {
+            status = CloudService::Status::INVALID_ARGUMENT_V20;
+        }
+        if (status != CloudService::Status::SUCCESS) {
+            LOG_ERROR("request, errcode = %{public}d", status);
+            ThrowAniError(status);
+        }
+    };
+    RequestIPC(work);
+}
+
 void ConfigImpl::OnSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
     callback_view<void(map_view<string, map<string, SyncInfo>> data)> progress)
 {
@@ -764,6 +813,7 @@ TH_EXPORT_CPP_API_ChangeAppCloudSwitchImplWithConfig(AniCloudData::ConfigImpl::C
 TH_EXPORT_CPP_API_ClearImplWithConfig(AniCloudData::ConfigImpl::ClearImplWithConfig);
 TH_EXPORT_CPP_API_SetGlobalCloudStrategyImpl(AniCloudData::ConfigImpl::SetGlobalCloudStrategyImpl);
 TH_EXPORT_CPP_API_CloudSyncImpl(AniCloudData::ConfigImpl::CloudSyncImpl);
+TH_EXPORT_CPP_API_CloudSyncWithConfigImpl(AniCloudData::ConfigImpl::CloudSyncWithConfigImpl);
 TH_EXPORT_CPP_API_OnSyncInfoChanged(AniCloudData::ConfigImpl::OnSyncInfoChanged);
 TH_EXPORT_CPP_API_OffSyncInfoChanged(AniCloudData::ConfigImpl::OffSyncInfoChanged);
 TH_EXPORT_CPP_API_SetCloudStrategyImpl(AniCloudData::SetCloudStrategyImpl);
