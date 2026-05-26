@@ -27,6 +27,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_common_path}/include",
       "${relational_store_native_path}/rdb_crypt",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/vdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
     ]
@@ -56,6 +57,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_common_path}/include",
       "${relational_store_innerapi_path}/appdatafwk/include",
       "${relational_store_native_path}/rdb/include",
+      "${relational_store_native_path}/vdb/include",
       "${relational_store_native_path}/dfx/include",
       "${relational_store_native_path}/obs_mgr_adapter",
       "../cloud_data/include",
@@ -82,10 +84,10 @@ if (is_ohos && !build_ohos_sdk) {
     cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
-      "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
-      "${relational_store_native_path}/rdb/src/rd_connection.cpp",
-      "${relational_store_native_path}/rdb/src/rd_statement.cpp",
-      "${relational_store_native_path}/rdb/src/rd_utils.cpp",
+      "${relational_store_native_path}/vdb/src/grd_api_manager.cpp",
+      "${relational_store_native_path}/vdb/src/rd_connection.cpp",
+      "${relational_store_native_path}/vdb/src/rd_statement.cpp",
+      "${relational_store_native_path}/vdb/src/rd_utils.cpp",
       "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
@@ -154,10 +156,10 @@ if (is_ohos && !build_ohos_sdk) {
 
     sources += [
       "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
-      "${relational_store_native_path}/rdb/src/grd_api_manager.cpp",
-      "${relational_store_native_path}/rdb/src/rd_connection.cpp",
-      "${relational_store_native_path}/rdb/src/rd_statement.cpp",
-      "${relational_store_native_path}/rdb/src/rd_utils.cpp",
+      "${relational_store_native_path}/vdb/src/grd_api_manager.cpp",
+      "${relational_store_native_path}/vdb/src/rd_connection.cpp",
+      "${relational_store_native_path}/vdb/src/rd_statement.cpp",
+      "${relational_store_native_path}/vdb/src/rd_utils.cpp",
       "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",

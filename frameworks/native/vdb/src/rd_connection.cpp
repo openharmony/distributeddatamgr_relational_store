@@ -154,7 +154,7 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
     std::vector<uint8_t> key = config.GetEncryptKey();
     std::string configStr = GetConfigStr(key, config.IsEncrypt());
     errCode = RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(),
-        GRD_DB_OPEN_CREATE | GRD_DB_OPEN_IGNORE_DATA_CORRPUUTION, &dbHandle_);
+        GRD_DB_OPEN_CREATE | GRD_DB_OPEN_IGNORE_DATA_CORRPUPTION, &dbHandle_);
     if (errCode == E_CHANGE_UNENCRYPTED_TO_ENCRYPTED) {
         errCode = RdUtils::RdDbRekey(dbPath.c_str(), GetConfigStr({}, false).c_str(), key);
         if (errCode != E_OK) {
@@ -164,7 +164,7 @@ int RdConnection::InnerOpen(const RdbStoreConfig &config)
             return errCode;
         }
         errCode = RdUtils::RdDbOpen(dbPath.c_str(), configStr.c_str(),
-            GRD_DB_OPEN_CREATE | GRD_DB_OPEN_IGNORE_DATA_CORRPUUTION, &dbHandle_);
+            GRD_DB_OPEN_CREATE | GRD_DB_OPEN_IGNORE_DATA_CORRPUPTION, &dbHandle_);
     }
     key.assign(key.size(), 0);
     RdUtils::ClearAndZeroString(configStr);
