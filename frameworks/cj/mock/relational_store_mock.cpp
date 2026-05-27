@@ -100,4 +100,57 @@ FFI_EXPORT int FfiOHOSRelationalStoreOn = 0;
 FFI_EXPORT int FfiOHOSRelationalStoreOff = 0;
 FFI_EXPORT int FfiOHOSRelationalStoreOffAll = 0;
 FFI_EXPORT int FfiOHOSRelationalStoreEmit = 0;
+
+FFI_EXPORT int FfiOHOSRelationalStoreGetRdbStoreEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreDeleteRdbStoreConfigEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreBatchInsertEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreInsertEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreUpdateEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreQuerySqlEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreExecuteSqlBindArgsEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreGetRowEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreEqualToEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreNotEqualToEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreLessThanEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreLessThanOrEqualToEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreGreaterThanEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreGreaterThanOrEqualToEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreBetweenEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreNotBetweenEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreInEx = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreNotInEx = 0;
+
+FFI_EXPORT int FfiOHOSRelationalStoreBatchInsertWithConflictResolution = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreExecute = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreExecuteWithTxId = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreBeginTrans = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreRdbStoreClose = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreCommitWithTxId = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreSetDistributedTablesConfigExt = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreAttach = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreAttachConfig = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreDetach = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreRdbStoreGetRebuilt = 0;
+
+FFI_EXPORT int FfiOHOSRelationalStoreOnArrStr = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreOnChangeInfo = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreOnProgressDetails = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreOffArrStrChangeInfo = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreOffArrStrChangeInfoAll = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreOffProgressDetails = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreOffProgressDetailsAll = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreCloudSync = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreGetVersion = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreSetVersion = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreGetModifyTime = 0;
+
+FFI_EXPORT int FfiOHOSRelationalStoreRdbPredicatesNotContains = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreRdbPredicatesNotLike = 0;
+
+FFI_EXPORT int FfiOHOSRelationalStoreResultSetGetColumnNames = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreResultSetGetColumnTypeByName = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreResultSetGetColumnTypeById = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreResultSetGetColumnType = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreResultSetGetCurrentRowData = 0;
+FFI_EXPORT int FfiOHOSRelationalStoreResultSetGetRowsData = 0;
 }

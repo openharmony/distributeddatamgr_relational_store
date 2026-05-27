@@ -36,6 +36,7 @@ public:
     explicit ResultSetImpl(std::shared_ptr<NativeRdb::ResultSet> resultSet);
 
     CArrStr GetAllColumnNames();
+    CArrStr GetWholeColumnNames(int32_t *errCode);
 
     int32_t GetColumnCount();
 
@@ -89,7 +90,11 @@ public:
 
     ValuesBucketEx GetRowEx(int32_t *rtnCode);
 
-    ValueTypeEx GetValue(int32_t columnIndex, int32_t* rtnCode);
+    ValueTypeEx GetValue(int32_t columnIndex, int32_t *rtnCode);
+
+    int32_t GetColumnType(int32_t columnIndex, int32_t *rtnCode);
+    RowDataEx GetCurrentRowData(int32_t *rtnCode);
+    RowsDataEx GetRowsData(int32_t maxCount, int32_t position, int32_t *rtnCode);
 
     std::shared_ptr<NativeRdb::ResultSet> resultSetValue;
 

@@ -16,7 +16,13 @@
 #ifndef RELATIONAL_STORE_UTILS_H
 #define RELATIONAL_STORE_UTILS_H
 
+#include <cstdint>
+#include <memory>
+
+#include "js_ability.h"
+#include "napi_rdb_js_utils.h"
 #include "rdb_store.h"
+#include "rdb_store_config.h"
 #include "rdb_types.h"
 #include "securec.h"
 #include "value_object.h"
@@ -178,6 +184,8 @@ ValueType ValueObjectToValueType(const NativeRdb::ValueObject &object);
 
 ValueTypeEx ValueObjectToValueTypeEx(const NativeRdb::ValueObject &object);
 
+ValuesBucketEx RowEntityToValuesBucketEx(const NativeRdb::RowEntity &rowEntity);
+
 struct RetPRIKeyType {
     int64_t integer;
     double dou;
@@ -261,6 +269,67 @@ CProgressDetails ToCProgressDetails(const DistributedRdb::Details &details);
 struct RetDistributedConfig {
     bool autoSync;
 };
+
+struct RetDistributedConfigExt {
+    bool autoSync;
+    bool asyncDownloadAsset;
+    bool enableCloud;
+    int32_t tableType;
+};
+
+struct CArrValuesBucket {
+    ValuesBucketEx *head;
+    int64_t size;
+};
+
+struct ReturningConfig {
+    char **columns;
+    int64_t columnsSize;
+    int32_t maxReturningCount;
+    bool hasMaxCount;
+};
+
+struct ReturningResult {
+    int64_t changed;
+    int64_t resultSetId;
+    int32_t errCode;
+};
+
+struct RowDataEx {
+    ValueTypeEx *head;
+    int64_t size;
+};
+
+struct RowsDataEx {
+    RowDataEx *head;
+    int64_t size;
+};
+
+void FreeReturningResult(ReturningResult *result);
+CArrValuesBucket ValuesBucketExVectorToCArrValuesBucket(
+    const std::vector<NativeRdb::ValuesBucket> &valuesBuckets);
+RowDataEx ValueObjectVectorToRowDataEx(const std::vector<NativeRdb::ValueObject> &values);
+RowsDataEx RowDataExVectorToRowsDataEx(const std::vector<std::vector<NativeRdb::ValueObject>> &rows);
+
+NativeRdb::ReturningConfig CReturningConfigToNative(const ReturningConfig &config);
+
+int32_t GetRealPath(OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
+    const OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param,
+    std::shared_ptr<OHOS::AppDataMgrJsKit::Context> abilityContext);
+
+void initContextParam(OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param,
+    std::shared_ptr<OHOS::AppDataMgrJsKit::Context> abilityContext);
+
+void initRdbConfig(OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig, StoreConfig &config);
+
+void initRdbConfigEx(OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig, const StoreConfigEx &config);
+
+NativeRdb::RdbStoreConfig getRdbStoreConfig(const OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
+    const OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param);
+
+NativeRdb::RdbStoreConfig getRdbStoreConfigEx(const OHOS::AppDataMgrJsKit::JSUtils::RdbConfig &rdbConfig,
+    const OHOS::AppDataMgrJsKit::JSUtils::ContextParam &param);
+
 } // namespace Relational
 } // namespace OHOS
 #endif

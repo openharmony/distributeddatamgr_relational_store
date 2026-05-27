@@ -14,11 +14,23 @@
  */
 
 #include "relational_store_utils.h"
+
 #include "native_log.h"
+#include "rdb_errno.h"
+#include "rdb_sql_utils.h"
 #include "rdb_store.h"
+
+#ifndef PATH_SPLIT
+#define PATH_SPLIT '/'
+#endif
+
+using ContextParam = OHOS::AppDataMgrJsKit::JSUtils::ContextParam;
+using RdbConfig = OHOS::AppDataMgrJsKit::JSUtils::RdbConfig;
 
 const int64_t UI64TOUI8 = 8;
 const int64_t BITNUMOFUI64 = 64;
+static constexpr size_t MAX_COLUMNS = 2000;
+static constexpr int32_t MAX_ROWS_COUNT = 32766;
 
 namespace OHOS {
 namespace Relational {
@@ -34,13 +46,13 @@ OHOS::NativeRdb::RdbStoreConfig::CryptoParam ToCCryptoParam(CryptoParam param)
     return cryptoParam;
 }
 
-char* MallocCString(const std::string& origin)
+char *MallocCString(const std::string& origin)
 {
     if (origin.empty()) {
         return nullptr;
     }
     auto len = origin.length() + 1;
-    char* res = static_cast<char*>(malloc(sizeof(char) * len));
+    char *res = static_cast<char*>(malloc(sizeof(char) * len));
     if (res == nullptr) {
         return nullptr;
     }
@@ -293,11 +305,11 @@ ValueType ValueObjectToValueTypeAssets(const NativeRdb::ValueObject& object)
     NativeRdb::ValueObject::Assets val;
     object.GetAssets(val);
     if (val.size() == 0) {
-        return ValueType {.assets = Assets{nullptr, -1}, .tag = TYPE_ASSETS};
+        return ValueType {.assets = Assets{ nullptr, -1 }, .tag = TYPE_ASSETS};
     }
     Assets assets = Assets {.head = static_cast<Asset*>(malloc(val.size() * sizeof(Asset))), .size = val.size()};
     if (assets.head == nullptr) {
-        return ValueType {.assets = Assets{nullptr, -1}, .tag = TYPE_ASSETS};
+        return ValueType {.assets = Assets{ nullptr, -1 }, .tag = TYPE_ASSETS};
     }
     for (std::size_t i = 0; i < val.size(); i++) {
         assets.head[i] = Asset {
@@ -342,12 +354,12 @@ ValueType ValueObjectToValueType(const NativeRdb::ValueObject& object)
             std::vector<uint8_t> val;
             object.GetBlob(val);
             if (val.size() == 0) {
-                return ValueType {.Uint8Array = CArrUI8 {nullptr, -1}, .tag = TYPE_BLOB};
+                return ValueType {.Uint8Array = CArrUI8 { nullptr, -1 }, .tag = TYPE_BLOB};
             }
             CArrUI8 arr = CArrUI8 {.head = static_cast<uint8_t*>(malloc(val.size() * sizeof(uint8_t))),
                 .size = val.size()};
             if (arr.head == nullptr) {
-                return ValueType {.Uint8Array = CArrUI8 {nullptr, -1}, .tag = TYPE_BLOB};
+                return ValueType {.Uint8Array = CArrUI8 { nullptr, -1 }, .tag = TYPE_BLOB};
             }
             return ValueType {.Uint8Array = arr, .tag = TYPE_BLOB};
         }
@@ -358,7 +370,7 @@ ValueType ValueObjectToValueType(const NativeRdb::ValueObject& object)
             return ValueObjectToValueTypeAssets(object);
         }
         case NativeRdb::ValueObject::TYPE_BUTT:
-            return ValueType {.tag = 128};
+            return ValueType {.tag = TYPE_BUTT_TAG};
         default:
             return ValueType {.tag = TYPE_NULL};
     }
@@ -369,12 +381,12 @@ ValueTypeEx ValueObjectToValueTypeExBlob(const NativeRdb::ValueObject& object)
     std::vector<uint8_t> val = static_cast<std::vector<uint8_t>>(object);
     auto size = val.size();
     if (size == 0) {
-        return ValueTypeEx {.uint8Array = CArrUI8 {nullptr, ERROR_VALUE}, .tag = TYPE_BLOB};
+        return ValueTypeEx {.uint8Array = CArrUI8 { nullptr, ERROR_VALUE }, .tag = TYPE_BLOB};
     }
     CArrUI8 arr = CArrUI8 {.head = static_cast<uint8_t*>(malloc(size * sizeof(uint8_t))),
         .size = size};
     if (arr.head == nullptr) {
-        return ValueTypeEx {.uint8Array = CArrUI8 {nullptr, ERROR_VALUE}, .tag = TYPE_BLOB};
+        return ValueTypeEx {.uint8Array = CArrUI8 { nullptr, ERROR_VALUE }, .tag = TYPE_BLOB};
     }
     for (size_t i = 0; i < size; i++) {
         arr.head[i] = val[i];
@@ -401,11 +413,11 @@ ValueTypeEx ValueObjectToValueTypeExAssets(const NativeRdb::ValueObject& object)
 {
     NativeRdb::ValueObject::Assets val = static_cast<NativeRdb::ValueObject::Assets>(object);
     if (val.size() == 0) {
-        return ValueTypeEx {.assets = Assets{nullptr, ERROR_VALUE}, .tag = TYPE_ASSETS};
+        return ValueTypeEx {.assets = Assets{ nullptr, ERROR_VALUE }, .tag = TYPE_ASSETS};
     }
     Assets assets = Assets {.head = static_cast<Asset*>(malloc(val.size() * sizeof(Asset))), .size = val.size()};
     if (assets.head == nullptr) {
-        return ValueTypeEx {.assets = Assets{nullptr, ERROR_VALUE}, .tag = TYPE_ASSETS};
+        return ValueTypeEx {.assets = Assets{ nullptr, ERROR_VALUE }, .tag = TYPE_ASSETS};
     }
     for (std::size_t i = 0; i < val.size(); i++) {
         assets.head[i] = Asset {
@@ -426,12 +438,12 @@ ValueTypeEx ValueObjectToValueTypeExFloatArray(const NativeRdb::ValueObject& obj
     std::vector<float> val = static_cast<std::vector<float>>(object);
     auto size = val.size();
     if (size == 0) {
-        return ValueTypeEx {.floatArray = CArrFloat {nullptr, ERROR_VALUE}, .tag = TYPE_FLOATARR};
+        return ValueTypeEx {.floatArray = CArrFloat { nullptr, ERROR_VALUE }, .tag = TYPE_FLOATARR};
     }
     CArrFloat arr = CArrFloat {.head = static_cast<float*>(malloc(size * sizeof(float))),
         .size = size};
     if (arr.head == nullptr) {
-        return ValueTypeEx {.floatArray = CArrFloat {nullptr, ERROR_VALUE}, .tag = TYPE_FLOATARR};
+        return ValueTypeEx {.floatArray = CArrFloat { nullptr, ERROR_VALUE }, .tag = TYPE_FLOATARR};
     }
     for (size_t i = 0; i < size; i++) {
         arr.head[i] = val[i];
@@ -446,11 +458,11 @@ ValueTypeEx ValueObjectToValueTypeExBigInt(const NativeRdb::ValueObject& object)
     std::vector<uint64_t> value = bigInt.Value();
     size_t size = value.size();
     if (size == 0) {
-        return ValueTypeEx {.bigInt = BigInt {CArrUI8 {nullptr, ERROR_VALUE}, ERROR_VALUE}, .tag = TYPE_BIGINT};
+        return ValueTypeEx {.bigInt = BigInt { CArrUI8 { nullptr, ERROR_VALUE }, ERROR_VALUE }, .tag = TYPE_BIGINT};
     }
     uint8_t *head = static_cast<uint8_t*>(calloc(UI64TOUI8 * size, sizeof(uint8_t)));
     if (head == nullptr) {
-        return ValueTypeEx {.bigInt = BigInt {CArrUI8 {nullptr, ERROR_VALUE}, ERROR_VALUE}, .tag = TYPE_BIGINT};
+        return ValueTypeEx {.bigInt = BigInt { CArrUI8 { nullptr, ERROR_VALUE }, ERROR_VALUE }, .tag = TYPE_BIGINT};
     }
     for (size_t i = 0; i < size; i++) {
         for (size_t j = 0; j < UI64TOUI8; j++) {
@@ -493,19 +505,49 @@ ValueTypeEx ValueObjectToValueTypeEx(const NativeRdb::ValueObject& object)
             return ValueObjectToValueTypeExBigInt(object);
         }
         case NativeRdb::ValueObject::TYPE_BUTT:
-            return ValueTypeEx {.tag = 128};
+            return ValueTypeEx {.tag = TYPE_BUTT_TAG};
         default:
             return ValueTypeEx {.tag = TYPE_NULL};
     }
 }
 
+ValuesBucketEx RowEntityToValuesBucketEx(const NativeRdb::RowEntity &rowEntity)
+{
+    const std::map<std::string, NativeRdb::ValueObject> map = rowEntity.Get();
+    size_t size = map.size();
+    if (size == 0) {
+        return ValuesBucketEx{ nullptr, nullptr, 0 };
+    }
+    if (size > MAX_COLUMNS) {
+        LOGE("RowEntityToValuesBucketEx size %{public}zu exceeds limit", size);
+        return ValuesBucketEx{ nullptr, nullptr, ERROR_VALUE };
+    }
+    ValuesBucketEx result = ValuesBucketEx{
+        .key = static_cast<char **>(malloc(sizeof(char *) * size)),
+        .value = static_cast<ValueTypeEx *>(malloc(sizeof(ValueTypeEx) * size)),
+        .size = static_cast<int64_t>(size)
+    };
+    if (result.key == nullptr || result.value == nullptr) {
+        free(result.key);
+        free(result.value);
+        return ValuesBucketEx{ nullptr, nullptr, ERROR_VALUE };
+    }
+    int64_t i = 0;
+    for (auto &t : map) {
+        result.key[i] = MallocCString(t.first);
+        result.value[i] = ValueObjectToValueTypeEx(t.second);
+        i++;
+    }
+    return result;
+}
+
 CArrStr VectorToCArrStr(const std::vector<std::string> &devices)
 {
-    CArrStr cArrStr{0};
-    if (devices.size() == 0) {
+    CArrStr cArrStr = { nullptr, 0 };
+    if (devices.empty()) {
         return cArrStr;
     }
-    cArrStr.head = static_cast<char**>(malloc(sizeof(char*) * devices.size()));
+    cArrStr.head = static_cast<char **>(malloc(sizeof(char *) * devices.size()));
     if (cArrStr.head == nullptr) {
         return cArrStr;
     }
@@ -564,7 +606,7 @@ RetPRIKeyType VariantToRetPRIKeyType(const std::variant<std::monostate, std::str
         return RetPRIKeyType{ .integer = 0, .dou = 0.0,
             .string = MallocCString(std::get<std::string>(value)), .tag = NativeRdb::ValueObject::TYPE_STRING };
     } else {
-        return RetPRIKeyType{0};
+        return RetPRIKeyType{ 0 };
     }
 }
 
@@ -579,10 +621,10 @@ std::vector<NativeRdb::RdbStore::PRIKey> CArrPRIKeyTypeToPRIKeyArray(CArrPRIKeyT
 
 ModifyTime MapToModifyTime(std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbStore::Date> &map, int32_t &errCode)
 {
-    ModifyTime modifyTime{0};
+    ModifyTime modifyTime{ 0 };
     modifyTime.size = static_cast<int64_t>(map.size());
     if (modifyTime.size == 0) {
-        return ModifyTime{0};
+        return ModifyTime{ 0 };
     }
     modifyTime.key = static_cast<RetPRIKeyType*>(malloc(sizeof(RetPRIKeyType) * modifyTime.size));
     modifyTime.value = static_cast<uint64_t*>(malloc(sizeof(uint64_t) * modifyTime.size));
@@ -590,7 +632,7 @@ ModifyTime MapToModifyTime(std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbS
         free(modifyTime.key);
         free(modifyTime.value);
         errCode = -1;
-        return ModifyTime{0};
+        return ModifyTime{ 0 };
     }
     int64_t index = 0;
     for (auto it = map.begin(); it != map.end(); ++it) {
@@ -603,7 +645,7 @@ ModifyTime MapToModifyTime(std::map<NativeRdb::RdbStore::PRIKey, NativeRdb::RdbS
 
 CArrPRIKeyType VectorToCArrPRIKeyType(std::vector<DistributedRdb::RdbStoreObserver::PrimaryKey> arr)
 {
-    CArrPRIKeyType types{0};
+    CArrPRIKeyType types{ 0 };
     if (arr.size() == 0) {
         return types;
     }
@@ -621,7 +663,7 @@ CArrPRIKeyType VectorToCArrPRIKeyType(std::vector<DistributedRdb::RdbStoreObserv
 RetChangeInfo ToRetChangeInfo(const DistributedRdb::Origin &origin,
     DistributedRdb::RdbStoreObserver::ChangeInfo::iterator info)
 {
-    RetChangeInfo retInfo{0};
+    RetChangeInfo retInfo{ 0 };
     retInfo.table = MallocCString(info->first);
     retInfo.type = origin.dataType;
     retInfo.inserted = VectorToCArrPRIKeyType(info->
@@ -637,13 +679,13 @@ CArrRetChangeInfo ToCArrRetChangeInfo(const DistributedRdb::Origin &origin,
     const DistributedRdb::RdbStoreObserver::PrimaryFields &fields,
     DistributedRdb::RdbStoreObserver::ChangeInfo &&changeInfo)
 {
-    CArrRetChangeInfo infos{0};
+    CArrRetChangeInfo infos{ 0 };
     if (changeInfo.size() == 0) {
         return infos;
     }
     infos.head = static_cast<RetChangeInfo*>(malloc(sizeof(RetChangeInfo) * changeInfo.size()));
     if (infos.head == nullptr) {
-        return CArrRetChangeInfo{0};
+        return CArrRetChangeInfo{ 0 };
     }
     int64_t index = 0;
     for (auto it = changeInfo.begin(); it != changeInfo.end(); ++it) {
@@ -668,14 +710,14 @@ CTableDetails ToCTableDetails(DistributedRdb::TableDetail detail)
 CDetails ToCDetails(DistributedRdb::TableDetails details)
 {
     if (details.size() == 0) {
-        return CDetails{0};
+        return CDetails{ 0 };
     }
-    char** key = static_cast<char**>(malloc(sizeof(char*) * details.size()));
-    CTableDetails* value = static_cast<CTableDetails*>(malloc(sizeof(CTableDetails) * details.size()));
+    char **key = static_cast<char **>(malloc(sizeof(char *) * details.size()));
+    CTableDetails *value = static_cast<CTableDetails*>(malloc(sizeof(CTableDetails) * details.size()));
     if (key == nullptr || value == nullptr) {
         free(key);
         free(value);
-        return CDetails{0};
+        return CDetails{ 0 };
     }
     int64_t index = 0;
     for (auto it = details.begin(); it != details.end(); ++it) {
@@ -686,14 +728,249 @@ CDetails ToCDetails(DistributedRdb::TableDetails details)
     return CDetails{ .key = key, .value = value, .size = details.size() };
 }
 
-CProgressDetails ToCProgressDetails(const  DistributedRdb::Details &details)
+CProgressDetails ToCProgressDetails(const DistributedRdb::Details &details)
 {
     if (details.empty()) {
-        return CProgressDetails{0};
+        return CProgressDetails{ 0 };
     }
     DistributedRdb::ProgressDetail detail = details.begin() ->second;
     return CProgressDetails{ .schedule = detail.progress, .code = detail.code,
         .details = ToCDetails(detail.details) };
 }
+
+void FreeReturningResult(ReturningResult *result)
+{
+    if (result == nullptr) {
+        return;
+    }
 }
+
+NativeRdb::ReturningConfig CReturningConfigToNative(const ReturningConfig &config)
+{
+    NativeRdb::ReturningConfig nativeConfig;
+    nativeConfig.defaultRowIndex = NativeRdb::ReturningConfig::DEFAULT_ROW_INDEX;
+    if (config.columns != nullptr && config.columnsSize > 0) {
+        for (int64_t i = 0; i < config.columnsSize; ++i) {
+            nativeConfig.columns.push_back(config.columns[i]);
+        }
+    }
+    if (config.hasMaxCount) {
+        nativeConfig.maxReturningCount = config.maxReturningCount;
+    }
+    return nativeConfig;
 }
+
+CArrValuesBucket ValuesBucketExVectorToCArrValuesBucket(const std::vector<NativeRdb::ValuesBucket> &valuesBuckets)
+{
+    CArrValuesBucket result{ nullptr, 0 };
+    if (valuesBuckets.empty()) {
+        return result;
+    }
+    result.size = static_cast<int64_t>(valuesBuckets.size());
+    result.head = static_cast<ValuesBucketEx *>(malloc(sizeof(ValuesBucketEx) * result.size));
+    if (result.head == nullptr) {
+        return result;
+    }
+    for (int64_t i = 0; i < result.size; ++i) {
+        const auto &bucket = valuesBuckets[i];
+        auto map = bucket.GetAll();
+        result.head[i].size = static_cast<int64_t>(map.size());
+        result.head[i].key = static_cast<char **>(malloc(sizeof(char *) * result.head[i].size));
+        result.head[i].value = static_cast<ValueTypeEx *>(malloc(sizeof(ValueTypeEx) * result.head[i].size));
+        if (result.head[i].key == nullptr || result.head[i].value == nullptr) {
+            for (int64_t j = 0; j < i; ++j) {
+                free(result.head[j].key);
+                free(result.head[j].value);
+            }
+            free(result.head);
+            result.head = nullptr;
+            result.size = 0;
+            return result;
+        }
+        int64_t k = 0;
+        for (const auto &pair : map) {
+            result.head[i].key[k] = MallocCString(pair.first);
+            result.head[i].value[k] = ValueObjectToValueTypeEx(pair.second);
+            ++k;
+        }
+    }
+    return result;
+}
+
+RowDataEx ValueObjectVectorToRowDataEx(const std::vector<NativeRdb::ValueObject> &values)
+{
+    RowDataEx result{ nullptr, 0 };
+    if (values.size() == 0) {
+        return result;
+    }
+    if (values.size() > MAX_COLUMNS) {
+        LOGE("ValueObjectVectorToRowDataEx size %{public}zu exceeds limit %{public}zu", values.size(), MAX_COLUMNS);
+        return result;
+    }
+    result.size = static_cast<int64_t>(values.size());
+    result.head = static_cast<ValueTypeEx *>(malloc(sizeof(ValueTypeEx) * result.size));
+    if (result.head == nullptr) {
+        return result;
+    }
+    for (int64_t i = 0; i < result.size; i++) {
+        result.head[i] = ValueObjectToValueTypeEx(values[i]);
+    }
+    return result;
+}
+
+RowsDataEx RowDataExVectorToRowsDataEx(const std::vector<std::vector<NativeRdb::ValueObject>> &rows)
+{
+    RowsDataEx result{ nullptr, 0 };
+    if (rows.size() == 0) {
+        return result;
+    }
+    if (rows.size() > MAX_ROWS_COUNT) {
+        LOGE("RowDataExVectorToRowsDataEx size %{public}zu exceeds limit %{public}d", rows.size(), MAX_ROWS_COUNT);
+        return result;
+    }
+    result.size = static_cast<int64_t>(rows.size());
+    result.head = static_cast<RowDataEx *>(malloc(sizeof(RowDataEx) * result.size));
+    if (result.head == nullptr) {
+        return result;
+    }
+    for (int64_t i = 0; i < result.size; i++) {
+        result.head[i] = ValueObjectVectorToRowDataEx(rows[i]);
+    }
+    return result;
+}
+
+int32_t GetRealPath(
+    RdbConfig &rdbConfig, const ContextParam &param, std::shared_ptr<OHOS::AppDataMgrJsKit::Context> abilityContext)
+{
+    if (rdbConfig.name.find(PATH_SPLIT) != std::string::npos) {
+        LOGE("Parameter error. The StoreConfig.name must be a file name without path.");
+        return RelationalStoreJsKit::E_PARAM_ERROR;
+    }
+
+    if (!rdbConfig.customDir.empty()) {
+        if (rdbConfig.customDir.find_first_of(PATH_SPLIT) == 0) {
+            LOGE("Parameter error. The customDir must be a relative directory.");
+            return RelationalStoreJsKit::E_PARAM_ERROR;
+        }
+        if (rdbConfig.customDir.length() > MAX_CUSTOM_DIR_LENGTH) {
+            LOGE("Parameter error. The customDir length must be less than or equal to 128 bytes.");
+            return RelationalStoreJsKit::E_PARAM_ERROR;
+        }
+    }
+
+    std::string baseDir = param.baseDir;
+    if (!rdbConfig.dataGroupId.empty()) {
+        if (!param.isStageMode) {
+            return RelationalStoreJsKit::E_NOT_STAGE_MODE;
+        }
+        std::string groupDir;
+        int errCode = abilityContext->GetSystemDatabaseDir(rdbConfig.dataGroupId, groupDir);
+        if (errCode != NativeRdb::E_OK && groupDir.empty()) {
+            return RelationalStoreJsKit::E_DATA_GROUP_ID_INVALID;
+        }
+        baseDir = groupDir;
+    }
+
+    auto [realPath, errorCode] =
+        NativeRdb::RdbSqlUtils::GetDefaultDatabasePath(baseDir, rdbConfig.name, rdbConfig.customDir);
+    if (errorCode != NativeRdb::E_OK || realPath.length() > MAX_DATABASE_PATH_LENGTH) {
+        LOGE("Parameter error. The database path must be a valid path.");
+        return RelationalStoreJsKit::E_PARAM_ERROR;
+    }
+    rdbConfig.path = realPath;
+    return NativeRdb::E_OK;
+}
+
+void initContextParam(ContextParam &param, std::shared_ptr<OHOS::AppDataMgrJsKit::Context> abilityContext)
+{
+    param.bundleName = abilityContext->GetBundleName();
+    param.moduleName = abilityContext->GetModuleName();
+    param.baseDir = abilityContext->GetDatabaseDir();
+    param.area = abilityContext->GetArea();
+    param.isSystemApp = abilityContext->IsSystemAppCalled();
+    param.isStageMode = abilityContext->IsStageMode();
+}
+
+void initRdbConfig(RdbConfig &rdbConfig, StoreConfig &config)
+{
+    rdbConfig.isEncrypt = config.encrypt;
+    rdbConfig.isSearchable = config.isSearchable;
+    rdbConfig.isAutoClean = config.autoCleanDirtyData;
+    rdbConfig.securityLevel = static_cast<NativeRdb::SecurityLevel>(config.securityLevel);
+    rdbConfig.dataGroupId = config.dataGroupId;
+    rdbConfig.name = config.name;
+    rdbConfig.customDir = config.customDir;
+}
+
+void initRdbConfigEx(RdbConfig &rdbConfig, const StoreConfigEx &config)
+{
+    rdbConfig.isEncrypt = config.encrypt;
+    rdbConfig.isSearchable = config.isSearchable;
+    rdbConfig.isAutoClean = config.autoCleanDirtyData;
+    rdbConfig.securityLevel = static_cast<NativeRdb::SecurityLevel>(config.securityLevel);
+    rdbConfig.dataGroupId = config.dataGroupId;
+    rdbConfig.name = config.name;
+    rdbConfig.customDir = config.customDir;
+    rdbConfig.rootDir = config.rootDir;
+    rdbConfig.vector = config.vector;
+    rdbConfig.allowRebuild = config.allowRebuild;
+    rdbConfig.isReadOnly = config.isReadOnly;
+    rdbConfig.pluginLibs = CArrStrToVector(config.pluginLibs);
+    rdbConfig.cryptoParam = ToCCryptoParam(config.cryptoParam);
+    rdbConfig.tokenizer = static_cast<OHOS::NativeRdb::Tokenizer>(config.tokenizer);
+    rdbConfig.persist = config.persist;
+}
+
+NativeRdb::RdbStoreConfig getRdbStoreConfig(const RdbConfig &rdbConfig, const ContextParam &param)
+{
+    NativeRdb::RdbStoreConfig rdbStoreConfig(rdbConfig.path);
+    rdbStoreConfig.SetEncryptStatus(rdbConfig.isEncrypt);
+    rdbStoreConfig.SetSearchable(rdbConfig.isSearchable);
+    rdbStoreConfig.SetIsVector(rdbConfig.vector);
+    rdbStoreConfig.SetAutoClean(rdbConfig.isAutoClean);
+    rdbStoreConfig.SetSecurityLevel(rdbConfig.securityLevel);
+    rdbStoreConfig.SetDataGroupId(rdbConfig.dataGroupId);
+    rdbStoreConfig.SetName(rdbConfig.name);
+    rdbStoreConfig.SetCustomDir(rdbConfig.customDir);
+    rdbStoreConfig.SetAllowRebuild(rdbConfig.allowRebuild);
+
+    if (!param.bundleName.empty()) {
+        rdbStoreConfig.SetBundleName(param.bundleName);
+    }
+    rdbStoreConfig.SetModuleName(param.moduleName);
+    rdbStoreConfig.SetArea(param.area);
+    return rdbStoreConfig;
+}
+
+NativeRdb::RdbStoreConfig getRdbStoreConfigEx(const RdbConfig &rdbConfig, const ContextParam &param)
+{
+    NativeRdb::RdbStoreConfig rdbStoreConfig(rdbConfig.path);
+    rdbStoreConfig.SetEncryptStatus(rdbConfig.isEncrypt);
+    rdbStoreConfig.SetSearchable(rdbConfig.isSearchable);
+    rdbStoreConfig.SetIsVector(rdbConfig.vector);
+    rdbStoreConfig.SetDBType(rdbConfig.vector ? NativeRdb::DB_VECTOR : NativeRdb::DB_SQLITE);
+    rdbStoreConfig.SetStorageMode(
+        rdbConfig.persist ? NativeRdb::StorageMode::MODE_DISK : NativeRdb::StorageMode::MODE_MEMORY);
+    rdbStoreConfig.SetAutoClean(rdbConfig.isAutoClean);
+    rdbStoreConfig.SetSecurityLevel(rdbConfig.securityLevel);
+    rdbStoreConfig.SetDataGroupId(rdbConfig.dataGroupId);
+    rdbStoreConfig.SetName(rdbConfig.name);
+    rdbStoreConfig.SetCustomDir(rdbConfig.customDir);
+    rdbStoreConfig.SetAllowRebuild(rdbConfig.allowRebuild);
+    rdbStoreConfig.SetReadOnly(rdbConfig.isReadOnly);
+    rdbStoreConfig.SetIntegrityCheck(NativeRdb::IntegrityCheck::NONE);
+    rdbStoreConfig.SetTokenizer(rdbConfig.tokenizer);
+
+    if (!param.bundleName.empty()) {
+        rdbStoreConfig.SetBundleName(param.bundleName);
+    }
+    rdbStoreConfig.SetModuleName(param.moduleName);
+    rdbStoreConfig.SetArea(param.area);
+    rdbStoreConfig.SetPluginLibs(rdbConfig.pluginLibs);
+    rdbStoreConfig.SetHaMode(rdbConfig.haMode);
+
+    rdbStoreConfig.SetCryptoParam(rdbConfig.cryptoParam);
+    return rdbStoreConfig;
+}
+} // namespace Relational
+} // namespace OHOS
