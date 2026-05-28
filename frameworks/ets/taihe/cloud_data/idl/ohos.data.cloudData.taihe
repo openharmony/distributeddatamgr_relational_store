@@ -145,7 +145,7 @@ function QueryStatisticsImpl(accountId: String, bundleName: String, storeId: Opt
 function QueryLastSyncInfoImpl(accountId: String, bundleName: String, storeId: Optional<String>): @record Map<String, SyncInfo>;
 
 @static("Config")
-@gen_promise("queryLastSyncInfo")
+@gen_promise("batchQueryLastSyncInfo")
 function QueryLastSyncInfoBatchImpl(accountId: String, bundleInfos: Array<BundleInfo>): @record Map<String, @record Map<String, SyncInfo>>;
 
 @static("Config")
@@ -170,7 +170,7 @@ function SetGlobalCloudStrategyImpl(strategy: StrategyType, param: Optional<Arra
 function CloudSyncImpl(bundleName: String, storeId: String, mode: SyncMode, progress: (data: ProgressDetails)=> void): void;
 
 @static("Config")
-@gen_promise("cloudSync")
+@gen_promise("cloudSyncEx")
 function CloudSyncWithConfigImpl(bundleInfo: BundleInfo, config: CloudSyncConfig, progress: (data: ProgressDetails)=> void): void;
 
 @static("Config")

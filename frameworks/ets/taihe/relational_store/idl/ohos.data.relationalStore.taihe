@@ -949,7 +949,7 @@ interface RdbStore {
     @gen_promise("cloudSync")
     CloudSyncWithPredicates(mode: SyncMode, predicates: RdbPredicates, progress: (p : ProgressDetails) => void): void;
 
-    @gen_promise("cloudSync")
+    @gen_promise("cloudSyncEx")
     CloudSyncWithConfig(config: CloudSyncConfig, progress: (p : ProgressDetails) => void): void;
 
     @gen_promise("stopCloudSync")
