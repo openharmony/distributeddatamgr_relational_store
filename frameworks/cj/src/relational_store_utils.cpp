@@ -373,6 +373,7 @@ ValueType ValueObjectToValueType(const NativeRdb::ValueObject& object)
             if (arr.head == nullptr) {
                 return ValueType {.Uint8Array = CArrUI8 { nullptr, -1 }, .tag = TYPE_BLOB};
             }
+            memcpy_s(arr.head, arr.size * sizeof(uint8_t), val.data(), val.size() * sizeof(uint8_t));
             return ValueType {.Uint8Array = arr, .tag = TYPE_BLOB};
         }
         case NativeRdb::ValueObject::TYPE_ASSET: {
