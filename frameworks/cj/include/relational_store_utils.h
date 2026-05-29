@@ -305,6 +305,8 @@ struct RowsDataEx {
     int64_t size;
 };
 
+bool IsValidTableName(const std::string &table);
+
 void FreeReturningResult(ReturningResult *result);
 CArrValuesBucket ValuesBucketExVectorToCArrValuesBucket(
     const std::vector<NativeRdb::ValuesBucket> &valuesBuckets);

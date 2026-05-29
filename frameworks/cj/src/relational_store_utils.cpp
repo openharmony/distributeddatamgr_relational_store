@@ -15,6 +15,7 @@
 
 #include "relational_store_utils.h"
 
+#include <regex>
 #include "native_log.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
@@ -29,11 +30,22 @@ using RdbConfig = OHOS::AppDataMgrJsKit::JSUtils::RdbConfig;
 
 const int64_t UI64TOUI8 = 8;
 const int64_t BITNUMOFUI64 = 64;
+static constexpr size_t MAX_TABLE_NAME_LENGTH = 256;
 static constexpr size_t MAX_COLUMNS = 2000;
 static constexpr int32_t MAX_ROWS_COUNT = 32766;
 
 namespace OHOS {
 namespace Relational {
+
+bool IsValidTableName(const std::string &table)
+{
+    if (table.empty() || table.length() > MAX_TABLE_NAME_LENGTH) {
+        return false;
+    }
+    std::regex validName("^[a-zA-Z0-9_]*$");
+    return std::regex_match(table, validName);
+}
+
 OHOS::NativeRdb::RdbStoreConfig::CryptoParam ToCCryptoParam(CryptoParam param)
 {
     auto cryptoParam = OHOS::NativeRdb::RdbStoreConfig::CryptoParam();

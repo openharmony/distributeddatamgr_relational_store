@@ -697,6 +697,93 @@ FFI_EXPORT RowsDataEx FfiOHOSRelationalStoreResultSetGetRowsData(int64_t id,
     }
     return resultSet->GetRowsData(maxCount, position, rtnCode);
 }
+
+FFI_EXPORT int64_t FfiOHOSRelationalStoreQueryWithoutRowCount(int64_t id, int64_t predicatesId,
+    char **columns, int64_t columnsSize, int32_t *errCode)
+{
+    auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+    if (nativeRdbStore == nullptr) {
+        *errCode = -1;
+        return -1;
+    }
+    auto nativePredicates = FFIData::GetData<RdbPredicatesImpl>(predicatesId);
+    if (nativePredicates == nullptr) {
+        *errCode = -1;
+        return -1;
+    }
+    return nativeRdbStore->QueryWithoutRowCount(*nativePredicates, columns, columnsSize, errCode);
+}
+
+FFI_EXPORT int64_t FfiOHOSRelationalStoreQuerySqlWithoutRowCount(int64_t id, const char *sql,
+    ValueTypeEx *bindArgs, int64_t size, int32_t *errCode)
+{
+    auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+    if (nativeRdbStore == nullptr) {
+        *errCode = -1;
+        return -1;
+    }
+    return nativeRdbStore->QuerySqlWithoutRowCount(sql, bindArgs, size, errCode);
+}
+
+FFI_EXPORT ReturningResult FfiOHOSRelationalStoreBatchInsertWithReturning(int64_t id,
+    const char *tableName, ValuesBucketEx *valuesBuckets, int64_t valuesSize, ReturningConfig config,
+    int32_t conflict, int32_t *errCode)
+{
+    auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+    if (nativeRdbStore == nullptr) {
+        *errCode = -1;
+        ReturningResult result = { 0, 0, -1 };
+        return result;
+    }
+    return nativeRdbStore->BatchInsertWithReturning(tableName, valuesBuckets, valuesSize, config, conflict, errCode);
+}
+
+FFI_EXPORT ReturningResult FfiOHOSRelationalStoreUpdateWithReturning(int64_t id,
+    ValuesBucketEx valuesBucket, int64_t predicatesId, ReturningConfig config,
+    int32_t conflict, int32_t *errCode)
+{
+    auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+    if (nativeRdbStore == nullptr) {
+        *errCode = -1;
+        ReturningResult result = { 0, 0, -1 };
+        return result;
+    }
+    auto nativePredicates = FFIData::GetData<RdbPredicatesImpl>(predicatesId);
+    if (nativePredicates == nullptr) {
+        *errCode = -1;
+        ReturningResult result = { 0, 0, -1 };
+        return result;
+    }
+    return nativeRdbStore->UpdateWithReturning(valuesBucket, *nativePredicates, config, conflict, errCode);
+}
+
+FFI_EXPORT ReturningResult FfiOHOSRelationalStoreDeleteWithReturning(int64_t id,
+    int64_t predicatesId, ReturningConfig config, int32_t *errCode)
+{
+    auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+    if (nativeRdbStore == nullptr) {
+        *errCode = -1;
+        ReturningResult result = { 0, 0, -1 };
+        return result;
+    }
+    auto nativePredicates = FFIData::GetData<RdbPredicatesImpl>(predicatesId);
+    if (nativePredicates == nullptr) {
+        *errCode = -1;
+        ReturningResult result = { 0, 0, -1 };
+        return result;
+    }
+    return nativeRdbStore->DeleteWithReturning(*nativePredicates, config, errCode);
+}
+
+FFI_EXPORT int64_t FfiOHOSRelationalStoreCreateTransaction(int64_t id, int32_t transactionType, int32_t *errCode)
+{
+    auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
+    if (nativeRdbStore == nullptr) {
+        *errCode = -1;
+        return -1;
+    }
+    return nativeRdbStore->CreateTransaction(transactionType, errCode);
+}
 }
 } // namespace Relational
 } // namespace OHOS
