@@ -109,6 +109,7 @@ relational_store/
 | 日志 | 错误日志 **MUST** 提供充足上下文信息；高频分支 **NEVER** 打正常日志 |
 | 文件命名 | 测试文件 `*_test.cpp`；Mock 文件 `mock_*.cpp/.h`；构建配置 `BUILD.gn` |
 | 导出约定 | inner_api 仅导出 `include/` 下头文件；新增导出 **MUST** 同步更新 `bundle.json` |
+| 工具类复用 | **MUST** 优先使用 `kv_store:datamgr_common` 提供的工具类（ConcurrentMap、ITypesUtil、Traits、JSProxy、BlockData、LRUBucket 等），**NEVER** 自行实现已有同等能力
 
 Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修改为其它单词。
 

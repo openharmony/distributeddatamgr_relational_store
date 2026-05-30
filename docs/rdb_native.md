@@ -129,7 +129,7 @@ classDiagram
 ### RdbStoreImpl
 **文件**: `src/rdb_store_impl.cpp`, `include/rdb_store_impl.h`
 
-入口类，实现 `interfaces/inner_api/rdb/include/rdb_store.h` 定义的接口。持有 `ConnectionPool` 负责连接管理和事务协调，管理分布式同步、云同步、观察者注册等功能。
+入口类，实现 `interfaces/inner_api/rdb/include/rdb_store.h` 定义的接口。持有 `ConnectionPool` 负责连接管理和事务协调，提供CRUD、同步、观察者注册等功能实现。
 
 ### ConnectionPool
 **文件**: `src/connection_pool.cpp`, `include/connection_pool.h`
