@@ -61,19 +61,40 @@ classDiagram
         参数绑定与执行
     }
 
+    class RemoteResultSet {
+        <<抽象>>
+        最基础结果集能力
+    }
+
+    class ResultSet {
+        继承 RemoteResultSet
+        扩展批量接口
+    }
+
     class AbsResultSet {
         <<抽象>>
-        GoToRow/GetColumn
+        继承并实现 RemoteResultSet
+        GoToRow/Get 汇聚接口
     }
 
     class StepResultSet {
-        逐行查询
-        持有 Statement
+        继承 AbsResultSet
+        基于 SQLite 实现
     }
 
     class CacheResultSet {
-        缓存结果集
-        持有 SharedBlock
+        继承 ResultSet
+        封装 valueBuckets
+    }
+
+    class AbsSharedResultSet {
+        继承 AbsResultSet 和 SharedResultSet
+        基于共享内存
+    }
+
+    class SqliteSharedResultSet {
+        继承 AbsSharedResultSet
+        基于 SQLite 填充共享内存
     }
 
     RdbStoreImpl "1" --> "1" ConnectionPool : 持有
@@ -85,8 +106,12 @@ classDiagram
     Statement "1" --> "1" AbsResultSet : 生成
     Transaction <|-- TransactionImpl
     TransactionImpl --> BaseTransaction : 使用
+    RemoteResultSet <|-- ResultSet
+    RemoteResultSet <|-- AbsResultSet
     AbsResultSet <|-- StepResultSet
-    AbsResultSet <|-- CacheResultSet
+    AbsResultSet <|-- AbsSharedResultSet
+    ResultSet <|-- CacheResultSet
+    AbsSharedResultSet <|-- SqliteSharedResultSet
 ```
 
 ### 关系说明
@@ -97,7 +122,7 @@ classDiagram
 - **Connection → Transaction**: 1:0..*，一个连接可以创建多个事务
 - **Statement → AbsResultSet**: 1:1 生成关系
 - **TransactionImpl → BaseTransaction**: 使用 BaseTransaction 管理事务状态
-- 继承关系：`SqliteConnection`、`SqliteStatement`、`TransactionImpl`、`StepResultSet`、`CacheResultSet` 分别继承自抽象接口
+- 继承关系：`SqliteConnection`、`SqliteStatement`、`TransactionImpl`、`StepResultSet`、`CacheResultSet`、`AbsSharedResultSet`、`SqliteSharedResultSet` 分别继承自抽象接口
 
 ## 核心类职责
 
@@ -131,10 +156,17 @@ classDiagram
 
 `Statement` 是 SQL 语句抽象接口。`SqliteStatement` 是 SQLite 实现，提供参数绑定（`Bind`）和执行（`Step`、`Execute`）功能，支持特殊类型（Asset、BigInt、FloatVector 等）。
 
-### AbsResultSet → StepResultSet / CacheResultSet
-**文件**: `include/abs_result_set.h`, `include/step_result_set.h`, `include/cache_result_set.h`
+### ResultSet 继承体系
 
-`AbsResultSet` 是结果集抽象接口。`StepResultSet` 逐行查询，适合大数据量；`CacheResultSet` 缓存结果集到 SharedBlock，支持跨进程共享。提供统一的 `GoToRow`、`GetColumn`、`GetRow` 等数据访问接口。
+**继承链路**：
+
+- **RemoteResultSet**：定义结果集最基础能力
+- **ResultSet**：继承 RemoteResultSet，扩展批量接口
+- **AbsResultSet**：继承并实现 RemoteResultSet，将移动操作汇聚到 `GoToRow`，将 Get 操作汇聚到 `Get`，减少子类需实现的接口
+- **StepResultSet**：继承 AbsResultSet，基于 SQLite 实现 `GoToRow`、`Get`、`GetColumnType`、`GetSize`
+- **CacheResultSet**：继承 ResultSet，封装 valueBuckets 实现 ResultSet 能力
+- **AbsSharedResultSet**：继承 AbsResultSet 和 SharedResultSet，基于共享内存实现 `GoToRow` 和 `Get`
+- **SqliteSharedResultSet**：继承 AbsSharedResultSet，基于 SQLite 实现共享内存填充和遍历
 
 ## 目录结构
 
@@ -148,11 +180,9 @@ rdb/
 │   ├── statement.h             # Statement 抽象接口
 │   ├── sqlite_statement.h      # SqliteStatement
 │   ├── abs_result_set.h        # AbsResultSet 抽象接口
-│   ├── step_result_set.h       # StepResultSet
-│   ├── cache_result_set.h      # CacheResultSet
+│   ├── abs_shared_result_set.h # AbsSharedResultSet 抽象接口
 │   ├── transaction.h           # Transaction 抽象接口
 │   ├── transaction_impl.h      # TransactionImpl
-│   ├── base_transaction.h      # BaseTransaction
 │   ├── rdb_predicates.h        # 谓词
 │   └ ...                       # 其他头文件
 │
@@ -163,7 +193,6 @@ rdb/
     ├── sqlite_statement.cpp    # SqliteStatement 实现
     ├── transaction.cpp         # Transaction 实现
     ├── transaction_impl.cpp    # TransactionImpl 实现
-    ├── base_transaction.cpp    # BaseTransaction 实现
     ├── step_result_set.cpp     # StepResultSet 实现
     ├── cache_result_set.cpp    # CacheResultSet 实现
     ├── rdb_predicates.cpp      # 谓词实现
