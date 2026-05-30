@@ -16,7 +16,9 @@
 #include <cstdint>
 #include <cstdlib>
 
-#include "ffi_remote_data.h"
+#include "cj_lambda.h"
+#include "napi_rdb_js_utils.h"
+#include "rdb_errno.h"
 #include "relational_store_impl_rdbpredicatesproxy.h"
 #include "relational_store_utils.h"
 
@@ -25,7 +27,7 @@ using namespace OHOS::FFI;
 namespace OHOS {
 namespace Relational {
 extern "C" {
-int64_t FfiOHOSRelationalStoreRdbPredicatesConstructor(const char *tableName)
+FFI_EXPORT int64_t FfiOHOSRelationalStoreRdbPredicatesConstructor(const char *tableName)
 {
     if (tableName == nullptr) {
         return -1;
@@ -37,7 +39,7 @@ int64_t FfiOHOSRelationalStoreRdbPredicatesConstructor(const char *tableName)
     return nativeRdbPredicates->GetID();
 }
 
-int32_t FfiOHOSRelationalStoreInDevices(int64_t id, const char **devicesArray, int64_t devicesSize)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreInDevices(int64_t id, const char **devicesArray, int64_t devicesSize)
 {
     if (devicesArray == nullptr && devicesSize != 0) {
         return -1;
@@ -50,7 +52,7 @@ int32_t FfiOHOSRelationalStoreInDevices(int64_t id, const char **devicesArray, i
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreInAllDevices(int64_t id)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreInAllDevices(int64_t id)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr) {
@@ -60,7 +62,7 @@ int32_t FfiOHOSRelationalStoreInAllDevices(int64_t id)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreBeginWrap(int64_t id)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreBeginWrap(int64_t id)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr) {
@@ -70,7 +72,7 @@ int32_t FfiOHOSRelationalStoreBeginWrap(int64_t id)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreEndWrap(int64_t id)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreEndWrap(int64_t id)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr) {
@@ -80,7 +82,7 @@ int32_t FfiOHOSRelationalStoreEndWrap(int64_t id)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreOr(int64_t id)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreOr(int64_t id)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr) {
@@ -90,7 +92,7 @@ int32_t FfiOHOSRelationalStoreOr(int64_t id)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreAnd(int64_t id)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreAnd(int64_t id)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr) {
@@ -100,7 +102,7 @@ int32_t FfiOHOSRelationalStoreAnd(int64_t id)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreContains(int64_t id, const char *field, const char *value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreContains(int64_t id, const char *field, const char *value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr || value == nullptr) {
@@ -110,7 +112,7 @@ int32_t FfiOHOSRelationalStoreContains(int64_t id, const char *field, const char
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreBeginsWith(int64_t id, const char *field, const char *value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreBeginsWith(int64_t id, const char *field, const char *value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr || value == nullptr) {
@@ -120,7 +122,7 @@ int32_t FfiOHOSRelationalStoreBeginsWith(int64_t id, const char *field, const ch
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreEndsWith(int64_t id, const char *field, const char *value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreEndsWith(int64_t id, const char *field, const char *value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr || value == nullptr) {
@@ -130,7 +132,7 @@ int32_t FfiOHOSRelationalStoreEndsWith(int64_t id, const char *field, const char
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreIsNull(int64_t id, const char *field)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreIsNull(int64_t id, const char *field)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -140,7 +142,7 @@ int32_t FfiOHOSRelationalStoreIsNull(int64_t id, const char *field)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreIsNotNull(int64_t id, const char *field)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreIsNotNull(int64_t id, const char *field)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -150,7 +152,7 @@ int32_t FfiOHOSRelationalStoreIsNotNull(int64_t id, const char *field)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreLike(int64_t id, const char *field, const char *value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreLike(int64_t id, const char *field, const char *value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr || value == nullptr) {
@@ -160,7 +162,7 @@ int32_t FfiOHOSRelationalStoreLike(int64_t id, const char *field, const char *va
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreGlob(int64_t id, const char *field, const char *value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreGlob(int64_t id, const char *field, const char *value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr || value == nullptr) {
@@ -170,7 +172,7 @@ int32_t FfiOHOSRelationalStoreGlob(int64_t id, const char *field, const char *va
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreOrderByAsc(int64_t id, const char *field)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreOrderByAsc(int64_t id, const char *field)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -180,7 +182,7 @@ int32_t FfiOHOSRelationalStoreOrderByAsc(int64_t id, const char *field)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreOrderByDesc(int64_t id, const char *field)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreOrderByDesc(int64_t id, const char *field)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -190,7 +192,7 @@ int32_t FfiOHOSRelationalStoreOrderByDesc(int64_t id, const char *field)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreDistinct(int64_t id)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreDistinct(int64_t id)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr) {
@@ -200,7 +202,7 @@ int32_t FfiOHOSRelationalStoreDistinct(int64_t id)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreLimitAs(int64_t id, int32_t value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreLimitAs(int64_t id, int32_t value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr) {
@@ -210,7 +212,7 @@ int32_t FfiOHOSRelationalStoreLimitAs(int64_t id, int32_t value)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreOffsetAs(int64_t id, int32_t rowOffset)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreOffsetAs(int64_t id, int32_t rowOffset)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr) {
@@ -220,7 +222,7 @@ int32_t FfiOHOSRelationalStoreOffsetAs(int64_t id, int32_t rowOffset)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreGroupBy(int64_t id, const char **fieldsArray, int64_t fieldsSize)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreGroupBy(int64_t id, const char **fieldsArray, int64_t fieldsSize)
 {
     if (fieldsArray == nullptr && fieldsSize != 0) {
         return -1;
@@ -233,7 +235,7 @@ int32_t FfiOHOSRelationalStoreGroupBy(int64_t id, const char **fieldsArray, int6
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreIndexedBy(int64_t id, const char *field)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreIndexedBy(int64_t id, const char *field)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -243,7 +245,7 @@ int32_t FfiOHOSRelationalStoreIndexedBy(int64_t id, const char *field)
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreLessThanOrEqualTo(int64_t id, const char *field, ValueType value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreLessThanOrEqualTo(int64_t id, const char *field, ValueType value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -263,7 +265,7 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreLessThanOrEqualToEx(int64_t id, const c
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreEqualTo(int64_t id, const char *field, ValueType value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreEqualTo(int64_t id, const char *field, ValueType value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -283,7 +285,7 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreEqualToEx(int64_t id, const char *field
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreGreaterThanOrEqualTo(int64_t id, const char *field, ValueType value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreGreaterThanOrEqualTo(int64_t id, const char *field, ValueType value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -303,7 +305,7 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreGreaterThanOrEqualToEx(int64_t id, cons
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreGreaterThan(int64_t id, const char *field, ValueType value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreGreaterThan(int64_t id, const char *field, ValueType value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -323,7 +325,8 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreGreaterThanEx(int64_t id, const char *f
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreNotBetween(int64_t id, const char *field, ValueType lowValue, ValueType highValue)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreNotBetween(
+    int64_t id, const char *field, ValueType lowValue, ValueType highValue)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -344,7 +347,7 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreNotBetweenEx(int64_t id, const char *fi
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreLessThan(int64_t id, const char *field, ValueType value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreLessThan(int64_t id, const char *field, ValueType value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -364,7 +367,7 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreLessThanEx(int64_t id, const char *fiel
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreBetween(int64_t id, const char *field, ValueType lowValue, ValueType highValue)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreBetween(int64_t id, const char *field, ValueType lowValue, ValueType highValue)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -385,7 +388,7 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreBetweenEx(int64_t id, const char *field
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreIn(int64_t id, const char *field, ValueType *values, int64_t valuesSize)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreIn(int64_t id, const char *field, ValueType *values, int64_t valuesSize)
 {
     if (values == nullptr && valuesSize != 0) {
         return -1;
@@ -411,7 +414,7 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreInEx(int64_t id, const char *field, Val
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreNotIn(int64_t id, const char *field, ValueType *values, int64_t valuesSize)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreNotIn(int64_t id, const char *field, ValueType *values, int64_t valuesSize)
 {
     if (values == nullptr && valuesSize != 0) {
         return -1;
@@ -437,7 +440,7 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreNotInEx(int64_t id, const char *field, 
     return 0;
 }
 
-int32_t FfiOHOSRelationalStoreNotEqualTo(int64_t id, const char *field, ValueType value)
+FFI_EXPORT int32_t FfiOHOSRelationalStoreNotEqualTo(int64_t id, const char *field, ValueType value)
 {
     auto nativeRdbPredicates = FFIData::GetData<RdbPredicatesImpl>(id);
     if (nativeRdbPredicates == nullptr || field == nullptr) {
@@ -477,5 +480,5 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreRdbPredicatesNotLike(int64_t id, const 
     return 0;
 }
 }
-}
-}
+} // namespace Relational
+} // namespace OHOS

@@ -524,13 +524,6 @@ int RdbStore::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam, bool isVectorRekey)
-{
-    (void)cryptoParam;
-    (void)isVectorRekey;
-    return E_NOT_SUPPORT;
-}
-
 int RdbStore::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     (void)cryptoParam;

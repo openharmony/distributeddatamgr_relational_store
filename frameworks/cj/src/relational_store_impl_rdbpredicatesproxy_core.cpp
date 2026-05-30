@@ -173,11 +173,11 @@ void RdbPredicatesImpl::NotContains(const char* field, const char* value)
     predicates_->NotContains(cfield, cvalue);
 }
 
-void RdbPredicatesImpl::NotLike(const char* field, const char* value)
+void RdbPredicatesImpl::NotLike(const char *field, const char *value)
 {
     std::string cfield = field;
     std::string cvalue = value;
-    predicates_->NotLike(field, value);
+    predicates_->NotLike(cfield, cvalue);
 }
-}
-}
+} // namespace Relational
+} // namespace OHOS

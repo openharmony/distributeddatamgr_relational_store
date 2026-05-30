@@ -949,7 +949,7 @@ interface RdbStore {
     @gen_promise("cloudSync")
     CloudSyncWithPredicates(mode: SyncMode, predicates: RdbPredicates, progress: (p : ProgressDetails) => void): void;
 
-    @gen_promise("cloudSync")
+    @gen_promise("cloudSyncEx")
     CloudSyncWithConfig(config: CloudSyncConfig, progress: (p : ProgressDetails) => void): void;
 
     @gen_promise("stopCloudSync")
@@ -1131,9 +1131,6 @@ interface RdbStore {
 
     @gen_promise("rekey")
     RekeySync(cryptoParam: Optional<CryptoParam>): void;
-
-    @gen_promise("rekey")
-    RekeySyncWithEncryptionKey(encryptionKey: @typedarray Array<u8>): void;
 
     @gen_promise("rekeyEx")
     RekeyExSync(cryptoParam: CryptoParam): void;

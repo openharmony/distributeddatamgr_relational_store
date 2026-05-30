@@ -65,6 +65,40 @@ CArrStr ResultSetImpl::GetAllColumnNames()
     return CArrStr{result, int64_t(colNames.size())};
 }
 
+CArrStr ResultSetImpl::GetWholeColumnNames(int32_t *errCode)
+{
+    std::vector<std::string> colNames;
+    int code = NativeRdb::E_ALREADY_CLOSED;
+    if (resultSetValue != nullptr) {
+        std::tie(code, colNames) = resultSetValue->GetWholeColumnNames();
+    }
+    *errCode = code;
+    if (code != NativeRdb::E_OK) {
+        LOGE("GetWholeColumnNames failed code: %{public}d", code);
+        return CArrStr{ nullptr, 0 };
+    }
+    if (colNames.size() == 0) {
+        return CArrStr{ nullptr, 0 };
+    }
+    char **result = static_cast<char **>(malloc(colNames.size() * sizeof(char *)));
+    if (result == nullptr) {
+        *errCode = NativeRdb::E_ERROR;
+        return CArrStr{ nullptr, 0 };
+    }
+    for (size_t i = 0; i < colNames.size(); i++) {
+        result[i] = MallocCString(colNames[i]);
+        if (result[i] == nullptr) {
+            for (size_t j = 0; j < i; j++) {
+                free(result[j]);
+            }
+            free(result);
+            *errCode = NativeRdb::E_ERROR;
+            return CArrStr{ nullptr, 0 };
+        }
+    }
+    return CArrStr{ result, int64_t(colNames.size()) };
+}
+
 int32_t ResultSetImpl::GetColumnCount()
 {
     int32_t count = 0;
@@ -141,32 +175,32 @@ bool ResultSetImpl::IsClosed()
     return resultSetValue->IsClosed();
 }
 
-double ResultSetImpl::GetDouble(int32_t columnIndex, int32_t* rtnCode)
+double ResultSetImpl::GetDouble(int32_t columnIndex, int32_t *rtnCode)
 {
     double result = 0.0;
     *rtnCode = resultSetValue->GetDouble(columnIndex, result);
     return result;
 }
 
-bool ResultSetImpl::GoToRow(int32_t position, int32_t* rtnCode)
+bool ResultSetImpl::GoToRow(int32_t position, int32_t *rtnCode)
 {
     *rtnCode = resultSetValue->GoToRow(position);
     return *rtnCode == RelationalStoreJsKit::OK;
 }
 
-bool ResultSetImpl::GoToPreviousRow(int32_t* rtnCode)
+bool ResultSetImpl::GoToPreviousRow(int32_t *rtnCode)
 {
     *rtnCode = resultSetValue->GoToPreviousRow();
     return *rtnCode == RelationalStoreJsKit::OK;
 }
 
-bool ResultSetImpl::GoToLastRow(int32_t* rtnCode)
+bool ResultSetImpl::GoToLastRow(int32_t *rtnCode)
 {
     *rtnCode = resultSetValue->GoToLastRow();
     return *rtnCode == RelationalStoreJsKit::OK;
 }
 
-char* ResultSetImpl::GetColumnName(int32_t columnIndex, int32_t* rtnCode)
+char *ResultSetImpl::GetColumnName(int32_t columnIndex, int32_t *rtnCode)
 {
     std::string result;
     *rtnCode = resultSetValue->GetColumnName(columnIndex, result);
@@ -176,19 +210,19 @@ char* ResultSetImpl::GetColumnName(int32_t columnIndex, int32_t* rtnCode)
     return MallocCString(result);
 }
 
-bool ResultSetImpl::IsColumnNull(int32_t columnIndex, int32_t* rtnCode)
+bool ResultSetImpl::IsColumnNull(int32_t columnIndex, int32_t *rtnCode)
 {
     bool result;
     *rtnCode = resultSetValue->IsColumnNull(columnIndex, result);
     return result;
 }
 
-Asset ResultSetImpl::GetAsset(int32_t columnIndex, int32_t* rtnCode)
+Asset ResultSetImpl::GetAsset(int32_t columnIndex, int32_t *rtnCode)
 {
     NativeRdb::ValueObject::Asset asset;
     *rtnCode = resultSetValue->GetAsset(columnIndex, asset);
     if (*rtnCode != RelationalStoreJsKit::OK) {
-        return Asset{nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0};
+        return Asset{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0 };
     }
     Asset result = {
         .name= MallocCString(asset.name),
@@ -207,7 +241,7 @@ int32_t ResultSetImpl::Close()
     return resultSetValue->Close();
 }
 
-int32_t ResultSetImpl::GetColumnIndex(char* columnName, int32_t* rtnCode)
+int32_t ResultSetImpl::GetColumnIndex(char *columnName, int32_t *rtnCode)
 {
     int32_t result = -1;
     *rtnCode = resultSetValue->GetColumnIndex(columnName, result);
@@ -218,50 +252,50 @@ int32_t ResultSetImpl::GetColumnIndex(char* columnName, int32_t* rtnCode)
     return result;
 }
 
-char* ResultSetImpl::GetString(int32_t columnIndex, int32_t* rtnCode)
+char *ResultSetImpl::GetString(int32_t columnIndex, int32_t *rtnCode)
 {
     std::string result;
     *rtnCode = resultSetValue->GetString(columnIndex, result);
     return MallocCString(result);
 }
 
-bool ResultSetImpl::GoToFirstRow(int32_t* rtnCode)
+bool ResultSetImpl::GoToFirstRow(int32_t *rtnCode)
 {
     *rtnCode = resultSetValue->GoToFirstRow();
     return *rtnCode == RelationalStoreJsKit::OK;
 }
 
-int64_t ResultSetImpl::GetLong(int32_t columnIndex, int32_t* rtnCode)
+int64_t ResultSetImpl::GetLong(int32_t columnIndex, int32_t *rtnCode)
 {
     int64_t result;
     *rtnCode = resultSetValue->GetLong(columnIndex, result);
     return result;
 }
 
-bool ResultSetImpl::GoToNextRow(int32_t* rtnCode)
+bool ResultSetImpl::GoToNextRow(int32_t *rtnCode)
 {
     *rtnCode = resultSetValue->GoToNextRow();
     return *rtnCode == RelationalStoreJsKit::OK;
 }
 
-CArrUI8 ResultSetImpl::GetBlob(int32_t columnIndex, int32_t* rtnCode)
+CArrUI8 ResultSetImpl::GetBlob(int32_t columnIndex, int32_t *rtnCode)
 {
     std::vector<uint8_t> vec;
     *rtnCode = resultSetValue->GetBlob(columnIndex, vec);
     if (*rtnCode != RelationalStoreJsKit::OK || vec.size() == 0) {
-        return CArrUI8{nullptr, 0};
+        return CArrUI8{ nullptr, 0 };
     }
-    uint8_t* result = static_cast<uint8_t*>(malloc(vec.size() * sizeof(uint8_t)));
+    uint8_t *result = static_cast<uint8_t *>(malloc(vec.size() * sizeof(uint8_t)));
     if (result == nullptr) {
-        return CArrUI8{nullptr, -1};
+        return CArrUI8{ nullptr, -1 };
     }
     for (size_t i = 0; i < vec.size(); i++) {
         result[i] = vec[i];
     }
-    return CArrUI8{result, int64_t(vec.size())};
+    return CArrUI8{ result, int64_t(vec.size()) };
 }
 
-bool ResultSetImpl::GoTo(int32_t offset, int32_t* rtnCode)
+bool ResultSetImpl::GoTo(int32_t offset, int32_t *rtnCode)
 {
     *rtnCode = resultSetValue->GoTo(offset);
     return *rtnCode == RelationalStoreJsKit::OK;
@@ -291,5 +325,5 @@ Assets ResultSetImpl::GetAssets(int32_t columnIndex, int32_t* rtnCode)
     }
     return Assets{.head = result, .size = (int64_t)(assets.size())};
 }
-}
-}
+} // namespace Relational
+} // namespace OHOS

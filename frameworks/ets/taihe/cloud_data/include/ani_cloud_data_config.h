@@ -93,6 +93,8 @@ public:
         optional_view<array<::ohos::data::commonType::ValueType>> param);
     static void CloudSyncImpl(string_view bundleName, string_view storeId, SyncMode mode,
         callback_view<void(const ProgressDetails &data)> progress);
+    static void CloudSyncWithConfigImpl(::ohos::data::cloudData::BundleInfo bundleInfo, CloudSyncConfig config,
+        callback_view<void(const ProgressDetails &data)> progress);
     static void OnSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,
         callback_view<void(map_view<string, map<string, SyncInfo>> data)> progress);
     static void OffSyncInfoChanged(array_view<::ohos::data::cloudData::BundleInfo> bundleInfos,

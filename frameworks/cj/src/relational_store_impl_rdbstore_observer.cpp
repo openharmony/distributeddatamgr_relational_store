@@ -13,17 +13,13 @@
  * limitations under the License.
  */
 
+#include "relational_store_utils.h"
 #include "cj_lambda.h"
-#include "ffi_remote_data.h"
-#include "native_log.h"
-#include "napi_base_context.h"
-#include "napi_rdb_js_utils.h"
-#include "rdb_common.h"
+#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_store.h"
-#include "relational_store_impl_rdbpredicatesproxy.h"
+#include "native_log.h"
 #include "relational_store_impl_rdbstore.h"
-#include "relational_store_utils.h"
 
 using namespace OHOS::FFI;
 
@@ -98,6 +94,10 @@ int32_t RdbStoreImpl::RegisteredObserver(
     std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
     int64_t callback, const std::function<void()>& callbackRef)
 {
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     observers.try_emplace(option.event);
     if (!HasRegisteredObserver(callback, observers[option.event])) {
         auto localObserver = std::make_shared<RdbStoreObserverImpl>(callback, callbackRef);
@@ -132,6 +132,10 @@ int32_t RdbStoreImpl::RegisterObserverArrStr(int32_t subscribeType, int64_t call
     DistributedRdb::SubscribeOption option;
     option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
     option.event = "dataChange";
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto observer = std::make_shared<RdbStoreObserverImpl>(callbackId, RdbStoreObserverImpl::ParamArrStr, mode);
     int32_t errCode = NativeRdb::E_OK;
     if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
@@ -152,6 +156,10 @@ int32_t RdbStoreImpl::RegisterObserverChangeInfo(int32_t subscribeType, int64_t 
     DistributedRdb::SubscribeOption option;
     option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
     option.event = "dataChange";
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto observer = std::make_shared<RdbStoreObserverImpl>(callbackId, RdbStoreObserverImpl::ParamChangeInfo, mode);
     int32_t errCode = NativeRdb::E_OK;
     if (option.mode == DistributedRdb::SubscribeMode::LOCAL_DETAIL) {
@@ -168,6 +176,10 @@ int32_t RdbStoreImpl::RegisterObserverChangeInfo(int32_t subscribeType, int64_t 
 
 int32_t RdbStoreImpl::RegisterObserverProgressDetails(int64_t callbackId)
 {
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto observer = std::make_shared<SyncObserverImpl>(callbackId);
     int errCode = rdbStore_->RegisterAutoSyncCallback(observer);
     if (errCode == NativeRdb::E_OK) {
@@ -193,6 +205,10 @@ int32_t RdbStoreImpl::UnRegisteredObserver(DistributedRdb::SubscribeOption optio
     std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers,
     int64_t callback)
 {
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto obs = observers.find(option.event);
     if (obs == observers.end()) {
         LOGI("observer not found, event: %{public}s", option.event.c_str());
@@ -232,6 +248,10 @@ int32_t RdbStoreImpl::UnRegisterAllObserver(const char *event, bool interProcess
 int32_t RdbStoreImpl::UnRegisteredAllObserver(DistributedRdb::SubscribeOption option, std::map<std::string,
     std::list<std::shared_ptr<RdbStoreObserverImpl>>> &observers)
 {
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     auto obs = observers.find(option.event);
     if (obs == observers.end()) {
         LOGI("observer not found, event: %{public}s", option.event.c_str());
@@ -253,6 +273,10 @@ int32_t RdbStoreImpl::UnRegisterObserverArrStrChangeInfo(int32_t subscribeType, 
     DistributedRdb::SubscribeOption option;
     option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
     option.event = "dataChange";
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
         if (*it == nullptr) {
             it = observers_[mode].erase(it);
@@ -282,6 +306,10 @@ int32_t RdbStoreImpl::UnRegisterObserverArrStrChangeInfoAll(int32_t subscribeTyp
     DistributedRdb::SubscribeOption option;
     option.mode = static_cast<DistributedRdb::SubscribeMode>(mode);
     option.event = "dataChange";
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     for (auto it = observers_[mode].begin(); it != observers_[mode].end();) {
         if (*it == nullptr) {
             it = observers_[mode].erase(it);
@@ -303,6 +331,10 @@ int32_t RdbStoreImpl::UnRegisterObserverArrStrChangeInfoAll(int32_t subscribeTyp
 
 int32_t RdbStoreImpl::UnRegisterObserverProgressDetails(int64_t callbackId)
 {
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     for (auto it = syncObservers_.begin(); it != syncObservers_.end();) {
         if (*it == nullptr) {
             it = syncObservers_.erase(it);
@@ -324,6 +356,10 @@ int32_t RdbStoreImpl::UnRegisterObserverProgressDetails(int64_t callbackId)
 
 int32_t RdbStoreImpl::UnRegisterObserverProgressDetailsAll()
 {
+    std::lock_guard<std::mutex> lock(observerMutex_);
+    if (rdbStore_ == nullptr) {
+        return NativeRdb::E_ALREADY_CLOSED;
+    }
     for (auto it = syncObservers_.begin(); it != syncObservers_.end();) {
         if (*it == nullptr) {
             it = syncObservers_.erase(it);
@@ -336,19 +372,6 @@ int32_t RdbStoreImpl::UnRegisterObserverProgressDetailsAll()
         it = syncObservers_.erase(it);
     }
     return NativeRdb::E_OK;
-}
-
-int32_t RdbStoreImpl::CloudSync(int32_t mode, CArrStr tables, int64_t callbackId)
-{
-    DistributedRdb::SyncOption option;
-    option.mode = static_cast<DistributedRdb::SyncMode>(mode);
-    option.isBlock = false;
-    std::vector<std::string> arr = CArrStrToVector(tables);
-    auto cFunc = reinterpret_cast<void(*)(CProgressDetails details)>(callbackId);
-    auto async = [ lambda = CJLambda::Create(cFunc)](const DistributedRdb::Details &details) ->
-        void { lambda(ToCProgressDetails(details)); };
-    int32_t errCode = rdbStore_->Sync(option, arr, async);
-    return errCode;
 }
 }
 }

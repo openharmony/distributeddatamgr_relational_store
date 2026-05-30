@@ -1175,22 +1175,14 @@ napi_value RdbStoreProxy::Rekey(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(argc >= 0 && argc <= 1, std::make_shared<ParamNumError>("0 - 1"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (argc == 1 && !JSUtils::IsNull(env, argv[0])) {
-            bool isArray = false;
-            napi_status status = napi_is_typedarray(env, argv[0], &isArray);
-            CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
-            context->isVectorRekey = isArray;
-            if (isArray) {
-                CHECK_RETURN(OK == ParseEncryptionkey(env, argv[0], context));
-            } else {
-                CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
-            }
+            CHECK_RETURN(OK == ParseCryptoParam(env, argv[0], context));
         }
         CHECK_RETURN_SET_E(context->cryptoParam.IsValid(),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal CryptoParam."));
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        return context->StealRdbStore()->Rekey(context->cryptoParam, context->isVectorRekey);
+        return context->StealRdbStore()->Rekey(context->cryptoParam);
     };
 
     auto output = [context](napi_env env, napi_value &result) {
@@ -1556,6 +1548,7 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
     properties.push_back(DECLARE_NAPI_FUNCTION("sync", Sync));
     properties.push_back(DECLARE_NAPI_FUNCTION("syncEx", SyncEx));
     properties.push_back(DECLARE_NAPI_FUNCTION("cloudSync", CloudSync));
+    properties.push_back(DECLARE_NAPI_FUNCTION("cloudSyncEx", CloudSync));
     properties.push_back(DECLARE_NAPI_FUNCTION("stopCloudSync", StopCloudSync));
     properties.push_back(DECLARE_NAPI_FUNCTION("getModifyTime", GetModifyTime));
     properties.push_back(DECLARE_NAPI_FUNCTION("cleanDirtyData", CleanDirtyData));
@@ -1744,9 +1737,8 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
     } else {
         napi_get_undefined(env, &promise);
     }
-    RDB_NAPI_ASSERT_BASE(env, context->predicatesProxy != nullptr,
-        std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS), nullptr);
-    RDB_NAPI_ASSERT_BASE(env, context->predicatesProxy->GetPredicates() != nullptr,
+    RDB_NAPI_ASSERT_BASE(env,
+        context->predicatesProxy != nullptr && context->predicatesProxy->GetPredicates() != nullptr,
         std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS), nullptr);
     auto predicates = *context->predicatesProxy->GetPredicates();
     auto exec = [queue, defer, callback, predicates, rdbStore = context->StealRdbStore(),
@@ -1767,8 +1759,7 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
                 queue->AsyncPromise({ defer }, args, "DistributedSync::OnError");
         }
     };
-    auto execResult = queue->Execute(std::move(exec), "DistributedSync::Execute");
-    if (execResult) {
+    if (queue->Execute(std::move(exec), "DistributedSync::Execute")) {
         context->callback_ = nullptr;
     }
     context = nullptr;
@@ -1854,8 +1845,7 @@ napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
                      : queue->AsyncPromise({defer}, args, "DistributedSync::OnErrorEx");
         }
     };
-    auto execResult = queue->Execute(std::move(exec), "DistributedSyncEx::Execute");
-    if (execResult) {
+    if (queue->Execute(std::move(exec), "DistributedSyncEx::Execute")) {
         context->callback_ = nullptr;
     }
     context = nullptr;

@@ -173,5 +173,5 @@ void RdbPredicatesImpl::NotEqualToEx(const char* field, const ValueTypeEx *value
     NativeRdb::ValueObject valueObject = ValueTypeExToValueObject(*value);
     predicates_->NotEqualTo(cfield, valueObject);
 }
-}
-}
+} // namespace Relational
+} // namespace OHOS

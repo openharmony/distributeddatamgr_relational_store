@@ -15,6 +15,7 @@
 
 @!namespace("@ohos.data.cloudData", "cloudData")
 from ohos.data.commonType use ValueType;
+from ohos.data.relationalStore use CloudSyncConfig;
 from ohos.data.relationalStore use ProgressCode;
 from ohos.data.relationalStore use SyncMode;
 from ohos.data.relationalStore use ProgressDetails;
@@ -144,7 +145,7 @@ function QueryStatisticsImpl(accountId: String, bundleName: String, storeId: Opt
 function QueryLastSyncInfoImpl(accountId: String, bundleName: String, storeId: Optional<String>): @record Map<String, SyncInfo>;
 
 @static("Config")
-@gen_promise("queryLastSyncInfo")
+@gen_promise("batchQueryLastSyncInfo")
 function QueryLastSyncInfoBatchImpl(accountId: String, bundleInfos: Array<BundleInfo>): @record Map<String, @record Map<String, SyncInfo>>;
 
 @static("Config")
@@ -167,6 +168,10 @@ function SetGlobalCloudStrategyImpl(strategy: StrategyType, param: Optional<Arra
 @static("Config")
 @gen_promise("cloudSync")
 function CloudSyncImpl(bundleName: String, storeId: String, mode: SyncMode, progress: (data: ProgressDetails)=> void): void;
+
+@static("Config")
+@gen_promise("cloudSyncEx")
+function CloudSyncWithConfigImpl(bundleInfo: BundleInfo, config: CloudSyncConfig, progress: (data: ProgressDetails)=> void): void;
 
 @static("Config")
 function OnSyncInfoChanged(bundleInfos: Array<BundleInfo>, progress: (data: @record Map<String, @record Map<String, SyncInfo>>)=> void): void;

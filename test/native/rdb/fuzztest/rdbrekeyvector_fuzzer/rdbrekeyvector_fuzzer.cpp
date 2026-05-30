@@ -77,7 +77,7 @@ void RdbRekeyVectorWithKeyFuzz(FuzzedDataProvider &provider)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = ConsumeEncryptKey(provider);
-    store->Rekey(newCryptoParam, true);
+    store->Rekey(newCryptoParam);
 
     store = nullptr;
     RdbHelper::ClearCache();
@@ -102,7 +102,7 @@ void RdbRekeyVectorEmptyKeyFuzz(FuzzedDataProvider &provider)
     }
 
     RdbStoreConfig::CryptoParam emptyCryptoParam;
-    store->Rekey(emptyCryptoParam, true);
+    store->Rekey(emptyCryptoParam);
 
     store = nullptr;
     RdbHelper::ClearCache();
@@ -132,7 +132,7 @@ void RdbRekeyVectorIsVectorFlagFuzz(FuzzedDataProvider &provider)
 
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = ConsumeEncryptKey(provider);
-    store->Rekey(newCryptoParam, provider.ConsumeBool());
+    store->Rekey(newCryptoParam);
 
     store = nullptr;
     RdbHelper::ClearCache();
@@ -164,7 +164,7 @@ void RdbRekeyVectorConfigFuzz(FuzzedDataProvider &provider)
     RdbStoreConfig::CryptoParam newCryptoParam;
     newCryptoParam.encryptKey_ = ConsumeEncryptKey(provider);
     newCryptoParam.iterNum = provider.ConsumeIntegral<int32_t>();
-    store->Rekey(newCryptoParam, provider.ConsumeBool());
+    store->Rekey(newCryptoParam);
 
     store = nullptr;
     RdbHelper::ClearCache();
@@ -198,7 +198,7 @@ void RdbRekeyVectorConsecutiveFuzz(FuzzedDataProvider &provider)
     for (int i = 0; i < rekeyCount; i++) {
         RdbStoreConfig::CryptoParam newParam;
         newParam.encryptKey_ = ConsumeEncryptKey(provider);
-        store->Rekey(newParam, true);
+        store->Rekey(newParam);
     }
 
     store = nullptr;

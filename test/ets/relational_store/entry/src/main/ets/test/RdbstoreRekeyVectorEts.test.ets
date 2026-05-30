@@ -39,7 +39,7 @@ export default function RdbstoreRekeyVectorEtsTest() {
     /**
      * @tc.number testRekeyVector
      * @tc.name testRekeyVector0001
-     * @tc.desc Normal rekey on encrypted vector database with explicit key using Uint8Array
+     * @tc.desc Normal rekey on encrypted vector database with CryptoParam
      * @tc.type FUNC
      */
     it('testRekeyVector0001', 0, async () => {
@@ -62,8 +62,10 @@ export default function RdbstoreRekeyVectorEtsTest() {
       await rdbStore.execute("INSERT INTO test VALUES(1, 'zhangsan', 18, 100.5)", 0, undefined);
 
       try {
-        let newKey = new Uint8Array([6, 5, 4, 3, 2, 1]);
-        await rdbStore.rekey(newKey);
+        let newCryptoParam: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array([6, 5, 4, 3, 2, 1]),
+        };
+        await rdbStore.rekey(newCryptoParam);
 
         let resultSet = await rdbStore.querySql("SELECT * FROM test WHERE name = ?", ["zhangsan"]);
         expect(true).assertEqual(resultSet.goToFirstRow());
@@ -102,8 +104,10 @@ export default function RdbstoreRekeyVectorEtsTest() {
       await rdbStore.execute("INSERT INTO test VALUES(1, 'zhangsan', 18, 100.5)", 0, undefined);
 
       try {
-        let emptyKey = new Uint8Array();
-        await rdbStore.rekey(emptyKey);
+        let emptyCryptoParam: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array(),
+        };
+        await rdbStore.rekey(emptyCryptoParam);
 
         let resultSet = await rdbStore.querySql("SELECT * FROM test WHERE name = ?", ["zhangsan"]);
         expect(true).assertEqual(resultSet.goToFirstRow());
@@ -139,8 +143,10 @@ export default function RdbstoreRekeyVectorEtsTest() {
       let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       try {
-        let newKey = new Uint8Array([1, 2, 3, 4, 5, 6]);
-        await rdbStore.rekey(newKey);
+        let newCryptoParam: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
+        };
+        await rdbStore.rekey(newCryptoParam);
         expect().assertFail();
       } catch (e) {
         console.log(TAG + "catch err: code=" + e.code + " message=" + e.message);
@@ -178,11 +184,15 @@ export default function RdbstoreRekeyVectorEtsTest() {
       await rdbStore.execute("INSERT INTO test VALUES(1, 'zhangsan', 18, 100.5)", 0, undefined);
 
       try {
-        let key1 = new Uint8Array([2, 3, 4, 5, 6, 7]);
-        await rdbStore.rekey(key1);
+        let cryptoParam1: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array([2, 3, 4, 5, 6, 7]),
+        };
+        await rdbStore.rekey(cryptoParam1);
 
-        let key2 = new Uint8Array([3, 4, 5, 6, 7, 8]);
-        await rdbStore.rekey(key2);
+        let cryptoParam2: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array([3, 4, 5, 6, 7, 8]),
+        };
+        await rdbStore.rekey(cryptoParam2);
 
         let resultSet = await rdbStore.querySql("SELECT * FROM test WHERE name = ?", ["zhangsan"]);
         expect(true).assertEqual(resultSet.goToFirstRow());
@@ -202,9 +212,7 @@ export default function RdbstoreRekeyVectorEtsTest() {
     /**
      * @tc.number testRekeyVector
      * @tc.name testRekeyVector0005
-     * @tc.desc Rekey on vector DB with CryptoParam object (not Uint8Array) should fail with E_NOT_SUPPORT.
-     *          Covers branch: isVector=false path when napi_is_typedarray returns false for CryptoParam,
-     *          and (!isVector && config_.GetDBType() == DB_VECTOR) in rdb_store_impl.cpp
+     * @tc.desc Rekey on vector DB with CryptoParam object should succeed.
      * @tc.type FUNC
      */
     it('testRekeyVector0005', 0, async () => {
@@ -223,16 +231,23 @@ export default function RdbstoreRekeyVectorEtsTest() {
         cryptoParam: cryptoParam,
       }
       let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
+      await rdbStore.execute(CREATE_TABLE_TEST, 0, undefined);
+      await rdbStore.execute("INSERT INTO test VALUES(1, 'zhangsan', 18, 100.5)", 0, undefined);
 
       try {
         let newCryptoParam: data_relationalStore.CryptoParam = {
           encryptionKey: new Uint8Array([6, 5, 4, 3, 2, 1]),
         };
         await rdbStore.rekey(newCryptoParam);
-        expect().assertFail();
+
+        let resultSet = await rdbStore.querySql("SELECT * FROM test WHERE name = ?", ["zhangsan"]);
+        expect(true).assertEqual(resultSet.goToFirstRow());
+        let nameIndex = resultSet.getColumnIndex("name");
+        expect("zhangsan").assertEqual(resultSet.getString(nameIndex));
+        resultSet.close();
       } catch (e) {
         console.log(TAG + "catch err: code=" + e.code + " message=" + e.message);
-        expect(String(e.code)).assertEqual(String(801));
+        expect(false).assertTrue();
       }
 
       rdbStore = undefined;
@@ -243,7 +258,7 @@ export default function RdbstoreRekeyVectorEtsTest() {
     /**
      * @tc.number testRekeyVector
      * @tc.name testRekeyVector0006
-     * @tc.desc Rekey on non-encrypted vector DB with empty Uint8Array should fail.
+     * @tc.desc Rekey on non-encrypted vector DB with empty CryptoParam should fail.
      *          Covers branch: !config_.IsEncrypt() in rdb_store_impl.cpp
      * @tc.type FUNC
      */
@@ -260,8 +275,10 @@ export default function RdbstoreRekeyVectorEtsTest() {
       let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       try {
-        let emptyKey = new Uint8Array();
-        await rdbStore.rekey(emptyKey);
+        let emptyCryptoParam: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array(),
+        };
+        await rdbStore.rekey(emptyCryptoParam);
         expect().assertFail();
       } catch (e) {
         console.log(TAG + "catch err: code=" + e.code + " message=" + e.message);
@@ -276,7 +293,7 @@ export default function RdbstoreRekeyVectorEtsTest() {
     /**
      * @tc.number testRekeyVector
      * @tc.name testRekeyVector0007
-     * @tc.desc Rekey on non-custom-encrypted vector DB with explicit Uint8Array key should fail.
+     * @tc.desc Rekey on non-custom-encrypted vector DB with explicit CryptoParam should fail.
      *          Covers branch: (config_.IsCustomEncryptParam() == cryptoParam.encryptKey_.empty()) in
      *          rdb_store_impl.cpp when store was NOT created with custom key but rekey provides a key
      * @tc.type FUNC
@@ -295,8 +312,10 @@ export default function RdbstoreRekeyVectorEtsTest() {
       let rdbStore = await data_relationalStore.getRdbStore(globalThis.abilityContext, storeConfig);
 
       try {
-        let newKey = new Uint8Array([1, 2, 3, 4, 5, 6]);
-        await rdbStore.rekey(newKey);
+        let newCryptoParam: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array([1, 2, 3, 4, 5, 6]),
+        };
+        await rdbStore.rekey(newCryptoParam);
         expect().assertFail();
       } catch (e) {
         console.log(TAG + "catch err: code=" + e.code + " message=" + e.message);
@@ -311,7 +330,7 @@ export default function RdbstoreRekeyVectorEtsTest() {
     /**
      * @tc.number testRekeyVector
      * @tc.name testRekeyVector0008
-     * @tc.desc Multiple consecutive rekey operations on encrypted vector database
+     * @tc.desc Multiple consecutive rekey operations on encrypted non-vector database
      * @tc.type FUNC
      */
     it('testRekeyVector0008', 0, async () => {
@@ -334,11 +353,15 @@ export default function RdbstoreRekeyVectorEtsTest() {
       await rdbStore.execute("INSERT INTO test VALUES(1, 'zhangsan', 18, 100.5)", 0, undefined);
 
       try {
-        let key1 = new Uint8Array([2, 3, 4, 5, 6, 7]);
-        await rdbStore.rekey(key1);
+        let cryptoParam1: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array([2, 3, 4, 5, 6, 7]),
+        };
+        await rdbStore.rekey(cryptoParam1);
 
-        let key2 = new Uint8Array([3, 4, 5, 6, 7, 8]);
-        await rdbStore.rekey(key2);
+        let cryptoParam2: data_relationalStore.CryptoParam = {
+          encryptionKey: new Uint8Array([3, 4, 5, 6, 7, 8]),
+        };
+        await rdbStore.rekey(cryptoParam2);
 
         let resultSet = await rdbStore.querySql("SELECT * FROM test WHERE name = ?", ["zhangsan"]);
         expect(true).assertEqual(resultSet.goToFirstRow());
