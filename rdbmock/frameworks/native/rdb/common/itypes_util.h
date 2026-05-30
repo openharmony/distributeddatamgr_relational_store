@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -487,117 +487,6 @@ bool ITypesUtil::UnmarshalFromContainer(T &val, MessageParcel &parcel)
         val.emplace_back(std::move(value));
     }
     return true;
-}
-
-template<typename T>
-bool ITypesUtil::MarshalToBuffer(const T &input, int size, MessageParcel &data)
-{
-    if (size < 0 || static_cast<size_t>(size) > MAX_SIZE || !data.WriteInt32(size)) {
-        return false;
-    }
-    if (size == 0) {
-        return true;
-    }
-    std::unique_ptr<uint8_t[]> buffer = std::make_unique<uint8_t[]>(size);
-    if (buffer == nullptr) {
-        return false;
-    }
-
-    int leftSize = size;
-    uint8_t *cursor = buffer.get();
-    if (!input.WriteToBuffer(cursor, leftSize)) {
-        return false;
-    }
-    return data.WriteRawData(buffer.get(), size);
-}
-
-template<typename T>
-bool ITypesUtil::MarshalToBuffer(const std::vector<T> &input, int size, MessageParcel &data)
-{
-    if (size < 0 || static_cast<size_t>(size) > MAX_SIZE || input.size() > MAX_COUNT || !data.WriteInt32(size)) {
-        return false;
-    }
-    if (size == 0) {
-        return true;
-    }
-    if (!data.WriteInt32(input.size())) {
-        return false;
-    }
-
-    std::unique_ptr<uint8_t[]> buffer = std::make_unique<uint8_t[]>(size);
-    if (buffer == nullptr) {
-        return false;
-    }
-
-    uint8_t *cursor = buffer.get();
-    int32_t left = size;
-    for (const auto &entry : input) {
-        if (!entry.WriteToBuffer(cursor, left)) {
-            return false;
-        }
-    }
-    return data.WriteRawData(buffer.get(), size);
-}
-
-template<typename T>
-bool ITypesUtil::UnmarshalFromBuffer(MessageParcel &data, T &output)
-{
-    int32_t size = data.ReadInt32();
-    if (size == 0) {
-        return true;
-    }
-    if (size < 0 || static_cast<size_t>(size) > MAX_SIZE) {
-        return false;
-    }
-    const uint8_t *buffer = reinterpret_cast<const uint8_t *>(data.ReadRawData(size));
-    if (buffer == nullptr) {
-        return false;
-    }
-    return output.ReadFromBuffer(buffer, size);
-}
-
-template<typename T>
-bool ITypesUtil::UnmarshalFromBuffer(MessageParcel &data, std::vector<T> &output)
-{
-    int size = data.ReadInt32();
-    if (size == 0) {
-        return true;
-    }
-    if (size < 0 || static_cast<size_t>(size) > MAX_SIZE) {
-        return false;
-    }
-    int count = data.ReadInt32();
-    const uint8_t *buffer = reinterpret_cast<const uint8_t *>(data.ReadRawData(size));
-    if (count < 0 || static_cast<size_t>(count) > MAX_COUNT || buffer == nullptr) {
-        return false;
-    }
-
-    output.resize(count);
-    for (auto &entry : output) {
-        if (!entry.ReadFromBuffer(buffer, size)) {
-            output.clear();
-            return false;
-        }
-    }
-    return true;
-}
-
-template<typename T, typename... Types>
-bool ITypesUtil::Marshal(MessageParcel &parcel, const T &first, const Types &...others)
-{
-    if (!ITypesUtil::Marshalling(first, parcel)) {
-        return false;
-    }
-    return ITypesUtil::Marshal(parcel, others...);
-}
-
-template<typename T, typename... Types>
-bool ITypesUtil::Unmarshal(MessageParcel &parcel, T &first, Types &...others)
-{
-    if (!ITypesUtil::Unmarshalling(first, parcel)) {
-        return false;
-    }
-    return ITypesUtil::Unmarshal(parcel, others...);
 }
 } // namespace OHOS
 #endif
