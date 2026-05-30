@@ -146,11 +146,6 @@ classDiagram
 
 `Transaction` 是事务抽象接口，定义 `Commit`、`Rollback`、`Close` 以及 `Insert`、`Update`、`Delete`、`QueryByStep`、`Execute` 等操作。`TransactionImpl` 是 SQLite 实现，支持三种事务类型（DEFERRED、IMMEDIATE、EXCLUSIVE），持有 `Connection` 和 `RdbStore` 引用。
 
-### BaseTransaction
-**文件**: `frameworks/native/rdb/include/base_transaction.h`
-
-事务状态管理基类，管理 `allBeforeSuccessful`、`markedSuccessful`、`childFailure` 等状态标志，支持嵌套事务和 SAVEPOINT 机制。提供 `IsAllBeforeSuccessful`、`SetMarkedSuccessful`、`GetType` 等状态查询方法。
-
 ### Statement (抽象) → SqliteStatement
 **文件**: `include/statement.h`, `include/sqlite_statement.h`, `src/sqlite_statement.cpp`
 
