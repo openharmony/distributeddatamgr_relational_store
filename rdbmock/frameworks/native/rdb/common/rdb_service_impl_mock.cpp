@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -81,17 +81,17 @@ RdbServiceImpl::Factory::Factory()
         return product_;
     });
     AutoCache::GetInstance().RegCreator(RDB_DEVICE_COLLABORATION,
-        [](const StoreMetaData &metaData, const AutoCache::StoreOption &option) -> std::pair<int32_t, GeneralStore *> {
-            auto store = new (std::nothrow) RdbGeneralStore(metaData, option.createRequired);
+        [](const StoreMetaData &metaData,
+            const AutoCache::StoreOption &option) -> std::pair<int32_t, std::unique_ptr<GeneralStore>> {
+            auto store = std::make_unique<RdbGeneralStore>(metaData, option.createRequired);
             if (store == nullptr) {
                 return { GeneralError::E_ERROR, nullptr };
             }
             auto ret = store->Init();
             if (ret != GeneralError::E_OK) {
-                delete store;
-                store = nullptr;
+                store.reset();
             }
-            return { ret, store };
+            return { ret, std::move(store) };
         });
     staticActs_ = std::make_shared<RdbStatic>();
     FeatureSystem::GetInstance().RegisterStaticActs(RdbServiceImpl::SERVICE_NAME, staticActs_);
@@ -104,9 +104,14 @@ RdbServiceImpl::Factory::~Factory()
 RdbServiceImpl::RdbServiceImpl() : eventContainer_(std::make_shared<GlobalEvent>())
 {
     ZLOGI("construct");
+    auto weakThis = std::weak_ptr<RdbServiceImpl>(shared_from_this());
     DistributedDB::RelationalStoreManager::SetAutoLaunchRequestCallback(
-        [this](const std::string &identifier, DistributedDB::AutoLaunchParam &param) {
-            return ResolveAutoLaunch(identifier, param);
+        [weakThis](const std::string &identifier, DistributedDB::AutoLaunchParam &param) {
+            auto strongThis = weakThis.lock();
+            if (strongThis) {
+                return strongThis->ResolveAutoLaunch(identifier, param);
+            }
+            return false;
         });
     RegisterEvent();
 }
