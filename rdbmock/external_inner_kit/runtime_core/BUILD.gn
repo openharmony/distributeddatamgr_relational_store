@@ -1,0 +1,16 @@
+import("//build/ohos.gni")
+
+config("runtime_core_config") {
+  include_dirs = [ "include" ]
+}
+
+ohos_source_set("ani_helpers") {
+  configs = [ ":runtime_core_config" ]
+  sources = [ "mock_js_runtime.cpp" ]
+  all_dependent_configs = [ ":runtime_core_config" ]
+  public_configs = [ ":runtime_core_config" ]
+  deps = []
+  external_deps = [ "c_utils:utils" ]
+  part_name = "relational_store"
+  subsystem_name = "distributeddatamgr"
+}

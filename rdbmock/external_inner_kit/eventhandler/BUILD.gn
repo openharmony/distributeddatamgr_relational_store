@@ -1,0 +1,16 @@
+import("//build/ohos.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
+
+config("eventhandler_config") {
+  include_dirs = [ "include" ]
+}
+
+ohos_source_set("libeventhandler") {
+  sources = [ "mock_libeventhandler.cpp" ]
+  public_configs = [ ":eventhandler_config" ]
+  deps = []
+  external_deps = [ "c_utils:utils" ]
+  part_name = "relational_store"
+  subsystem_name = "distributeddatamgr"
+}
