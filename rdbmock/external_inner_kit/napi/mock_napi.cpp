@@ -1234,7 +1234,8 @@ void Ability::OnConfigurationUpdated() {}
 }  // namespace OHOS
 
 extern "C" {
-int uv_queue_work_internal(uv_loop_t* loop, uv_work_t* req, uv_work_cb work_cb, uv_after_work_cb after_work_cb, const char* task_name)
+int uv_queue_work_internal(uv_loop_t* loop, uv_work_t* req,
+    uv_work_cb work_cb, uv_after_work_cb after_work_cb, const char* task_name)
 {
     return 0;
 }
