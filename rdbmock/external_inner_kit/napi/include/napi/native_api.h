@@ -3229,7 +3229,8 @@ NAPI_EXTERN napi_status napi_map_set_property(napi_env env, napi_value map, napi
  * @return Returns the function execution status.
  * @since 12
  */
-NAPI_EXTERN napi_status napi_map_set_named_property(napi_env env, napi_value map, const char* utf8name, napi_value value);
+NAPI_EXTERN napi_status napi_map_set_named_property(napi_env env, napi_value map,
+                                                 const char* utf8name, napi_value value);
 
 /**
  * @brief Gets a property from an ArkTS Map object.
@@ -3251,7 +3252,8 @@ NAPI_EXTERN napi_status napi_map_get_property(napi_env env, napi_value map, napi
  * @return Returns the function execution status.
  * @since 12
  */
-NAPI_EXTERN napi_status napi_map_get_named_property(napi_env env, napi_value map, const char* utf8name, napi_value* result);
+NAPI_EXTERN napi_status napi_map_get_named_property(napi_env env, napi_value map,
+                                                    const char* utf8name, napi_value* result);
 
 /**
  * @brief Checks if a property exists in an ArkTS Map object.
