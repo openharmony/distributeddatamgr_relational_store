@@ -16,7 +16,11 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 config("rdb_data_ability_adapter_config") {
   visibility = [ ":*" ]
   if (!is_mingw && !is_mac) {
-    cflags_cc = [ "-fvisibility=hidden" ]
+    cflags_cc = [
+      "-fvisibility=hidden",
+      "-fno-unwind-tables",
+      "-fno-asynchronous-unwind-tables",
+    ]
   }
   include_dirs = [
     "include",
@@ -46,6 +50,9 @@ ohos_shared_library("rdb_data_ability_adapter") {
   ]
 
   configs = [ ":rdb_data_ability_adapter_config" ]
+
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
+  version_script = "rdb_data_ability_adapter.versionscript"
 
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"

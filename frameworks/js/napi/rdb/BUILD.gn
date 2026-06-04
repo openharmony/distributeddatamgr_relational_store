@@ -84,6 +84,15 @@ ohos_shared_library("napi_rdb") {
       "${relational_store_napi_path}/rdb/include",
     ]
     defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
+    cflags_cc = [
+      "-Oz",
+      "-fno-unwind-tables",
+      "-fno-asynchronous-unwind-tables",
+    ]
+
+    ldflags = [ "-Wl,--exclude-libs,ALL" ]
+    version_script = "napi_rdb.versionscript"
+
     sources += [
       "${relational_store_js_common_path}/src/js_ability.cpp",
       "src/napi_rdb_store_observer.cpp",
