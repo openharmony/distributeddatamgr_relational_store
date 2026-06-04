@@ -3230,7 +3230,7 @@ NAPI_EXTERN napi_status napi_map_set_property(napi_env env, napi_value map, napi
  * @since 12
  */
 NAPI_EXTERN napi_status napi_map_set_named_property(napi_env env, napi_value map,
-                                                 const char* utf8name, napi_value value);
+                                                       const char* utf8name, napi_value value);
 
 /**
  * @brief Gets a property from an ArkTS Map object.
