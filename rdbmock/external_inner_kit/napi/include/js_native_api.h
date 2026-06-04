@@ -22,3 +22,5 @@
 #include <stdbool.h>  // NOLINT(modernize-deprecated-headers)
 
 // Use INT_MAX, this should only be consumed by the pre-processor anyway.
+
+#endif  // SRC_JS_NATIVE_API_H_
