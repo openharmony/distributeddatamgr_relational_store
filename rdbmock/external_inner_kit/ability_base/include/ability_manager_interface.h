@@ -1891,7 +1891,6 @@ public:
     {
         return 0;
     }
-
 }  // namespace AAFwk
 }  // namespace OHOS
 #endif  // OHOS_ABILITY_RUNTIME_ABILITY_MANAGER_INTERFACE_H
