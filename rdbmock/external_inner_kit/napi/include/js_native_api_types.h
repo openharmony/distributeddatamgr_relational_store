@@ -14,7 +14,7 @@
  */
 
 
-﻿#ifndef SRC_JS_NATIVE_API_TYPES_H_
+#ifndef SRC_JS_NATIVE_API_TYPES_H_
 #define SRC_JS_NATIVE_API_TYPES_H_
 
 // This file needs to be compatible with C compilers.
