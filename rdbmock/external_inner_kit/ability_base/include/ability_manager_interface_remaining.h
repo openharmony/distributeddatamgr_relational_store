@@ -979,7 +979,3 @@
     {
         return ERR_OK;
     }
-};
-}  // namespace AAFwk
-}  // namespace OHOS
-#endif  // OHOS_ABILITY_RUNTIME_ABILITY_MANAGER_INTERFACE_H

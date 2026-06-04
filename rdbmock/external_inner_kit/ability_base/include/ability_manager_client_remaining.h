@@ -404,7 +404,3 @@ private:
     sptr<IRemoteObject::DeathRecipient> deathRecipient_;
     std::recursive_mutex mutex_;
     std::mutex topAbilityMutex_;
-};
-}  // namespace AAFwk
-}  // namespace OHOS
-#endif  // OHOS_ABILITY_RUNTIME_ABILITY_MANAGER_CLIENT_H
