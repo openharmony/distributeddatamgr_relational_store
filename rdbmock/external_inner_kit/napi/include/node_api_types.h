@@ -14,7 +14,7 @@
  */
 
 
-﻿#ifndef SRC_NODE_API_TYPES_H_
+#ifndef SRC_NODE_API_TYPES_H_
 #define SRC_NODE_API_TYPES_H_
 
 #include "js_native_api_types.h"
