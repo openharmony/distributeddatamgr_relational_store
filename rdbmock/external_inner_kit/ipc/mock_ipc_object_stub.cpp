@@ -12,13 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "accesstoken_kit.h"
 #include "ipc_object_stub.h"
 #include "nativetoken_kit.h"
 namespace OHOS {
-IPCObjectStub::~IPCObjectStub() {}
+IPCObjectStub::~IPCObjectStub()
+{
+}
 IPCObjectStub::IPCObjectStub(std::u16string descriptor, bool serialInvokeFlag)
-    : IRemoteObject(descriptor), serialInvokeFlag_(serialInvokeFlag) {}
+    : IRemoteObject(descriptor), serialInvokeFlag_(serialInvokeFlag)
+{
+}
 // IPCObjectStub::IPCObjectStub() : IRemoteObject(), Parcelable(), RefBase() {}
 int32_t IPCObjectStub::GetObjectRefCount()
 {
