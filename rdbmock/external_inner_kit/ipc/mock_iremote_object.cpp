@@ -18,8 +18,14 @@
 #include "iremote_proxy.h"
 #include "napi_remote_object.h"
 namespace OHOS {
-bool IRemoteObject::IsProxyObject() const { return true;}
-bool IRemoteObject::IsObjectDead() const { return false; }
+bool IRemoteObject::IsProxyObject() const
+{
+    return true;
+}
+bool IRemoteObject::IsObjectDead() const
+{
+    return false;
+}
 bool IRemoteObject::CheckObjectLegality() const
 {
     return false;
@@ -49,10 +55,8 @@ std::u16string IRemoteObject::GetInterfaceDescriptor()
     return descriptor_;
 }
 IRemoteObject::IRemoteObject(std::u16string descriptor)
- : descriptor_(descriptor)
+    : descriptor_(descriptor)
 {
-
-
 }
 
 }

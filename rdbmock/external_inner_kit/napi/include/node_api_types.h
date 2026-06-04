@@ -28,8 +28,8 @@ typedef struct napi_threadsafe_function__* napi_threadsafe_function;
 
 #if NAPI_VERSION >= 4
 typedef enum {
-  napi_tsfn_release,
-  napi_tsfn_abort
+    napi_tsfn_release,
+    napi_tsfn_abort
 } napi_threadsafe_function_release_mode;
 
 typedef enum {

@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <ipc_skeleton.h>
 #include <iremote_broker.h>
 #include <message_option.h>
@@ -109,14 +110,28 @@ sptr<IRemoteBroker> BrokerRegistration::NewInstance(const std::u16string &descri
 }
 
 PeerHolder::PeerHolder(const sptr<IRemoteObject> &object)
-    : remoteObject_(object) {};
-sptr<IRemoteObject> PeerHolder::Remote() {
+    : remoteObject_(object)
+{}
+sptr<IRemoteObject> PeerHolder::Remote()
+{
     return remoteObject_;
 }
-pid_t IPCSkeleton::GetCallingUid() { return 1000; }
-pid_t IPCSkeleton::GetCallingPid() { return getpid(); }
-pid_t IPCSkeleton::GetCallingRealPid() { return getpid(); }
-std::string IPCSkeleton::GetCallingSid() { return ""; }
+pid_t IPCSkeleton::GetCallingUid()
+{
+    return 1000;
+}
+pid_t IPCSkeleton::GetCallingPid()
+{
+    return getpid();
+}
+pid_t IPCSkeleton::GetCallingRealPid()
+{
+    return getpid();
+}
+std::string IPCSkeleton::GetCallingSid()
+{
+    return "";
+}
 
 uint32_t IPCSkeleton::GetCallingTokenID()
 {
@@ -165,7 +180,8 @@ uint32_t IPCSkeleton::GetDCallingTokenID()
 {
     return 0;
 }
-int32_t IPCSkeleton::GetMemoryUsage(uint32_t pid, unsigned long &totalSize, unsigned long &oneWayFreeSize)
+int32_t IPCSkeleton::GetMemoryUsage(uint32_t pid,
+    unsigned long &totalSize, unsigned long &oneWayFreeSize)
 {
     return 0;
 }
@@ -177,7 +193,9 @@ std::optional<bool> IPCSkeleton::HasSoUnreleasedRemoteObject(const std::unordere
 {
     return std::nullopt;
 }
-void IPCDfx::BlockUntilThreadAvailable() {}
+void IPCDfx::BlockUntilThreadAvailable()
+{
+}
 bool IPCDfx::SetIPCProxyLimit(uint64_t num, IPCProxyLimitCallback callback)
 {
     return false;
@@ -186,8 +204,12 @@ bool IPCSkeleton::SetMaxWorkThreadNum(int maxThreadNum)
 {
     return false;
 }
-void IPCSkeleton::JoinWorkThread() {}
-void IPCSkeleton::StopWorkThread() {}
+void IPCSkeleton::JoinWorkThread()
+{
+}
+void IPCSkeleton::StopWorkThread()
+{
+}
 uint32_t IPCSkeleton::GetFirstTokenID()
 {
     return 0;
@@ -230,15 +252,35 @@ static size_t g_cursor = 0;
 static std::queue<sptr<IRemoteObject>> g_remoteObjects;
 static std::u16string g_token;
 
-MessageOption::MessageOption(int flags, int waitTime) : flags_(flags), waitTime_(waitTime) {}
-void MessageOption::SetFlags(int flags) { flags_ = flags; }
-int MessageOption::GetFlags() const { return flags_; }
-void MessageOption::SetWaitTime(int waitTime) { waitTime_ = waitTime; }
-int MessageOption::GetWaitTime() const { return waitTime_; }
-MessageParcel::MessageParcel() : rawDataSize_(0) {}
-MessageParcel::~MessageParcel() {}
+MessageOption::MessageOption(int flags, int waitTime)
+    : flags_(flags), waitTime_(waitTime)
+{
+}
+void MessageOption::SetFlags(int flags)
+{
+    flags_ = flags;
+}
+int MessageOption::GetFlags() const
+{
+    return flags_;
+}
+void MessageOption::SetWaitTime(int waitTime)
+{
+    waitTime_ = waitTime;
+}
+int MessageOption::GetWaitTime() const
+{
+    return waitTime_;
+}
+MessageParcel::MessageParcel()
+    : rawDataSize_(0)
+{}
+MessageParcel::~MessageParcel()
+{
+}
 MessageParcel::MessageParcel(Allocator *allocator)
-    : Parcel(allocator) {}
+    : Parcel(allocator)
+{}
 bool MessageParcel::WriteRemoteObject(const sptr<IRemoteObject> &object)
 {
     g_remoteObjects.push(object);
@@ -253,9 +295,18 @@ sptr<IRemoteObject> MessageParcel::ReadRemoteObject()
     g_remoteObjects.pop();
     return object;
 }
-bool MessageParcel::WriteFileDescriptor(int fd) { return false; }
-int MessageParcel::ReadFileDescriptor() { return 0; }
-bool MessageParcel::ContainFileDescriptors() const { return false; }
+bool MessageParcel::WriteFileDescriptor(int fd)
+{
+    return false;
+}
+int MessageParcel::ReadFileDescriptor()
+{
+    return 0;
+}
+bool MessageParcel::ContainFileDescriptors() const
+{
+    return false;
+}
 bool MessageParcel::WriteInterfaceToken(std::u16string name)
 {
     g_token = name;
@@ -293,14 +344,31 @@ bool MessageParcel::RestoreRawData(std::shared_ptr<char> rawData, size_t size)
     rawDataSize_ = size;
     return true;
 }
-const void *MessageParcel::GetRawData() const { return rawData_.get(); }
-size_t MessageParcel::GetRawDataSize() const { return rawDataSize_; }
-size_t MessageParcel::GetRawDataCapacity() const { return MAX_RAWDATA_SIZE; }
-void MessageParcel::WriteNoException() {}
-int32_t MessageParcel::ReadException() { return 0; }
-bool MessageParcel::WriteAshmem(sptr<Ashmem> ashmem) { return false; }
-sptr<Ashmem> MessageParcel::ReadAshmem() { return sptr<Ashmem>(); }
-void MessageParcel::ClearFileDescriptor() {}
-bool MessageParcel::Append(MessageParcel &data) { return false; }
-bool MessageParcel::WriteDBinderProxy(const sptr<IRemoteObject> &object, uint32_t handle, uint64_t stubIndex) { return false;}
+const void *MessageParcel::GetRawData() const
+{
+    return rawData_.get();
+}
+size_t MessageParcel::GetRawDataSize() const
+{
+    return rawDataSize_;
+}
+size_t MessageParcel::GetRawDataCapacity() const
+{
+    return MAX_RAWDATA_SIZE;
+}
+void MessageParcel::WriteNoException()
+{
+}
+void MessageParcel::ClearFileDescriptor()
+{
+}
+bool MessageParcel::Append(MessageParcel &data)
+{
+    return false;
+}
+bool MessageParcel::WriteDBinderProxy(const sptr<IRemoteObject> &object,
+    uint32_t handle, uint64_t stubIndex)
+{
+    return false;
+}
 }
