@@ -111,7 +111,8 @@ sptr<IRemoteBroker> BrokerRegistration::NewInstance(const std::u16string &descri
 
 PeerHolder::PeerHolder(const sptr<IRemoteObject> &object)
     : remoteObject_(object)
-{}
+{
+}
 sptr<IRemoteObject> PeerHolder::Remote()
 {
     return remoteObject_;
@@ -274,13 +275,15 @@ int MessageOption::GetWaitTime() const
 }
 MessageParcel::MessageParcel()
     : rawDataSize_(0)
-{}
+{
+}
 MessageParcel::~MessageParcel()
 {
 }
 MessageParcel::MessageParcel(Allocator *allocator)
     : Parcel(allocator)
-{}
+{
+}
 bool MessageParcel::WriteRemoteObject(const sptr<IRemoteObject> &object)
 {
     g_remoteObjects.push(object);
