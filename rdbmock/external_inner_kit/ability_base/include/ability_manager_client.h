@@ -1897,7 +1897,8 @@ public:
      * @return Returns ERR_OK on success, others on failure.
      */
     int32_t SetResidentProcessEnabled(const std::string &bundleName, bool enable);
-/**
+
+    /**
      * Starts a new ability with specific start options.
      *
      * @param want, the want of the ability to start.

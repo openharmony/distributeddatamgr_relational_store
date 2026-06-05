@@ -1891,7 +1891,8 @@ public:
     {
         return 0;
     }
-/**
+
+    /**
      * @brief Register auto start up callback for system api.
      * @param callback The point of JsAbilityAutoStartupCallBack.
      * @return Returns ERR_OK on success, others on failure.
