@@ -1897,7 +1897,7 @@ public:
      * @return Returns ERR_OK on success, others on failure.
      */
     int32_t SetResidentProcessEnabled(const std::string &bundleName, bool enable);
-
-// namespace AAFwk
+};
+}  // namespace AAFwk
 }  // namespace OHOS
 #endif  // OHOS_ABILITY_RUNTIME_ABILITY_MANAGER_CLIENT_H
