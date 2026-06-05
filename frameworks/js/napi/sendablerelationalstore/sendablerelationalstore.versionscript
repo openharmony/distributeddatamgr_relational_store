@@ -15,16 +15,10 @@
   global:
     Init;
     NAPI_OHOS_Data_SendableRelationalStore*;
-    _ZN4OHOS9NativeRdb*;
-    _ZNK4OHOS9NativeRdb*;
-    _ZN4OHOS15AppDataMgrJsKit*;
-    _ZNK4OHOS15AppDataMgrJsKit*;
-    _ZTVN4OHOS9NativeRdb*;
-    _ZTVN4OHOS15AppDataMgrJsKit*;
-    _ZTSN4OHOS9NativeRdb*;
-    _ZTSN4OHOS15AppDataMgrJsKit*;
-    _ZTIN4OHOS9NativeRdb*;
-    _ZTIN4OHOS15AppDataMgrJsKit*;
+    extern "C++" {
+      *OHOS::NativeRdb*;
+      *OHOS::AppDataMgrJsKit*;
+    };
     __cfi_check;
 
   local:

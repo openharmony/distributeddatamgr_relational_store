@@ -13,8 +13,9 @@
 
 {
   global:
-    _ZN4OHOS21RdbDataAbilityAdapter19RdbDataAbilityUtils*;
-    _ZTVN4OHOS21RdbDataAbilityAdapter*;
+    extern "C++" {
+      *OHOS::RdbDataAbilityAdapter*;
+    };
     __cfi_check;
 
   local:

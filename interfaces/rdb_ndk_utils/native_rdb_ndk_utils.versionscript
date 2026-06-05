@@ -13,10 +13,12 @@
 
 {
   global:
-    _ZN4OHOS6RdbNdk*;
-    _ZT?N4OHOS6RdbNdk*;
-    _ZN4OHOS9NativeRdb14RdbStoreConfig23DB_DEFAULT_JOURNAL_MODE_E;
+    extern "C++" {
+      *OHOS::RdbNdk*;
+      OHOS::NativeRdb::RdbStoreConfig::DB_DEFAULT_JOURNAL_MODE_E;
+    };
     __cfi_check;
+
   local:
     *;
 };

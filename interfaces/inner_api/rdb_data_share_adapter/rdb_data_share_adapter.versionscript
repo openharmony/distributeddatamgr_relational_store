@@ -13,11 +13,9 @@
 
 {
   global:
-    _ZN4OHOS19RdbDataShareAdapter*;
-    _ZNK4OHOS19RdbDataShareAdapter*;
-    _ZTVN4OHOS19RdbDataShareAdapter*;
-    _ZTSN4OHOS19RdbDataShareAdapter*;
-    _ZTIN4OHOS19RdbDataShareAdapter*;
+    extern "C++" {
+      *OHOS::RdbDataShareAdapter*;
+    };
     __cfi_check;
 
   local:

@@ -13,10 +13,9 @@
 
 {
   global:
-    _ZN4OHOS10AppDataFwk11SharedBlock*;
-    _ZNK4OHOS10AppDataFwk11SharedBlock*;
-    _ZNK4OHOS10AppDataFwk11SharedBlock8CellUnit*;
-    _ZTVN4OHOS10AppDataFwk11SharedBlock*;
+    extern "C++" {
+      *OHOS::AppDataFwk*;
+    };
     __cfi_check;
 
   local:

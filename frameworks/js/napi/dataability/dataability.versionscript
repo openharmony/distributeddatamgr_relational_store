@@ -15,16 +15,10 @@
   global:
     Init;
     NAPI_OHOS_Data_DataAbilityJsKit*;
-    _ZN4OHOS17DataAbilityJsKit*;
-    _ZNK4OHOS17DataAbilityJsKit*;
-    _ZN4OHOS9NativeRdb*;
-    _ZNK4OHOS9NativeRdb*;
-    _ZTVN4OHOS17DataAbilityJsKit*;
-    _ZTVN4OHOS9NativeRdb*;
-    _ZTSN4OHOS17DataAbilityJsKit*;
-    _ZTSN4OHOS9NativeRdb*;
-    _ZTIN4OHOS17DataAbilityJsKit*;
-    _ZTIN4OHOS9NativeRdb*;
+    extern "C++" {
+      *OHOS::DataAbilityJsKit*;
+      *OHOS::NativeRdb*;
+    };
     __cfi_check;
 
   local:

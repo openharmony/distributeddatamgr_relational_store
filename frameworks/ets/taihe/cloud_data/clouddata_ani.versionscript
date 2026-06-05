@@ -18,9 +18,10 @@
     taihe_platform_ani_*;
     tobj_*;
     tstr_*;
-    _ZN4ohos4data9cloudData7sharing11ANIRegister*;
-    _ZN4ohos4data9cloudData11ANIRegister*;
-    _ZN4ohos4data10commonType11ANIRegister*;
+    extern "C++" {
+      *ohos::data::cloudData*;
+      *ohos::data::commonType*;
+    };
     __cfi_check;
 
   local:

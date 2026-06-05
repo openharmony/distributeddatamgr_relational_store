@@ -14,9 +14,11 @@
 {
   global:
     OH_*;
-    _ZN4OHOS6RdbNdk*;
-    _ZT?N4OHOS6RdbNdk*;
+    extern "C++" {
+      *OHOS::RdbNdk*;
+    };
     __cfi_check;
+
   local:
     *;
 };

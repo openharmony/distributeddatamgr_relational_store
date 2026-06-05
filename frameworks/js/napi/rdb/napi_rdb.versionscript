@@ -15,18 +15,12 @@
   global:
     Init;
     NAPI_OHOS_Data_RdbJsKit_*;
-    _ZN4OHOS8RdbJsKit*;
-    _ZNK4OHOS8RdbJsKit*;
-    _ZN4OHOS15AppDataMgrJsKit*;
-    _ZNK4OHOS15AppDataMgrJsKit*;
-    _ZN4OHOS9NativeRdb*;
-    _Z12NewCInstance*;
-    _ZTVN4OHOS8RdbJsKit*;
-    _ZTVN4OHOS15AppDataMgrJsKit*;
-    _ZTSN4OHOS8RdbJsKit*;
-    _ZTSN4OHOS15AppDataMgrJsKit*;
-    _ZTIN4OHOS8RdbJsKit*;
-    _ZTIN4OHOS15AppDataMgrJsKit*;
+    extern "C++" {
+      *OHOS::RdbJsKit*;
+      *OHOS::AppDataMgrJsKit*;
+      *OHOS::NativeRdb*;
+      NewCInstance*;
+    };
     __cfi_check;
 
   local:

@@ -18,13 +18,13 @@
     taihe_platform_ani_*;
     tobj_*;
     tstr_*;
-    _ZN4ohos4data15relationalStore11ANIRegister*;
     extern "C++" {
-      OHOS::RdbTaihe::*;
-      ani_rdbutils::*;
-      ani_utils::*;
-      ani_abilityutils::*;
-      OHOS::AppDataMgrJsKit::*;
+      *ohos::data::relationalStore*;
+      *OHOS::RdbTaihe*;
+      *ani_rdbutils*;
+      *ani_utils*;
+      *ani_abilityutils*;
+      *OHOS::AppDataMgrJsKit*;
     };
     __cfi_check;
 

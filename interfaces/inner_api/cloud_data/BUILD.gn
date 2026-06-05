@@ -50,8 +50,6 @@ ohos_shared_library("cloud_data_native") {
   public_configs = [ ":cloud_public_config" ]
   cflags_cc = [
     "-fvisibility=hidden",
-    "-fno-unwind-tables",
-    "-fno-asynchronous-unwind-tables",
     "-Werror=vla",
   ]
   sources = [

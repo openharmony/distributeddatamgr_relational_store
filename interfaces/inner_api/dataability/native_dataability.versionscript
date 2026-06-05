@@ -13,14 +13,9 @@
 
 {
   global:
-    _ZN4OHOS9NativeRdb21DataAbilityPredicates*;
-    _ZNK4OHOS9NativeRdb21DataAbilityPredicates*;
-    _ZTv0_n*_N*4OHOS9NativeRdb21DataAbilityPredicates*;
-    _ZN4OHOS9NativeRdb16ISharedResultSet*;
-    _ZN4OHOS9NativeRdb15PredicatesUtils*;
-    _ZTVN4OHOS9NativeRdb21DataAbilityPredicatesE;
-    _ZTCN4OHOS9NativeRdb21DataAbilityPredicates*;
-    _ZTTN4OHOS9NativeRdb21DataAbilityPredicatesE;
+    extern "C++" {
+      *OHOS::NativeRdb*;
+    };
     __cfi_check;
 
   local:
