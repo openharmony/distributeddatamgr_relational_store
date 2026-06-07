@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "napi/libuv/include/uv.h"
+#include "ability.h"
 #include "js_native_api.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "node_api.h"
 #include "napi_base_context.h"
-#include "ability.h"
+#include "node_api.h"
+#include "uv.h"
 
 extern "C" {
 napi_status napi_create_threadsafe_function(napi_env env, napi_value func, napi_value async_resource,
@@ -30,8 +30,8 @@ napi_status napi_create_threadsafe_function(napi_env env, napi_value func, napi_
     return napi_ok;
 }
 
-napi_status napi_call_threadsafe_function(napi_threadsafe_function func, void *data,
-    napi_threadsafe_function_call_mode is_blocking)
+napi_status napi_call_threadsafe_function(
+    napi_threadsafe_function func, void *data, napi_threadsafe_function_call_mode is_blocking)
 {
     return napi_ok;
 }
@@ -46,8 +46,8 @@ napi_status napi_release_threadsafe_function(napi_threadsafe_function func, napi
     return napi_ok;
 }
 
-napi_status napi_create_object_with_properties(napi_env env, napi_value *result, size_t property_count,
-    const napi_property_descriptor *properties)
+napi_status napi_create_object_with_properties(
+    napi_env env, napi_value *result, size_t property_count, const napi_property_descriptor *properties)
 {
     return napi_ok;
 }
@@ -57,14 +57,14 @@ napi_status napi_get_named_property(napi_env env, napi_value object, const char 
     return napi_ok;
 }
 
-napi_status napi_call_function(napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv,
-    napi_value *result)
+napi_status napi_call_function(
+    napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv, napi_value *result)
 {
     return napi_ok;
 }
 
-napi_status napi_get_cb_info(napi_env env, napi_callback_info cbinfo, size_t *argc, napi_value *argv,
-    napi_value *this_arg, void **data)
+napi_status napi_get_cb_info(
+    napi_env env, napi_callback_info cbinfo, size_t *argc, napi_value *argv, napi_value *this_arg, void **data)
 {
     return napi_ok;
 }
@@ -234,8 +234,8 @@ napi_status napi_get_reference_value(napi_env env, napi_ref ref, napi_value *res
     return napi_ok;
 }
 
-napi_status napi_new_instance(napi_env env, napi_value constructor, size_t argc, const napi_value *argv,
-    napi_value *result)
+napi_status napi_new_instance(
+    napi_env env, napi_value constructor, size_t argc, const napi_value *argv, napi_value *result)
 {
     return napi_ok;
 }
@@ -305,16 +305,18 @@ napi_status napi_create_object(napi_env env, napi_value *result)
     return napi_ok;
 }
 
-napi_status napi_define_properties(napi_env env, napi_value object, size_t property_count,
-    const napi_property_descriptor *properties)
+napi_status napi_define_properties(
+    napi_env env, napi_value object, size_t property_count, const napi_property_descriptor *properties)
 {
     return napi_ok;
 }
 
-void napi_module_register(napi_module *mod) {}
+void napi_module_register(napi_module *mod)
+{
+}
 
-napi_status napi_async_init(napi_env env, napi_value async_resource, napi_value async_resource_name,
-    napi_async_context *result)
+napi_status napi_async_init(
+    napi_env env, napi_value async_resource, napi_value async_resource_name, napi_async_context *result)
 {
     return napi_ok;
 }
@@ -335,14 +337,14 @@ napi_status napi_create_buffer(napi_env env, size_t length, void **data, napi_va
     return napi_ok;
 }
 
-napi_status napi_create_external_buffer(napi_env env, size_t length, void *data, napi_finalize finalize_cb,
-    void *finalize_hint, napi_value *result)
+napi_status napi_create_external_buffer(
+    napi_env env, size_t length, void *data, napi_finalize finalize_cb, void *finalize_hint, napi_value *result)
 {
     return napi_ok;
 }
 
-napi_status napi_create_buffer_copy(napi_env env, size_t length, const void *data, void **result_data,
-    napi_value *result)
+napi_status napi_create_buffer_copy(
+    napi_env env, size_t length, const void *data, void **result_data, napi_value *result)
 {
     return napi_ok;
 }
@@ -402,8 +404,8 @@ napi_status napi_create_symbol(napi_env env, napi_value description, napi_value 
     return napi_ok;
 }
 
-napi_status napi_create_function(napi_env env, const char *utf8name, size_t length, napi_callback cb, void *data,
-    napi_value *result)
+napi_status napi_create_function(
+    napi_env env, const char *utf8name, size_t length, napi_callback cb, void *data, napi_value *result)
 {
     return napi_ok;
 }
@@ -518,8 +520,8 @@ napi_status napi_remove_wrap(napi_env env, napi_value js_object, void **result)
     return napi_ok;
 }
 
-napi_status napi_create_external(napi_env env, void *data, napi_finalize finalize_cb, void *finalize_hint,
-    napi_value *result)
+napi_status napi_create_external(
+    napi_env env, void *data, napi_finalize finalize_cb, void *finalize_hint, napi_value *result)
 {
     return napi_ok;
 }
@@ -595,8 +597,8 @@ napi_status napi_get_arraybuffer_info(napi_env env, napi_value arraybuffer, void
     return napi_ok;
 }
 
-napi_status napi_create_dataview(napi_env env, size_t length, napi_value arraybuffer, size_t byte_offset,
-    napi_value *result)
+napi_status napi_create_dataview(
+    napi_env env, size_t length, napi_value arraybuffer, size_t byte_offset, napi_value *result)
 {
     return napi_ok;
 }
@@ -606,8 +608,8 @@ napi_status napi_is_dataview(napi_env env, napi_value value, bool *result)
     return napi_ok;
 }
 
-napi_status napi_get_dataview_info(napi_env env, napi_value dataview, size_t *bytelength, void **data,
-    napi_value *arraybuffer, size_t *byte_offset)
+napi_status napi_get_dataview_info(
+    napi_env env, napi_value dataview, size_t *bytelength, void **data, napi_value *arraybuffer, size_t *byte_offset)
 {
     return napi_ok;
 }
@@ -649,14 +651,14 @@ napi_status napi_add_finalizer(napi_env env, napi_value js_object, void *native_
     return napi_ok;
 }
 
-napi_status napi_create_bigint_words(napi_env env, int sign_bit, size_t word_count, const uint64_t *words,
-    napi_value *result)
+napi_status napi_create_bigint_words(
+    napi_env env, int sign_bit, size_t word_count, const uint64_t *words, napi_value *result)
 {
     return napi_ok;
 }
 
-napi_status napi_get_value_bigint_words(napi_env env, napi_value value, int *sign_bit, size_t *word_count,
-    uint64_t *words)
+napi_status napi_get_value_bigint_words(
+    napi_env env, napi_value value, int *sign_bit, size_t *word_count, uint64_t *words)
 {
     return napi_ok;
 }
@@ -818,7 +820,9 @@ napi_status napi_create_limit_runtime(napi_env env, napi_env *result_env)
     return napi_ok;
 }
 
-void napi_module_with_js_register(napi_module_with_js *mod) {}
+void napi_module_with_js_register(napi_module_with_js *mod)
+{
+}
 
 napi_status napi_serialize_inner(napi_env env, napi_value object, napi_value transfer_list, napi_value clone_list,
     bool defaultTransfer, bool defaultCloneSendable, void **result)
@@ -826,8 +830,8 @@ napi_status napi_serialize_inner(napi_env env, napi_value object, napi_value tra
     return napi_ok;
 }
 
-napi_status napi_run_actor(napi_env env, uint8_t *buffer, size_t bufferSize, const char *descriptor,
-    napi_value *result, char *entryPoint)
+napi_status napi_run_actor(
+    napi_env env, uint8_t *buffer, size_t bufferSize, const char *descriptor, napi_value *result, char *entryPoint)
 {
     return napi_ok;
 }
@@ -997,8 +1001,8 @@ napi_status napi_remove_async_cleanup_hook(napi_async_cleanup_hook_handle remove
     return napi_ok;
 }
 
-napi_status napi_add_async_cleanup_hook(napi_env env, napi_async_cleanup_hook hook, void *arg,
-    napi_async_cleanup_hook_handle *remove_handle)
+napi_status napi_add_async_cleanup_hook(
+    napi_env env, napi_async_cleanup_hook hook, void *arg, napi_async_cleanup_hook_handle *remove_handle)
 {
     return napi_ok;
 }
@@ -1008,8 +1012,8 @@ napi_status napi_close_callback_scope(napi_env env, napi_callback_scope scope)
     return napi_ok;
 }
 
-napi_status napi_open_callback_scope(napi_env env, napi_value resource_object, napi_async_context context,
-    napi_callback_scope *result)
+napi_status napi_open_callback_scope(
+    napi_env env, napi_value resource_object, napi_async_context context, napi_callback_scope *result)
 {
     return napi_ok;
 }
@@ -1019,8 +1023,8 @@ napi_status node_api_get_module_file_name(napi_env env, const char **result)
     return napi_ok;
 }
 
-napi_status napi_create_object_with_named_properties(napi_env env, napi_value *result, size_t property_count,
-    const char **keys, const napi_value *values)
+napi_status napi_create_object_with_named_properties(
+    napi_env env, napi_value *result, size_t property_count, const char **keys, const napi_value *values)
 {
     return napi_ok;
 }
@@ -1052,8 +1056,8 @@ napi_status napi_destroy_ark_runtime(napi_env *env)
     return napi_ok;
 }
 
-napi_status napi_serialize(napi_env env, napi_value object, napi_value transfer_list, napi_value clone_list,
-    void **result)
+napi_status napi_serialize(
+    napi_env env, napi_value object, napi_value transfer_list, napi_value clone_list, void **result)
 {
     return napi_ok;
 }
@@ -1073,8 +1077,8 @@ napi_status napi_is_concurrent_function(napi_env env, napi_value value, bool *re
     return napi_ok;
 }
 
-napi_status napi_call_threadsafe_function_with_priority(napi_threadsafe_function func, void *data,
-    napi_task_priority priority, bool isTail)
+napi_status napi_call_threadsafe_function_with_priority(
+    napi_threadsafe_function func, void *data, napi_task_priority priority, bool isTail)
 {
     return napi_ok;
 }
@@ -1151,8 +1155,8 @@ napi_status napi_define_sendable_class(napi_env env, const char *utf8name, size_
     return napi_ok;
 }
 
-napi_status napi_create_sendable_object_with_properties(napi_env env, size_t property_count,
-    const napi_property_descriptor *properties, napi_value *result)
+napi_status napi_create_sendable_object_with_properties(
+    napi_env env, size_t property_count, const napi_property_descriptor *properties, napi_value *result)
 {
     return napi_ok;
 }
@@ -1172,8 +1176,8 @@ napi_status napi_create_sendable_map(napi_env env, napi_value *result)
     return napi_ok;
 }
 
-napi_status napi_wrap_sendable(napi_env env, napi_value js_object, void *native_object, napi_finalize finalize_cb,
-    void *finalize_hint)
+napi_status napi_wrap_sendable(
+    napi_env env, napi_value js_object, void *native_object, napi_finalize finalize_cb, void *finalize_hint)
 {
     return napi_ok;
 }
@@ -1195,47 +1199,11 @@ napi_status napi_remove_wrap_sendable(napi_env env, napi_value js_object, void *
 }
 
 namespace OHOS {
-namespace AbilityRuntime {
-
-napi_status IsStageContext(napi_env env, napi_value value, bool &mode)
-{
-    mode = true;
-    return napi_ok;
-}
-
-std::shared_ptr<Context> GetStageModeContext(napi_env env, napi_value value)
-{
-    return std::make_shared<ExtensionContext>();
-}
-
-std::shared_ptr<AppExecFwk::Ability> GetCurrentAbility(napi_env env)
-{
-    return std::make_shared<AppExecFwk::Ability>();
-}
-
-}  // namespace AbilityRuntime
-
-namespace AppExecFwk {
-
-Ability* Ability::Create(const std::unique_ptr<AbilityRuntime::Runtime>& runtime)
-{
-    return nullptr;
-}
-
-void Ability::OnStart() {}
-void Ability::OnStop() {}
-void Ability::OnActive() {}
-void Ability::OnInactive() {}
-void Ability::OnForeground() {}
-void Ability::OnBackground() {}
-void Ability::OnConfigurationUpdated() {}
-
-}  // namespace AppExecFwk
-}  // namespace OHOS
+} // namespace OHOS
 
 extern "C" {
-int uv_queue_work_internal(uv_loop_t* loop, uv_work_t* req,
-    uv_work_cb work_cb, uv_after_work_cb after_work_cb, const char* task_name)
+int uv_queue_work_internal(
+    uv_loop_t *loop, uv_work_t *req, uv_work_cb work_cb, uv_after_work_cb after_work_cb, const char *task_name)
 {
     return 0;
 }

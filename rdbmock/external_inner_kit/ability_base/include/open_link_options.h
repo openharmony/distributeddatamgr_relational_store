@@ -22,6 +22,9 @@
 #include "parcel.h"
 
 namespace OHOS {
+namespace AppExecFwk {
+class ElementName;
+}
 namespace AbilityRuntime {
 using OnRequestResult = std::function<void(const AppExecFwk::ElementName &, const std::string &)>;
 }

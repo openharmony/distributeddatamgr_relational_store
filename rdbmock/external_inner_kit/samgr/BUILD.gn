@@ -23,10 +23,11 @@ config("samgr_config") {
   ]
 }
 
-ohos_source_set("samgr_proxy") {
+ohos_static_library("samgr_proxy") {
   configs = [ ":samgr_config" ]
   sources = [
     "mock_sys_ability.cpp",
+    "mock_sys_ability_get_samgr.cpp",
     "mock_system_ability_manager.cpp",
   ]
   all_dependent_configs = [ ":samgr_config" ]

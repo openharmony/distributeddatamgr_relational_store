@@ -18,7 +18,11 @@ import("//foundation/distributeddatamgr/relational_store/relational_store_deps.g
 config("ability_runtime_config") {
   include_dirs = [
     "include",
+    "include/napi_base_context",
+    "include/appkit/ability_runtime/",
+    "include/appkit/ability_runtime/context",
     "${relational_store_mock_external_kit_path}/ability_base/include",
+    "${relational_store_mock_external_kit_path}/ability_base/include/ability/native",
     "${relational_store_mock_external_kit_path}/ipc/include",
     "${relational_store_mock_external_kit_path}/safwk/include",
     "${relational_store_mock_external_kit_path}/resource_management/include",
@@ -33,7 +37,7 @@ ohos_source_set("abilitykit_native") {
   sources = [ "mock_context.cpp" ]
   all_dependent_configs = [ ":ability_runtime_config" ]
   public_configs = [ ":ability_runtime_config" ]
-  deps = []
+  deps = [ ":napi_base_context" ]
   external_deps = [
     "c_utils:utils",
     "json:nlohmann_json_static",
@@ -54,10 +58,13 @@ ohos_source_set("extensionkit_native") {
 
 ohos_source_set("napi_base_context") {
   configs = [ ":ability_runtime_config" ]
+  sources = [ "mock_napi_base_context.cpp" ]
   all_dependent_configs = [ ":ability_runtime_config" ]
   public_configs = [ ":ability_runtime_config" ]
   deps = []
+  deps += deps_napi
   external_deps = [ "c_utils:utils" ]
+  external_deps += external_deps_napi
   part_name = "relational_store"
   subsystem_name = "distributeddatamgr"
 }

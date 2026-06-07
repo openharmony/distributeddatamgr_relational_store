@@ -1,18 +1,3 @@
-﻿/*
- * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #ifndef SRC_NODE_API_H_
 #define SRC_NODE_API_H_
 
@@ -178,7 +163,8 @@ NAPI_EXTERN napi_status napi_get_buffer_info(napi_env env,
                                              size_t* length);
 
 // Methods to manage simple async operations
-NAPI_EXTERN napi_status napi_create_async_work(napi_env env,
+NAPI_EXTERN
+napi_status napi_create_async_work(napi_env env,
                                    napi_value async_resource,
                                    napi_value async_resource_name,
                                    napi_async_execute_callback execute,
@@ -193,8 +179,9 @@ NAPI_EXTERN napi_status napi_cancel_async_work(napi_env env,
                                                napi_async_work work);
 
 // version management
-NAPI_EXTERN napi_status napi_get_node_version(napi_env env,
-                                   const napi_node_version** version);
+NAPI_EXTERN
+napi_status napi_get_node_version(napi_env env,
+                                  const napi_node_version** version);
 
 #if NAPI_VERSION >= 2
 
@@ -235,24 +222,10 @@ NAPI_EXTERN napi_status napi_close_callback_scope(napi_env env,
 
 #if NAPI_VERSION >= 4
 
-/*
- * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #ifndef __wasm32__
 // Calling into JS from other threads
-NAPI_EXTERN napi_status napi_create_threadsafe_function(napi_env env,
+NAPI_EXTERN napi_status
+napi_create_threadsafe_function(napi_env env,
                                 napi_value func,
                                 napi_value async_resource,
                                 napi_value async_resource_name,
@@ -264,21 +237,27 @@ NAPI_EXTERN napi_status napi_create_threadsafe_function(napi_env env,
                                 napi_threadsafe_function_call_js call_js_cb,
                                 napi_threadsafe_function* result);
 
-NAPI_EXTERN napi_status napi_get_threadsafe_function_context(napi_threadsafe_function func,
+NAPI_EXTERN napi_status
+napi_get_threadsafe_function_context(napi_threadsafe_function func,
                                      void** result);
 
-NAPI_EXTERN napi_status napi_call_threadsafe_function(napi_threadsafe_function func,
+NAPI_EXTERN napi_status
+napi_call_threadsafe_function(napi_threadsafe_function func,
                               void* data,
                               napi_threadsafe_function_call_mode is_blocking);
 
-NAPI_EXTERN napi_status napi_acquire_threadsafe_function(napi_threadsafe_function func);
+NAPI_EXTERN napi_status
+napi_acquire_threadsafe_function(napi_threadsafe_function func);
 
-NAPI_EXTERN napi_status napi_release_threadsafe_function(napi_threadsafe_function func,
+NAPI_EXTERN napi_status
+napi_release_threadsafe_function(napi_threadsafe_function func,
                                  napi_threadsafe_function_release_mode mode);
 
-NAPI_EXTERN napi_status napi_unref_threadsafe_function(napi_env env, napi_threadsafe_function func);
+NAPI_EXTERN napi_status
+napi_unref_threadsafe_function(napi_env env, napi_threadsafe_function func);
 
-NAPI_EXTERN napi_status napi_ref_threadsafe_function(napi_env env, napi_threadsafe_function func);
+NAPI_EXTERN napi_status
+napi_ref_threadsafe_function(napi_env env, napi_threadsafe_function func);
 #endif  // __wasm32__
 
 #endif  // NAPI_VERSION >= 4
@@ -298,7 +277,8 @@ NAPI_EXTERN napi_status napi_remove_async_cleanup_hook(
 
 #ifdef NAPI_EXPERIMENTAL
 
-NAPI_EXTERN napi_status node_api_get_module_file_name(napi_env env, const char** result);
+NAPI_EXTERN napi_status
+node_api_get_module_file_name(napi_env env, const char** result);
 
 #endif  // NAPI_EXPERIMENTAL
 
