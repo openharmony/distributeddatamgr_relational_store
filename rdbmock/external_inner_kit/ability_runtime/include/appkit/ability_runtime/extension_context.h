@@ -22,6 +22,9 @@
 #include "start_options.h"
 
 namespace OHOS {
+namespace AppExecFwk {
+class ElementName;
+}
 namespace AbilityRuntime {
 /**
  * @brief context supply for extension

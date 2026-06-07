@@ -362,6 +362,18 @@ size_t MessageParcel::GetRawDataCapacity() const
 void MessageParcel::WriteNoException()
 {
 }
+int32_t MessageParcel::ReadException() 
+{
+    return 0; 
+}
+bool MessageParcel::WriteAshmem(sptr<Ashmem> ashmem) 
+{ 
+    return false; 
+}
+sptr<Ashmem> MessageParcel::ReadAshmem() 
+{
+  return sptr<Ashmem>(); 
+}
 void MessageParcel::ClearFileDescriptor()
 {
 }

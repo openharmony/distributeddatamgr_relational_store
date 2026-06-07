@@ -21,7 +21,6 @@
 
 #include "application_info.h"
 #include "parcel.h"
-#include "skill.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -62,7 +61,9 @@ enum class ExtensionAbilityType {
     ENTERPRISE_ADMIN = 11,
     FILEACCESS_EXTENSION = 12,
     THUMBNAIL = 13,
+#ifndef PREVIEW
     PREVIEW = 14,
+#endif
     PRINT = 15,
     SHARE = 16,
     PUSH = 17,
@@ -201,8 +202,8 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::vector<Metadata> metadata;
 
     // for Check flags, add to abilityInfo and extensionAbilityInfo
-    std::vector<SkillUriForAbilityAndExtension> skillUri;
-    std::vector<Skill> skills;
+    //std::vector<SkillUriForAbilityAndExtension> skillUri;
+    //std::vector<Skill> skills;
     std::vector<std::string> dataGroupIds;
     std::vector<std::string> validDataGroupIds;
     ApplicationInfo applicationInfo;

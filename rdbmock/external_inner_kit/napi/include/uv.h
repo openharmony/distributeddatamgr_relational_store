@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,8 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/* See https://github.com/libuv/libuv#documentation for documentation. */
 
 #ifndef UV_H
 #define UV_H
@@ -585,7 +583,7 @@ UV_EXTERN int uv_try_write2(uv_stream_t* handle,
 struct uv_write_s {
   UV_REQ_FIELDS
   uv_write_cb cb;
-  uv_stream_t* send_handle; /* NOTE: make private and unix-only in v2.x. */
+  uv_stream_t* send_handle; /* TODO: make private and unix-only in v2.x. */
   uv_stream_t* handle;
   UV_WRITE_PRIVATE_FIELDS
 };

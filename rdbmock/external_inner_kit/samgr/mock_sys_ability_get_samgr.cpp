@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <iservice_registry.h>
 
-
-#ifndef SRC_JS_NATIVE_API_H_
-#define SRC_JS_NATIVE_API_H_
-
-// This file needs to be compatible with C compilers.
-#include <stddef.h>   // NOLINT(modernize-deprecated-headers)
-#include <stdbool.h>  // NOLINT(modernize-deprecated-headers)
-
-// Use INT_MAX, this should only be consumed by the pre-processor anyway.
-
-#endif  // SRC_JS_NATIVE_API_H_
+#include "mock_system_ability_manager.h"
+namespace OHOS {
+sptr<ISystemAbilityManager> SystemAbilityManagerClient::GetSystemAbilityManager()
+{
+    if (systemAbilityManager_ == nullptr) {
+        systemAbilityManager_ = new MockSystemAbilityManager();
+    }
+    return systemAbilityManager_;
+}
+}

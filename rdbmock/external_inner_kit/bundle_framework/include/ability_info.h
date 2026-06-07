@@ -304,8 +304,6 @@ struct AbilityInfo : public Parcelable {
     std::vector<std::string> configChanges;
 
     // for Check flags, add to abilityInfo and extensionAbilityInfo
-    std::vector<SkillUriForAbilityAndExtension> skillUri;
-    std::vector<Skill> skills;
     std::vector<Metadata> metadata;
 
     // support windows mode

@@ -401,7 +401,7 @@ DataObsMgrClient::DataObsMgrClient()
 DataObsMgrClient::~DataObsMgrClient()
 {
 }
-std::shared_ptr<DataObsMgrClient> DataObsMgrClient::GetInstance()
+__attribute__((weak)) std::shared_ptr<DataObsMgrClient> DataObsMgrClient::GetInstance()
 {
     static std::shared_ptr<DataObsMgrClient> instance = std::make_shared<DataObsMgrClient>();
     return instance;
@@ -416,7 +416,7 @@ ErrCode DataObsMgrClient::UnregisterObserver(
 {
     return 0;
 }
-ErrCode DataObsMgrClient::NotifyChange(const Uri &uri, int32_t userId, DataObsOption opt)
+__attribute__((weak)) ErrCode DataObsMgrClient::NotifyChange(const Uri &uri, int32_t userId, DataObsOption opt)
 {
     return 0;
 }

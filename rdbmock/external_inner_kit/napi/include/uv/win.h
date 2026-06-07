@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,9 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef WIN_H
-#define WIN_H
 
 #ifndef _WIN32_WINNT
 # define _WIN32_WINNT   0x0A00
@@ -691,5 +688,3 @@ typedef struct {
 #define UV_FS_O_NONBLOCK     0
 #define UV_FS_O_SYMLINK      0
 #define UV_FS_O_SYNC         0x08000000 /* FILE_FLAG_WRITE_THROUGH */
-
-#endif /* WIN_H */
