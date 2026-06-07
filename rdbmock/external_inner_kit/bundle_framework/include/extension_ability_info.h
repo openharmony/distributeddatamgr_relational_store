@@ -21,7 +21,6 @@
 
 #include "application_info.h"
 #include "parcel.h"
-//#include "skill.h"
 
 namespace OHOS {
 namespace AppExecFwk {
