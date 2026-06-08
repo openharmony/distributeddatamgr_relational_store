@@ -83,11 +83,16 @@ taihe_shared_library("relationalstore_ani") {
     debug = false
   }
   cflags = [
+    "-Oz",
     "-DHILOG_ENABLE",
     "-fPIC",
     "-g3",
     "-Werror=vla",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
   ]
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
+  version_script = "relationalstore_ani.versionscript"
   external_deps = [
     "ability_runtime:abilitykit_native",
     "ability_runtime:ani_base_context",

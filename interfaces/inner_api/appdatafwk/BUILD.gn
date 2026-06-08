@@ -54,7 +54,12 @@ if (is_android || is_ios) {
       sources += [
         "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
       ]
-      cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
+      cflags_cc = [
+        "-fvisibility=hidden",
+        "-fno-unwind-tables",
+        "-fno-asynchronous-unwind-tables",
+        "-Werror=vla",
+      ]
     }
 
     configs = [
@@ -95,13 +100,22 @@ if (is_android || is_ios) {
       sources += [
         "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
       ]
-      cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
+      cflags_cc = [
+        "-Oz",
+        "-fvisibility=hidden",
+        "-fno-unwind-tables",
+        "-fno-asynchronous-unwind-tables",
+        "-Werror=vla",
+      ]
     }
 
     configs = [
       ":common_public_config",
       ":appdatafwk_public_config",
     ]
+    if (is_ohos) {
+      ldflags = [ "-Wl,--exclude-libs,ALL" ]
+    }
     external_deps = [
       "hilog:libhilog",
       "json:nlohmann_json_static",
@@ -128,6 +142,9 @@ ohos_shared_library("native_appdatafwk") {
       [ "${relational_store_native_path}/appdatafwk/src/shared_block.cpp" ]
 
   configs = [ ":appdatafwk_config" ]
+
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
+  version_script = "native_appdatafwk.versionscript"
 
   subsystem_name = "distributeddatamgr"
   innerapi_tags = [ "platformsdk_indirect" ]

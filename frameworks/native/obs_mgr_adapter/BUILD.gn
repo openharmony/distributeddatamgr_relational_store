@@ -29,14 +29,21 @@ ohos_shared_library("rdb_obs_mgr_adapter") {
   }
 
   ldflags = [ "-Wl,--exclude-libs,ALL" ]
-  cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
+  version_script = "rdb_obs_mgr_adapter.versionscript"
+  cflags_cc = [
+    "-fvisibility=hidden",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+    "-Werror=vla",
+  ]
 
   include_dirs = [
     "${relational_store_common_path}/include",
     "${relational_store_innerapi_path}/rdb/include",
   ]
 
-  sources = [ "${relational_store_native_path}/obs_mgr_adapter/obs_mgr_adapter.cpp" ]
+  sources =
+      [ "${relational_store_native_path}/obs_mgr_adapter/obs_mgr_adapter.cpp" ]
 
   external_deps = [
     "ability_base:zuri",
