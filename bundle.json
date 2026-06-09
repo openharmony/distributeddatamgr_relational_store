@@ -74,7 +74,8 @@
                 "runtime_core",
                 "ets_frontend",
                 "api_metrics",
-                "openssl"
+                "openssl",
+                "taihe_ffi_gen"
             ],
             "third_party": [ "sqlite" ]
         },
