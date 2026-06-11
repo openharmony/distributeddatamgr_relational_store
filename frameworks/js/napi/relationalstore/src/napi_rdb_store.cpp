@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1330,6 +1330,86 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     return proxy->UnRegisteredObserver(env, option, argc == 3 ? argv[2] : nullptr);
 }
 
+napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
+{
+    // argc must be greater than or equal to 2 to be valid
+    RDB_NAPI_ASSERT(env, argc >= 2 && argv != nullptr,
+        std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
+    napi_valuetype type = napi_undefined;
+    int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
+    napi_get_value_int32(env, argv[0], &mode);
+    bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
+    RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
+
+    napi_typeof(env, argv[1], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+
+    bool result = std::any_of(napiRdbStoreData_->observers_[mode].begin(), napiRdbStoreData_->observers_[mode].end(),
+        [argv](const auto &observer) { return *observer == argv[1]; });
+    if (result) {
+        LOG_INFO("Duplicate subscribe.");
+        return nullptr;
+    }
+    SubscribeOption option;
+    option.mode = static_cast<SubscribeMode>(mode);
+    option.event = "dataChange";
+    auto uvQueue = std::make_shared<UvQueue>(env);
+    auto observer = std::make_shared<NapiRdbStoreObserver>(argv[1], uvQueue, mode);
+    int errCode = E_OK;
+    if (option.mode == SubscribeMode::LOCAL_DETAIL) {
+        errCode = GetInstance()->SubscribeObserver(option, observer);
+    } else {
+        errCode = GetInstance()->Subscribe(option, observer);
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    napiRdbStoreData_->observers_[mode].push_back(observer);
+    LOG_INFO("Subscribe success.");
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_number, std::make_shared<ParamError>("type", "SubscribeType"));
+
+    int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
+    napi_get_value_int32(env, argv[0], &mode);
+    bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
+    RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
+
+    bool isNotNull = argc >= 2 && !JSUtils::IsNull(env, argv[1]);
+    if (isNotNull) {
+        napi_typeof(env, argv[1], &type);
+        RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+    }
+
+    SubscribeOption option;
+    option.mode = static_cast<SubscribeMode>(mode);
+    option.event = "dataChange";
+    for (auto it = napiRdbStoreData_->observers_[mode].begin(); it != napiRdbStoreData_->observers_[mode].end();) {
+        if (*it == nullptr) {
+            it = napiRdbStoreData_->observers_[mode].erase(it);
+            continue;
+        }
+        if (isNotNull && !(**it == argv[1])) {
+            ++it;
+            continue;
+        }
+        int errCode = E_OK;
+        if (option.mode == SubscribeMode::LOCAL_DETAIL) {
+            errCode = GetInstance()->UnsubscribeObserver(option, *it);
+        } else {
+            errCode = GetInstance()->UnSubscribe(option, *it);
+        }
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        (*it)->Clear();
+        it = napiRdbStoreData_->observers_[mode].erase(it);
+        LOG_DEBUG("Observer unsubscribe success");
+    }
+    return nullptr;
+}
+
 napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *argv)
 {
     napi_valuetype type = napi_undefined;
@@ -2094,86 +2174,6 @@ napi_value RdbStoreProxy::CleanDeviceDirtyData(napi_env env, napi_callback_info 
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
-}
-
-napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
-{
-    // argc must be greater than or equal to 2 to be valid
-    RDB_NAPI_ASSERT(env, argc >= 2 && argv != nullptr,
-        std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
-    napi_valuetype type = napi_undefined;
-    int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
-    napi_get_value_int32(env, argv[0], &mode);
-    bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
-    RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
-
-    napi_typeof(env, argv[1], &type);
-    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
-
-    bool result = std::any_of(napiRdbStoreData_->observers_[mode].begin(), napiRdbStoreData_->observers_[mode].end(),
-        [argv](const auto &observer) { return *observer == argv[1]; });
-    if (result) {
-        LOG_INFO("Duplicate subscribe.");
-        return nullptr;
-    }
-    SubscribeOption option;
-    option.mode = static_cast<SubscribeMode>(mode);
-    option.event = "dataChange";
-    auto uvQueue = std::make_shared<UvQueue>(env);
-    auto observer = std::make_shared<NapiRdbStoreObserver>(argv[1], uvQueue, mode);
-    int errCode = E_OK;
-    if (option.mode == SubscribeMode::LOCAL_DETAIL) {
-        errCode = GetInstance()->SubscribeObserver(option, observer);
-    } else {
-        errCode = GetInstance()->Subscribe(option, observer);
-    }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    napiRdbStoreData_->observers_[mode].push_back(observer);
-    LOG_INFO("Subscribe success.");
-    return nullptr;
-}
-
-napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
-{
-    napi_valuetype type = napi_undefined;
-    napi_typeof(env, argv[0], &type);
-    RDB_NAPI_ASSERT(env, type == napi_number, std::make_shared<ParamError>("type", "SubscribeType"));
-
-    int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
-    napi_get_value_int32(env, argv[0], &mode);
-    bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
-    RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
-
-    bool isNotNull = argc >= 2 && !JSUtils::IsNull(env, argv[1]);
-    if (isNotNull) {
-        napi_typeof(env, argv[1], &type);
-        RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
-    }
-
-    SubscribeOption option;
-    option.mode = static_cast<SubscribeMode>(mode);
-    option.event = "dataChange";
-    for (auto it = napiRdbStoreData_->observers_[mode].begin(); it != napiRdbStoreData_->observers_[mode].end();) {
-        if (*it == nullptr) {
-            it = napiRdbStoreData_->observers_[mode].erase(it);
-            continue;
-        }
-        if (isNotNull && !(**it == argv[1])) {
-            ++it;
-            continue;
-        }
-        int errCode = E_OK;
-        if (option.mode == SubscribeMode::LOCAL_DETAIL) {
-            errCode = GetInstance()->UnsubscribeObserver(option, *it);
-        } else {
-            errCode = GetInstance()->UnSubscribe(option, *it);
-        }
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-        (*it)->Clear();
-        it = napiRdbStoreData_->observers_[mode].erase(it);
-        LOG_DEBUG("Observer unsubscribe success");
-    }
-    return nullptr;
 }
 
 napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)

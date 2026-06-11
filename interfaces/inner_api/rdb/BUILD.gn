@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,9 +13,12 @@
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-if (!is_ohos) {
-  base_sources +=
-      [ "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp" ]
+if (!is_ohos && !is_android && !is_ios) {
+  base_sources += [ "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
+                    "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp",
+  ]
+} else if (is_android || is_ios) {
+  base_sources += [ "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp" ]
 }
 
 if (is_ohos && !build_ohos_sdk) {
@@ -457,6 +460,9 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${kvstore_path}/libs/distributeddb/interfaces/include/relational",
+      "${kvstore_path}/libs/distributeddb/interfaces/include",
+      "${kvstore_path}/libs/distributeddb/include",
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/win32",
       "${distributedfile_path}/mod_securitylabel",
@@ -512,6 +518,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//commonlibrary/c_utils/base:utilsbase",
+      "${kvstore_path}/libs/distributeddb/build/android:distributeddb_client_lite",
       "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
@@ -529,6 +536,9 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${kvstore_path}/libs/distributeddb/interfaces/include/relational",
+      "${kvstore_path}/libs/distributeddb/interfaces/include",
+      "${kvstore_path}/libs/distributeddb/include",
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/win32",
       "${distributedfile_path}/mod_securitylabel",
@@ -582,6 +592,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//commonlibrary/c_utils/base:utilsbase",
+      "${kvstore_path}/libs/distributeddb/build/ios:distributeddb_client_lite",
       "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",

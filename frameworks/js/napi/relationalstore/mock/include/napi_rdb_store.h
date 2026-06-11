@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -90,7 +90,9 @@ private:
     static napi_value UpdateWithReturning(napi_env env, napi_callback_info info);
     static napi_value DeleteWithReturning(napi_env env, napi_callback_info info);
 
-    static constexpr int EVENT_HANDLE_NUM = 3;
+    static constexpr int EVENT_HANDLE_NUM = 4;
+    napi_value OnRemote(napi_env env, size_t argc, napi_value *argv);
+    napi_value OffRemote(napi_env env, size_t argc, napi_value *argv);
     napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,  napi_value callback);
     napi_value UnRegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option, napi_value callback);
     napi_value OnStatistics(napi_env env, size_t argc, napi_value *argv);
@@ -105,11 +107,13 @@ private:
         EventHandle handle;
     };
     static constexpr HandleInfo onEventHandlers_[EVENT_HANDLE_NUM] = {
+        { "dataChange", &RdbStoreProxy::OnRemote },
         { "statistics", &RdbStoreProxy::OnStatistics },
         { "perfStat", &RdbStoreProxy::OnPerfStat },
         { "sqliteErrorOccurred", &RdbStoreProxy::OnErrorLog },
     };
     static constexpr HandleInfo offEventHandlers_[EVENT_HANDLE_NUM] = {
+        { "dataChange", &RdbStoreProxy::OffRemote },
         { "statistics", &RdbStoreProxy::OffStatistics },
         { "perfStat", &RdbStoreProxy::OffPerfStat },
         { "sqliteErrorOccurred", &RdbStoreProxy::OffErrorLog },
