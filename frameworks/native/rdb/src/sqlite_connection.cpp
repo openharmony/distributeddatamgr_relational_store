@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,9 +49,7 @@
 #include "string_utils.h"
 #include "suspender.h"
 #include "value_object.h"
-#if !defined(CROSS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
-#endif
 #include "task_executor.h"
 
 namespace OHOS {
