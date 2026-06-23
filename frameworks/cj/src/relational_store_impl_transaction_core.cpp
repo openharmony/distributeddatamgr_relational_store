@@ -40,7 +40,7 @@ TransactionImpl::TransactionImpl(std::shared_ptr<NativeRdb::Transaction> tx)
 int32_t TransactionImpl::Commit()
 {
     if (transaction_ == nullptr) {
-        return NativeRdb::E_ALREADY_CLOSED;
+        return NativeRdb::E_ERROR;
     }
     return transaction_->Commit();
 }
@@ -48,7 +48,7 @@ int32_t TransactionImpl::Commit()
 int32_t TransactionImpl::RollBack()
 {
     if (transaction_ == nullptr) {
-        return NativeRdb::E_ALREADY_CLOSED;
+        return NativeRdb::E_ERROR;
     }
     return transaction_->Rollback();
 }

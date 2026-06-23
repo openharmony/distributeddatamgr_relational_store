@@ -82,19 +82,18 @@ std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::Query(RdbPredicatesImpl &pre
 }
 
 std::shared_ptr<NativeRdb::ResultSet> RdbStoreImpl::RemoteQuery(char *device, RdbPredicatesImpl &predicates,
-    char **column, int64_t columnSize)
+    char **column, int64_t columnSize, int32_t *errCode)
 {
     auto store = GetRdbStore();
     if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return nullptr;
     }
     std::vector<std::string> columnsVector;
     for (int64_t i = 0; i < columnSize; i++) {
         columnsVector.push_back(std::string(column[i]));
     }
-    int32_t errCode;
-    auto resultSet = store->RemoteQuery(std::string(device), *(predicates.GetPredicates()), columnsVector,
-        errCode);
+    auto resultSet = store->RemoteQuery(std::string(device), *(predicates.GetPredicates()), columnsVector, *errCode);
     return resultSet;
 }
 
@@ -237,14 +236,14 @@ int32_t RdbStoreImpl::Restore(const char *srcName)
     return store->Restore(srcName, newKey);
 }
 
-char *RdbStoreImpl::ObtainDistributedTableName(const char *device, const char *table)
+char *RdbStoreImpl::ObtainDistributedTableName(const char *device, const char *table, int32_t *errCode)
 {
     auto store = GetRdbStore();
     if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return nullptr;
     }
-    int errCode = RelationalStoreJsKit::E_INNER_ERROR;
-    std::string tableName = store->ObtainDistributedTableName(device, table, errCode);
+    std::string tableName = store->ObtainDistributedTableName(device, table, *errCode);
     return MallocCString(tableName);
 }
 

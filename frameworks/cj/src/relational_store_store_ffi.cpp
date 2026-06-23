@@ -62,10 +62,11 @@ FFI_EXPORT int64_t FfiOHOSRelationalStoreQuery(
 }
 
 FFI_EXPORT int64_t FfiOHOSRelationalStoreRemoteQuery(
-    int64_t id, char *device, char *table, int64_t predicatesId, char **columns, int64_t columnsSize)
+    int64_t id, char *device, char *table, int64_t predicatesId, char **columns, int64_t columnsSize, int32_t *errCode)
 {
     (void)table;
-    if (columns == nullptr && columnsSize != 0) {
+    *errCode = RelationalStoreJsKit::E_INNER_ERROR;
+    if ((columns == nullptr && columnsSize != 0) || device == nullptr) {
         return -1;
     }
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
@@ -76,14 +77,16 @@ FFI_EXPORT int64_t FfiOHOSRelationalStoreRemoteQuery(
     if (nativeRdbPredicates == nullptr) {
         return -1;
     }
-    auto resultSet = nativeRdbStore->RemoteQuery(device, *nativeRdbPredicates, columns, columnsSize);
+    auto resultSet = nativeRdbStore->RemoteQuery(device, *nativeRdbPredicates, columns, columnsSize, errCode);
     if (resultSet == nullptr) {
         return -1;
     }
     auto nativeResultSet = FFIData::Create<ResultSetImpl>(resultSet);
     if (nativeResultSet == nullptr) {
+        *errCode = RelationalStoreJsKit::E_INNER_ERROR;
         return -1;
     }
+    *errCode = RelationalStoreJsKit::OK;
     return nativeResultSet->GetID();
 }
 
@@ -159,13 +162,15 @@ FFI_EXPORT int32_t FfiOHOSRelationalStoreSetDistributedTablesConfigExt(
     return nativeRdbStore->SetDistributedTables(tables, tablesSize, type, config);
 }
 
-FFI_EXPORT char *FfiOHOSRelationalStoreObtainDistributedTableName(int64_t id, const char *device, char *table)
+FFI_EXPORT char *FfiOHOSRelationalStoreObtainDistributedTableName(
+    int64_t id, const char *device, char *table, int32_t *errCode)
 {
     auto nativeRdbStore = FFIData::GetData<RdbStoreImpl>(id);
     if (nativeRdbStore == nullptr) {
+        *errCode = RelationalStoreJsKit::E_INNER_ERROR;
         return nullptr;
     }
-    return nativeRdbStore->ObtainDistributedTableName(device, table);
+    return nativeRdbStore->ObtainDistributedTableName(device, table, errCode);
 }
 
 FFI_EXPORT int32_t FfiOHOSRelationalStoreBackUp(int64_t id, const char *destName)
