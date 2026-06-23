@@ -2,7 +2,7 @@
 
 本文件是 AI Agent 处理本仓库任务时的轻量入口。先读本文件，再按任务类型只加载匹配的详细文档页。
 
-## 阅读策略
+# 阅读策略
 
 不要一开始就读取 `docs/` 下的所有文件。
 
@@ -12,7 +12,7 @@
 2. 读取一个与任务领域匹配的专题页（`docs/error_code_layers.md` 或 `docs/dynamic_loading.md`）。
 3. 规划验证时，见本文件"编译和测试方法"章节。
 
-## 仓库定位
+# 仓库定位
 
 `relational_store` 是 OpenHarmony 关系型数据库组件。在 OpenHarmony 源码树中的位置是：
 
