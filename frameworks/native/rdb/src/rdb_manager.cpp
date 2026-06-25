@@ -67,4 +67,9 @@ void RdbManager::OnRemoteDied()
 {
 }
 
+bool RdbManager::IsProxy() const
+{
+    return true;
+}
+
 } // namespace OHOS::DistributedRdb

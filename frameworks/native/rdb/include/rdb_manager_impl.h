@@ -35,11 +35,13 @@ public:
     static constexpr int RETRY_INTERVAL = 1;
     static constexpr int WAIT_TIME = 2;
 
-    std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param);
+    std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param) override;
 
-    std::string GetSelfBundleName();
+    std::string GetSelfBundleName() override;
 
-    void OnRemoteDied();
+    bool IsProxy() const override;
+
+    void OnRemoteDied() override;
 
 private:
     class Factory {

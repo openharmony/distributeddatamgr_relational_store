@@ -27,6 +27,7 @@ public:
     virtual inline std::pair<int32_t, std::shared_ptr<RdbService>> GetRdbService(const RdbSyncerParam &param) = 0;
     virtual inline std::string GetSelfBundleName() = 0;
     virtual inline void OnRemoteDied() = 0;
+    virtual inline bool IsProxy() const = 0;
 
 public:
     static inline std::shared_ptr<BRdbManager> rdbManager = nullptr;
@@ -37,6 +38,7 @@ public:
         (std::pair<int32_t, std::shared_ptr<RdbService>>), GetRdbService, (const RdbSyncerParam &param), (override));
     MOCK_METHOD((std::string), GetSelfBundleName, (), (override));
     MOCK_METHOD((void), OnRemoteDied, (), (override));
+    MOCK_METHOD((bool), IsProxy, (), (const, override));
 };
 } // namespace OHOS::DistributedRdb
 #endif

@@ -1398,8 +1398,9 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     if (initStatus_ != -1) {
         return initStatus_;
     }
-    isNeedSetAcl = isNeedSetAcl || SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
-                   SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID);
+    isNeedSetAcl = RdbMgr::GetInstance().IsProxy() && (isNeedSetAcl ||
+                   SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
+                   SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID));
     std::lock_guard<std::mutex> lock(initMutex_);
     if (initStatus_ != -1) {
         return initStatus_;
