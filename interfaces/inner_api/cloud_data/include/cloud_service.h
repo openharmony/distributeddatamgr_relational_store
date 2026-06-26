@@ -149,6 +149,8 @@ public:
         const std::string &id, const std::vector<BundleInfo> &bundleInfos) = 0;
     virtual int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const DistributedRdb::AsyncDetail &async) = 0;
+    virtual int32_t CloudSync(const BundleInfo &bundleInfo, const Option &option,
+        const DistributedRdb::AsyncDetail &async) = 0;
     virtual int32_t StopCloudSyncTask(const std::vector<BundleInfo> &bundleInfos) = 0;
     virtual int32_t InitNotifier(sptr<IRemoteObject> notifier) = 0;
     virtual int32_t SubscribeCloudSyncTrigger(std::shared_ptr<ISyncInfoObserver> observer) = 0;

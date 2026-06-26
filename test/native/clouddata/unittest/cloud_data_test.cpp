@@ -1572,4 +1572,204 @@ HWTEST_F(CloudDataTest, OnSyncInfoNotify_ObserverDataVerification001, TestSize.L
     EXPECT_EQ(observer->GetTriggerMode(), triggerMode);
     proxy->UnSubscribeCloudSyncTrigger(observer);
 }
+
+/**
+ * @tc.name: CloudSync010
+ * @tc.desc: Test CloudSync with empty storeId and system permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync010, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    int32_t syncMode = 4;
+    uint32_t seqNum = 23;
+    BundleInfo bundleInfo = { TEST_BUNDLE_NAME, "" };
+    auto status = proxy->CloudSync(bundleInfo, { syncMode, seqNum }, progress);
+    EXPECT_NE(status, CloudService::INVALID_ARGUMENT_V20);
+    LOG_INFO("CloudSync010 test end.");
+}
+
+/**
+ * @tc.name: CloudSync011
+ * @tc.desc: Test CloudSync with empty storeId and no config permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync011, TestSize.Level1)
+{
+    AllocSystemHapToken(g_notPermissonPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    int32_t syncMode = 4;
+    uint32_t seqNum = 24;
+    BundleInfo bundleInfo = { TEST_BUNDLE_NAME, "" };
+    auto status = proxy->CloudSync(bundleInfo, { syncMode, seqNum }, progress);
+    EXPECT_EQ(status, CloudService::CLOUD_CONFIG_PERMISSION_DENIED);
+    LOG_INFO("CloudSync011 test end.");
+}
+
+/**
+ * @tc.name: Subscribe_EmptyStoreId
+ * @tc.desc: Test Subscribe with empty storeId in BundleInfo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Subscribe_EmptyStoreId, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, ""}};
+    auto status = proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+    status = proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+}
+
+/**
+ * @tc.name: Unsubscribe_EmptyStoreId
+ * @tc.desc: Test Unsubscribe with empty storeId in BundleInfo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, Unsubscribe_EmptyStoreId, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, ""}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    auto status = proxy->Unsubscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+}
+
+/**
+ * @tc.name: OnSyncInfoNotify_EmptyStoreIdObserver
+ * @tc.desc: Test OnSyncInfoNotify with observer subscribed with empty storeId
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, OnSyncInfoNotify_EmptyStoreIdObserver, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto cloudServiceProxy = std::static_pointer_cast<CloudServiceProxy>(proxy);
+    ASSERT_NE(cloudServiceProxy, nullptr);
+
+    auto observer = std::make_shared<MockSyncInfoObserver>();
+    std::vector<BundleInfo> bundleInfos = {{TEST_BUNDLE_NAME, ""}};
+    proxy->Subscribe(CloudSubscribeType::SYNC_INFO_CHANGED, bundleInfos, observer);
+
+    BatchQueryLastResults data;
+    QueryLastResults storeResults;
+    CloudSyncInfo syncInfo;
+    syncInfo.code = 0;
+    syncInfo.syncStatus = SyncStatus::FINISHED;
+    storeResults[TEST_STORE_ID] = syncInfo;
+    data[TEST_BUNDLE_NAME] = storeResults;
+
+    cloudServiceProxy->OnSyncInfoNotify(data);
+    EXPECT_TRUE(observer->IsCalled());
+
+    const auto &receivedData = observer->GetData();
+    EXPECT_EQ(receivedData.size(), 1u);
+    EXPECT_EQ(receivedData.count(TEST_BUNDLE_NAME), 1u);
+}
+
+/**
+ * @tc.name: CloudSync_BundleInfo_001
+ * @tc.desc: Test CloudSync with BundleInfo and null async callback
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync_BundleInfo_001, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    BundleInfo bundleInfo = { TEST_BUNDLE_NAME, TEST_STORE_ID };
+    auto ret = proxy->CloudSync(bundleInfo, { 4, 200 }, nullptr);
+    EXPECT_EQ(ret, CloudService::INVALID_ARGUMENT_V20);
+    LOG_INFO("CloudSync_BundleInfo_001 test end.");
+}
+
+/**
+ * @tc.name: CloudSync_BundleInfo_002
+ * @tc.desc: Test CloudSync with BundleInfo and empty bundleName
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync_BundleInfo_002, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    BundleInfo bundleInfo = { "", TEST_STORE_ID };
+    auto ret = proxy->CloudSync(bundleInfo, { 4, 201 }, progress);
+    EXPECT_EQ(ret, CloudService::INVALID_ARGUMENT_V20);
+    LOG_INFO("CloudSync_BundleInfo_002 test end.");
+}
+
+/**
+ * @tc.name: CloudSync_BundleInfo_003
+ * @tc.desc: Test CloudSync with BundleInfo and invalid syncMode
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync_BundleInfo_003, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    BundleInfo bundleInfo = { TEST_BUNDLE_NAME, TEST_STORE_ID };
+    auto ret = proxy->CloudSync(bundleInfo, { 10, 202 }, progress);
+    EXPECT_EQ(ret, CloudService::INVALID_ARGUMENT_V20);
+    LOG_INFO("CloudSync_BundleInfo_003 test end.");
+}
+
+/**
+ * @tc.name: CloudSync_BundleInfo_005
+ * @tc.desc: Test CloudSync with BundleInfo and non-empty storeId
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync_BundleInfo_005, TestSize.Level1)
+{
+    AllocSystemHapToken(g_systemPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    BundleInfo bundleInfo = { TEST_BUNDLE_NAME, TEST_STORE_ID };
+    auto status = proxy->CloudSync(bundleInfo, { 4, 204 }, progress);
+    EXPECT_EQ(status, CloudService::SUCCESS);
+    LOG_INFO("CloudSync_BundleInfo_005 test end.");
+}
+
+/**
+ * @tc.name: CloudSync_BundleInfo_006
+ * @tc.desc: Test CloudSync with BundleInfo and normal hap permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(CloudDataTest, CloudSync_BundleInfo_006, TestSize.Level1)
+{
+    AllocNormalHapToken(g_normalPolicy);
+    auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
+    ASSERT_EQ(state == CloudService::SUCCESS && proxy != nullptr, true);
+    auto progress = [](DistributedRdb::Details &&) {};
+    BundleInfo bundleInfo = { TEST_BUNDLE_NAME, TEST_STORE_ID };
+    auto status = proxy->CloudSync(bundleInfo, { 4, 205 }, progress);
+    EXPECT_EQ(status, CloudService::PERMISSION_DENIED);
+    LOG_INFO("CloudSync_BundleInfo_006 test end.");
+}
 }

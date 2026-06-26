@@ -203,7 +203,7 @@ bool Marshalling(const CloudSubscribeType &type, MessageParcel &data)
 template<>
 bool Unmarshalling(ProgressDetail &output, MessageParcel &data)
 {
-    return Unmarshal(data, output.progress, output.code, output.details);
+    return Unmarshal(data, output.progress, output.code, output.details, output.message);
 }
 
 template<>

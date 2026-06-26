@@ -485,6 +485,26 @@ int32_t CloudServiceProxy::CloudSync(const std::string &bundleName, const std::s
     return status;
 }
 
+int32_t CloudServiceProxy::CloudSync(const BundleInfo &bundleInfo, const Option &option, const AsyncDetail &async)
+{
+    LOG_INFO("cloud sync start, bundleName = %{public}s, seqNum = %{public}u",
+        bundleInfo.bundleName.c_str(), option.seqNum);
+    if (bundleInfo.bundleName.empty() || option.syncMode < DistributedRdb::TIME_FIRST ||
+        option.syncMode > DistributedRdb::CLOUD_FIRST || async == nullptr) {
+        LOG_ERROR("invalid args, bundleName = %{public}s", bundleInfo.bundleName.c_str());
+        return INVALID_ARGUMENT_V20;
+    }
+    if (!syncCallbacks_.Insert(option.seqNum, async)) {
+        LOG_ERROR("register progress failed, bundleName = %{public}s", bundleInfo.bundleName.c_str());
+        return ERROR;
+    }
+    auto status = DoAsync(bundleInfo.bundleName, bundleInfo.storeId, option);
+    if (status != SUCCESS) {
+        syncCallbacks_.Erase(option.seqNum);
+    }
+    return status;
+}
+
 int32_t CloudServiceProxy::StopCloudSyncTask(const std::vector<BundleInfo> &bundleInfos)
 {
     MessageParcel reply;

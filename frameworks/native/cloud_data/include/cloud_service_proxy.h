@@ -70,6 +70,7 @@ public:
         const std::string &id, const std::vector<BundleInfo> &bundleInfos) override;
     int32_t CloudSync(const std::string &bundleName, const std::string &storeId, const Option &option,
         const AsyncDetail &async) override;
+    int32_t CloudSync(const BundleInfo &bundleInfo, const Option &option, const AsyncDetail &async) override;
     int32_t StopCloudSyncTask(const std::vector<BundleInfo> &bundleInfos) override;
     int32_t InitNotifier(sptr<IRemoteObject> notifier) override;
     int32_t InitNotifier();
