@@ -47,7 +47,6 @@ public:
     void Interrupt() override;
     int32_t GetDBType() const override;
     bool IsWriter() const override;
-    bool IsSlaveConnEnabled() const override;
     int32_t ResetKey(const RdbStoreConfig &config) override;
     int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) override;
     int32_t TryCheckPoint(bool timeout) override;
