@@ -1398,6 +1398,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     if (initStatus_ != -1) {
         return initStatus_;
     }
+    // If it is a distributeddata request, never need ACL
     isNeedSetAcl = RdbMgr::GetInstance().IsProxy() && (isNeedSetAcl ||
                    SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
                    SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID));
