@@ -1390,6 +1390,26 @@ HWTEST_F(RdbStoreImplConditionTest, SetSearchable_Test_002, TestSize.Level2)
 }
 
 /**
+ * @tc.name: IsProxy_SkipAcl_Test_001
+ * @tc.desc: When IsProxy returns false (service process), ACL should be skipped even for searchable store
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, IsProxy_SkipAcl_Test_001, TestSize.Level2)
+{
+    constexpr int32_t SERVICE_GID = 3012;
+    EXPECT_CALL(*mockRdbManagerImpl, IsProxy()).WillRepeatedly(Return(false));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetBundleName("com.example.distributed.rdb");
+    config.SetSearchable(true);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    EXPECT_EQ(false, SqliteUtils::HasAccessAcl(RdbStoreImplConditionTest::DATABASE_NAME, SERVICE_GID));
+    RdbHelper::DeleteRdbStore(RdbStoreImplConditionTest::DATABASE_NAME);
+}
+
+/**
  * @tc.name: RegisterAutoSyncCallback_Test_001
  * @tc.desc: Abnormal testCase of RegisterAutoSyncCallback
  * @tc.type: FUNC

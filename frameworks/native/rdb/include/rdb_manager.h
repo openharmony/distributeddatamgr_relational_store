@@ -31,6 +31,8 @@ public:
 
     virtual std::string GetSelfBundleName();
 
+    virtual bool IsProxy() const;
+
     virtual void OnRemoteDied();
 
 protected:

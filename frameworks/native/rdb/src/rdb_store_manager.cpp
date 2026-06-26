@@ -119,7 +119,8 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     // If silent accessible status is UNKNOWN, use proxy manager's result
     // If configured to SUPPORT, always need ACL
     // If configured to NOSUPPORT, never need ACL
-    bool isNeedAcl = config.GetRoleType() == OWNER &&
+    // If it is a distributeddata request, never need ACL
+    bool isNeedAcl = (RdbMgr::GetInstance().IsProxy()) && (config.GetRoleType() == OWNER) &&
                     (config.IsSearchable() ||
                     (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::SUPPORT) ||
                     (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::UNKNOWN &&

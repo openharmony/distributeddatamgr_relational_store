@@ -217,6 +217,11 @@ std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(co
     return { E_OK, rdbService_ };
 }
 
+bool RdbManagerImpl::IsProxy() const
+{
+    return isProxy_;
+}
+
 std::string RdbManagerImpl::GetSelfBundleName()
 {
     std::shared_ptr<RdbStoreDataServiceProxy> distributedDataMgr = nullptr;

@@ -835,6 +835,7 @@ public:
 HWTEST_F(SilentProxyTest, RoleType_Visitor_032, TestSize.Level1)
 {
     SetupMock();
+    EXPECT_CALL(*mockRdbManager_, IsProxy()).WillRepeatedly(Return(true));
     ON_CALL(*mockRdbManager_, GetRdbService(_))
         .WillByDefault(Return(std::make_pair(E_OK, mockRdbService_)));
     EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_)).Times(1);
@@ -875,6 +876,7 @@ HWTEST_F(SilentProxyTest, RoleType_Visitor_032, TestSize.Level1)
 HWTEST_F(SilentProxyTest, RoleType_VisitorWrite_033, TestSize.Level1)
 {
     SetupMock();
+    EXPECT_CALL(*mockRdbManager_, IsProxy()).WillRepeatedly(Return(true));
     ON_CALL(*mockRdbManager_, GetRdbService(_))
         .WillByDefault(Return(std::make_pair(E_OK, mockRdbService_)));
     EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_)).Times(1);
@@ -923,6 +925,7 @@ HWTEST_F(SilentProxyTest, RoleType_VisitorWrite_033, TestSize.Level1)
 HWTEST_F(SilentProxyTest, RoleType_Owner_034, TestSize.Level1)
 {
     SetupMock();
+    EXPECT_CALL(*mockRdbManager_, IsProxy()).WillRepeatedly(Return(true));
     ON_CALL(*mockRdbManager_, GetRdbService(_))
         .WillByDefault(Return(std::make_pair(E_OK, mockRdbService_)));
     EXPECT_CALL(*mockRdbService_, GetSilentAccessStores(_))
