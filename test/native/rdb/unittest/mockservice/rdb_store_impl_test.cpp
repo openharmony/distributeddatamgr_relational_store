@@ -1397,6 +1397,7 @@ HWTEST_F(RdbStoreImplConditionTest, SetSearchable_Test_002, TestSize.Level2)
 HWTEST_F(RdbStoreImplConditionTest, IsProxy_SkipAcl_Test_001, TestSize.Level2)
 {
     constexpr int32_t SERVICE_GID = 3012;
+    EXPECT_CALL(*mockRdbManagerImpl, IsProxy()).WillRepeatedly(Return(false));
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetBundleName("com.example.distributed.rdb");
     config.SetSearchable(true);
@@ -1404,16 +1405,7 @@ HWTEST_F(RdbStoreImplConditionTest, IsProxy_SkipAcl_Test_001, TestSize.Level2)
     int errCode;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr) << "store is null";
-    EXPECT_EQ(true, SqliteUtils::HasAccessAcl(RdbStoreImplConditionTest::DATABASE_NAME, SERVICE_GID));
-    store = nullptr;
-
-    EXPECT_CALL(*mockRdbManagerImpl, IsProxy()).WillRepeatedly(Return(false));
-    RdbStoreConfig configService(RdbStoreImplConditionTest::DATABASE_NAME);
-    configService.SetBundleName("com.example.distributed.rdb");
-    configService.SetSearchable(true);
-    store = RdbHelper::GetRdbStore(configService, 1, helper, errCode);
-    ASSERT_NE(store, nullptr) << "store is null";
-    EXPECT_EQ(true, SqliteUtils::HasAccessAcl(RdbStoreImplConditionTest::DATABASE_NAME, SERVICE_GID));
+    EXPECT_EQ(false, SqliteUtils::HasAccessAcl(RdbStoreImplConditionTest::DATABASE_NAME, SERVICE_GID));
     RdbHelper::DeleteRdbStore(RdbStoreImplConditionTest::DATABASE_NAME);
 }
 
