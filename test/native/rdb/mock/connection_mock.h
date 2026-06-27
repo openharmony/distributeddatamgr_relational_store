@@ -47,7 +47,6 @@ public:
     MOCK_METHOD(int32_t, Rekey, (const RdbStoreConfig::CryptoParam &cryptoParam), (override));
     MOCK_METHOD(int32_t, GetDBType, (), (const, override));
     MOCK_METHOD(bool, IsWriter, (), (const, override));
-    MOCK_METHOD(bool, IsSlaveConnEnabled, (), (const, override));
     MOCK_METHOD(int32_t, ResetKey, (const RdbStoreConfig &config), (override));
     MOCK_METHOD(int32_t, TryCheckPoint, (bool timeout), (override));
     MOCK_METHOD(int32_t, LimitWalSize, (), (override));

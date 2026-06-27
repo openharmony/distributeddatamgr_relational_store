@@ -2064,11 +2064,7 @@ int RdbStoreImpl::Backup()
     if (errCode != E_OK || conn == nullptr) {
         return errCode;
     }
-    errCode = conn->Backup(destPath, {}, false, slaveStatus_, false);
-    if (errCode == E_OK) {
-        EnableSearchBinlogIfNeeded(true, true);
-    }
-    return errCode;
+    return conn->Backup(destPath, {}, false, slaveStatus_, false);
 }
 
 /**
@@ -2148,22 +2144,6 @@ std::vector<ValueObject> RdbStoreImpl::CreateBackupBindArgs(
 /**
  * Backup a database from a specified encrypted or unencrypted database file.
  */
-int RdbStoreImpl::BackupForHaSlave(const std::string &databasePath, bool verifyDb)
-{
-    auto [errCode, conn] = GetConn(false);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    errCode = conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
-    if (SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID)) {
-        SetFileGid(config_, SERVICE_GID);
-    }
-    if (errCode == E_OK) {
-        EnableSearchBinlogIfNeeded(true, true);
-    }
-    return errCode;
-}
-
 int RdbStoreImpl::InnerBackup(
     const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool verifyDb)
 {
@@ -2177,7 +2157,15 @@ int RdbStoreImpl::InnerBackup(
     }
 
     if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
-        return BackupForHaSlave(databasePath, verifyDb);
+        auto [errCode, conn] = GetConn(false);
+        if (errCode != E_OK) {
+            return errCode;
+        }
+        errCode = conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
+        if (SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID)) {
+            SetFileGid(config_, SERVICE_GID);
+        }
+        return errCode;
     }
     Suspender suspender(Suspender::SQL_LOG);
     auto config = config_;
@@ -3185,7 +3173,7 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
         return E_OK;
     }
     auto [errCode, conn] = GetConn(false);
-    if (errCode != E_OK || conn == nullptr) {
+    if (errCode != E_OK) {
         return errCode;
     }
     conn->RegisterReplayCallback(config_, std::bind(&RdbStoreImpl::ReplayCallbackImpl, config_));
@@ -3194,7 +3182,6 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
         LOG_WARN("exchange st:%{public}d, %{public}s,", strategy, SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
     int ret = E_OK;
-    bool isSlaveEnabled = conn->IsSlaveConnEnabled();
     if (strategy == ExchangeStrategy::RESTORE && !IsInAsyncRestore(config_.GetPath())) {
         conn = nullptr;
         // disable is required before restore
@@ -3205,26 +3192,7 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     } else if (strategy == ExchangeStrategy::PENDING_BACKUP) {
         ret = StartAsyncBackupIfNeed(slaveStatus_);
     }
-    if (isSlaveEnabled) {
-        EnableSearchBinlogIfNeeded(true, false);
-    }
     return ret;
-}
-
-void RdbStoreImpl::EnableSearchBinlogIfNeeded(bool enabled, bool isFull)
-{
-    if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER) {
-        return;
-    }
-    if (!SqliteUtils::IsSupportBinlog(config_)) {
-        return;
-    }
-    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
-    if (errCode != E_OK || service == nullptr) {
-        return;
-    }
-    LOG_INFO("enable search binlog:%{public}d, isFull:%{public}d", enabled, isFull);
-    service->EnableSearchBinlog(syncerParam_, enabled, isFull);
 }
 
 int32_t RdbStoreImpl::GetDbType() const
