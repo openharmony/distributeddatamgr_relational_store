@@ -1805,7 +1805,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ArchiveSyncedData_001, TestSize.Level2)
     // valid table, non-distributed table returns error from distributed db
     table = "test";
     errCode = store_->ArchiveSyncedData(table, cursor);
-    EXPECT_TRUE(errCode == E_OK);
+    EXPECT_EQ(errCode, E_OK);
     store_->ExecuteSql("DROP TABLE IF EXISTS test");
 }
 
@@ -1836,7 +1836,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ArchiveSyncedData_002, TestSize.Level2)
 
     // Archive synced data with cursor 0
     errCode = store->ArchiveSyncedData("test", 0);
-    EXPECT_TRUE(errCode == E_OK);
+    EXPECT_EQ(errCode, E_OK);
 
     errCode = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(errCode, E_OK);
@@ -1862,7 +1862,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_DeleteSyncedData_001, TestSize.Level2)
     // valid table, non-distributed table returns error from distributed db
     table = "test";
     errCode = store_->DeleteSyncedData(table, keys);
-    EXPECT_TRUE(errCode == E_OK);
+    EXPECT_EQ(errCode, E_OK);
     store_->ExecuteSql("DROP TABLE IF EXISTS test");
 }
 
@@ -1894,13 +1894,13 @@ HWTEST_F(RdbStoreImplTest, RdbStore_DeleteSyncedData_002, TestSize.Level2)
     // Delete synced data with empty keys
     std::vector<std::vector<RdbStore::PRIKey>> keys;
     errCode = store->DeleteSyncedData("test", keys);
-    EXPECT_TRUE(errCode == E_OK);
+    EXPECT_EQ(errCode, E_OK);
 
     // Delete synced data with one key (int64)
     std::vector<RdbStore::PRIKey> key1 = { int64_t(1) };
     keys.push_back(key1);
     errCode = store->DeleteSyncedData("test", keys);
-    EXPECT_TRUE(errCode == E_OK);
+    EXPECT_EQ(errCode, E_OK);
 
     errCode = RdbHelper::DeleteRdbStore(config);
     EXPECT_EQ(errCode, E_OK);

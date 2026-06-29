@@ -1747,7 +1747,7 @@ int SqliteConnection::ArchiveSyncedData(const std::string &table, uint64_t curso
     auto status = ::ArchiveSyncedData(dbHandle_, table, cursor);
     LOG_INFO("status:%{public}d, table:%{public}s, cursor:%{public}" PRIu64 "", status,
         SqliteUtils::Anonymous(table).c_str(), cursor);
-    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+    return SqliteUtils::ConvertDBStatusNative(status);
 }
 
 int SqliteConnection::DeleteSyncedData(const std::string &table,
@@ -1779,7 +1779,7 @@ int SqliteConnection::DeleteSyncedData(const std::string &table,
     auto status = ::DeleteSyncedData(dbHandle_, table, dbKeys);
     LOG_INFO("status:%{public}d, table:%{public}s, keys size:%{public}zu", status,
         SqliteUtils::Anonymous(table).c_str(), keys.size());
-    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+    return SqliteUtils::ConvertDBStatusNative(status);
 }
 
 int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
