@@ -73,6 +73,9 @@ public:
         bool isReplay), (override));
     MOCK_METHOD(int, SetKnowledgeSchema, (const DistributedRdb::RdbKnowledgeSchema &schema), (override));
     MOCK_METHOD(int, CleanDirtyLog, (const std::string &table, uint64_t cursor), (override));
+    MOCK_METHOD(int, ArchiveSyncedData, (const std::string &table, uint64_t cursor), (override));
+    MOCK_METHOD(int, DeleteSyncedData,
+        (const std::string &table, const std::vector<std::vector<PRIKey>> &keys), (override));
     MOCK_METHOD(int, RegisterAlgo, (const std::string &clstAlgoName, ClusterAlgoFunc func), (override));
     MOCK_METHOD(int32_t, RegisterReplayCallback, (const RdbStoreConfig &config,
         const ReplayCallBack &replayCallback), (override));

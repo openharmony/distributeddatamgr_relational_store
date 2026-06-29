@@ -1786,6 +1786,127 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ClearDirtyLog_001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_ArchiveSyncedData_001
+ * @tc.desc: Abnormal testCase for ArchiveSyncedData, empty table name
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ArchiveSyncedData_001, TestSize.Level2)
+{
+    store_->ExecuteSql("CREATE TABLE IF NOT EXISTS test "
+                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER);");
+    int errCode = E_OK;
+
+    // table is empty
+    std::string table = "";
+    uint64_t cursor = 100;
+    errCode = store_->ArchiveSyncedData(table, cursor);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+
+    // valid table, non-distributed table returns error from distributed db
+    table = "test";
+    errCode = store_->ArchiveSyncedData(table, cursor);
+    EXPECT_TRUE(errCode == E_OK);
+    store_->ExecuteSql("DROP TABLE IF EXISTS test");
+}
+
+/**
+ * @tc.name: RdbStore_ArchiveSyncedData_002
+ * @tc.desc: Normal testCase for ArchiveSyncedData, call with valid table and cursor
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ArchiveSyncedData_002, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store);
+    EXPECT_EQ(E_OK, errCode);
+    errCode = store->ExecuteSql(CREATE_TABLE_TEST);
+    EXPECT_EQ(errCode, E_OK);
+
+    // Insert some data
+    int64_t id;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("name", "test_name");
+    valuesBucket.PutInt("age", 20);
+    valuesBucket.PutDouble("salary", 100.5);
+    errCode = store->Insert(id, "test", valuesBucket);
+    EXPECT_EQ(E_OK, errCode);
+
+    // Archive synced data with cursor 0
+    errCode = store->ArchiveSyncedData("test", 0);
+    EXPECT_TRUE(errCode == E_OK);
+
+    errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_DeleteSyncedData_001
+ * @tc.desc: Abnormal testCase for DeleteSyncedData, empty table name
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_DeleteSyncedData_001, TestSize.Level2)
+{
+    store_->ExecuteSql("CREATE TABLE IF NOT EXISTS test "
+                       "(id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER);");
+    int errCode = E_OK;
+
+    // table is empty
+    std::string table = "";
+    std::vector<std::vector<RdbStore::PRIKey>> keys;
+    errCode = store_->DeleteSyncedData(table, keys);
+    EXPECT_EQ(E_INVALID_ARGS, errCode);
+
+    // valid table, non-distributed table returns error from distributed db
+    table = "test";
+    errCode = store_->DeleteSyncedData(table, keys);
+    EXPECT_TRUE(errCode == E_OK);
+    store_->ExecuteSql("DROP TABLE IF EXISTS test");
+}
+
+/**
+ * @tc.name: RdbStore_DeleteSyncedData_002
+ * @tc.desc: Normal testCase for DeleteSyncedData, call with valid table and keys
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_DeleteSyncedData_002, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbStoreImplTest::DATABASE_NAME);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(nullptr, store);
+    EXPECT_EQ(E_OK, errCode);
+    errCode = store->ExecuteSql(CREATE_TABLE_TEST);
+    EXPECT_EQ(errCode, E_OK);
+
+    // Insert some data
+    int64_t id;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString("name", "test_name");
+    valuesBucket.PutInt("age", 20);
+    valuesBucket.PutDouble("salary", 100.5);
+    errCode = store->Insert(id, "test", valuesBucket);
+    EXPECT_EQ(E_OK, errCode);
+
+    // Delete synced data with empty keys
+    std::vector<std::vector<RdbStore::PRIKey>> keys;
+    errCode = store->DeleteSyncedData("test", keys);
+    EXPECT_TRUE(errCode == E_OK);
+
+    // Delete synced data with one key (int64)
+    std::vector<RdbStore::PRIKey> key1 = { int64_t(1) };
+    keys.push_back(key1);
+    errCode = store->DeleteSyncedData("test", keys);
+    EXPECT_TRUE(errCode == E_OK);
+
+    errCode = RdbHelper::DeleteRdbStore(config);
+    EXPECT_EQ(errCode, E_OK);
+}
+
+/**
  * @tc.name: RdbStore_ConfigLocale_001
  * @tc.desc: test RdbStore ConfigLocale
  * @tc.type: FUNC

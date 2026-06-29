@@ -285,4 +285,84 @@ HWTEST_F(ConnectionTest, RegisterReplicaChecker_Test_001, TestSize.Level2)
     EXPECT_EQ(Connection::RegisterReplicaChecker(OHOS::NativeRdb::DBType::DB_SQLITE, MockReplicaChecker), E_OK);
     EXPECT_EQ(Connection::RegisterReplicaChecker(OHOS::NativeRdb::DBType::DB_SQLITE, MockReplicaChecker), E_OK);
 }
+
+/**
+ * @tc.name: ArchiveSyncedData_Test_001
+ * @tc.desc: Abnormal testCase of SqliteConnection ArchiveSyncedData, empty table name
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, ArchiveSyncedData_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // empty table name
+    auto res = conn->ArchiveSyncedData("", 0);
+    EXPECT_EQ(E_INVALID_ARGS, res);
+}
+
+/**
+ * @tc.name: ArchiveSyncedData_Test_002
+ * @tc.desc: Normal testCase of SqliteConnection ArchiveSyncedData, valid table name
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, ArchiveSyncedData_Test_002, TestSize.Level2)
+{
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // valid table name, non-distributed table
+    auto res = conn->ArchiveSyncedData("test", 0);
+    EXPECT_TRUE(res == E_OK);
+}
+
+/**
+ * @tc.name: DeleteSyncedData_Test_001
+ * @tc.desc: Abnormal testCase of SqliteConnection DeleteSyncedData, empty table name
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, DeleteSyncedData_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // empty table name
+    std::vector<std::vector<Connection::PRIKey>> keys;
+    auto res = conn->DeleteSyncedData("", keys);
+    EXPECT_EQ(E_INVALID_ARGS, res);
+}
+
+/**
+ * @tc.name: DeleteSyncedData_Test_002
+ * @tc.desc: Normal testCase of SqliteConnection DeleteSyncedData, valid table name
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, DeleteSyncedData_Test_002, TestSize.Level2)
+{
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // valid table name with empty keys, non-distributed table
+    std::vector<std::vector<Connection::PRIKey>> keys;
+    auto res = conn->DeleteSyncedData("test", keys);
+    EXPECT_TRUE(res == E_OK);
+
+    // valid table name with one key (int64)
+    std::vector<Connection::PRIKey> key1 = { int64_t(1) };
+    keys.push_back(key1);
+    res = conn->DeleteSyncedData("test", keys);
+    EXPECT_TRUE(res == E_OK);
+}
 } // namespace Test

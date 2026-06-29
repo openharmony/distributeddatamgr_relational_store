@@ -1738,6 +1738,50 @@ int SqliteConnection::CleanDirtyLog(const std::string &table, uint64_t cursor)
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 
+int SqliteConnection::ArchiveSyncedData(const std::string &table, uint64_t cursor)
+{
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    auto status = ::ArchiveSyncedData(dbHandle_, table, cursor);
+    LOG_INFO("status:%{public}d, table:%{public}s, cursor:%{public}" PRIu64 "", status,
+        SqliteUtils::Anonymous(table).c_str(), cursor);
+    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+}
+
+int SqliteConnection::DeleteSyncedData(const std::string &table,
+    const std::vector<std::vector<PRIKey>> &keys)
+{
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    // convert PRIKey to DistributedDB::Type for the distributed db interface
+    std::vector<std::vector<DistributedDB::Type>> dbKeys;
+    dbKeys.reserve(keys.size());
+    for (const auto &keyRow : keys) {
+        std::vector<DistributedDB::Type> dbKeyRow;
+        dbKeyRow.reserve(keyRow.size());
+        for (const auto &pk : keyRow) {
+            if (std::holds_alternative<std::monostate>(pk)) {
+                dbKeyRow.emplace_back(DistributedDB::Nil());
+            } else if (std::holds_alternative<int64_t>(pk)) {
+                dbKeyRow.emplace_back(std::get<int64_t>(pk));
+            } else if (std::holds_alternative<double>(pk)) {
+                dbKeyRow.emplace_back(std::get<double>(pk));
+            } else if (std::holds_alternative<std::string>(pk)) {
+                dbKeyRow.emplace_back(std::get<std::string>(pk));
+            }
+        }
+        dbKeys.push_back(std::move(dbKeyRow));
+    }
+    auto status = ::DeleteSyncedData(dbHandle_, table, dbKeys);
+    LOG_INFO("status:%{public}d, table:%{public}s, keys size:%{public}zu", status,
+        SqliteUtils::Anonymous(table).c_str(), keys.size());
+    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+}
+
 int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
 {
     std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);

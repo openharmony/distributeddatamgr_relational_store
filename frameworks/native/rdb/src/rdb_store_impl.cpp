@@ -785,6 +785,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     rdbOption.enableErrorDetail = option.enableErrorDetail;
     rdbOption.isDownloadOnly = option.isDownloadOnly;
     rdbOption.isEnablePredicate = option.isEnablePredicate;
+    rdbOption.isFullSync = option.isFullSync;
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
     ret = InnerSync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), async);
     return ret;
@@ -3277,6 +3278,44 @@ int RdbStoreImpl::CleanDirtyLog(const std::string &table, uint64_t cursor)
         return errCode;
     }
     return conn->CleanDirtyLog(table, cursor);
+}
+
+int RdbStoreImpl::ArchiveSyncedData(const std::string &table, uint64_t cursor)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
+        return E_NOT_SUPPORT;
+    }
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK || conn == nullptr) {
+        LOG_ERROR("The database is busy or closed errCode:%{public}d", errCode);
+        return errCode;
+    }
+    return conn->ArchiveSyncedData(table, cursor);
+}
+
+int RdbStoreImpl::DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
+        return E_NOT_SUPPORT;
+    }
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK || conn == nullptr) {
+        LOG_ERROR("The database is busy or closed errCode:%{public}d", errCode);
+        return errCode;
+    }
+    return conn->DeleteSyncedData(table, keys);
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> statement,

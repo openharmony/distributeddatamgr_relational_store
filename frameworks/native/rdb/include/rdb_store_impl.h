@@ -153,6 +153,8 @@ public:
     int InitKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
     int ConfigLocale(const std::string &localeStr) override;
+    int ArchiveSyncedData(const std::string &table, uint64_t cursor) override;
+    int DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys) override;
 
     // not virtual functions /
     const RdbStoreConfig &GetConfig();
