@@ -114,6 +114,23 @@ API_EXPORT DistributedDB::DBStatus CleanDeletedData(sqlite3 *db, const std::stri
     return DBStatus::OK;
 }
 
+API_EXPORT DistributedDB::DBStatus ArchiveSyncedData(sqlite3 *db, const std::string &tableName, uint64_t cursor)
+{
+    (void)db;
+    (void)tableName;
+    (void)cursor;
+    return DBStatus::OK;
+}
+
+API_EXPORT DistributedDB::DBStatus DeleteSyncedData(sqlite3 *db, const std::string &tableName,
+    const std::vector<std::vector<DistributedDB::Type>> &keys)
+{
+    (void)db;
+    (void)tableName;
+    (void)keys;
+    return DBStatus::OK;
+}
+
 API_EXPORT void Clean(bool isOpenSslClean)
 {
     (void)isOpenSslClean;

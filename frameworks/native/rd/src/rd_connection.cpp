@@ -458,6 +458,17 @@ int RdConnection::CleanDirtyLog([[gnu::unused]] const std::string &table, [[gnu:
     return E_NOT_SUPPORT;
 }
 
+int RdConnection::ArchiveSyncedData([[gnu::unused]] const std::string &table, [[gnu::unused]] uint64_t cursor)
+{
+    return E_NOT_SUPPORT;
+}
+
+int RdConnection::DeleteSyncedData([[gnu::unused]] const std::string &table,
+    [[gnu::unused]] const std::vector<std::vector<PRIKey>> &keys)
+{
+    return E_NOT_SUPPORT;
+}
+
 int RdConnection::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func)
 {
     int errCode =

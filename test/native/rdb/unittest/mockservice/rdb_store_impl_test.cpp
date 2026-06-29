@@ -2347,6 +2347,138 @@ HWTEST_F(RdbStoreImplConditionTest, CleanDirtyLog_Test_004, TestSize.Level2)
 }
 
 /**
+ * @tc.name: ArchiveSyncedData_Test_001
+ * @tc.desc: Abnormal testCase of ArchiveSyncedData, memory db not support
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, ArchiveSyncedData_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetDBType(DB_SQLITE);
+    config.SetReadOnly(false);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    uint64_t cursor = 0;
+    auto res = store->ArchiveSyncedData("test", cursor);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: ArchiveSyncedData_Test_002
+ * @tc.desc: Abnormal testCase of ArchiveSyncedData, vector db not support
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, ArchiveSyncedData_Test_002, TestSize.Level2)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_VECTOR);
+    config.SetReadOnly(false);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    uint64_t cursor = 0;
+    auto res = store->ArchiveSyncedData("test", cursor);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: ArchiveSyncedData_Test_003
+ * @tc.desc: Abnormal testCase of ArchiveSyncedData, read only db not support
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, ArchiveSyncedData_Test_003, TestSize.Level2)
+{
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    store = nullptr;
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetReadOnly(true);
+    store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    uint64_t cursor = 0;
+    auto res = store->ArchiveSyncedData("test", cursor);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: DeleteSyncedData_Test_001
+ * @tc.desc: Abnormal testCase of DeleteSyncedData, memory db not support
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, DeleteSyncedData_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetDBType(DB_SQLITE);
+    config.SetReadOnly(false);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::vector<std::vector<RdbStore::PRIKey>> keys;
+    auto res = store->DeleteSyncedData("test", keys);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: DeleteSyncedData_Test_002
+ * @tc.desc: Abnormal testCase of DeleteSyncedData, vector db not support
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, DeleteSyncedData_Test_002, TestSize.Level2)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_VECTOR);
+    config.SetReadOnly(false);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::vector<std::vector<RdbStore::PRIKey>> keys;
+    auto res = store->DeleteSyncedData("test", keys);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
+ * @tc.name: DeleteSyncedData_Test_003
+ * @tc.desc: Abnormal testCase of DeleteSyncedData, read only db not support
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, DeleteSyncedData_Test_003, TestSize.Level2)
+{
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    store = nullptr;
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    config.SetReadOnly(true);
+    store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::vector<std::vector<RdbStore::PRIKey>> keys;
+    auto res = store->DeleteSyncedData("test", keys);
+    EXPECT_EQ(E_NOT_SUPPORT, res);
+}
+
+/**
  * @tc.name: CloudTables::Change_Test_001
  * @tc.desc: Abnormal testCase of CloudTables::Change
  * @tc.type: FUNC

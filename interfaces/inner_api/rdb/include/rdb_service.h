@@ -39,6 +39,7 @@ public:
         bool enableErrorDetail = false;
         bool isEnablePredicate = false;
         bool isDownloadOnly = false;
+        bool isFullSync = false;
     };
     using ResultSet = NativeRdb::ResultSet;
     inline static constexpr const char *SERVICE_NAME = "relational_store";
