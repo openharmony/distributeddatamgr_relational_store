@@ -2314,8 +2314,8 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
         if (argc >= 2) {
             CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
         }
-        context->rdbPredicates = std::make_shared<RdbPredicates>(*context->rdbPredicates);
         CHECK_RETURN(context->rdbPredicates != nullptr);
+        context->rdbPredicates = std::make_shared<RdbPredicates>(*context->rdbPredicates);
         context->rdbPredicates->BeginWrap()
             ->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
         context->rdbPredicates
