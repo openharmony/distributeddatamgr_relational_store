@@ -25,6 +25,7 @@ ohos_shared_library("native_rdb_ndk") {
   }
 
   cflags_cc = [
+    "-Oz",
     "-fno-unwind-tables",
     "-fno-asynchronous-unwind-tables",
   ]
