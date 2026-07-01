@@ -337,7 +337,6 @@ int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<RdbS
 napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -361,7 +360,6 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.insert", "Arkdata.Rdb.RdbStore.insertSync");
 
     CHECK_RETURN_NULL(!(context->error) || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -454,7 +452,6 @@ int ParseDataSharePredicates(const napi_env env, const napi_value arg, std::shar
 napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -475,7 +472,6 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.delete", "Arkdata.Rdb.RdbStore.deleteSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -484,7 +480,6 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (IsNapiTypeString(env, argc, argv, 0)) {
@@ -516,7 +511,6 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.update", "Arkdata.Rdb.RdbStore.updateSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -525,7 +519,6 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (IsNapiTypeString(env, argc, argv, 0)) {
@@ -557,7 +550,6 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.query", "Arkdata.Rdb.RdbStore.querySync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -637,7 +629,6 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -658,7 +649,6 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.executeSql", "Arkdata.Rdb.RdbStore.executeSqlSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -667,7 +657,6 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2 || argc == 3, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -703,7 +692,6 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.execute", "Arkdata.Rdb.RdbStore.executeSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
