@@ -2302,13 +2302,16 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
         if (argc >= 2) {
             CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
         }
+        CHECK_RETURN(context->rdbPredicates != nullptr);
+        context->rdbPredicates = std::make_shared<RdbPredicates>(*context->rdbPredicates);
+        context->rdbPredicates->BeginWrap()
+            ->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
+        context->rdbPredicates
+            ->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
-        context->rdbPredicates->BeginWrap()->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
-        context->rdbPredicates->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
-        context->resultSet = context->rdbStore->QueryByStep(*(context->rdbPredicates), context->columns);
-        context->rdbStore = nullptr;
+        context->resultSet = context->StealRdbStore()->QueryByStep(*(context->rdbPredicates), context->columns);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
