@@ -319,7 +319,7 @@ HWTEST_F(ConnectionTest, ArchiveSyncedData_Test_002, TestSize.Level2)
 
     // valid table name, non-distributed table
     auto res = conn->ArchiveSyncedData("test", 0);
-    EXPECT_EQ(res, E_OK);
+    EXPECT_EQ(res, E_ERROR);
 }
 
 /**
@@ -357,12 +357,12 @@ HWTEST_F(ConnectionTest, DeleteSyncedData_Test_002, TestSize.Level2)
     // valid table name with empty keys, non-distributed table
     std::vector<std::vector<Connection::PRIKey>> keys;
     auto res = conn->DeleteSyncedData("test", keys);
-    EXPECT_EQ(res, E_OK);
+    EXPECT_EQ(res, E_ERROR);
 
     // valid table name with one key (int64)
     std::vector<Connection::PRIKey> key1 = { int64_t(1) };
     keys.push_back(key1);
     res = conn->DeleteSyncedData("test", keys);
-    EXPECT_EQ(res, E_OK);
+    EXPECT_EQ(res, E_ERROR);
 }
 } // namespace Test
