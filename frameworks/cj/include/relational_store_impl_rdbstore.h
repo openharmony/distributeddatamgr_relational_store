@@ -107,7 +107,7 @@ public:
 
     std::shared_ptr<NativeRdb::ResultSet> Query(RdbPredicatesImpl &predicates, char **column, int64_t columnSize);
     std::shared_ptr<NativeRdb::ResultSet> RemoteQuery(
-        char *device, RdbPredicatesImpl &predicates, char **column, int64_t columnSize);
+        char *device, RdbPredicatesImpl &predicates, char **column, int64_t columnSize, int32_t *errCode);
     int Delete(RdbPredicatesImpl &predicates, int32_t *errCode);
     int32_t SetDistributedTables(char **tables, int64_t tablesSize);
     int32_t SetDistributedTables(char **tables, int64_t tablesSize, int32_t type);
@@ -119,7 +119,7 @@ public:
     int32_t BeginTransaction();
     int32_t Backup(const char *destName);
     int32_t Restore(const char *srcName);
-    char *ObtainDistributedTableName(const char *device, const char *table);
+    char *ObtainDistributedTableName(const char *device, const char *table, int32_t *errCode);
     int32_t Emit(const char *event);
     int64_t Insert(const char *table, ValuesBucket valuesBucket, int32_t conflict, int32_t *errCode);
     int32_t BatchInsert(int64_t &insertNum, const char *tableName, ValuesBucket *valuesBuckets, int64_t valuesSize);
@@ -199,6 +199,7 @@ private:
     std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> localObservers_;
     std::map<std::string, std::list<std::shared_ptr<RdbStoreObserverImpl>>> localSharedObservers_;
     std::list<std::shared_ptr<SyncObserverImpl>> syncObservers_;
+    static constexpr int32_t WAIT_TIME_LIMIT = 300;
 };
 
 int64_t GetRdbStore(OHOS::AbilityRuntime::Context *context, StoreConfig config, int32_t *errCode);

@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,15 +13,22 @@
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
-if (!is_ohos) {
-  base_sources += [ "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp" ]
+if (!is_ohos && !is_android && !is_ios) {
+  base_sources += [ "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
+                    "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp",
+  ]
+} else if (is_android || is_ios) {
+  base_sources += [ "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp" ]
 }
 
 if (is_ohos && !build_ohos_sdk) {
   config("native_rdb_config") {
     visibility = [ ":*" ]
 
-    cflags = [ "-Wno-c99-designator", "-Werror=vla", ]
+    cflags = [
+      "-Wno-c99-designator",
+      "-Werror=vla",
+    ]
     include_dirs = [
       "include",
       "${relational_store_common_path}/include",
@@ -33,7 +40,9 @@ if (is_ohos && !build_ohos_sdk) {
     ]
 
     if (!support_jsapi) {
-      include_dirs += [ "${relational_store_mock_path}/frameworks/native/rdb/mock_security" ]
+      include_dirs += [
+        "${relational_store_mock_path}/frameworks/native/rdb/mock_security",
+      ]
     }
 
     defines = [
@@ -81,13 +90,19 @@ if (is_ohos && !build_ohos_sdk) {
     configs = [ ":native_rdb_config" ]
 
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
-    cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
+    cflags_cc = [
+      "-fvisibility=hidden",
+      "-fvisibility-inlines-hidden",
+      "-fno-unwind-tables",
+      "-fno-asynchronous-unwind-tables",
+      "-Werror=vla",
+    ]
     sources += [
-      "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rd/src/grd_api_manager.cpp",
       "${relational_store_native_path}/rd/src/rd_connection.cpp",
       "${relational_store_native_path}/rd/src/rd_statement.cpp",
       "${relational_store_native_path}/rd/src/rd_utils.cpp",
+      "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
@@ -155,11 +170,11 @@ if (is_ohos && !build_ohos_sdk) {
     ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
     sources += [
-      "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rd/src/grd_api_manager.cpp",
       "${relational_store_native_path}/rd/src/rd_connection.cpp",
       "${relational_store_native_path}/rd/src/rd_statement.cpp",
       "${relational_store_native_path}/rd/src/rd_utils.cpp",
+      "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
       "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
       "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
       "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
@@ -213,9 +228,7 @@ if (is_ohos && !build_ohos_sdk) {
       debug = false
     }
 
-    sources = [
-      "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
-    ]
+    sources = [ "${relational_store_native_path}/rdb/src/rdb_types_util.cpp" ]
 
     configs = [ ":native_rdb_config" ]
 
@@ -297,8 +310,8 @@ if (is_ohos && !build_ohos_sdk) {
 
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
-      "//commonlibrary/c_utils/base:utils",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+      "//commonlibrary/c_utils/base:utils",
       "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
@@ -405,7 +418,10 @@ if (is_ohos && !build_ohos_sdk) {
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
-    cflags_cc = [ "-std=c++17", "-Werror=vla", ]
+    cflags_cc = [
+      "-std=c++17",
+      "-Werror=vla",
+    ]
 
     public_configs = [ ":native_rdb_public_config" ]
     innerapi_tags = [ "platformsdk" ]
@@ -417,7 +433,9 @@ if (is_ohos && !build_ohos_sdk) {
 
     configs = [ ":native_rdb_config" ]
 
-    sources += [ "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp" ]
+    sources += [
+      "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp",
+    ]
 
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
@@ -426,7 +444,10 @@ if (is_ohos && !build_ohos_sdk) {
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_sdk",
     ]
-    cflags_cc = [ "-std=c++17", "-Werror=vla", ]
+    cflags_cc = [
+      "-std=c++17",
+      "-Werror=vla",
+    ]
 
     public_configs = [ ":native_rdb_public_config" ]
 
@@ -438,6 +459,9 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${kvstore_path}/libs/distributeddb/interfaces/include/relational",
+      "${kvstore_path}/libs/distributeddb/interfaces/include",
+      "${kvstore_path}/libs/distributeddb/include",
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/win32",
       "${distributedfile_path}/mod_securitylabel",
@@ -450,7 +474,10 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
-    cflags = [ "-includemock.h", "-Werror=vla", ]
+    cflags = [
+      "-includemock.h",
+      "-Werror=vla",
+    ]
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
@@ -490,11 +517,15 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_android",
       "//commonlibrary/c_utils/base:utilsbase",
+      "${kvstore_path}/libs/distributeddb/build/android:distributeddb_client_lite",
       "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
     ]
-    cflags_cc = [ "-std=c++17", "-Werror=vla", ]
+    cflags_cc = [
+      "-std=c++17",
+      "-Werror=vla",
+    ]
 
     public_configs = [ ":native_rdb_public_config" ]
     subsystem_name = "distributeddatamgr"
@@ -504,6 +535,9 @@ if (is_ohos && !build_ohos_sdk) {
     visibility = [ ":*" ]
 
     include_dirs = [
+      "${kvstore_path}/libs/distributeddb/interfaces/include/relational",
+      "${kvstore_path}/libs/distributeddb/interfaces/include",
+      "${kvstore_path}/libs/distributeddb/include",
       "${relational_store_mock_path}/frameworks/native/rdb",
       "${relational_store_mock_path}/frameworks/native/win32",
       "${distributedfile_path}/mod_securitylabel",
@@ -516,7 +550,10 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_native_path}/obs_mgr_adapter",
     ]
 
-    cflags = [ "-includemock.h", "-Werror=vla", ]
+    cflags = [
+      "-includemock.h",
+      "-Werror=vla",
+    ]
     defines = [
       "RELATIONAL_STORE",
       "SQLITE_HAS_CODEC",
@@ -554,6 +591,7 @@ if (is_ohos && !build_ohos_sdk) {
       "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
       "//commonlibrary/c_utils/base:utilsbase",
+      "${kvstore_path}/libs/distributeddb/build/ios:distributeddb_client_lite",
       "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
       "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
       "//third_party/sqlite:sqlite_static",
@@ -561,7 +599,10 @@ if (is_ohos && !build_ohos_sdk) {
 
     external_deps = [ "c_utils:utils" ]
 
-    cflags_cc = [ "-std=c++17", "-Werror=vla", ]
+    cflags_cc = [
+      "-std=c++17",
+      "-Werror=vla",
+    ]
 
     public_configs = [ ":native_rdb_public_config" ]
     subsystem_name = "distributeddatamgr"

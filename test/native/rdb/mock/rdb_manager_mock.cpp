@@ -43,4 +43,12 @@ std::string RdbManager::GetSelfBundleName()
 void RdbManager::OnRemoteDied()
 {
 }
+
+bool RdbManager::IsProxy() const
+{
+    if (BRdbManager::rdbManager == nullptr) {
+        return true;
+    }
+    return BRdbManager::rdbManager->IsProxy();
+}
 } // namespace OHOS::DistributedRdb

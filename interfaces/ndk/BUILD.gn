@@ -24,6 +24,15 @@ ohos_shared_library("native_rdb_ndk") {
     debug = false
   }
 
+  cflags_cc = [
+    "-Oz",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+  ]
+
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
+  version_script = "native_rdb_ndk.versionscript"
+
   include_dirs = [
     "include",
     "${relational_store_base_path}/interfaces/ndk",
@@ -39,8 +48,8 @@ ohos_shared_library("native_rdb_ndk") {
     "src/oh_data_values.cpp",
     "src/oh_data_values_buckets.cpp",
     "src/oh_rdb_crypto_param.cpp",
-    "src/oh_rdb_types.cpp",
     "src/oh_rdb_transaction.cpp",
+    "src/oh_rdb_types.cpp",
     "src/relational_asset.cpp",
     "src/relational_cursor.cpp",
     "src/relational_predicates.cpp",

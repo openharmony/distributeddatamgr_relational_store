@@ -748,4 +748,18 @@ int RdbStore::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func
     (void)clstAlgoName;
     return E_NOT_SUPPORT;
 }
+
+int RdbStore::ArchiveSyncedData(const std::string &table, uint64_t cursor)
+{
+    (void)table;
+    (void)cursor;
+    return E_NOT_SUPPORT;
+}
+
+int RdbStore::DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys)
+{
+    (void)table;
+    (void)keys;
+    return E_NOT_SUPPORT;
+}
 } // namespace OHOS::NativeRdb

@@ -15,32 +15,37 @@ import("//build/ohos/ace/ace.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ohos_shared_library("relational_store_crypt") {
-part_name = "relational_store"
-sanitize = {
+  part_name = "relational_store"
+  sanitize = {
     boundary_sanitize = true
     ubsan = true
     cfi = true
     cfi_cross_dso = true
     debug = false
-}
+  }
 
-sources = [
-    "${relational_store_native_path}/rdb_crypt/relational_store_crypt.cpp",
-]
-include_dirs = [
+  sources =
+      [ "${relational_store_native_path}/rdb_crypt/relational_store_crypt.cpp" ]
+  include_dirs = [
     "${relational_store_common_path}/include",
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_native_path}/rdb_crypt",
     "${relational_store_native_path}/rdb/include",
     "${relational_store_native_path}/dfx/include",
-]
-ldflags = [ "-Wl,--exclude-libs,ALL" ]
-cflags_cc = [ "-fvisibility=hidden", "-Werror=vla", ]
+  ]
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
+  version_script = "relational_store_crypt.versionscript"
+  cflags_cc = [
+    "-fvisibility=hidden",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+    "-Werror=vla",
+  ]
 
-external_deps = [
+  external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "huks:libhukssdk",
-]
-subsystem_name = "distributeddatamgr"
+  ]
+  subsystem_name = "distributeddatamgr"
 }

@@ -29,9 +29,13 @@ namespace Relational {
 int64_t RdbStoreImpl::BatchInsertWithConflictResolution(const char *tableName, ValuesBucketEx *valuesBuckets,
     int64_t valuesSize, int32_t conflict, int32_t *errCode)
 {
-    auto store = GetRdbStore();
-    if (store == nullptr || tableName == nullptr || valuesBuckets == nullptr) {
+    if (tableName == nullptr || valuesBuckets == nullptr) {
         *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return -1;
     }
     std::vector<NativeRdb::ValuesBucket> buckets;
@@ -53,9 +57,13 @@ int64_t RdbStoreImpl::BatchInsertWithConflictResolution(const char *tableName, V
 ValueTypeEx RdbStoreImpl::Execute(const char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize,
     int32_t *errCode)
 {
-    auto store = GetRdbStore();
-    if (store == nullptr || sql == nullptr) {
+    if (sql == nullptr) {
         *errCode = NativeRdb::E_ERROR;
+        return ValueTypeEx{};
+    }
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return ValueTypeEx{};
     }
     std::vector<NativeRdb::ValueObject> args;
@@ -78,9 +86,13 @@ ValueTypeEx RdbStoreImpl::Execute(const char *sql, ValueTypeEx *bindArgs, int64_
 ValueTypeEx RdbStoreImpl::Execute(const char *sql, ValueTypeEx *bindArgs, int64_t bindArgsSize,
     int64_t txId, int32_t *errCode)
 {
-    auto store = GetRdbStore();
-    if (store == nullptr || sql == nullptr) {
+    if (sql == nullptr) {
         *errCode = NativeRdb::E_ERROR;
+        return ValueTypeEx{};
+    }
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return ValueTypeEx{};
     }
     std::vector<NativeRdb::ValueObject> args;
@@ -104,7 +116,7 @@ int64_t RdbStoreImpl::BeginTrans(int32_t *errCode)
 {
     auto store = GetRdbStore();
     if (store == nullptr) {
-        *errCode = NativeRdb::E_ERROR;
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return -1;
     }
     int32_t status = NativeRdb::E_ERROR;
@@ -166,9 +178,13 @@ ReturningResult RdbStoreImpl::BatchInsertWithReturning(const char *tableName, Va
     int64_t valuesSize, ReturningConfig config, int32_t conflict, int32_t *errCode)
 {
     ReturningResult result = { 0, 0, NativeRdb::E_ERROR };
-    auto store = GetRdbStore();
-    if (store == nullptr || tableName == nullptr || valuesBuckets == nullptr) {
+    if (tableName == nullptr || valuesBuckets == nullptr) {
         *errCode = NativeRdb::E_ERROR;
+        return result;
+    }
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return result;
     }
     if (!IsValidTableName(tableName)) {
@@ -209,7 +225,7 @@ ReturningResult RdbStoreImpl::UpdateWithReturning(ValuesBucketEx valuesBucket, R
     ReturningResult result = { 0, 0, NativeRdb::E_ERROR };
     auto store = GetRdbStore();
     if (store == nullptr) {
-        *errCode = NativeRdb::E_ERROR;
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return result;
     }
     NativeRdb::ValuesBucket row;
@@ -241,7 +257,7 @@ ReturningResult RdbStoreImpl::DeleteWithReturning(RdbPredicatesImpl &predicates,
     ReturningResult result = { 0, 0, NativeRdb::E_ERROR };
     auto store = GetRdbStore();
     if (store == nullptr) {
-        *errCode = NativeRdb::E_ERROR;
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return result;
     }
     auto nativeConfig = CReturningConfigToNative(config);
@@ -266,7 +282,7 @@ int64_t RdbStoreImpl::QueryWithoutRowCount(RdbPredicatesImpl &predicates, char *
 {
     auto store = GetRdbStore();
     if (store == nullptr) {
-        *errCode = NativeRdb::E_ERROR;
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return -1;
     }
     std::vector<std::string> cols;
@@ -294,9 +310,13 @@ int64_t RdbStoreImpl::QueryWithoutRowCount(RdbPredicatesImpl &predicates, char *
 int64_t RdbStoreImpl::QuerySqlWithoutRowCount(const char *sql, ValueTypeEx *bindArgs,
     int64_t size, int32_t *errCode)
 {
-    auto store = GetRdbStore();
-    if (store == nullptr || sql == nullptr) {
+    if (sql == nullptr) {
         *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
         return -1;
     }
     std::vector<NativeRdb::ValueObject> args;
@@ -345,9 +365,17 @@ int64_t RdbStoreImpl::CreateTransaction(int32_t transactionType, int32_t *errCod
 
 int32_t RdbStoreImpl::Attach(const char *fullPath, const char *attachName, int32_t waitTime, int32_t *errCode)
 {
-    auto store = GetRdbStore();
-    if (store == nullptr || fullPath == nullptr || attachName == nullptr) {
+    if (fullPath == nullptr || attachName == nullptr) {
         *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
+        return -1;
+    }
+    if (waitTime < 1 || waitTime > RdbStoreImpl::WAIT_TIME_LIMIT) {
+        *errCode = NativeRdb::E_INVALID_ARGS_NEW;
         return -1;
     }
     NativeRdb::RdbStoreConfig storeConfig(fullPath);
@@ -359,9 +387,17 @@ int32_t RdbStoreImpl::Attach(const char *fullPath, const char *attachName, int32
 int32_t RdbStoreImpl::AttachConfig(OHOS::AbilityRuntime::Context *context, StoreConfigEx *config,
     const char *attachName, int32_t waitTime, int32_t *errCode)
 {
-    auto store = GetRdbStore();
-    if (store == nullptr || context == nullptr || config == nullptr || attachName == nullptr) {
+    if (context == nullptr || config == nullptr || attachName == nullptr) {
         *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
+        return -1;
+    }
+    if (waitTime < 1 || waitTime > RdbStoreImpl::WAIT_TIME_LIMIT) {
+        *errCode = NativeRdb::E_INVALID_ARGS_NEW;
         return -1;
     }
     // shared_from_this() shares the existing control block for correct ref-counting;
@@ -383,9 +419,17 @@ int32_t RdbStoreImpl::AttachConfig(OHOS::AbilityRuntime::Context *context, Store
 
 int32_t RdbStoreImpl::Detach(const char *attachName, int32_t waitTime, int32_t *errCode)
 {
-    auto store = GetRdbStore();
-    if (store == nullptr || attachName == nullptr) {
+    if (attachName == nullptr) {
         *errCode = NativeRdb::E_ERROR;
+        return -1;
+    }
+    auto store = GetRdbStore();
+    if (store == nullptr) {
+        *errCode = NativeRdb::E_ALREADY_CLOSED;
+        return -1;
+    }
+    if (waitTime < 1 || waitTime > RdbStoreImpl::WAIT_TIME_LIMIT) {
+        *errCode = NativeRdb::E_INVALID_ARGS_NEW;
         return -1;
     }
     auto [ret, attachedNum] = store->Detach(attachName, waitTime);

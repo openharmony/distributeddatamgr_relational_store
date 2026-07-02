@@ -68,7 +68,6 @@ public:
         const std::string &sql, SConn conn, const std::string &returningSql = "") override;
     int CheckReplicaForRestore() override;
     bool IsWriter() const override;
-    bool IsSlaveConnEnabled() const override;
     int SubscribeTableChanges(const Notifier &notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
@@ -82,6 +81,8 @@ public:
     ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;
+    int ArchiveSyncedData(const std::string &table, uint64_t cursor) override;
+    int DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys) override;
     int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
     void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount = false) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);

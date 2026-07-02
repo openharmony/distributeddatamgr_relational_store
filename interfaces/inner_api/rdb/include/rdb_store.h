@@ -884,6 +884,24 @@ public:
      */
     virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func);
 
+    /**
+     * @brief Archives synced data. Removes data that is consistent between the device and cloud from the table
+     * while keeping the corresponding log records, and cleans log records with cursor <= the specified cursor.
+     *
+     * @param table Indicates the specified table.
+     * @param cursor Indicates the cursor threshold, log records with cursor <= this value will be cleaned.
+     */
+    virtual int ArchiveSyncedData(const std::string &table, uint64_t cursor);
+
+    /**
+     * @brief Deletes archived data based on the conflict resolution columns.
+     * The deleted data will be synced to the cloud.
+     *
+     * @param table Indicates the specified table.
+     * @param keys Indicates the keys of the archived data to be deleted.
+     */
+    virtual int DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys);
+
 protected:
     virtual std::string GetLogTableName(const std::string &tableName);
 };

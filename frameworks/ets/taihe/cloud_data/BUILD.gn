@@ -89,11 +89,16 @@ taihe_shared_library("cloud_data_taihe") {
     debug = false
   }
   cflags = [
+    "-Oz",
     "-DHILOG_ENABLE",
     "-fPIC",
     "-g3",
     "-Werror=vla",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
   ]
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
+  version_script = "clouddata_ani.versionscript"
   external_deps = [
     "ability_runtime:abilitykit_native",
     "ability_runtime:ani_base_context",

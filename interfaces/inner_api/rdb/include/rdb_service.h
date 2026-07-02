@@ -39,6 +39,7 @@ public:
         bool enableErrorDetail = false;
         bool isEnablePredicate = false;
         bool isDownloadOnly = false;
+        bool isFullSync = false;
     };
     using ResultSet = NativeRdb::ResultSet;
     inline static constexpr const char *SERVICE_NAME = "relational_store";
@@ -59,8 +60,6 @@ public:
         const AsyncDetail &async) = 0;
 
     virtual int32_t StopCloudSync(const RdbSyncerParam &param) = 0;
-
-    virtual int32_t EnableSearchBinlog(const RdbSyncerParam &param, bool enabled, bool isFull) = 0;
 
     virtual int32_t Subscribe(
         const RdbSyncerParam &param, const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer) = 0;

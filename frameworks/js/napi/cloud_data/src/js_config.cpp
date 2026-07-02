@@ -661,7 +661,6 @@ napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
     ctxt->queue = std::make_shared<AppDataMgrJsKit::UvQueue>(env);
     HandleCloudSyncArgs(env, info, ctxt);
     ASSERT_NULL(!ctxt->isThrowError, "CloudSync exit");
-
     auto execute = [ctxt]() {
         auto [state, proxy] = CloudManager::GetInstance().GetCloudService();
         if (proxy == nullptr) {
@@ -685,12 +684,16 @@ napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
         };
         CloudService::Option option;
         option.syncMode = ctxt->syncMode;
-        option.isDownloadOnly = ctxt->downloadOnly;
         option.seqNum = GetSeqNum();
-        auto status = proxy->CloudSync(ctxt->bundleName, ctxt->storeId, option, async);
-        if (status == Status::INVALID_ARGUMENT) {
-            status = Status::INVALID_ARGUMENT_V20;
+        option.isDownloadOnly = ctxt->downloadOnly;
+        int32_t status = 0;
+        if (ctxt->storeId.empty()) {
+            BundleInfo bundleInfo = { ctxt->bundleName, ctxt->storeId };
+            status = proxy->CloudSync(bundleInfo, option, async);
+        } else {
+            status = proxy->CloudSync(ctxt->bundleName, ctxt->storeId, option, async);
         }
+        status = (status == Status::INVALID_ARGUMENT) ? Status::INVALID_ARGUMENT_V20 : status;
         ctxt->status =
             (GenerateNapiError(status, ctxt->jsCode, ctxt->error) == Status::SUCCESS) ? napi_ok : napi_generic_failure;
     };

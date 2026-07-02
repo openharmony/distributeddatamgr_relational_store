@@ -785,6 +785,7 @@ int RdbStoreImpl::Sync(const SyncOption &option, const AbsRdbPredicates &predica
     rdbOption.enableErrorDetail = option.enableErrorDetail;
     rdbOption.isDownloadOnly = option.isDownloadOnly;
     rdbOption.isEnablePredicate = option.isEnablePredicate;
+    rdbOption.isFullSync = option.isFullSync;
     RdbRadar ret(Scene::SCENE_SYNC, __FUNCTION__, config_.GetBundleName());
     ret = InnerSync(syncerParam_, rdbOption, predicate.GetDistributedPredicates(), async);
     return ret;
@@ -1398,8 +1399,10 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     if (initStatus_ != -1) {
         return initStatus_;
     }
-    isNeedSetAcl = isNeedSetAcl || SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
-                   SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID);
+    // If it is a distributeddata request, never need ACL
+    isNeedSetAcl = RdbMgr::GetInstance().IsProxy() && (isNeedSetAcl ||
+                   SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
+                   SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID));
     std::lock_guard<std::mutex> lock(initMutex_);
     if (initStatus_ != -1) {
         return initStatus_;
@@ -2062,11 +2065,7 @@ int RdbStoreImpl::Backup()
     if (errCode != E_OK || conn == nullptr) {
         return errCode;
     }
-    errCode = conn->Backup(destPath, {}, false, slaveStatus_, false);
-    if (errCode == E_OK) {
-        EnableSearchBinlogIfNeeded(true, true);
-    }
-    return errCode;
+    return conn->Backup(destPath, {}, false, slaveStatus_, false);
 }
 
 /**
@@ -2146,22 +2145,6 @@ std::vector<ValueObject> RdbStoreImpl::CreateBackupBindArgs(
 /**
  * Backup a database from a specified encrypted or unencrypted database file.
  */
-int RdbStoreImpl::BackupForHaSlave(const std::string &databasePath, bool verifyDb)
-{
-    auto [errCode, conn] = GetConn(false);
-    if (errCode != E_OK) {
-        return errCode;
-    }
-    errCode = conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
-    if (SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID)) {
-        SetFileGid(config_, SERVICE_GID);
-    }
-    if (errCode == E_OK) {
-        EnableSearchBinlogIfNeeded(true, true);
-    }
-    return errCode;
-}
-
 int RdbStoreImpl::InnerBackup(
     const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool verifyDb)
 {
@@ -2175,7 +2158,15 @@ int RdbStoreImpl::InnerBackup(
     }
 
     if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
-        return BackupForHaSlave(databasePath, verifyDb);
+        auto [errCode, conn] = GetConn(false);
+        if (errCode != E_OK) {
+            return errCode;
+        }
+        errCode = conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
+        if (SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID)) {
+            SetFileGid(config_, SERVICE_GID);
+        }
+        return errCode;
     }
     Suspender suspender(Suspender::SQL_LOG);
     auto config = config_;
@@ -3183,7 +3174,7 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
         return E_OK;
     }
     auto [errCode, conn] = GetConn(false);
-    if (errCode != E_OK || conn == nullptr) {
+    if (errCode != E_OK) {
         return errCode;
     }
     conn->RegisterReplayCallback(config_, std::bind(&RdbStoreImpl::ReplayCallbackImpl, config_));
@@ -3192,7 +3183,6 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
         LOG_WARN("exchange st:%{public}d, %{public}s,", strategy, SqliteUtils::Anonymous(config_.GetName()).c_str());
     }
     int ret = E_OK;
-    bool isSlaveEnabled = conn->IsSlaveConnEnabled();
     if (strategy == ExchangeStrategy::RESTORE && !IsInAsyncRestore(config_.GetPath())) {
         conn = nullptr;
         // disable is required before restore
@@ -3203,26 +3193,7 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     } else if (strategy == ExchangeStrategy::PENDING_BACKUP) {
         ret = StartAsyncBackupIfNeed(slaveStatus_);
     }
-    if (isSlaveEnabled) {
-        EnableSearchBinlogIfNeeded(true, false);
-    }
     return ret;
-}
-
-void RdbStoreImpl::EnableSearchBinlogIfNeeded(bool enabled, bool isFull)
-{
-    if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER) {
-        return;
-    }
-    if (!SqliteUtils::IsSupportBinlog(config_)) {
-        return;
-    }
-    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
-    if (errCode != E_OK || service == nullptr) {
-        return;
-    }
-    LOG_INFO("enable search binlog:%{public}d, isFull:%{public}d", enabled, isFull);
-    service->EnableSearchBinlog(syncerParam_, enabled, isFull);
 }
 
 int32_t RdbStoreImpl::GetDbType() const
@@ -3277,6 +3248,44 @@ int RdbStoreImpl::CleanDirtyLog(const std::string &table, uint64_t cursor)
         return errCode;
     }
     return conn->CleanDirtyLog(table, cursor);
+}
+
+int RdbStoreImpl::ArchiveSyncedData(const std::string &table, uint64_t cursor)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
+        return E_NOT_SUPPORT;
+    }
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK || conn == nullptr) {
+        LOG_ERROR("The database is busy or closed errCode:%{public}d", errCode);
+        return errCode;
+    }
+    return conn->ArchiveSyncedData(table, cursor);
+}
+
+int RdbStoreImpl::DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR) || isMemoryRdb_) {
+        LOG_ERROR("Not support. table:%{public}s, isRead:%{public}d, dbType:%{public}d, isMemoryRdb:%{public}d.",
+            SqliteUtils::Anonymous(table).c_str(), isReadOnly_, config_.GetDBType(), isMemoryRdb_);
+        return E_NOT_SUPPORT;
+    }
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK || conn == nullptr) {
+        LOG_ERROR("The database is busy or closed errCode:%{public}d", errCode);
+        return errCode;
+    }
+    return conn->DeleteSyncedData(table, keys);
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::GenerateResult(int32_t code, std::shared_ptr<Statement> statement,

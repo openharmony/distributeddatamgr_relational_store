@@ -1,0 +1,55 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
+
+SUBSYSTEM_DIR = "//foundation/distributeddatamgr/relational_store"
+
+config("ipc_all_deps_config") {
+  include_dirs = [ "$SUBSYSTEM_DIR/rdbmock/external_inner_kit/ipc/include" ]
+  defines = []
+  if (current_os == "ohos") {
+    defines += [ "OHOS_PLATFORM" ]
+  }
+}
+
+ohos_source_set("ipc_single") {
+  sources = [
+    "mock_ipc.cpp",
+    "mock_iremote_object.cpp",
+    "mock_ipc_object_stub.cpp",
+  ]
+  all_dependent_configs = [ ":ipc_all_deps_config" ]
+  public_configs = [ ":ipc_all_deps_config" ]
+  deps = []
+  deps += deps_access_token_libaccesstoken_sdk
+  deps += deps_access_token_libtoken_setproc
+  deps += deps_bounds_checking_function
+  external_deps = [ "c_utils:utils" ]
+  external_deps += external_deps_access_token_libaccesstoken_sdk
+  external_deps += external_deps_access_token_libtoken_setproc
+  external_deps += external_deps_bounds_checking_function
+  part_name = "relational_store"
+  subsystem_name = "distributeddatamgr"
+}
+
+ohos_source_set("ipc_core") {
+  sources = []
+  all_dependent_configs = [ ":ipc_all_deps_config" ]
+  public_configs = [ ":ipc_all_deps_config" ]
+  deps = [ ":ipc_single" ]
+  part_name = "relational_store"
+  subsystem_name = "distributeddatamgr"
+}

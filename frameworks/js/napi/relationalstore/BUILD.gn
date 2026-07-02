@@ -41,8 +41,8 @@ sources = [
   "src/napi_rdb_store.cpp",
   "src/napi_rdb_store_helper.cpp",
   "src/napi_result_set.cpp",
-  "src/napi_transaction.cpp",
   "src/napi_sync_observer.cpp",
+  "src/napi_transaction.cpp",
 ]
 
 if (is_ohos) {
@@ -59,10 +59,17 @@ if (is_ohos) {
       defines += [ "RELATIONAL_STORE_API_METRICS_ENABLED" ]
     }
 
+    cflags_cc = [
+      "-fno-unwind-tables",
+      "-fno-asynchronous-unwind-tables",
+    ]
+
+    ldflags = [ "-Wl,--exclude-libs,ALL" ]
+
     sources += [
       "${relational_store_js_common_path}/src/js_ability.cpp",
-      "src/napi_rdb_store_observer.cpp",
       "src/napi_rdb_histogram_reporter.cpp",
+      "src/napi_rdb_store_observer.cpp",
     ]
 
     deps = [
@@ -166,8 +173,8 @@ if (is_ohos) {
     ]
 
     sources += [
-      "${relational_store_js_common_path}/mock/src/mock.cpp",
       "${relational_store_js_common_path}/mock/src/js_ability.cpp",
+      "${relational_store_js_common_path}/mock/src/mock.cpp",
       "src/napi_rdb_histogram_reporter.cpp",
     ]
 
@@ -213,10 +220,10 @@ if (is_ohos) {
     ]
 
     sources += [
-      "src/napi_rdb_store_observer.cpp",
-      "src/napi_rdb_histogram_reporter.cpp",
       "${relational_store_js_common_path}/mock/src/js_ability.cpp",
       "//foundation/appframework/ability/ability_runtime/cross_platform/interfaces/inner_api/napi_base_context/src/napi_base_context.cpp",
+      "src/napi_rdb_histogram_reporter.cpp",
+      "src/napi_rdb_store_observer.cpp",
     ]
 
     deps = [
@@ -257,10 +264,10 @@ if (is_ohos) {
     ]
 
     sources += [
-      "${relational_store_js_common_path}/mock/src/mock.cpp",
-      "src/napi_rdb_store_observer.cpp",
-      "src/napi_rdb_histogram_reporter.cpp",
       "${relational_store_js_common_path}/mock/src/js_ability.cpp",
+      "${relational_store_js_common_path}/mock/src/mock.cpp",
+      "src/napi_rdb_histogram_reporter.cpp",
+      "src/napi_rdb_store_observer.cpp",
     ]
 
     deps = [

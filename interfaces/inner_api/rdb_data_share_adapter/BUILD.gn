@@ -16,9 +16,16 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 config("rdb_data_share_adapter_config") {
   visibility = [ ":*" ]
 
-  cflags = [ "-Wno-c99-designator", "-Werror=vla", ]
+  cflags = [
+    "-Wno-c99-designator",
+    "-Werror=vla",
+  ]
   if (!is_mingw && !is_mac) {
-    cflags_cc = [ "-fvisibility=hidden" ]
+    cflags_cc = [
+      "-fvisibility=hidden",
+      "-fno-unwind-tables",
+      "-fno-asynchronous-unwind-tables",
+    ]
   }
   include_dirs = [
     "include",
@@ -31,9 +38,7 @@ config("rdb_data_share_adapter_config") {
 
 config("rdb_data_share_adapter_public_config") {
   visibility = [ ":*" ]
-  include_dirs = [
-    "include",
-  ]
+  include_dirs = [ "include" ]
 }
 
 ohos_shared_library("rdb_data_share_adapter") {
@@ -52,6 +57,9 @@ ohos_shared_library("rdb_data_share_adapter") {
   ]
 
   configs = [ ":rdb_data_share_adapter_config" ]
+
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
+  version_script = "rdb_data_share_adapter.versionscript"
 
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"

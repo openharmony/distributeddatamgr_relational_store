@@ -168,6 +168,7 @@ struct SyncOption {
     bool enableErrorDetail;
     bool isDownloadOnly = false;
     bool isEnablePredicate = false;
+    bool isFullSync = false;
 };
 
 struct CloudSyncConfig {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -337,7 +337,6 @@ int ParserThis(const napi_env &env, const napi_value &self, std::shared_ptr<RdbS
 napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 2 || argc == 3, std::make_shared<ParamNumError>("2 to 4"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -361,7 +360,6 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.insert", "Arkdata.Rdb.RdbStore.insertSync");
 
     CHECK_RETURN_NULL(!(context->error) || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -454,7 +452,6 @@ int ParseDataSharePredicates(const napi_env env, const napi_value arg, std::shar
 napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -475,7 +472,6 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.delete", "Arkdata.Rdb.RdbStore.deleteSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -484,7 +480,6 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (IsNapiTypeString(env, argc, argv, 0)) {
@@ -516,7 +511,6 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.update", "Arkdata.Rdb.RdbStore.updateSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -525,7 +519,6 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN(OK == ParserThis(env, self, context));
         if (IsNapiTypeString(env, argc, argv, 0)) {
@@ -557,7 +550,6 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.query", "Arkdata.Rdb.RdbStore.querySync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -637,7 +629,6 @@ napi_value RdbStoreProxy::QuerySql(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -658,7 +649,6 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.executeSql", "Arkdata.Rdb.RdbStore.executeSqlSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -667,7 +657,6 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();
-    context->histogram = std::make_unique<NativeRdb::HistogramReporter>("", HistogramType::TIME | HistogramType::ENUM);
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2 || argc == 3, std::make_shared<ParamNumError>("1 to 3"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
@@ -703,7 +692,6 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.execute", "Arkdata.Rdb.RdbStore.executeSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -1328,6 +1316,86 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
     valueBool ? option.mode = SubscribeMode::LOCAL_SHARED : option.mode = SubscribeMode::LOCAL;
     // 'argv[2]' represents a callback function, 'argc == 3' represents determine if 'argc' is equal to '3'
     return proxy->UnRegisteredObserver(env, option, argc == 3 ? argv[2] : nullptr);
+}
+
+napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
+{
+    // argc must be greater than or equal to 2 to be valid
+    RDB_NAPI_ASSERT(env, argc >= 2 && argv != nullptr,
+        std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
+    napi_valuetype type = napi_undefined;
+    int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
+    napi_get_value_int32(env, argv[0], &mode);
+    bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
+    RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
+
+    napi_typeof(env, argv[1], &type);
+    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+
+    bool result = std::any_of(napiRdbStoreData_->observers_[mode].begin(), napiRdbStoreData_->observers_[mode].end(),
+        [argv](const auto &observer) { return *observer == argv[1]; });
+    if (result) {
+        LOG_INFO("Duplicate subscribe.");
+        return nullptr;
+    }
+    SubscribeOption option;
+    option.mode = static_cast<SubscribeMode>(mode);
+    option.event = "dataChange";
+    auto uvQueue = std::make_shared<UvQueue>(env);
+    auto observer = std::make_shared<NapiRdbStoreObserver>(argv[1], uvQueue, mode);
+    int errCode = E_OK;
+    if (option.mode == SubscribeMode::LOCAL_DETAIL) {
+        errCode = GetInstance()->SubscribeObserver(option, observer);
+    } else {
+        errCode = GetInstance()->Subscribe(option, observer);
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    napiRdbStoreData_->observers_[mode].push_back(observer);
+    LOG_INFO("Subscribe success.");
+    return nullptr;
+}
+
+napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
+{
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, argv[0], &type);
+    RDB_NAPI_ASSERT(env, type == napi_number, std::make_shared<ParamError>("type", "SubscribeType"));
+
+    int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
+    napi_get_value_int32(env, argv[0], &mode);
+    bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
+    RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
+
+    bool isNotNull = argc >= 2 && !JSUtils::IsNull(env, argv[1]);
+    if (isNotNull) {
+        napi_typeof(env, argv[1], &type);
+        RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
+    }
+
+    SubscribeOption option;
+    option.mode = static_cast<SubscribeMode>(mode);
+    option.event = "dataChange";
+    for (auto it = napiRdbStoreData_->observers_[mode].begin(); it != napiRdbStoreData_->observers_[mode].end();) {
+        if (*it == nullptr) {
+            it = napiRdbStoreData_->observers_[mode].erase(it);
+            continue;
+        }
+        if (isNotNull && !(**it == argv[1])) {
+            ++it;
+            continue;
+        }
+        int errCode = E_OK;
+        if (option.mode == SubscribeMode::LOCAL_DETAIL) {
+            errCode = GetInstance()->UnsubscribeObserver(option, *it);
+        } else {
+            errCode = GetInstance()->UnSubscribe(option, *it);
+        }
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        (*it)->Clear();
+        it = napiRdbStoreData_->observers_[mode].erase(it);
+        LOG_DEBUG("Observer unsubscribe success");
+    }
+    return nullptr;
 }
 
 napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *argv)
@@ -2096,86 +2164,6 @@ napi_value RdbStoreProxy::CleanDeviceDirtyData(napi_env env, napi_callback_info 
     return ASYNC_CALL(env, context);
 }
 
-napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
-{
-    // argc must be greater than or equal to 2 to be valid
-    RDB_NAPI_ASSERT(env, argc >= 2 && argv != nullptr,
-        std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
-    napi_valuetype type = napi_undefined;
-    int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
-    napi_get_value_int32(env, argv[0], &mode);
-    bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
-    RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
-
-    napi_typeof(env, argv[1], &type);
-    RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
-
-    bool result = std::any_of(napiRdbStoreData_->observers_[mode].begin(), napiRdbStoreData_->observers_[mode].end(),
-        [argv](const auto &observer) { return *observer == argv[1]; });
-    if (result) {
-        LOG_INFO("Duplicate subscribe.");
-        return nullptr;
-    }
-    SubscribeOption option;
-    option.mode = static_cast<SubscribeMode>(mode);
-    option.event = "dataChange";
-    auto uvQueue = std::make_shared<UvQueue>(env);
-    auto observer = std::make_shared<NapiRdbStoreObserver>(argv[1], uvQueue, mode);
-    int errCode = E_OK;
-    if (option.mode == SubscribeMode::LOCAL_DETAIL) {
-        errCode = GetInstance()->SubscribeObserver(option, observer);
-    } else {
-        errCode = GetInstance()->Subscribe(option, observer);
-    }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-    napiRdbStoreData_->observers_[mode].push_back(observer);
-    LOG_INFO("Subscribe success.");
-    return nullptr;
-}
-
-napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
-{
-    napi_valuetype type = napi_undefined;
-    napi_typeof(env, argv[0], &type);
-    RDB_NAPI_ASSERT(env, type == napi_number, std::make_shared<ParamError>("type", "SubscribeType"));
-
-    int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
-    napi_get_value_int32(env, argv[0], &mode);
-    bool valid = (mode >= 0 && mode < SubscribeMode::SUBSCRIBE_MODE_MAX);
-    RDB_NAPI_ASSERT(env, valid, std::make_shared<ParamError>("type", "SubscribeType"));
-
-    bool isNotNull = argc >= 2 && !JSUtils::IsNull(env, argv[1]);
-    if (isNotNull) {
-        napi_typeof(env, argv[1], &type);
-        RDB_NAPI_ASSERT(env, type == napi_function, std::make_shared<ParamError>("observer", "function"));
-    }
-
-    SubscribeOption option;
-    option.mode = static_cast<SubscribeMode>(mode);
-    option.event = "dataChange";
-    for (auto it = napiRdbStoreData_->observers_[mode].begin(); it != napiRdbStoreData_->observers_[mode].end();) {
-        if (*it == nullptr) {
-            it = napiRdbStoreData_->observers_[mode].erase(it);
-            continue;
-        }
-        if (isNotNull && !(**it == argv[1])) {
-            ++it;
-            continue;
-        }
-        int errCode = E_OK;
-        if (option.mode == SubscribeMode::LOCAL_DETAIL) {
-            errCode = GetInstance()->UnsubscribeObserver(option, *it);
-        } else {
-            errCode = GetInstance()->UnSubscribe(option, *it);
-        }
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
-        (*it)->Clear();
-        it = napiRdbStoreData_->observers_[mode].erase(it);
-        LOG_DEBUG("Observer unsubscribe success");
-    }
-    return nullptr;
-}
-
 napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
 {
     size_t argc = 1;
@@ -2314,13 +2302,16 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
         if (argc >= 2) {
             CHECK_RETURN(OK == ParseColumns(env, argv[1], context));
         }
+        CHECK_RETURN(context->rdbPredicates != nullptr);
+        context->rdbPredicates = std::make_shared<RdbPredicates>(*context->rdbPredicates);
+        context->rdbPredicates->BeginWrap()
+            ->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
+        context->rdbPredicates
+            ->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
-        context->rdbPredicates->BeginWrap()->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
-        context->rdbPredicates->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
-        context->resultSet = context->rdbStore->QueryByStep(*(context->rdbPredicates), context->columns);
-        context->rdbStore = nullptr;
+        context->resultSet = context->StealRdbStore()->QueryByStep(*(context->rdbPredicates), context->columns);
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {

@@ -16,21 +16,12 @@
 #include <mock_starter.h>
 #include <system_ability.h>
 
-#include "mock_system_ability_manager.h"
 #include "system_ability_load_callback_stub.h"
 namespace OHOS {
 SystemAbilityManagerClient &SystemAbilityManagerClient::GetInstance()
 {
     static SystemAbilityManagerClient instance;
     return instance;
-}
-
-sptr<ISystemAbilityManager> SystemAbilityManagerClient::GetSystemAbilityManager()
-{
-    if (systemAbilityManager_ == nullptr) {
-        systemAbilityManager_ = new MockSystemAbilityManager();
-    }
-    return systemAbilityManager_;
 }
 
 void SystemAbilityManagerClient::DestroySystemAbilityManagerObject() {};

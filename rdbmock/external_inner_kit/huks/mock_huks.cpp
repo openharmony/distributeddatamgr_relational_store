@@ -537,7 +537,6 @@ int32_t HksLocalGenerateKey(const struct HksParamSet *paramSetIn, struct HksPara
 {
     paramSetOut->paramSetSize = paramSetIn->paramSetSize;
     paramSetOut->paramsCnt = paramSetIn->paramsCnt;
-    //    (void)memcpy_s(paramSetIn->params, paramSetIn->paramSetSize, paramSetOut->params, paramSetOut->paramSetSize);
     HksMemCmp(paramSetIn->params, paramSetOut->params, paramSetOut->paramSetSize);
     return 0;
 }
@@ -634,7 +633,6 @@ int32_t HksEncrypt(const struct HksBlob *key, const struct HksParamSet *paramSet
         return HKS_ERROR_INVALID_ARGUMENT;
     }
     (void)memcpy_s(cipherText->data, cipherText->size, plainText->data, plainText->size);
-    // cipherText->size = plainText->size;
     cipherText->size = 48;
     cipherText->data[cipherText->size - 1] = 66;
     return 0;
@@ -650,7 +648,6 @@ int32_t HksDecrypt(const struct HksBlob *key, const struct HksParamSet *paramSet
         return HKS_ERROR_INVALID_ARGUMENT;
     }
     (void)memcpy_s(plainText->data, plainText->size, cipherText->data, plainText->size);
-    // plainText->size = cipherText->size;
     return 0;
 }
 int32_t HksAgreeKey(const struct HksParamSet *paramSet, const struct HksBlob *privateKey,

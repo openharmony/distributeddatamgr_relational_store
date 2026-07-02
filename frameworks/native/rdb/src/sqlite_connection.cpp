@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,9 +49,7 @@
 #include "string_utils.h"
 #include "suspender.h"
 #include "value_object.h"
-#if !defined(CROSS_PLATFORM)
 #include "relational/relational_store_sqlite_ext.h"
-#endif
 #include "task_executor.h"
 
 namespace OHOS {
@@ -634,11 +632,6 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatementInne
 bool SqliteConnection::IsWriter() const
 {
     return isWriter_;
-}
-
-bool SqliteConnection::IsSlaveConnEnabled() const
-{
-    return slaveConnection_ != nullptr && slaveConnection_->dbHandle_ != nullptr;
 }
 
 int SqliteConnection::SubscribeTableChanges(const Connection::Notifier &notifier)
@@ -1740,6 +1733,50 @@ int SqliteConnection::CleanDirtyLog(const std::string &table, uint64_t cursor)
     return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
 }
 
+int SqliteConnection::ArchiveSyncedData(const std::string &table, uint64_t cursor)
+{
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    auto status = ::ArchiveSyncedData(dbHandle_, table, cursor);
+    LOG_INFO("status:%{public}d, table:%{public}s, cursor:%{public}" PRIu64 "", status,
+        SqliteUtils::Anonymous(table).c_str(), cursor);
+    return SqliteUtils::ConvertDBStatusNative(status);
+}
+
+int SqliteConnection::DeleteSyncedData(const std::string &table,
+    const std::vector<std::vector<PRIKey>> &keys)
+{
+    if (table.empty()) {
+        LOG_ERROR("table is empty");
+        return E_INVALID_ARGS;
+    }
+    // convert PRIKey to DistributedDB::Type for the distributed db interface
+    std::vector<std::vector<DistributedDB::Type>> dbKeys;
+    dbKeys.reserve(keys.size());
+    for (const auto &keyRow : keys) {
+        std::vector<DistributedDB::Type> dbKeyRow;
+        dbKeyRow.reserve(keyRow.size());
+        for (const auto &pk : keyRow) {
+            if (std::holds_alternative<std::monostate>(pk)) {
+                dbKeyRow.emplace_back(DistributedDB::Nil());
+            } else if (std::holds_alternative<int64_t>(pk)) {
+                dbKeyRow.emplace_back(std::get<int64_t>(pk));
+            } else if (std::holds_alternative<double>(pk)) {
+                dbKeyRow.emplace_back(std::get<double>(pk));
+            } else if (std::holds_alternative<std::string>(pk)) {
+                dbKeyRow.emplace_back(std::get<std::string>(pk));
+            }
+        }
+        dbKeys.push_back(std::move(dbKeyRow));
+    }
+    auto status = ::DeleteSyncedData(dbHandle_, table, dbKeys);
+    LOG_INFO("status:%{public}d, table:%{public}s, keys size:%{public}zu", status,
+        SqliteUtils::Anonymous(table).c_str(), keys.size());
+    return SqliteUtils::ConvertDBStatusNative(status);
+}
+
 int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
 {
     std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);
@@ -2168,7 +2205,17 @@ void SqliteConnection::SetIsSupportBinlog(bool isSupport)
 
 bool SqliteConnection::IsSupportBinlog(const RdbStoreConfig &config)
 {
-    return SqliteUtils::IsSupportBinlog(config);
+#if !defined(CROSS_PLATFORM)
+    if (sqlite3_is_support_binlog == nullptr) {
+        return false;
+    }
+    if (sqlite3_is_support_binlog(config.GetName().c_str()) != SQLITE_OK) {
+        return false;
+    }
+    return !config.IsEncrypt() && !config.IsMemoryRdb();
+#else
+    return false;
+#endif
 }
 
 std::string SqliteConnection::GetBinlogFolderPath(const std::string &dbPath)

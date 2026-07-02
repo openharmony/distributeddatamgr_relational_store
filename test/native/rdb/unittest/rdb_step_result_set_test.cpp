@@ -225,7 +225,6 @@ void RdbStepResultSetTest::CheckResultSetData(
     }
 }
 
-
 /* *
  * @tc.name: testSqlStep017
  * @tc.desc: Abnormal testcase for build query string

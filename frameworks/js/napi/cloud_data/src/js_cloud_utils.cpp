@@ -428,6 +428,7 @@ napi_value Convert2JSValue(napi_env env, const DistributedRdb::ProgressDetail &v
         DECLARE_JS_PROPERTY(env, "schedule", value.progress),
         DECLARE_JS_PROPERTY(env, "code", value.code),
         DECLARE_JS_PROPERTY(env, "details", value.details),
+        DECLARE_JS_PROPERTY(env, "message", value.message),
     };
 
     napi_value object = nullptr;

@@ -124,6 +124,8 @@ classDiagram
 - **TransactionImpl → BaseTransaction**: 使用 BaseTransaction 管理事务状态
 - 继承关系：`SqliteConnection`、`SqliteStatement`、`TransactionImpl`、`StepResultSet`、`CacheResultSet`、`AbsSharedResultSet`、`SqliteSharedResultSet` 分别继承自抽象接口
 
+**SQLite 分层约束**：`SqliteConnection` 和 `SqliteStatement` 是唯一可以直接操作 SQLite API（持有 `sqlite3*`/`sqlite3_stmt*`）的类；`RdbStoreImpl`、`StepResultSet`、`SqliteSharedResultSet` 等上层类只通过 `Connection` 和 `Statement` 调用，**MUST NOT** 直接调用 sqlite3 系函数。
+
 ## 核心类职责
 
 ### RdbStoreImpl

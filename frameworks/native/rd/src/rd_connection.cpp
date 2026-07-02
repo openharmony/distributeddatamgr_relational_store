@@ -230,11 +230,6 @@ bool RdConnection::IsWriter() const
     return isWriter_;
 }
 
-bool RdConnection::IsSlaveConnEnabled() const
-{
-    return false;
-}
-
 int32_t RdConnection::ResetKey(const RdbStoreConfig &config)
 {
     if (!IsWriter()) {
@@ -459,6 +454,17 @@ void RdConnection::ReplayBinlog([[gnu::unused]] const RdbStoreConfig &config, [[
 }
 
 int RdConnection::CleanDirtyLog([[gnu::unused]] const std::string &table, [[gnu::unused]] uint64_t cursor)
+{
+    return E_NOT_SUPPORT;
+}
+
+int RdConnection::ArchiveSyncedData([[gnu::unused]] const std::string &table, [[gnu::unused]] uint64_t cursor)
+{
+    return E_NOT_SUPPORT;
+}
+
+int RdConnection::DeleteSyncedData([[gnu::unused]] const std::string &table,
+    [[gnu::unused]] const std::vector<std::vector<PRIKey>> &keys)
 {
     return E_NOT_SUPPORT;
 }
