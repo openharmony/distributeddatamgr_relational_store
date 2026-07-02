@@ -66,7 +66,7 @@ ohos_unittest("NativeCloudDataTest") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
-    "kv_store:distributeddata_mgr",
+    "kv_store:datamgr_common",
     "samgr:samgr_proxy",
   ]
 

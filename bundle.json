@@ -75,6 +75,7 @@
                 "ets_frontend",
                 "api_metrics",
                 "openssl",
+                "taihe_ffi_gen",
                 "node",
                 "libuv"
             ],

@@ -60,7 +60,7 @@ if (is_ohos) {
     }
 
     cflags_cc = [
-      "-Oz",
+      "-Os",
       "-fno-unwind-tables",
       "-fno-asynchronous-unwind-tables",
     ]
