@@ -95,6 +95,7 @@ if (is_ohos && !build_ohos_sdk) {
       "-fvisibility-inlines-hidden",
       "-fno-unwind-tables",
       "-fno-asynchronous-unwind-tables",
+      "-Os",
       "-Werror=vla",
     ]
     sources += [
