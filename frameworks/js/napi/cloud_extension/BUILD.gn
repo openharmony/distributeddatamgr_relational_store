@@ -34,7 +34,11 @@ ohos_shared_library("cloudextension") {
 
   deps = [ ":cloud_extension_abc" ]
 
-  external_deps = [ "napi:ace_napi" ]
+  external_deps = [
+    "napi:ace_napi",
+    "node:node_header_notice",
+    "libuv:uv",
+  ]
 
   relative_install_dir = "module/data"
   subsystem_name = "distributeddatamgr"

@@ -54,6 +54,7 @@ ohos_shared_library("dataability") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "node:node_header_notice",
   ]
 
   subsystem_name = "distributeddatamgr"
