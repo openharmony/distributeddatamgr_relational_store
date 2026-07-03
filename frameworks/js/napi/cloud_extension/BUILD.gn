@@ -36,8 +36,7 @@ ohos_shared_library("cloudextension") {
 
   external_deps = [
     "napi:ace_napi",
-    "node:node_header_notice",
-    "libuv:uv",
+    "node:node_header_notice"
   ]
 
   relative_install_dir = "module/data"
