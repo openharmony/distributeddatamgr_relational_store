@@ -22,8 +22,6 @@ ohos_source_set("hitrace_meter") {
   sources = [ "mock_hitrace_meter.cpp" ]
   all_dependent_configs = [ ":hitrace_config" ]
   public_configs = [ ":hitrace_config" ]
-  deps = deps_bounds_checking_function
-  external_deps = external_deps_bounds_checking_function
   part_name = "relational_store"
   subsystem_name = "distributeddatamgr"
 }
