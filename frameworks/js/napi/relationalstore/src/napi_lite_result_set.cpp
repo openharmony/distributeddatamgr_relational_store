@@ -257,8 +257,16 @@ napi_value LiteResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info
     if (resultSet != nullptr) {
         errCode = resultSet->GoToNextRow();
     }
-    // If the line exceeds the threshold, no exception is thrown and false is returned.
-    RDB_NAPI_ASSERT_INT(env, errCode == E_ROW_OUT_RANGE || errCode == E_OK, std::make_shared<InnerErrorExt>(errCode));
+    std::string opMsg;
+    if ((errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) &&
+        resultSet != nullptr) {
+        auto sqliteMsg = resultSet->GetLastErrorMsg();
+        if (!sqliteMsg.empty()) {
+            opMsg = " " + sqliteMsg;
+        }
+    }
+    RDB_NAPI_ASSERT_INT(
+        env, errCode == E_ROW_OUT_RANGE || errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, opMsg));
     return JSUtils::Convert2JSValue(env, (errCode == E_OK));
 }
 

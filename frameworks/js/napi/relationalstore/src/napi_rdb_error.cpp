@@ -119,5 +119,38 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode)
     return ConvertCode(JS_ERROR_CODE_MSGS_EXT, count, errorCode);
 }
 
+static constexpr std::pair<int, const char *> NATIVE_ERR_MSG_MAP[] = {
+    { NativeRdb::E_REMOVE_FILE, "Remove file failed." },
+    { NativeRdb::E_INVALID_ARGS, "The ValueBucket contains Assets and conflictResolution is REPLACE." },
+    { NativeRdb::E_EMPTY_TABLE_NAME, "The table must be not empty string." },
+    { NativeRdb::E_EMPTY_VALUES_BUCKET, "Bucket must not be empty." },
+    { NativeRdb::E_INVALID_CONFLICT_FLAG, "Conflict flag is not correct." },
+    { NativeRdb::E_INVALID_COLUMN_TYPE, "Invalid column type." },
+    { NativeRdb::E_EXECUTE_WRITE_IN_READ_CONNECTION, "Execute write in read connection." },
+    { NativeRdb::E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE, "Attach is not supported in WAL mode." },
+    { NativeRdb::E_CREATE_FOLDER_FAIL, "Create folder failed." },
+    { NativeRdb::E_SERVICE_NOT_FOUND, "Service not found." },
+    { NativeRdb::E_SQLITE_SCHEMA, "Database schema has changed." },
+    { NativeRdb::E_SQLITE_INTERRUPT, "Operation interrupted." },
+};
+
+std::string GetErrorString(int errcode)
+{
+    for (const auto &entry : NATIVE_ERR_MSG_MAP) {
+        if (entry.first == errcode) {
+            return std::string(entry.second);
+        }
+    }
+    return std::string();
+}
+
+std::string GetNativeErrMsg(int32_t errorCode)
+{
+    auto msg = GetErrorString(errorCode);
+    if (!msg.empty()) {
+        return std::string(" ") + msg;
+    }
+    return "";
+}
 } // namespace RelationalStoreJsKit
 } // namespace OHOS

@@ -32,6 +32,35 @@ std::shared_ptr<NativeRdb::RdbStore> RdbStoreContextBase::StealRdbStore()
     rdbStore = nullptr;
     return rdb;
 }
+
+void RdbStoreContextBase::SetError(std::shared_ptr<Error> err)
+{
+    if (err == nullptr) {
+        return;
+    }
+    int nativeCode = err->GetNativeCode();
+    if (nativeCode == ERR) {
+        error = err;
+        return;
+    }
+    std::string opMsg;
+    if (nativeCode == NativeRdb::E_SQLITE_ERROR || nativeCode == NativeRdb::E_SQLITE_SCHEMA
+        || nativeCode == NativeRdb::E_SQLITE_INTERRUPT) {
+        if (!capturedErrMsg_.empty()) {
+            opMsg = " " + capturedErrMsg_;
+        }
+    }
+    if (opMsg.empty()) {
+        error = err;
+        return;
+    }
+    auto jsCode = GetJsErrorCodeExt(nativeCode);
+    if (jsCode.has_value()) {
+        error = std::make_shared<InnerErrorExt>(nativeCode, opMsg);
+    } else {
+        error = std::make_shared<InnerError>(nativeCode, opMsg);
+    }
+}
 int ParseTransactionOptions(
     const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<CreateTransactionContext> context)
 {

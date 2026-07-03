@@ -63,6 +63,7 @@ public:
     int32_t FillBlockInfo(SharedBlockInfo *info, int retryTime = RETRY_TIME) const override;
     int ModifyLockStatus(
         const std::string &table, const std::vector<std::vector<uint8_t>> &hashKeys, bool isLock) override;
+    std::string GetLastErrorMsg() const override;
 
 private:
     friend class SqliteConnection;

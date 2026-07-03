@@ -68,6 +68,8 @@ public:
         return 0;
     }
 
+    virtual std::string GetLastErrorMsg() const { return ""; }
+
     static constexpr int INVALID_COUNT = -1;
 };
 } // namespace OHOS::NativeRdb

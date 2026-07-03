@@ -52,11 +52,13 @@ struct TransactionContext : public ContextBase {
         transaction_ = nullptr;
         return trans;
     }
+    void SetError(std::shared_ptr<Error> err) override;
     int32_t ParseRdbPredicatesProxy(napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates);
     int32_t ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket);
     int32_t ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets);
     int32_t ParseConflictResolution(napi_env env, napi_value arg, NativeRdb::ConflictResolution &conflictResolution);
     std::shared_ptr<NativeRdb::Transaction> transaction_ = nullptr;
+    std::string capturedErrMsg_;
 };
 
 int32_t TransactionContext::ParseRdbPredicatesProxy(
@@ -92,6 +94,35 @@ int32_t TransactionContext::ParseConflictResolution(
     auto err = RelationalStoreJsKit::ParseConflictResolution(env, arg, conflictResolution);
     ASSERT_RETURN_SET_ERROR(!err, err);
     return OK;
+}
+
+void TransactionContext::SetError(std::shared_ptr<Error> err)
+{
+    if (err == nullptr) {
+        return;
+    }
+    int nativeCode = err->GetNativeCode();
+    if (nativeCode == ERR) {
+        error = err;
+        return;
+    }
+    std::string opMsg;
+    if (nativeCode == NativeRdb::E_SQLITE_ERROR || nativeCode == NativeRdb::E_SQLITE_SCHEMA
+        || nativeCode == NativeRdb::E_SQLITE_INTERRUPT) {
+        if (!capturedErrMsg_.empty()) {
+            opMsg = " " + capturedErrMsg_;
+        }
+    }
+    if (opMsg.empty()) {
+        error = err;
+        return;
+    }
+    auto jsCode = GetJsErrorCodeExt(nativeCode);
+    if (jsCode.has_value()) {
+        error = std::make_shared<InnerErrorExt>(nativeCode, opMsg);
+    } else {
+        error = std::make_shared<InnerError>(nativeCode, opMsg);
+    }
 }
 
 napi_value TransactionProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::Transaction> transaction)
@@ -315,8 +346,12 @@ napi_value TransactionProxy::Delete(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
-        auto [code, deleteRows] = context->StealTransaction()->Delete(*(context->rdbPredicates));
+        auto trans = context->StealTransaction();
+        auto [code, deleteRows] = trans->Delete(*(context->rdbPredicates));
         context->deleteRows = deleteRows;
+        if (code != E_OK) {
+            context->capturedErrMsg_ = trans->GetLastErrorMsg();
+        }
         return code;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -366,9 +401,13 @@ napi_value TransactionProxy::Update(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
-        auto [code, updateRows] = context->StealTransaction()->Update(
+        auto trans = context->StealTransaction();
+        auto [code, updateRows] = trans->Update(
             context->valuesBucket, *context->rdbPredicates, context->conflictResolution);
         context->updateRows = updateRows;
+        if (code != E_OK) {
+            context->capturedErrMsg_ = trans->GetLastErrorMsg();
+        }
         return code;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -418,9 +457,13 @@ napi_value TransactionProxy::Insert(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
-        auto [code, insertRows] = context->StealTransaction()->Insert(
+        auto trans = context->StealTransaction();
+        auto [code, insertRows] = trans->Insert(
             context->tableName, context->valuesBucket, context->conflictResolution);
         context->insertRows = insertRows;
+        if (code != E_OK) {
+            context->capturedErrMsg_ = trans->GetLastErrorMsg();
+        }
         return code;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -467,8 +510,12 @@ napi_value TransactionProxy::BatchInsert(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
-        auto [code, insertRows] = context->StealTransaction()->BatchInsert(context->tableName, context->valuesBuckets);
+        auto trans = context->StealTransaction();
+        auto [code, insertRows] = trans->BatchInsert(context->tableName, context->valuesBuckets);
         context->insertRows = insertRows;
+        if (code != E_OK) {
+            context->capturedErrMsg_ = trans->GetLastErrorMsg();
+        }
         return code;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -521,9 +568,13 @@ napi_value TransactionProxy::BatchInsertWithConflictResolution(napi_env env, nap
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
-        auto [code, insertRows] = context->StealTransaction()->BatchInsert(
+        auto trans = context->StealTransaction();
+        auto [code, insertRows] = trans->BatchInsert(
             context->tableName, context->valuesBuckets, context->conflictResolution);
         context->insertRows = insertRows;
+        if (code != E_OK) {
+            context->capturedErrMsg_ = trans->GetLastErrorMsg();
+        }
         return code;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -729,8 +780,12 @@ napi_value TransactionProxy::Execute(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
+        auto trans = context->StealTransaction();
         auto status = E_ERROR;
-        std::tie(status, context->output) = context->StealTransaction()->Execute(context->sql, context->bindArgs);
+        std::tie(status, context->output) = trans->Execute(context->sql, context->bindArgs);
+        if (status != E_OK) {
+            context->capturedErrMsg_ = trans->GetLastErrorMsg();
+        }
         return status;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -799,9 +854,13 @@ napi_value TransactionProxy::BatchInsertWithReturning(napi_env env, napi_callbac
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
-        auto result = context->StealTransaction()->BatchInsert(context->tableName, context->valuesBuckets,
+        auto trans = context->StealTransaction();
+        auto result = trans->BatchInsert(context->tableName, context->valuesBuckets,
             context->config, context->conflictResolution);
         context->result = result.second;
+        if (result.first != E_OK) {
+            context->capturedErrMsg_ = trans->GetLastErrorMsg();
+        }
         return result.first;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -874,9 +933,13 @@ napi_value TransactionProxy::UpdateWithReturning(napi_env env, napi_callback_inf
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
-        auto result = context->StealTransaction()->Update(
+        auto trans = context->StealTransaction();
+        auto result = trans->Update(
             context->valuesBucket, *context->rdbPredicates, context->config, context->conflictResolution);
         context->result = result.second;
+        if (result.first != E_OK) {
+            context->capturedErrMsg_ = trans->GetLastErrorMsg();
+        }
         return result.first;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -935,8 +998,12 @@ napi_value TransactionProxy::DeleteWithReturning(napi_env env, napi_callback_inf
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
-        auto result = context->StealTransaction()->Delete(*(context->rdbPredicates), context->config);
+        auto trans = context->StealTransaction();
+        auto result = trans->Delete(*(context->rdbPredicates), context->config);
         context->result = result.second;
+        if (result.first != E_OK) {
+            context->capturedErrMsg_ = trans->GetLastErrorMsg();
+        }
         return result.first;
     };
     auto output = [context](napi_env env, napi_value &result) {

@@ -352,8 +352,12 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->InsertWithConflictResolution(
+        int errCode = rdbStore->InsertWithConflictResolution(
             context->int64Output, context->tableName, context->valuesBucket, context->conflictResolution);
+        if (errCode != E_OK) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->int64Output, &result);
@@ -382,6 +386,9 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         auto rdbStore = std::move(context->rdbStore);
         auto [ret, output] = rdbStore->BatchInsert(context->tableName, context->sharedValuesBuckets);
         context->int64Output = output;
+        if (ret != E_OK) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return ret;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -418,6 +425,9 @@ napi_value RdbStoreProxy::BatchInsertWithConflictResolution(napi_env env, napi_c
         auto [ret, output] =
             rdbStore->BatchInsert(context->tableName, context->sharedValuesBuckets, context->conflictResolution);
         context->int64Output = output;
+        if (ret != E_OK) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return ret;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -465,7 +475,11 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->Delete(context->intOutput, *(context->rdbPredicates));
+        int errCode = rdbStore->Delete(context->intOutput, *(context->rdbPredicates));
+        if (errCode != E_OK) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->intOutput, &result);
@@ -502,9 +516,13 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->UpdateWithConflictResolution(context->intOutput, context->tableName,
+        int errCode = rdbStore->UpdateWithConflictResolution(context->intOutput, context->tableName,
             context->valuesBucket, context->rdbPredicates->GetWhereClause(),
             context->rdbPredicates->GetBindArgs(), context->conflictResolution);
+        if (errCode != E_OK) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->intOutput, &result);
@@ -642,7 +660,12 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        return context->StealRdbStore()->ExecuteSql(context->sql, context->bindArgs);
+        auto rdbStore = context->StealRdbStore();
+        int errCode = rdbStore->ExecuteSql(context->sql, context->bindArgs);
+        if (errCode != E_OK) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -681,10 +704,13 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto rdbStore = std::move(context->rdbStore);
         auto status = E_ERROR;
         std::tie(status, context->sqlExeOutput) =
-            context->rdbStore->Execute(context->sql, context->bindArgs, context->txId);
-        context->rdbStore = nullptr;
+            rdbStore->Execute(context->sql, context->bindArgs, context->txId);
+        if (status != E_OK) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return status;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -874,7 +900,14 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     RDB_NAPI_ASSERT(
         env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = rdbStoreProxy->GetInstance()->BeginTransaction();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    std::string opMsg;
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+        auto sqliteMsg = rdbStoreProxy->GetInstance()->GetLastErrorMsg();
+        if (!sqliteMsg.empty()) {
+            opMsg = " " + sqliteMsg;
+        }
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -913,7 +946,14 @@ napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(
         env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = rdbStoreProxy->GetInstance()->RollBack();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    std::string opMsg;
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+        auto sqliteMsg = rdbStoreProxy->GetInstance()->GetLastErrorMsg();
+        if (!sqliteMsg.empty()) {
+            opMsg = " " + sqliteMsg;
+        }
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     LOG_DEBUG("RdbStoreProxy::RollBack end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -955,7 +995,14 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, OK == ParserThis(env, thisObj, context), context->error);
     if (argc == 0) {
         int errCode = context->rdbStore->Commit();
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        std::string opMsg;
+        if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+            auto sqliteMsg = context->rdbStore->GetLastErrorMsg();
+            if (!sqliteMsg.empty()) {
+                opMsg = " " + sqliteMsg;
+            }
+        }
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
         LOG_DEBUG("RdbStoreProxy::Commit end, errCode is:%{public}d.", errCode);
         return nullptr;
     }
@@ -1032,6 +1079,9 @@ napi_value RdbStoreProxy::QueryWithoutRowCount(napi_env env, napi_callback_info 
         auto rdbStore = std::move(context->rdbStore);
         DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet = rdbStore->QueryByStep(*(context->rdbPredicates), context->columns, options);
+        if (context->resultSet == nullptr) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -1068,6 +1118,9 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
         auto rdbStore = std::move(context->rdbStore);
         DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
         context->resultSet = rdbStore->QueryByStep(context->sql, context->bindArgs, options);
+        if (context->resultSet == nullptr) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -1197,7 +1250,11 @@ napi_value RdbStoreProxy::RekeyEx(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->RekeyEx(context->cryptoParam);
+        int errCode = rdbStore->RekeyEx(context->cryptoParam);
+        if (errCode != E_OK) {
+            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
 
     auto output = [context](napi_env env, napi_value &result) {
@@ -1349,7 +1406,14 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     } else {
         errCode = GetInstance()->Subscribe(option, observer);
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    std::string opMsg;
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+        auto sqliteMsg = GetInstance()->GetLastErrorMsg();
+        if (!sqliteMsg.empty()) {
+            opMsg = " " + sqliteMsg;
+        }
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     napiRdbStoreData_->observers_[mode].push_back(observer);
     LOG_INFO("Subscribe success.");
     return nullptr;
@@ -1390,7 +1454,14 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
         } else {
             errCode = GetInstance()->UnSubscribe(option, *it);
         }
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        std::string opMsg;
+        if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+            auto sqliteMsg = GetInstance()->GetLastErrorMsg();
+            if (!sqliteMsg.empty()) {
+                opMsg = " " + sqliteMsg;
+            }
+        }
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
         (*it)->Clear();
         it = napiRdbStoreData_->observers_[mode].erase(it);
         LOG_DEBUG("Observer unsubscribe success");
@@ -1411,7 +1482,14 @@ napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *ar
     }
     auto observer = std::make_shared<NapiStatisticsObserver>(env, argv[0], queue_);
     int errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    std::string opMsg;
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+        auto sqliteMsg = GetInstance()->GetLastErrorMsg();
+        if (!sqliteMsg.empty()) {
+            opMsg = " " + sqliteMsg;
+        }
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     napiRdbStoreData_->statisticses_.push_back(std::move(observer));
     LOG_INFO("Statistics subscribe success.");
     return nullptr;
@@ -1436,7 +1514,14 @@ napi_value RdbStoreProxy::OffStatistics(napi_env env, size_t argc, napi_value *a
             continue;
         }
         int errCode = DistributedRdb::SqlStatistic::Unsubscribe(*it);
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        std::string opMsg;
+        if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+            auto sqliteMsg = GetInstance()->GetLastErrorMsg();
+            if (!sqliteMsg.empty()) {
+                opMsg = " " + sqliteMsg;
+            }
+        }
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
         (*it)->Clear();
         it = napiRdbStoreData_->statisticses_.erase(it);
     }
@@ -1513,7 +1598,14 @@ napi_value RdbStoreProxy::OnErrorLog(napi_env env, size_t argc, napi_value *argv
     auto observer = std::make_shared<NapiLogObserver>(env, argv[0], queue_);
     std::string dbPath = this->GetInstance()->GetPath();
     int errCode = NativeRdb::SqlLog::Subscribe(dbPath, observer);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    std::string opMsg;
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+        auto sqliteMsg = GetInstance()->GetLastErrorMsg();
+        if (!sqliteMsg.empty()) {
+            opMsg = " " + sqliteMsg;
+        }
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     napiRdbStoreData_->logObservers_.push_back(std::move(observer));
     LOG_DEBUG("sqliteErrorOccurred subscribe success.");
     return nullptr;
@@ -1542,7 +1634,14 @@ napi_value RdbStoreProxy::OffErrorLog(napi_env env, size_t argc, napi_value *arg
         }
         std::string dbPath = this->GetInstance()->GetPath();
         int errCode = NativeRdb::SqlLog::Unsubscribe(dbPath, *it);
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        std::string opMsg;
+        if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+            auto sqliteMsg = GetInstance()->GetLastErrorMsg();
+            if (!sqliteMsg.empty()) {
+                opMsg = " " + sqliteMsg;
+            }
+        }
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
         (*it)->Clear();
         it = napiRdbStoreData_->logObservers_.erase(it);
     }
@@ -1566,7 +1665,14 @@ napi_value RdbStoreProxy::RegisteredObserver(
     auto uvQueue = std::make_shared<UvQueue>(env);
     auto localObserver = std::make_shared<NapiRdbStoreObserver>(callback, uvQueue);
     int errCode = GetInstance()->Subscribe(option, localObserver);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    std::string opMsg;
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+        auto sqliteMsg = GetInstance()->GetLastErrorMsg();
+        if (!sqliteMsg.empty()) {
+            opMsg = " " + sqliteMsg;
+        }
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     observers[option.event].push_back(localObserver);
     LOG_INFO("Subscribe success event: %{public}s", option.event.c_str());
     return nullptr;
@@ -2175,7 +2281,14 @@ napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
     RDB_NAPI_ASSERT(env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = proxy->GetInstance()->Notify(JSUtils::Convert2String(env, argv[0]));
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    std::string opMsg;
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+        auto sqliteMsg = proxy->GetInstance()->GetLastErrorMsg();
+        if (!sqliteMsg.empty()) {
+            opMsg = " " + sqliteMsg;
+        }
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     return nullptr;
 }
 
@@ -2226,7 +2339,14 @@ napi_value RdbStoreProxy::RegisterSyncCallback(napi_env env, size_t argc, napi_v
     }
     auto observer = std::make_shared<SyncObserver>(env, argv[0], queue_);
     int errCode = GetInstance()->RegisterAutoSyncCallback(observer);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    std::string opMsg;
+    if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+        auto sqliteMsg = GetInstance()->GetLastErrorMsg();
+        if (!sqliteMsg.empty()) {
+            opMsg = " " + sqliteMsg;
+        }
+    }
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     napiRdbStoreData_->syncObservers_.push_back(std::move(observer));
     LOG_INFO("Progress subscribe success.");
     return nullptr;
@@ -2252,7 +2372,14 @@ napi_value RdbStoreProxy::UnregisterSyncCallback(napi_env env, size_t argc, napi
         }
 
         int errCode = GetInstance()->UnregisterAutoSyncCallback(*it);
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        std::string opMsg;
+        if (errCode == E_SQLITE_ERROR || errCode == E_SQLITE_SCHEMA || errCode == E_SQLITE_INTERRUPT) {
+            auto sqliteMsg = GetInstance()->GetLastErrorMsg();
+            if (!sqliteMsg.empty()) {
+                opMsg = " " + sqliteMsg;
+            }
+        }
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
         (*it)->Clear();
         it = napiRdbStoreData_->syncObservers_.erase(it);
         LOG_DEBUG("Observer unsubscribe success.");

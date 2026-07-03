@@ -902,6 +902,8 @@ public:
      */
     virtual int DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys);
 
+    virtual std::string GetLastErrorMsg() const { return ""; }
+
 protected:
     virtual std::string GetLogTableName(const std::string &tableName);
 };

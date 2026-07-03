@@ -1096,5 +1096,26 @@ std::shared_ptr<Conn> ConnPool::AcquireById(bool isReadOnly, int32_t id)
         node = nullptr;
     });
 }
+
+std::string ConnectionPool::GetLastErrorMsg() const
+{
+    for (auto &node : writers_.nodes_) {
+        if (node != nullptr && node->connect_ != nullptr) {
+            auto msg = node->connect_->GetLastErrorMsg();
+            if (!msg.empty()) {
+                return msg;
+            }
+        }
+    }
+    for (auto &node : readers_.nodes_) {
+        if (node != nullptr && node->connect_ != nullptr) {
+            auto msg = node->connect_->GetLastErrorMsg();
+            if (!msg.empty()) {
+                return msg;
+            }
+        }
+    }
+    return "";
+}
 } // namespace NativeRdb
 } // namespace OHOS

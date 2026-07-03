@@ -138,6 +138,9 @@ void SqliteStatement::TryNotifyErrorLog(const int &errCode, sqlite3 *dbHandle, c
         return ;
     }
     std::string errMsg(sqlite3_errmsg(dbHandle));
+    if (conn_ != nullptr) {
+        conn_->SetLastErrorMsg(errMsg + " in " + sql);
+    }
     DistributedRdb::SqlErrorObserver::ExceptionMessage exceMessage;
     exceMessage.code = errCode;
     exceMessage.message = std::move(errMsg);
@@ -926,6 +929,14 @@ int SqliteStatement::ModifyLockStatus(
     }
     LOG_ERROR("Lock/Unlock failed, err is %{public}d.", ret);
     return E_ERROR;
+}
+
+std::string SqliteStatement::GetLastErrorMsg() const
+{
+    if (conn_ != nullptr) {
+        return conn_->GetLastErrorMsg();
+    }
+    return "";
 }
 
 int SqliteStatement::InnerFinalize()

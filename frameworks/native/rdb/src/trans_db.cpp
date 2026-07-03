@@ -40,7 +40,10 @@ std::pair<int, int64_t> TransDB::Insert(const std::string &table, const Row &row
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto conflictClause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
-    if (table.empty() || row.IsEmpty() || conflictClause == nullptr) {
+    if (table.empty()) {
+        return { E_EMPTY_TABLE_NAME, -1 };
+    }
+    if (row.IsEmpty() || conflictClause == nullptr) {
         return { E_INVALID_ARGS, -1 };
     }
 
@@ -86,7 +89,12 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
     }
 
     auto batchInfo = SqliteSqlBuilder::GenerateSqls(table, rows, maxArgs_);
-    if (table.empty() || batchInfo.empty()) {
+    if (table.empty()) {
+        LOG_ERROR("empty,table=%{public}s,rows:%{public}zu,max:%{public}d.", SqliteUtils::Anonymous(table).c_str(),
+            rows.RowSize(), maxArgs_);
+        return { E_EMPTY_TABLE_NAME, -1 };
+    }
+    if (batchInfo.empty()) {
         LOG_ERROR("empty,table=%{public}s,rows:%{public}zu,max:%{public}d.", SqliteUtils::Anonymous(table).c_str(),
             rows.RowSize(), maxArgs_);
         return { E_INVALID_ARGS, -1 };
@@ -378,5 +386,14 @@ std::pair<int32_t, Results> TransDB::GenerateResult(int32_t code, std::shared_pt
         result.results = std::make_shared<CacheResultSet>();
     }
     return { code, result };
+}
+
+std::string TransDB::GetLastErrorMsg() const
+{
+    auto connection = conn_.lock();
+    if (connection != nullptr) {
+        return connection->GetLastErrorMsg();
+    }
+    return "";
 }
 } // namespace OHOS::NativeRdb

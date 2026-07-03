@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include "connection_pool.h"
+#include "err_msg_store.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite3sym.h"
@@ -31,8 +32,9 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 
 constexpr int64_t TIME_OUT = 1500;
-StepResultSet::StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args,
-    QueryOptions options, bool safe) : AbsResultSet(safe), conn_(std::move(conn)), sql_(sql), args_(args)
+StepResultSet::StepResultSet(
+    Time start, Conn conn, const std::string &sql, const Values &args, QueryOptions options, bool safe)
+    : AbsResultSet(safe), conn_(std::move(conn)), sql_(sql), args_(args)
 {
     if (conn_ == nullptr) {
         isClosed_ = true;
@@ -74,6 +76,7 @@ StepResultSet::StepResultSet(Time start, Conn conn, const std::string &sql, cons
 
 StepResultSet::~StepResultSet()
 {
+    ErrMsgStore::Instance().RemoveAll(this);
     Close();
 }
 
@@ -257,6 +260,9 @@ int StepResultSet::GoToNextRow()
         }
         return E_ROW_OUT_RANGE;
     } else {
+        if (conn_ != nullptr) {
+            ErrMsgStore::Instance().Set(this, conn_->GetLastErrorMsg());
+        }
         Reset();
         rowPos_ = rowCount_;
         return errCode;
@@ -388,6 +394,11 @@ std::shared_ptr<Statement> StepResultSet::GetStatement()
     }
 
     return statement_;
+}
+
+std::string StepResultSet::GetLastErrorMsg() const
+{
+    return ErrMsgStore::Instance().Get(this);
 }
 } // namespace NativeRdb
 } // namespace OHOS

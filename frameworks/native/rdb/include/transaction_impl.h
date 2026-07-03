@@ -32,6 +32,7 @@ public:
     int32_t Commit() override;
     int32_t Rollback() override;
     int32_t Close() override;
+    std::string GetLastErrorMsg() const override;
 
     std::pair<int32_t, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;

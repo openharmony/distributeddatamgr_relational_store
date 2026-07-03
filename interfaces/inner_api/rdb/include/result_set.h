@@ -82,6 +82,8 @@ public:
      * @param columnIndex Indicates the zero-based index of the target column.
      */
     API_EXPORT virtual int GetSize(int columnIndex, size_t &size) = 0;
+
+    virtual std::string GetLastErrorMsg() const { return ""; }
 };
 
 } // namespace NativeRdb
