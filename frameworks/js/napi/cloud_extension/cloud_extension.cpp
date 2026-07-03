@@ -15,7 +15,6 @@
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "native_engine/native_engine.h"
 
 extern const char _binary_cloud_extension_abc_start[];
 extern const char _binary_cloud_extension_abc_end[];

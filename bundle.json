@@ -76,8 +76,7 @@
                 "api_metrics",
                 "openssl",
                 "taihe_ffi_gen",
-                "node",
-                "libuv"
+                "node"
             ],
             "third_party": [ "sqlite" ]
         },
