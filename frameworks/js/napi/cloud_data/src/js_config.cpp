@@ -589,21 +589,20 @@ void JsConfig::ParseCloudSyncArgs(napi_env env, size_t argc, napi_value *argv,
 {
     size_t argumentsNum = 4;
     ASSERT_BUSINESS_ERR(ctxt, argc >= argumentsNum, Status::INVALID_ARGUMENT_V20,
-                        "Old interface requires 4 arguments");
-    
+        "Old interface requires 4 arguments");
+
     int status = JSUtils::Convert2Value(env, argv[0], ctxt->bundleName);
     ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK && !ctxt->bundleName.empty(),
-                        Status::INVALID_ARGUMENT_V20, "bundleName cannot be empty");
-    
+        Status::INVALID_ARGUMENT_V20, "bundleName cannot be empty");
+
     status = JSUtils::Convert2Value(env, argv[1], ctxt->storeId);
-    ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20,
-                        "Invalid storeId");
-    
+    ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20, "Invalid storeId");
+
     // parse argv 2 to syncMode
     status = JSUtils::Convert2ValueExt(env, argv[2], ctxt->syncMode);
     ASSERT_BUSINESS_ERR(ctxt, status == JSUtils::OK, Status::INVALID_ARGUMENT_V20,
-                        "Invalid syncMode");
-    
+        "Invalid syncMode");
+
     napi_valuetype progressType = napi_undefined;
     napi_status ret = napi_typeof(env, argv[3], &progressType);
     ASSERT_BUSINESS_ERR(ctxt, ret == napi_ok && progressType == napi_function,
@@ -612,7 +611,7 @@ void JsConfig::ParseCloudSyncArgs(napi_env env, size_t argc, napi_value *argv,
     // parse argv 3 to asyncHolder
     ASSERT_BUSINESS_ERR(ctxt, napi_create_reference(env, argv[3], 1,
         &ctxt->asyncHolder) == napi_ok, Status::INVALID_ARGUMENT_V20, "create reference failed");
-    
+
     ctxt->downloadOnly = false;
 }
 
@@ -630,6 +629,9 @@ void JsConfig::ParseCloudSyncArgsWithConfig(napi_env env, size_t argc, napi_valu
 
     ctxt->bundleName = bundleInfo.bundleName;
     ctxt->storeId = bundleInfo.storeId;
+    if (ctxt->storeId.empty()) {
+        ctxt->isStoreIdEmpty = true;
+    }
 
     DistributedRdb::CloudSyncConfig config;
     ret = JSUtils::Convert2Value(env, argv[1], config);
@@ -687,7 +689,7 @@ napi_value JsConfig::CloudSync(napi_env env, napi_callback_info info)
         option.seqNum = GetSeqNum();
         option.isDownloadOnly = ctxt->downloadOnly;
         int32_t status = 0;
-        if (ctxt->storeId.empty()) {
+        if (ctxt->isStoreIdEmpty) {
             BundleInfo bundleInfo = { ctxt->bundleName, ctxt->storeId };
             status = proxy->CloudSync(bundleInfo, option, async);
         } else {

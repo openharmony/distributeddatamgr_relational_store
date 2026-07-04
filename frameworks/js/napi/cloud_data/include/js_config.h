@@ -84,6 +84,7 @@ private:
         std::string storeId;
         int32_t syncMode;
         bool downloadOnly = false;
+        bool isStoreIdEmpty = false;
         napi_ref asyncHolder = nullptr;
         std::shared_ptr<UvQueue> queue;
     };
