@@ -18,7 +18,6 @@
 #include <unistd.h>
 
 #include "connection_pool.h"
-#include "err_msg_store.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "sqlite3sym.h"
@@ -76,7 +75,6 @@ StepResultSet::StepResultSet(
 
 StepResultSet::~StepResultSet()
 {
-    ErrMsgStore::Instance().RemoveAll(this);
     Close();
 }
 
@@ -261,7 +259,7 @@ int StepResultSet::GoToNextRow()
         return E_ROW_OUT_RANGE;
     } else {
         if (conn_ != nullptr) {
-            ErrMsgStore::Instance().Set(this, conn_->GetLastErrorMsg());
+            lastErrMsg_ = conn_->GetLastErrorMsg();
         }
         Reset();
         rowPos_ = rowCount_;
@@ -398,7 +396,14 @@ std::shared_ptr<Statement> StepResultSet::GetStatement()
 
 std::string StepResultSet::GetLastErrorMsg() const
 {
-    return ErrMsgStore::Instance().Get(this);
+    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
+    if (!lastErrMsg_.empty()) {
+        return lastErrMsg_;
+    }
+    if (conn_ != nullptr) {
+        return conn_->GetLastErrorMsg();
+    }
+    return "";
 }
 } // namespace NativeRdb
 } // namespace OHOS

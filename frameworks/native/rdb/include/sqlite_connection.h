@@ -21,6 +21,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <vector>
 
 #include "concurrent_map.h"
@@ -226,6 +227,7 @@ private:
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
+    ConcurrentMap<std::thread::id, std::string> lastErrMsg_;
     const RdbStoreConfig config_;
 };
 } // namespace NativeRdb

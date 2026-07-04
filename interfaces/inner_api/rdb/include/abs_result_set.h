@@ -356,7 +356,7 @@ protected:
     static const int INIT_POS = -1;
     static constexpr int NO_COUNT = -1;
 
-    Mutex globalMtx_;
+    mutable Mutex globalMtx_;
     /*
      * The value can be in the range [-1 ~ n], where -1 represents the start flag position and N represents the data end
      * flag position, and [0, n-1] represents the real data index.

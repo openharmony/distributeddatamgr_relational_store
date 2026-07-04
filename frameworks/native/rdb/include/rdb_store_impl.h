@@ -304,6 +304,7 @@ private:
     std::list<std::shared_ptr<RdbStoreLocalDbObserver>> localDetailObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
+    ConcurrentMap<std::thread::id, std::string> lastErrMsg_;
     std::list<std::weak_ptr<Transaction>> transactions_;
     std::list<std::weak_ptr<Connection>> conns_;
     std::mutex helperMutex_;

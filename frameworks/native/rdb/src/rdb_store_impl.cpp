@@ -33,7 +33,6 @@
 #include "connection_pool.h"
 #include "delay_notify.h"
 #include "directory_ex.h"
-#include "err_msg_store.h"
 #include "knowledge_schema_helper.h"
 #include "logger.h"
 #include "raw_data_parser.h"
@@ -1441,7 +1440,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
 
 RdbStoreImpl::~RdbStoreImpl()
 {
-    ErrMsgStore::Instance().RemoveAll(this);
+    lastErrMsg_.Clear();
     // ToD: Scenario for handling binlog replay interrupt
     auto [errCode, conn] = GetConn(false);
     if (errCode == E_OK && conn != nullptr) {
@@ -1465,8 +1464,8 @@ RdbStoreImpl::~RdbStoreImpl()
 
 std::string RdbStoreImpl::GetLastErrorMsg() const
 {
-    auto msg = ErrMsgStore::Instance().Get(this);
-    if (!msg.empty()) {
+    auto [found, msg] = lastErrMsg_.Find(std::this_thread::get_id());
+    if (found && !msg.empty()) {
         return msg;
     }
     if (connectionPool_ != nullptr) {
@@ -1478,7 +1477,7 @@ std::string RdbStoreImpl::GetLastErrorMsg() const
 void RdbStoreImpl::CaptureLastError(const Stmt &stmt)
 {
     if (stmt != nullptr) {
-        ErrMsgStore::Instance().Set(this, stmt->GetLastErrorMsg());
+        lastErrMsg_.Insert(std::this_thread::get_id(), stmt->GetLastErrorMsg());
     }
 }
 

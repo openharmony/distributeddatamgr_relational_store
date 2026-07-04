@@ -27,7 +27,6 @@
 #include <sstream>
 #include <string>
 
-#include "err_msg_store.h"
 #include "global_resource.h"
 #include "logger.h"
 #include "rdb_errno.h"
@@ -493,7 +492,7 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
 
 SqliteConnection::~SqliteConnection()
 {
-    ErrMsgStore::Instance().RemoveAll(this);
+    lastErrMsg_.Clear();
     if (backupId_ != TaskExecutor::INVALID_TASK_ID) {
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (pool != nullptr) {
@@ -510,17 +509,21 @@ SqliteConnection::~SqliteConnection()
 
 std::string SqliteConnection::GetLastErrorMsg() const
 {
-    return ErrMsgStore::Instance().Get(this);
+    auto [found, msg] = lastErrMsg_.Find(std::this_thread::get_id());
+    if (found) {
+        return msg + " " + SqliteUtils::Anonymous(config_.GetPath());
+    }
+    return "";
 }
 
 void SqliteConnection::SetLastErrorMsg(const std::string &msg)
 {
-    ErrMsgStore::Instance().Set(this, msg);
+    lastErrMsg_.Insert(std::this_thread::get_id(), msg);
 }
 
 void SqliteConnection::ClearLastErrorMsg()
 {
-    ErrMsgStore::Instance().Clear(this);
+    lastErrMsg_.Erase(std::this_thread::get_id());
 }
 
 int32_t SqliteConnection::VerifyAndRegisterHook(const RdbStoreConfig &config)
