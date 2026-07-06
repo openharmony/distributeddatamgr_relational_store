@@ -229,7 +229,6 @@ int ParseCloudSyncConfig(const napi_env env, const napi_value arg, std::shared_p
         auto err = ParseRdbPredicatesProxy(env, predicatesValue, context->rdbPredicates);
         if (err == nullptr && context->rdbPredicates != nullptr) {
             context->cloudSyncConfig.predicates = context->rdbPredicates;
-            context->cloudSyncConfig.isEnablePredicate = true;
         }
     }
     

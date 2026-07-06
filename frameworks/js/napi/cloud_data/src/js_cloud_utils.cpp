@@ -225,16 +225,11 @@ int32_t Convert2Value(napi_env env, napi_value input, CloudSyncConfig &output)
         auto ret = Convert2Value(env, predicatesValue, predicates);
         if (ret == napi_ok && predicates != nullptr) {
             output.predicates = predicates;
-            output.isEnablePredicate = true;
         }
     }
 
     if (output.isEnablePredicate && output.predicates == nullptr) {
         LOG_ERROR("isEnablePredicate is true but predicates is null");
-        return napi_invalid_arg;
-    }
-    if (!output.isEnablePredicate && output.predicates != nullptr) {
-        LOG_ERROR("isEnablePredicate is false but predicates is not null");
         return napi_invalid_arg;
     }
     return napi_ok;
