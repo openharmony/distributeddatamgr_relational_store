@@ -28,7 +28,7 @@ describe('CloudConfigCallbackTest', function () {
         console.info('EnabledCloudInvalidArgsCallbackTest');
         try {
             let account = "test_id";
-            await cloudData.Config.enableCloud(account, null, function (err) {
+            cloudData.Config.enableCloud(account, null, function (err) {
                 if (err == undefined) {
                     expect(null).assertFail();
                     console.info('EnabledCloudInvalidArgsCallbackTest enableCloud success');
