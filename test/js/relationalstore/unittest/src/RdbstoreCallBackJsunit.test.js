@@ -60,7 +60,7 @@ describe('rdbStoreCallBackTest', async function () {
     it('testRdbStoreCallBackTest0001', 0, async function (done) {
         console.info(TAG, "************* testRdbStoreCallBackTest0001 start *************");
         try {
-            await data_relationalStore.getRdbStore(context, STORE_CONFIG, async (err, rdbStore) => {
+            data_relationalStore.getRdbStore(context, STORE_CONFIG, async (err, rdbStore) => {
                 if (err) {
                     console.error(TAG, "Get RdbStore failed, err: code=" + err.code + " message=" + err.message)
                     expect(false).assertTrue()

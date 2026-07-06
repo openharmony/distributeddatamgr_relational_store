@@ -140,7 +140,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             expect("202").assertEqual(e.code)
         }
         done()
-        console.log(TAG + "************* testRdbStoreDelete0002 end *************")
+        console.log(TAG + "************* testRdbStoreDataShareFunc0002 end *************")
     })
 
     /**
@@ -179,7 +179,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         }
 
         done()
-        console.log(TAG + "************* testRdbStoreDelete0003 end *************")
+        console.log(TAG + "************* testRdbStoreDataShareFunc0003 end *************")
     })
 
     /**

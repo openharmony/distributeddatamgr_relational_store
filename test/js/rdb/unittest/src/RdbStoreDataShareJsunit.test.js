@@ -164,7 +164,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         resultSet = null
 
         done()
-        console.log(TAG + "************* testRdbStoreDelete0002 end *************")
+        console.log(TAG + "************* testRdbStoreDataShareFunc0002 end *************")
     })
 
     /**
@@ -194,7 +194,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
 
-        await rdbStore.update("test", valueBucket, predicates, async function (err, ret) {
+        rdbStore.update("test", valueBucket, predicates, async function (err, ret) {
             if (err) {
                 console.info("Update err: " + err)
                 expect(false).assertTrue()
@@ -222,10 +222,9 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                 "age=" + age + ", salary=" + salary + ", blobType=" + blobType)
             resultSet.close()
             resultSet = null
+            done()
+            console.log(TAG + "************* testRdbStoreDataShareFunc0003 end *************")
         })
-
-        done()
-        console.log(TAG + "************* testRdbStoreDelete0003 end *************")
     })
 
     /**
@@ -291,7 +290,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
 
-        await rdbStore.query("test", predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
+        rdbStore.query("test", predicates, ["ID", "NAME", "AGE", "SALARY", "blobType"],
             function (err, resultSet) {
                 if (err) {
                     console.info("Query err: " + err)
@@ -309,10 +308,9 @@ describe('rdbStoreDataSharePredicatesTest', function () {
                 expect(4).assertEqual(blobType[0])
                 expect(5).assertEqual(blobType[1])
                 expect(6).assertEqual(blobType[2])
+                done()
+                console.log(TAG + "************* testRdbStoreDataShareFunc0005 end *************")
             })
-
-        done()
-        console.log(TAG + "************* testRdbStoreDataShareFunc0005 end *************")
     })
 
     /**
@@ -373,7 +371,7 @@ describe('rdbStoreDataSharePredicatesTest', function () {
         let predicates = new data_dataSharePredicates.DataSharePredicates()
         predicates.equalTo("name", "zhangsan")
 
-        await rdbStore.delete("test", predicates, async function (err, ret) {
+        rdbStore.delete("test", predicates, async function (err, ret) {
             if (err) {
                 console.info("Delete err: " + err)
                 expect(false).assertTrue()
@@ -386,10 +384,9 @@ describe('rdbStoreDataSharePredicatesTest', function () {
             expect(false).assertEqual(resultSet.goToFirstRow())
             resultSet.close()
             resultSet = null
+            done()
+            console.log(TAG + "************* testRdbStoreDataShareFunc0007 end *************")
         })
-
-        done()
-        console.log(TAG + "************* testRdbStoreDataShareFunc0007 end *************")
     })
     console.log(TAG + "*************Unit Test End*************")
 })
