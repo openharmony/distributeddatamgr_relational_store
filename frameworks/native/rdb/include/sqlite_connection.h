@@ -40,6 +40,7 @@ namespace NativeRdb {
 using DataChangeCallback = std::function<void(ClientChangedData &clientChangedData)>;
 
 class SqliteConnection : public Connection {
+    friend class SqliteStatement;
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
     static int32_t Delete(const RdbStoreConfig &config);
@@ -95,10 +96,9 @@ protected:
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
 
     std::string GetLastErrorMsg() const override;
-    void SetLastErrorMsg(const std::string &msg) override;
-    void ClearLastErrorMsg() override;
 
 private:
+    void SetLastErrorMsg(const std::string &msg);
     struct Suffix {
         const char *suffix_ = nullptr;
         const char *debug_ = nullptr;
@@ -227,7 +227,7 @@ private:
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
-    ConcurrentMap<std::thread::id, std::string> lastErrMsg_;
+    std::string lastErrMsg_;
     const RdbStoreConfig config_;
 };
 } // namespace NativeRdb

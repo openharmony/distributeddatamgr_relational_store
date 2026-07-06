@@ -106,8 +106,6 @@ public:
     virtual void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount) = 0;
 
     virtual std::string GetLastErrorMsg() const { return ""; }
-    virtual void SetLastErrorMsg(const std::string &msg) {}
-    virtual void ClearLastErrorMsg() {}
 
 private:
     int32_t id_ = 0;

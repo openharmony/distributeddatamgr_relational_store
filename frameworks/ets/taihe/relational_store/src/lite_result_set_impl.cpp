@@ -22,13 +22,6 @@
 namespace OHOS {
 namespace RdbTaihe {
 
-namespace {
-std::string WithLeadingSpace(const std::string &msg)
-{
-    return msg.empty() ? std::string() : " " + msg;
-}
-} // namespace
-
 LiteResultSetImpl::LiteResultSetImpl()
 {
 }
@@ -247,7 +240,7 @@ ValueType LiteResultSetImpl::GetValue(int32_t columnIndex)
         errCode = nativeResultSet_->Get(columnIndex, object);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
+        ThrowInnerErrorExt(errCode, nativeResultSet_->GetLastErrorMsg());
     }
     return ani_rdbutils::ValueObjectToAni(object);
 }
@@ -316,7 +309,7 @@ array<string> LiteResultSetImpl::GetColumnNames()
     }
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
         std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(
-            errCode, WithLeadingSpace(nativeResultSet_->GetLastErrorMsg())),
+            errCode, nativeResultSet_->GetLastErrorMsg()),
         {});
     return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
 }
@@ -330,7 +323,7 @@ array<ohos::data::relationalStore::ValueType> LiteResultSetImpl::GetCurrentRowDa
     }
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
         std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(
-            errCode, WithLeadingSpace(nativeResultSet_->GetLastErrorMsg())),
+            errCode, nativeResultSet_->GetLastErrorMsg()),
         {});
     std::vector<ValueType> rowDataTemp;
     std::transform(rowData.begin(), rowData.end(), std::back_inserter(rowDataTemp),
@@ -357,7 +350,7 @@ array<array<ValueType>> LiteResultSetImpl::GetRowsDataSync(int32_t maxCount, opt
     }
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
         std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(
-            errCode, WithLeadingSpace(nativeResultSet_->GetLastErrorMsg())),
+            errCode, nativeResultSet_->GetLastErrorMsg()),
         {});
 
     std::vector<std::vector<ValueType>> rowsDataTemp;

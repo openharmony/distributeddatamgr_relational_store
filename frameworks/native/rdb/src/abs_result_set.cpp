@@ -29,24 +29,18 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
-namespace {
-std::string BuildRowRangeCtx(ResultSet &rs)
+
+std::string AbsResultSet::BuildRowRangeCtx()
 {
-    int32_t rowPos = -1;
-    rs.GetRowIndex(rowPos);
-    int32_t rowCount = -1;
-    int rc = rs.GetRowCount(rowCount);
-    std::string msg = "The row index is " + std::to_string(rowPos);
-    if (rc == E_OK && rowCount >= 0) {
-        msg += ", and the row count is " + std::to_string(rowCount);
+    std::string msg = "The row index is " + std::to_string(rowPos_);
+    if (rowCount_ >= 0) {
+        msg += ", and the row count is " + std::to_string(rowCount_);
     }
     return msg + ".";
 }
 
-std::string BuildColumnRangeCtx(ResultSet &rs, int32_t columnIndex, const std::string &columnName = "")
+std::string AbsResultSet::BuildColumnRangeCtx(int32_t columnIndex, const std::string &columnName)
 {
-    int32_t columnCount = -1;
-    int rc = rs.GetColumnCount(columnCount);
     std::string msg;
     if (!columnName.empty()) {
         msg = "The column \"" + columnName + "\" is not found";
@@ -55,12 +49,11 @@ std::string BuildColumnRangeCtx(ResultSet &rs, int32_t columnIndex, const std::s
     } else {
         msg = "The column index is unknown";
     }
-    if (rc == E_OK && columnCount >= 0) {
-        msg += ", and the column count is " + std::to_string(columnCount);
+    if (columnCount_ >= 0) {
+        msg += ", and the column count is " + std::to_string(columnCount_);
     }
     return msg + ".";
 }
-} // namespace
 
 void AbsResultSet::SetLastErrorMsg(const std::string &msg)
 {
@@ -461,7 +454,7 @@ int AbsResultSet::GoToLastRow()
         return ret;
     }
     if (rowCnt == 0) {
-        SetLastErrorMsg(BuildRowRangeCtx(*this));
+        SetLastErrorMsg(BuildRowRangeCtx());
         return E_ROW_OUT_RANGE;
     }
 
@@ -567,7 +560,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
     }
     LOG_ERROR(
         "Failed, columnName : %{public}s, errCode : %{public}d", SqliteUtils::Anonymous(columnName).c_str(), errCode);
-    SetLastErrorMsg(BuildColumnRangeCtx(*this, -1, columnName));
+    SetLastErrorMsg(BuildColumnRangeCtx(-1, columnName));
     return E_INVALID_ARGS;
 }
 
@@ -582,7 +575,7 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
     }
     if (columnCount_ <= columnIndex || columnIndex < 0) {
         LOG_ERROR("Invalid columnIndex %{public}d", columnIndex);
-        SetLastErrorMsg(BuildColumnRangeCtx(*this, columnIndex));
+        SetLastErrorMsg(BuildColumnRangeCtx(columnIndex));
         return E_COLUMN_OUT_RANGE;
     }
 
@@ -592,7 +585,7 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
             return E_OK;
         }
     }
-    SetLastErrorMsg(BuildColumnRangeCtx(*this, columnIndex));
+    SetLastErrorMsg(BuildColumnRangeCtx(columnIndex));
     return E_COLUMN_OUT_RANGE;
 }
 

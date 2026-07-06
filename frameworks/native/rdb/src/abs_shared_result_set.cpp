@@ -33,6 +33,7 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using SharedBlock = AppDataFwk::SharedBlock;
+
 AbsSharedResultSet::AbsSharedResultSet(std::string name)
     : AbsResultSet(true), sharedBlock_(nullptr), sharedBlockName_(std::move(name))
 {
@@ -122,6 +123,7 @@ int AbsSharedResultSet::GoToRow(int position)
     if (position >= rowCnt || position < 0) {
         rowPos_ = (position >= rowCnt && rowCnt != 0) ? rowCnt : rowPos_;
         LOG_DEBUG("position[%{public}d] rowCnt[%{public}d] rowPos[%{public}d]!", position, rowCnt, rowPos_);
+        SetLastErrorMsg(BuildRowRangeCtx());
         return E_ROW_OUT_RANGE;
     }
 
@@ -309,11 +311,13 @@ int AbsSharedResultSet::CheckState(int columnIndex)
     int count = 0;
     GetRowCount(count);
     if (rowPos_ < 0 || rowPos_ >= count) {
+        SetLastErrorMsg(BuildRowRangeCtx());
         return E_ROW_OUT_RANGE;
     }
 
     GetColumnCount(count);
     if (columnIndex >= count || columnIndex < 0) {
+        SetLastErrorMsg(BuildColumnRangeCtx(columnIndex));
         return E_COLUMN_OUT_RANGE;
     }
 

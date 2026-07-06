@@ -133,15 +133,16 @@ public:
     InnerError(int code, const std::string &msg = "")
     {
         nativeCode_ = code;
+        std::string opMsg = msg.empty() ? "" : " " + msg;
         auto errorMsg = GetJsErrorCode(code);
         if (errorMsg.has_value()) {
             auto napiError = errorMsg.value();
             code_ = napiError.jsCode;
-            msg_ = napiError.message + msg;
+            msg_ = napiError.message + opMsg;
         } else {
             code_ = E_INNER_ERROR;
             std::string nativeMsg = GetNativeErrMsg(code);
-            msg_ = "Inner error." + (nativeMsg.empty() ? "" : " " + nativeMsg) + msg;
+            msg_ = "Inner error." + (nativeMsg.empty() ? "" : " " + nativeMsg) + opMsg;
         }
     }
 
@@ -204,15 +205,16 @@ public:
     InnerErrorExt(int code, const std::string &msg = "")
     {
         nativeCode_ = code;
+        std::string opMsg = msg.empty() ? "" : " " + msg;
         auto errorMsgExt = GetJsErrorCodeExt(code);
         if (errorMsgExt.has_value()) {
             auto napiError = errorMsgExt.value();
             code_ = napiError.jsCode;
-            msg_ = napiError.message + msg;
+            msg_ = napiError.message + opMsg;
         } else {
             code_ = E_INNER_ERROR;
             std::string nativeMsg = InnerError::GetNativeErrMsg(code);
-            msg_ = "Inner error." + (nativeMsg.empty() ? "" : " " + nativeMsg) + msg;
+            msg_ = "Inner error." + (nativeMsg.empty() ? "" : " " + nativeMsg) + opMsg;
         }
     }
 

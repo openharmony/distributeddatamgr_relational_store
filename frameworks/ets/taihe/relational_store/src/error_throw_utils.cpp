@@ -55,21 +55,13 @@ void ThrowError(std::shared_ptr<Error> err)
 
 void ThrowInnerError(int errCode, const std::string &errMsg)
 {
-    std::string opMsg;
-    if (!errMsg.empty()) {
-        opMsg = " " + errMsg;
-    }
-    auto innErr = std::make_shared<InnerError>(errCode, opMsg);
+    auto innErr = std::make_shared<InnerError>(errCode, errMsg);
     ThrowError(innErr);
 }
 
 void ThrowInnerErrorExt(int errCode, const std::string &errMsg)
 {
-    std::string opMsg;
-    if (!errMsg.empty()) {
-        opMsg = " " + errMsg;
-    }
-    auto innErr = std::make_shared<InnerErrorExt>(errCode, opMsg);
+    auto innErr = std::make_shared<InnerErrorExt>(errCode, errMsg);
     if (innErr != nullptr) {
         taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
     }

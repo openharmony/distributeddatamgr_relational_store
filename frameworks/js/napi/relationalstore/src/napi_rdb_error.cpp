@@ -119,7 +119,12 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode)
     return ConvertCode(JS_ERROR_CODE_MSGS_EXT, count, errorCode);
 }
 
-static constexpr std::pair<int, const char *> NATIVE_ERR_MSG_MAP[] = {
+struct NativeErrMsgEntry {
+    int code;
+    const char *msg;
+};
+
+static constexpr NativeErrMsgEntry NATIVE_ERR_MSG_MAP[] = {
     { NativeRdb::E_REMOVE_FILE, "Remove file failed." },
     { NativeRdb::E_INVALID_ARGS, "The ValueBucket contains Assets and conflictResolution is REPLACE." },
     { NativeRdb::E_EMPTY_TABLE_NAME, "The table must be not empty string." },
@@ -137,8 +142,8 @@ static constexpr std::pair<int, const char *> NATIVE_ERR_MSG_MAP[] = {
 std::string GetErrorString(int errcode)
 {
     for (const auto &entry : NATIVE_ERR_MSG_MAP) {
-        if (entry.first == errcode) {
-            return std::string(entry.second);
+        if (entry.code == errcode) {
+            return std::string(entry.msg);
         }
     }
     return std::string();

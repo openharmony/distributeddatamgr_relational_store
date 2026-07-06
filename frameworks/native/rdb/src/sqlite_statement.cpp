@@ -139,7 +139,8 @@ void SqliteStatement::TryNotifyErrorLog(const int &errCode, sqlite3 *dbHandle, c
     }
     std::string errMsg(sqlite3_errmsg(dbHandle));
     if (conn_ != nullptr) {
-        conn_->SetLastErrorMsg(errMsg + " in " + sql);
+        auto sqliteConn = std::static_pointer_cast<SqliteConnection>(conn_);
+        sqliteConn->SetLastErrorMsg(errMsg + " in " + sql);
     }
     DistributedRdb::SqlErrorObserver::ExceptionMessage exceMessage;
     exceMessage.code = errCode;

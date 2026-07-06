@@ -22,19 +22,18 @@
 #include "napi_lite_result_set.h"
 #include "napi_rdb_context.h"
 #include "napi_rdb_error.h"
+#include "napi_rdb_histogram_reporter.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_predicates.h"
 #include "napi_result_set.h"
 #include "rdb_common.h"
 #include "rdb_errno.h"
-#include "napi_rdb_histogram_reporter.h"
 #include "rdb_types.h"
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 namespace OHOS::RelationalStoreJsKit {
-#define ASSERT_RETURN_SET_ERROR(assertion, paramError) \
-    CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
+#define ASSERT_RETURN_SET_ERROR(assertion, paramError) CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
 
 struct TransactionContext : public ContextBase {
     void ParsedInstance(napi_value self)
@@ -69,10 +68,9 @@ int32_t TransactionContext::ParseRdbPredicatesProxy(
     return OK;
 }
 
-#define CHECK_RETURN_SET_PARAM_ERROR(oriErr, newErr)                                                     \
-    ASSERT_RETURN_SET_ERROR(!(oriErr), (oriErr)->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW        \
-                               ? (newErr)                                                                \
-                               : (oriErr))                                                               \
+#define CHECK_RETURN_SET_PARAM_ERROR(oriErr, newErr) \
+    ASSERT_RETURN_SET_ERROR(                         \
+        !(oriErr), (oriErr)->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW ? (newErr) : (oriErr))
 
 int32_t TransactionContext::ParseValuesBucket(napi_env env, napi_value arg, ValuesBucket &valuesBucket)
 {
@@ -107,11 +105,8 @@ void TransactionContext::SetError(std::shared_ptr<Error> err)
         return;
     }
     std::string opMsg;
-    if (nativeCode == NativeRdb::E_SQLITE_ERROR || nativeCode == NativeRdb::E_SQLITE_SCHEMA
-        || nativeCode == NativeRdb::E_SQLITE_INTERRUPT) {
-        if (!capturedErrMsg_.empty()) {
-            opMsg = " " + capturedErrMsg_;
-        }
+    if (!capturedErrMsg_.empty()) {
+        opMsg = capturedErrMsg_;
     }
     if (opMsg.empty()) {
         error = err;
@@ -185,8 +180,8 @@ void TransactionProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &p
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertSync", BatchInsert, SYNC));
-    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertWithConflictResolutionSync",
-        BatchInsertWithConflictResolution, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA(
+        "batchInsertWithConflictResolutionSync", BatchInsertWithConflictResolution, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", Query, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("queryWithoutRowCountSync", QueryWithoutRowCount, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlWithoutRowCountSync", QuerySqlWithoutRowCount, SYNC));
@@ -402,8 +397,8 @@ napi_value TransactionProxy::Update(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
         auto trans = context->StealTransaction();
-        auto [code, updateRows] = trans->Update(
-            context->valuesBucket, *context->rdbPredicates, context->conflictResolution);
+        auto [code, updateRows] =
+            trans->Update(context->valuesBucket, *context->rdbPredicates, context->conflictResolution);
         context->updateRows = updateRows;
         if (code != E_OK) {
             context->capturedErrMsg_ = trans->GetLastErrorMsg();
@@ -458,8 +453,7 @@ napi_value TransactionProxy::Insert(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
         auto trans = context->StealTransaction();
-        auto [code, insertRows] = trans->Insert(
-            context->tableName, context->valuesBucket, context->conflictResolution);
+        auto [code, insertRows] = trans->Insert(context->tableName, context->valuesBucket, context->conflictResolution);
         context->insertRows = insertRows;
         if (code != E_OK) {
             context->capturedErrMsg_ = trans->GetLastErrorMsg();
@@ -569,8 +563,8 @@ napi_value TransactionProxy::BatchInsertWithConflictResolution(napi_env env, nap
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
         auto trans = context->StealTransaction();
-        auto [code, insertRows] = trans->BatchInsert(
-            context->tableName, context->valuesBuckets, context->conflictResolution);
+        auto [code, insertRows] =
+            trans->BatchInsert(context->tableName, context->valuesBuckets, context->conflictResolution);
         context->insertRows = insertRows;
         if (code != E_OK) {
             context->capturedErrMsg_ = trans->GetLastErrorMsg();
@@ -582,8 +576,7 @@ napi_value TransactionProxy::BatchInsertWithConflictResolution(napi_env env, nap
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
-    context->FinishHistogram(
-        "Arkdata.Rdb.Transaction.batchInsertWithConflictResolution",
+    context->FinishHistogram("Arkdata.Rdb.Transaction.batchInsertWithConflictResolution",
         "Arkdata.Rdb.Transaction.batchInsertWithConflictResolutionSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
@@ -651,7 +644,7 @@ napi_value TransactionProxy::QueryWithoutRowCount(napi_env env, napi_callback_in
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr && context->rdbPredicates != nullptr);
-        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+        DistributedRdb::QueryOptions options{ .preCount = false, .isGotoNextRowReturnLastError = true };
         context->resultSet =
             context->StealTransaction()->QueryByStep(*(context->rdbPredicates), context->columns, options);
         return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
@@ -732,7 +725,7 @@ napi_value TransactionProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
-        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+        DistributedRdb::QueryOptions options{ .preCount = false, .isGotoNextRowReturnLastError = true };
         context->resultSet = context->StealTransaction()->QueryByStep(context->sql, context->bindArgs, options);
         return (context->resultSet != nullptr) ? E_OK : E_ALREADY_CLOSED;
     };
@@ -814,8 +807,7 @@ struct TransBatchInsertWithReturningContext : public TransactionContext {
         ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBuckets),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
         auto errCode = JSUtils::Convert2Value(env, argv[2], config);
-        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
-            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK, std::make_shared<ParamError>("Illegal ReturningConfig."));
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
@@ -855,8 +847,8 @@ napi_value TransactionProxy::BatchInsertWithReturning(napi_env env, napi_callbac
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->transaction_ != nullptr);
         auto trans = context->StealTransaction();
-        auto result = trans->BatchInsert(context->tableName, context->valuesBuckets,
-            context->config, context->conflictResolution);
+        auto result = trans->BatchInsert(
+            context->tableName, context->valuesBuckets, context->config, context->conflictResolution);
         context->result = result.second;
         if (result.first != E_OK) {
             context->capturedErrMsg_ = trans->GetLastErrorMsg();
@@ -866,7 +858,7 @@ napi_value TransactionProxy::BatchInsertWithReturning(napi_env env, napi_callbac
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
-        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = { context->result.changed, resultSet };
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
@@ -893,8 +885,7 @@ struct TransUpdateWithReturningContext : public TransactionContext {
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto errCode = JSUtils::Convert2Value(env, argv[2], config);
-        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
-            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK, std::make_shared<ParamError>("Illegal ReturningConfig."));
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
@@ -945,7 +936,7 @@ napi_value TransactionProxy::UpdateWithReturning(napi_env env, napi_callback_inf
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
-        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = { context->result.changed, resultSet };
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
@@ -967,8 +958,7 @@ struct TransDeleteWithReturningContext : public TransactionContext {
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto errCode = JSUtils::Convert2Value(env, argv[1], config);
-        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
-            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK, std::make_shared<ParamError>("Illegal ReturningConfig."));
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
             std::make_shared<InnerError>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
@@ -1009,7 +999,7 @@ napi_value TransactionProxy::DeleteWithReturning(napi_env env, napi_callback_inf
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
-        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = { context->result.changed, resultSet };
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };

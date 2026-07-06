@@ -14,6 +14,7 @@
  */
 
 #include "napi_rdb_context.h"
+
 #include "napi_rdb_error.h"
 #include "napi_rdb_store.h"
 
@@ -43,13 +44,7 @@ void RdbStoreContextBase::SetError(std::shared_ptr<Error> err)
         error = err;
         return;
     }
-    std::string opMsg;
-    if (nativeCode == NativeRdb::E_SQLITE_ERROR || nativeCode == NativeRdb::E_SQLITE_SCHEMA
-        || nativeCode == NativeRdb::E_SQLITE_INTERRUPT) {
-        if (!capturedErrMsg_.empty()) {
-            opMsg = " " + capturedErrMsg_;
-        }
-    }
+    std::string opMsg = capturedErrMsg_;
     if (opMsg.empty()) {
         error = err;
         return;
@@ -216,12 +211,12 @@ int ParseCloudSyncConfig(const napi_env env, const napi_value arg, std::shared_p
     napi_valuetype type = napi_undefined;
     napi_typeof(env, arg, &type);
     CHECK_RETURN_SET(type == napi_object, std::make_shared<ParamError>("config", "a CloudSyncConfig object."));
-    
+
     // 解析 mode（必填）
     napi_value modeValue = nullptr;
     napi_status status = napi_get_named_property(env, arg, "mode", &modeValue);
     CHECK_RETURN_SET(status == napi_ok, std::make_shared<ParamError>("mode", "a SyncMode."));
-    
+
     int32_t mode = 0;
     int32_t ret = JSUtils::Convert2ValueExt(env, modeValue, mode);
     CHECK_RETURN_SET(ret == JSUtils::OK, std::make_shared<ParamError>("mode", "a SyncMode."));
@@ -242,7 +237,7 @@ int ParseCloudSyncConfig(const napi_env env, const napi_value arg, std::shared_p
         }
         // 非系统应用：不解析，使用默认值 false，不抛异常
     }
-    
+
     // 解析 enablePredicate（可选）
     napi_value enablePredicateValue = nullptr;
     status = napi_get_named_property(env, arg, "enablePredicate", &enablePredicateValue);
@@ -250,7 +245,7 @@ int ParseCloudSyncConfig(const napi_env env, const napi_value arg, std::shared_p
         ret = JSUtils::Convert2Value(env, enablePredicateValue, context->cloudSyncConfig.isEnablePredicate);
         CHECK_RETURN_SET(ret == JSUtils::OK, std::make_shared<ParamError>("enablePredicate", "a boolean."));
     }
-    
+
     // 解析 predicates（可选）
     napi_value predicatesValue = nullptr;
     status = napi_get_named_property(env, arg, "predicate", &predicatesValue);
@@ -261,10 +256,9 @@ int ParseCloudSyncConfig(const napi_env env, const napi_value arg, std::shared_p
             context->cloudSyncConfig.isEnablePredicate = true;
         }
     }
-    
+
     return OK;
 }
-
 
 int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
@@ -346,11 +340,8 @@ int ParseTxId(const napi_env env, const napi_value arg, std::shared_ptr<RdbStore
     return OK;
 }
 
-
-#define CHECK_RETURN_SET_PARAM_ERROR(oriErr, newErr)                                              \
-    CHECK_RETURN_SET(!(oriErr), (oriErr)->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW        \
-                               ? (newErr)                                                         \
-                               : (oriErr))                                                        \
+#define CHECK_RETURN_SET_PARAM_ERROR(oriErr, newErr) \
+    CHECK_RETURN_SET(!(oriErr), (oriErr)->GetNativeCode() == NativeRdb::E_INVALID_ARGS_NEW ? (newErr) : (oriErr))
 
 int ParseSendableValuesBucket(const napi_env env, const napi_value map, std::shared_ptr<RdbStoreContext> context)
 {
@@ -385,8 +376,7 @@ int ParseConflictResolution(const napi_env env, const napi_value arg, std::share
     return OK;
 }
 
-std::shared_ptr<Error> ParseRdbPredicatesProxy(
-    napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates)
+std::shared_ptr<Error> ParseRdbPredicatesProxy(napi_env env, napi_value arg, std::shared_ptr<RdbPredicates> &predicates)
 {
     RdbPredicatesProxy *predicatesProxy = nullptr;
     auto status = napi_unwrap(env, arg, reinterpret_cast<void **>(&predicatesProxy));
@@ -397,8 +387,7 @@ std::shared_ptr<Error> ParseRdbPredicatesProxy(
     return nullptr;
 }
 
-std::shared_ptr<Error> ParseSendableValuesBucket(
-    const napi_env env, const napi_value map, ValuesBucket &valuesBucket)
+std::shared_ptr<Error> ParseSendableValuesBucket(const napi_env env, const napi_value map, ValuesBucket &valuesBucket)
 {
     uint32_t length = 0;
     napi_status status = napi_map_get_size(env, map, &length);
@@ -479,8 +468,7 @@ std::shared_ptr<Error> ParseValuesBucket(napi_env env, napi_value arg, ValuesBuc
     return nullptr;
 }
 
-std::shared_ptr<Error> ParseValuesBuckets(
-    napi_env env, napi_value arg, ValuesBuckets &valuesBuckets)
+std::shared_ptr<Error> ParseValuesBuckets(napi_env env, napi_value arg, ValuesBuckets &valuesBuckets)
 {
     bool isArray = false;
     auto status = napi_is_array(env, arg, &isArray);

@@ -42,13 +42,6 @@ using FloatVector = std::vector<float>;
 static const int E_OK = 0;
 static const int INIT_POSITION = -1;
 
-namespace {
-std::string WithSpace(const std::string &msg)
-{
-    return msg.empty() ? std::string() : " " + msg;
-}
-} // namespace
-
 napi_value LiteResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet)
 {
     napi_value cons = JSUtils::GetClass(env, "ohos.data.relationalStore", "LiteResultSet");
@@ -265,7 +258,7 @@ napi_value LiteResultSetProxy::GoToNextRow(napi_env env, napi_callback_info info
     }
     std::string opMsg;
     if (errCode != E_ROW_OUT_RANGE && errCode != E_OK && resultSet != nullptr) {
-        opMsg = WithSpace(resultSet->GetLastErrorMsg());
+        opMsg = resultSet->GetLastErrorMsg();
     }
     RDB_NAPI_ASSERT_INT(
         env, errCode == E_ROW_OUT_RANGE || errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, opMsg));
@@ -282,8 +275,7 @@ napi_value LiteResultSetProxy::GetLong(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->GetLong(columnIndex, result);
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -298,8 +290,7 @@ napi_value LiteResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->GetBlob(columnIndex, result);
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -318,8 +309,7 @@ napi_value LiteResultSetProxy::GetAsset(napi_env env, napi_callback_info info)
         LOG_DEBUG("GetAsset col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -338,8 +328,7 @@ napi_value LiteResultSetProxy::GetAssets(napi_env env, napi_callback_info info)
         LOG_DEBUG("GetAssets col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -358,8 +347,7 @@ napi_value LiteResultSetProxy::GetFloat32Array(napi_env env, napi_callback_info 
         LOG_DEBUG("GetFloat32Array col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -373,8 +361,7 @@ napi_value LiteResultSetProxy::GetString(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->GetString(columnIndex, result);
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -389,8 +376,7 @@ napi_value LiteResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->GetDouble(columnIndex, result);
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -405,8 +391,7 @@ napi_value LiteResultSetProxy::GetColumnIndex(napi_env env, napi_callback_info i
     if (resultSet != nullptr) {
         errCode = resultSet->GetColumnIndex(input, result);
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -420,8 +405,7 @@ napi_value LiteResultSetProxy::GetColumnName(napi_env env, napi_callback_info in
     if (resultSet != nullptr) {
         errCode = resultSet->GetColumnName(columnIndex, result);
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -434,8 +418,7 @@ napi_value LiteResultSetProxy::GetWholeColumnNames(napi_env env, napi_callback_i
     if (resultSet != nullptr) {
         std::tie(errCode, colNames) = resultSet->GetWholeColumnNames();
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
     return JSUtils::Convert2JSValue(env, std::move(colNames));
 }
 
@@ -449,8 +432,7 @@ napi_value LiteResultSetProxy::IsColumnNull(napi_env env, napi_callback_info inf
     if (resultSet != nullptr) {
         errCode = resultSet->IsColumnNull(columnIndex, result);
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -464,8 +446,7 @@ napi_value LiteResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->GetRow(rowEntity);
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
 
     return JSUtils::Convert2JSValue(env, rowEntity);
 }
@@ -479,8 +460,7 @@ napi_value LiteResultSetProxy::GetRowData(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         std::tie(errCode, rowData) = resultSet->GetRowData();
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
 
     return JSUtils::Convert2JSValue(env, std::move(rowData));
 }
@@ -621,8 +601,7 @@ napi_value LiteResultSetProxy::GetValue(napi_env env, napi_callback_info info)
     if (resultSet != nullptr) {
         errCode = resultSet->Get(columnIndex, object);
     }
-    RDB_NAPI_ASSERT_INT(
-        env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, WithSpace(resultSet->GetLastErrorMsg())));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
     return JSUtils::Convert2JSValue(env, object);
 }
 

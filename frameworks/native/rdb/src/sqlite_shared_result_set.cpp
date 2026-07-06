@@ -38,6 +38,7 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 constexpr int64_t TIME_OUT = 1500;
+
 SqliteSharedResultSet::SqliteSharedResultSet(
     Time start, Conn conn, std::string sql, const Values &args, const std::string &path)
     : AbsSharedResultSet(path), conn_(std::move(conn)), qrySql_(std::move(sql)), bindArgs_(args)
@@ -171,6 +172,7 @@ int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
             rowCount_ = sharedBlock->GetLastPos() > INT_MAX ? Statement::INVALID_COUNT
                                                             : static_cast<int>(sharedBlock->GetLastPos());
             rowPos_ = rowPos_ > rowCount_ ? rowCount_ : rowPos_;
+            SetLastErrorMsg(BuildRowRangeCtx());
             errCode = E_ROW_OUT_RANGE;
         }
         return errCode;

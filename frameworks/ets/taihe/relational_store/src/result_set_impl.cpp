@@ -171,7 +171,7 @@ uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnId
     if (errCode == NativeRdb::E_INVALID_ARGS) {
         errCode = E_PARAM_ERROR;
     }
-    if (errCode != OHOS::NativeRdb::E_OK) {
+    if (nativeResultSet_ != nullptr && errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
         return 0;
     }
