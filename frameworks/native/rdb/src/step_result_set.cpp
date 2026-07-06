@@ -30,6 +30,37 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
+namespace {
+std::string BuildRowRangeCtx(ResultSet &rs)
+{
+    int32_t rowPos = -1;
+    rs.GetRowIndex(rowPos);
+    int32_t rowCount = -1;
+    int rc = rs.GetRowCount(rowCount);
+    std::string msg = "The row index is " + std::to_string(rowPos);
+    if (rc == E_OK && rowCount >= 0) {
+        msg += ", and the row count is " + std::to_string(rowCount);
+    }
+    return msg + ".";
+}
+
+std::string BuildColumnRangeCtx(ResultSet &rs, int32_t columnIndex)
+{
+    int32_t columnCount = -1;
+    int rc = rs.GetColumnCount(columnCount);
+    std::string msg;
+    if (columnIndex >= 0) {
+        msg = "The column index is " + std::to_string(columnIndex);
+    } else {
+        msg = "The column index is unknown";
+    }
+    if (rc == E_OK && columnCount >= 0) {
+        msg += ", and the column count is " + std::to_string(columnCount);
+    }
+    return msg + ".";
+}
+} // namespace
+
 constexpr int64_t TIME_OUT = 1500;
 StepResultSet::StepResultSet(
     Time start, Conn conn, const std::string &sql, const Values &args, QueryOptions options, bool safe)
@@ -157,6 +188,7 @@ int StepResultSet::GetColumnType(int columnIndex, ColumnType &columnType)
     }
     if (rowPos_ == INIT_POS || ((isSupportCountRow_ || rowCount_ != Statement::INVALID_COUNT) && IsEnded().second)) {
         LOG_ERROR("query not executed.");
+        SetLastErrorMsg(BuildRowRangeCtx(*this));
         return E_ROW_OUT_RANGE;
     }
     auto statement = GetStatement();
@@ -190,10 +222,12 @@ int StepResultSet::GoToRow(int position)
     if (isSupportCountRow_ && position >= rowCount_) {
         rowPos_ = (position >= rowCount_ && rowCount_ != 0) ? rowCount_ : rowPos_;
         LOG_ERROR("position[%{public}d] rowCount[%{public}d] rowPos_[%{public}d]!", position, rowCount_, rowPos_);
+        SetLastErrorMsg(BuildRowRangeCtx(*this));
         return E_ROW_OUT_RANGE;
     }
 
     if (position < 0) {
+        SetLastErrorMsg(BuildRowRangeCtx(*this));
         return E_ROW_OUT_RANGE;
     }
 
@@ -256,10 +290,11 @@ int StepResultSet::GoToNextRow()
             ++rowPos_;
             rowCount_ = rowPos_;
         }
+        SetLastErrorMsg(BuildRowRangeCtx(*this));
         return E_ROW_OUT_RANGE;
     } else {
         if (conn_ != nullptr) {
-            lastErrMsg_ = conn_->GetLastErrorMsg();
+            SetLastErrorMsg(conn_->GetLastErrorMsg());
         }
         Reset();
         rowPos_ = rowCount_;
@@ -343,6 +378,7 @@ int StepResultSet::GetSize(int columnIndex, size_t &size)
     }
     if (rowPos_ == INIT_POS || ((isSupportCountRow_ || rowCount_ != Statement::INVALID_COUNT) && IsEnded().second)) {
         size = 0;
+        SetLastErrorMsg(BuildRowRangeCtx(*this));
         return E_ROW_OUT_RANGE;
     }
 
@@ -371,6 +407,7 @@ int StepResultSet::GetValue(int32_t col, T &value)
 std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t index)
 {
     if (rowPos_ == INIT_POS || ((isSupportCountRow_ || rowCount_ != Statement::INVALID_COUNT) && IsEnded().second)) {
+        SetLastErrorMsg(BuildRowRangeCtx(*this));
         return { E_ROW_OUT_RANGE, ValueObject() };
     }
     auto statement = GetStatement();
@@ -378,6 +415,9 @@ std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t in
         return { E_ALREADY_CLOSED, ValueObject() };
     }
     auto [ret, value] = statement->GetColumn(col);
+    if (ret == E_COLUMN_OUT_RANGE) {
+        SetLastErrorMsg(BuildColumnRangeCtx(*this, col));
+    }
     if (index < ValueObject::TYPE_MAX && value.value.index() != index) {
         return { E_INVALID_COLUMN_TYPE, ValueObject() };
     }

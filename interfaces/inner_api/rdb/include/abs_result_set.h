@@ -177,8 +177,8 @@ public:
     /**
      * @brief Gets the entire row of data for the multiple rows from the result set in order.
      */
-    API_EXPORT std::pair<int, std::vector<std::vector<ValueObject>>> GetRowsData(int32_t maxCount,
-        int32_t position) override;
+    API_EXPORT std::pair<int, std::vector<std::vector<ValueObject>>> GetRowsData(
+        int32_t maxCount, int32_t position) override;
 
     /**
      * @brief Move the cursor to an absolute position.
@@ -311,6 +311,7 @@ public:
      * Calling this method on the result set will release all of its resources and makes it ineffective.
      */
     API_EXPORT int Close() override;
+
 protected:
     /**
      * @brief Constructor.
@@ -357,6 +358,9 @@ protected:
     static constexpr int NO_COUNT = -1;
 
     mutable Mutex globalMtx_;
+    std::string lastErrMsg_;
+    void SetLastErrorMsg(const std::string &msg) override;
+    std::string GetLastErrorMsg() const override;
     /*
      * The value can be in the range [-1 ~ n], where -1 represents the start flag position and N represents the data end
      * flag position, and [0, n-1] represents the real data index.

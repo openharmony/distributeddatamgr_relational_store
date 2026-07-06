@@ -15,11 +15,19 @@
 
 #define LOG_TAG "LiteResultSetImpl"
 #include "lite_result_set_impl.h"
+
 #include "ohos.data.relationalStore.impl.h"
 #include "ohos.data.relationalStore.proj.hpp"
 
 namespace OHOS {
 namespace RdbTaihe {
+
+namespace {
+std::string WithLeadingSpace(const std::string &msg)
+{
+    return msg.empty() ? std::string() : " " + msg;
+}
+} // namespace
 
 LiteResultSetImpl::LiteResultSetImpl()
 {
@@ -37,8 +45,8 @@ intptr_t LiteResultSetImpl::GetProxy()
     return reinterpret_cast<intptr_t>(proxy_.get());
 }
 
-array<ohos::data::relationalStore::ValuesBucket> LiteResultSetImpl::GetRowsSync(int32_t maxCount,
-    optional_view<int32_t> position)
+array<ohos::data::relationalStore::ValuesBucket> LiteResultSetImpl::GetRowsSync(
+    int32_t maxCount, optional_view<int32_t> position)
 {
     auto resultSet = GetResource();
     if (maxCount <= 0) {
@@ -66,7 +74,7 @@ array<ohos::data::relationalStore::ValuesBucket> LiteResultSetImpl::GetRowsSync(
         return {};
     }
     std::vector<ohos::data::relationalStore::ValuesBucket> valuesBuckets;
-    for (size_t  i = 0; i < rowEntities.size(); ++i) {
+    for (size_t i = 0; i < rowEntities.size(); ++i) {
         map<string, ValueType> aniMap;
         const std::map<std::string, OHOS::NativeRdb::ValueObject> &rowMap = rowEntities[i].Get();
         for (auto const &[key, value] : rowMap) {
@@ -92,12 +100,11 @@ int32_t LiteResultSetImpl::GetColumnIndex(string_view columnName)
     return result;
 }
 
-uintptr_t LiteResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnIdentifier const& columnIdentifier)
+uintptr_t LiteResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnIdentifier const &columnIdentifier)
 {
     auto resultSet = GetResource();
     OHOS::DistributedRdb::ColumnType columnType = OHOS::DistributedRdb::ColumnType::TYPE_NULL;
-    ASSERT_RETURN_THROW_ERROR(resultSet != nullptr,
-        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
+    ASSERT_RETURN_THROW_ERROR(resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
     int32_t columnIndex = 0;
     int errCode = OHOS::NativeRdb::E_OK;
     if (columnIdentifier.holds_columnIndex()) {
@@ -240,7 +247,7 @@ ValueType LiteResultSetImpl::GetValue(int32_t columnIndex)
         errCode = nativeResultSet_->Get(columnIndex, object);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
     }
     return ani_rdbutils::ValueObjectToAni(object);
 }
@@ -308,7 +315,9 @@ array<string> LiteResultSetImpl::GetColumnNames()
         std::tie(errCode, colNames) = nativeResultSet_->GetWholeColumnNames();
     }
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
-        std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode), {});
+        std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(
+            errCode, WithLeadingSpace(nativeResultSet_->GetLastErrorMsg())),
+        {});
     return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
 }
 
@@ -320,7 +329,9 @@ array<ohos::data::relationalStore::ValueType> LiteResultSetImpl::GetCurrentRowDa
         std::tie(errCode, rowData) = nativeResultSet_->GetRowData();
     }
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
-        std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode), {});
+        std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(
+            errCode, WithLeadingSpace(nativeResultSet_->GetLastErrorMsg())),
+        {});
     std::vector<ValueType> rowDataTemp;
     std::transform(rowData.begin(), rowData.end(), std::back_inserter(rowDataTemp),
         [](const OHOS::NativeRdb::ValueObject &object) { return ani_rdbutils::ValueObjectToAni(object); });
@@ -330,8 +341,8 @@ array<ohos::data::relationalStore::ValueType> LiteResultSetImpl::GetCurrentRowDa
 array<array<ValueType>> LiteResultSetImpl::GetRowsDataSync(int32_t maxCount, optional_view<int32_t> position)
 {
     auto resultSet = GetResource();
-    ASSERT_RETURN_THROW_ERROR(maxCount > 0,
-        std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Invalid maxCount"), {});
+    ASSERT_RETURN_THROW_ERROR(
+        maxCount > 0, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_INVALID_ARGS_NEW, "Invalid maxCount"), {});
     int32_t nativePosition = INIT_POSITION;
     if (position.has_value()) {
         nativePosition = position.value();
@@ -345,7 +356,9 @@ array<array<ValueType>> LiteResultSetImpl::GetRowsDataSync(int32_t maxCount, opt
         std::tie(errCode, rowsData) = resultSet->GetRowsData(maxCount, nativePosition);
     }
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
-        std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode), {});
+        std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(
+            errCode, WithLeadingSpace(nativeResultSet_->GetLastErrorMsg())),
+        {});
 
     std::vector<std::vector<ValueType>> rowsDataTemp;
     rowsDataTemp.reserve(rowsData.size());
@@ -358,5 +371,5 @@ array<array<ValueType>> LiteResultSetImpl::GetRowsDataSync(int32_t maxCount, opt
 
     return array<array<ValueType>>(::taihe::copy_data_t{}, rowsDataTemp.data(), rowsDataTemp.size());
 }
-}
-}
+} // namespace RdbTaihe
+} // namespace OHOS

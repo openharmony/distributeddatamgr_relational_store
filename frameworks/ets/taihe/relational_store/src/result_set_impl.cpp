@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+#include "result_set_impl.h"
+
 #include "ohos.data.relationalStore.impl.h"
 #include "ohos.data.relationalStore.proj.hpp"
-#include "result_set_impl.h"
 
 namespace OHOS {
 namespace RdbTaihe {
@@ -53,7 +54,7 @@ array<string> ResultSetImpl::GetColumnNames()
         std::tie(errCode, colNames) = nativeResultSet_->GetWholeColumnNames();
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode);
+        ThrowInnerErrorExt(errCode, nativeResultSet_->GetLastErrorMsg());
         return {};
     }
     return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
@@ -148,22 +149,20 @@ string ResultSetImpl::GetColumnName(int32_t columnIndex)
     return string(result);
 }
 
-uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnIdentifier const& columnIdentifier)
+uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnIdentifier const &columnIdentifier)
 {
     auto resultSet = GetResource();
     OHOS::DistributedRdb::ColumnType columnType = OHOS::DistributedRdb::ColumnType::TYPE_NULL;
-    ASSERT_RETURN_THROW_ERROR(resultSet != nullptr,
-        std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
+    ASSERT_RETURN_THROW_ERROR(resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
     int32_t columnIndex = 0;
     int errCode = OHOS::NativeRdb::E_OK;
     if (columnIdentifier.holds_columnIndex()) {
         columnIndex = columnIdentifier.get_columnIndex_ref();
-        ASSERT_RETURN_THROW_ERROR(columnIndex >= 0,
-            std::make_shared<ParamError>("Invalid columnIndex"), 0);
+        ASSERT_RETURN_THROW_ERROR(columnIndex >= 0, std::make_shared<ParamError>("Invalid columnIndex"), 0);
     } else {
         std::string columnName(columnIdentifier.get_columnName_ref());
-        ASSERT_RETURN_THROW_ERROR(!columnName.empty(),
-            std::make_shared<ParamError>("columnName", "a non empty string."), 0);
+        ASSERT_RETURN_THROW_ERROR(
+            !columnName.empty(), std::make_shared<ParamError>("columnName", "a non empty string."), 0);
         errCode = resultSet->GetColumnIndex(columnName, columnIndex);
     }
     if (errCode == OHOS::NativeRdb::E_OK) {
@@ -173,7 +172,7 @@ uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnId
         errCode = E_PARAM_ERROR;
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
         return 0;
     }
     return ani_rdbutils::ColumnTypeToTaihe(columnType);
@@ -241,7 +240,7 @@ array<uint8_t> ResultSetImpl::GetBlob(int32_t columnIndex)
         errCode = nativeResultSet_->GetBlob(columnIndex, result);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
     }
     return array<uint8_t>(::taihe::copy_data_t{}, result.data(), result.size());
 }
@@ -254,7 +253,7 @@ string ResultSetImpl::GetString(int32_t columnIndex)
         errCode = nativeResultSet_->GetString(columnIndex, result);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
     }
     return string(result);
 }
@@ -267,7 +266,7 @@ int64_t ResultSetImpl::GetLong(int32_t columnIndex)
         errCode = nativeResultSet_->GetLong(columnIndex, result);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
     }
     return result;
 }
@@ -280,7 +279,7 @@ double ResultSetImpl::GetDouble(int32_t columnIndex)
         errCode = nativeResultSet_->GetDouble(columnIndex, result);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
     }
     return result;
 }
@@ -296,7 +295,7 @@ ohos::data::relationalStore::Asset ResultSetImpl::GetAsset(int32_t columnIndex)
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return aniret;
     } else if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
     }
     return ani_rdbutils::AssetToAni(result);
 }
@@ -311,7 +310,7 @@ array<ohos::data::relationalStore::Asset> ResultSetImpl::GetAssets(int32_t colum
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return {};
     } else if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
         return {};
     }
     std::vector<ohos::data::relationalStore::Asset> resultTemp;
@@ -328,7 +327,7 @@ ValueType ResultSetImpl::GetValue(int32_t columnIndex)
         errCode = nativeResultSet_->Get(columnIndex, object);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
     }
     return ani_rdbutils::ValueObjectToAni(object);
 }
@@ -343,7 +342,7 @@ array<float> ResultSetImpl::GetFloat32Array(int32_t columnIndex)
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return {};
     } else if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
         return {};
     }
     return array<float>(::taihe::copy_data_t{}, result.data(), result.size());
@@ -358,7 +357,7 @@ map<string, ValueType> ResultSetImpl::GetRow()
     }
     map<string, ValueType> aniMap;
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
         return aniMap;
     }
     const std::map<std::string, OHOS::NativeRdb::ValueObject> &rowMap = rowEntity.Get();
@@ -368,8 +367,8 @@ map<string, ValueType> ResultSetImpl::GetRow()
     return aniMap;
 }
 
-taihe::array<ohos::data::relationalStore::ValuesBucket> ResultSetImpl::GetRowsSync(int32_t maxCount,
-    taihe::optional_view<int32_t> position)
+taihe::array<ohos::data::relationalStore::ValuesBucket> ResultSetImpl::GetRowsSync(
+    int32_t maxCount, taihe::optional_view<int32_t> position)
 {
     auto resultSet = GetResource();
     if (maxCount < 0) {
@@ -391,11 +390,11 @@ taihe::array<ohos::data::relationalStore::ValuesBucket> ResultSetImpl::GetRowsSy
         std::tie(errCode, rowEntities) = ani_rdbutils::GetRows(*resultSet, maxCount, positionNative);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
         return {};
     }
     std::vector<ohos::data::relationalStore::ValuesBucket> res;
-    for (size_t  i = 0; i < rowEntities.size(); ++i) {
+    for (size_t i = 0; i < rowEntities.size(); ++i) {
         OHOS::NativeRdb::ValuesBucket bucket(rowEntities[i].Get());
         res.push_back(ani_rdbutils::ValuesBucketToAni(bucket));
     }
@@ -411,7 +410,7 @@ array<ohos::data::relationalStore::ValueType> ResultSetImpl::GetCurrentRowData()
         std::tie(errCode, rowData) = nativeResultSet_->GetRowData();
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode);
+        ThrowInnerErrorExt(errCode, nativeResultSet_->GetLastErrorMsg());
         return {};
     }
     std::vector<ValueType> rowDataTemp;
@@ -441,7 +440,7 @@ array<array<ValueType>> ResultSetImpl::GetRowsDataSync(int32_t maxCount, optiona
         std::tie(errCode, rowsData) = resultSet->GetRowsData(maxCount, nativePosition);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode);
+        ThrowInnerErrorExt(errCode, nativeResultSet_->GetLastErrorMsg());
         return {};
     }
     std::vector<std::vector<ValueType>> rowsDataTemp;
@@ -463,7 +462,7 @@ bool ResultSetImpl::IsColumnNull(int32_t columnIndex)
         errCode = nativeResultSet_->IsColumnNull(columnIndex, result);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode);
+        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
     }
     return result;
 }
@@ -474,5 +473,5 @@ void ResultSetImpl::Close()
     nativeResultSet_ = nullptr;
     proxy_ = nullptr;
 }
-}
-}
+} // namespace RdbTaihe
+} // namespace OHOS

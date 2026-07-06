@@ -71,7 +71,6 @@ private:
 
     std::string sql_;
     std::vector<ValueObject> args_;
-    std::string lastErrMsg_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
