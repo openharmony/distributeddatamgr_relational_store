@@ -75,7 +75,8 @@ struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
 #endif
-#define ASSERT_RETURN_SET_ERROR(assertion, paramError) CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
+#define ASSERT_RETURN_SET_ERROR(assertion, paramError) \
+    CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
 RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NapiRdbStoreData>())
 {
 }
@@ -900,7 +901,8 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     RDB_NAPI_ASSERT(
         env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = rdbStoreProxy->GetInstance()->BeginTransaction();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, rdbStoreProxy->GetInstance()->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(
+        env, errCode == E_OK, std::make_shared<InnerError>(errCode, rdbStoreProxy->GetInstance()->GetLastErrorMsg()));
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -939,7 +941,8 @@ napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(
         env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = rdbStoreProxy->GetInstance()->RollBack();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, rdbStoreProxy->GetInstance()->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(
+        env, errCode == E_OK, std::make_shared<InnerError>(errCode, rdbStoreProxy->GetInstance()->GetLastErrorMsg()));
     LOG_DEBUG("RdbStoreProxy::RollBack end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -981,7 +984,8 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, OK == ParserThis(env, thisObj, context), context->error);
     if (argc == 0) {
         int errCode = context->rdbStore->Commit();
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, context->rdbStore->GetLastErrorMsg()));
+        RDB_NAPI_ASSERT(
+            env, errCode == E_OK, std::make_shared<InnerError>(errCode, context->rdbStore->GetLastErrorMsg()));
         LOG_DEBUG("RdbStoreProxy::Commit end, errCode is:%{public}d.", errCode);
         return nullptr;
     }
@@ -1357,8 +1361,8 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
 {
     // argc must be greater than or equal to 2 to be valid
-    RDB_NAPI_ASSERT(
-        env, argc >= 2 && argv != nullptr, std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
+    RDB_NAPI_ASSERT(env, argc >= 2 && argv != nullptr,
+        std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
     napi_valuetype type = napi_undefined;
     int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
     napi_get_value_int32(env, argv[0], &mode);
@@ -2212,7 +2216,8 @@ napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
     RDB_NAPI_ASSERT(env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = proxy->GetInstance()->Notify(JSUtils::Convert2String(env, argv[0]));
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, proxy->GetInstance()->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(
+        env, errCode == E_OK, std::make_shared<InnerError>(errCode, proxy->GetInstance()->GetLastErrorMsg()));
     return nullptr;
 }
 

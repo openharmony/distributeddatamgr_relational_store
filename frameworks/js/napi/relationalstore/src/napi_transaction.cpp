@@ -33,7 +33,8 @@ using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 namespace OHOS::RelationalStoreJsKit {
-#define ASSERT_RETURN_SET_ERROR(assertion, paramError) CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
+#define ASSERT_RETURN_SET_ERROR(assertion, paramError) \
+    CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
 
 struct TransactionContext : public ContextBase {
     void ParsedInstance(napi_value self)
