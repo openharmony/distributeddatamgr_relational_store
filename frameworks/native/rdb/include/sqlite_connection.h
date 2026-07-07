@@ -40,7 +40,6 @@ namespace NativeRdb {
 using DataChangeCallback = std::function<void(ClientChangedData &clientChangedData)>;
 
 class SqliteConnection : public Connection {
-    friend class SqliteStatement;
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
     static int32_t Delete(const RdbStoreConfig &config);
@@ -88,17 +87,16 @@ public:
     int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
     void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount = false) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
+    void SetLastErrorMsg(const std::string &msg);
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
-
     std::string GetLastErrorMsg() const override;
 
 private:
-    void SetLastErrorMsg(const std::string &msg);
     struct Suffix {
         const char *suffix_ = nullptr;
         const char *debug_ = nullptr;

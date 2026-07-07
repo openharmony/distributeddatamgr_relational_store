@@ -385,7 +385,7 @@ std::pair<int, ValueObject> StepResultSet::GetValueObject(int32_t col, size_t in
     }
     auto [ret, value] = statement->GetColumn(col);
     if (ret == E_COLUMN_OUT_RANGE) {
-        SetLastErrorMsg(BuildColumnRangeCtx(col));
+        SetLastErrorMsg(col >= 0 ? BuildColumnIndexRangeCtx(col) : BuildColumnUnknownCtx());
     }
     if (index < ValueObject::TYPE_MAX && value.value.index() != index) {
         return { E_INVALID_COLUMN_TYPE, ValueObject() };

@@ -73,7 +73,6 @@ public:
     bool IsInTransaction();
     void SetInTransaction(bool isInTransaction);
     SharedConn AcquireById(bool isReadOnly, int32_t id);
-    std::string GetLastErrorMsg() const;
 
 private:
     struct ConnNode {

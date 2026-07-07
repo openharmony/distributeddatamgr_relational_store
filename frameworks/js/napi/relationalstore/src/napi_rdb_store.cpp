@@ -75,8 +75,7 @@ struct PredicatesProxy {
     std::shared_ptr<DataShareAbsPredicates> predicates_;
 };
 #endif
-#define ASSERT_RETURN_SET_ERROR(assertion, paramError) \
-    CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
+#define ASSERT_RETURN_SET_ERROR(assertion, paramError) CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
 RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NapiRdbStoreData>())
 {
 }
@@ -358,7 +357,7 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
         int errCode = rdbStore->InsertWithConflictResolution(
             context->int64Output, context->tableName, context->valuesBucket, context->conflictResolution);
         if (errCode != E_OK) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return errCode;
     };
@@ -390,7 +389,7 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         auto [ret, output] = rdbStore->BatchInsert(context->tableName, context->sharedValuesBuckets);
         context->int64Output = output;
         if (ret != E_OK) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return ret;
     };
@@ -429,7 +428,7 @@ napi_value RdbStoreProxy::BatchInsertWithConflictResolution(napi_env env, napi_c
             rdbStore->BatchInsert(context->tableName, context->sharedValuesBuckets, context->conflictResolution);
         context->int64Output = output;
         if (ret != E_OK) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return ret;
     };
@@ -480,7 +479,7 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
         auto rdbStore = std::move(context->rdbStore);
         int errCode = rdbStore->Delete(context->intOutput, *(context->rdbPredicates));
         if (errCode != E_OK) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return errCode;
     };
@@ -523,7 +522,7 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
             context->valuesBucket, context->rdbPredicates->GetWhereClause(), context->rdbPredicates->GetBindArgs(),
             context->conflictResolution);
         if (errCode != E_OK) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return errCode;
     };
@@ -664,9 +663,10 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = context->StealRdbStore();
+        CHECK_RETURN_ERR(rdbStore != nullptr);
         int errCode = rdbStore->ExecuteSql(context->sql, context->bindArgs);
         if (errCode != E_OK) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return errCode;
     };
@@ -711,7 +711,7 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
         auto status = E_ERROR;
         std::tie(status, context->sqlExeOutput) = rdbStore->Execute(context->sql, context->bindArgs, context->txId);
         if (status != E_OK) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return status;
     };
@@ -1063,7 +1063,7 @@ napi_value RdbStoreProxy::QueryWithoutRowCount(napi_env env, napi_callback_info 
         DistributedRdb::QueryOptions options{ .preCount = false, .isGotoNextRowReturnLastError = true };
         context->resultSet = rdbStore->QueryByStep(*(context->rdbPredicates), context->columns, options);
         if (context->resultSet == nullptr) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
@@ -1102,7 +1102,7 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
         DistributedRdb::QueryOptions options{ .preCount = false, .isGotoNextRowReturnLastError = true };
         context->resultSet = rdbStore->QueryByStep(context->sql, context->bindArgs, options);
         if (context->resultSet == nullptr) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
@@ -1235,7 +1235,7 @@ napi_value RdbStoreProxy::RekeyEx(napi_env env, napi_callback_info info)
         auto rdbStore = std::move(context->rdbStore);
         int errCode = rdbStore->RekeyEx(context->cryptoParam);
         if (errCode != E_OK) {
-            context->capturedErrMsg_ = rdbStore->GetLastErrorMsg();
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
         }
         return errCode;
     };
@@ -1361,8 +1361,8 @@ napi_value RdbStoreProxy::OffEvent(napi_env env, napi_callback_info info)
 napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
 {
     // argc must be greater than or equal to 2 to be valid
-    RDB_NAPI_ASSERT(env, argc >= 2 && argv != nullptr,
-        std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
+    RDB_NAPI_ASSERT(
+        env, argc >= 2 && argv != nullptr, std::make_shared<ParamError>(" argc is less than 2 or argv is nullptr"));
     napi_valuetype type = napi_undefined;
     int32_t mode = SubscribeMode::SUBSCRIBE_MODE_MAX;
     napi_get_value_int32(env, argv[0], &mode);

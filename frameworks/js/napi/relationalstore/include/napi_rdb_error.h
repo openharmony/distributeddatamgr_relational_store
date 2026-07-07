@@ -130,8 +130,7 @@ public:
             msg_ = napiError.message + opMsg;
         } else {
             code_ = E_INNER_ERROR;
-            std::string nativeMsg = GetNativeErrMsg(code);
-            msg_ = "Inner error." + (nativeMsg.empty() ? "" : " " + nativeMsg) + opMsg;
+            msg_ = "Inner error.";
         }
     }
 
@@ -157,32 +156,6 @@ public:
         return nativeCode_;
     }
 
-    static std::string GetNativeErrMsg(int nativeCode)
-    {
-        switch (nativeCode) {
-            case NativeRdb::E_EMPTY_TABLE_NAME:
-                return "The table must be not empty string.";
-            case NativeRdb::E_EMPTY_VALUES_BUCKET:
-                return "Bucket must not be empty.";
-            case NativeRdb::E_INVALID_CONFLICT_FLAG:
-                return "Conflict flag is not correct.";
-            case NativeRdb::E_INVALID_ARGS:
-                return "The ValueBucket contains Assets and conflictResolution is REPLACE.";
-            case NativeRdb::E_SQLITE_ERROR:
-                return "SQLite: Generic error.";
-            case NativeRdb::E_SQLITE_SCHEMA:
-                return "SQLite: Database schema has changed.";
-            case NativeRdb::E_SQLITE_INTERRUPT:
-                return "SQLite: Operation interrupted.";
-            case NativeRdb::E_NOT_SELECT:
-                return "The SQL must be a query statement.";
-            case NativeRdb::E_NOT_SUPPORT_THE_SQL:
-                return "SQLite: Generic error. Executed SQL statement is not supported.";
-            default:
-                return std::string();
-        }
-    }
-
 private:
     int code_;
     int nativeCode_;
@@ -202,8 +175,7 @@ public:
             msg_ = napiError.message + opMsg;
         } else {
             code_ = E_INNER_ERROR;
-            std::string nativeMsg = InnerError::GetNativeErrMsg(code);
-            msg_ = "Inner error." + (nativeMsg.empty() ? "" : " " + nativeMsg) + opMsg;
+            msg_ = "Inner error.";
         }
     }
 

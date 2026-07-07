@@ -39,20 +39,25 @@ std::string AbsResultSet::BuildRowRangeCtx()
     return msg + ".";
 }
 
-std::string AbsResultSet::BuildColumnRangeCtx(int32_t columnIndex, const std::string &columnName)
+std::string FormatColumnCtx(int32_t columnCount, const std::string &head)
 {
-    std::string msg;
-    if (!columnName.empty()) {
-        msg = "The column \"" + columnName + "\" is not found";
-    } else if (columnIndex >= 0) {
-        msg = "The column index is " + std::to_string(columnIndex);
-    } else {
-        msg = "The column index is unknown";
-    }
-    if (columnCount_ >= 0) {
-        msg += ", and the column count is " + std::to_string(columnCount_);
-    }
-    return msg + ".";
+    return columnCount >= 0 ? head + ", and the column count is " + std::to_string(columnCount) + "."
+                            : head + ".";
+}
+
+std::string AbsResultSet::BuildColumnNameNotFoundCtx(const std::string &columnName)
+{
+    return FormatColumnCtx(columnCount_, "The column \"" + columnName + "\" is not found");
+}
+
+std::string AbsResultSet::BuildColumnIndexRangeCtx(int32_t columnIndex)
+{
+    return FormatColumnCtx(columnCount_, "The column index is " + std::to_string(columnIndex));
+}
+
+std::string AbsResultSet::BuildColumnUnknownCtx()
+{
+    return FormatColumnCtx(columnCount_, "The column index is unknown");
 }
 
 void AbsResultSet::SetLastErrorMsg(const std::string &msg)
@@ -560,7 +565,7 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
     }
     LOG_ERROR(
         "Failed, columnName : %{public}s, errCode : %{public}d", SqliteUtils::Anonymous(columnName).c_str(), errCode);
-    SetLastErrorMsg(BuildColumnRangeCtx(-1, columnName));
+    SetLastErrorMsg(columnName.empty() ? BuildColumnUnknownCtx() : BuildColumnNameNotFoundCtx(columnName));
     return E_INVALID_ARGS;
 }
 
@@ -575,7 +580,7 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
     }
     if (columnCount_ <= columnIndex || columnIndex < 0) {
         LOG_ERROR("Invalid columnIndex %{public}d", columnIndex);
-        SetLastErrorMsg(BuildColumnRangeCtx(columnIndex));
+        SetLastErrorMsg(columnIndex >= 0 ? BuildColumnIndexRangeCtx(columnIndex) : BuildColumnUnknownCtx());
         return E_COLUMN_OUT_RANGE;
     }
 
@@ -585,7 +590,7 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
             return E_OK;
         }
     }
-    SetLastErrorMsg(BuildColumnRangeCtx(columnIndex));
+    SetLastErrorMsg(BuildColumnIndexRangeCtx(columnIndex));
     return E_COLUMN_OUT_RANGE;
 }
 

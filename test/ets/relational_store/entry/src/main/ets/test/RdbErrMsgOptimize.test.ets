@@ -650,6 +650,213 @@ export default function rdbErrMsgOptimizeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgOptimize_025
+     * @tc.name Verify concurrent async insert returns isolated error messages with different columns
+     * @tc.desc 1.Run two async inserts with different invalid columns concurrently on same store
+     *          2.Expect each error message contains its own invalid column name, not the other's
+     */
+    it('ErrMsg_ConcurrentInsertAsync_DifferentErrorMsg_025', 0, async (done: Function) => {
+      console.log(TAG + "************* 025 start *************");
+      try {
+        const bucket1: data_relationalStore.ValuesBucket = {
+          "name": "diff1",
+          "col_diff_invalid_1": 1,
+        }
+        const bucket2: data_relationalStore.ValuesBucket = {
+          "name": "diff2",
+          "col_diff_invalid_2": 2,
+        }
+        let results = await Promise.allSettled([
+          rdbStore.insert("test", bucket1),
+          rdbStore.insert("test", bucket2),
+        ]);
+        for (let i = 0; i < results.length; i++) {
+          let r = results[i];
+          if (r.status === "rejected") {
+            console.log(`${TAG} 025 rejected[${i}] code:${r.reason?.code}, message:${r.reason?.message}`);
+          }
+        }
+        let r0 = results[0];
+        let r1 = results[1];
+        if (r0.status === "rejected" && r1.status === "rejected") {
+          expect(r0.reason.code == 14800021).assertTrue();
+          expect(r1.reason.code == 14800021).assertTrue();
+          expect(r0.reason.message.includes("col_diff_invalid_1")).assertTrue();
+          expect(!r0.reason.message.includes("col_diff_invalid_2")).assertTrue();
+          expect(r1.reason.message.includes("col_diff_invalid_2")).assertTrue();
+          expect(!r1.reason.message.includes("col_diff_invalid_1")).assertTrue();
+        } else if (r0.status === "rejected") {
+          expect(r0.reason.code == 14800021).assertTrue();
+          expect(r0.reason.message.includes("has no column named")).assertTrue();
+        } else if (r1.status === "rejected") {
+          expect(r1.reason.code == 14800021).assertTrue();
+          expect(r1.reason.message.includes("has no column named")).assertTrue();
+        }
+        expect(r0.status === "rejected" || r1.status === "rejected").assertTrue();
+      } catch (err) {
+        console.log(`${TAG} 025 unexpected error:${err.code}, message:${err.message}`);
+      }
+      done();
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgOptimize_026
+     * @tc.name Verify concurrent async update/delete return isolated error messages with different error types
+     * @tc.desc 1.Run async update(wrong_table) and async delete(wrong_table) concurrently
+     *          2.Expect both return 14800021 with "no such table", each isolated
+     */
+    it('ErrMsg_ConcurrentUpdateDeleteAsync_DifferentErrorMsg_026', 0, async (done: Function) => {
+      console.log(TAG + "************* 026 start *************");
+      try {
+        const valueBucket: data_relationalStore.ValuesBucket = {
+          "invalid_column": 999,
+        }
+        let predicatesUpdate = new data_relationalStore.RdbPredicates("wrong_table_update");
+        predicatesUpdate.equalTo('id', 1);
+        let predicatesDelete = new data_relationalStore.RdbPredicates("wrong_table_delete");
+        predicatesDelete.equalTo('id', 1);
+        let results = await Promise.allSettled([
+          rdbStore.update(valueBucket, predicatesUpdate),
+          rdbStore.delete(predicatesDelete),
+        ]);
+        for (let i = 0; i < results.length; i++) {
+          let r = results[i];
+          if (r.status === "rejected") {
+            console.log(`${TAG} 026 rejected[${i}] code:${r.reason?.code}, message:${r.reason?.message}`);
+            expect(r.reason.code == 14800021).assertTrue();
+            expect(r.reason.message.includes("no such table")).assertTrue();
+          }
+        }
+        let hasRejection = results.some((r: any) => r.status === "rejected");
+        expect(hasRejection).assertTrue();
+      } catch (err) {
+        console.log(`${TAG} 026 unexpected error:${err.code}, message:${err.message}`);
+      }
+      done();
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgOptimize_027
+     * @tc.name Verify concurrent async executeSql return isolated error messages
+     * @tc.desc 1.Run two async executeSql with different invalid SQL concurrently
+     *          2.Expect each error contains its own table name context
+     */
+    it('ErrMsg_ConcurrentExecuteSqlAsync_DifferentErrorMsg_027', 0, async (done: Function) => {
+      console.log(TAG + "************* 027 start *************");
+      try {
+        let results = await Promise.allSettled([
+          rdbStore.executeSql("DELETE FROM wrong_table_a"),
+          rdbStore.executeSql("DELETE FROM wrong_table_b"),
+        ]);
+        for (let i = 0; i < results.length; i++) {
+          let r = results[i];
+          if (r.status === "rejected") {
+            console.log(`${TAG} 027 rejected[${i}] code:${r.reason?.code}, message:${r.reason?.message}`);
+            expect(r.reason.code == 14800021).assertTrue();
+            expect(r.reason.message.includes("no such table")).assertTrue();
+          }
+        }
+        let r0 = results[0];
+        let r1 = results[1];
+        if (r0.status === "rejected" && r1.status === "rejected") {
+          expect(r0.reason.message.includes("wrong_table_a")).assertTrue();
+          expect(r1.reason.message.includes("wrong_table_b")).assertTrue();
+          expect(!r0.reason.message.includes("wrong_table_b")).assertTrue();
+          expect(!r1.reason.message.includes("wrong_table_a")).assertTrue();
+        } else if (r0.status === "rejected") {
+          expect(r0.reason.message.includes("no such table")).assertTrue();
+        } else if (r1.status === "rejected") {
+          expect(r1.reason.message.includes("no such table")).assertTrue();
+        }
+        expect(r0.status === "rejected" || r1.status === "rejected").assertTrue();
+      } catch (err) {
+        console.log(`${TAG} 027 unexpected error:${err.code}, message:${err.message}`);
+      }
+      done();
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgOptimize_028
+     * @tc.name Verify sequential sync operations do not cross-contaminate error messages
+     * @tc.desc 1.insertSync with invalid column A, verify error msg contains A
+     *          2.insertSync with invalid column B, verify error msg contains B, not A
+     */
+    it('ErrMsg_SequentialInsertSync_NoCrossContamination_028', 0, async (done: Function) => {
+      console.log(TAG + "************* 028 start *************");
+      try {
+        const bucketA: data_relationalStore.ValuesBucket = {
+          "name": "syncA",
+          "col_sync_invalid_A": 1,
+        }
+        try {
+          rdbStore.insertSync("test", bucketA);
+          expect(true).assertFail();
+        } catch (errA) {
+          console.log(`${TAG} 028 errA code:${errA.code}, message:${errA.message}`);
+          expect(errA.code == 14800021).assertTrue();
+          expect(errA.message.includes("has no column named")).assertTrue();
+          expect(errA.message.includes("col_sync_invalid_A")).assertTrue();
+        }
+        const bucketB: data_relationalStore.ValuesBucket = {
+          "name": "syncB",
+          "col_sync_invalid_B": 2,
+        }
+        try {
+          rdbStore.insertSync("test", bucketB);
+          expect(true).assertFail();
+        } catch (errB) {
+          console.log(`${TAG} 028 errB code:${errB.code}, message:${errB.message}`);
+          expect(errB.code == 14800021).assertTrue();
+          expect(errB.message.includes("has no column named")).assertTrue();
+          expect(errB.message.includes("col_sync_invalid_B")).assertTrue();
+          expect(!errB.message.includes("col_sync_invalid_A")).assertTrue();
+        }
+      } catch (err) {
+        console.log(`${TAG} 028 unexpected error:${err.code}, message:${err.message}`);
+      }
+      done();
+    })
+
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgOptimize_029
+     * @tc.name Verify sequential operations with different error types do not cross-contaminate
+     * @tc.desc 1.deleteSync from wrong_table → error "no such table"
+     *          2.insertSync with invalid column → error "has no column named"
+     *          3.Verify second error does not contain "no such table"
+     */
+    it('ErrMsg_SequentialDifferentError_NoCrossContamination_029', 0, async (done: Function) => {
+      console.log(TAG + "************* 029 start *************");
+      try {
+        let predicates = new data_relationalStore.RdbPredicates("wrong_table");
+        predicates.equalTo('id', 1);
+        try {
+          rdbStore.deleteSync(predicates);
+          expect(true).assertFail();
+        } catch (errA) {
+          console.log(`${TAG} 029 errA code:${errA.code}, message:${errA.message}`);
+          expect(errA.code == 14800021).assertTrue();
+          expect(errA.message.includes("no such table")).assertTrue();
+        }
+        const bucketB: data_relationalStore.ValuesBucket = {
+          "name": "diffErrB",
+          "col_diff_err_B": 2,
+        }
+        try {
+          rdbStore.insertSync("test", bucketB);
+          expect(true).assertFail();
+        } catch (errB) {
+          console.log(`${TAG} 029 errB code:${errB.code}, message:${errB.message}`);
+          expect(errB.code == 14800021).assertTrue();
+          expect(errB.message.includes("has no column named")).assertTrue();
+          expect(!errB.message.includes("no such table")).assertTrue();
+        }
+      } catch (err) {
+        console.log(`${TAG} 029 unexpected error:${err.code}, message:${err.message}`);
+      }
+      done();
+    })
+
     console.log(TAG + "*************Unit Test End*************");
   })
 }

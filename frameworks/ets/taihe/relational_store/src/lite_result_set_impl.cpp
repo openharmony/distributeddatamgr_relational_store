@@ -62,7 +62,7 @@ array<ohos::data::relationalStore::ValuesBucket> LiteResultSetImpl::GetRowsSync(
 
     if (resultSet != nullptr) {
         std::tie(errCode, rowEntities) = ani_rdbutils::GetRows(*resultSet, maxCount, positionNative);
-        opMsg = nativeResultSet_->GetLastErrorMsg();
+        opMsg = resultSet->GetLastErrorMsg();
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerErrorExt(errCode, opMsg);
@@ -118,7 +118,7 @@ uintptr_t LiteResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::Colu
         errCode = resultSet->GetColumnType(columnIndex, columnType);
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode, nativeResultSet_->GetLastErrorMsg());
+        ThrowInnerErrorExt(errCode, resultSet->GetLastErrorMsg());
         return 0;
     }
     return ani_rdbutils::ColumnTypeToTaihe(columnType);
@@ -378,7 +378,7 @@ array<array<ValueType>> LiteResultSetImpl::GetRowsDataSync(int32_t maxCount, opt
     std::string opMsg;
     if (resultSet != nullptr) {
         std::tie(errCode, rowsData) = resultSet->GetRowsData(maxCount, nativePosition);
-        opMsg = nativeResultSet_->GetLastErrorMsg();
+        opMsg = resultSet->GetLastErrorMsg();
     }
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
         std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode, opMsg),

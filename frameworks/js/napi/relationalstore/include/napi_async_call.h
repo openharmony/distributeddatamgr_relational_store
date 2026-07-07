@@ -84,6 +84,7 @@ public:
     std::unique_ptr<NativeRdb::HistogramReporter> histogram;
     void FinishHistogram(const char *asyncName, const char *syncName);
     void FinishHistogram(const char *name);
+    std::string errorMsg_;
 };
 
 class EnhancedContext : public ContextBase {

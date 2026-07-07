@@ -353,7 +353,10 @@ protected:
     virtual std::pair<int, std::vector<std::string>> GetColumnNames();
     std::pair<int, bool> IsEnded();
     std::string BuildRowRangeCtx();
-    std::string BuildColumnRangeCtx(int32_t columnIndex, const std::string &columnName = "");
+    // Column-range context builders, one per scenario. See GetColumnIndex/GetColumnName callers.
+    std::string BuildColumnNameNotFoundCtx(const std::string &columnName);
+    std::string BuildColumnIndexRangeCtx(int32_t columnIndex);
+    std::string BuildColumnUnknownCtx();
 
     // The default position of the result set
     static const int INIT_POS = -1;

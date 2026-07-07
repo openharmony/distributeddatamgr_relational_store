@@ -317,7 +317,7 @@ int AbsSharedResultSet::CheckState(int columnIndex)
 
     GetColumnCount(count);
     if (columnIndex >= count || columnIndex < 0) {
-        SetLastErrorMsg(BuildColumnRangeCtx(columnIndex));
+        SetLastErrorMsg(columnIndex >= 0 ? BuildColumnIndexRangeCtx(columnIndex) : BuildColumnUnknownCtx());
         return E_COLUMN_OUT_RANGE;
     }
 

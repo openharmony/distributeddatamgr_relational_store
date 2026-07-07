@@ -50,7 +50,6 @@ struct RdbStoreContextBase : public ContextBase {
     std::shared_ptr<NativeRdb::RdbStore> StealRdbStore();
     void SetError(std::shared_ptr<Error> err) override;
     std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
-    std::string capturedErrMsg_;
 };
 
 struct RdbStoreContext : public RdbStoreContextBase {

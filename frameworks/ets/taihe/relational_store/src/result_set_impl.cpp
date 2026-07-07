@@ -173,8 +173,8 @@ uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnId
     if (errCode == NativeRdb::E_INVALID_ARGS) {
         errCode = E_PARAM_ERROR;
     }
-    if (nativeResultSet_ != nullptr && errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, nativeResultSet_->GetLastErrorMsg());
+    if (resultSet != nullptr && errCode != OHOS::NativeRdb::E_OK) {
+        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
         return 0;
     }
     return ani_rdbutils::ColumnTypeToTaihe(columnType);

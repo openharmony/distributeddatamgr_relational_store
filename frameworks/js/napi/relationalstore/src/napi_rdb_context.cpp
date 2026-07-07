@@ -44,11 +44,11 @@ void RdbStoreContextBase::SetError(std::shared_ptr<Error> err)
         error = err;
         return;
     }
-    if (capturedErrMsg_.empty()) {
+    if (errorMsg_.empty()) {
         error = err;
         return;
     }
-    error = std::make_shared<InnerError>(nativeCode, capturedErrMsg_);
+    error = std::make_shared<InnerError>(nativeCode, errorMsg_);
 }
 int ParseTransactionOptions(
     const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<CreateTransactionContext> context)
