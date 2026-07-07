@@ -409,7 +409,7 @@ taihe::array<ohos::data::relationalStore::ValuesBucket> ResultSetImpl::GetRowsSy
 
     if (resultSet != nullptr) {
         std::tie(errCode, rowEntities) = ani_rdbutils::GetRows(*resultSet, maxCount, positionNative);
-        opMsg = nativeResultSet_->GetLastErrorMsg();
+        opMsg = resultSet->GetLastErrorMsg();
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerError(errCode, opMsg);
@@ -463,7 +463,7 @@ array<array<ValueType>> ResultSetImpl::GetRowsDataSync(int32_t maxCount, optiona
     std::string opMsg;
     if (resultSet != nullptr) {
         std::tie(errCode, rowsData) = resultSet->GetRowsData(maxCount, nativePosition);
-        opMsg = nativeResultSet_->GetLastErrorMsg();
+        opMsg = resultSet->GetLastErrorMsg();
     }
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerErrorExt(errCode, opMsg);
