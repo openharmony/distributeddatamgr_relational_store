@@ -44,17 +44,11 @@ void RdbStoreContextBase::SetError(std::shared_ptr<Error> err)
         error = err;
         return;
     }
-    std::string opMsg = capturedErrMsg_;
-    if (opMsg.empty()) {
+    if (capturedErrMsg_.empty()) {
         error = err;
         return;
     }
-    auto jsCode = GetJsErrorCodeExt(nativeCode);
-    if (jsCode.has_value()) {
-        error = std::make_shared<InnerErrorExt>(nativeCode, opMsg);
-    } else {
-        error = std::make_shared<InnerError>(nativeCode, opMsg);
-    }
+    error = std::make_shared<InnerError>(nativeCode, capturedErrMsg_);
 }
 int ParseTransactionOptions(
     const napi_env &env, size_t argc, napi_value *argv, std::shared_ptr<CreateTransactionContext> context)

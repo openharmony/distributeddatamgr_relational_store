@@ -1209,6 +1209,7 @@ int RdbStoreImpl::ModifyLockStatus(const AbsRdbPredicates &predicates, bool isLo
     Suspender suspender(Suspender::SQL_LOG);
     auto [err, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION);
     if (statement == nullptr || err != E_OK) {
+        CaptureLastError();
         return err;
     }
     int errCode = statement->ModifyLockStatus(predicates.GetTableName(), hashKeys, isLock);
@@ -1352,8 +1353,7 @@ int32_t RdbStoreImpl::CreatePool(bool &created)
 {
     int32_t errCode = E_OK;
     connectionPool_ = ConnectionPool::Create(configHolder_, config_, errCode);
-    if (connectionPool_ == nullptr && (errCode == E_SQLITE_CORRUPT || errCode == E_INVALID_SECRET_KEY) &&
-        !isReadOnly_) {
+    if (connectionPool_ == nullptr && (errCode == E_SQLITE_CORRUPT || errCode == E_INVALID_SECRET_KEY) && !isReadOnly_) {
         LOG_ERROR("database corrupt, errCode:0x%{public}x, %{public}s, %{public}s", errCode,
             SqliteUtils::Anonymous(name_).c_str(),
             SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str());
@@ -1396,9 +1396,9 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         return initStatus_;
     }
     // If it is a distributeddata request, never need ACL
-    isNeedSetAcl = RdbMgr::GetInstance().IsProxy() && (isNeedSetAcl ||
-                   SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
-                   SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID));
+    isNeedSetAcl = RdbMgr::GetInstance().IsProxy() &&
+                   (isNeedSetAcl || SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
+                       SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID));
     std::lock_guard<std::mutex> lock(initMutex_);
     if (initStatus_ != -1) {
         return initStatus_;
@@ -1475,7 +1475,7 @@ void RdbStoreImpl::CaptureLastError()
 {
     auto msg = connectionPool_ != nullptr ? connectionPool_->GetLastErrorMsg() : "";
     if (!msg.empty()) {
-        lastErrMsg_.Insert(std::this_thread::get_id(), msg);
+        lastErrMsg_.InsertOrAssign(std::this_thread::get_id(), msg);
     }
 }
 
@@ -1536,42 +1536,32 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
         return { E_INVALID_ARGS, -1 };
     }
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
-    int errCode = ExecuteBatchSql(executeSqlArgs, conn, pool);
-    if (errCode != E_OK) {
-        return { errCode, -1 };
-    }
-    conn = nullptr;
-    DoCloudSync(table);
-    return { E_OK, int64_t(rows.RowSize()) };
-}
-
-int RdbStoreImpl::ExecuteBatchSql(const RdbStoreImpl::BatchSqlArgs &sqls, const std::shared_ptr<Connection> &conn,
-    const std::shared_ptr<ConnectionPool> &pool)
-{
-    for (const auto &[sql, bindArgs] : sqls) {
+    for (const auto &[sql, bindArgs] : executeSqlArgs) {
         auto [errCode, statement] = GetStatement(sql, conn);
         if (statement == nullptr) {
-            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, "
+            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
                       "app self can check the SQL",
-                errCode, bindArgs.size());
-            return E_OK;
+                errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
+            return { E_OK, -1 };
         }
         for (const auto &args : bindArgs) {
             auto errCode = statement->Execute(args);
             if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
                 CaptureLastError();
                 pool->Dump(true, "BATCH");
-                return errCode;
+                return { errCode, -1 };
             }
             if (errCode != E_OK) {
                 CaptureLastError();
-                LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,app self can check the SQL", errCode,
-                    bindArgs.size());
-                return E_OK;
+                LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
+                    errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
+                return { E_OK, -1 };
             }
         }
     }
-    return E_OK;
+    conn = nullptr;
+    DoCloudSync(table);
+    return { E_OK, int64_t(rows.RowSize()) };
 }
 
 void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
@@ -1630,6 +1620,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteBatchInsertReturning(const RdbS
         LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, "
                   "app self can check the SQL",
             errCode, bindArgs.size());
+        CaptureLastError();
         return { errCode, -1 };
     }
     std::vector<ValuesBucket> values;
@@ -1798,6 +1789,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
     auto [errCode, statement] = BeginExecuteSql(sql);
     if (statement == nullptr) {
+        CaptureLastError();
         return errCode;
     }
     errCode = statement->Execute(args);
@@ -1842,6 +1834,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
 
     auto [errCode, statement] = GetStatement(sql, false);
     if (errCode != E_OK || statement == nullptr) {
+        CaptureLastError();
         return { errCode != E_OK ? errCode : E_ERROR, object };
     }
 
@@ -1935,6 +1928,7 @@ int RdbStoreImpl::ExecuteAndGetLong(int64_t &outValue, const std::string &sql, c
     }
     auto [errCode, statement] = BeginExecuteSql(sql);
     if (statement == nullptr) {
+        CaptureLastError();
         return errCode;
     }
     auto [err, object] = statement->ExecuteForValue(args);
@@ -1953,6 +1947,7 @@ int RdbStoreImpl::ExecuteAndGetString(std::string &outValue, const std::string &
     }
     auto [errCode, statement] = BeginExecuteSql(sql);
     if (statement == nullptr) {
+        CaptureLastError();
         return errCode;
     }
     ValueObject object;
@@ -1973,6 +1968,7 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     auto begin = std::chrono::steady_clock::now();
     auto [errCode, statement] = GetStatement(sql, false);
     if (statement == nullptr) {
+        CaptureLastError();
         return errCode;
     }
     auto beginExec = std::chrono::steady_clock::now();
@@ -2009,6 +2005,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
     }
     auto [errCode, statement] = GetStatement(sql, false, returningSql);
     if (statement == nullptr) {
+        CaptureLastError();
         return { errCode, -1 };
     }
     std::vector<ValuesBucket> values;
@@ -2034,8 +2031,8 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
         backupFilePath = StringUtils::ExtractFilePath(path_) + databasePath;
     } else {
         // 2 represents two characters starting from the len - 2 position
-        if (!PathToRealPath(StringUtils::ExtractFilePath(databasePath), backupFilePath) || databasePath.back() == '/' ||
-            databasePath.substr(databasePath.length() - 2, 2) == "\\") {
+        if (!PathToRealPath(StringUtils::ExtractFilePath(databasePath), backupFilePath) ||
+            databasePath.back() == '/' || databasePath.substr(databasePath.length() - 2, 2) == "\\") {
             LOG_ERROR("Invalid databasePath.");
             return E_INVALID_FILE_PATH;
         }
@@ -2081,6 +2078,7 @@ int RdbStoreImpl::Backup()
     std::shared_ptr<Statement> statement;
     std::tie(errCode, statement) = conn->CreateStatement("PRAGMA quick_check", conn);
     if (errCode != E_OK || statement == nullptr) {
+        CaptureLastError();
         return errCode;
     }
     {
@@ -2264,6 +2262,7 @@ std::pair<int32_t, RdbStoreImpl::Stmt> RdbStoreImpl::BeginExecuteSql(const std::
 
     auto [errCode, statement] = GetStatement(sql, conn);
     if (statement == nullptr) {
+        CaptureLastError();
         return { errCode, nullptr };
     }
 
@@ -2387,6 +2386,7 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
         auto [errCode, statement] = GetStatement(GlobalExpr::ATTACH_WITH_KEY_SQL, conn);
         if (statement == nullptr || errCode != E_OK) {
             LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
+            CaptureLastError();
             return E_ERROR;
         }
         return statement->Execute(bindArgs);
@@ -2395,6 +2395,7 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
     auto [errCode, statement] = GetStatement(GlobalExpr::ATTACH_SQL, conn);
     if (statement == nullptr || errCode != E_OK) {
         LOG_ERROR("Attach get statement failed, code is %{public}d", errCode);
+        CaptureLastError();
         return errCode;
     }
     return statement->Execute(bindArgs);
@@ -2470,6 +2471,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     auto [errCode, statement] = GetStatement(GlobalExpr::DETACH_SQL, connection);
     if (statement == nullptr || errCode != E_OK) {
         LOG_ERROR("Detach get statement failed, errCode %{public}d", errCode);
+        CaptureLastError();
         return { errCode, 0 };
     }
     errCode = statement->Execute(bindArgs);
@@ -2501,6 +2503,7 @@ int RdbStoreImpl::GetVersion(int &version)
     Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_VERSION, isReadOnly_);
     if (statement == nullptr) {
+        CaptureLastError();
         return errCode;
     }
     ValueObject value;
@@ -2527,6 +2530,7 @@ int RdbStoreImpl::SetVersion(int version)
     std::string sql = std::string(GlobalExpr::PRAGMA_VERSION) + " = " + std::to_string(version);
     auto [errCode, statement] = GetStatement(sql);
     if (statement == nullptr) {
+        CaptureLastError();
         return errCode;
     }
     auto execErr = statement->Execute();
@@ -2555,6 +2559,7 @@ int RdbStoreImpl::BeginTransaction()
     BaseTransaction transaction(pool->GetTransactionStack().size());
     auto [err, statement] = GetStatement(transaction.GetTransactionStr());
     if (statement == nullptr) {
+        CaptureLastError();
         return err;
     }
     err = statement->Execute();
@@ -2629,6 +2634,7 @@ int RdbStoreImpl::RollBack()
     }
     auto [err, statement] = GetStatement(transaction.GetRollbackStr());
     if (statement == nullptr) {
+        CaptureLastError();
         if (err == E_DATABASE_BUSY) {
             Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, err, config_.GetBundleName(), "RollBusy"));
         }
@@ -2729,6 +2735,7 @@ int RdbStoreImpl::Commit()
     }
     auto [err, statement] = GetStatement(sqlStr);
     if (statement == nullptr) {
+        CaptureLastError();
         if (err == E_DATABASE_BUSY) {
             Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, err, config_.GetBundleName(), "ComBusy"));
         }
@@ -2787,6 +2794,7 @@ int RdbStoreImpl::CheckAttach(const std::string &sql)
     Suspender suspender(Suspender::SQL_LOG);
     auto [errCode, statement] = GetStatement(GlobalExpr::PRAGMA_JOUR_MODE_EXP);
     if (statement == nullptr) {
+        CaptureLastError();
         return errCode;
     }
 

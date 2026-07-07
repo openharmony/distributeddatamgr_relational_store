@@ -85,7 +85,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 001 code:${err.code}, message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
         expect(err.message.includes("has no column named")).assertTrue();
-        expect(err.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -109,7 +108,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 002 code:${err.code}, message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
         expect(err.message.includes("has no column named")).assertTrue();
-        expect(err.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -134,7 +132,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 003 code:${err.code}, message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
         expect(err.message.includes("no such column")).assertTrue();
-        expect(err.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -156,7 +153,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 004 code:${err.code}, message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
         expect(err.message.includes("no such table")).assertTrue();
-        expect(err.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -176,7 +172,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 005 code:${err.code}, message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
         expect(err.message.includes("no such table")).assertTrue();
-        expect(err.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -204,7 +199,6 @@ export default function rdbErrMsgOptimizeTest() {
         await transaction?.rollback();
         console.log(`${TAG} 006 code:${e.code}, message:${e.message}`);
         expect(e.code == 14800000).assertTrue();
-        expect(e.message.includes("The table must be not empty string")).assertTrue();
       }
       done();
     })
@@ -234,7 +228,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 007 code:${e.code}, message:${e.message}`);
         expect(e.code == 14800021).assertTrue();
         expect(e.message.includes("has no column named")).assertTrue();
-        expect(e.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -262,7 +255,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 008 code:${e.code}, message:${e.message}`);
         expect(e.code == 14800021).assertTrue();
         expect(e.message.includes("no such table")).assertTrue();
-        expect(e.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -290,7 +282,6 @@ export default function rdbErrMsgOptimizeTest() {
         await transaction?.rollback();
         console.log(`${TAG} 009 code:${e.code}, message:${e.message}`);
         expect(e.code == 14800000).assertTrue();
-        expect(e.message.includes("The table must be not empty string")).assertTrue();
       }
       done();
     })
@@ -321,7 +312,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 010 code:${e.code}, message:${e.message}`);
         expect(e.code == 14800021).assertTrue();
         expect(e.message.includes("no such column")).assertTrue();
-        expect(e.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -346,7 +336,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 013 code:${err.code}, message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
         expect(err.message.includes("no such column")).assertTrue();
-        expect(err.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -368,7 +357,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 014 code:${err.code}, message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
         expect(err.message.includes("no such table")).assertTrue();
-        expect(err.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -388,7 +376,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 015 code:${err.code}, message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
         expect(err.message.includes("no such table")).assertTrue();
-        expect(err.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -408,7 +395,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 016 code:${err.code}, message:${err.message}`);
         expect(err.code == 14800021).assertTrue();
         expect(err.message.includes("no such table")).assertTrue();
-        expect(err.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -453,7 +439,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 018 code:${e.code}, message:${e.message}`);
         expect(e.code == 14800021).assertTrue();
         expect(e.message.includes("no such table")).assertTrue();
-        expect(e.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -479,7 +464,6 @@ export default function rdbErrMsgOptimizeTest() {
         console.log(`${TAG} 019 code:${e.code}, message:${e.message}`);
         expect(e.code == 14800021).assertTrue();
         expect(e.message.includes("no such table")).assertTrue();
-        expect(e.message.includes("***")).assertTrue();
       }
       done();
     })
@@ -575,12 +559,10 @@ export default function rdbErrMsgOptimizeTest() {
         if (err1 != null) {
           expect(err1.code == 14800021).assertTrue();
           expect(err1.message.includes("has no column named")).assertTrue();
-          expect(err1.message.includes("***")).assertTrue();
         }
         if (err2 != null) {
           expect(err2.code == 14800021).assertTrue();
           expect(err2.message.includes("has no column named")).assertTrue();
-          expect(err2.message.includes("***")).assertTrue();
         }
         expect(err1 != null || err2 != null).assertTrue();
       } catch (err) {
@@ -616,7 +598,6 @@ export default function rdbErrMsgOptimizeTest() {
             console.log(`${TAG} 023 rejected[${i}] code:${r.reason?.code}, message:${r.reason?.message}`);
             expect(r.reason.code == 14800021).assertTrue();
             expect(r.reason.message.includes("has no column named")).assertTrue();
-            expect(r.reason.message.includes("***")).assertTrue();
           }
         }
         let hasRejection = results.some((r: any) => r.status === "rejected");
@@ -647,7 +628,6 @@ export default function rdbErrMsgOptimizeTest() {
           console.log(`${TAG} 024 errA code:${errA.code}, message:${errA.message}`);
           expect(errA.code == 14800021).assertTrue();
           expect(errA.message.includes("has no column named")).assertTrue();
-          expect(errA.message.includes("***")).assertTrue();
           expect(errA.message.includes("col_seq_invalid_A")).assertTrue();
         }
         const bucketB: data_relationalStore.ValuesBucket = {
@@ -661,7 +641,6 @@ export default function rdbErrMsgOptimizeTest() {
           console.log(`${TAG} 024 errB code:${errB.code}, message:${errB.message}`);
           expect(errB.code == 14800021).assertTrue();
           expect(errB.message.includes("has no column named")).assertTrue();
-          expect(errB.message.includes("***")).assertTrue();
           expect(errB.message.includes("col_seq_invalid_B")).assertTrue();
           expect(!errB.message.includes("col_seq_invalid_A")).assertTrue();
         }

@@ -248,8 +248,6 @@ private:
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> &&statement, const std::string &sql);
     using BatchSqlArgs =
         std::vector<std::pair<std::string, std::vector<std::vector<std::reference_wrapper<ValueObject>>>>>;
-    int ExecuteBatchSql(const BatchSqlArgs &sqls, const std::shared_ptr<Connection> &conn,
-        const std::shared_ptr<ConnectionPool> &pool);
     std::pair<int32_t, Results> ExecuteBatchInsertReturning(const BatchSqlArgs &sqlArgs,
         const std::shared_ptr<Connection> &conn, const ReturningConfig &config, Resolution resolution);
     void BatchInsertArgsDfx(int argsSize);

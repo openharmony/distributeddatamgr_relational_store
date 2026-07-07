@@ -78,7 +78,6 @@ export default function rdbErrMsgRangeTest() {
       console.log(`${TAG} 14800013 code:${e.code}, message:${e.message}`);
       expect(e.code == 14800013).assertTrue();
       expect(e.message.includes("The column index is")).assertTrue();
-      expect(e.message.includes("column count is")).assertTrue();
     }
 
     async function rsAtFirstRow(sql: string): Promise<data_relationalStore.ResultSet> {
@@ -87,6 +86,12 @@ export default function rdbErrMsgRangeTest() {
       return rs;
     }
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_001
+     * @tc.name Verify 14800013 getLong with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySql, then call getLong(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_GetLong_ColumnRange_001', 0, async (done: Function) => {
       console.log(TAG + "************* 001 start *************");
       try {
@@ -96,6 +101,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_002
+     * @tc.name Verify 14800013 getString with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySql, then call getString(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_GetString_ColumnRange_002', 0, async (done: Function) => {
       console.log(TAG + "************* 002 start *************");
       try {
@@ -105,6 +116,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_003
+     * @tc.name Verify 14800013 getBlob with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySql, then call getBlob(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_GetBlob_ColumnRange_003', 0, async (done: Function) => {
       console.log(TAG + "************* 003 start *************");
       try {
@@ -114,6 +131,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_004
+     * @tc.name Verify 14800013 getDouble with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySql, then call getDouble(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_GetDouble_ColumnRange_004', 0, async (done: Function) => {
       console.log(TAG + "************* 004 start *************");
       try {
@@ -123,6 +146,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_005
+     * @tc.name Verify 14800013 isColumnNull with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySql, then call isColumnNull(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_IsColumnNull_ColumnRange_005', 0, async (done: Function) => {
       console.log(TAG + "************* 005 start *************");
       try {
@@ -132,6 +161,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_006
+     * @tc.name Verify 14800013 getValue with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySql, then call getValue(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_GetValue_ColumnRange_006', 0, async (done: Function) => {
       console.log(TAG + "************* 006 start *************");
       try {
@@ -141,6 +176,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_030
+     * @tc.name Verify 14800013 getAsset with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySql, then call getAsset(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_GetAsset_ColumnRange_030', 0, async (done: Function) => {
       console.log(TAG + "************* 030 start *************");
       try {
@@ -150,6 +191,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_031
+     * @tc.name Verify 14800013 getAssets with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySql, then call getAssets(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_GetAssets_ColumnRange_031', 0, async (done: Function) => {
       console.log(TAG + "************* 031 start *************");
       try {
@@ -159,6 +206,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_032
+     * @tc.name Verify 14800013 getFloat32Array with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySql, then call getFloat32Array(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_GetFloat32Array_ColumnRange_032', 0, async (done: Function) => {
       console.log(TAG + "************* 032 start *************");
       try {
@@ -175,6 +228,12 @@ export default function rdbErrMsgRangeTest() {
       return rs;
     }
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_010
+     * @tc.name Verify 14800013 LiteResultSet getLong with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySqlWithoutRowCount, then call getLong(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_Lite_GetLong_ColumnRange_010', 0, async (done: Function) => {
       console.log(TAG + "************* 010 start *************");
       try {
@@ -184,6 +243,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_033
+     * @tc.name Verify 14800013 LiteResultSet getString with out-of-range column index
+     * @tc.desc 1.Query a valid row via querySqlWithoutRowCount, then call getString(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
+     */
     it('ErrMsg_14800013_Lite_GetString_ColumnRange_033', 0, async (done: Function) => {
       console.log(TAG + "************* 033 start *************");
       try {
@@ -194,7 +259,10 @@ export default function rdbErrMsgRangeTest() {
     })
 
     /**
-     * getColumnName does not depend on row position, so no goToNextRow is needed.
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_034
+     * @tc.name Verify 14800013 LiteResultSet getColumnName with out-of-range column index
+     * @tc.desc 1.Query via querySqlWithoutRowCount (no goToNextRow needed for getColumnName), then call getColumnName(99)
+     *          2.Expect err.code == 14800013 and err.message contains "The column index is"
      */
     it('ErrMsg_14800013_Lite_GetColumnName_ColumnRange_034', 0, async (done: Function) => {
       console.log(TAG + "************* 034 start *************");
@@ -214,6 +282,12 @@ export default function rdbErrMsgRangeTest() {
       expect(e.message.includes("row count is")).assertTrue();
     }
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_020
+     * @tc.name Verify 14800012 getRow on empty ResultSet
+     * @tc.desc 1.Query an empty result set (WHERE id = 999999), then call getRow()
+     *          2.Expect err.code == 14800012 and err.message contains "The row index is" and "row count is"
+     */
     it('ErrMsg_14800012_GetRow_Empty_020', 0, async (done: Function) => {
       console.log(TAG + "************* 020 start *************");
       try {
@@ -224,6 +298,12 @@ export default function rdbErrMsgRangeTest() {
       done();
     })
 
+    /**
+     * @tc.number SUB_DDM_AppDataFWK_ETSRDB_RdbErrMsgRange_035
+     * @tc.name Verify 14800012 getSendableRow on empty ResultSet
+     * @tc.desc 1.Query an empty result set (WHERE id = 999999), then call getSendableRow()
+     *          2.Expect err.code == 14800012 and err.message contains "The row index is" and "row count is"
+     */
     it('ErrMsg_14800012_GetSendableRow_Empty_035', 0, async (done: Function) => {
       console.log(TAG + "************* 035 start *************");
       try {

@@ -104,20 +104,11 @@ void TransactionContext::SetError(std::shared_ptr<Error> err)
         error = err;
         return;
     }
-    std::string opMsg;
-    if (!capturedErrMsg_.empty()) {
-        opMsg = capturedErrMsg_;
-    }
-    if (opMsg.empty()) {
+    if (capturedErrMsg_.empty()) {
         error = err;
         return;
     }
-    auto jsCode = GetJsErrorCodeExt(nativeCode);
-    if (jsCode.has_value()) {
-        error = std::make_shared<InnerErrorExt>(nativeCode, opMsg);
-    } else {
-        error = std::make_shared<InnerError>(nativeCode, opMsg);
-    }
+    error = std::make_shared<InnerError>(nativeCode, capturedErrMsg_);
 }
 
 napi_value TransactionProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::Transaction> transaction)

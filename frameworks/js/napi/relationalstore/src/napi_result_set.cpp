@@ -214,13 +214,15 @@ napi_value ResultSetProxy::GetWholeColumnNames(napi_env env, napi_callback_info 
     auto resultSet = GetInnerResultSet(env, info);
     int errCode = E_ALREADY_CLOSED;
     std::vector<std::string> colNames;
+    std::string opMsg;
     if (resultSet != nullptr) {
         std::tie(errCode, colNames) = resultSet->GetWholeColumnNames();
+        opMsg = resultSet->GetLastErrorMsg();
     }
     if (errCode == E_INVALID_ARGS) {
         errCode = E_INVALID_ARGS_NEW;
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, opMsg));
     return JSUtils::Convert2JSValue(env, std::move(colNames));
 }
 
@@ -454,10 +456,12 @@ napi_value ResultSetProxy::GetInt(napi_env env, napi_callback_info info)
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     int32_t result;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetInt(columnIndex, result);
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -469,10 +473,12 @@ napi_value ResultSetProxy::GetLong(napi_env env, napi_callback_info info)
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     int64_t result;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetLong(columnIndex, result);
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -484,10 +490,12 @@ napi_value ResultSetProxy::GetBlob(napi_env env, napi_callback_info info)
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     std::vector<uint8_t> result;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetBlob(columnIndex, result);
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -499,14 +507,16 @@ napi_value ResultSetProxy::GetAsset(napi_env env, napi_callback_info info)
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     Asset result;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetAsset(columnIndex, result);
+        opMsg = resultSet->GetLastErrorMsg();
     }
     if (errCode == E_NULL_OBJECT) {
         LOG_DEBUG("GetAsset col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -518,14 +528,16 @@ napi_value ResultSetProxy::GetAssets(napi_env env, napi_callback_info info)
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     Assets result;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetAssets(columnIndex, result);
+        opMsg = resultSet->GetLastErrorMsg();
     }
     if (errCode == E_NULL_OBJECT) {
         LOG_DEBUG("GetAssets col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -537,14 +549,16 @@ napi_value ResultSetProxy::GetFloat32Array(napi_env env, napi_callback_info info
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     FloatVector result = {};
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetFloat32Array(columnIndex, result);
+        opMsg = resultSet->GetLastErrorMsg();
     }
     if (errCode == E_NULL_OBJECT) {
         LOG_DEBUG("GetFloat32Array col %{public}d is null.", columnIndex);
         return JSUtils::Convert2JSValue(env, std::monostate());
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     return JSUtils::Convert2JSValue(env, result);
 }
 
@@ -555,10 +569,12 @@ napi_value ResultSetProxy::GetString(napi_env env, napi_callback_info info)
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     std::string result;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetString(columnIndex, result);
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -570,10 +586,12 @@ napi_value ResultSetProxy::GetDouble(napi_env env, napi_callback_info info)
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     double result = 0.0;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetDouble(columnIndex, result);
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -611,10 +629,12 @@ napi_value ResultSetProxy::IsColumnNull(napi_env env, napi_callback_info info)
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     bool result = false;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->IsColumnNull(columnIndex, result);
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, result);
 }
@@ -625,10 +645,12 @@ napi_value ResultSetProxy::GetRow(napi_env env, napi_callback_info info)
     auto resultSet = GetInnerResultSet(env, info);
     RowEntity rowEntity;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetRow(rowEntity);
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, rowEntity);
 }
@@ -639,10 +661,12 @@ napi_value ResultSetProxy::GetRowData(napi_env env, napi_callback_info info)
     auto resultSet = GetInnerResultSet(env, info);
     std::vector<ValueObject> rowData;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         std::tie(errCode, rowData) = resultSet->GetRowData();
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, opMsg));
 
     return JSUtils::Convert2JSValue(env, std::move(rowData));
 }
@@ -776,10 +800,12 @@ napi_value ResultSetProxy::GetSendableRow(napi_env env, napi_callback_info info)
     auto resultSet = GetInnerResultSet(env, info);
     RowEntity rowEntity;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->GetRow(rowEntity);
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     return JSUtils::Convert2Sendable(env, rowEntity);
 }
 
@@ -790,10 +816,12 @@ napi_value ResultSetProxy::GetValue(napi_env env, napi_callback_info info)
     auto resultSet = ParseInt32FieldByName(env, info, columnIndex, "columnIndex");
     ValueObject object;
     int errCode = E_ALREADY_CLOSED;
+    std::string opMsg;
     if (resultSet != nullptr) {
         errCode = resultSet->Get(columnIndex, object);
+        opMsg = resultSet->GetLastErrorMsg();
     }
-    RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, opMsg));
     return JSUtils::Convert2JSValue(env, object);
 }
 
