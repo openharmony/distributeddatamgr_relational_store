@@ -175,6 +175,7 @@ int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
             SetLastErrorMsg(BuildRowRangeCtx());
             errCode = E_ROW_OUT_RANGE;
         }
+        SetLastErrorMsg(conn_->GetLastErrorMsg());
         return errCode;
     }
     return E_OK;

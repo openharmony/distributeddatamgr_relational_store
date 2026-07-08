@@ -932,7 +932,7 @@ std::string SqliteStatement::GetLastErrorMsg() const
 {
     auto dbHandle = sqlite3_db_handle(stmt_);
     std::string errMsg(sqlite3_errmsg(dbHandle));
-    return errMsg + " in " + sql_;
+    return errMsg;
 }
 
 int SqliteStatement::InnerFinalize()

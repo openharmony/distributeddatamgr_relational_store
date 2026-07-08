@@ -48,7 +48,7 @@ void AbsResultSet::SetLastErrorMsg(const std::string &msg)
 std::string AbsResultSet::GetLastErrorMsg() const
 {
     std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
-    return lastErrMsg_;
+    return std::move(lastErrMsg_);
 }
 
 void RowEntity::Put(const std::string &name, int32_t index, ValueObject &&value)

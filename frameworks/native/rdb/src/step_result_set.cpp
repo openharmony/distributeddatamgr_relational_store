@@ -262,9 +262,7 @@ int StepResultSet::GoToNextRow()
         SetLastErrorMsg(BuildRowRangeCtx());
         return E_ROW_OUT_RANGE;
     } else {
-        if (conn_ != nullptr) {
-            SetLastErrorMsg(conn_->GetLastErrorMsg());
-        }
+        SetLastErrorMsg(statement->GetLastErrorMsg());
         Reset();
         rowPos_ = rowCount_;
         return errCode;
@@ -407,7 +405,7 @@ std::string StepResultSet::GetLastErrorMsg() const
 {
     std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
     if (!lastErrMsg_.empty()) {
-        return lastErrMsg_;
+        return std::move(lastErrMsg_);
     }
     if (conn_ != nullptr) {
         return conn_->GetLastErrorMsg();

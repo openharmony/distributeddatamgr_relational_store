@@ -1464,7 +1464,7 @@ RdbStoreImpl::~RdbStoreImpl()
 std::string RdbStoreImpl::GetLastErrorMsg() const
 {
     std::lock_guard<decltype(errMutex_)> lock(errMutex_);
-    return lastErrMsg_;
+    return std::move(lastErrMsg_);
 }
 
 void RdbStoreImpl::SetLastErrorMsg(const std::string &msg) const
@@ -1545,7 +1545,6 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
                 return { errCode, -1 };
             }
             if (errCode != E_OK) {
-                SetLastErrorMsg(statement->GetLastErrorMsg());
                 LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
                     errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
                 return { E_OK, -1 };
