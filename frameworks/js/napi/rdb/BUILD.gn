@@ -22,6 +22,7 @@ ohos_copy("relational_store_declaration") {
 }
 
 ohos_shared_library("napi_rdb") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "../common/src/js_df_manager.cpp",
     "../common/src/js_scope.cpp",
@@ -128,6 +129,7 @@ ohos_shared_library("napi_rdb") {
 }
 
 ohos_shared_library("rdb") {
+  branch_protector_ret = "pac_ret"
   sources = [ "src/entry_point.cpp" ]
 
   if (is_mingw || is_mac) {
