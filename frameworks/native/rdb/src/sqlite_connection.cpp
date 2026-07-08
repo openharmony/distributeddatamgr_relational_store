@@ -492,7 +492,6 @@ int SqliteConnection::Configure(const RdbStoreConfig &config, std::string &dbPat
 
 SqliteConnection::~SqliteConnection()
 {
-    lastErrMsg_.clear();
     if (backupId_ != TaskExecutor::INVALID_TASK_ID) {
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (pool != nullptr) {
@@ -509,17 +508,8 @@ SqliteConnection::~SqliteConnection()
 
 std::string SqliteConnection::GetLastErrorMsg() const
 {
-    if (!lastErrMsg_.empty()) {
-        return lastErrMsg_ + " " + SqliteUtils::Anonymous(config_.GetPath());
-    }
-    return "";
+    return std::string(sqlite3_errmsg(dbHandle_));
 }
-
-void SqliteConnection::SetLastErrorMsg(const std::string &msg)
-{
-    lastErrMsg_ = msg;
-}
-
 
 int32_t SqliteConnection::VerifyAndRegisterHook(const RdbStoreConfig &config)
 {
@@ -622,7 +612,6 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatementInne
     }
     int errCode = statement->Prepare(db, sql + returningSql);
     if (errCode != E_OK) {
-        SetLastErrorMsg(std::string(sqlite3_errmsg(db)) + " in " + sql);
         return { errCode, nullptr };
     }
     statement->conn_ = conn;

@@ -87,7 +87,6 @@ public:
     int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
     void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount = false) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
-    void SetLastErrorMsg(const std::string &msg);
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
@@ -225,7 +224,6 @@ private:
     int maxVariableNumber_;
     std::shared_ptr<SqliteConnection> slaveConnection_;
     std::map<std::string, ScalarFunctionInfo> customScalarFunctions_;
-    std::string lastErrMsg_;
     const RdbStoreConfig config_;
 };
 } // namespace NativeRdb
