@@ -39,8 +39,9 @@
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_store_config.h"
-#include "relational_store_client.h"
 #include "rdb_time_utils.h"
+#include "relational/relational_store_sqlite_ext.h"
+#include "relational_store_client.h"
 #include "sqlite3.h"
 #include "sqlite_default_function.h"
 #include "sqlite_errno.h"
@@ -48,9 +49,8 @@
 #include "sqlite_utils.h"
 #include "string_utils.h"
 #include "suspender.h"
-#include "value_object.h"
-#include "relational/relational_store_sqlite_ext.h"
 #include "task_executor.h"
+#include "value_object.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -144,7 +144,7 @@ std::map<std::string, Connection::Info> SqliteConnection::Collect(const RdbStore
         }
     }
     RdbSecurityManager::KeyFiles keyFiles(path);
-    std::string keyPath =  keyFiles.GetKeyFile(RdbSecurityManager::PUB_KEY_FILE);
+    std::string keyPath = keyFiles.GetKeyFile(RdbSecurityManager::PUB_KEY_FILE);
     std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(keyPath);
     if (fileInfo.first == E_OK) {
         collection.insert(std::pair{ "key", fileInfo.second });
@@ -211,8 +211,9 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::CreateSl
         SqliteUtils::FormatDebugInfoBrief(bugInfo, SqliteUtils::Anonymous(config.GetName())).c_str(),
         SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config_), "master").c_str(), isSlaveExist,
         isSlaveLockExist, hasFailure, walOverLimit, IsSupportBinlog(config_));
-    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER && (slaveOpenPolicy == SlaveOpenPolicy::OPEN_IF_DB_VALID &&
-        (!isSlaveExist || isSlaveLockExist || hasFailure || walOverLimit))) {
+    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER &&
+        (slaveOpenPolicy == SlaveOpenPolicy::OPEN_IF_DB_VALID &&
+            (!isSlaveExist || isSlaveLockExist || hasFailure || walOverLimit))) {
         if (walOverLimit) {
             SqliteUtils::SetSlaveInvalid(config_.GetPath());
             Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_WAL_OVER_LIMIT, E_SQLITE_ERROR,
@@ -317,7 +318,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 
     if (isWriter_) {
-        ValueObject checkResult{"ok"};
+        ValueObject checkResult{ "ok" };
         auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
         if (index < static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
             auto sql = INTEGRITIES[index];
@@ -505,9 +506,14 @@ SqliteConnection::~SqliteConnection()
     }
 }
 
+std::string SqliteConnection::GetLastErrorMsg() const
+{
+    return std::string(sqlite3_errmsg(dbHandle_));
+}
+
 int32_t SqliteConnection::VerifyAndRegisterHook(const RdbStoreConfig &config)
 {
-    if (!isWriter_  || config_.IsEqualRegisterInfo(config)) {
+    if (!isWriter_ || config_.IsEqualRegisterInfo(config)) {
         return E_OK;
     }
     for (auto &eventInfo : onEventHandlers_) {
@@ -601,7 +607,6 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatementInne
     std::shared_ptr<Connection> conn, sqlite3 *db, bool isFromReplica, const std::string &returningSql)
 {
     std::shared_ptr<SqliteStatement> statement = std::make_shared<SqliteStatement>(&config_);
-    // When memory is not cleared, quick_check reads memory pages and detects damage but does not report it
     if (sql == INTEGRITIES[1] && db != nullptr && mode_ == JournalMode::MODE_WAL) {
         sqlite3_db_release_memory(db);
     }
@@ -734,24 +739,22 @@ int SqliteConnection::SetEncryptAgo(const RdbStoreConfig::CryptoParam &cryptoPar
         }
     }
 
-    auto errCode = ExecuteSql(std::string(GlobalExpr::CODEC_HMAC_ALGO_PREFIX) +
-                              SqliteUtils::HmacAlgoDescription(cryptoParam.hmacAlgo) +
-                              std::string(GlobalExpr::ALGO_SUFFIX));
+    auto errCode =
+        ExecuteSql(std::string(GlobalExpr::CODEC_HMAC_ALGO_PREFIX) +
+                   SqliteUtils::HmacAlgoDescription(cryptoParam.hmacAlgo) + std::string(GlobalExpr::ALGO_SUFFIX));
     if (errCode != E_OK) {
         LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
         return errCode;
     }
 
     errCode = ExecuteSql(std::string(GlobalExpr::CODEC_KDF_ALGO_PREFIX) +
-                         SqliteUtils::KdfAlgoDescription(cryptoParam.kdfAlgo) +
-                         std::string(GlobalExpr::ALGO_SUFFIX));
+                         SqliteUtils::KdfAlgoDescription(cryptoParam.kdfAlgo) + std::string(GlobalExpr::ALGO_SUFFIX));
     if (errCode != E_OK) {
         LOG_ERROR("set codec kdf algo failed, err = %{public}d", errCode);
         return errCode;
     }
 
-    errCode = ExecuteSql(
-        std::string(GlobalExpr::CODEC_PAGE_SIZE_PREFIX) + std::to_string(cryptoParam.cryptoPageSize));
+    errCode = ExecuteSql(std::string(GlobalExpr::CODEC_PAGE_SIZE_PREFIX) + std::to_string(cryptoParam.cryptoPageSize));
     if (errCode != E_OK) {
         LOG_ERROR("set codec page size failed, err = %{public}d", errCode);
         return errCode;
@@ -801,8 +804,8 @@ int SqliteConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         return E_ERROR;
     }
     errCode = ExecuteSql(std::string(GlobalExpr::REKEY_HMAC_ALGO) +
-                              SqliteUtils::HmacAlgoDescription(config_.GetCryptoParam().hmacAlgo) +
-                              std::string(GlobalExpr::ALGO_SUFFIX));
+                         SqliteUtils::HmacAlgoDescription(config_.GetCryptoParam().hmacAlgo) +
+                         std::string(GlobalExpr::ALGO_SUFFIX));
     if (errCode != E_OK) {
         key.assign(key.size(), 0);
         LOG_ERROR("set codec hmac algo failed, err = %{public}d", errCode);
@@ -1005,8 +1008,9 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
             errCode = SetEncryptKey(newKey, config);
             if (errCode != E_OK) {
                 Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_SET_NEW_ENCRYPT_FAIL, config,
-                    "LOG:new key SetEncryptKey errcode= "+ std::to_string(errCode) +
-                    ",iter=" + std::to_string(config.GetIter()), true));
+                    "LOG:new key SetEncryptKey errcode= " + std::to_string(errCode) +
+                        ",iter=" + std::to_string(config.GetIter()),
+                    true));
             }
         }
         newKey.assign(newKey.size(), 0);
@@ -1018,7 +1022,8 @@ int SqliteConnection::SetEncrypt(const RdbStoreConfig &config)
                 bool sameKey = (key == config.GetEncryptKey()) || (newKey == config.GetEncryptKey());
                 Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_SET_SERVICE_ENCRYPT_FAIL, config,
                     "LOG:service key SetEncryptKey errcode=" + std::to_string(errCode) +
-                    ",iter=" + std::to_string(config.GetIter()) + ",samekey=" + std::to_string(sameKey), true));
+                        ",iter=" + std::to_string(config.GetIter()) + ",samekey=" + std::to_string(sameKey),
+                    true));
             }
             return errCode;
         }
@@ -1093,9 +1098,9 @@ int SqliteConnection::RegDefaultFunctions(sqlite3 *dbHandle)
     auto [funcs, funcCount] = SqliteFunctionRegistry::GetFunctions();
 
     for (size_t i = 0; i < funcCount; i++) {
-        const SqliteFunction& func = funcs[i];
-        int errCode = sqlite3_create_function_v2(dbHandle, func.name, func.numArgs,
-            SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr, func.function, nullptr, nullptr, nullptr);
+        const SqliteFunction &func = funcs[i];
+        int errCode = sqlite3_create_function_v2(dbHandle, func.name, func.numArgs, SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+            nullptr, func.function, nullptr, nullptr, nullptr);
         if (errCode != SQLITE_OK) {
             LOG_ERROR("register function %{public}s failed, errCode=0x%{public}x, errno=%{public}d", func.name,
                 errCode, errno);
@@ -1130,8 +1135,8 @@ int SqliteConnection::SetJournalMode(const RdbStoreConfig &config)
         if (errorCode != E_OK) {
             LOG_ERROR("SqliteConnection SetJournalMode: fail to set journal mode err=%{public}d", errorCode);
             Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_OPEN, E_DFX_SET_JOURNAL_FAIL, config_.GetBundleName(),
-                "PRAGMA journal_mode set fail: " +  std::to_string(errCode) + "," + std::to_string(errno) + "," +
-                config.GetJournalMode()));
+                "PRAGMA journal_mode set fail: " + std::to_string(errCode) + "," + std::to_string(errno) + "," +
+                    config.GetJournalMode()));
             return errorCode;
         }
 
@@ -1310,8 +1315,8 @@ int32_t SqliteConnection::SetTokenizer(Tokenizer tokenizer)
     }
     err = sqlite3_load_extension(dbHandle_, "libcustomtokenizer.z.so", nullptr, nullptr);
     if (err != SQLITE_OK) {
-        LOG_ERROR("load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s", err, errno,
-            sqlite3_errmsg(dbHandle_));
+        LOG_ERROR(
+            "load error. err=%{public}d, errno=%{public}d, errmsg:%{public}s", err, errno, sqlite3_errmsg(dbHandle_));
     }
     int ret = sqlite3_db_config(
         dbHandle_, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, SqliteUtils::DISABLE_LOAD_EXTENSION, nullptr);
@@ -1342,8 +1347,8 @@ int SqliteConnection::TryCheckPoint(bool timeout)
             if (rc == E_SQLITE_CORRUPT) {
                 RdbStoreConfig slaveConfig(slaveConnection_->config_.GetPath());
                 DeleteCorruptSlave(slaveConfig.GetPath());
-                Reportor::ReportCorrupted(Reportor::Create(slaveConfig,
-                    SQLiteError::ErrNo(rc), "ErrorType: slaveCheckPoint"));
+                Reportor::ReportCorrupted(
+                    Reportor::Create(slaveConfig, SQLiteError::ErrNo(rc), "ErrorType: slaveCheckPoint"));
                 LOG_ERROR("slave CheckPoint failed err:%{public}d, errno:%{public}d", rc, errno);
             }
         }
@@ -1387,8 +1392,7 @@ int SqliteConnection::LimitWalSize()
     if (fileSize < 0 || fileSize > config_.GetWalLimitSize()) {
         std::stringstream ss;
         ss << "The WAL file size exceeds the limit,name=" << SqliteUtils::Anonymous(walName).c_str()
-            << ",file size=" << fileSize
-            << ",limit size=" << config_.GetWalLimitSize();
+           << ",file size=" << fileSize << ",limit size=" << config_.GetWalLimitSize();
         LOG_ERROR("%{public}s", ss.str().c_str());
         Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_WAL_SIZE_OVER_LIMIT, config_, ss.str()));
         return E_WAL_SIZE_OVER_LIMIT;
@@ -1464,8 +1468,7 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
     return E_OK;
 }
 
-int32_t SqliteConnection::Restore(
-    const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+int32_t SqliteConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
     std::shared_ptr<SlaveStatus> slaveStatus)
 {
     return ExchangeSlaverToMaster(true, true, slaveStatus);
@@ -1590,7 +1593,6 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std:
     return E_OK;
 }
 
-
 int SqliteConnection::SqliteBackupStep(bool isRestore, sqlite3_backup *pBackup, std::shared_ptr<SlaveStatus> curStatus)
 {
     int sleepTime = BACKUP_PRE_WAIT_TIME;
@@ -1676,7 +1678,7 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
     }
     if (IsSupportBinlog(config_)) {
         if (isRelpay || (mCount == 0 && !SqliteUtils::IsUseAsyncRestore(config_, config_.GetPath(),
-            SqliteUtils::GetSlavePath(config_.GetPath())))) {
+                                            SqliteUtils::GetSlavePath(config_.GetPath())))) {
             SqliteConnection::ReplayBinlog(config_.GetPath(), slaveConnection_, false);
         } else if (mCount == 0) {
             LOG_INFO("main empty");
@@ -1697,10 +1699,9 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         for (const auto &item : table.knowledgeFields) {
             sourceSchema.knowledgeColNames.insert(item.columnName);
         }
-        sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(),
-            table.referenceFields.end());
+        sourceSchema.extendColNames = std::set<std::string>(table.referenceFields.begin(), table.referenceFields.end());
 
-        std::set<std::string> fieldsNeedExist = {table.commonAttribute.timeAttribute.baseTimeField};
+        std::set<std::string> fieldsNeedExist = { table.commonAttribute.timeAttribute.baseTimeField };
         fieldsNeedExist.insert(table.commonAttribute.timeAttribute.sourceFields.begin(),
             table.commonAttribute.timeAttribute.sourceFields.end());
         fieldsNeedExist.insert(table.commonAttribute.timeAttribute.extendFields.begin(),
@@ -1711,8 +1712,8 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
         fieldsNeedExist.erase("");
 
         sourceSchema.columnsToVerify = {
-            {"processSequence", {table.processSequence.columnName}},
-            {"fieldsNeedExist", fieldsNeedExist},
+            { "processSequence", { table.processSequence.columnName } },
+            { "fieldsNeedExist", fieldsNeedExist },
         };
 
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
@@ -1839,8 +1840,8 @@ int SqliteConnection::ExchangeVerify(bool isRestore)
         return E_ALREADY_CLOSED;
     }
     if (access(config_.GetPath().c_str(), F_OK) != 0) {
-        LOG_WARN("main no exist, isR:%{public}d, %{public}s", isRestore,
-            SqliteUtils::Anonymous(config_.GetName()).c_str());
+        LOG_WARN(
+            "main no exist, isR:%{public}d, %{public}s", isRestore, SqliteUtils::Anonymous(config_.GetName()).c_str());
         return E_DB_NOT_EXIST;
     }
     auto [cRet, cObj] = ExecuteForValue(INTEGRITIES[1]); // 1 is quick_check
@@ -1898,8 +1899,8 @@ int SqliteConnection::VerifySlaveIntegrity()
 
     RdbStoreConfig slaveCfg = GetSlaveRdbStoreConfig(config_);
     std::map<std::string, DebugInfo> bugInfo = Connection::Collect(slaveCfg);
-    LOG_INFO("%{public}s", SqliteUtils::FormatDebugInfoBrief(bugInfo,
-        SqliteUtils::Anonymous(slaveCfg.GetName())).c_str());
+    LOG_INFO(
+        "%{public}s", SqliteUtils::FormatDebugInfoBrief(bugInfo, SqliteUtils::Anonymous(slaveCfg.GetName())).c_str());
 
     if (SqliteUtils::IsSlaveInterrupted(config_.GetPath())) {
         return E_SQLITE_CORRUPT;
@@ -1988,8 +1989,8 @@ int SqliteConnection::BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHa
     sqlite3 *db = nullptr;
     int err = sqlite3_open_v2(dbPath.c_str(), &db, static_cast<int>(openFileFlags), nullptr);
     if (err != SQLITE_OK) {
-        LOG_ERROR("open binlog handle error. rc=%{public}d, errno=%{public}d, p=%{public}s",
-            err, errno, SqliteUtils::Anonymous(dbPath).c_str());
+        LOG_ERROR("open binlog handle error. rc=%{public}d, errno=%{public}d, p=%{public}s", err, errno,
+            SqliteUtils::Anonymous(dbPath).c_str());
         sqlite3_close_v2(db);
         return E_INVALID_FILE_PATH;
     }
@@ -2011,8 +2012,7 @@ int SqliteConnection::CheckPathExist(const std::string &dbPath)
 {
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist) {
-        LOG_ERROR("db %{public}s not exist errno is %{public}d",
-            SqliteUtils::Anonymous(dbPath).c_str(), errno);
+        LOG_ERROR("db %{public}s not exist errno is %{public}d", SqliteUtils::Anonymous(dbPath).c_str(), errno);
         return E_DB_NOT_EXIST;
     }
     return E_OK;
@@ -2134,8 +2134,8 @@ int SqliteConnection::ReplayBinlogSqlite(sqlite3 *dbFrom, sqlite3 *slaveDb, cons
     return errCode;
 }
 
-void SqliteConnection::ReplayBinlog(const std::string &dbPath,
-    std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean)
+void SqliteConnection::ReplayBinlog(
+    const std::string &dbPath, std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean)
 {
     auto errCode = SqliteConnection::CheckPathExist(dbPath);
     if (errCode != E_OK) {

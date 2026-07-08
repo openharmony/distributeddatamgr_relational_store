@@ -26,8 +26,8 @@ using namespace OHOS::RelationalStoreJsKit;
 
 std::string GetErrorString(int errcode);
 void ThrowError(std::shared_ptr<Error> err);
-void ThrowInnerError(int errCode);
-void ThrowInnerErrorExt(int errCode);
+void ThrowInnerError(int errCode, const std::string &errMsg = "");
+void ThrowInnerErrorExt(int errCode, const std::string &errMsg = "");
 void ThrowNonSystemError();
 void ThrowParamError(const char *message);
 

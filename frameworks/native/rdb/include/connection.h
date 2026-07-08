@@ -105,6 +105,8 @@ public:
     virtual int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) = 0;
     virtual void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount) = 0;
 
+    virtual std::string GetLastErrorMsg() const { return ""; }
+
 private:
     int32_t id_ = 0;
     bool isRecyclable_ = true;

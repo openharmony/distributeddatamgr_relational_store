@@ -182,6 +182,15 @@ std::shared_ptr<RdbStore> TransactionImpl::GetStore()
     return store_;
 }
 
+std::string TransactionImpl::GetLastErrorMsg()
+{
+    auto store = GetStore();
+    if (store == nullptr) {
+        return "";
+    }
+    return store->GetLastErrorMsg();
+}
+
 std::pair<int, int64_t> TransactionImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);

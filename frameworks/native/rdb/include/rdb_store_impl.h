@@ -47,8 +47,8 @@ class RdbStoreLocalDbObserver;
 using RdbStoreObserver = DistributedRdb::RdbStoreObserver;
 class RdbStoreLocalObserver {
 public:
-    explicit RdbStoreLocalObserver(std::shared_ptr<RdbStoreObserver> observer) : observer_(observer) {};
-    virtual ~RdbStoreLocalObserver() {};
+    explicit RdbStoreLocalObserver(std::shared_ptr<RdbStoreObserver> observer) : observer_(observer){};
+    virtual ~RdbStoreLocalObserver(){};
     void OnChange()
     {
         auto obs = observer_.lock();
@@ -72,15 +72,14 @@ public:
     int32_t Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl = false);
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
-    std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        const ReturningConfig &config, Resolution resolution) override;
+    std::pair<int32_t, Results> BatchInsert(
+        const std::string &table, const RefRows &rows, const ReturningConfig &config, Resolution resolution) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
         const ReturningConfig &config, Resolution resolution) override;
-    std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const ReturningConfig &config) override;
+    std::pair<int32_t, Results> Delete(const AbsRdbPredicates &predicates, const ReturningConfig &config) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
-    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        const QueryOptions &options) override;
+    std::shared_ptr<ResultSet> QueryByStep(
+        const std::string &sql, const Values &args, const QueryOptions &options) override;
     std::shared_ptr<ResultSet> RemoteQuery(
         const std::string &device, const AbsRdbPredicates &predicates, const Fields &columns, int &errCode) override;
     std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
@@ -155,6 +154,7 @@ public:
     int ConfigLocale(const std::string &localeStr) override;
     int ArchiveSyncedData(const std::string &table, uint64_t cursor) override;
     int DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys) override;
+    std::string GetLastErrorMsg() const override;
 
     // not virtual functions /
     const RdbStoreConfig &GetConfig();
@@ -170,7 +170,7 @@ private:
     using RdbParam = DistributedRdb::RdbSyncerParam;
     using Options = DistributedRdb::RdbService::Option;
     using Memo = DistributedRdb::PredicatesMemo;
-    using ReportFunc = std::function<void(const DistributedRdb::RdbStatEvent&)>;
+    using ReportFunc = std::function<void(const DistributedRdb::RdbStatEvent &)>;
     class CloudTables {
     public:
         int32_t AddTables(const std::vector<std::string> &tables);
@@ -202,8 +202,8 @@ private:
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     void DoCloudSync(const std::string &table);
-    static int InnerSync(const RdbParam &param, const Options &option, const Memo &predicates,
-        const AsyncDetail &async);
+    static int InnerSync(
+        const RdbParam &param, const Options &option, const Memo &predicates, const AsyncDetail &async);
     int InnerBackup(const std::string &databasePath,
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>(), bool verifyDb = true);
     ModifyTime GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys);
@@ -240,11 +240,16 @@ private:
     int HandleCloudSyncAfterSetDistributedTables(
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
+    void SetLastErrorMsg(const std::string &msg) const;
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args,
         const ReturningConfig &config = {}, const std::string &returningSql = "");
     std::pair<int32_t, Results> GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
         std::vector<ValuesBucket> &&returningValues, bool isDML, int32_t rowIndex = ReturningConfig::FIRST_ROW_INDEX);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> &&statement, const std::string &sql);
+    using BatchSqlArgs =
+        std::vector<std::pair<std::string, std::vector<std::vector<std::reference_wrapper<ValueObject>>>>>;
+    std::pair<int32_t, Results> ExecuteBatchInsertReturning(const BatchSqlArgs &sqlArgs,
+        const std::shared_ptr<Connection> &conn, const ReturningConfig &config, Resolution resolution);
     void BatchInsertArgsDfx(int argsSize);
     void SetKnowledgeSchema();
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> GetKnowledgeSchemaHelper();
@@ -253,8 +258,8 @@ private:
     bool IsInAsyncRestore(const std::string &dbPath);
     int StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const;
     int StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatus);
-    int RestoreInner(const std::string &destPath, const std::vector<uint8_t> &newKey,
-        std::shared_ptr<ConnectionPool> pool);
+    int RestoreInner(
+        const std::string &destPath, const std::vector<uint8_t> &newKey, std::shared_ptr<ConnectionPool> pool);
     bool IsInvalidDistributedConfig(const DistributedRdb::DistributedConfig &distributedConfig);
     static int32_t RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path);
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
@@ -297,11 +302,13 @@ private:
     std::list<std::shared_ptr<RdbStoreLocalDbObserver>> localDetailObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
+    mutable std::string lastErrMsg_;
+    mutable std::mutex errMutex_;
     std::list<std::weak_ptr<Transaction>> transactions_;
     std::list<std::weak_ptr<Connection>> conns_;
     std::mutex helperMutex_;
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> knowledgeSchemaHelper_;
-    std::atomic<bool> isKnowledgeSchemaReady_{false};
+    std::atomic<bool> isKnowledgeSchemaReady_{ false };
 };
 } // namespace OHOS::NativeRdb
 #endif

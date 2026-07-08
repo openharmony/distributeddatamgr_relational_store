@@ -28,19 +28,20 @@ namespace OHOS {
 namespace RdbTaihe {
 using namespace taihe;
 
-const std::map<int, std::string> ERR_STRING_MAP = {
-    { NativeRdb::E_EMPTY_TABLE_NAME, "The table must be not empty string." },
-    { NativeRdb::E_EMPTY_VALUES_BUCKET, "Bucket must not be empty." },
-    { NativeRdb::E_INVALID_CONFLICT_FLAG, "Conflict flag is not correct." },
-    { NativeRdb::E_INVALID_ARGS, "The ValueBucket contains Assets and conflictResolution is REPLACE." },
-};
-
 std::string GetErrorString(int errcode)
 {
-    if (ERR_STRING_MAP.find(errcode) != ERR_STRING_MAP.end()) {
-        return ERR_STRING_MAP.at(errcode);
+    switch (errcode) {
+        case NativeRdb::E_EMPTY_TABLE_NAME:
+            return "The table must be not empty string.";
+        case NativeRdb::E_EMPTY_VALUES_BUCKET:
+            return "Bucket must not be empty.";
+        case NativeRdb::E_INVALID_CONFLICT_FLAG:
+            return "Conflict flag is not correct.";
+        case NativeRdb::E_INVALID_ARGS:
+            return "The ValueBucket contains Assets and conflictResolution is REPLACE.";
+        default:
+            return std::string();
     }
-    return std::string();
 }
 
 void ThrowError(std::shared_ptr<Error> err)
@@ -52,16 +53,15 @@ void ThrowError(std::shared_ptr<Error> err)
     }
 }
 
-void ThrowInnerError(int errCode)
+void ThrowInnerError(int errCode, const std::string &errMsg)
 {
-    auto innErr = std::make_shared<InnerError>(errCode);
+    auto innErr = std::make_shared<InnerError>(errCode, errMsg);
     ThrowError(innErr);
 }
 
-// Error codes that cannot be thrown in some old scenarios need to be converted in new scenarios.
-void ThrowInnerErrorExt(int errCode)
+void ThrowInnerErrorExt(int errCode, const std::string &errMsg)
 {
-    auto innErr = std::make_shared<InnerErrorExt>(errCode);
+    auto innErr = std::make_shared<InnerErrorExt>(errCode, errMsg);
     if (innErr != nullptr) {
         taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
     }

@@ -34,8 +34,8 @@ public:
     using Conn = std::shared_ptr<Connection>;
     using Time = std::chrono::steady_clock::time_point;
     using QueryOptions = DistributedRdb::QueryOptions;
-    StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args,
-        QueryOptions options, bool safe = false);
+    StepResultSet(
+        Time start, Conn conn, const std::string &sql, const Values &args, QueryOptions options, bool safe = false);
     ~StepResultSet() override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GoToRow(int position) override;
@@ -47,6 +47,8 @@ public:
 
 protected:
     std::pair<int, std::vector<std::string>> GetColumnNames() override;
+
+    std::string GetLastErrorMsg() const override;
 
 private:
     template<typename T>

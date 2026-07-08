@@ -68,6 +68,7 @@ public:
     bool isAsync_ = true;
     void *boundObj = nullptr;
     std::shared_ptr<Error> error;
+    std::string errorMsg_;
     std::shared_ptr<RecordData> executed_;
     const char *fun = nullptr;
 

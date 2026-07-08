@@ -23,13 +23,21 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { E_PARAM_ERROR, 401, "Invalid args."},
     { E_NOT_STAGE_MODE, 14801001, "The operation is supported in the stage model only." },
     { E_DATA_GROUP_ID_INVALID, 14801002, "Invalid data ground ID." },
+    { NativeRdb::E_REMOVE_FILE, 14800000, "Remove file failed." },
+    { NativeRdb::E_EMPTY_TABLE_NAME, 14800000, "The table must be not empty string." },
+    { NativeRdb::E_EMPTY_VALUES_BUCKET, 14800000, "Bucket must not be empty." },
     { NativeRdb::E_NOT_SELECT, 14800019, "The SQL must be a query statement." },
     { NativeRdb::E_COLUMN_OUT_RANGE, 14800013, "Resultset is empty or column index is out of bounds." },
+    { NativeRdb::E_INVALID_COLUMN_TYPE, 14800000, "Invalid column type." },
     { NativeRdb::E_INVALID_FILE_PATH, 14800010, "Failed to open or delete the database by an invalid database path." },
     { NativeRdb::E_ROW_OUT_RANGE, 14800012, "ResultSet is empty or pointer index is out of bounds." },
+    { NativeRdb::E_EXECUTE_WRITE_IN_READ_CONNECTION, 14800000, "Execute write in read connection." },
     { NativeRdb::E_NO_ROW_IN_QUERY, 14800018, "No data meets the condition." },
+    { NativeRdb::E_INVALID_CONFLICT_FLAG, 14800000, "Conflict flag is not correct." },
     { NativeRdb::E_ALREADY_CLOSED, 14800014, "The RdbStore or ResultSet is already closed." },
     { NativeRdb::E_DATABASE_BUSY, 14800015, "The database does not respond." },
+    { NativeRdb::E_NOT_SUPPORTED_ATTACH_IN_WAL_MODE, 14800000, "Attach is not supported in WAL mode." },
+    { NativeRdb::E_CREATE_FOLDER_FAIL, 14800000, "Create folder failed." },
     { NativeRdb::E_WAL_SIZE_OVER_LIMIT, 14800047, "The WAL file size over default limit." },
     { NativeRdb::E_GET_DATAOBSMGRCLIENT_FAIL, 14801050, "Failed to get DataObsMgrClient." },
     { NativeRdb::E_TYPE_MISMATCH, 14800051, "The type of the distributed table does not match." },
@@ -52,13 +60,15 @@ static constexpr JsErrorCode JS_ERROR_CODE_MSGS[] = {
     { NativeRdb::E_SQLITE_MISMATCH, 14800033, "SQLite: Data type mismatch." },
     { NativeRdb::E_SQLITE_MISUSE, 14800034, "SQLite: Library used incorrectly." },
     { NativeRdb::E_CONFIG_INVALID_CHANGE, 14800017, "StoreConfig is changed." },
+    { NativeRdb::E_SERVICE_NOT_FOUND, 14800000, "Service not found." },
+    { NativeRdb::E_SQLITE_SCHEMA, 14800000, "Database schema has changed." },
     { NativeRdb::E_INVALID_SECRET_KEY, 14800020, "The secret key is corrupted or lost." },
     { NativeRdb::E_SQLITE_IOERR_FULL, 14800028, "SQLite: Some kind of disk I/O error occurred." },
     { NativeRdb::E_INVALID_ARGS_NEW, 14800001, "Invalid args." },
+    { NativeRdb::E_SQLITE_INTERRUPT, 14800000, "Operation interrupted." },
     { NativeRdb::E_SYNC_PERMISSION_DENIED, 201, "Permission denied." },
     { NativeRdb::E_NOT_SUPPORT, 801, "Capability not support." },
 };
-
 
 // Error codes that cannot be thrown in some old scenarios need to be converted in new scenarios.
 static constexpr JsErrorCode JS_ERROR_CODE_MSGS_EXT[] = {
@@ -118,6 +128,5 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode)
     int count = sizeof(JS_ERROR_CODE_MSGS_EXT) / sizeof(JS_ERROR_CODE_MSGS_EXT[0]);
     return ConvertCode(JS_ERROR_CODE_MSGS_EXT, count, errorCode);
 }
-
 } // namespace RelationalStoreJsKit
 } // namespace OHOS
