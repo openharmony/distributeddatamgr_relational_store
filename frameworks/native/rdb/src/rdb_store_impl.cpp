@@ -1440,7 +1440,6 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
 
 RdbStoreImpl::~RdbStoreImpl()
 {
-    lastErrMsg_.Clear();
     // ToD: Scenario for handling binlog replay interrupt
     auto [errCode, conn] = GetConn(false);
     if (errCode == E_OK && conn != nullptr) {
@@ -1464,18 +1463,12 @@ RdbStoreImpl::~RdbStoreImpl()
 
 std::string RdbStoreImpl::GetLastErrorMsg() const
 {
-    auto [found, msg] = lastErrMsg_.Find(std::this_thread::get_id());
-    if (found && !msg.empty()) {
-        return msg;
-    }
-    return "";
+    return lastErrMsg_;
 }
 
 void RdbStoreImpl::SetLastErrorMsg(const std::string &msg) const
 {
-    if (!msg.empty()) {
-        lastErrMsg_.InsertOrAssign(std::this_thread::get_id(), msg);
-    }
+    lastErrMsg_ = msg;
 }
 
 const RdbStoreConfig &RdbStoreImpl::GetConfig()
@@ -1546,7 +1539,6 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
         for (const auto &args : bindArgs) {
             auto errCode = statement->Execute(args);
             if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-                SetLastErrorMsg(conn->GetLastErrorMsg());
                 pool->Dump(true, "BATCH");
                 return { errCode, -1 };
             }
@@ -1625,7 +1617,6 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteBatchInsertReturning(const RdbS
     std::vector<ValuesBucket> values;
     std::tie(errCode, values) = statement->ExecuteForRows(std::ref(bindArgs.front()), config.maxReturningCount);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-        SetLastErrorMsg(conn->GetLastErrorMsg());
         TryDump(errCode, "BATCH");
         return { errCode, -1 };
     }
@@ -2632,7 +2623,6 @@ int RdbStoreImpl::RollBack()
     }
     err = statement->Execute();
     if (err != E_OK) {
-        SetLastErrorMsg(statement->GetLastErrorMsg());
         if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
             Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, err, config_.GetBundleName(), "RollBusy"));
         }
@@ -2731,7 +2721,6 @@ int RdbStoreImpl::Commit()
     }
     err = statement->Execute();
     if (err != E_OK) {
-        SetLastErrorMsg(statement->GetLastErrorMsg());
         if (err == E_SQLITE_BUSY || err == E_SQLITE_LOCKED) {
             Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_CURD, err, config_.GetBundleName(), "ComBusy"));
         }

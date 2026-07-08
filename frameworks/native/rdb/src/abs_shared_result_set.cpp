@@ -317,7 +317,7 @@ int AbsSharedResultSet::CheckState(int columnIndex)
 
     GetColumnCount(count);
     if (columnIndex >= count || columnIndex < 0) {
-        SetLastErrorMsg(columnIndex >= 0 ? BuildColumnIndexRangeCtx(columnIndex) : BuildColumnUnknownCtx());
+        SetLastErrorMsg("The columnIndex: " + std::to_string(columnIndex) + " is out of range");
         return E_COLUMN_OUT_RANGE;
     }
 
