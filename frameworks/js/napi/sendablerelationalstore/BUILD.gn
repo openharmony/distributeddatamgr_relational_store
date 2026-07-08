@@ -23,6 +23,7 @@ ohos_copy("relational_store_declaration") {
 }
 
 ohos_shared_library("sendablerelationalstore") {
+  branch_protector_ret = "pac_ret"
   include_dirs = [
     "${relational_store_common_path}/include",
     "${relational_store_js_common_path}/include",
