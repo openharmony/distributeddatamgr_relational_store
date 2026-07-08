@@ -58,9 +58,7 @@ array<ohos::data::relationalStore::ValuesBucket> LiteResultSetImpl::GetRowsSync(
     }
     ASSERT_RETURN_THROW_ERROR(
         resultSet != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
-    int errCode = OHOS::NativeRdb::E_OK;
-    std::vector<OHOS::NativeRdb::RowEntity> rowEntities;
-    std::tie(errCode, rowEntities) = ani_rdbutils::GetRows(*resultSet, maxCount, positionNative);
+    auto [errCode, rowEntities] = ani_rdbutils::GetRows(*resultSet, maxCount, positionNative);
     if (errCode != OHOS::NativeRdb::E_OK) {
         ThrowInnerErrorExt(errCode, resultSet->GetLastErrorMsg());
         return {};
@@ -305,9 +303,7 @@ array<string> LiteResultSetImpl::GetColumnNames()
     auto resultSet = GetResource();
     ASSERT_RETURN_THROW_ERROR(
         resultSet != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
-    int errCode = OHOS::NativeRdb::E_OK;
-    std::vector<std::string> colNames;
-    std::tie(errCode, colNames) = resultSet->GetWholeColumnNames();
+    auto [errCode, colNames] = resultSet->GetWholeColumnNames();
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
         std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()), {});
     return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
@@ -318,9 +314,7 @@ array<ohos::data::relationalStore::ValueType> LiteResultSetImpl::GetCurrentRowDa
     auto resultSet = GetResource();
     ASSERT_RETURN_THROW_ERROR(
         resultSet != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
-    int errCode = OHOS::NativeRdb::E_OK;
-    std::vector<OHOS::NativeRdb::ValueObject> rowData;
-    std::tie(errCode, rowData) = resultSet->GetRowData();
+    auto [errCode, rowData] = resultSet->GetRowData();
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
         std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()), {});
     std::vector<ValueType> rowDataTemp;
@@ -342,9 +336,7 @@ array<array<ValueType>> LiteResultSetImpl::GetRowsDataSync(int32_t maxCount, opt
     }
     ASSERT_RETURN_THROW_ERROR(
         resultSet != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
-    int errCode = OHOS::NativeRdb::E_OK;
-    std::vector<std::vector<ValueObject>> rowsData;
-    std::tie(errCode, rowsData) = resultSet->GetRowsData(maxCount, nativePosition);
+    auto [errCode, rowsData] = resultSet->GetRowsData(maxCount, nativePosition);
     ASSERT_RETURN_THROW_ERROR(errCode == OHOS::NativeRdb::E_OK,
         std::make_shared<OHOS::RelationalStoreJsKit::InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()), {});
 

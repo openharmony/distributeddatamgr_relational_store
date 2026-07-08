@@ -387,9 +387,7 @@ napi_value LiteResultSetProxy::GetWholeColumnNames(napi_env env, napi_callback_i
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto resultSet = GetInnerResultSet(env, info);
     RDB_NAPI_ASSERT_INT(env, resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ALREADY_CLOSED));
-    int errCode = E_OK;
-    std::vector<std::string> colNames;
-    std::tie(errCode, colNames) = resultSet->GetWholeColumnNames();
+    auto [errCode, colNames] = resultSet->GetWholeColumnNames();
     RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
     return JSUtils::Convert2JSValue(env, std::move(colNames));
 }
@@ -422,9 +420,7 @@ napi_value LiteResultSetProxy::GetRowData(napi_env env, napi_callback_info info)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto resultSet = GetInnerResultSet(env, info);
     RDB_NAPI_ASSERT_INT(env, resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ALREADY_CLOSED));
-    int errCode = E_OK;
-    std::vector<ValueObject> rowData;
-    std::tie(errCode, rowData) = resultSet->GetRowData();
+    auto [errCode, rowData] = resultSet->GetRowData();
     RDB_NAPI_ASSERT_INT(env, errCode == E_OK, std::make_shared<InnerErrorExt>(errCode, resultSet->GetLastErrorMsg()));
     return JSUtils::Convert2JSValue(env, std::move(rowData));
 }

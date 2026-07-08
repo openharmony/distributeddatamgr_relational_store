@@ -68,6 +68,7 @@ public:
     bool isAsync_ = true;
     void *boundObj = nullptr;
     std::shared_ptr<Error> error;
+    std::string errorMsg_;
     std::shared_ptr<RecordData> executed_;
     const char *fun = nullptr;
 
@@ -84,7 +85,6 @@ public:
     std::unique_ptr<NativeRdb::HistogramReporter> histogram;
     void FinishHistogram(const char *asyncName, const char *syncName);
     void FinishHistogram(const char *name);
-    std::string errorMsg_;
 };
 
 class EnhancedContext : public ContextBase {

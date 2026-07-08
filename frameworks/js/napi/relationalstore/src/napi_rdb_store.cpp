@@ -662,7 +662,6 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
         }
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = context->StealRdbStore();
         CHECK_RETURN_ERR(rdbStore != nullptr);
         int errCode = rdbStore->ExecuteSql(context->sql, context->bindArgs);
