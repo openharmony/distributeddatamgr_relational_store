@@ -303,6 +303,7 @@ private:
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
     mutable std::string lastErrMsg_;
+    mutable std::mutex errMutex_;
     std::list<std::weak_ptr<Transaction>> transactions_;
     std::list<std::weak_ptr<Connection>> conns_;
     std::mutex helperMutex_;

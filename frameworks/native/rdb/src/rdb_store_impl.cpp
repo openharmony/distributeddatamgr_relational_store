@@ -1463,11 +1463,13 @@ RdbStoreImpl::~RdbStoreImpl()
 
 std::string RdbStoreImpl::GetLastErrorMsg() const
 {
+    std::lock_guard<decltype(errMutex_)> lock(errMutex_);
     return lastErrMsg_;
 }
 
 void RdbStoreImpl::SetLastErrorMsg(const std::string &msg) const
 {
+    std::lock_guard<decltype(errMutex_)> lock(errMutex_);
     lastErrMsg_ = msg;
 }
 
