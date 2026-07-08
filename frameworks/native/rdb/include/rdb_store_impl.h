@@ -240,7 +240,7 @@ private:
     int HandleCloudSyncAfterSetDistributedTables(
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
-    void SetLastErrorMsg(const std::string &msg);
+    void SetLastErrorMsg(const std::string &msg) const;
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args,
         const ReturningConfig &config = {}, const std::string &returningSql = "");
     std::pair<int32_t, Results> GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
@@ -302,7 +302,7 @@ private:
     std::list<std::shared_ptr<RdbStoreLocalDbObserver>> localDetailObservers_;
     ConcurrentMap<std::string, std::string> attachedInfo_;
     ConcurrentMap<int64_t, std::shared_ptr<Connection>> trxConnMap_ = {};
-    ConcurrentMap<std::thread::id, std::string> lastErrMsg_;
+    mutable ConcurrentMap<std::thread::id, std::string> lastErrMsg_;
     std::list<std::weak_ptr<Transaction>> transactions_;
     std::list<std::weak_ptr<Connection>> conns_;
     std::mutex helperMutex_;

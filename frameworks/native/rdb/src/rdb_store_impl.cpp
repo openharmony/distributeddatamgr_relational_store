@@ -1470,7 +1470,7 @@ std::string RdbStoreImpl::GetLastErrorMsg() const
     return "";
 }
 
-void RdbStoreImpl::SetLastErrorMsg(const std::string &msg)
+void RdbStoreImpl::SetLastErrorMsg(const std::string &msg) const
 {
     if (!msg.empty()) {
         lastErrMsg_.InsertOrAssign(std::this_thread::get_id(), msg);
@@ -1835,10 +1835,11 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
     }
 
     errCode = statement->Execute(args);
+    if (errCode != E_OK) {
+        SetLastErrorMsg(statement->GetLastErrorMsg());
+    }
     TryDump(errCode, "EXECUTE");
     if (config_.IsVector()) {
-        if (errCode != E_OK) {
-        }
         return { errCode, object };
     }
 
@@ -3121,7 +3122,11 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
         }
     }
 
-    return conn->CreateStatement(sql, conn, returningSql);
+    auto [errCode, statement] = conn->CreateStatement(sql, conn, returningSql);
+    if (statement == nullptr) {
+        SetLastErrorMsg(conn->GetLastErrorMsg());
+    }
+    return { errCode, statement };
 }
 
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
