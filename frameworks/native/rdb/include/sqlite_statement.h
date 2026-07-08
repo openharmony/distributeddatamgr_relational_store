@@ -117,6 +117,7 @@ private:
     sqlite3_stmt *stmt_;
     std::shared_ptr<Connection> conn_;
     std::string sql_;
+    std::string lastErrMsg_;
     mutable std::vector<int32_t> types_;
     std::shared_ptr<Statement> slave_;
     const RdbStoreConfig *config_ = nullptr;

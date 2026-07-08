@@ -182,12 +182,13 @@ std::shared_ptr<RdbStore> TransactionImpl::GetStore()
     return store_;
 }
 
-std::string TransactionImpl::GetLastErrorMsg() const
+std::string TransactionImpl::GetLastErrorMsg()
 {
-    if (store_ == nullptr) {
+    auto store = GetStore();
+    if (store == nullptr) {
         return "";
     }
-    return store_->GetLastErrorMsg();
+    return store->GetLastErrorMsg();
 }
 
 std::pair<int, int64_t> TransactionImpl::Insert(const std::string &table, const Row &row, Resolution resolution)

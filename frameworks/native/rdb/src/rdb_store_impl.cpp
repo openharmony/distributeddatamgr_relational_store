@@ -1543,7 +1543,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
                 return { errCode, -1 };
             }
             if (errCode != E_OK) {
-                SetLastErrorMsg(conn->GetLastErrorMsg());
+                SetLastErrorMsg(statement->GetLastErrorMsg());
                 LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
                     errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
                 return { E_OK, -1 };
@@ -1593,7 +1593,6 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(
             SqliteUtils::Anonymous(table).c_str(), fields != nullptr ? fields->size() : 0, conn->GetMaxVariable());
         return { E_INVALID_ARGS, -1 };
     }
-    PauseDelayNotify pauseDelayNotify(delayNotifier_);
     auto [errCode, result] = ExecuteBatchInsertReturning(sqlArgs, conn, config, resolution);
     if (result.changed > 0) {
         DoCloudSync(table);
@@ -1614,6 +1613,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteBatchInsertReturning(const RdbS
         SetLastErrorMsg(conn->GetLastErrorMsg());
         return { errCode, -1 };
     }
+    PauseDelayNotify pauseDelayNotify(delayNotifier_);
     std::vector<ValuesBucket> values;
     std::tie(errCode, values) = statement->ExecuteForRows(std::ref(bindArgs.front()), config.maxReturningCount);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
@@ -1621,7 +1621,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteBatchInsertReturning(const RdbS
         return { errCode, -1 };
     }
     if (errCode != E_OK) {
-        SetLastErrorMsg(conn->GetLastErrorMsg());
+        SetLastErrorMsg(statement->GetLastErrorMsg());
         LOG_ERROR("failed,errCode:%{public}d,args:%{public}zu,resolution:%{public}d.", errCode,
             bindArgs.front().size(), static_cast<int32_t>(resolution));
     }

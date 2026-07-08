@@ -617,14 +617,15 @@ std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatementInne
     std::shared_ptr<Connection> conn, sqlite3 *db, bool isFromReplica, const std::string &returningSql)
 {
     std::shared_ptr<SqliteStatement> statement = std::make_shared<SqliteStatement>(&config_);
-    statement->conn_ = conn;
     if (sql == INTEGRITIES[1] && db != nullptr && mode_ == JournalMode::MODE_WAL) {
         sqlite3_db_release_memory(db);
     }
     int errCode = statement->Prepare(db, sql + returningSql);
     if (errCode != E_OK) {
+        SetLastErrorMsg(std::string(sqlite3_errmsg(db)) + " in " + sql);
         return { errCode, nullptr };
     }
+    statement->conn_ = conn;
     if (!isFromReplica && slaveConnection_ && IsWriter() && !IsSupportBinlog(config_) &&
         !SqliteUtils::IsSlaveRestoring(config_.GetPath())) {
         auto slaveStmt = std::make_shared<SqliteStatement>();

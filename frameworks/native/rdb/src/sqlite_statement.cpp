@@ -138,10 +138,7 @@ void SqliteStatement::TryNotifyErrorLog(const int &errCode, sqlite3 *dbHandle, c
         return ;
     }
     std::string errMsg(sqlite3_errmsg(dbHandle));
-    if (conn_ != nullptr) {
-        auto sqliteConn = std::static_pointer_cast<SqliteConnection>(conn_);
-        sqliteConn->SetLastErrorMsg(errMsg + " in " + sql);
-    }
+    lastErrMsg_ = errMsg + " in " + sql;
     DistributedRdb::SqlErrorObserver::ExceptionMessage exceMessage;
     exceMessage.code = errCode;
     exceMessage.message = std::move(errMsg);
@@ -934,10 +931,7 @@ int SqliteStatement::ModifyLockStatus(
 
 std::string SqliteStatement::GetLastErrorMsg() const
 {
-    if (conn_ != nullptr) {
-        return conn_->GetLastErrorMsg();
-    }
-    return "";
+    return lastErrMsg_;
 }
 
 int SqliteStatement::InnerFinalize()

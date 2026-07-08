@@ -91,7 +91,7 @@ public:
     virtual int32_t Rollback() = 0;
     virtual int32_t Close() = 0;
 
-    virtual std::string GetLastErrorMsg() const { return ""; }
+    virtual std::string GetLastErrorMsg() { return ""; }
 
     /**
      * @brief Inserts a row of data into the target table.
