@@ -85,6 +85,8 @@ public:
     int DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys) override;
     int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
     void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount = false) override;
+    int SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fileInfo) override;
+    int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(

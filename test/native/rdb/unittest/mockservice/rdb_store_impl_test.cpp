@@ -2854,3 +2854,58 @@ HWTEST_F(RdbStoreImplConditionTest, RdbStore_SyncEx_014, TestSize.Level2)
 
     RdbHelper::DeleteRdbStore(config);
 }
+
+/**
+ * @tc.name: UpdateMatrixTest_001
+ * @tc.desc: Test update matrix when conn is closed
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, UpdateMatrixTest_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_SQLITE);
+    config.SetSearchable(true);
+    config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    auto [errCode, conn] = storeImpl->GetConn(true);
+    EXPECT_EQ(conn, nullptr);
+ 
+    storeImpl->NotifyDataChange();
+    EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
+}
+ 
+/**
+ * @tc.name: UpdateMatrixTest_002
+ * @tc.desc: Test update matrix when conn is normal
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, UpdateMatrixTest_002, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbService, RegisterMatrix(_, _, _, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+ 
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetDBType(DB_SQLITE);
+    config.SetSearchable(true);
+    config.SetRegisterInfo(RegisterType::CLIENT_OBSERVER, true);
+ 
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    storeImpl->Init(0, helper);
+    storeImpl->NotifyDataChange();
+ 
+    EXPECT_EQ(storeImpl->config_.GetRegisterInfo(RegisterType::CLIENT_OBSERVER), true);
+}
+
+/**
+ * @tc.name: RegisterMatrix_Nullptr_Test
+ * @tc.desc: Test RegisterMatrix when thisPtr is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_Nullptr_Test, TestSize.Level2)
+{
+    OHOS::DistributedRdb::RdbSyncerParam param;
+    RdbStoreImpl::RegisterMatrix(nullptr, param, 0);
+}

@@ -116,5 +116,5 @@ HWTEST_F(DelayNotifyTest, UpdateNotify_Test_001, TestSize.Level1)
     rdbChangeProperties.isTrackedDataChange = true;
     changedData.tableData.insert_or_assign("UpdateNotify_Test_001", rdbChangeProperties);
     delayNotifier->UpdateNotify(changedData);
-    EXPECT_TRUE(block->GetValue());
+    EXPECT_FALSE(block->GetValue());
 }

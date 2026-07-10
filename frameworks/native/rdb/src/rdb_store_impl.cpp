@@ -143,6 +143,11 @@ int RdbStoreImpl::InnerOpen()
     if (config_.GetDBType() == DB_VECTOR || (!config_.IsSearchable() && !config_.GetEnableSemanticIndex())) {
         return E_OK;
     }
+
+    if (config_.IsSearchable()) {
+        RegisterMatrix(shared_from_this(), syncerParam_);
+    }
+
     int errCode = RegisterDataChangeCallback();
     if (errCode != E_OK) {
         LOG_ERROR("RegisterCallBackObserver is failed, err is %{public}d.", errCode);
@@ -270,6 +275,47 @@ void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
         LOG_ERROR("AfterOpen failed, err: %{public}d, storeName: %{public}s.", err,
             SqliteUtils::Anonymous(param.storeName_).c_str());
     }
+}
+
+void RdbStoreImpl::RegisterMatrix(std::shared_ptr<RdbStoreImpl> thisPtr, const RdbParam &param, int32_t retry)
+{
+    if (thisPtr == nullptr) {
+        LOG_ERROR("RegisterMatrix failed, thisPtr is nullptr.");
+        return;
+    }
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
+    if (errCode != E_OK || service == nullptr) {
+        if (errCode != E_INVALID_ARGS) {
+            LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", errCode,
+                SqliteUtils::Anonymous(param.storeName_).c_str());
+        }
+        auto pool = TaskExecutor::GetInstance().GetExecutor();
+        if (errCode == E_SERVICE_NOT_FOUND && pool != nullptr && retry < MAX_RETRY_TIMES) {
+            retry++;
+            LOG_INFO("RegisterMatrix set retry schedule times: %{public}d", retry);
+            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [thisPtr, param, retry]() {
+                RegisterMatrix(thisPtr, param, retry);
+            });
+        }
+        return;
+    }
+    DistributedRdb::MatrixFileInfo fileInfo = {};
+    errCode = service->RegisterMatrix(param,
+        fileInfo.matrixFilePath, fileInfo.matrixTables, fileInfo.fullSyncOffset);
+    if (errCode != E_OK) {
+        LOG_ERROR("RegisterMatrix failed, err: %{public}d, storeName: %{public}s.", errCode,
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+        return;
+    }
+
+    auto [ret, conn] = thisPtr->GetConn(true);
+    if (ret != E_OK || conn == nullptr) {
+        LOG_ERROR("Database is busy or closed when register matrix %{public}d.", ret);
+        return;
+    }
+
+    errCode = conn->SetMatrixFileInfo(fileInfo);
+    LOG_INFO("Set tracker matrix info res: %{public}d", errCode);
 }
 
 RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(
@@ -443,6 +489,17 @@ void RdbStoreImpl::NotifyDataChange()
     DistributedRdb::RdbChangedData rdbChangedData;
     if (delayNotifier_ != nullptr) {
         delayNotifier_->UpdateNotify(rdbChangedData, true);
+    }
+    if (config_.IsSearchable()) {
+        auto [ret, conn] = GetConn(true);
+        if (ret != E_OK || conn == nullptr) {
+            LOG_ERROR("The database is busy or closed %{public}d", ret);
+        } else {
+            ret = conn->UpdateTrackerMatrix(rdbChangedData, true);
+            if (ret != E_OK) {
+                LOG_ERROR("Update matrix file err: %{public}d", ret);
+            }
+        }
     }
 }
 
@@ -3431,7 +3488,7 @@ bool RdbStoreImpl::IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &r
 bool RdbStoreImpl::IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData)
 {
     for (const auto &item : rdbChangedData.tableData) {
-        if (item.second.isP2pSyncDataChange || item.second.isTrackedDataChange) {
+        if (item.second.isP2pSyncDataChange) {
             return true;
         }
     }

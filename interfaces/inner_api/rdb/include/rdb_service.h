@@ -84,6 +84,9 @@ public:
 
     virtual int32_t AfterOpen(const RdbSyncerParam &param) = 0;
 
+    virtual int32_t RegisterMatrix(const RdbSyncerParam &param,
+        std::string &matrixFilePath, std::map<std::string, uint64_t> &matrixTables, uint64_t &fullSyncOffset) = 0;
+
     // only use param.storeName_
     virtual int32_t Delete(const RdbSyncerParam &param) = 0;
 

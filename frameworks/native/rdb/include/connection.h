@@ -31,6 +31,14 @@
 namespace DistributedDB {
 class StoreObserver;
 }
+
+namespace OHOS::DistributedRdb {
+struct MatrixFileInfo {
+    std::string matrixFilePath;
+    std::map<std::string, uint64_t> matrixTables;
+    uint64_t fullSyncOffset = 0u;
+};
+}
 namespace OHOS::NativeRdb {
 class RdbStoreConfig;
 class Statement;
@@ -104,6 +112,8 @@ public:
     virtual int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) = 0;
     virtual int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) = 0;
     virtual void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount) = 0;
+    virtual int SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fileInfo) = 0;
+    virtual int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) = 0;
 
 private:
     int32_t id_ = 0;

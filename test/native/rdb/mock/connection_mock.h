@@ -79,6 +79,9 @@ public:
     MOCK_METHOD(int32_t, RegisterReplayCallback, (const RdbStoreConfig &config,
         const ReplayCallBack &replayCallback), (override));
     MOCK_METHOD(void, ReplayBinlog, (const RdbStoreConfig &config, bool chkBinlogCount), (override));
+    MOCK_METHOD(int, SetMatrixFileInfo, (const DistributedRdb::MatrixFileInfo &fileInfo), (override));
+    MOCK_METHOD(int, UpdateTrackerMatrix, (const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull),
+        (override));
 };
 } // namespace OHOS::NativeRdb
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_CONNECTION_H
