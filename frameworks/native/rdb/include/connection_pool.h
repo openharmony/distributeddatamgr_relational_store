@@ -70,6 +70,7 @@ public:
     int AcquireTransaction();
     void ReleaseTransaction();
     void CloseAllConnections();
+    void WaitAndClearAll();
     bool IsInTransaction();
     void SetInTransaction(bool isInTransaction);
     SharedConn AcquireById(bool isReadOnly, int32_t id);
@@ -95,6 +96,7 @@ private:
         static constexpr int32_t MAX_RIGHT = 0x4FFFFFFF;
         static constexpr int32_t MIN_TRANS_ID = 10000;
         bool disable_ = true;
+        bool draining_ = false;
         int max_ = 0;
         int total_ = 0;
         int count_ = 0;
@@ -120,6 +122,7 @@ private:
         int32_t Release(std::shared_ptr<ConnNode> node);
         int32_t ReleaseTrans(std::shared_ptr<ConnNode> node);
         int32_t Clear();
+        int32_t DrainAndClear();
         bool IsFull();
         bool Empty();
         int32_t Dump(const char *header, int32_t count);

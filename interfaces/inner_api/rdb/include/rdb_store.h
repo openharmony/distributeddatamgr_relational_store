@@ -654,6 +654,12 @@ public:
     virtual int32_t RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam);
 
     /**
+     * @brief Hard close: wait for all borrowed connections to be returned, then close every
+     *        connection and release the pool.
+     */
+    virtual int Release();
+
+    /**
      * @brief Check the current database is memory database.
      */
     virtual bool IsMemoryRdb() const;

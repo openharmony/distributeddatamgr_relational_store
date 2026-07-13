@@ -251,6 +251,13 @@ void ConnPool::CloseAllConnections()
     trans_.Clear();
 }
 
+void ConnPool::WaitAndClearAll()
+{
+    writers_.DrainAndClear();
+    readers_.DrainAndClear();
+    trans_.DrainAndClear();
+}
+
 bool ConnPool::IsInTransaction()
 {
     return isInTransaction_.load();
@@ -925,7 +932,7 @@ int32_t ConnectionPool::Container::ReleaseTrans(std::shared_ptr<ConnNode> node)
         if (node->id_ < left_ || node->id_ >= right_) {
             return E_OK;
         }
-        if (node->IsRecyclable()) {
+        if (node->IsRecyclable() && !draining_) {
             nodes_.push_back(node);
             count_++;
         } else {
@@ -989,6 +996,27 @@ int32_t ConnPool::Container::Clear()
     nodes.clear();
     details.clear();
     return 0;
+}
+
+int32_t ConnPool::Container::DrainAndClear()
+{
+    std::list<std::shared_ptr<ConnNode>> nodes;
+    {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        nodes = std::move(nodes_);
+        count_ = 0;
+        disable_ = true;
+        max_ = 0;
+        draining_ = true;
+    }
+    nodes.clear();
+    {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        details_.remove_if([](const std::weak_ptr<ConnNode> &wn) { return wn.expired(); });
+        cond_.wait(lock, [this]() { return details_.empty(); });
+        draining_ = false;
+    }
+    return E_OK;
 }
 
 bool ConnPool::Container::IsFull()

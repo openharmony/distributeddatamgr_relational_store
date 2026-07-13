@@ -195,6 +195,36 @@ void RdbStoreImpl::Close()
     }
 }
 
+int RdbStoreImpl::Release()
+{
+    std::shared_ptr<ConnectionPool> pool;
+    {
+        std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
+        pool = std::move(connectionPool_);
+    }
+    {
+        std::lock_guard<decltype(mutex_)> guard(mutex_);
+        for (auto &it : transactions_) {
+            auto trans = it.lock();
+            if (trans != nullptr) {
+                trans->Close();
+            }
+        }
+        transactions_ = {};
+    }
+    trxConnMap_ = {};
+    if (pool != nullptr) {
+        pool->WaitAndClearAll();
+    }
+    {
+        std::lock_guard<decltype(helperMutex_)> autoLock(helperMutex_);
+        if (knowledgeSchemaHelper_ != nullptr) {
+            knowledgeSchemaHelper_->Close();
+        }
+    }
+    return E_OK;
+}
+
 std::shared_ptr<ConnectionPool> RdbStoreImpl::GetPool() const
 {
     std::shared_lock<decltype(poolMutex_)> lock(poolMutex_);

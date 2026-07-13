@@ -57,6 +57,13 @@ public:
     API_EXPORT static int DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose = true);
 
     /**
+     * @brief Evict the cached RdbStore instance for this config from the store cache only; does not
+     *        close the database, delete the file, or contact the service.
+     * @param config The same RdbStoreConfig used to open the store.
+     */
+    API_EXPORT static int ClearStoreCache(const RdbStoreConfig &config);
+
+    /**
      * @brief Clear Cache.
      */
     API_EXPORT static void ClearCache();

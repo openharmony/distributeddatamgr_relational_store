@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <atomic>
 #include <map>
 #include <memory>
 #include <string>
@@ -2543,4 +2544,183 @@ HWTEST_F(RdbStoreImplTest, InitSaDb001, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(E_OK, errCode);
     RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: RdbStore_Release_001
+ * @tc.desc: Test RdbStore::Release() hard-closes the connection pool; later operations fail.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_basic_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+    ASSERT_EQ(E_OK, store->Release());
+    EXPECT_NE(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: Rdb_ConnectionPool_DrainAndClear_001
+ * @tc.desc: Test WaitAndClearAll blocks until borrowed connections are returned, then drains all.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPool_DrainAndClear_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "drainclear_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    int errCode = E_OK;
+    RdbStoreConfig config(db);
+    std::shared_ptr<RdbStoreConfig> holder = std::make_shared<RdbStoreConfig>(config);
+    auto pool = ConnectionPool::Create(holder, *holder, errCode);
+    ASSERT_NE(pool, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+
+    auto conn = pool->AcquireConnection(false);
+    ASSERT_NE(conn, nullptr);
+
+    std::atomic<bool> done(false);
+    std::thread worker([&pool, &done]() { pool->WaitAndClearAll(); done.store(true); });
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    EXPECT_FALSE(done.load());
+    conn.reset();
+    worker.join();
+    EXPECT_TRUE(done.load());
+
+    EXPECT_EQ(nullptr, pool->AcquireConnection(false));
+
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_ClearStoreCache_001
+ * @tc.desc: ClearStoreCache evicts the cached store so the next GetRdbStore yields a fresh instance.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ClearStoreCache_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "clearcache_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+
+    ASSERT_EQ(E_OK, storeA->Release());
+    EXPECT_NE(E_OK, storeA->ExecuteSql(CREATE_TABLE_TEST));
+    EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
+
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    EXPECT_NE(storeA.get(), storeB.get());
+    EXPECT_EQ(E_OK, storeB->ExecuteSql(CREATE_TABLE_TEST));
+
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_ReleaseAndReopen_001
+ * @tc.desc: Open a store, hold a borrowed connection, Release it, clear the cache and reopen;
+ *           verify the new store/pool differ from the old ones.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_reopen_test.db";
+    RdbHelper::DeleteRdbStore(db);
+
+    RdbStoreConfig config(db);
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    auto implA = std::static_pointer_cast<RdbStoreImpl>(storeA);
+    std::shared_ptr<ConnectionPool> poolA = implA->GetPool();
+    ASSERT_NE(poolA, nullptr);
+
+    std::shared_ptr<Connection> connOld = poolA->AcquireConnection(false);
+    ASSERT_NE(connOld, nullptr);
+
+    std::atomic<bool> done(false);
+    std::thread worker([&storeA, &done]() { storeA->Release(); done.store(true); });
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    EXPECT_FALSE(done.load());
+    connOld.reset();
+    worker.join();
+    EXPECT_TRUE(done.load());
+    EXPECT_EQ(nullptr, implA->GetPool());
+
+    EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    auto implB = std::static_pointer_cast<RdbStoreImpl>(storeB);
+    std::shared_ptr<ConnectionPool> poolB = implB->GetPool();
+    ASSERT_NE(poolB, nullptr);
+
+    EXPECT_NE(storeA.get(), storeB.get());
+    EXPECT_NE(poolA.get(), poolB.get());
+    EXPECT_NE(nullptr, poolB->AcquireConnection(false));
+
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_ReleaseAndReopen_ResultSet_001
+ * @tc.desc: With WAL an open ResultSet holds a read connection; Release blocks until it is closed,
+ *           then ClearStoreCache + reopen yields a fresh handle.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_ResultSet_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_reopen_resultset_test.db";
+    RdbHelper::DeleteRdbStore(db);
+
+    RdbStoreConfig config(db);
+    config.SetJournalMode(JournalMode::MODE_WAL);
+    config.SetReadConSize(4);
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, storeA->ExecuteSql(CREATE_TABLE_TEST));
+    auto implA = std::static_pointer_cast<RdbStoreImpl>(storeA);
+    std::shared_ptr<ConnectionPool> poolA = implA->GetPool();
+    ASSERT_NE(poolA, nullptr);
+
+    std::shared_ptr<ResultSet> resultSet = storeA->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+
+    std::atomic<bool> done(false);
+    std::thread worker([&storeA, &done]() { storeA->Release(); done.store(true); });
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    EXPECT_FALSE(done.load());
+    EXPECT_EQ(E_OK, resultSet->Close());
+    worker.join();
+    EXPECT_TRUE(done.load());
+    EXPECT_EQ(nullptr, implA->GetPool());
+
+    EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    auto implB = std::static_pointer_cast<RdbStoreImpl>(storeB);
+    EXPECT_NE(storeA.get(), storeB.get());
+    EXPECT_NE(poolA.get(), implB->GetPool().get());
+
+    RdbHelper::DeleteRdbStore(db);
 }
