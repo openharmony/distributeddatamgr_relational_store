@@ -2600,8 +2600,9 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ClearStoreCache_001, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_ReleaseAndReopen_001
- * @tc.desc: Open a store, hold a borrowed connection, Release it, clear the cache and reopen;
- *           verify the new store/pool differ from the old ones.
+ * @tc.desc: While a borrowed connection is held, Release times out with E_DATABASE_BUSY and the pool
+ *           is restored; once the connection is returned, Release succeeds. ClearStoreCache + reopen
+ *           then yields a fresh store/pool.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_001, TestSize.Level2)
@@ -2623,13 +2624,11 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_001, TestSize.Level2)
     std::shared_ptr<Connection> connOld = poolA->AcquireConnection(false);
     ASSERT_NE(connOld, nullptr);
 
-    std::atomic<bool> done(false);
-    std::thread worker([&storeA, &done]() { storeA->Release(); done.store(true); });
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    EXPECT_FALSE(done.load());
+    EXPECT_EQ(E_DATABASE_BUSY, storeA->Release(1));
+    EXPECT_NE(nullptr, implA->GetPool());
+
     connOld.reset();
-    worker.join();
-    EXPECT_TRUE(done.load());
+    EXPECT_EQ(E_OK, storeA->Release(1));
     EXPECT_EQ(nullptr, implA->GetPool());
 
     EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
@@ -2648,8 +2647,8 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_001, TestSize.Level2)
 
 /**
  * @tc.name: RdbStore_ReleaseAndReopen_ResultSet_001
- * @tc.desc: With WAL an open ResultSet holds a read connection; Release blocks until it is closed,
- *           then ClearStoreCache + reopen yields a fresh handle.
+ * @tc.desc: With WAL an open ResultSet holds a read connection; Release times out with E_DATABASE_BUSY
+ *           until the ResultSet is closed, then succeeds. ClearStoreCache + reopen yields a fresh handle.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_ResultSet_001, TestSize.Level2)
@@ -2674,13 +2673,11 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_ResultSet_001, TestSize.Lev
     std::shared_ptr<ResultSet> resultSet = storeA->QueryByStep("SELECT * FROM test");
     ASSERT_NE(resultSet, nullptr);
 
-    std::atomic<bool> done(false);
-    std::thread worker([&storeA, &done]() { storeA->Release(); done.store(true); });
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    EXPECT_FALSE(done.load());
+    EXPECT_EQ(E_DATABASE_BUSY, storeA->Release(1));
+    EXPECT_NE(nullptr, implA->GetPool());
+
     EXPECT_EQ(E_OK, resultSet->Close());
-    worker.join();
-    EXPECT_TRUE(done.load());
+    EXPECT_EQ(E_OK, storeA->Release(1));
     EXPECT_EQ(nullptr, implA->GetPool());
 
     EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
@@ -2690,5 +2687,99 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_ResultSet_001, TestSize.Lev
     EXPECT_NE(storeA.get(), storeB.get());
     EXPECT_NE(poolA.get(), implB->GetPool().get());
 
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_Release_Timeout_ResultSet_001
+ * @tc.desc: Release returns E_DATABASE_BUSY while ResultSets still hold read connections, and E_OK
+ *           once the last one is closed. Bounded-wait semantics: Release never blocks past waitTime.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_ResultSet_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_timeout_resultset_test.db";
+    RdbHelper::DeleteRdbStore(db);
+
+    RdbStoreConfig config(db);
+    config.SetJournalMode(JournalMode::MODE_WAL);
+    config.SetReadConSize(8);
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+    EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('a', 1);"));
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
+
+    std::vector<std::shared_ptr<ResultSet>> resultSets;
+    for (int i = 0; i < 5; i++) {
+        auto rs = store->QueryByStep("SELECT * FROM test");
+        ASSERT_NE(rs, nullptr);
+        resultSets.push_back(rs);
+    }
+    ASSERT_NE(nullptr, impl->GetPool());
+
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1));
+    EXPECT_NE(nullptr, impl->GetPool());
+    EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('b', 2);"));
+
+    EXPECT_EQ(E_OK, resultSets[0]->Close());
+    resultSets.erase(resultSets.begin());
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1));
+
+    for (size_t i = 0; i + 1 < resultSets.size(); i++) {
+        EXPECT_EQ(E_OK, resultSets[i]->Close());
+    }
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1));
+
+    EXPECT_EQ(E_OK, resultSets.back()->Close());
+    resultSets.clear();
+    EXPECT_EQ(E_OK, store->Release(1));
+    EXPECT_EQ(nullptr, impl->GetPool());
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_Release_Timeout_Transaction_001
+ * @tc.desc: Release returns E_DATABASE_BUSY while an open Transaction still borrows a connection, and
+ *           E_OK after the transaction is closed. Bounded-wait semantics: Release never blocks past
+ *           waitTime.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_Transaction_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_timeout_transaction_test.db";
+    RdbHelper::DeleteRdbStore(db);
+
+    RdbStoreConfig config(db);
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
+
+    auto [beginErr, transaction] = store->CreateTransaction(Transaction::IMMEDIATE);
+    ASSERT_EQ(E_OK, beginErr);
+    ASSERT_NE(transaction, nullptr);
+    ASSERT_NE(nullptr, impl->GetPool());
+
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1));
+    EXPECT_NE(nullptr, impl->GetPool());
+    ValuesBucket row;
+    row.Put("name", "a");
+    row.Put("age", 1);
+    EXPECT_EQ(E_OK, transaction->Insert("test", row).first);
+    EXPECT_EQ(E_OK, transaction->Commit());
+
+    EXPECT_EQ(E_OK, store->Release(1));
+    EXPECT_EQ(nullptr, impl->GetPool());
+
+    RdbHelper::ClearStoreCache(config);
     RdbHelper::DeleteRdbStore(db);
 }

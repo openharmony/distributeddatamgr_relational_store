@@ -202,17 +202,6 @@ int RdbStoreImpl::Release(int32_t waitTime)
         std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
         pool = std::move(connectionPool_);
     }
-    {
-        std::lock_guard<decltype(mutex_)> guard(mutex_);
-        for (auto &it : transactions_) {
-            auto trans = it.lock();
-            if (trans != nullptr) {
-                trans->Close();
-            }
-        }
-        transactions_ = {};
-    }
-    trxConnMap_ = {};
     if (pool != nullptr) {
         auto acquired = pool->AcquireAll(waitTime);
         if (acquired.first == nullptr) {
