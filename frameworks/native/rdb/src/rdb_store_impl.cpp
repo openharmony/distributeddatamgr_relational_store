@@ -195,7 +195,7 @@ void RdbStoreImpl::Close()
     }
 }
 
-int RdbStoreImpl::Release()
+int RdbStoreImpl::Release(int32_t waitTime)
 {
     std::shared_ptr<ConnectionPool> pool;
     {
@@ -214,7 +214,16 @@ int RdbStoreImpl::Release()
     }
     trxConnMap_ = {};
     if (pool != nullptr) {
-        pool->WaitAndClearAll();
+        auto acquired = pool->AcquireAll(waitTime);
+        if (acquired.first == nullptr) {
+            pool->Dump(true, "Release AcquireAll timeout");
+            pool->Dump(false, "Release AcquireAll timeout");
+            {
+                std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
+                connectionPool_ = std::move(pool);
+            }
+            return E_DATABASE_BUSY;
+        }
     }
     {
         std::lock_guard<decltype(helperMutex_)> autoLock(helperMutex_);

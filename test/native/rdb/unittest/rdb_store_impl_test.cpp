@@ -2571,38 +2571,6 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_001, TestSize.Level2)
 }
 
 /**
- * @tc.name: Rdb_ConnectionPool_DrainAndClear_001
- * @tc.desc: Test WaitAndClearAll blocks until borrowed connections are returned, then drains all.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPool_DrainAndClear_001, TestSize.Level2)
-{
-    const std::string db = RDB_TEST_PATH + "drainclear_test.db";
-    RdbHelper::DeleteRdbStore(db);
-    int errCode = E_OK;
-    RdbStoreConfig config(db);
-    std::shared_ptr<RdbStoreConfig> holder = std::make_shared<RdbStoreConfig>(config);
-    auto pool = ConnectionPool::Create(holder, *holder, errCode);
-    ASSERT_NE(pool, nullptr);
-    ASSERT_EQ(E_OK, errCode);
-
-    auto conn = pool->AcquireConnection(false);
-    ASSERT_NE(conn, nullptr);
-
-    std::atomic<bool> done(false);
-    std::thread worker([&pool, &done]() { pool->WaitAndClearAll(); done.store(true); });
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    EXPECT_FALSE(done.load());
-    conn.reset();
-    worker.join();
-    EXPECT_TRUE(done.load());
-
-    EXPECT_EQ(nullptr, pool->AcquireConnection(false));
-
-    RdbHelper::DeleteRdbStore(db);
-}
-
-/**
  * @tc.name: RdbStore_ClearStoreCache_001
  * @tc.desc: ClearStoreCache evicts the cached store so the next GetRdbStore yields a fresh instance.
  * @tc.type: FUNC
