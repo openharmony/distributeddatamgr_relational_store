@@ -18,7 +18,6 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <atomic>
 #include <map>
 #include <memory>
 #include <string>
