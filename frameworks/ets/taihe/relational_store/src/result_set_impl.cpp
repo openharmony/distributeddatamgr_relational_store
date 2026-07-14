@@ -29,7 +29,6 @@ ResultSetImpl::ResultSetImpl()
 
 ResultSetImpl::ResultSetImpl(std::shared_ptr<OHOS::NativeRdb::ResultSet> resultSet)
 {
-    nativeResultSet_ = resultSet;
     proxy_ = std::make_shared<ResultSetProxy>(resultSet);
     SetResource(resultSet);
 }
@@ -41,9 +40,10 @@ int64_t ResultSetImpl::GetProxy()
 
 array<string> ResultSetImpl::GetAllColumnNames()
 {
+    auto resultSet = GetResource();
     std::vector<std::string> colNames;
-    if (nativeResultSet_ != nullptr) {
-        nativeResultSet_->GetAllColumnNames(colNames);
+    if (resultSet != nullptr) {
+        resultSet->GetAllColumnNames(colNames);
     }
     return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
 }
@@ -51,101 +51,107 @@ array<string> ResultSetImpl::GetAllColumnNames()
 array<string> ResultSetImpl::GetColumnNames()
 {
     auto resultSet = GetResource();
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
+    ASSERT_THROW_INNER_ERROR_EXT(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
     auto [errCode, colNames] = resultSet->GetWholeColumnNames();
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode, resultSet->GetLastErrorMsg());
-        return {};
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, resultSet->GetLastErrorMsg(),
+        array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size()));
     return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
 }
 
 int32_t ResultSetImpl::GetColumnCount()
 {
+    auto resultSet = GetResource();
     int32_t count = 0;
-    if (nativeResultSet_ != nullptr) {
-        nativeResultSet_->GetColumnCount(count);
+    if (resultSet != nullptr) {
+        resultSet->GetColumnCount(count);
     }
     return count;
 }
 
 int32_t ResultSetImpl::GetRowCount()
 {
-    if (nativeResultSet_ == nullptr) {
+    auto resultSet = GetResource();
+    if (resultSet == nullptr) {
         return -1;
     }
     int32_t rowCount = 0;
-    nativeResultSet_->GetRowCount(rowCount);
+    resultSet->GetRowCount(rowCount);
     return rowCount;
 }
 
 int32_t ResultSetImpl::GetRowIndex()
 {
+    auto resultSet = GetResource();
     int32_t rowIndex = -1;
-    if (nativeResultSet_ != nullptr) {
-        nativeResultSet_->GetRowIndex(rowIndex);
+    if (resultSet != nullptr) {
+        resultSet->GetRowIndex(rowIndex);
     }
     return rowIndex;
 }
 
 bool ResultSetImpl::GetIsAtFirstRow()
 {
+    auto resultSet = GetResource();
     bool isAtFirstRow = false;
-    if (nativeResultSet_ != nullptr) {
-        nativeResultSet_->IsAtFirstRow(isAtFirstRow);
+    if (resultSet != nullptr) {
+        resultSet->IsAtFirstRow(isAtFirstRow);
     }
     return isAtFirstRow;
 }
 
 bool ResultSetImpl::GetIsAtLastRow()
 {
+    auto resultSet = GetResource();
     bool isAtLastRow = false;
-    if (nativeResultSet_ != nullptr) {
-        nativeResultSet_->IsAtLastRow(isAtLastRow);
+    if (resultSet != nullptr) {
+        resultSet->IsAtLastRow(isAtLastRow);
     }
     return isAtLastRow;
 }
 
 bool ResultSetImpl::GetIsEnded()
 {
+    auto resultSet = GetResource();
     bool isEnded = true;
-    if (nativeResultSet_ != nullptr) {
-        nativeResultSet_->IsEnded(isEnded);
+    if (resultSet != nullptr) {
+        resultSet->IsEnded(isEnded);
     }
     return isEnded;
 }
 
 bool ResultSetImpl::GetIsStarted()
 {
+    auto resultSet = GetResource();
     bool isStarted = false;
-    if (nativeResultSet_ != nullptr) {
-        nativeResultSet_->IsStarted(isStarted);
+    if (resultSet != nullptr) {
+        resultSet->IsStarted(isStarted);
     }
     return isStarted;
 }
 
 bool ResultSetImpl::GetIsClosed()
 {
-    return nativeResultSet_ == nullptr;
+    return GetResource() == nullptr;
 }
 
 int32_t ResultSetImpl::GetColumnIndex(string_view columnName)
 {
+    auto resultSet = GetResource();
     int32_t result = -1;
     int errCode = OHOS::NativeRdb::E_OK;
-    if (nativeResultSet_ != nullptr) {
-        errCode = nativeResultSet_->GetColumnIndex(std::string(columnName), result);
+    if (resultSet != nullptr) {
+        errCode = resultSet->GetColumnIndex(std::string(columnName), result);
     }
     return result;
 }
 
 string ResultSetImpl::GetColumnName(int32_t columnIndex)
 {
+    auto resultSet = GetResource();
     std::string result;
     int errCode = OHOS::NativeRdb::E_OK;
-    if (nativeResultSet_ != nullptr) {
-        errCode = nativeResultSet_->GetColumnName(columnIndex, result);
+    if (resultSet != nullptr) {
+        errCode = resultSet->GetColumnName(columnIndex, result);
     }
     return string(result);
 }
@@ -154,16 +160,15 @@ uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnId
 {
     auto resultSet = GetResource();
     OHOS::DistributedRdb::ColumnType columnType = OHOS::DistributedRdb::ColumnType::TYPE_NULL;
-    ASSERT_RETURN_THROW_ERROR(resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), 0);
+    ASSERT_THROW_INNER_ERROR_EXT(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", 0);
     int32_t columnIndex = 0;
     int errCode = OHOS::NativeRdb::E_OK;
     if (columnIdentifier.holds_columnIndex()) {
         columnIndex = columnIdentifier.get_columnIndex_ref();
-        ASSERT_RETURN_THROW_ERROR(columnIndex >= 0, std::make_shared<ParamError>("Invalid columnIndex"), 0);
+        ASSERT_THROW_PARAM_ERROR(columnIndex >= 0, "Invalid columnIndex", "", 0);
     } else {
         std::string columnName(columnIdentifier.get_columnName_ref());
-        ASSERT_RETURN_THROW_ERROR(
-            !columnName.empty(), std::make_shared<ParamError>("columnName", "a non empty string."), 0);
+        ASSERT_THROW_PARAM_ERROR(!columnName.empty(), "columnName", "a non empty string.", 0);
         errCode = resultSet->GetColumnIndex(columnName, columnIndex);
     }
     if (errCode == OHOS::NativeRdb::E_OK) {
@@ -172,63 +177,66 @@ uintptr_t ResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::ColumnId
     if (errCode == NativeRdb::E_INVALID_ARGS) {
         errCode = E_PARAM_ERROR;
     }
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-        return 0;
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), 0);
     return ani_rdbutils::ColumnTypeToTaihe(columnType);
 }
 
 bool ResultSetImpl::GoTo(int32_t offset)
 {
+    auto resultSet = GetResource();
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeResultSet_ != nullptr) {
-        errCode = nativeResultSet_->GoTo(offset);
+    if (resultSet != nullptr) {
+        errCode = resultSet->GoTo(offset);
     }
     return errCode == OHOS::NativeRdb::E_OK;
 }
 
 bool ResultSetImpl::GoToRow(int32_t position)
 {
+    auto resultSet = GetResource();
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeResultSet_ != nullptr) {
-        errCode = nativeResultSet_->GoToRow(position);
+    if (resultSet != nullptr) {
+        errCode = resultSet->GoToRow(position);
     }
     return errCode == OHOS::NativeRdb::E_OK;
 }
 
 bool ResultSetImpl::GoToFirstRow()
 {
+    auto resultSet = GetResource();
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeResultSet_ != nullptr) {
-        errCode = nativeResultSet_->GoToFirstRow();
+    if (resultSet != nullptr) {
+        errCode = resultSet->GoToFirstRow();
     }
     return errCode == OHOS::NativeRdb::E_OK;
 }
 
 bool ResultSetImpl::GoToLastRow()
 {
+    auto resultSet = GetResource();
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeResultSet_ != nullptr) {
-        errCode = nativeResultSet_->GoToLastRow();
+    if (resultSet != nullptr) {
+        errCode = resultSet->GoToLastRow();
     }
     return errCode == OHOS::NativeRdb::E_OK;
 }
 
 bool ResultSetImpl::GoToNextRow()
 {
+    auto resultSet = GetResource();
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeResultSet_ != nullptr) {
-        errCode = nativeResultSet_->GoToNextRow();
+    if (resultSet != nullptr) {
+        errCode = resultSet->GoToNextRow();
     }
     return errCode == OHOS::NativeRdb::E_OK;
 }
 
 bool ResultSetImpl::GoToPreviousRow()
 {
+    auto resultSet = GetResource();
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
-    if (nativeResultSet_ != nullptr) {
-        errCode = nativeResultSet_->GoToPreviousRow();
+    if (resultSet != nullptr) {
+        errCode = resultSet->GoToPreviousRow();
     }
     return errCode == OHOS::NativeRdb::E_OK;
 }
@@ -236,13 +244,11 @@ bool ResultSetImpl::GoToPreviousRow()
 array<uint8_t> ResultSetImpl::GetBlob(int32_t columnIndex)
 {
     auto resultSet = GetResource();
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
     std::vector<uint8_t> result;
     int errCode = resultSet->GetBlob(columnIndex, result);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(
+        errCode, resultSet->GetLastErrorMsg(), array<uint8_t>(::taihe::copy_data_t{}, result.data(), result.size()));
     return array<uint8_t>(::taihe::copy_data_t{}, result.data(), result.size());
 }
 
@@ -250,12 +256,9 @@ string ResultSetImpl::GetString(int32_t columnIndex)
 {
     auto resultSet = GetResource();
     std::string result;
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), result);
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", result);
     int errCode = resultSet->GetString(columnIndex, result);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), string(result));
     return string(result);
 }
 
@@ -263,12 +266,9 @@ int64_t ResultSetImpl::GetLong(int32_t columnIndex)
 {
     auto resultSet = GetResource();
     int64_t result = 0;
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), result);
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", result);
     int errCode = resultSet->GetLong(columnIndex, result);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), result);
     return result;
 }
 
@@ -276,12 +276,9 @@ double ResultSetImpl::GetDouble(int32_t columnIndex)
 {
     double result = 0.0;
     auto resultSet = GetResource();
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), result);
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", result);
     int errCode = resultSet->GetDouble(columnIndex, result);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), result);
     return result;
 }
 
@@ -290,14 +287,12 @@ ohos::data::relationalStore::Asset ResultSetImpl::GetAsset(int32_t columnIndex)
     auto resultSet = GetResource();
     OHOS::NativeRdb::AssetValue result;
     ohos::data::relationalStore::Asset aniret = {};
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), aniret);
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", aniret);
     int errCode = resultSet->GetAsset(columnIndex, result);
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return aniret;
-    } else if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-    }
+    } else
+        CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), aniret);
     return ani_rdbutils::AssetToAni(result);
 }
 
@@ -305,15 +300,12 @@ array<ohos::data::relationalStore::Asset> ResultSetImpl::GetAssets(int32_t colum
 {
     auto resultSet = GetResource();
     std::vector<OHOS::NativeRdb::AssetValue> result;
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
     int errCode = resultSet->GetAssets(columnIndex, result);
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return {};
-    } else if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-        return {};
-    }
+    } else
+        CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), {});
     std::vector<ohos::data::relationalStore::Asset> resultTemp;
     std::transform(result.begin(), result.end(), std::back_inserter(resultTemp),
         [](const OHOS::NativeRdb::AssetValue &asset) { return ani_rdbutils::AssetToAni(asset); });
@@ -324,12 +316,10 @@ ValueType ResultSetImpl::GetValue(int32_t columnIndex)
 {
     auto resultSet = GetResource();
     OHOS::NativeRdb::ValueObject object;
-    ASSERT_RETURN_THROW_ERROR(resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED),
-        ani_rdbutils::ValueObjectToAni(object));
+    ASSERT_THROW_INNER_ERROR(
+        resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", ani_rdbutils::ValueObjectToAni(object));
     int errCode = resultSet->Get(columnIndex, object);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), ani_rdbutils::ValueObjectToAni(object));
     return ani_rdbutils::ValueObjectToAni(object);
 }
 
@@ -337,15 +327,12 @@ array<float> ResultSetImpl::GetFloat32Array(int32_t columnIndex)
 {
     auto resultSet = GetResource();
     std::vector<float> result = {};
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
     int errCode = resultSet->GetFloat32Array(columnIndex, result);
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return {};
-    } else if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-        return {};
-    }
+    } else
+        CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), {});
     return array<float>(::taihe::copy_data_t{}, result.data(), result.size());
 }
 
@@ -354,13 +341,9 @@ map<string, ValueType> ResultSetImpl::GetRow()
     auto resultSet = GetResource();
     OHOS::NativeRdb::RowEntity rowEntity;
     map<string, ValueType> aniMap;
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), aniMap);
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", aniMap);
     int errCode = resultSet->GetRow(rowEntity);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-        return aniMap;
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), aniMap);
     const std::map<std::string, OHOS::NativeRdb::ValueObject> &rowMap = rowEntity.Get();
     for (auto const &[key, value] : rowMap) {
         aniMap.emplace(string(key), ani_rdbutils::ValueObjectToAni(value));
@@ -372,25 +355,15 @@ taihe::array<ohos::data::relationalStore::ValuesBucket> ResultSetImpl::GetRowsSy
     int32_t maxCount, taihe::optional_view<int32_t> position)
 {
     auto resultSet = GetResource();
-    if (maxCount < 0) {
-        ThrowParamError("Invalid maxCount");
-        return {};
-    }
+    ASSERT_THROW_PARAM_ERROR(maxCount < 0, "Invalid maxCount", "", {});
     int positionNative = INIT_POSITION;
     if (position.has_value()) {
-        if (position.value() < 0) {
-            ThrowParamError("invalid position");
-            return {};
-        }
+        ASSERT_THROW_PARAM_ERROR(position.value() < 0, "invalid position", "", {});
         positionNative = position.value();
     }
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
     auto [errCode, rowEntities] = ani_rdbutils::GetRows(*resultSet, maxCount, positionNative);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-        return {};
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), {});
     std::vector<ohos::data::relationalStore::ValuesBucket> res;
     for (size_t i = 0; i < rowEntities.size(); ++i) {
         OHOS::NativeRdb::ValuesBucket bucket(rowEntities[i].Get());
@@ -403,13 +376,9 @@ taihe::array<ohos::data::relationalStore::ValuesBucket> ResultSetImpl::GetRowsSy
 array<ohos::data::relationalStore::ValueType> ResultSetImpl::GetCurrentRowData()
 {
     auto resultSet = GetResource();
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
     auto [errCode, rowData] = resultSet->GetRowData();
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode, resultSet->GetLastErrorMsg());
-        return {};
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, resultSet->GetLastErrorMsg(), {});
     std::vector<ValueType> rowDataTemp;
     std::transform(rowData.begin(), rowData.end(), std::back_inserter(rowDataTemp),
         [](const OHOS::NativeRdb::ValueObject &object) { return ani_rdbutils::ValueObjectToAni(object); });
@@ -419,25 +388,15 @@ array<ohos::data::relationalStore::ValueType> ResultSetImpl::GetCurrentRowData()
 array<array<ValueType>> ResultSetImpl::GetRowsDataSync(int32_t maxCount, optional_view<int32_t> position)
 {
     auto resultSet = GetResource();
-    if (maxCount <= 0) {
-        ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
-        return {};
-    }
+    ASSERT_THROW_INNER_ERROR(maxCount <= 0, OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", {});
     int32_t nativePosition = INIT_POSITION;
     if (position.has_value()) {
         nativePosition = position.value();
-        if (nativePosition < 0) {
-            ThrowInnerError(OHOS::NativeRdb::E_INVALID_ARGS_NEW);
-            return {};
-        }
+        ASSERT_THROW_INNER_ERROR(nativePosition < 0, OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", {});
     }
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerErrorExt>(OHOS::NativeRdb::E_ALREADY_CLOSED), {});
+    ASSERT_THROW_INNER_ERROR_EXT(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
     auto [errCode, rowsData] = resultSet->GetRowsData(maxCount, nativePosition);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerErrorExt(errCode, resultSet->GetLastErrorMsg());
-        return {};
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, resultSet->GetLastErrorMsg(), {});
     std::vector<std::vector<ValueType>> rowsDataTemp;
     rowsDataTemp.reserve(rowsData.size());
     for (const auto &rowData : rowsData) {
@@ -453,19 +412,15 @@ bool ResultSetImpl::IsColumnNull(int32_t columnIndex)
 {
     auto resultSet = GetResource();
     bool result = false;
-    ASSERT_RETURN_THROW_ERROR(
-        resultSet != nullptr, std::make_shared<InnerError>(OHOS::NativeRdb::E_ALREADY_CLOSED), result);
+    ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", result);
     int errCode = resultSet->IsColumnNull(columnIndex, result);
-    if (errCode != OHOS::NativeRdb::E_OK) {
-        ThrowInnerError(errCode, resultSet->GetLastErrorMsg());
-    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), result);
     return result;
 }
 
 void ResultSetImpl::Close()
 {
     ResetResource();
-    nativeResultSet_ = nullptr;
     proxy_ = nullptr;
 }
 } // namespace RdbTaihe

@@ -748,8 +748,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_006, TestSize.Level2)
     auto connectionPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
-    connectionPool->clearActuator_ =
-        std::make_shared<DelayActuator>(UINT32_MAX, UINT32_MAX, 1000);
+    connectionPool->clearActuator_ = std::make_shared<DelayActuator>(UINT32_MAX, UINT32_MAX, 1000);
     connectionPool->clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
     auto blockData = std::make_shared<BlockData<int>>(2, 0);
     std::weak_ptr<ConnectionPool> pool = connectionPool;
@@ -790,8 +789,7 @@ HWTEST_F(RdbStoreImplTest, Rdb_ConnectionPoolTest_007, TestSize.Level2)
     auto connectionPool = ConnectionPool::Create(configHolder, *configHolder, errCode);
     EXPECT_NE(nullptr, connectionPool);
     EXPECT_EQ(E_OK, errCode);
-    connectionPool->clearActuator_ =
-        std::make_shared<DelayActuator>(UINT32_MAX, UINT32_MAX, 1000);
+    connectionPool->clearActuator_ = std::make_shared<DelayActuator>(UINT32_MAX, UINT32_MAX, 1000);
     connectionPool->clearActuator_->SetExecutorPool(TaskExecutor::GetInstance().GetExecutor());
     auto blockData = std::make_shared<BlockData<int>>(2, 0);
     std::weak_ptr<ConnectionPool> pool = connectionPool;
@@ -1018,7 +1016,7 @@ HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_001, TestSize.Level2)
     EXPECT_NE(nullptr, store);
     EXPECT_EQ(E_OK, errCode);
     store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
-                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                      "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t id;
     ValuesBucket valuesBucket;
     for (int i = 0; i < 1000; ++i) {
@@ -1054,7 +1052,7 @@ HWTEST_F(RdbStoreImplTest, Normal_ClearCacheTest_002, TestSize.Level2)
     EXPECT_NE(nullptr, store);
     EXPECT_EQ(E_OK, errCode);
     store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
-                       "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
+                      "data2 INTEGER, data3 FLOAT, data4 BLOB, data5 BOOLEAN);");
     int64_t id;
     ValuesBucket valuesBucket;
     valuesBucket.PutString("data1", std::string(0.5 * 1024 * 1024, 'a'));
@@ -1410,8 +1408,7 @@ HWTEST_F(RdbStoreImplTest, BatchInsert_003, TestSize.Level1)
 {
     std::string tableName = "BatchInsertTest";
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
-    auto res =
-        store_->Execute("CREATE TABLE " + tableName + " (id TEXT PRIMARY KEY, name TEXT NOT NULL)");
+    auto res = store_->Execute("CREATE TABLE " + tableName + " (id TEXT PRIMARY KEY, name TEXT NOT NULL)");
     ASSERT_EQ(res.first, E_OK);
 
     ValuesBuckets rows;
@@ -1920,7 +1917,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ConfigLocale_001, TestSize.Level1)
     EXPECT_EQ(E_OK, errCode);
     ASSERT_NE(store, nullptr);
     errCode = store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
-                    "data2 INTEGER);");
+                                "data2 INTEGER);");
     EXPECT_EQ(errCode, E_OK);
     errCode = store->ConfigLocale("111");
     EXPECT_EQ(errCode, E_INVALID_ARGS_NEW);
@@ -1963,11 +1960,11 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ConfigLocale_002, TestSize.Level1)
     EXPECT_EQ(E_OK, errCode);
     ASSERT_NE(store, nullptr);
     errCode = store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
-                    "data2 INTEGER);");
+                                "data2 INTEGER);");
     EXPECT_EQ(errCode, E_OK);
     errCode = store->ConfigLocale("zh");
     EXPECT_EQ(errCode, E_OK);
-    
+
     int64_t id;
     ValuesBucket valuesBucket;
     valuesBucket.PutString("data1", "张三");
@@ -2011,14 +2008,14 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ConfigLocale_003, TestSize.Level1)
     EXPECT_EQ(E_OK, errCode);
     ASSERT_NE(store, nullptr);
     errCode = store->ExecuteSql("CREATE TABLE test1 (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, "
-                    "data2 INTEGER);");
+                                "data2 INTEGER);");
     EXPECT_EQ(errCode, E_OK);
     auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
     EXPECT_EQ(ret, E_OK);
     ASSERT_NE(transaction, nullptr);
     errCode = store->ConfigLocale("zh");
     EXPECT_EQ(errCode, E_OK);
-    
+
     ValuesBucket valuesBucket;
     valuesBucket.PutString("data1", "张三");
     valuesBucket.PutInt("data2", 20);
@@ -2032,7 +2029,8 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ConfigLocale_003, TestSize.Level1)
     std::vector<std::string> columns;
     AbsRdbPredicates predicates("test1");
     predicates.OrderByAsc("data1 COLLATE LOCALES");
-    auto resultSet = transaction->QueryByStep("SELECT * FROM test1 order by data1 COLLATE LOCALES");;
+    auto resultSet = transaction->QueryByStep("SELECT * FROM test1 order by data1 COLLATE LOCALES");
+    ;
     ASSERT_NE(nullptr, resultSet);
     std::string strValue;
     resultSet->GoToNextRow();
@@ -2154,7 +2152,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_001, TestSize.Level0)
     ASSERT_NE(store, nullptr);
 
     std::string createSql = "CREATE VIRTUAL TABLE example USING fts5(content, "
-        "tokenize = 'customtokenizer cut_mode short_words')";
+                            "tokenize = 'customtokenizer cut_mode short_words')";
     auto [status, val] = store->Execute(createSql);
     ASSERT_NE(status, E_OK);
 
@@ -2170,10 +2168,10 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_001, TestSize.Level0)
     std::tie(status, val) = store->Execute(insertValueSql);
     ASSERT_EQ(status, E_OK);
 
-    std::vector<std::string> words = {"电子", "邮件", "电子邮件"};
-    for (auto word: words) {
+    std::vector<std::string> words = { "电子", "邮件", "电子邮件" };
+    for (auto word : words) {
         auto resultSet =
-            store->QuerySql("SELECT * FROM example WHERE content MATCH ?;", std::vector<std::string>{word});
+            store->QuerySql("SELECT * FROM example WHERE content MATCH ?;", std::vector<std::string>{ word });
         ASSERT_NE(resultSet, nullptr);
         int count = 0;
         ASSERT_EQ(resultSet->GetRowCount(count), E_OK);
@@ -2196,7 +2194,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_002, TestSize.Level0)
     ASSERT_NE(store, nullptr);
 
     std::string createSql = "CREATE VIRTUAL TABLE example USING fts5(content, "
-        "tokenize = 'customtokenizer cut_mode short_words')";
+                            "tokenize = 'customtokenizer cut_mode short_words')";
     auto [status, val] = store->Execute(createSql);
     ASSERT_NE(status, E_OK);
     Tokenizer tokenizer = static_cast<Tokenizer>(-1); // -1 is a value outside the boundary of the tokenizer.
@@ -2221,7 +2219,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_SetTokenizer_003, TestSize.Level0)
 
     ASSERT_EQ(store->SetTokenizer(Tokenizer::NONE_TOKENIZER), E_OK);
     std::string createSql = "CREATE VIRTUAL TABLE example USING fts5(content, "
-        "tokenize = 'customtokenizer cut_mode short_words')";
+                            "tokenize = 'customtokenizer cut_mode short_words')";
     auto [status, val] = store->Execute(createSql);
     ASSERT_NE(status, E_OK);
     ASSERT_EQ(store->SetTokenizer(Tokenizer::ICU_TOKENIZER), E_NOT_SUPPORT);
@@ -2543,4 +2541,69 @@ HWTEST_F(RdbStoreImplTest, InitSaDb001, TestSize.Level1)
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(E_OK, errCode);
     RdbHelper::DeleteRdbStore(config);
+}
+
+/**
+ * @tc.name: R_ErrMsg_001
+ * @tc.desc: Verify RdbStoreImpl GetLastErrorMsg when executing SQL with syntax error.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, R_ErrMsg_001, TestSize.Level1)
+{
+    // "CREAATE" is a misspelled keyword — prepare fails with a syntax error
+    auto [ret, value] = store_->Execute("CREAATE TABLE r_errmsg_test(id int)");
+    EXPECT_NE(ret, E_OK);
+    std::string errMsg = store_->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("syntax"), std::string::npos);
+}
+
+/**
+ * @tc.name: R_ErrMsg_002
+ * @tc.desc: Verify RdbStoreImpl GetLastErrorMsg when inserting into a non-existent table.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, R_ErrMsg_002, TestSize.Level1)
+{
+    auto [ret, value] = store_->Execute("INSERT INTO r_errmsg_nonexistent_tbl VALUES(1)");
+    EXPECT_NE(ret, E_OK);
+    std::string errMsg = store_->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("no such table"), std::string::npos);
+}
+
+/**
+ * @tc.name: R_ErrMsg_003
+ * @tc.desc: Verify RdbStoreImpl GetLastErrorMsg when creating a duplicate table.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, R_ErrMsg_003, TestSize.Level1)
+{
+    auto [ret1, val1] = store_->Execute("CREATE TABLE r_errmsg_dup(id int)");
+    EXPECT_EQ(ret1, E_OK);
+    // Second creation fails — table already exists
+    auto [ret2, val2] = store_->Execute("CREATE TABLE r_errmsg_dup(id int)");
+    EXPECT_NE(ret2, E_OK);
+    std::string errMsg = store_->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("already exists"), std::string::npos);
+}
+
+/**
+ * @tc.name: R_ErrMsg_004
+ * @tc.desc: Verify RdbStoreImpl GetLastErrorMsg when a UNIQUE constraint is violated.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, R_ErrMsg_004, TestSize.Level1)
+{
+    auto [ret1, val1] = store_->Execute("CREATE TABLE r_errmsg_unique(id INTEGER PRIMARY KEY)");
+    EXPECT_EQ(ret1, E_OK);
+    auto [ret2, val2] = store_->Execute("INSERT INTO r_errmsg_unique VALUES(1)");
+    EXPECT_EQ(ret2, E_OK);
+    // Second insert violates the PRIMARY KEY uniqueness constraint
+    auto [ret3, val3] = store_->Execute("INSERT INTO r_errmsg_unique VALUES(1)");
+    EXPECT_NE(ret3, E_OK);
+    std::string errMsg = store_->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("UNIQUE constraint"), std::string::npos);
 }
