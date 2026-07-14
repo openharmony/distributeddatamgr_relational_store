@@ -92,8 +92,7 @@ uintptr_t LiteResultSetImpl::GetColumnTypeSync(ohos::data::relationalStore::Colu
     if (errCode == OHOS::NativeRdb::E_OK) {
         errCode = resultSet->GetColumnType(columnIndex, columnType);
     }
-    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(
-        errCode, resultSet->GetLastErrorMsg(), 0);
+    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, resultSet->GetLastErrorMsg(), 0);
     return ani_rdbutils::ColumnTypeToTaihe(columnType);
 }
 
@@ -167,8 +166,9 @@ ohos::data::relationalStore::Asset LiteResultSetImpl::GetAsset(int32_t columnInd
     int errCode = resultSet->GetAsset(columnIndex, result);
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return aniret;
-    } else
+    } else {
         CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, resultSet->GetLastErrorMsg(), aniret);
+    }
     return ani_rdbutils::AssetToAni(result);
 }
 
@@ -180,8 +180,9 @@ array<ohos::data::relationalStore::Asset> LiteResultSetImpl::GetAssets(int32_t c
     int errCode = resultSet->GetAssets(columnIndex, result);
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return {};
-    } else
+    } else {
         CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, resultSet->GetLastErrorMsg(), {});
+    }
     std::vector<ohos::data::relationalStore::Asset> resultTemp;
     std::transform(result.begin(), result.end(), std::back_inserter(resultTemp),
         [](const OHOS::NativeRdb::AssetValue &asset) { return ani_rdbutils::AssetToAni(asset); });
@@ -207,8 +208,9 @@ array<float> LiteResultSetImpl::GetFloat32Array(int32_t columnIndex)
     int errCode = resultSet->GetFloat32Array(columnIndex, result);
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return {};
-    } else
+    } else {
         CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, resultSet->GetLastErrorMsg(), {});
+    }
     return array<float>(::taihe::copy_data_t{}, result.data(), result.size());
 }
 
@@ -250,8 +252,7 @@ array<string> LiteResultSetImpl::GetColumnNames()
     auto resultSet = GetResource();
     ASSERT_THROW_INNER_ERROR_EXT(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
     auto [errCode, colNames] = resultSet->GetWholeColumnNames();
-    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, resultSet->GetLastErrorMsg(),
-        array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size()));
+    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, resultSet->GetLastErrorMsg(), {});
     return array<string>(::taihe::copy_data_t{}, colNames.data(), colNames.size());
 }
 

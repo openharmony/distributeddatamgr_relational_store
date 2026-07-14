@@ -355,10 +355,10 @@ taihe::array<ohos::data::relationalStore::ValuesBucket> ResultSetImpl::GetRowsSy
     int32_t maxCount, taihe::optional_view<int32_t> position)
 {
     auto resultSet = GetResource();
-    ASSERT_THROW_PARAM_ERROR(maxCount < 0, "Invalid maxCount", "", {});
+    ASSERT_THROW_PARAM_ERROR(maxCount >= 0, "Invalid maxCount", "", {});
     int positionNative = INIT_POSITION;
     if (position.has_value()) {
-        ASSERT_THROW_PARAM_ERROR(position.value() < 0, "invalid position", "", {});
+        ASSERT_THROW_PARAM_ERROR(position.value() >= 0, "invalid position", "", {});
         positionNative = position.value();
     }
     ASSERT_THROW_INNER_ERROR(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
@@ -388,11 +388,11 @@ array<ohos::data::relationalStore::ValueType> ResultSetImpl::GetCurrentRowData()
 array<array<ValueType>> ResultSetImpl::GetRowsDataSync(int32_t maxCount, optional_view<int32_t> position)
 {
     auto resultSet = GetResource();
-    ASSERT_THROW_INNER_ERROR(maxCount <= 0, OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", {});
+    ASSERT_THROW_INNER_ERROR(maxCount > 0, OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", {});
     int32_t nativePosition = INIT_POSITION;
     if (position.has_value()) {
         nativePosition = position.value();
-        ASSERT_THROW_INNER_ERROR(nativePosition < 0, OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", {});
+        ASSERT_THROW_INNER_ERROR(nativePosition >= 0, OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", {});
     }
     ASSERT_THROW_INNER_ERROR_EXT(resultSet != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", {});
     auto [errCode, rowsData] = resultSet->GetRowsData(maxCount, nativePosition);

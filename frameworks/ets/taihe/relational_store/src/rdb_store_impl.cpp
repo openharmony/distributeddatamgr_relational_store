@@ -192,7 +192,7 @@ int64_t RdbStoreImpl::UpdateSync(
         conflictResolution = conflict.value().get_key();
     }
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    ASSERT_THROW_INNER_ERROR(rdbPredicateNative == nullptr, OHOS::NativeRdb::E_ERROR, "", ERR_NULL);
+    ASSERT_THROW_INNER_ERROR(rdbPredicateNative != nullptr, OHOS::NativeRdb::E_ERROR, "", ERR_NULL);
     OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
     auto nativeConflictValue = (OHOS::NativeRdb::ConflictResolution)conflictResolution.get_key();
     int output = 0;
@@ -229,7 +229,7 @@ int64_t RdbStoreImpl::DeleteSync(weak::RdbPredicates predicates)
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", ERR_NULL);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
-    ASSERT_THROW_INNER_ERROR(rdbPredicateNative == nullptr, OHOS::NativeRdb::E_ERROR, "", ERR_NULL);
+    ASSERT_THROW_INNER_ERROR(rdbPredicateNative != nullptr, OHOS::NativeRdb::E_ERROR, "", ERR_NULL);
     int output = 0;
     int errCode = store->Delete(output, *rdbPredicateNative);
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), output);
@@ -348,7 +348,7 @@ LiteResultSet RdbStoreImpl::QuerySqlWithoutRowCountSync(string_view sql, optiona
     ASSERT_THROW_INNER_ERROR(
         store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", (make_holder<LiteResultSetImpl, LiteResultSet>()));
     ASSERT_THROW_INNER_ERROR(
-        sql.empty(), OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", (make_holder<LiteResultSetImpl, LiteResultSet>()));
+        !sql.empty(), OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", (make_holder<LiteResultSetImpl, LiteResultSet>()));
     std::vector<OHOS::NativeRdb::ValueObject> para;
     if (bindArgs.has_value()) {
         para.resize(bindArgs.value().size());
@@ -450,7 +450,7 @@ ModifyTime RdbStoreImpl::GetModifyTimeSync(
     // Replace it with the actual method name and parameters
     std::map<OHOS::NativeRdb::RdbStore::PRIKey, OHOS::NativeRdb::RdbStore::Date> mapResult =
         store->GetModifyTime(nativeTable, nativeColumnName, nativePrimaryKeys);
-    ASSERT_THROW_INNER_ERROR(mapResult.empty(), OHOS::NativeRdb::E_ERROR, "", result);
+    ASSERT_THROW_INNER_ERROR(!mapResult.empty(), OHOS::NativeRdb::E_ERROR, "", result);
     return ani_rdbutils::ToAniModifyTime(mapResult);
 }
 
@@ -492,11 +492,11 @@ void RdbStoreImpl::CleanDeviceDirtyDataWithOptionCursor(string_view table, optio
         nativeCursor = cursor.value();
     }
     std::string nativeTable(table);
-    ASSERT_THROW_INNER_ERROR_EXT(nativeTable.empty() || nativeTable.length() > TABLE_NAME_MAX,
+    ASSERT_THROW_INNER_ERROR_EXT(!nativeTable.empty() && nativeTable.length() <= TABLE_NAME_MAX,
         OHOS::NativeRdb::E_INVALID_ARGS, "", RDB_DO_NOTHING);
     std::regex validName("^[a-zA-Z0-9_]*$");
     ASSERT_THROW_INNER_ERROR_EXT(
-        !std::regex_match(nativeTable, validName), OHOS::NativeRdb::E_INVALID_ARGS, "", RDB_DO_NOTHING);
+        std::regex_match(nativeTable, validName), OHOS::NativeRdb::E_INVALID_ARGS, "", RDB_DO_NOTHING);
     int32_t errCode = store->CleanDeviceDirtyData(nativeTable, nativeCursor);
     if (errCode == OHOS::NativeRdb::E_OK) {
         return;
@@ -783,17 +783,17 @@ void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainD
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     std::map<std::string, std::vector<std::string>> nativeRetainDevices;
     for (auto &[table, devices] : retainDevices) {
-        ASSERT_THROW_INNER_ERROR(table.empty(), OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", RDB_DO_NOTHING);
+        ASSERT_THROW_INNER_ERROR(!table.empty(), OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", RDB_DO_NOTHING);
         if (devices.empty()) {
             continue;
         }
         for (auto &device : devices) {
-            ASSERT_THROW_INNER_ERROR_EXT(device.empty(), OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", RDB_DO_NOTHING);
+            ASSERT_THROW_INNER_ERROR_EXT(!device.empty(), OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", RDB_DO_NOTHING);
         }
         nativeRetainDevices.emplace(table, std::vector<std::string>(devices.begin(), devices.end()));
     }
     int errCode = store->RetainDeviceData(nativeRetainDevices);
-    ASSERT_THROW_INNER_ERROR_EXT(errCode != OHOS::NativeRdb::E_OK, errCode, "", RDB_DO_NOTHING);
+    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, "", RDB_DO_NOTHING);
 }
 
 int64_t RdbStoreImpl::UpdateDistributedInfoAsync(DistributedInfo info, weak::RdbPredicates predicates)
