@@ -141,7 +141,7 @@ int64_t RdbStoreImpl::InsertWithConflict(
     int64_t int64Output = 0;
     OHOS::NativeRdb::ValuesBucket bucket = ani_rdbutils::MapValuesToNative(values);
     ASSERT_THROW_PARAM_ERROR(
-        ani_rdbutils::HasDuplicateAssets(bucket), "Duplicate assets are not allowed", "", ERR_NULL);
+        !ani_rdbutils::HasDuplicateAssets(bucket), "Duplicate assets are not allowed", "", ERR_NULL);
 
     int errCode = store->InsertWithConflictResolution(
         int64Output, std::string(table), bucket, (OHOS::NativeRdb::ConflictResolution)conflict.get_key());
@@ -170,7 +170,7 @@ int64_t RdbStoreImpl::BatchInsertSync(string_view table, array_view<map<string, 
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", ERR_NULL);
     OHOS::NativeRdb::ValuesBuckets buckets = ani_rdbutils::BucketValuesToNative(values);
     ASSERT_THROW_PARAM_ERROR(
-        ani_rdbutils::HasDuplicateAssets(buckets), "Duplicate assets are not allowed", "", ERR_NULL);
+        !ani_rdbutils::HasDuplicateAssets(buckets), "Duplicate assets are not allowed", "", ERR_NULL);
     auto [errCode, output] = store->BatchInsert(std::string(table), buckets);
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), output);
     return output;
@@ -595,7 +595,7 @@ void RdbStoreImpl::ExecuteSqlWithOptionArgs(string_view sql, optional_view<array
     std::transform(value.begin(), value.end(), std::back_inserter(para),
         [](const ValueType &valueType) { return ani_rdbutils::ValueTypeToNative(valueType); });
     ASSERT_THROW_PARAM_ERROR(
-        ani_rdbutils::HasDuplicateAssets(para), "Duplicate assets are not allowed", "", RDB_DO_NOTHING);
+        !ani_rdbutils::HasDuplicateAssets(para), "Duplicate assets are not allowed", "", RDB_DO_NOTHING);
     int errCode = store->ExecuteSql(std::string(sql), para);
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
 }
@@ -619,7 +619,7 @@ ValueType RdbStoreImpl::ExecuteWithTxId(string_view sql, int64_t txId, optional_
         nativeValues = ani_rdbutils::ArrayValuesToNative(arrayView);
     }
     ASSERT_THROW_PARAM_ERROR(
-        ani_rdbutils::HasDuplicateAssets(nativeValues), "Duplicate assets are not allowed", "", aniValue);
+        !ani_rdbutils::HasDuplicateAssets(nativeValues), "Duplicate assets are not allowed", "", aniValue);
     auto [errCode, sqlExeOutput] = store->Execute(std::string(sql), nativeValues, txId);
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), aniValue);
     return ani_rdbutils::ValueObjectToAni(sqlExeOutput);
