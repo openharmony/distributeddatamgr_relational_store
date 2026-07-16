@@ -717,7 +717,7 @@ void RdbStoreImpl::SetDistributedTablesWithType(array_view<string> tables, Distr
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     auto [isValidType, nativeTableType] = ani_rdbutils::DistributedTableTypeToNative(type);
-    ASSERT_THROW_PARAM_ERROR(!isValidType, "type must be a DistributedTableType.", "", RDB_DO_NOTHING);
+    ASSERT_THROW_PARAM_ERROR(isValidType, "type must be a DistributedTableType.", "", RDB_DO_NOTHING);
     int errCode = store->SetDistributedTables(std::vector<std::string>(tables.begin(), tables.end()), nativeTableType);
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
 }
@@ -728,9 +728,9 @@ void RdbStoreImpl::SetDistributedTablesWithConfig(
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     auto [isValidType, nativeTableType] = ani_rdbutils::DistributedTableTypeToNative(type);
-    ASSERT_THROW_PARAM_ERROR(!isValidType, "type must be a DistributedTableType.", "", RDB_DO_NOTHING);
+    ASSERT_THROW_PARAM_ERROR(isValidType, "type must be a DistributedTableType.", "", RDB_DO_NOTHING);
     auto [isValidConfig, nativeConfig] = ani_rdbutils::DistributedConfigToNative(config, nativeTableType);
-    ASSERT_THROW_PARAM_ERROR(!isValidConfig, "config must be a DistributedConfig.", "", RDB_DO_NOTHING);
+    ASSERT_THROW_PARAM_ERROR(isValidConfig, "config must be a DistributedConfig.", "", RDB_DO_NOTHING);
     if (nativeTableType == NativeDistributedTableType::DISTRIBUTED_CLOUD &&
         nativeConfig.tableType == NativeDistributedTableMode::DEVICE_COLLABORATION) {
         ThrowError(std::make_shared<InnerError>(
@@ -753,13 +753,13 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
     NativeDistributedConfig nativeConfig = { true };
     if (type.has_value()) {
         auto [isValidType, nativeTableTypeTemp] = ani_rdbutils::DistributedTableTypeToNative(type.value());
-        ASSERT_THROW_PARAM_ERROR(!isValidType, "type must be a DistributedTableType.", "", RDB_DO_NOTHING);
+        ASSERT_THROW_PARAM_ERROR(isValidType, "type must be a DistributedTableType.", "", RDB_DO_NOTHING);
         nativeTableType = nativeTableTypeTemp;
     }
     if (config.has_value()) {
         auto [isValidConfig, nativeConfigTemp] =
             ani_rdbutils::DistributedConfigToNative(config.value(), nativeTableType);
-        ASSERT_THROW_PARAM_ERROR(!isValidConfig, "config must be a DistributedConfig.", "", RDB_DO_NOTHING);
+        ASSERT_THROW_PARAM_ERROR(isValidConfig, "config must be a DistributedConfig.", "", RDB_DO_NOTHING);
         nativeConfig = std::move(nativeConfigTemp);
     } else {
         nativeConfig.tableType = nativeTableType == NativeDistributedTableType::DISTRIBUTED_DEVICE
@@ -804,7 +804,7 @@ int64_t RdbStoreImpl::UpdateDistributedInfoAsync(DistributedInfo info, weak::Rdb
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_THROW_PARAM_ERROR(rdbPredicateNative != nullptr, "predicates", "an RdbPredicates.", ERR_NULL);
     auto [isValidInfo, nativeInfo] = ani_rdbutils::DistributedInfoToNative(info);
-    ASSERT_THROW_PARAM_ERROR(!isValidInfo, "config must be a DistributedConfig.", "", 0);
+    ASSERT_THROW_PARAM_ERROR(isValidInfo, "config must be a DistributedConfig.", "", 0);
     auto [errCode, output] = store->UpdateDistributedInfo(nativeInfo, *rdbPredicateNative);
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), output);
     return output;
@@ -830,7 +830,7 @@ void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t
     ASSERT_THROW_PARAM_ERROR(rdbPredicateNative != nullptr, "predicates", "an RdbPredicates.", RDB_DO_NOTHING);
     auto nativeMode = ani_rdbutils::SyncModeToNative(mode);
     ASSERT_THROW_PARAM_ERROR(
-        nativeMode != OHOS::DistributedRdb::SyncMode::PUSH && nativeMode != OHOS::DistributedRdb::SyncMode::PULL,
+        nativeMode == OHOS::DistributedRdb::SyncMode::PUSH || nativeMode == OHOS::DistributedRdb::SyncMode::PULL,
         "mode must be a SyncMode of device.", "", RDB_DO_NOTHING);
     OHOS::DistributedRdb::SyncOption option{ nativeMode, false, false };
     std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
@@ -1311,7 +1311,7 @@ int32_t RdbStoreImpl::AttachWithWaitTime(
     if (waitTime.has_value()) {
         waitTimeNative = waitTime.value();
         ASSERT_THROW_PARAM_ERROR(
-            waitTimeNative < WAIT_TIME_MIN || waitTimeNative > WAIT_TIME_MAX, "waitTime cannot exceed 300s.", "", 0);
+            waitTimeNative >= WAIT_TIME_MIN && waitTimeNative <= WAIT_TIME_MAX, "waitTime cannot exceed 300s.", "", 0);
     }
     OHOS::NativeRdb::RdbStoreConfig config(fullPathStr);
     auto [errCode, output] = store->Attach(config, attachNameStr, waitTimeNative);
@@ -1339,7 +1339,7 @@ int32_t RdbStoreImpl::AttachWithContext(
     if (waitTime.has_value()) {
         waitTimeValue = waitTime.value();
         ASSERT_THROW_PARAM_ERROR(
-            waitTimeValue < WAIT_TIME_MIN || waitTimeValue > WAIT_TIME_MAX, "waitTime cannot exceed 300s.", "", 0);
+            waitTimeValue >= WAIT_TIME_MIN && waitTimeValue <= WAIT_TIME_MAX, "waitTime cannot exceed 300s.", "", 0);
     }
 
     auto [errCode, output] = store->Attach(storeConfig, attachNameStr, waitTimeValue);
