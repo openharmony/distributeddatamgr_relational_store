@@ -1,0 +1,207 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at the same Apache License, Version 2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
+
+module_output_path = "relational_store/relational_store/rdb_service_adapter"
+
+###############################################################################
+config("module_private_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "${relational_store_common_path}/include",
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_native_path}/rdb_service_adapter/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/dfx/include",
+    "${relational_store_native_path}/rdb/src",
+    "${relational_store_native_path}/rdb_crypt",
+    "${relational_store_innerapi_path}/appdatafwk/include",
+    "${relational_store_base_path}/test/native/rdb/unittest",
+  ]
+
+  defines = [ "RELATIONAL_STORE" ]
+}
+
+ohos_unittest("RdbManagerImplTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    "unittest/rdb_manager_impl_test.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+  ]
+
+  configs = [ ":module_private_config" ]
+
+  cflags = [ "-fno-access-control" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "json:nlohmann_json_static",
+    "openssl:libcrypto_shared",
+    "sqlite:sqlite",
+    "sqlite:sqliteicu",
+  ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ability_base_zuri
+  external_deps += external_deps_ability_runtime_dataobs_manager
+  external_deps += external_deps_hisysevent
+  external_deps += external_deps_hitrace
+  external_deps += external_deps_ipc_core
+  external_deps += external_deps_database_utils
+  external_deps += external_deps_datamgr_common
+  external_deps += external_deps_distributeddata_inner
+  external_deps += external_deps_distributeddb_client
+  external_deps += external_deps_samgr
+
+  deps = [
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+    "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+    "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+    "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
+    "${relational_store_native_path}/rdb_service_adapter:rdb_service_adapter",
+  ]
+  deps += deps_hilog
+  deps += deps_hisysevent
+  deps += deps_hitrace
+  deps += deps_ipc_core
+  deps += deps_database_utils
+  deps += deps_datamgr_common
+  deps += deps_distributeddata_inner
+  deps += deps_distributeddb_client
+  deps += deps_samgr
+}
+
+ohos_unittest("ResultSetProxyTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    "unittest/result_set_proxy_test.cpp",
+    "unittest/result_set_proxy_adapter_test.cpp",
+  ]
+
+  configs = [ ":module_private_config" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "sqlite:sqlite",
+  ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ability_base_zuri
+  external_deps += external_deps_ability_runtime_dataobs_manager
+  external_deps += external_deps_ipc_core
+  external_deps += external_deps_datamgr_common
+
+  deps = [
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+    "${relational_store_native_path}/rdb_service_adapter:rdb_service_adapter",
+  ]
+  deps += deps_hilog
+  deps += deps_ipc_core
+  deps += deps_datamgr_common
+}
+
+ohos_unittest("RdbTypesUtilTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    "unittest/rdb_types_util_test.cpp",
+  ]
+
+  configs = [ ":module_private_config" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "sqlite:sqlite",
+  ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ability_base_zuri
+  external_deps += external_deps_ability_runtime_dataobs_manager
+  external_deps += external_deps_ipc_core
+  external_deps += external_deps_datamgr_common
+
+  deps = [
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+    "${relational_store_native_path}/rdb_service_adapter:rdb_service_adapter",
+  ]
+  deps += deps_hilog
+  deps += deps_ipc_core
+  deps += deps_datamgr_common
+}
+
+ohos_unittest("RdbServiceProxyTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    "unittest/rdb_service_proxy_test.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+  ]
+
+  configs = [ ":module_private_config" ]
+
+  cflags = [ "-fno-access-control" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "json:nlohmann_json_static",
+    "openssl:libcrypto_shared",
+    "sqlite:sqlite",
+    "sqlite:sqliteicu",
+  ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ability_base_zuri
+  external_deps += external_deps_ability_runtime_dataobs_manager
+  external_deps += external_deps_hisysevent
+  external_deps += external_deps_hitrace
+  external_deps += external_deps_ipc_core
+  external_deps += external_deps_database_utils
+  external_deps += external_deps_datamgr_common
+  external_deps += external_deps_distributeddata_inner
+  external_deps += external_deps_distributeddb_client
+  external_deps += external_deps_samgr
+
+  deps = [
+    "${relational_store_innerapi_path}/rdb:native_rdb",
+    "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+    "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+    "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
+    "${relational_store_native_path}/rdb_service_adapter:rdb_service_adapter",
+  ]
+  deps += deps_hilog
+  deps += deps_hisysevent
+  deps += deps_hitrace
+  deps += deps_ipc_core
+  deps += deps_database_utils
+  deps += deps_datamgr_common
+  deps += deps_distributeddata_inner
+  deps += deps_distributeddb_client
+  deps += deps_samgr
+}
+
+###############################################################################
+group("unittest") {
+  testonly = true
+
+  deps = [
+    ":RdbManagerImplTest",
+    ":ResultSetProxyTest",
+    ":RdbTypesUtilTest",
+    ":RdbServiceProxyTest",
+  ]
+}

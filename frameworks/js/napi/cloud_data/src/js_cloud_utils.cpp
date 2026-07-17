@@ -19,7 +19,6 @@
 #include "js_proxy.h"
 #include "logger.h"
 #include "result_set.h"
-#include "result_set_bridge.h"
 
 #define NAPI_CALL_RETURN_ERR(call, ret)  \
     ASSERT_RETURN((call) == napi_ok, ret)
@@ -31,6 +30,10 @@
         }                        \
     } while (0)
 
+
+namespace OHOS::DataShare {
+class ResultSetBridge;
+}
 namespace OHOS::AppDataMgrJsKit {
 namespace JSUtils {
 using namespace OHOS::Rdb;

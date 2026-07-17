@@ -1,0 +1,138 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
+
+native_rdb_platform_include_dirs = [
+  "include",
+  "${relational_store_common_path}/include",
+  "${relational_store_native_path}/rdb_crypt",
+  "${relational_store_native_path}/rdb/include",
+  "${relational_store_native_path}/rd/include",
+  "${relational_store_native_path}/dfx/include",
+  "${relational_store_native_path}/obs_mgr_adapter",
+]
+if (!support_jsapi) {
+  native_rdb_platform_include_dirs += [
+    "${relational_store_mock_path}/frameworks/native/rdb/mock_security",
+  ]
+}
+
+native_rdb_platform_cflags = [
+  "-Wno-c99-designator",
+  "-Werror=vla",
+]
+
+native_rdb_platform_cflags_cc = [
+  "-fvisibility=hidden",
+  "-fvisibility-inlines-hidden",
+  "-fno-unwind-tables",
+  "-fno-asynchronous-unwind-tables",
+  "-Oz",
+  "-Werror=vla",
+]
+
+native_rdb_platform_defines = [
+  "RELATIONAL_STORE",
+  "SQLITE_HAS_CODEC",
+  "RDB_TRACE_ON",
+  "SQLITE_DISTRIBUTE_RELATIONAL",
+]
+if (arkdata_db_core_is_exists) {
+  native_rdb_platform_defines += [
+    "ARKDATA_DATABASE_CORE_ENABLE",
+    "ARKDATA_DB_CORE_IS_EXISTS",
+  ]
+}
+
+native_rdb_platform_ldflags = [ "-Wl,--exclude-libs,ALL" ]
+
+native_rdb_platform_sources = [
+  "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
+  "${relational_store_native_path}/rd/src/grd_api_manager.cpp",
+  "${relational_store_native_path}/rd/src/rd_connection.cpp",
+  "${relational_store_native_path}/rd/src/rd_statement.cpp",
+  "${relational_store_native_path}/rd/src/rd_utils.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
+  "${relational_store_native_path}/rdb/src/share_block.cpp",
+  "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
+  "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+]
+
+native_rdb_platform_deps = [
+  "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+  "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+  "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
+]
+
+native_rdb_platform_deps += deps_hilog
+native_rdb_platform_deps += deps_hisysevent
+native_rdb_platform_deps += deps_hitrace
+if (support_jsapi) {
+  native_rdb_platform_deps += deps_file_api
+}
+native_rdb_platform_deps += deps_ipc_core
+native_rdb_platform_deps += deps_samgr
+if (relational_store_datamgr_service_enabled) {
+  native_rdb_platform_deps += [ "${relational_store_native_path}/rdb_service_adapter:rdb_service_adapter" ]
+}
+
+native_rdb_platform_external_deps = [
+  "c_utils:utils",
+  "json:nlohmann_json_static",
+  "kv_store:database_utils",
+  "kv_store:datamgr_common",
+  "kv_store:distributeddb_client",
+  "openssl:libcrypto_shared",
+  "sqlite:sqlite",
+  "sqlite:sqliteicu",
+]
+
+native_rdb_platform_external_deps += external_deps_hilog
+native_rdb_platform_external_deps += external_deps_hisysevent
+native_rdb_platform_external_deps += external_deps_hitrace
+if (support_jsapi) {
+  native_rdb_platform_external_deps += external_deps_file_api
+}
+native_rdb_platform_external_deps += external_deps_ipc_core
+native_rdb_platform_external_deps += external_deps_samgr
+
+native_rdb_platform_public_include_dirs = [
+  "include",
+  "${relational_store_common_path}/include",
+  "${relational_store_innerapi_path}/appdatafwk/include",
+  "${relational_store_native_path}/rdb/include",
+  "${relational_store_native_path}/rd/include",
+  "${relational_store_native_path}/dfx/include",
+  "${relational_store_native_path}/obs_mgr_adapter",
+  "../cloud_data/include",
+  "../common_type/include",
+]
+
+native_rdb_platform_sanitize = {
+  boundary_sanitize = true
+  ubsan = true
+  cfi = true
+  cfi_cross_dso = true
+  debug = false
+}
+
+native_rdb_platform_innerapi_tags = [
+  "platformsdk",
+  "sasdk",
+]
+
+native_rdb_platform_target_type = "ohos_shared_library"
+native_rdb_platform_has_extra_source_set = true
+native_rdb_platform_has_static_library = false
+native_rdb_platform_add_mock_source = false

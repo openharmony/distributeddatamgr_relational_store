@@ -13,6 +13,8 @@
 
 import("//build/config/components/ets_frontend/es2abc_config.gni")
 import("//build/ohos.gni")
+import(
+    "//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 es2abc_gen_abc("gen_cloud_extension_abc") {
   src_js = rebase_path("cloud_extension_stub.js")
@@ -34,11 +36,12 @@ ohos_shared_library("cloudextension") {
   sources = [ "cloud_extension.cpp" ]
 
   deps = [ ":cloud_extension_abc" ]
+  deps += deps_napi
 
   external_deps = [
-    "napi:ace_napi",
     "node:node_header_notice"
   ]
+  external_deps += external_deps_napi
 
   relative_install_dir = "module/data"
   subsystem_name = "distributeddatamgr"

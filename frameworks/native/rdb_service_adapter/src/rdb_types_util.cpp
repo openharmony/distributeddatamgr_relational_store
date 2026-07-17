@@ -14,6 +14,7 @@
  */
 
 #include "rdb_types_util.h"
+
 namespace OHOS::ITypesUtil {
 template<>
 bool Marshalling(const SyncerParam &input, MessageParcel &data)
@@ -25,6 +26,7 @@ bool Marshalling(const SyncerParam &input, MessageParcel &data)
         input.isAutoCleanDevice_, input.customSwitch_, input.autoSyncSwitch_, input.assetConflictPolicy_,
         input.assetTempPath_, input.assetDownloadOnDemand_, input.dbPath_);
 }
+
 template<>
 bool Unmarshalling(SyncerParam &output, MessageParcel &data)
 {
@@ -39,38 +41,38 @@ bool Unmarshalling(SyncerParam &output, MessageParcel &data)
 template<>
 bool Marshalling(const NotifyConfig &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.delay_, input.isFull_);
+    return Marshal(data, input.delay_, input.isFull_);
 }
 
 template<>
 bool Marshalling(const Option &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.mode, input.seqNum, input.isAsync, input.isAutoSync, input.isCompensation,
+    return Marshal(data, input.mode, input.seqNum, input.isAsync, input.isAutoSync, input.isCompensation,
         input.isEnablePredicate, input.isDownloadOnly, input.enableErrorDetail, input.isFullSync);
 }
 
 template<>
 bool Marshalling(const RdbPredicates &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, input.tables_, input.devices_, input.operations_);
+    return Marshal(data, input.tables_, input.devices_, input.operations_);
 }
 template<>
 bool Unmarshalling(RdbPredicates &output, MessageParcel &data)
 {
-    return ITypesUtil::Unmarshal(data, output.tables_, output.devices_, output.operations_);
+    return Unmarshal(data, output.tables_, output.devices_, output.operations_);
 }
 
 template<>
 bool Marshalling(const RdbOperation &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, static_cast<int32_t>(input.operator_), input.field_, input.values_);
+    return Marshal(data, static_cast<int32_t>(input.operator_), input.field_, input.values_);
 }
 
 template<>
 bool Unmarshalling(RdbOperation &output, MessageParcel &data)
 {
     int32_t option;
-    auto ret = ITypesUtil::Unmarshal(data, option, output.field_, output.values_);
+    auto ret = Unmarshal(data, option, output.field_, output.values_);
     output.operator_ = static_cast<decltype(output.operator_)>(option);
     return ret;
 }
@@ -78,7 +80,7 @@ bool Unmarshalling(RdbOperation &output, MessageParcel &data)
 template<>
 bool Marshalling(const SubOption &input, MessageParcel &data)
 {
-    return ITypesUtil::Marshal(data, static_cast<int32_t>(input.mode));
+    return Marshal(data, static_cast<int32_t>(input.mode));
 }
 
 template<>
@@ -91,7 +93,6 @@ bool Unmarshalling(ValueObject &output, MessageParcel &data)
 {
     return Unmarshal(data, output.value);
 }
-
 template<>
 bool Marshalling(const ValuesBucket &input, MessageParcel &data)
 {

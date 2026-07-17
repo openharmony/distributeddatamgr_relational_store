@@ -17,7 +17,7 @@
 #define NATIVE_RDB_SQLITE_ERRNO_H
 
 #include <sqlite3sym.h>
-
+#include <algorithm>
 #include <map>
 
 #include "rdb_errno.h"

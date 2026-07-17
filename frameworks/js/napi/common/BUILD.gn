@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 group("build_module") {
   deps = [ ":commontype_napi" ]
 }
@@ -41,11 +42,13 @@ ohos_shared_library("commontype_napi") {
 
   configs = [ ":objectstore_config" ]
 
-  external_deps = [
-    "hilog:libhilog",
-    "napi:ace_napi",
-    "node:node_header_notice",
-  ]
+  deps = []
+  deps += deps_hilog
+  deps += deps_napi
+
+  external_deps = []
+  external_deps += external_deps_hilog
+  external_deps += external_deps_napi
 
   relative_install_dir = "module/data"
   subsystem_name = "distributeddatamgr"

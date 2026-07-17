@@ -88,7 +88,7 @@ void RdbNativeStoreTest::SetUpTestCase(void)
     mkdir(config_.dataBaseDir, 0770);
     int errCode = 0;
     storeTestRdbStore_ = OH_Rdb_GetOrOpen(&config_, &errCode);
-    EXPECT_NE(storeTestRdbStore_, NULL);
+    EXPECT_NE(storeTestRdbStore_, nullptr);
 }
 
 void RdbNativeStoreTest::TearDownTestCase(void)
@@ -178,7 +178,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_001, TestSize.Level1)
 
     predicates->clear(predicates);
     OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -580,7 +580,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
 
     char *table = NULL;
     OH_Predicates *predicates1 = OH_Rdb_CreatePredicates(table);
-    EXPECT_EQ(predicates1, NULL);
+    EXPECT_EQ(predicates1, nullptr);
     errCode = OH_Rdb_Update(storeTestRdbStore_, valueBucket, predicates1);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
     errCode = OH_Rdb_Update(nullptr, valueBucket, predicates);
@@ -590,7 +590,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_0010, TestSize.Level1)
 
     OH_Predicates *predicates2 = OH_Rdb_CreatePredicates("store_test");
     OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates2, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -636,15 +636,15 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_011, TestSize.Level1)
     char *querySql = NULL;
     // sql is nullptr
     OH_Cursor *cursor = OH_Rdb_ExecuteQuery(storeTestRdbStore_, querySql);
-    EXPECT_EQ(cursor, NULL);
+    EXPECT_EQ(cursor, nullptr);
     // store is nullptr
     cursor = OH_Rdb_ExecuteQuery(nullptr, querySql);
-    EXPECT_EQ(cursor, NULL);
+    EXPECT_EQ(cursor, nullptr);
 
     // store is nullptr
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
     cursor = OH_Rdb_Query(nullptr, predicates, NULL, 0);
-    EXPECT_EQ(cursor, NULL);
+    EXPECT_EQ(cursor, nullptr);
 }
 
 /**
@@ -1047,7 +1047,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_023, TestSize.Level1)
 
     predicates->clear(predicates);
     OH_Cursor *cursor = OH_Rdb_QueryLockedRow(storeTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -1060,7 +1060,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_023, TestSize.Level1)
 
     predicates->clear(predicates);
     cursor = OH_Rdb_QueryLockedRow(storeTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -1802,17 +1802,17 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_040, TestSize.Level1)
     int errCode = 0;
     OH_Rdb_Store *store = storeTestRdbStore_;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
-    EXPECT_NE(predicates, NULL);
+    EXPECT_NE(predicates, nullptr);
 
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
-    EXPECT_NE(valueObject, NULL);
+    EXPECT_NE(valueObject, nullptr);
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
 
     predicates->equalTo(predicates, "data1", valueObject);
 
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    EXPECT_NE(valueBucket, NULL);
+    EXPECT_NE(valueBucket, nullptr);
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
     valueBucket->putReal(valueBucket, "data3", 200.1);
@@ -1831,7 +1831,7 @@ HWTEST_F(RdbNativeStoreTest, RDB_Native_store_test_040, TestSize.Level1)
 
     predicates->clear(predicates);
     OH_Cursor *cursor = OH_Rdb_Query(storeTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -1867,7 +1867,7 @@ static void CreateAttachDatabase()
 
     int errCode = 0;
     auto tmpStore = OH_Rdb_CreateOrOpen(g_attachConfig, &errCode);
-    EXPECT_NE(tmpStore, NULL);
+    EXPECT_NE(tmpStore, nullptr);
     OH_Rdb_CloseStore(tmpStore);
 }
 

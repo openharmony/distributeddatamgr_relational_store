@@ -1,0 +1,63 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import(
+    "//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
+
+group("unittest") {
+  testonly = true
+  deps = [
+    "appdatafwk:unittest",
+    "clouddata:unittest",
+    "dataability:unittest",
+    "rdb:unittest",
+    "rdb/unittest/dynamic_load_test:unittest",
+    "rdb/unittest/mock_obs_manage_test:unittest",
+    "rdb/unittest/sqlite_statement_test:unittest",
+    "rdb/unittest/mockservice:unittest",
+  ]
+  if (relational_store_data_share_enabled) {
+    deps += [
+      "rdb_data_ability_adapter:unittest",
+      "rdb_data_share_adapter:unittest",
+    ]
+  }
+  if (relational_store_datamgr_service_enabled) {
+    deps += [ "rdb_service_adapter:unittest" ]
+  }
+}
+
+group("fuzztest") {
+  testonly = true
+  deps = []
+
+  deps += [ "clouddata:fuzztest" ]
+  deps += [ "rdb:fuzztest" ]
+}
+
+group("distributedtest") {
+  testonly = true
+  deps = []
+
+  deps += [ "rdb:distributedtest" ]
+}
+
+group("all_tests") {
+  testonly = true
+  deps = [
+    ":distributedtest",
+    ":fuzztest",
+    ":unittest",
+  ]
+}

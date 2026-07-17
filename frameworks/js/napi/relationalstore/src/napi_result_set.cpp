@@ -31,10 +31,12 @@
 #include "napi_rdb_trace.h"
 #include "rdb_errno.h"
 #include "result_set.h"
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "rdb_result_set_bridge.h"
+#if !defined(CROSS_PLATFORM)
 #include "string_ex.h"
 #endif
+namespace OHOS::DataShare {
+class ResultSetBridge;
+}
 
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
@@ -72,18 +74,22 @@ napi_value ResultSetProxy::NewInstance(napi_env env, std::shared_ptr<NativeRdb::
     return instance;
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
     auto instance = GetInstance();
     if (instance == nullptr) {
-        LOG_ERROR("ResultSet is null.");
+        LOG_ERROR("resultSet_ is null.");
         return nullptr;
     }
     SetInstance(nullptr);
-    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(instance);
+    return CreateBridge(instance);
 }
-#endif
+
+__attribute__((weak)) std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::CreateBridge(
+    std::shared_ptr<NativeRdb::ResultSet> instance)
+{
+    return nullptr;
+}
 
 napi_value ResultSetProxy::Initialize(napi_env env, napi_callback_info info)
 {

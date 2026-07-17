@@ -13,6 +13,8 @@
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import(
+    "//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 group("build_module") {
   deps = [ ":rdb_obs_mgr_adapter" ]
@@ -45,13 +47,21 @@ ohos_shared_library("rdb_obs_mgr_adapter") {
   sources =
       [ "${relational_store_native_path}/obs_mgr_adapter/obs_mgr_adapter.cpp" ]
 
+  deps = []
+  deps += deps_ipc_core
+  deps += deps_datamgr_common
+  deps += deps_hilog
+  deps += deps_ability_base_zuri
+  deps += deps_ability_runtime_dataobs_manager
+
   external_deps = [
-    "ability_base:zuri",
-    "ability_runtime:dataobs_manager",
     "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_core",
   ]
+  external_deps += external_deps_ipc_core
+  external_deps += external_deps_datamgr_common
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ability_base_zuri
+  external_deps += external_deps_ability_runtime_dataobs_manager
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"
 }

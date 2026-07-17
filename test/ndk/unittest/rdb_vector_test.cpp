@@ -67,7 +67,7 @@ void RdbVectorTest::SetUpTestCase(void)
     mkdir(RDB_TEST_PATH, 0770);
     int errCode = 0;
     store_ = OH_Rdb_CreateOrOpen(config_, &errCode);
-    EXPECT_NE(store_, NULL);
+    EXPECT_NE(store_, nullptr);
 }
 
 void RdbVectorTest::TearDownTestCase(void)
@@ -113,7 +113,7 @@ HWTEST_F(RdbVectorTest, RDB_vector_001, TestSize.Level1)
     OH_Data_Values *values = OH_Values_Create();
     OH_Values_PutInt(values, 1);
     OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(store_, querySql, values);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -150,20 +150,20 @@ HWTEST_F(RdbVectorTest, RDB_vector_002, TestSize.Level1)
     OH_Data_Values *values = OH_Values_Create();
     OH_Values_PutInt(values, 1);
     OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(nullptr, querySql, values);
-    EXPECT_EQ(cursor, NULL);
+    EXPECT_EQ(cursor, nullptr);
 
     cursor = OH_Rdb_ExecuteQueryV2(store_, nullptr, values);
-    EXPECT_EQ(cursor, NULL);
+    EXPECT_EQ(cursor, nullptr);
 
     cursor = OH_Rdb_ExecuteQueryV2(store_, querySql, nullptr);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 0);
 
     OH_Values_PutInt(values, 1);
     cursor = OH_Rdb_ExecuteQueryV2(store_, querySql, values);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, -1);
 
@@ -181,7 +181,7 @@ HWTEST_F(RdbVectorTest, RDB_vector_003, TestSize.Level1)
     OH_Data_Values *values = OH_Values_Create();
     OH_Values_PutInt(values, 1);
     OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(store_, querySql, values);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -209,7 +209,7 @@ HWTEST_F(RdbVectorTest, RDB_vector_004, TestSize.Level1)
     OH_Data_Values *values = OH_Values_Create();
     OH_Values_PutInt(values, 1);
     OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(store_, querySql, values);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -223,7 +223,7 @@ HWTEST_F(RdbVectorTest, RDB_vector_004, TestSize.Level1)
     EXPECT_EQ(errCode, RDB_OK);
 
     cursor = OH_Rdb_ExecuteQueryV2(store_, querySql, values);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
     cursor->goToNextRow(cursor);
@@ -240,7 +240,7 @@ HWTEST_F(RdbVectorTest, RDB_vector_004, TestSize.Level1)
     errCode = OH_Rdb_ExecuteV2(store_, "delete from test where id = ?", values, nullptr);
     EXPECT_EQ(errCode, RDB_OK);
     cursor = OH_Rdb_ExecuteQueryV2(store_, querySql, values);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 0);
 
@@ -286,26 +286,26 @@ HWTEST_F(RdbVectorTest, RDB_vector_006, TestSize.Level1)
     OH_Values_PutFloatVector(values, test, 2);
     OH_Values_PutInt(values, 1);
     OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(store_, querySql1, values);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
     char querySql2[] = "select id, data1 <=> ? from test where id = ?;";
     cursor = OH_Rdb_ExecuteQueryV2(store_, querySql2, values);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
     char querySql3[] = "select id, data1 <-> '[ 2.1, 3.0 ]' from test;";
     cursor = OH_Rdb_ExecuteQueryV2(store_, querySql3, nullptr);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
     char querySql4[] = "select id, data1 <=> '[ 2.1, 3.0 ]' from test;";
     cursor = OH_Rdb_ExecuteQueryV2(store_, querySql4, nullptr);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
 
@@ -328,7 +328,7 @@ HWTEST_F(RdbVectorTest, RDB_vector_007, TestSize.Level1)
 
     char querySql[] = "select id, data1 <=> '[ 2.1, 3.0 ]' from test where id in (select id from test1);";
     OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(store_, querySql, nullptr);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -337,7 +337,7 @@ HWTEST_F(RdbVectorTest, RDB_vector_007, TestSize.Level1)
     errCode = OH_Rdb_ExecuteV2(store_, updateSql, nullptr, nullptr);
     EXPECT_EQ(errCode, RDB_OK);
     cursor = OH_Rdb_ExecuteQueryV2(store_, "select * from test1 where id = 1;", nullptr);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->goToNextRow(cursor);
     float test1[2];
     size_t outLen;
@@ -372,7 +372,7 @@ HWTEST_F(RdbVectorTest, RDB_vector_008, TestSize.Level1)
     OH_Values_PutInt(values, 0);
     OH_Values_PutFloatVector(values, test, 2);
     OH_Cursor *cursor = OH_Rdb_ExecuteQueryV2(store_, querySql, values);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);

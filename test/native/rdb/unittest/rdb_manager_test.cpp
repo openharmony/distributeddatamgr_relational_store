@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "rdb_manager.h"
-#include "rdb_manager_impl.h"
 #include "rdb_types.h"
 #include "rdb_service.h"
 

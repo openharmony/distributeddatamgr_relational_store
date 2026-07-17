@@ -12,6 +12,7 @@
 # limitations under the License.
 import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 module_output_path = "relational_store/relational_store/native_rdb"
 
@@ -36,17 +37,17 @@ ohos_distributedtest("DistributedTest") {
   sources += [ "distributed_test.cpp" ]
 
   external_deps = [
-    "ability_base:zuri",
-    "ability_runtime:dataobs_manager",
     "c_utils:utils",
     "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-    "kv_store:datamgr_common",
-    "kv_store:distributeddb",
-    "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ability_base_zuri
+  external_deps += external_deps_ability_runtime_dataobs_manager
+  external_deps += external_deps_ipc_core
+  external_deps += external_deps_datamgr_common
+  external_deps += external_deps_distributeddb
+  external_deps += external_deps_distributeddb_client
 
   if (relational_store_dm_part_is_enabled) {
     external_deps += [ "device_manager:devicemanagersdk", ]
@@ -60,6 +61,11 @@ ohos_distributedtest("DistributedTest") {
   }
 
   deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
+  deps += deps_hilog
+  deps += deps_ipc_core
+  deps += deps_datamgr_common
+  deps += deps_distributeddb
+  deps += deps_distributeddb_client
 }
 
 ohos_distributedtest("DistributedTestAgent") {
@@ -68,17 +74,17 @@ ohos_distributedtest("DistributedTestAgent") {
   sources = [ "distributed_test_agent.cpp" ]
 
   external_deps = [
-    "ability_base:zuri",
-    "ability_runtime:dataobs_manager",
     "c_utils:utils",
     "googletest:gtest_main",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-    "kv_store:datamgr_common",
-    "kv_store:distributeddb",
-    "kv_store:distributeddb_client",
     "sqlite:sqlite",
   ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ability_base_zuri
+  external_deps += external_deps_ability_runtime_dataobs_manager
+  external_deps += external_deps_ipc_core
+  external_deps += external_deps_datamgr_common
+  external_deps += external_deps_distributeddb
+  external_deps += external_deps_distributeddb_client
 
   if (relational_store_dm_part_is_enabled) {
     external_deps += [ "device_manager:devicemanagersdk", ]
@@ -92,6 +98,11 @@ ohos_distributedtest("DistributedTestAgent") {
   }
 
   deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
+  deps += deps_hilog
+  deps += deps_ipc_core
+  deps += deps_datamgr_common
+  deps += deps_distributeddb
+  deps += deps_distributeddb_client
 }
 
 ###############################################################################

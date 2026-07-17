@@ -14,9 +14,8 @@
  */
 
 #include "values_bucket.h"
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "itypes_util.h"
-#endif
+#include "marshal_utils.h"
+
 namespace OHOS {
 namespace NativeRdb {
 ValuesBucket::ValuesBucket()
@@ -144,26 +143,17 @@ void ValuesBucket::GetAll(std::map<std::string, ValueObject> &output) const
 {
     output = values_;
 }
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+
 bool ValuesBucket::Marshalling(Parcel &parcel) const
 {
-    MessageParcel *data = static_cast<MessageParcel *>(&parcel);
-    if (data == nullptr) {
-        return false;
-    }
-    return ITypesUtil::Marshal(*data, values_);
+    return MarshalUtils::Marshal(parcel, values_);
 }
 
 ValuesBucket ValuesBucket::Unmarshalling(Parcel &parcel)
 {
-    MessageParcel *data = static_cast<MessageParcel *>(&parcel);
-    if (data == nullptr) {
-        return {};
-    }
     ValuesBucket bucket;
-    ITypesUtil::Unmarshal(*data, bucket.values_);
+    MarshalUtils::Unmarshal(parcel, bucket.values_);
     return bucket;
 }
-#endif
 } // namespace NativeRdb
 } // namespace OHOS

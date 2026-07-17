@@ -59,7 +59,7 @@ void RdbTransactionCapiTest::SetUpTestCase(void)
     int errCode = 0;
     char table[] = "test";
     g_transStore = OH_Rdb_GetOrOpen(&config_, &errCode);
-    EXPECT_NE(g_transStore, NULL);
+    EXPECT_NE(g_transStore, nullptr);
 
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";

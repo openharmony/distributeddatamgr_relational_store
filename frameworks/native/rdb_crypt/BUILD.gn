@@ -13,6 +13,8 @@
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import(
+    "//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 ohos_shared_library("relational_store_crypt") {
   branch_protector_ret = "pac_ret"
@@ -33,6 +35,7 @@ ohos_shared_library("relational_store_crypt") {
     "${relational_store_native_path}/rdb_crypt",
     "${relational_store_native_path}/rdb/include",
     "${relational_store_native_path}/dfx/include",
+    "${huks_inner_kit_path}",
   ]
   ldflags = [ "-Wl,--exclude-libs,ALL" ]
   version_script = "relational_store_crypt.versionscript"
@@ -42,11 +45,13 @@ ohos_shared_library("relational_store_crypt") {
     "-fno-asynchronous-unwind-tables",
     "-Werror=vla",
   ]
+  deps = []
+  deps += deps_hilog
+  deps += deps_huks
 
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "huks:libhukssdk",
-  ]
+  external_deps = [ "c_utils:utils" ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_huks
+
   subsystem_name = "distributeddatamgr"
 }

@@ -46,21 +46,15 @@
 #include "rdb_types.h"
 #include "securec.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-#include "rdb_utils.h"
-using namespace OHOS::DataShare;
-#endif
-
 using namespace OHOS::Rdb;
 using namespace OHOS::AppDataMgrJsKit;
 using namespace OHOS::AppDataMgrJsKit::JSUtils;
 using namespace OHOS::DistributedRdb;
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
 using OHOS::DistributedRdb::SubscribeMode;
 using OHOS::DistributedRdb::SubscribeOption;
 using OHOS::DistributedRdb::SyncOption;
-
 using OHOS::DistributedRdb::Details;
 using OHOS::DistributedRdb::SyncResult;
 #endif
@@ -69,12 +63,8 @@ using OHOS::DistributedRdb::SyncResult;
 
 namespace OHOS {
 namespace RelationalStoreJsKit {
+struct PredicatesProxy;
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-struct PredicatesProxy {
-    std::shared_ptr<DataShareAbsPredicates> predicates_;
-};
-#endif
 #define ASSERT_RETURN_SET_ERROR(assertion, paramError) \
     CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
 RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NapiRdbStoreData>())
@@ -445,20 +435,9 @@ napi_value RdbStoreProxy::BatchInsertWithConflictResolution(napi_env env, napi_c
     return ASYNC_CALL(env, context);
 }
 
-int ParseDataSharePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
+__attribute__((weak)) int ParseDataSharePredicates(const napi_env env, const napi_value arg,
+    std::shared_ptr<RdbStoreContext> context)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
-    RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
-    CHECK_RETURN_SET(obj->IsSystemAppCalled(), std::make_shared<NonSystemError>());
-    PredicatesProxy *proxy = nullptr;
-    napi_status status = napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
-    bool checked = (status == napi_ok) && (proxy != nullptr) && (proxy->predicates_ != nullptr);
-    CHECK_RETURN_SET(checked, std::make_shared<ParamError>("predicates", "an DataShare Predicates."));
-
-    std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
-    RdbPredicates rdbPredicates = RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, context->tableName);
-    context->rdbPredicates = std::make_shared<RdbPredicates>(rdbPredicates);
-#endif
     return OK;
 }
 
@@ -576,7 +555,7 @@ napi_value RdbStoreProxy::Query(napi_env env, napi_callback_info info)
     return ASYNC_CALL(env, context);
 }
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
+#if !defined(CROSS_PLATFORM)
 napi_value RdbStoreProxy::RemoteQuery(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<RdbStoreContext>();

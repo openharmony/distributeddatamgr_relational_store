@@ -22,11 +22,12 @@
 #include "distributeddata_relational_store_ipc_interface_code.h"
 #include "rdb_notifier.h"
 #include "rdb_types.h"
-#include "refbase.h"
 #include "result_set.h"
 
 namespace OHOS {
 class IRemoteObject;
+template <typename T>
+class sptr;
 namespace DistributedRdb {
 class RdbService {
 public:
@@ -76,7 +77,7 @@ public:
     virtual std::pair<int32_t, std::shared_ptr<ResultSet>> RemoteQuery(const RdbSyncerParam &param,
         const std::string &device, const std::string &sql, const std::vector<std::string> &selectionArgs) = 0;
 
-    virtual int32_t InitNotifier(const RdbSyncerParam &param, sptr<IRemoteObject> notifier) = 0;
+    virtual int32_t InitNotifier(const RdbSyncerParam &param, const sptr<IRemoteObject> &notifier) = 0;
 
     virtual int32_t BeforeOpen(RdbSyncerParam &param) = 0;
 

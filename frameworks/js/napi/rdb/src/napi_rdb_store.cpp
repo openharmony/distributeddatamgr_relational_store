@@ -23,20 +23,19 @@
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_async_call.h"
+#include "napi_rdb_context.h"
 #include "napi_rdb_error.h"
 #include "napi_rdb_predicates.h"
 #include "napi_rdb_trace.h"
 #include "napi_result_set.h"
 #include "rdb_errno.h"
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-#include "rdb_utils.h"
-using namespace OHOS::DataShare;
-#endif
-
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
+namespace OHOS::DataShare {
+class DataShareAbsPredicates;
+}
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 using OHOS::DistributedRdb::SubscribeMode;
@@ -49,51 +48,7 @@ using OHOS::DistributedRdb::SyncResult;
 
 namespace OHOS {
 namespace RdbJsKit {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-struct PredicatesProxy {
-    std::shared_ptr<DataShareAbsPredicates> predicates_;
-};
-#endif
-struct RdbStoreContext : public BaseContext {
-    bool isNapiString = false;
-    std::string device;
-    std::string tableName;
-    std::vector<std::string> tablesName;
-    std::string whereClause;
-    std::vector<std::string> whereArgs;
-    std::vector<std::string> selectionArgs;
-    std::string sql;
-    RdbPredicatesProxy *predicatesProxy;
-    std::vector<std::string> columns;
-    ValuesBucket valuesBucket;
-    std::vector<ValuesBucket> valuesBuckets;
-    std::map<std::string, ValueObject> numberMaps;
-    std::vector<ValueObject> bindArgs;
-    int64_t rowId = -1;
-    int64_t insertNum = -1;
-    std::vector<uint8_t> newKey;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    std::shared_ptr<AbsSharedResultSet> resultSet;
-#else
-    std::shared_ptr<ResultSet> resultSet;
-#endif
-    std::shared_ptr<ResultSet> stepResultSet;
-    std::string aliasName;
-    std::string pathName;
-    std::string srcName;
-    int32_t enumArg;
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    DistributedRdb::SyncResult syncResult;
-#endif
-    std::shared_ptr<RdbPredicates> rdbPredicates = nullptr;
-
-    RdbStoreContext() : predicatesProxy(nullptr), rowId(0), insertNum(0), enumArg(0)
-    {
-    }
-    virtual ~RdbStoreContext()
-    {
-    }
-};
+struct PredicatesProxy;
 
 static __thread napi_ref constructor_ = nullptr;
 static __thread napi_ref constructorV9_ = nullptr;
@@ -319,6 +274,13 @@ bool CheckGlobalProperty(const napi_env env, const napi_value arg, const std::st
     return (status == napi_ok ? result : false);
 }
 
+
+__attribute__((weak)) int ParseDataSharePredicatesImpl(const napi_env env, const napi_value arg,
+    std::shared_ptr<RdbStoreContext> context)
+{
+    return OK;
+}
+
 int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)
 {
     LOG_DEBUG("ParsePredicates start.");
@@ -337,23 +299,9 @@ int ParsePredicates(const napi_env env, const napi_value arg, std::shared_ptr<Rd
     }
 
     LOG_DEBUG("Isn't RdbPredicates, maybe DataShare Predicates.");
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    paramError = std::make_shared<ParamTypeError>("predicates", "an RdbPredicates or DataShare Predicates.");
-    PredicatesProxy *proxy = nullptr;
-    napi_unwrap(env, arg, reinterpret_cast<void **>(&proxy));
-    // proxy is nullptr, it isn't rdb predicates or datashare predicates
-    RDB_CHECK_RETURN_CALL_RESULT(proxy != nullptr, context->SetError(paramError));
-    // proxy is not nullptr, it's a datashare predicates.
-    LOG_DEBUG("Parse DataShare Predicates.");
-    paramError = std::make_shared<ParamTypeError>("predicates", "an DataShare Predicates.");
-    LOG_ERROR("dsPredicates is null ? %{public}d.", (proxy->predicates_ == nullptr));
-    RDB_CHECK_RETURN_CALL_RESULT(proxy->predicates_ != nullptr, context->SetError(paramError));
-    std::shared_ptr<DataShareAbsPredicates> dsPredicates = proxy->predicates_;
-    context->rdbPredicates = std::make_shared<RdbPredicates>(
-        RdbDataShareAdapter::RdbUtils::ToPredicates(*dsPredicates, context->tableName));
-#endif
+    auto errCode = ParseDataSharePredicatesImpl(env, arg, context);
     LOG_DEBUG("ParsePredicates end.");
-    return OK;
+    return errCode;
 }
 
 int ParseSrcName(const napi_env env, const napi_value arg, std::shared_ptr<RdbStoreContext> context)

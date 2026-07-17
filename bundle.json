@@ -87,18 +87,11 @@
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb_data_share_adapter:rdb_data_share_adapter",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb",
                 "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/cloud_data:cloud_data_native",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_data:clouddata",
                 "//foundation/distributeddatamgr/relational_store/interfaces/rdb_ndk_utils:native_rdb_ndk_utils",
                 "//foundation/distributeddatamgr/relational_store/interfaces/ndk:native_rdb_ndk",
                 "//foundation/distributeddatamgr/relational_store/frameworks/ets/taihe/cloud_data:clouddata_ani_pack",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/dataability:dataability",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:rdb",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/rdb:napi_rdb",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/relationalstore:relationalstore",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/cloud_extension:cloudextension",
+                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi:js_kits",
                 "//foundation/distributeddatamgr/relational_store/frameworks/ets/cloud_extension:cloud_extension_ext_ani_package",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/common:commontype_napi",
-                "//foundation/distributeddatamgr/relational_store/frameworks/js/napi/sendablerelationalstore:sendablerelationalstore",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/icu:build_module",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/obs_mgr_adapter:rdb_obs_mgr_adapter",
                 "//foundation/distributeddatamgr/relational_store/frameworks/native/rdb_crypt:relational_store_crypt",
@@ -220,47 +213,18 @@
                     "name": "//foundation/distributeddatamgr/relational_store/frameworks/ets/taihe/cloud_data:common_type_taihe_idl"
                 },
                 {
-                    "name": "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb:native_rdb_type_utils",
-                    "visibility": [ "datamgr_service" ],
-                    "header": {
-                        "header_files": [
-                            "rdb_types_util.h"
-                        ],
-                        "header_base": "//foundation/distributeddatamgr/relational_store/frameworks/native/rdb/include"
-                    }
-                },
-                {
                     "name": "//foundation/distributeddatamgr/relational_store/frameworks/ets/taihe/relational_store:copy_taihe"
                 }
             ],
             "test": [
                 "//foundation/distributeddatamgr/relational_store/test/interface:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/js/dataability:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/js/rdb:performancetest",
-                "//foundation/distributeddatamgr/relational_store/test/js/rdb:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:performancetest",
-                "//foundation/distributeddatamgr/relational_store/test/js/relationalstore:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/js/clouddata:cloudtest",
+                "//foundation/distributeddatamgr/relational_store/test/js:js_tests",
+                "//foundation/distributeddatamgr/relational_store/test/ets:ets_tests",
                 "//foundation/distributeddatamgr/relational_store/test/ndk:unittest",
                 "//foundation/distributeddatamgr/relational_store/test/ndk:fuzztest",
-                "//foundation/distributeddatamgr/relational_store/test/ets/cloud_data:stage_unittest",
-                "//foundation/distributeddatamgr/relational_store/test/ets/cloud_data_no_permission:stage_unittest",
-                "//foundation/distributeddatamgr/relational_store/test/ets/cloud_data_system:stage_unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/appdatafwk:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/clouddata:fuzztest",
-                "//foundation/distributeddatamgr/relational_store/test/native/clouddata:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/dataability:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb/unittest/mock_obs_manage_test:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb/unittest/dynamic_load_test:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb/unittest/sqlite_statement_test:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb/unittest/mockservice:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb:fuzztest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_ability_adapter:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb_data_share_adapter:unittest",
-                "//foundation/distributeddatamgr/relational_store/test/native/rdb:distributedtest",
-                "//foundation/distributeddatamgr/relational_store/test/ets/relational_store:stage_unittest",
-                "//foundation/distributeddatamgr/relational_store/test/ets/relational_store_system:stage_unittest"
+                "//foundation/distributeddatamgr/relational_store/test/native:unittest",
+                "//foundation/distributeddatamgr/relational_store/test/native:fuzztest",
+                "//foundation/distributeddatamgr/relational_store/test/native:distributedtest"
             ]
         }
     }

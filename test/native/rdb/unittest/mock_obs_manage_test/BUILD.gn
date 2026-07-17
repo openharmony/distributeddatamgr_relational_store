@@ -12,6 +12,7 @@
 # limitations under the License.
 import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 module_output_path = "relational_store/relational_store/native_rdb"
 
@@ -55,11 +56,6 @@ ohos_unittest("GlobalResourceTest") {
     "${relational_store_native_path}/rd/src/rd_statement.cpp",
     "${relational_store_native_path}/rd/src/rd_utils.cpp",
     "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
-    "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
-    "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
-    "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
-    "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
-    "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
     "${relational_store_native_path}/rdb/src/share_block.cpp",
     "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
@@ -72,27 +68,34 @@ ohos_unittest("GlobalResourceTest") {
 
   external_deps = [
     "c_utils:utils",
-    "file_api:securitylabel",
     "googletest:gmock",
     "googletest:gtest",
-    "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "hitrace:hitrace_meter",
-    "ipc:ipc_core",
     "json:nlohmann_json_static",
-    "kv_store:database_utils",
-    "kv_store:datamgr_common",
-    "kv_store:distributeddb_client",
     "openssl:libcrypto_shared",
-    "samgr:samgr_proxy",
     "sqlite:sqlite",
     "sqlite:sqliteicu",
   ]
+  external_deps += external_deps_file_api
+  external_deps += external_deps_hilog
+  external_deps += external_deps_hisysevent
+  external_deps += external_deps_hitrace
+  external_deps += external_deps_database_utils
+  external_deps += external_deps_datamgr_common
+  external_deps += external_deps_distributeddb_client
+  external_deps += external_deps_samgr
 
   deps = [
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
     "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
   ]
+  deps += deps_file_api
+  deps += deps_hilog
+  deps += deps_hisysevent
+  deps += deps_hitrace
+  deps += deps_database_utils
+  deps += deps_datamgr_common
+  deps += deps_distributeddb_client
+  deps += deps_samgr
 }
 
 ###############################################################################

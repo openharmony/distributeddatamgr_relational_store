@@ -12,6 +12,8 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import(
+    "//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 config("appdatafwk_config") {
   visibility = [ ":*" ]
@@ -96,7 +98,7 @@ if (is_android || is_ios) {
     if (is_mingw || is_mac || is_ios) {
       sources +=
           [ "${relational_store_native_path}/appdatafwk/src/mingw_endian.cpp" ]
-    } else if (is_ohos || is_android) {
+    } else if (is_ohos || is_android || is_linux) {
       sources += [
         "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
       ]
@@ -115,10 +117,13 @@ if (is_android || is_ios) {
     if (is_ohos) {
       ldflags = [ "-Wl,--exclude-libs,ALL" ]
     }
+    deps = []
+    deps += deps_hilog
+
     external_deps = [
-      "hilog:libhilog",
       "json:nlohmann_json_static",
     ]
+    external_deps += external_deps_hilog
 
     subsystem_name = "distributeddatamgr"
     part_name = "relational_store"
@@ -128,13 +133,15 @@ if (is_android || is_ios) {
 }
 
 ohos_shared_library("native_appdatafwk") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    boundary_sanitize = true
-    ubsan = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
+  if (is_ohos) {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      boundary_sanitize = true
+      ubsan = true
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
   }
 
   sources =
@@ -149,12 +156,16 @@ ohos_shared_library("native_appdatafwk") {
   innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "relational_store"
 
+  deps = []
+  deps += deps_hilog
+  deps += deps_ipc_single
+
   external_deps = [
     "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_single",
     "json:nlohmann_json_static",
   ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ipc_single
 
   public_configs = [ ":appdatafwk_public_config" ]
 }

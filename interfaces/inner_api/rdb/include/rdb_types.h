@@ -24,6 +24,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <optional>
 
 #include "values_buckets.h"
 

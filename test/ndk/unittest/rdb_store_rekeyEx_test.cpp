@@ -126,7 +126,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_001, TestSize.Level1)
     EXPECT_EQ(errCode, 1);
 
     OH_Rdb_CryptoParam *crypto1 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto1, NULL);
+    EXPECT_NE(crypto1, nullptr);
     OH_Crypto_SetEncryptionAlgo(crypto1, RDB_PLAIN_TEXT);
     errCode = OH_Rdb_RekeyEx(store, crypto1);
     EXPECT_EQ(errCode, RDB_OK);
@@ -165,7 +165,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_002, TestSize.Level1)
     ASSERT_NE(rekeyTestConfig, nullptr);
 
     OH_Rdb_CryptoParam *crypto1 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto1, NULL);
+    EXPECT_NE(crypto1, nullptr);
     const uint8_t key[] = "12345678";
     int errCode = OH_Crypto_SetEncryptionKey(crypto1, key, sizeof(key) - 1);
     errCode = OH_Rdb_SetCryptoParam(rekeyTestConfig, crypto1);
@@ -183,7 +183,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_002, TestSize.Level1)
     EXPECT_EQ(errCode, 1);
 
     OH_Rdb_CryptoParam *crypto2 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto2, NULL);
+    EXPECT_NE(crypto2, nullptr);
     const uint8_t newKey[] = "87654321";
     errCode = OH_Crypto_SetEncryptionKey(crypto2, newKey, sizeof(newKey) - 1);
     EXPECT_EQ(errCode, RDB_OK);
@@ -241,7 +241,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_003, TestSize.Level1)
     EXPECT_EQ(errCode, 1);
 
     OH_Rdb_CryptoParam *crypto2 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto2, NULL);
+    EXPECT_NE(crypto2, nullptr);
     errCode = OH_Crypto_SetKdfAlgo(crypto2, RDB_KDF_SHA512);
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Rdb_RekeyEx(store, crypto2);
@@ -282,7 +282,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_004, TestSize.Level1)
     ASSERT_NE(rekeyTestConfig, nullptr);
 
     OH_Rdb_CryptoParam *crypto1 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto1, NULL);
+    EXPECT_NE(crypto1, nullptr);
     const uint8_t key[] = "12345678";
     int errCode = OH_Crypto_SetEncryptionKey(crypto1, key, sizeof(key) - 1);
     errCode = OH_Rdb_SetCryptoParam(rekeyTestConfig, crypto1);
@@ -300,7 +300,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_004, TestSize.Level1)
     EXPECT_EQ(errCode, 1);
 
     OH_Rdb_CryptoParam *crypto2 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto2, NULL);
+    EXPECT_NE(crypto2, nullptr);
     errCode = OH_Crypto_SetHmacAlgo(crypto2, RDB_HMAC_SHA512);
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Rdb_RekeyEx(store, crypto2);
@@ -339,7 +339,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_005, TestSize.Level1)
     ASSERT_NE(rekeyTestConfig, nullptr);
 
     OH_Rdb_CryptoParam *crypto1 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto1, NULL);
+    EXPECT_NE(crypto1, nullptr);
     int errCode = OH_Rdb_SetCryptoParam(rekeyTestConfig, crypto1);
     EXPECT_EQ(errCode, RDB_OK);
 
@@ -355,7 +355,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_005, TestSize.Level1)
     EXPECT_EQ(errCode, 1);
 
     OH_Rdb_CryptoParam *crypto2 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto2, NULL);
+    EXPECT_NE(crypto2, nullptr);
     errCode = OH_Crypto_SetKdfAlgo(crypto2, RDB_KDF_SHA512);
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Rdb_RekeyEx(store, crypto2);
@@ -404,7 +404,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_006, TestSize.Level1)
     ASSERT_NE(rekeyTestConfig, nullptr);
 
     OH_Rdb_CryptoParam *crypto1 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto1, NULL);
+    EXPECT_NE(crypto1, nullptr);
     int errCode = OH_Rdb_SetCryptoParam(rekeyTestConfig, crypto1);
     EXPECT_EQ(errCode, RDB_OK);
 
@@ -420,7 +420,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_006, TestSize.Level1)
     EXPECT_EQ(errCode, 1);
 
     OH_Rdb_CryptoParam *crypto2 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto2, NULL);
+    EXPECT_NE(crypto2, nullptr);
     const uint8_t newKey[] = "87654321";
     errCode = OH_Crypto_SetEncryptionKey(crypto2, newKey, sizeof(newKey) - 1);
     EXPECT_EQ(errCode, RDB_OK);
@@ -477,7 +477,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_007, TestSize.Level1)
     OH_Rdb_SetSecurityLevel(config, OH_Rdb_SecurityLevel::S1);
     OH_Rdb_SetArea(config, RDB_SECURITY_AREA_EL1);
     OH_Rdb_CryptoParam *crypto = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto, NULL);
+    EXPECT_NE(crypto, nullptr);
     OH_Crypto_SetEncryptionAlgo(crypto, RDB_PLAIN_TEXT);
     const uint8_t newKey[] = "87654321";
     OH_Crypto_SetEncryptionKey(crypto, newKey, sizeof(newKey) - 1);
@@ -495,7 +495,7 @@ HWTEST_F(RdbStoreRekeyTest, RDB_Rekey_test_007, TestSize.Level1)
     EXPECT_EQ(errCode, 1);
 
     OH_Rdb_CryptoParam *crypto1 = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto1, NULL);
+    EXPECT_NE(crypto1, nullptr);
     errCode = OH_Rdb_RekeyEx(store, crypto1);
     EXPECT_EQ(errCode, RDB_OK);
     errCode = OH_Rdb_CloseStore(store);
