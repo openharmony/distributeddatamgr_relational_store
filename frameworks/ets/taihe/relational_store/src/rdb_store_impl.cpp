@@ -834,7 +834,7 @@ void RdbStoreImpl::Sync(SyncMode mode, weak::RdbPredicates predicates, uintptr_t
         "mode must be a SyncMode of device.", "", RDB_DO_NOTHING);
     OHOS::DistributedRdb::SyncOption option{ nativeMode, false, false };
     std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
-    ASSERT_THROW_INNER_ERROR(!context->Init(callback), OHOS::NativeRdb::E_ERROR, "", RDB_DO_NOTHING);
+    ASSERT_THROW_INNER_ERROR(context->Init(callback), OHOS::NativeRdb::E_ERROR, "", RDB_DO_NOTHING);
     promise = context->promise_;
     ::taihe::env_guard gurd;
     auto env = gurd.get_env();
@@ -869,7 +869,7 @@ void RdbStoreImpl::SyncEx(SyncMode mode, weak::RdbPredicates predicates, uintptr
         OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", RDB_DO_NOTHING);
     OHOS::DistributedRdb::SyncOption option{ nativeMode, false, true };
     std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
-    ASSERT_THROW_INNER_ERROR(!context->Init(callback), OHOS::NativeRdb::E_ERROR, "", RDB_DO_NOTHING);
+    ASSERT_THROW_INNER_ERROR(context->Init(callback), OHOS::NativeRdb::E_ERROR, "", RDB_DO_NOTHING);
     promise = context->promise_;
     ::taihe::env_guard gurd;
     auto env = gurd.get_env();
