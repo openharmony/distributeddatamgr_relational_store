@@ -6,3 +6,5 @@ CMakeLists.txt
 cmake-build-debug
 .clang-format
 .vscode/
+DatabaseCheckPlugin/.gradle
+DatabaseCheckPlugin/build
