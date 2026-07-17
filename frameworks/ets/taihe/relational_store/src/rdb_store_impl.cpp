@@ -207,7 +207,7 @@ int64_t RdbStoreImpl::UpdateDataShareSync(
 {
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", ERR_NULL);
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, ERR_NULL);
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, ERR_NULL);
     ani_env *env = get_env();
     ani_object object = reinterpret_cast<ani_object>(predicates);
     OHOS::DataShare::DataShareAbsPredicates *holder =
@@ -240,7 +240,7 @@ int64_t RdbStoreImpl::DeleteDataShareSync(::taihe::string_view table, uintptr_t 
 {
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", ERR_NULL);
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, ERR_NULL);
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, ERR_NULL);
     ani_env *env = get_env();
     ani_object object = reinterpret_cast<ani_object>(predicates);
     OHOS::DataShare::DataShareAbsPredicates *holder =
@@ -365,7 +365,7 @@ LiteResultSet RdbStoreImpl::QuerySqlWithoutRowCountSync(string_view sql, optiona
 
 ResultSet RdbStoreImpl::QueryDataShareSync(::taihe::string_view table, uintptr_t predicates)
 {
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, (taihe::make_holder<ResultSetImpl, ResultSet>()));
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, (taihe::make_holder<ResultSetImpl, ResultSet>()));
     optional_view<array<::taihe::string>> empty;
     return QueryDataShareWithColumnSync(table, predicates, empty);
 }
@@ -376,7 +376,7 @@ ResultSet RdbStoreImpl::QueryDataShareWithColumnSync(
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(
         store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", (make_holder<ResultSetImpl, ResultSet>()));
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, (taihe::make_holder<ResultSetImpl, ResultSet>()));
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, (taihe::make_holder<ResultSetImpl, ResultSet>()));
     ani_env *env = get_env();
     ani_object object = reinterpret_cast<ani_object>(predicates);
     OHOS::DataShare::DataShareAbsPredicates *holder =
@@ -511,7 +511,7 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithOptionColumn(
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, errCode, "", (make_holder<ResultSetImpl, ResultSet>()));
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, (make_holder<ResultSetImpl, ResultSet>()));
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, (make_holder<ResultSetImpl, ResultSet>()));
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_THROW_PARAM_ERROR(
         rdbPredicateNative != nullptr, "predicates", "an RdbPredicates.", (make_holder<ResultSetImpl, ResultSet>()));
@@ -534,7 +534,7 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithPredicate(weak::RdbPredicates pr
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, errCode, "", (make_holder<ResultSetImpl, ResultSet>()));
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, (make_holder<ResultSetImpl, ResultSet>()));
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, (make_holder<ResultSetImpl, ResultSet>()));
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_THROW_PARAM_ERROR(
         rdbPredicateNative != nullptr, "predicates", "an RdbPredicates.", (make_holder<ResultSetImpl, ResultSet>()));
@@ -552,7 +552,7 @@ ResultSet RdbStoreImpl::QuerySharingResourceWithColumn(weak::RdbPredicates predi
     int errCode = OHOS::NativeRdb::E_ALREADY_CLOSED;
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, errCode, "", (make_holder<ResultSetImpl, ResultSet>()));
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, (make_holder<ResultSetImpl, ResultSet>()));
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, (make_holder<ResultSetImpl, ResultSet>()));
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_THROW_PARAM_ERROR(
         rdbPredicateNative != nullptr, "predicates", "an RdbPredicates.", (make_holder<ResultSetImpl, ResultSet>()));
@@ -699,7 +699,7 @@ void RdbStoreImpl::RestoreWithVoid()
 {
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, RDB_DO_NOTHING);
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, RDB_DO_NOTHING);
     int errCode = store->Restore("");
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
 }
@@ -778,7 +778,7 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
 
 void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainDevices)
 {
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, RDB_DO_NOTHING);
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, RDB_DO_NOTHING);
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     std::map<std::string, std::vector<std::string>> nativeRetainDevices;
@@ -798,7 +798,7 @@ void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainD
 
 int64_t RdbStoreImpl::UpdateDistributedInfoAsync(DistributedInfo info, weak::RdbPredicates predicates)
 {
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, 0);
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, 0);
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", ERR_NULL);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
@@ -955,7 +955,7 @@ void RdbStoreImpl::CloudSyncWithPredicates(
 {
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, RDB_DO_NOTHING);
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, RDB_DO_NOTHING);
     OHOS::DistributedRdb::SyncOption option{ .mode = ani_rdbutils::SyncModeToNative(mode), .isBlock = false };
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_THROW_PARAM_ERROR(rdbPredicateNative != nullptr, "predicates", "an RdbPredicates.", RDB_DO_NOTHING);
@@ -990,7 +990,7 @@ void RdbStoreImpl::CloudSyncWithConfig(
         nativePredicates = ani_rdbutils::GetNativePredicatesFromTaihe(config.predicates.value());
         ASSERT_THROW_PARAM_ERROR(nativePredicates != nullptr, "predicates", "an RdbPredicates.", RDB_DO_NOTHING);
         if (config.enablePredicate.has_value() && config.enablePredicate.value()) {
-            ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, RDB_DO_NOTHING);
+            ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, RDB_DO_NOTHING);
         }
     }
 
@@ -1202,7 +1202,7 @@ void RdbStoreImpl::OnSqliteErrorOccurredInner(
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     ASSERT_THROW_INNER_ERROR(
-        store->GetDbType() != NativeRdb::DB_SQLITE, OHOS::NativeRdb::E_NOT_SUPPORT, "", RDB_DO_NOTHING);
+        store->GetDbType() == NativeRdb::DB_SQLITE, OHOS::NativeRdb::E_NOT_SUPPORT, "", RDB_DO_NOTHING);
     auto subscribeFunc = [this, store](std::shared_ptr<ani_rdbutils::TaiheLogObserver> observer) -> int32_t {
         auto errCode = NativeRdb::SqlLog::Subscribe(store->GetPath(), observer);
         if (errCode == OHOS::NativeRdb::E_OK) {
@@ -1221,7 +1221,7 @@ void RdbStoreImpl::OffSqliteErrorOccurredInner(taihe::optional_view<uintptr_t> o
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     ASSERT_THROW_INNER_ERROR(
-        store->GetDbType() != NativeRdb::DB_SQLITE, OHOS::NativeRdb::E_NOT_SUPPORT, "", RDB_DO_NOTHING);
+        store->GetDbType() == NativeRdb::DB_SQLITE, OHOS::NativeRdb::E_NOT_SUPPORT, "", RDB_DO_NOTHING);
     auto unSubscribeFunc = [this, store](std::shared_ptr<ani_rdbutils::TaiheLogObserver> observer) -> int32_t {
         auto errCode = NativeRdb::SqlLog::Unsubscribe(store->GetPath(), observer);
         if (errCode == OHOS::NativeRdb::E_OK) {
@@ -1245,7 +1245,7 @@ void RdbStoreImpl::OnPerfStatInner(
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     ASSERT_THROW_INNER_ERROR(
-        store->GetDbType() != NativeRdb::DB_SQLITE, OHOS::NativeRdb::E_NOT_SUPPORT, "", RDB_DO_NOTHING);
+        store->GetDbType() == NativeRdb::DB_SQLITE, OHOS::NativeRdb::E_NOT_SUPPORT, "", RDB_DO_NOTHING);
     auto subscribeFunc = [this, store](std::shared_ptr<ani_rdbutils::TaiheSqlObserver> observer) -> int32_t {
         auto errCode = DistributedRdb::PerfStat::Subscribe(store->GetPath(), observer);
         if (errCode == OHOS::NativeRdb::E_OK) {
@@ -1264,7 +1264,7 @@ void RdbStoreImpl::OffPerfStatInner(::taihe::optional_view<uintptr_t> opq)
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     ASSERT_THROW_INNER_ERROR(
-        store->GetDbType() != NativeRdb::DB_SQLITE, OHOS::NativeRdb::E_NOT_SUPPORT, "", RDB_DO_NOTHING);
+        store->GetDbType() == NativeRdb::DB_SQLITE, OHOS::NativeRdb::E_NOT_SUPPORT, "", RDB_DO_NOTHING);
     auto unSubscribeFunc = [this, store](std::shared_ptr<ani_rdbutils::TaiheSqlObserver> observer) -> int32_t {
         auto errCode = DistributedRdb::PerfStat::Unsubscribe(store->GetPath(), observer);
         if (errCode == OHOS::NativeRdb::E_OK) {
@@ -1421,7 +1421,7 @@ int32_t RdbStoreImpl::LockCloudContainerSync()
 {
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", 0);
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, 0);
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, 0);
     auto [errCode, output] = store->LockCloudContainer();
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), output);
     return output;
@@ -1431,7 +1431,7 @@ void RdbStoreImpl::UnlockCloudContainerSync()
 {
     auto store = GetResource();
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
-    ASSERT_THROW_NON_SYSTEM_ERROR(!isSystemApp_, RDB_DO_NOTHING);
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, RDB_DO_NOTHING);
     int errCode = store->UnlockCloudContainer();
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
 }
