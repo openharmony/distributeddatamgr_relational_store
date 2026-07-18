@@ -38,6 +38,15 @@ static UNUSED_FUNCTION uint32_t GetUid()
 #endif
 }
 
+static UNUSED_FUNCTION uint32_t GetGid()
+{
+#ifdef WINDOWS_PLATFORM
+    return 0;
+#else
+    return getgid();
+#endif
+}
+
 static UNUSED_FUNCTION int MkDir(const std::string &filePath, mode_t dirRight = DIR_RIGHT)
 {
 #ifdef WINDOWS_PLATFORM

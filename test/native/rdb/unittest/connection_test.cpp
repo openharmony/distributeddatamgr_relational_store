@@ -365,4 +365,37 @@ HWTEST_F(ConnectionTest, DeleteSyncedData_Test_002, TestSize.Level2)
     res = conn->DeleteSyncedData("test", keys);
     EXPECT_EQ(res, E_ERROR);
 }
+
+/**
+ * @tc.name: InnerOpen_DbNotExist_CreateNecessaryFalse
+ * @tc.desc: InnerOpen returns E_DB_NOT_EXIST when db not exist and IsCreateNecessary=false
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, InnerOpen_DbNotExist_CreateNecessaryFalse, TestSize.Level1)
+{
+    std::string dbPath = RDB_TEST_PATH + "inneropen_notexist_test.db";
+    RdbHelper::DeleteRdbStore(dbPath);
+    RdbStoreConfig config(dbPath);
+    config.SetCreateNecessary(false);
+    auto conn = std::make_shared<SqliteConnection>(config, true);
+    int ret = conn->InnerOpen(config);
+    EXPECT_EQ(ret, E_DB_NOT_EXIST);
+}
+
+/**
+ * @tc.name: InnerOpen_DbNotExist_CreateNecessaryTrue
+ * @tc.desc: InnerOpen succeeds when db not exist but IsCreateNecessary=true (default)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, InnerOpen_DbNotExist_CreateNecessaryTrue, TestSize.Level1)
+{
+    std::string dbPath = RDB_TEST_PATH + "inneropen_createnecessary_test.db";
+    RdbHelper::DeleteRdbStore(dbPath);
+    RdbStoreConfig config(dbPath);
+    // IsCreateNecessary defaults to true
+    auto conn = std::make_shared<SqliteConnection>(config, true);
+    int ret = conn->InnerOpen(config);
+    EXPECT_EQ(ret, E_OK);
+    RdbHelper::DeleteRdbStore(dbPath);
+}
 } // namespace Test
