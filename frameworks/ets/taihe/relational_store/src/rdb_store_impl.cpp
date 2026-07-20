@@ -498,11 +498,8 @@ void RdbStoreImpl::CleanDeviceDirtyDataWithOptionCursor(string_view table, optio
     ASSERT_THROW_INNER_ERROR_EXT(
         std::regex_match(nativeTable, validName), OHOS::NativeRdb::E_INVALID_ARGS, "", RDB_DO_NOTHING);
     int32_t errCode = store->CleanDeviceDirtyData(nativeTable, nativeCursor);
-    if (errCode == OHOS::NativeRdb::E_OK) {
-        return;
-    }
     errCode = errCode != OHOS::NativeRdb::E_NOT_SUPPORT ? errCode : OHOS::NativeRdb::E_NOT_SUPPORT_NEW;
-    ASSERT_THROW_INNER_ERROR_EXT(false, errCode, "", RDB_DO_NOTHING);
+    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, "", RDB_DO_NOTHING);
 }
 
 ResultSet RdbStoreImpl::QuerySharingResourceWithOptionColumn(
@@ -806,7 +803,7 @@ int64_t RdbStoreImpl::UpdateDistributedInfoAsync(DistributedInfo info, weak::Rdb
     auto [isValidInfo, nativeInfo] = ani_rdbutils::DistributedInfoToNative(info);
     ASSERT_THROW_PARAM_ERROR(isValidInfo, "config must be a DistributedConfig.", "", 0);
     auto [errCode, output] = store->UpdateDistributedInfo(nativeInfo, *rdbPredicateNative);
-    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), output);
+    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, store->GetLastErrorMsg(), output);
     return output;
 }
 
@@ -869,7 +866,7 @@ void RdbStoreImpl::SyncEx(SyncMode mode, weak::RdbPredicates predicates, uintptr
         OHOS::NativeRdb::E_INVALID_ARGS_NEW, "", RDB_DO_NOTHING);
     OHOS::DistributedRdb::SyncOption option{ nativeMode, false, true };
     std::shared_ptr<AniContext> context = std::make_shared<AniContext>();
-    ASSERT_THROW_INNER_ERROR(context->Init(callback), OHOS::NativeRdb::E_ERROR, "", RDB_DO_NOTHING);
+    ASSERT_THROW_INNER_ERROR_EXT(context->Init(callback), OHOS::NativeRdb::E_ERROR, "", RDB_DO_NOTHING);
     promise = context->promise_;
     ::taihe::env_guard gurd;
     auto env = gurd.get_env();
@@ -887,7 +884,7 @@ void RdbStoreImpl::SyncEx(SyncMode mode, weak::RdbPredicates predicates, uintptr
 
     int errCode = store->SyncEx(option, *rdbPredicateNative, nativeSyncCallback);
     if (errCode != OHOS::NativeRdb::E_OK) {
-        context->error_ = std::make_shared<InnerError>(errCode);
+        context->error_ = std::make_shared<InnerErrorExt>(errCode);
         AniAsyncCall::ReturnResult(context, env);
         return;
     }
