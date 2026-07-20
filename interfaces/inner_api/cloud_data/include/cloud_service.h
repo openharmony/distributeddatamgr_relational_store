@@ -101,7 +101,7 @@ public:
     };
 
     struct Option {
-        int32_t syncMode;
+        int32_t syncMode = 0;
         uint32_t seqNum = 0;
     };
 
