@@ -95,12 +95,12 @@ bool Unmarshalling(SharingCode &output, MessageParcel &data)
 template<>
 bool Marshalling(const Asset &input, MessageParcel &data)
 {
-    return Marshal(data, input.version, input.name, input.size, input.modifyTime, input.uri);
+    return Marshal(data, input.version, input.name, input.size, input.modifyTime, input.uri, input.extension);
 }
 template<>
 bool Unmarshalling(Asset &output, MessageParcel &data)
 {
-    return Unmarshal(data, output.version, output.name, output.size, output.modifyTime, output.uri);
+    return Unmarshal(data, output.version, output.name, output.size, output.modifyTime, output.uri, output.extension);
 }
 template<>
 bool Marshalling(const ValueObject &input, MessageParcel &data)
@@ -139,7 +139,7 @@ template<>
 bool Marshalling(const CommonAsset &input, MessageParcel &data)
 {
     return ITypesUtil::Marshal(data, input.name, input.uri, input.path, input.createTime, input.modifyTime, input.size,
-        input.status, input.hash);
+        input.status, input.hash, input.extension);
 }
 
 template<>

@@ -41,6 +41,7 @@ struct AssetValue {
     std::string size;
     std::string hash;
     std::string path;
+    std::string extension;
 
     bool operator<(const AssetValue &ref) const
     {
@@ -68,7 +69,10 @@ struct AssetValue {
         if (hash != ref.hash) {
             return hash < ref.hash;
         }
-        return path < ref.path;
+        if (path != ref.path) {
+            return path < ref.path;
+        }
+        return extension < ref.extension;
     }
 };
 } // namespace OHOS::NativeRdb

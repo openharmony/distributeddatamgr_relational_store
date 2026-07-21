@@ -48,6 +48,7 @@ using NativeDistributedOrigin = OHOS::DistributedRdb::DistributedOrigin;
 static const int E_OK = 0;
 static const int REALPATH_MAX_LEN = 1024;
 static const int INIT_POSITION = -1;
+static constexpr size_t EXTENSION_MAX_SIZE = 512;
 
 OHOS::NativeRdb::AssetValue::Status AssetStatusToNative(ohos::data::relationalStore::AssetStatus const &assetStatus)
 {
@@ -127,6 +128,12 @@ OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset c
         value.status = AssetValue::STATUS_UNKNOWN;
     }
     value.hash = value.modifyTime + "_" + value.size;
+    if (asset.extension.has_value()) {
+        value.extension = std::string(asset.extension.value());
+        if (value.extension.size() > EXTENSION_MAX_SIZE) {
+            value.extension = value.extension.substr(0, EXTENSION_MAX_SIZE);
+        }
+    }
     return value;
 }
 
@@ -150,6 +157,9 @@ std::vector<OHOS::NativeRdb::AssetValue> AssetsToNative(
     asset.path = value.path;
     auto status = static_cast<OHOS::NativeRdb::AssetValue::Status>(value.status & ~0xF0000000);
     asset.status = taihe::optional<TaiheAssetStatus>::make(AssetStatusToAni(status));
+    if (!value.extension.empty()) {
+        asset.extension = taihe::optional<taihe::string>::make(taihe::string(value.extension));
+    }
     return asset;
 }
 

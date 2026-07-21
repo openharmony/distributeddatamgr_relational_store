@@ -148,4 +148,139 @@ HWTEST_F(RawDataParserTest, Assets_Parser, TestSize.Level1)
         ASSERT_TRUE(parsedAssets[0].path == assets[0].path);
     }
 }
+/**
+ * @tc.name: Asset_Extension_Parser
+ * @tc.desc: test asset with extension field marshal and unmarshal roundtrip
+ * @tc.type: FUNC
+ * @tc.author: agent
+ */
+HWTEST_F(RawDataParserTest, Asset_Extension_Parser, TestSize.Level1)
+{
+    ValueObject::Asset asset;
+    asset.id = "100";
+    asset.name = "IMG_1690.png";
+    asset.uri = "file://data/args/header/IMG_1690.png";
+    asset.createTime = "2024-07-05 20:37.982158265 +8:00";
+    asset.modifyTime = "2024-07-05 20:37.982158265 +8:00";
+    asset.size = "4194304";
+    asset.hash = "2024-07-05 20:37.982158265 +8:00_4194304";
+    asset.path = "photos/header/IMG_1690.png";
+    asset.extension = "custom_extension_data";
+    auto rawData = RawDataParser::PackageRawData(asset);
+    for (size_t i = 0; i < sizeof(uintptr_t); ++i) {
+        std::vector<uint8_t> noAlign(rawData.size() + i, 0);
+        noAlign.insert(noAlign.begin() + i, rawData.begin(), rawData.end());
+        ValueObject::Asset parsedAsset;
+        RawDataParser::ParserRawData(noAlign.data() + i, noAlign.size() - i, parsedAsset);
+        ASSERT_TRUE(parsedAsset.id == asset.id);
+        ASSERT_TRUE(parsedAsset.name == asset.name);
+        ASSERT_TRUE(parsedAsset.uri == asset.uri);
+        ASSERT_TRUE(parsedAsset.createTime == asset.createTime);
+        ASSERT_TRUE(parsedAsset.modifyTime == asset.modifyTime);
+        ASSERT_TRUE(parsedAsset.size == asset.size);
+        ASSERT_TRUE(parsedAsset.hash == asset.hash);
+        ASSERT_TRUE(parsedAsset.path == asset.path);
+        ASSERT_TRUE(parsedAsset.extension == asset.extension);
+    }
+}
+
+/**
+ * @tc.name: Assets_Extension_Parser
+ * @tc.desc: test assets with extension field marshal and unmarshal roundtrip
+ * @tc.type: FUNC
+ * @tc.author: agent
+ */
+HWTEST_F(RawDataParserTest, Assets_Extension_Parser, TestSize.Level1)
+{
+    ValueObject::Assets assets(2);
+    assets[0].id = "100";
+    assets[0].name = "IMG_1690.png";
+    assets[0].uri = "file://data/args/header/IMG_1690.png";
+    assets[0].createTime = "2024-07-05 20:37.982158265 +8:00";
+    assets[0].modifyTime = "2024-07-05 20:37.982158265 +8:00";
+    assets[0].size = "4194304";
+    assets[0].hash = "2024-07-05 20:37.982158265 +8:00_4194304";
+    assets[0].path = "photos/header/IMG_1690.png";
+    assets[0].extension = "ext_value_0";
+    assets[1].id = "200";
+    assets[1].name = "doc.pdf";
+    assets[1].uri = "file://data/args/docs/doc.pdf";
+    assets[1].createTime = "2024-08-01 10:00.000000000 +8:00";
+    assets[1].modifyTime = "2024-08-01 10:00.000000000 +8:00";
+    assets[1].size = "2048";
+    assets[1].hash = "hash_doc_2048";
+    assets[1].path = "docs/doc.pdf";
+    assets[1].extension = "";
+    auto rawData = RawDataParser::PackageRawData(assets);
+    for (size_t i = 0; i < sizeof(uintptr_t); ++i) {
+        std::vector<uint8_t> noAlign(rawData.size() + i, 0);
+        noAlign.insert(noAlign.begin() + i, rawData.begin(), rawData.end());
+        ValueObject::Assets parsedAssets;
+        RawDataParser::ParserRawData(noAlign.data() + i, noAlign.size() - i, parsedAssets);
+        ASSERT_EQ(parsedAssets.size(), 2);
+        ASSERT_TRUE(parsedAssets[0].extension == "ext_value_0");
+        ASSERT_TRUE(parsedAssets[1].extension.empty());
+    }
+}
+/**
+ * @tc.name: Asset_Extension_ForwardCompat_Parser
+ * @tc.desc: test that old-format BLOB without extension key unmarshals correctly (forward compatibility)
+ * @tc.type: FUNC
+ * @tc.author: agent
+ */
+HWTEST_F(RawDataParserTest, Asset_Extension_ForwardCompat_Parser, TestSize.Level1)
+{
+    ValueObject::Asset asset;
+    asset.id = "100";
+    asset.name = "IMG_1690.png";
+    asset.uri = "file://data/args/header/IMG_1690.png";
+    asset.createTime = "2024-07-05 20:37.982158265 +8:00";
+    asset.modifyTime = "2024-07-05 20:37.982158265 +8:00";
+    asset.size = "4194304";
+    asset.hash = "2024-07-05 20:37.982158265 +8:00_4194304";
+    asset.path = "photos/header/IMG_1690.png";
+    auto rawData = RawDataParser::PackageRawData(asset);
+    for (size_t i = 0; i < sizeof(uintptr_t); ++i) {
+        std::vector<uint8_t> noAlign(rawData.size() + i, 0);
+        noAlign.insert(noAlign.begin() + i, rawData.begin(), rawData.end());
+        ValueObject::Asset parsedAsset;
+        RawDataParser::ParserRawData(noAlign.data() + i, noAlign.size() - i, parsedAsset);
+        ASSERT_TRUE(parsedAsset.id == asset.id);
+        ASSERT_TRUE(parsedAsset.name == asset.name);
+        ASSERT_TRUE(parsedAsset.uri == asset.uri);
+        ASSERT_TRUE(parsedAsset.extension.empty());
+    }
+}
+/**
+ * @tc.name: Asset_Extension_Oversize_Parser
+ * @tc.desc: test asset with extension >512 bytes preserves full value through BLOB roundtrip
+ *           (BLOB serialization layer does not enforce size limit)
+ * @tc.type: FUNC
+ * @tc.author: agent
+ */
+HWTEST_F(RawDataParserTest, Asset_Extension_Oversize_Parser, TestSize.Level1)
+{
+    ValueObject::Asset asset;
+    asset.id = "100";
+    asset.name = "IMG_1690.png";
+    asset.uri = "file://data/args/header/IMG_1690.png";
+    asset.createTime = "2024-07-05 20:37.982158265 +8:00";
+    asset.modifyTime = "2024-07-05 20:37.982158265 +8:00";
+    asset.size = "4194304";
+    asset.hash = "2024-07-05 20:37.982158265 +8:00_4194304";
+    asset.path = "photos/header/IMG_1690.png";
+    asset.extension = std::string(513, 'x');
+    auto rawData = RawDataParser::PackageRawData(asset);
+    for (size_t i = 0; i < sizeof(uintptr_t); ++i) {
+        std::vector<uint8_t> noAlign(rawData.size() + i, 0);
+        noAlign.insert(noAlign.begin() + i, rawData.begin(), rawData.end());
+        ValueObject::Asset parsedAsset;
+        RawDataParser::ParserRawData(noAlign.data() + i, noAlign.size() - i, parsedAsset);
+        ASSERT_TRUE(parsedAsset.id == asset.id);
+        ASSERT_TRUE(parsedAsset.name == asset.name);
+        ASSERT_TRUE(parsedAsset.uri == asset.uri);
+        ASSERT_EQ(parsedAsset.extension.size(), 513);
+        ASSERT_TRUE(parsedAsset.extension == asset.extension);
+    }
+}
 } // namespace Test
