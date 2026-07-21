@@ -22,14 +22,30 @@ using namespace OHOS;
 using namespace OHOS::Rdb;
 using namespace OHOS::RelationalStoreJsKit;
 
-#define ASSERT_RETURN_THROW_ERROR(assertion, error, retVal) CHECK_RETURN_CORE(assertion, ThrowError(error), retVal)
+#define ASSERT_THROW_INNER_ERROR(assertion, errCode, errMsg, retVal) \
+    CHECK_RETURN_CORE(assertion, ThrowInnerError((errCode), (errMsg)), retVal)
+
+#define ASSERT_THROW_INNER_ERROR_EXT(assertion, errCode, errMsg, retVal) \
+    CHECK_RETURN_CORE(assertion, ThrowInnerErrorExt((errCode), (errMsg)), retVal)
+
+#define ASSERT_THROW_NON_SYSTEM_ERROR(assertion, retVal) \
+    CHECK_RETURN_CORE(assertion, ThrowNonSystemError(), retVal)
+
+#define ASSERT_THROW_PARAM_ERROR(assertion, needed, mustbe, retVal) \
+    CHECK_RETURN_CORE(assertion, ThrowParamError((needed), (mustbe)), retVal)
+
+#define CHECK_ERRCODE_THROW_INNER_ERROR(errCode, errMsg, retVal) \
+    ASSERT_THROW_INNER_ERROR((errCode) == OHOS::NativeRdb::E_OK, (errCode), (errMsg), retVal)
+
+#define CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, errMsg, retVal) \
+    ASSERT_THROW_INNER_ERROR_EXT((errCode) == OHOS::NativeRdb::E_OK, (errCode), (errMsg), retVal)
 
 std::string GetErrorString(int errcode);
 void ThrowError(std::shared_ptr<Error> err);
 void ThrowInnerError(int errCode, const std::string &errMsg = "");
 void ThrowInnerErrorExt(int errCode, const std::string &errMsg = "");
 void ThrowNonSystemError();
-void ThrowParamError(const char *message);
+void ThrowParamError(const std::string &needed, const std::string &mustbe = "");
 
 } // namespace RdbTaihe
 } // namespace OHOS
