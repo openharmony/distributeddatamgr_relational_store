@@ -17,6 +17,7 @@
 #define OHOS_RELATION_STORE_TRANSACTION_IMPL_H
 
 #include "ani_rdb_utils.h"
+#include "error_throw_utils.h"
 #include "lite_result_set_impl.h"
 #include "lite_result_set_proxy.h"
 #include "result_set_impl.h"
@@ -31,6 +32,7 @@
 #include "rdb_store_impl.h"
 #include "rdb_types.h"
 #include "rdb_utils.h"
+#include "thread_safe_base.h"
 
 namespace OHOS {
 namespace RdbTaihe {
@@ -44,7 +46,7 @@ using namespace OHOS::RdbTaihe;
 using ValueType = ohos::data::relationalStore::ValueType;
 using ValueObject = OHOS::NativeRdb::ValueObject;
 
-class TransactionImpl {
+class TransactionImpl : public ThreadSafeBase<OHOS::NativeRdb::Transaction> {
 public:
     TransactionImpl();
     explicit TransactionImpl(std::shared_ptr<OHOS::NativeRdb::Transaction> transaction);
@@ -69,9 +71,6 @@ public:
     int64_t BatchInsertWithConflictResolutionSync(taihe::string_view table,
         taihe::array_view<ohos::data::relationalStore::ValuesBucket> values,
         ohos::data::relationalStore::ConflictResolution conflict);
-
-protected:
-    std::shared_ptr<OHOS::NativeRdb::Transaction> nativeTransaction_ = nullptr;
 };
 }
 }

@@ -29,6 +29,28 @@
 namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
+
+std::string AbsResultSet::BuildRowRangeCtx()
+{
+    std::string msg = "The row index is " + std::to_string(rowPos_);
+    if (rowCount_ >= 0) {
+        msg += ", and the row count is " + std::to_string(rowCount_);
+    }
+    return msg + ".";
+}
+
+void AbsResultSet::SetLastErrorMsg(const std::string &msg)
+{
+    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
+    lastErrMsg_ = msg;
+}
+
+std::string AbsResultSet::GetLastErrorMsg() const
+{
+    std::lock_guard<decltype(globalMtx_)> lockGuard(globalMtx_);
+    return std::move(lastErrMsg_);
+}
+
 void RowEntity::Put(const std::string &name, int32_t index, ValueObject &&value)
 {
     Put(std::string(name), index, std::move(value));
@@ -283,8 +305,8 @@ int AbsResultSet::GetRow(RowEntity &rowEntity)
         ValueObject value;
         auto ret = Get(index, value);
         if (ret != E_OK) {
-            LOG_ERROR("Get(%{public}d, %{public}s)->ret %{public}d",
-                index, SqliteUtils::Anonymous(std::string(name)).c_str(), ret);
+            LOG_ERROR("Get(%{public}d, %{public}s)->ret %{public}d", index,
+                SqliteUtils::Anonymous(std::string(name)).c_str(), ret);
             return ret;
         }
         rowEntity.Put(std::string(name), index, std::move(value));
@@ -314,8 +336,8 @@ std::pair<int, std::vector<ValueObject>> AbsResultSet::GetRowData()
         ValueObject value;
         auto ret = Get(index, value);
         if (ret != E_OK) {
-            LOG_ERROR("Get(%{public}d, %{public}s)->ret %{public}d", index,
-                SqliteUtils::Anonymous(columnName).c_str(), ret);
+            LOG_ERROR(
+                "Get(%{public}d, %{public}s)->ret %{public}d", index, SqliteUtils::Anonymous(columnName).c_str(), ret);
             return { ret, {} };
         }
         rowData.push_back(std::move(value));
@@ -416,6 +438,7 @@ int AbsResultSet::GoToLastRow()
         return ret;
     }
     if (rowCnt == 0) {
+        SetLastErrorMsg(BuildRowRangeCtx());
         return E_ROW_OUT_RANGE;
     }
 
@@ -519,8 +542,9 @@ int AbsResultSet::GetColumnIndex(const std::string &columnName, int &columnIndex
             return E_OK;
         }
     }
-    LOG_ERROR("Failed, columnName : %{public}s, errCode : %{public}d",
-        SqliteUtils::Anonymous(columnName).c_str(), errCode);
+    LOG_ERROR(
+        "Failed, columnName : %{public}s, errCode : %{public}d", SqliteUtils::Anonymous(columnName).c_str(), errCode);
+    SetLastErrorMsg("The columnName: " + SqliteUtils::Anonymous(columnName) + " is not found");
     return E_INVALID_ARGS;
 }
 
@@ -535,6 +559,7 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
     }
     if (columnCount_ <= columnIndex || columnIndex < 0) {
         LOG_ERROR("Invalid columnIndex %{public}d", columnIndex);
+        SetLastErrorMsg("The columnIndex: " + std::to_string(columnIndex) + " is out of range");
         return E_COLUMN_OUT_RANGE;
     }
 
@@ -544,6 +569,7 @@ int AbsResultSet::GetColumnName(int columnIndex, std::string &columnName)
             return E_OK;
         }
     }
+    SetLastErrorMsg("The columnIndex: " + std::to_string(columnIndex) + " is out of range");
     return E_COLUMN_OUT_RANGE;
 }
 

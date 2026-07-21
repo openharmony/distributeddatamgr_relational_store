@@ -928,6 +928,13 @@ int SqliteStatement::ModifyLockStatus(
     return E_ERROR;
 }
 
+std::string SqliteStatement::GetLastErrorMsg() const
+{
+    auto dbHandle = sqlite3_db_handle(stmt_);
+    std::string errMsg(sqlite3_errmsg(dbHandle));
+    return errMsg;
+}
+
 int SqliteStatement::InnerFinalize()
 {
     if (stmt_ == nullptr) {

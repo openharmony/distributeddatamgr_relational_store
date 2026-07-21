@@ -23,6 +23,7 @@
 
 #include "block_data.h"
 #include "common.h"
+#include "connection.h"
 #include "executor_pool.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
@@ -31,6 +32,7 @@
 #include "rdb_store.h"
 #include "rdb_store_manager.h"
 #include "rdb_types.h"
+#include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "values_bucket.h"
 
@@ -164,4 +166,141 @@ HWTEST_F(RdbSqliteStatementTest, SqliteStatement003, TestSize.Level0)
     sqlite3_finalize(stmt);
     rc = sqlite3_close(db);
     EXPECT_EQ(rc, SQLITE_OK);
+}
+
+/**
+ * @tc.name: S_ErrMsg_001
+ * @tc.desc: Verify SqliteStatement GetLastErrorMsg returns "not an error" when no error occurred.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteStatementTest, S_ErrMsg_001, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "S_ErrMsg_001.db";
+    RdbHelper::DeleteRdbStore(dbPath);
+    SqliteGlobalConfig::InitSqliteGlobalConfig();
+    RdbStoreConfig config(dbPath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // Create a valid statement — no error on the connection
+    auto [stmtErr, statement] = conn->CreateStatement("CREATE TABLE IF NOT EXISTS test(id INTEGER)", conn);
+    ASSERT_EQ(stmtErr, E_OK);
+    ASSERT_NE(statement, nullptr);
+
+    // GetLastErrorMsg delegates to sqlite3_errmsg which returns "not an error"
+    std::string result = statement->GetLastErrorMsg();
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result.find("not an error"), std::string::npos);
+
+    conn = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+}
+
+/**
+ * @tc.name: S_ErrMsg_002
+ * @tc.desc: Verify SqliteStatement GetLastErrorMsg returns syntax error after a failed prepare on the same connection.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteStatementTest, S_ErrMsg_002, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "S_ErrMsg_002.db";
+    RdbHelper::DeleteRdbStore(dbPath);
+    SqliteGlobalConfig::InitSqliteGlobalConfig();
+    RdbStoreConfig config(dbPath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // Create a valid statement first (shares the same db handle)
+    auto [stmtErr, statement] = conn->CreateStatement("CREATE TABLE IF NOT EXISTS test(id INTEGER)", conn);
+    ASSERT_EQ(stmtErr, E_OK);
+    ASSERT_NE(statement, nullptr);
+
+    // Trigger a syntax error by preparing invalid SQL on the same connection
+    auto [badErr, badStmt] = conn->CreateStatement("SELCT * FROM test", conn);
+    EXPECT_NE(badErr, E_OK);
+    EXPECT_EQ(badStmt, nullptr);
+
+    // The valid statement's GetLastErrorMsg reads sqlite3_errmsg on the shared db handle
+    std::string result = statement->GetLastErrorMsg();
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result.find("syntax"), std::string::npos);
+
+    conn = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+}
+
+/**
+ * @tc.name: S_ErrMsg_003
+ * @tc.desc: Verify SqliteStatement GetLastErrorMsg returns "no such table" after a failed prepare referencing a
+ *           non-existent table.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteStatementTest, S_ErrMsg_003, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "S_ErrMsg_003.db";
+    RdbHelper::DeleteRdbStore(dbPath);
+    SqliteGlobalConfig::InitSqliteGlobalConfig();
+    RdbStoreConfig config(dbPath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // Create a valid statement first
+    auto [stmtErr, statement] = conn->CreateStatement("CREATE TABLE IF NOT EXISTS test(id INTEGER)", conn);
+    ASSERT_EQ(stmtErr, E_OK);
+    ASSERT_NE(statement, nullptr);
+
+    // Trigger "no such table" by preparing INSERT into a non-existent table
+    auto [badErr, badStmt] = conn->CreateStatement("INSERT INTO no_such_table VALUES(1)", conn);
+    EXPECT_NE(badErr, E_OK);
+    EXPECT_EQ(badStmt, nullptr);
+
+    std::string result = statement->GetLastErrorMsg();
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result.find("no such table"), std::string::npos);
+
+    conn = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+}
+
+/**
+ * @tc.name: S_ErrMsg_004
+ * @tc.desc: Verify SqliteStatement GetLastErrorMsg returns "already exists" after executing a duplicate CREATE TABLE.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteStatementTest, S_ErrMsg_004, TestSize.Level0)
+{
+    const std::string dbPath = RDB_TEST_PATH + "S_ErrMsg_004.db";
+    RdbHelper::DeleteRdbStore(dbPath);
+    SqliteGlobalConfig::InitSqliteGlobalConfig();
+    RdbStoreConfig config(dbPath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    ASSERT_EQ(errCode, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // Create a statement for CREATE TABLE and execute it — table created
+    auto [stmtErr, statement] = conn->CreateStatement("CREATE TABLE dup_tbl(id INTEGER PRIMARY KEY)", conn);
+    ASSERT_EQ(stmtErr, E_OK);
+    ASSERT_NE(statement, nullptr);
+
+    int execRet = statement->Execute();
+    EXPECT_EQ(execRet, E_OK);
+
+    // Reset and execute again — fails with "table already exists"
+    statement->Reset();
+    execRet = statement->Execute();
+    EXPECT_NE(execRet, E_OK);
+
+    std::string result = statement->GetLastErrorMsg();
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result.find("already exists"), std::string::npos);
+
+    conn = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
 }

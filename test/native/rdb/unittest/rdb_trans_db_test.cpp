@@ -48,21 +48,14 @@ protected:
 };
 std::shared_ptr<ConnectionPool> RdbTransDBTest::connPool_ = nullptr;
 RdbStoreConfig RdbTransDBTest::config_(RDB_TEST_PATH + "transDb_test.db");
-ValuesBucket RdbTransDBTest::row_(std::map<std::string, ValueObject>{
-    { "id", ValueObject(1) },
-    { "name", ValueObject("xiaoming") },
-    { "extend", ValueObject(std::vector<uint8_t>(100, 128)) },
-    { "code", ValueObject(3.1415926) },
-    { "years", ValueObject(BigInteger(0, { 128, 225 })) },
+ValuesBucket RdbTransDBTest::row_(std::map<std::string, ValueObject>{ { "id", ValueObject(1) },
+    { "name", ValueObject("xiaoming") }, { "extend", ValueObject(std::vector<uint8_t>(100, 128)) },
+    { "code", ValueObject(3.1415926) }, { "years", ValueObject(BigInteger(0, { 128, 225 })) },
     { "attachment", ValueObject(AssetValue{ .id = "119", .name = "picture1", .hash = "111" }) },
-    { "attachments", ValueObject(ValueObject::Assets{
-                         AssetValue{ .id = "120", .name = "picture2", .hash = "112" },
+    { "attachments", ValueObject(ValueObject::Assets{ AssetValue{ .id = "120", .name = "picture2", .hash = "112" },
                          AssetValue{ .id = "121", .name = "picture3", .hash = "113" },
                          AssetValue{ .id = "122", .name = "picture4", .hash = "114" },
-                         AssetValue{ .id = "123", .name = "picture5", .hash = "115" }
-                     })
-    }
-});
+                         AssetValue{ .id = "123", .name = "picture5", .hash = "115" } }) } });
 
 void RdbTransDBTest::SetUpTestCase(void)
 {
@@ -1195,5 +1188,64 @@ HWTEST_F(RdbTransDBTest, ExecuteForChangedRowCount_001, TestSize.Level1)
     errCode = resultSet->GetRowCount(count);
     ASSERT_EQ(errCode, E_OK);
     ASSERT_EQ(count, 1);
+}
+
+/**
+ * @tc.name: TD_ErrMsg_001
+ * @tc.desc: Verify TransDB GetLastErrorMsg returns syntax error when executing invalid SQL.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransDBTest, TD_ErrMsg_001, TestSize.Level1)
+{
+    // "CREAATE" is a misspelled keyword — prepare fails with a syntax error
+    auto [errCode, value] = transDB_->Execute("CREAATE TABLE td_errmsg_test(id int)");
+    EXPECT_NE(errCode, E_OK);
+    std::string errMsg = transDB_->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("syntax"), std::string::npos);
+}
+
+/**
+ * @tc.name: TD_ErrMsg_002
+ * @tc.desc: Verify TransDB GetLastErrorMsg returns "no such table" when inserting into a non-existent table.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransDBTest, TD_ErrMsg_002, TestSize.Level1)
+{
+    auto [errCode, value] = transDB_->Execute("INSERT INTO td_errmsg_nonexist VALUES(1)");
+    EXPECT_NE(errCode, E_OK);
+    std::string errMsg = transDB_->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("no such table"), std::string::npos);
+}
+
+/**
+ * @tc.name: TD_ErrMsg_003
+ * @tc.desc: Verify TransDB GetLastErrorMsg returns "already exists" when creating a duplicate table.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransDBTest, TD_ErrMsg_003, TestSize.Level1)
+{
+    auto [ret1, val1] = transDB_->Execute("CREATE TABLE td_errmsg_dup(id int)");
+    EXPECT_EQ(ret1, E_OK);
+    // Second creation fails — table already exists
+    auto [ret2, val2] = transDB_->Execute("CREATE TABLE td_errmsg_dup(id int)");
+    EXPECT_NE(ret2, E_OK);
+    std::string errMsg = transDB_->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("already exists"), std::string::npos);
+}
+
+/**
+ * @tc.name: TD_ErrMsg_004
+ * @tc.desc: Verify TransDB GetLastErrorMsg returns empty string when connection is released.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTransDBTest, TD_ErrMsg_004, TestSize.Level1)
+{
+    // Release the connection — weak_ptr expires
+    conn_ = nullptr;
+    std::string errMsg = transDB_->GetLastErrorMsg();
+    EXPECT_TRUE(errMsg.empty());
 }
 } // namespace Test

@@ -379,4 +379,13 @@ std::pair<int32_t, Results> TransDB::GenerateResult(int32_t code, std::shared_pt
     }
     return { code, result };
 }
+
+std::string TransDB::GetLastErrorMsg() const
+{
+    auto connection = conn_.lock();
+    if (connection != nullptr) {
+        return connection->GetLastErrorMsg();
+    }
+    return "";
+}
 } // namespace OHOS::NativeRdb

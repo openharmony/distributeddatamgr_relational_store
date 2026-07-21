@@ -15,6 +15,7 @@
 
 #define LOG_TAG "NapiRdbStore"
 #include "napi_rdb_store.h"
+
 #include <algorithm>
 #include <cinttypes>
 #include <cstdint>
@@ -27,23 +28,23 @@
 #include "js_native_api_types.h"
 #include "js_utils.h"
 #include "logger.h"
+#include "napi_lite_result_set.h"
 #include "napi_rdb_context.h"
 #include "napi_rdb_error.h"
+#include "napi_rdb_histogram_reporter.h"
 #include "napi_rdb_js_utils.h"
 #include "napi_rdb_log_observer.h"
 #include "napi_rdb_statistics_observer.h"
 #include "napi_rdb_store_observer.h"
 #include "napi_rdb_trace.h"
-#include "napi_lite_result_set.h"
 #include "napi_result_set.h"
 #include "napi_transaction.h"
 #include "rdb_errno.h"
-#include "napi_rdb_histogram_reporter.h"
+#include "rdb_perfStat.h"
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
-#include "rdb_perfStat.h"
-#include "securec.h"
 #include "rdb_types.h"
+#include "securec.h"
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "rdb_utils.h"
@@ -76,7 +77,9 @@ struct PredicatesProxy {
 #endif
 #define ASSERT_RETURN_SET_ERROR(assertion, paramError) \
     CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
-RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NapiRdbStoreData>()) {}
+RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NapiRdbStoreData>())
+{
+}
 
 RdbStoreProxy::~RdbStoreProxy()
 {
@@ -225,8 +228,8 @@ void RdbStoreProxy::AddSyncFunctions(std::vector<napi_property_descriptor> &prop
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("updateSync", Update, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("insertSync", Insert, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertSync", BatchInsert, SYNC));
-    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("batchInsertWithConflictResolutionSync",
-        BatchInsertWithConflictResolution, SYNC));
+    properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA(
+        "batchInsertWithConflictResolutionSync", BatchInsertWithConflictResolution, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySqlSync", QueryByStep, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("executeSync", Execute, SYNC));
     properties.push_back(DECLARE_NAPI_FUNCTION_WITH_DATA("querySync", QueryByStep, SYNC));
@@ -352,8 +355,12 @@ napi_value RdbStoreProxy::Insert(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->InsertWithConflictResolution(
+        int errCode = rdbStore->InsertWithConflictResolution(
             context->int64Output, context->tableName, context->valuesBucket, context->conflictResolution);
+        if (errCode != E_OK) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->int64Output, &result);
@@ -382,6 +389,9 @@ napi_value RdbStoreProxy::BatchInsert(napi_env env, napi_callback_info info)
         auto rdbStore = std::move(context->rdbStore);
         auto [ret, output] = rdbStore->BatchInsert(context->tableName, context->sharedValuesBuckets);
         context->int64Output = output;
+        if (ret != E_OK) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return ret;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -418,6 +428,9 @@ napi_value RdbStoreProxy::BatchInsertWithConflictResolution(napi_env env, napi_c
         auto [ret, output] =
             rdbStore->BatchInsert(context->tableName, context->sharedValuesBuckets, context->conflictResolution);
         context->int64Output = output;
+        if (ret != E_OK) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return ret;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -465,7 +478,11 @@ napi_value RdbStoreProxy::Delete(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->Delete(context->intOutput, *(context->rdbPredicates));
+        int errCode = rdbStore->Delete(context->intOutput, *(context->rdbPredicates));
+        if (errCode != E_OK) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->intOutput, &result);
@@ -502,9 +519,13 @@ napi_value RdbStoreProxy::Update(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->UpdateWithConflictResolution(context->intOutput, context->tableName,
-            context->valuesBucket, context->rdbPredicates->GetWhereClause(),
-            context->rdbPredicates->GetBindArgs(), context->conflictResolution);
+        int errCode = rdbStore->UpdateWithConflictResolution(context->intOutput, context->tableName,
+            context->valuesBucket, context->rdbPredicates->GetWhereClause(), context->rdbPredicates->GetBindArgs(),
+            context->conflictResolution);
+        if (errCode != E_OK) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->intOutput, &result);
@@ -641,8 +662,13 @@ napi_value RdbStoreProxy::ExecuteSql(napi_env env, napi_callback_info info)
         }
     };
     auto exec = [context]() -> int {
-        CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        return context->StealRdbStore()->ExecuteSql(context->sql, context->bindArgs);
+        auto rdbStore = context->StealRdbStore();
+        CHECK_RETURN_ERR(rdbStore != nullptr);
+        int errCode = rdbStore->ExecuteSql(context->sql, context->bindArgs);
+        if (errCode != E_OK) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
@@ -681,10 +707,12 @@ napi_value RdbStoreProxy::Execute(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        auto rdbStore = std::move(context->rdbStore);
         auto status = E_ERROR;
-        std::tie(status, context->sqlExeOutput) =
-            context->rdbStore->Execute(context->sql, context->bindArgs, context->txId);
-        context->rdbStore = nullptr;
+        std::tie(status, context->sqlExeOutput) = rdbStore->Execute(context->sql, context->bindArgs, context->txId);
+        if (status != E_OK) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return status;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -712,8 +740,7 @@ napi_value RdbStoreProxy::Replace(napi_env env, napi_callback_info info)
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        return context->StealRdbStore()->Replace(
-            context->int64Output, context->tableName, context->valuesBucket);
+        return context->StealRdbStore()->Replace(context->int64Output, context->tableName, context->valuesBucket);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_create_int64(env, context->int64Output, &result);
@@ -874,7 +901,8 @@ napi_value RdbStoreProxy::BeginTransaction(napi_env env, napi_callback_info info
     RDB_NAPI_ASSERT(
         env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = rdbStoreProxy->GetInstance()->BeginTransaction();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(
+        env, errCode == E_OK, std::make_shared<InnerError>(errCode, rdbStoreProxy->GetInstance()->GetLastErrorMsg()));
     LOG_DEBUG("RdbStoreProxy::BeginTransaction end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -913,7 +941,8 @@ napi_value RdbStoreProxy::RollBack(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(
         env, rdbStoreProxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = rdbStoreProxy->GetInstance()->RollBack();
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(
+        env, errCode == E_OK, std::make_shared<InnerError>(errCode, rdbStoreProxy->GetInstance()->GetLastErrorMsg()));
     LOG_DEBUG("RdbStoreProxy::RollBack end, errCode is:%{public}d", errCode);
     return nullptr;
 }
@@ -955,7 +984,8 @@ napi_value RdbStoreProxy::Commit(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, OK == ParserThis(env, thisObj, context), context->error);
     if (argc == 0) {
         int errCode = context->rdbStore->Commit();
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        RDB_NAPI_ASSERT(
+            env, errCode == E_OK, std::make_shared<InnerError>(errCode, context->rdbStore->GetLastErrorMsg()));
         LOG_DEBUG("RdbStoreProxy::Commit end, errCode is:%{public}d.", errCode);
         return nullptr;
     }
@@ -1030,8 +1060,11 @@ napi_value RdbStoreProxy::QueryWithoutRowCount(napi_env env, napi_callback_info 
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+        DistributedRdb::QueryOptions options{ .preCount = false, .isGotoNextRowReturnLastError = true };
         context->resultSet = rdbStore->QueryByStep(*(context->rdbPredicates), context->columns, options);
+        if (context->resultSet == nullptr) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -1039,8 +1072,8 @@ napi_value RdbStoreProxy::QueryWithoutRowCount(napi_env env, napi_callback_info 
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.queryWithoutRowCount",
-        "Arkdata.Rdb.RdbStore.queryWithoutRowCountSync");
+    context->FinishHistogram(
+        "Arkdata.Rdb.RdbStore.queryWithoutRowCount", "Arkdata.Rdb.RdbStore.queryWithoutRowCountSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -1054,8 +1087,8 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
         CHECK_RETURN_SET_E(argc == 1 || argc == 2, std::make_shared<ParamNumError>("1 or 2"));
         CHECK_RETURN(OK == ParserThis(env, self, context));
-        CHECK_RETURN_SET_E(napi_ok == Convert2Value(env, argv[0], context->sql),
-            std::make_shared<ParamError>("sql", "not null"));
+        CHECK_RETURN_SET_E(
+            napi_ok == Convert2Value(env, argv[0], context->sql), std::make_shared<ParamError>("sql", "not null"));
         // 401 is reported only when the parameter type is incorrect.
         CHECK_RETURN_SET_E(!context->sql.empty(),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "sql cannot be empty"));
@@ -1066,8 +1099,11 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        DistributedRdb::QueryOptions options{.preCount = false, .isGotoNextRowReturnLastError = true};
+        DistributedRdb::QueryOptions options{ .preCount = false, .isGotoNextRowReturnLastError = true };
         context->resultSet = rdbStore->QueryByStep(context->sql, context->bindArgs, options);
+        if (context->resultSet == nullptr) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
         return (context->resultSet != nullptr) ? E_OK : E_ERROR;
     };
     auto output = [context](napi_env env, napi_value &result) {
@@ -1075,8 +1111,8 @@ napi_value RdbStoreProxy::QuerySqlWithoutRowCount(napi_env env, napi_callback_in
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.querySqlWithoutRowCount",
-        "Arkdata.Rdb.RdbStore.querySqlWithoutRowCountSync");
+    context->FinishHistogram(
+        "Arkdata.Rdb.RdbStore.querySqlWithoutRowCount", "Arkdata.Rdb.RdbStore.querySqlWithoutRowCountSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -1197,7 +1233,11 @@ napi_value RdbStoreProxy::RekeyEx(napi_env env, napi_callback_info info)
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         auto rdbStore = std::move(context->rdbStore);
-        return rdbStore->RekeyEx(context->cryptoParam);
+        int errCode = rdbStore->RekeyEx(context->cryptoParam);
+        if (errCode != E_OK) {
+            context->errorMsg_ = rdbStore->GetLastErrorMsg();
+        }
+        return errCode;
     };
 
     auto output = [context](napi_env env, napi_value &result) {
@@ -1349,7 +1389,7 @@ napi_value RdbStoreProxy::OnRemote(napi_env env, size_t argc, napi_value *argv)
     } else {
         errCode = GetInstance()->Subscribe(option, observer);
     }
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, GetInstance()->GetLastErrorMsg()));
     napiRdbStoreData_->observers_[mode].push_back(observer);
     LOG_INFO("Subscribe success.");
     return nullptr;
@@ -1390,7 +1430,7 @@ napi_value RdbStoreProxy::OffRemote(napi_env env, size_t argc, napi_value *argv)
         } else {
             errCode = GetInstance()->UnSubscribe(option, *it);
         }
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, GetInstance()->GetLastErrorMsg()));
         (*it)->Clear();
         it = napiRdbStoreData_->observers_[mode].erase(it);
         LOG_DEBUG("Observer unsubscribe success");
@@ -1411,7 +1451,7 @@ napi_value RdbStoreProxy::OnStatistics(napi_env env, size_t argc, napi_value *ar
     }
     auto observer = std::make_shared<NapiStatisticsObserver>(env, argv[0], queue_);
     int errCode = DistributedRdb::SqlStatistic::Subscribe(observer);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, GetInstance()->GetLastErrorMsg()));
     napiRdbStoreData_->statisticses_.push_back(std::move(observer));
     LOG_INFO("Statistics subscribe success.");
     return nullptr;
@@ -1436,7 +1476,7 @@ napi_value RdbStoreProxy::OffStatistics(napi_env env, size_t argc, napi_value *a
             continue;
         }
         int errCode = DistributedRdb::SqlStatistic::Unsubscribe(*it);
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, GetInstance()->GetLastErrorMsg()));
         (*it)->Clear();
         it = napiRdbStoreData_->statisticses_.erase(it);
     }
@@ -1513,7 +1553,7 @@ napi_value RdbStoreProxy::OnErrorLog(napi_env env, size_t argc, napi_value *argv
     auto observer = std::make_shared<NapiLogObserver>(env, argv[0], queue_);
     std::string dbPath = this->GetInstance()->GetPath();
     int errCode = NativeRdb::SqlLog::Subscribe(dbPath, observer);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, GetInstance()->GetLastErrorMsg()));
     napiRdbStoreData_->logObservers_.push_back(std::move(observer));
     LOG_DEBUG("sqliteErrorOccurred subscribe success.");
     return nullptr;
@@ -1542,7 +1582,7 @@ napi_value RdbStoreProxy::OffErrorLog(napi_env env, size_t argc, napi_value *arg
         }
         std::string dbPath = this->GetInstance()->GetPath();
         int errCode = NativeRdb::SqlLog::Unsubscribe(dbPath, *it);
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, GetInstance()->GetLastErrorMsg()));
         (*it)->Clear();
         it = napiRdbStoreData_->logObservers_.erase(it);
     }
@@ -1566,7 +1606,7 @@ napi_value RdbStoreProxy::RegisteredObserver(
     auto uvQueue = std::make_shared<UvQueue>(env);
     auto localObserver = std::make_shared<NapiRdbStoreObserver>(callback, uvQueue);
     int errCode = GetInstance()->Subscribe(option, localObserver);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, GetInstance()->GetLastErrorMsg()));
     observers[option.event].push_back(localObserver);
     LOG_INFO("Subscribe success event: %{public}s", option.event.c_str());
     return nullptr;
@@ -1816,15 +1856,15 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
             auto args = [result](napi_env env, int &argc, napi_value *argv) {
                 argv[1] = JSUtils::Convert2JSValue(env, result);
             };
-            callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnComplete") :
-                queue->AsyncPromise({ defer }, args, "DistributedSync::OnComplete");
+            callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnComplete")
+                     : queue->AsyncPromise({ defer }, args, "DistributedSync::OnComplete");
         });
         if (ret != NativeRdb::E_OK) {
             auto args = [ret](napi_env env, int &argc, napi_value *argv) mutable {
                 SetBusinessError(env, std::make_shared<InnerError>(ret), &argv[0]);
             };
-            callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnError") :
-                queue->AsyncPromise({ defer }, args, "DistributedSync::OnError");
+            callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnError")
+                     : queue->AsyncPromise({ defer }, args, "DistributedSync::OnError");
         }
     };
     if (queue->Execute(std::move(exec), "DistributedSync::Execute")) {
@@ -1886,20 +1926,19 @@ napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
     auto callback = context->callback_;
     if (callback == nullptr) {
         napi_status status = napi_create_promise(env, &defer, &promise);
-        RDB_NAPI_ASSERT_BASE(env,
-            status == napi_ok,
-            std::make_shared<InnerError>("failed(" + std::to_string(status) + ") to create promise"),
-            nullptr);
+        RDB_NAPI_ASSERT_BASE(env, status == napi_ok,
+            std::make_shared<InnerError>("failed(" + std::to_string(status) + ") to create promise"), nullptr);
     } else {
         napi_get_undefined(env, &promise);
     }
 
     auto predicates = *context->rdbPredicates;
     auto syncCallback = [queue, defer, callback](const SyncResultEx &result) {
-        auto args = [result](
-                        napi_env env, int &argc, napi_value *argv) { argv[1] = JSUtils::Convert2JSValue(env, result); };
-        callback ? queue->AsyncCall({callback}, args, {}, "DistributedSync::OnCompleteEx")
-                 : queue->AsyncPromise({defer}, args, "DistributedSync::OnCompleteEx");
+        auto args = [result](napi_env env, int &argc, napi_value *argv) {
+            argv[1] = JSUtils::Convert2JSValue(env, result);
+        };
+        callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnCompleteEx")
+                 : queue->AsyncPromise({ defer }, args, "DistributedSync::OnCompleteEx");
     };
     auto exec = [queue, defer, callback, predicates, rdbStore = context->StealRdbStore(), enumArg = context->syncMode,
                     syncCallback]() mutable {
@@ -1909,8 +1948,8 @@ napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
             auto args = [ret](napi_env env, int &argc, napi_value *argv) mutable {
                 SetBusinessError(env, std::make_shared<InnerErrorExt>(ret), &argv[0]);
             };
-            callback ? queue->AsyncCall({callback}, args, {}, "DistributedSync::OnErrorEx")
-                     : queue->AsyncPromise({defer}, args, "DistributedSync::OnErrorEx");
+            callback ? queue->AsyncCall({ callback }, args, {}, "DistributedSync::OnErrorEx")
+                     : queue->AsyncPromise({ defer }, args, "DistributedSync::OnErrorEx");
         }
     };
     if (queue->Execute(std::move(exec), "DistributedSyncEx::Execute")) {
@@ -1967,7 +2006,7 @@ InputAction GetCloudSyncInput(std::shared_ptr<RdbStoreContext> context)
         CHECK_RETURN(OK == ParserThis(env, self, context));
         napi_valuetype arg0Type = napi_undefined;
         napi_typeof(env, argv[0], &arg0Type);
-        
+
         if (arg0Type == napi_object) {
             // The number of parameters should be 2
             CHECK_RETURN_SET_E(argc == 2, std::make_shared<ParamNumError>("2"));
@@ -1998,10 +2037,13 @@ napi_value RdbStoreProxy::CloudSync(napi_env env, napi_callback_info info)
                 return;
             }
             bool repeat = !details.empty() && details.begin()->second.progress != DistributedRdb::SYNC_FINISH;
-            queue->AsyncCallInOrder({ callback, repeat }, [details](napi_env env, int &argc, napi_value *argv) -> void {
-                argc = 1;
-                argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
-            }, {}, "CloudSync");
+            queue->AsyncCallInOrder(
+                { callback, repeat },
+                [details](napi_env env, int &argc, napi_value *argv) -> void {
+                    argc = 1;
+                    argv[0] = details.empty() ? nullptr : JSUtils::Convert2JSValue(env, details.begin()->second);
+                },
+                {}, "CloudSync");
         };
         if (context->rdbPredicates == nullptr) {
             context->execCode_ = rdbStore->Sync(option, context->tablesNames, async);
@@ -2117,8 +2159,7 @@ struct CleanDeviceDirtyDataContext : public EnhancedContext {
         ASSERT_RETURN_SET_ERROR(obj != nullptr, std::make_shared<ParamNumError>("RdbStore must be not nullptr."));
         ASSERT_RETURN_SET_ERROR(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
         rdbStore = obj->GetInstance();
-        ASSERT_RETURN_SET_ERROR(
-            rdbStore != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        ASSERT_RETURN_SET_ERROR(rdbStore != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
         tableName = JSUtils::Convert2String(env, argv[0]);
         ASSERT_RETURN_SET_ERROR(IsValidTableName(tableName),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS, "Illegal tableName"));
@@ -2175,7 +2216,8 @@ napi_value RdbStoreProxy::Notify(napi_env env, napi_callback_info info)
     RDB_NAPI_ASSERT(env, proxy != nullptr, std::make_shared<ParamError>("RdbStore", "valid"));
     RDB_NAPI_ASSERT(env, proxy->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
     int errCode = proxy->GetInstance()->Notify(JSUtils::Convert2String(env, argv[0]));
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(
+        env, errCode == E_OK, std::make_shared<InnerError>(errCode, proxy->GetInstance()->GetLastErrorMsg()));
     return nullptr;
 }
 
@@ -2226,7 +2268,7 @@ napi_value RdbStoreProxy::RegisterSyncCallback(napi_env env, size_t argc, napi_v
     }
     auto observer = std::make_shared<SyncObserver>(env, argv[0], queue_);
     int errCode = GetInstance()->RegisterAutoSyncCallback(observer);
-    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+    RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, GetInstance()->GetLastErrorMsg()));
     napiRdbStoreData_->syncObservers_.push_back(std::move(observer));
     LOG_INFO("Progress subscribe success.");
     return nullptr;
@@ -2252,7 +2294,7 @@ napi_value RdbStoreProxy::UnregisterSyncCallback(napi_env env, size_t argc, napi
         }
 
         int errCode = GetInstance()->UnregisterAutoSyncCallback(*it);
-        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
+        RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode, GetInstance()->GetLastErrorMsg()));
         (*it)->Clear();
         it = napiRdbStoreData_->syncObservers_.erase(it);
         LOG_DEBUG("Observer unsubscribe success.");
@@ -2304,10 +2346,8 @@ napi_value RdbStoreProxy::QueryLockedRow(napi_env env, napi_callback_info info)
         }
         CHECK_RETURN(context->rdbPredicates != nullptr);
         context->rdbPredicates = std::make_shared<RdbPredicates>(*context->rdbPredicates);
-        context->rdbPredicates->BeginWrap()
-            ->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
-        context->rdbPredicates
-            ->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
+        context->rdbPredicates->BeginWrap()->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCKED)->Or();
+        context->rdbPredicates->EqualTo(AbsRdbPredicates::LOCK_STATUS, AbsRdbPredicates::LOCK_CHANGED)->EndWrap();
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr && context->rdbPredicates != nullptr);
@@ -2434,8 +2474,8 @@ struct RdbContext : public RdbStoreContextBase {
     int ParsedInstance(napi_value self)
     {
         auto status = napi_unwrap(env_, self, reinterpret_cast<void **>(&boundObj));
-        ASSERT_RETURN_SET_ERROR(status == napi_ok && boundObj != nullptr,
-            std::make_shared<ParamError>("RdbStore", "not nullptr."));
+        ASSERT_RETURN_SET_ERROR(
+            status == napi_ok && boundObj != nullptr, std::make_shared<ParamError>("RdbStore", "not nullptr."));
         rdbStore = reinterpret_cast<RdbStoreProxy *>(boundObj)->GetInstance();
         ASSERT_RETURN_SET_ERROR(rdbStore != nullptr, std::make_shared<InnerErrorExt>(NativeRdb::E_ALREADY_CLOSED));
         return OK;
@@ -2448,8 +2488,8 @@ struct RdbBatchInsertWithReturningContext : public RdbContext {
         // the parameters are either 3 or 4.
         ASSERT_RETURN_SET_ERROR(argc == 3 || argc == 4, std::make_shared<ParamNumError>("3 or 4"));
         CHECK_RETURN_ERR(OK == ParsedInstance(self));
-        ASSERT_RETURN_SET_ERROR(JSUtils::Convert2Value(env, argv[0], tableName) == OK,
-            std::make_shared<ParamError>("table", "a string."));
+        ASSERT_RETURN_SET_ERROR(
+            JSUtils::Convert2Value(env, argv[0], tableName) == OK, std::make_shared<ParamError>("table", "a string."));
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(tableName),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto err = ParseValuesBuckets(env, argv[1], valuesBuckets);
@@ -2457,8 +2497,7 @@ struct RdbBatchInsertWithReturningContext : public RdbContext {
         ASSERT_RETURN_SET_ERROR(!RdbSqlUtils::HasDuplicateAssets(valuesBuckets),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Duplicate assets are not allowed"));
         auto errCode = JSUtils::Convert2Value(env, argv[2], config);
-        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
-            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK, std::make_shared<ParamError>("Illegal ReturningConfig."));
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
@@ -2498,21 +2537,21 @@ napi_value RdbStoreProxy::BatchInsertWithReturning(napi_env env, napi_callback_i
     };
     auto exec = [context]() -> int {
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
-        auto result = context->StealRdbStore()->BatchInsert(context->tableName, context->valuesBuckets,
-            context->config, context->conflictResolution);
+        auto result = context->StealRdbStore()->BatchInsert(
+            context->tableName, context->valuesBuckets, context->config, context->conflictResolution);
         context->result = result.second;
         return result.first;
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
-        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = { context->result.changed, resultSet };
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.batchInsertWithReturning",
-        "Arkdata.Rdb.RdbStore.batchInsertWithReturningSync");
+    context->FinishHistogram(
+        "Arkdata.Rdb.RdbStore.batchInsertWithReturning", "Arkdata.Rdb.RdbStore.batchInsertWithReturningSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -2533,8 +2572,7 @@ struct RdbUpdateWithReturningContext : public RdbContext {
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto errCode = JSUtils::Convert2Value(env, argv[2], config);
-        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
-            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK, std::make_shared<ParamError>("Illegal ReturningConfig."));
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
@@ -2582,13 +2620,13 @@ napi_value RdbStoreProxy::UpdateWithReturning(napi_env env, napi_callback_info i
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
-        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = { context->result.changed, resultSet };
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.updateWithReturning",
-        "Arkdata.Rdb.RdbStore.updateWithReturningSync");
+    context->FinishHistogram(
+        "Arkdata.Rdb.RdbStore.updateWithReturning", "Arkdata.Rdb.RdbStore.updateWithReturningSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);
@@ -2605,8 +2643,7 @@ struct RdbDeleteWithReturningContext : public RdbContext {
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidTableName(rdbPredicates->GetTableName()),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal table name"));
         auto errCode = JSUtils::Convert2Value(env, argv[1], config);
-        ASSERT_RETURN_SET_ERROR(errCode == E_OK,
-            std::make_shared<ParamError>("Illegal ReturningConfig."));
+        ASSERT_RETURN_SET_ERROR(errCode == E_OK, std::make_shared<ParamError>("Illegal ReturningConfig."));
         config.columns = RdbSqlUtils::BatchTrim(config.columns);
         ASSERT_RETURN_SET_ERROR(RdbSqlUtils::IsValidFields(config.columns),
             std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS_NEW, "Illegal columns."));
@@ -2643,13 +2680,13 @@ napi_value RdbStoreProxy::DeleteWithReturning(napi_env env, napi_callback_info i
     auto output = [context](napi_env env, napi_value &result) {
         napi_value resultSet = LiteResultSetProxy::NewInstance(env, std::move(context->result.results));
         CHECK_RETURN_SET_E(resultSet != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
-        JSUtils::ReturningResult tsResults = {context->result.changed, resultSet};
+        JSUtils::ReturningResult tsResults = { context->result.changed, resultSet };
         result = JSUtils::Convert2JSValue(env, tsResults);
         CHECK_RETURN_SET_E(result != nullptr, std::make_shared<InnerErrorExt>(E_ERROR));
     };
     context->InitAction(env, info, input, exec, output);
-    context->FinishHistogram("Arkdata.Rdb.RdbStore.deleteWithReturning",
-        "Arkdata.Rdb.RdbStore.deleteWithReturningSync");
+    context->FinishHistogram(
+        "Arkdata.Rdb.RdbStore.deleteWithReturning", "Arkdata.Rdb.RdbStore.deleteWithReturningSync");
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);

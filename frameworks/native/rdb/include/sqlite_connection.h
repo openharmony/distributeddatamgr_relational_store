@@ -21,6 +21,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <vector>
 
 #include "concurrent_map.h"
@@ -88,11 +89,13 @@ public:
     int SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fileInfo) override;
     int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
+
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
         const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int ExecuteSql(const std::string &sql, const std::vector<ValueObject> &bindArgs = std::vector<ValueObject>());
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
+    std::string GetLastErrorMsg() const override;
 
 private:
     struct Suffix {
@@ -147,8 +150,8 @@ private:
     int RegisterStoreObs();
     int RegisterClientObs();
     int RegisterHookIfNecessary();
-    std::pair<int32_t, Stmt> CreateStatementInner(const std::string &sql, SConn conn,
-        sqlite3 *db, bool isFromReplica, const std::string &returningSql = "");
+    std::pair<int32_t, Stmt> CreateStatementInner(
+        const std::string &sql, SConn conn, sqlite3 *db, bool isFromReplica, const std::string &returningSql = "");
     ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount);
     void DeleteCorruptSlave(const std::string &path);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
@@ -160,8 +163,7 @@ private:
     static void BinlogSetConfig(sqlite3 *dbHandle, Sqlite3BinlogMode binlogMode);
     static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath);
     static int ReplayBinlogSqlite(sqlite3 *dbFrom, sqlite3 *slaveDb, const RdbStoreConfig &config);
-    static void ReplayBinlog(const std::string &dbPath,
-        std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean);
+    static void ReplayBinlog(const std::string &dbPath, std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean);
     static std::string GetBinlogFolderPath(const std::string &dbPath);
     static Connection::ReplayCallBack GetReplayCallback(const std::string &dbPath);
     /**

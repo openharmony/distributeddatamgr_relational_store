@@ -15,6 +15,7 @@ import("//build/ohos/ace/ace.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 
 ohos_shared_library("relational_store_crypt") {
+  branch_protector_ret = "pac_ret"
   part_name = "relational_store"
   sanitize = {
     boundary_sanitize = true

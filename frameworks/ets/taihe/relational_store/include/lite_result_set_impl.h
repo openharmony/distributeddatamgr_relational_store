@@ -56,7 +56,6 @@ public:
     array<array<ValueType>> GetRowsDataSync(int32_t maxCount, optional_view<int32_t> position);
 
 protected:
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet_;
     std::shared_ptr<LiteResultSetProxy> proxy_;
 };
 }

@@ -65,25 +65,25 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
 #define RDB_NAPI_ASSERT(env, assertion, error) RDB_NAPI_ASSERT_BASE(env, assertion, error, nullptr)
 
 // In API23 and later, when using this macro, the type of error code thrown is a int
-#define RDB_NAPI_ASSERT_INT_BASE(env, assertion, error, retVal)                                                 \
-    do {                                                                                                        \
-        if (!(assertion)) {                                                                                     \
-            if ((error) == nullptr) {                                                                           \
-                LOG_ERROR("throw error: error message is empty");                                               \
-                napi_throw_error((env), nullptr, "error message is empty");                                     \
-                return retVal;                                                                                  \
-            }                                                                                                   \
-            LOG_ERROR("throw error: code = %{public}d , message = %{public}s", (error)->GetCode(),              \
-                (error)->GetMessage().c_str());                                                                 \
-            napi_value code = nullptr;                                                                          \
-            napi_value msg = nullptr;                                                                           \
-            napi_create_int32(env, (error)->GetCode(), &code);                                                  \
-            napi_create_string_utf8(env, (error)->GetMessage().c_str(), NAPI_AUTO_LENGTH, &msg);                \
-            napi_value businessError;                                                                           \
-            napi_create_error(env, code, msg, &businessError);                                                  \
-            napi_throw(env, businessError);                                                                     \
-            return retVal;                                                                                      \
-        }                                                                                                       \
+#define RDB_NAPI_ASSERT_INT_BASE(env, assertion, error, retVal)                                    \
+    do {                                                                                           \
+        if (!(assertion)) {                                                                        \
+            if ((error) == nullptr) {                                                              \
+                LOG_ERROR("throw error: error message is empty");                                  \
+                napi_throw_error((env), nullptr, "error message is empty");                        \
+                return retVal;                                                                     \
+            }                                                                                      \
+            LOG_ERROR("throw error: code = %{public}d , message = %{public}s", (error)->GetCode(), \
+                (error)->GetMessage().c_str());                                                    \
+            napi_value code = nullptr;                                                             \
+            napi_value msg = nullptr;                                                              \
+            napi_create_int32(env, (error)->GetCode(), &code);                                     \
+            napi_create_string_utf8(env, (error)->GetMessage().c_str(), NAPI_AUTO_LENGTH, &msg);   \
+            napi_value businessError;                                                              \
+            napi_create_error(env, code, msg, &businessError);                                     \
+            napi_throw(env, businessError);                                                        \
+            return retVal;                                                                         \
+        }                                                                                          \
     } while (0)
 
 #define RDB_NAPI_ASSERT_INT(env, assertion, error) RDB_NAPI_ASSERT_INT_BASE(env, assertion, error, nullptr)
@@ -96,7 +96,7 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
         }                                           \
     } while (0)
 
-#define CHECK_RETURN_SET_E(assertion, paramError)   \
+#define CHECK_RETURN_SET_E(assertion, paramError) \
     CHECK_RETURN_CORE(assertion, context->SetError(paramError), RDB_REVT_NOTHING)
 
 #define CHECK_RETURN_SET(assertion, paramError) CHECK_RETURN_CORE(assertion, context->SetError(paramError), ERR)
@@ -108,7 +108,7 @@ const std::optional<JsErrorCode> GetJsErrorCodeExt(int32_t errorCode);
 #define CHECK_RETURN(assertion) CHECK_RETURN_CORE(assertion, RDB_REVT_NOTHING, RDB_REVT_NOTHING)
 class Error {
 public:
-    virtual ~Error() {};
+    virtual ~Error(){};
     virtual std::string GetMessage() = 0;
     virtual int GetCode() = 0;
     virtual int GetNativeCode()
@@ -122,11 +122,12 @@ public:
     InnerError(int code, const std::string &msg = "")
     {
         nativeCode_ = code;
+        std::string opMsg = msg.empty() ? "" : " " + msg;
         auto errorMsg = GetJsErrorCode(code);
         if (errorMsg.has_value()) {
             auto napiError = errorMsg.value();
             code_ = napiError.jsCode;
-            msg_ = napiError.message + msg;
+            msg_ = napiError.message + opMsg;
         } else {
             code_ = E_INNER_ERROR;
             msg_ = "Inner error.";
@@ -166,11 +167,12 @@ public:
     InnerErrorExt(int code, const std::string &msg = "")
     {
         nativeCode_ = code;
+        std::string opMsg = msg.empty() ? "" : " " + msg;
         auto errorMsgExt = GetJsErrorCodeExt(code);
         if (errorMsgExt.has_value()) {
             auto napiError = errorMsgExt.value();
             code_ = napiError.jsCode;
-            msg_ = napiError.message + msg;
+            msg_ = napiError.message + opMsg;
         } else {
             code_ = E_INNER_ERROR;
             msg_ = "Inner error.";
@@ -248,7 +250,7 @@ public:
 
 class ParamNumError : public Error {
 public:
-    ParamNumError(const std::string &wantNum) : wantNum(wantNum) {};
+    ParamNumError(const std::string &wantNum) : wantNum(wantNum){};
     std::string GetMessage() override
     {
         return "Parameter error. Need " + wantNum + " parameter(s)!";

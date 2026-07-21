@@ -40,6 +40,7 @@ public:
     int GetVersion(int &version) override;
     int SetVersion(int version) override;
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
+    std::string GetLastErrorMsg() const override;
 
 private:
     std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(

@@ -24,6 +24,7 @@ config("samgr_config") {
 }
 
 ohos_static_library("samgr_proxy") {
+  branch_protector_ret = "pac_ret"
   configs = [ ":samgr_config" ]
   sources = [
     "mock_sys_ability.cpp",

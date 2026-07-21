@@ -30,6 +30,7 @@ gen_js_obj("cloud_extension_abc") {
 }
 
 ohos_shared_library("cloudextension") {
+  branch_protector_ret = "pac_ret"
   sources = [ "cloud_extension.cpp" ]
 
   deps = [ ":cloud_extension_abc" ]

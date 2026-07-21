@@ -35,6 +35,7 @@ config("objectstore_public_config") {
 }
 
 ohos_shared_library("commontype_napi") {
+  branch_protector_ret = "pac_ret"
   part_name = "relational_store"
   sources = [ "${relational_store_base_path}/frameworks/js/napi/common/src/js_common_type_init.cpp" ]
 

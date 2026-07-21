@@ -49,7 +49,9 @@ public:
     /**
      * @brief Destructor.
      */
-    virtual ~ResultSet() {}
+    virtual ~ResultSet()
+    {
+    }
 
     virtual int GetAsset(int32_t col, ValueObject::Asset &value) = 0;
     virtual int GetAssets(int32_t col, ValueObject::Assets &value) = 0;
@@ -82,6 +84,14 @@ public:
      * @param columnIndex Indicates the zero-based index of the target column.
      */
     API_EXPORT virtual int GetSize(int columnIndex, size_t &size) = 0;
+
+    virtual std::string GetLastErrorMsg() const
+    {
+        return "";
+    }
+    virtual void SetLastErrorMsg(const std::string &msg)
+    {
+    }
 };
 
 } // namespace NativeRdb

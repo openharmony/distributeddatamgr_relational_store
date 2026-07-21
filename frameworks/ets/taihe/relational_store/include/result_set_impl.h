@@ -72,7 +72,6 @@ public:
     void Close();
 
 protected:
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> nativeResultSet_;
     std::shared_ptr<ResultSetProxy> proxy_;
 };
 }

@@ -108,6 +108,8 @@ public:
     virtual int SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fileInfo) = 0;
     virtual int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) = 0;
 
+    virtual std::string GetLastErrorMsg() const { return ""; }
+
 private:
     int32_t id_ = 0;
     bool isRecyclable_ = true;

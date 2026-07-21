@@ -15,8 +15,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <cstdlib>
+#include <string>
 
 #include "abs_rdb_predicates.h"
 #include "common.h"
@@ -157,10 +157,9 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_050, TestSize.Level1)
     auto [res, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
     ASSERT_EQ(res, E_OK);
     ASSERT_NE(transaction, nullptr);
-    
-    auto [code, result1] = transaction->Execute(
-        "CREATE TRIGGER before_update BEFORE UPDATE ON test"
-        " BEGIN DELETE FROM test WHERE name = 'wang'; END");
+
+    auto [code, result1] = transaction->Execute("CREATE TRIGGER before_update BEFORE UPDATE ON test"
+                                                " BEGIN DELETE FROM test WHERE name = 'wang'; END");
     EXPECT_EQ(code, E_OK);
 
     ValuesBuckets rows;
@@ -172,8 +171,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_050, TestSize.Level1)
     row.Put("name", "zhang");
     rows.Put(std::move(row));
 
-    auto [status, result] =
-        transaction->BatchInsert("test", rows, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
+    auto [status, result] = transaction->BatchInsert("test", rows, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(result.changed, 2);
     ASSERT_NE(result.results, nullptr);
@@ -221,10 +219,9 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_051, TestSize.Level1)
     auto [res, transaction] = store->CreateTransaction(Transaction::EXCLUSIVE);
     ASSERT_EQ(res, E_OK);
     ASSERT_NE(transaction, nullptr);
-    
-    auto [code, result1] = transaction->Execute(
-        "CREATE TRIGGER before_delete BEFORE DELETE ON test"
-        " BEGIN UPDATE test SET name = 'li' WHERE name = 'zhao'; END");
+
+    auto [code, result1] = transaction->Execute("CREATE TRIGGER before_delete BEFORE DELETE ON test"
+                                                " BEGIN UPDATE test SET name = 'li' WHERE name = 'zhao'; END");
     EXPECT_EQ(code, E_OK);
 
     ValuesBuckets rows;
@@ -236,8 +233,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_051, TestSize.Level1)
     row.Put("name", "zhao");
     rows.Put(std::move(row));
 
-    auto [status, result] =
-        transaction->BatchInsert("test", rows, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
+    auto [status, result] = transaction->BatchInsert("test", rows, { "name" }, ConflictResolution::ON_CONFLICT_IGNORE);
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(result.changed, 2);
     ASSERT_NE(result.results, nullptr);
@@ -296,7 +292,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_052, TestSize.Level1)
     row.Put("content", "test virtual tables");
     rows.Put(std::move(row));
     auto [status, result] =
-        transaction->BatchInsert("articles", rows, {"title"}, ConflictResolution::ON_CONFLICT_IGNORE);
+        transaction->BatchInsert("articles", rows, { "title" }, ConflictResolution::ON_CONFLICT_IGNORE);
     EXPECT_EQ(status, E_OK);
     EXPECT_EQ(result.changed, 1);
     ASSERT_NE(result.results, nullptr);
@@ -322,7 +318,7 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_052, TestSize.Level1)
     // DELETE RETURNING is not available on virtual tables
     EXPECT_EQ(status, E_SQLITE_ERROR);
     EXPECT_EQ(result.changed, -1);
-    
+
     transaction->Execute("Drop TABLE articles");
     EXPECT_EQ(transaction->Rollback(), E_OK);
 }
@@ -756,4 +752,65 @@ HWTEST_F(TransactionTest, RdbStore_Transaction_063, TestSize.Level1)
     ASSERT_EQ(rs, E_OK);
     rs = transaction->Rollback();
     ASSERT_EQ(rs, E_OK);
+}
+
+/**
+ * @tc.name: T_ErrMsg_001
+ * @tc.desc: Verify Transaction GetLastErrorMsg delegates to TransDB -> conn when SQL has syntax error.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, T_ErrMsg_001, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    // "CREAATE" is a misspelled keyword -- prepare fails with a syntax error
+    auto [execRet, value] = transaction->Execute("CREAATE TABLE t_errmsg_test(id int)");
+    EXPECT_NE(execRet, E_OK);
+    std::string errMsg = transaction->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("syntax"), std::string::npos);
+
+    transaction->Rollback();
+}
+
+/**
+ * @tc.name: T_ErrMsg_002
+ * @tc.desc: Verify Transaction GetLastErrorMsg delegates to TransDB -> conn when inserting into non-existent table.
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, T_ErrMsg_002, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    auto [execRet, value] = transaction->Execute("INSERT INTO t_errmsg_nonexist VALUES(1)");
+    EXPECT_NE(execRet, E_OK);
+    std::string errMsg = transaction->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("no such table"), std::string::npos);
+
+    transaction->Rollback();
+}
+
+/**
+ * @tc.name: T_ErrMsg_003
+ * @tc.desc: Verify Transaction GetLastErrorMsg returns empty string after Close (store is nullptr).
+ * @tc.type: FUNC
+ */
+HWTEST_F(TransactionTest, T_ErrMsg_003, TestSize.Level1)
+{
+    std::shared_ptr<RdbStore> &store = TransactionTest::store_;
+    auto [ret, transaction] = store->CreateTransaction(Transaction::DEFERRED);
+    ASSERT_EQ(ret, E_OK);
+    ASSERT_NE(transaction, nullptr);
+
+    // Close the transaction -- internal store_ becomes nullptr
+    transaction->Close();
+    std::string errMsg = transaction->GetLastErrorMsg();
+    EXPECT_TRUE(errMsg.empty());
 }

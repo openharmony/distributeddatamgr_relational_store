@@ -45,6 +45,8 @@ import UpdateDistributedInfo from './UpdateDistributedInfo.test';
 import CleanDeviceDirtyData from './CleanDeviceDirtyData.test';
 import RdbStoreSyncEx from './RdbStoreSyncEx.test'
 import RdbQueryByStep from './RdbQueryByStep.test';
+import RdbErrMsgOptimize from './RdbErrMsgOptimize.test.ets';
+import RdbErrMsgRange from './RdbErrMsgRange.test.ets';
 export default function testsuite() {
   RdbPredicatesEtsTest();
   RdbPredicatesPrefEtsTest();
@@ -79,4 +81,6 @@ export default function testsuite() {
   CleanDeviceDirtyData();
   RdbStoreSyncEx();
   RdbQueryByStep();
+  RdbErrMsgOptimize();
+  RdbErrMsgRange();
 }
