@@ -499,13 +499,13 @@ void RdbStoreImpl::NotifyDataChange()
     }
     if (config_.IsSearchable()) {
         auto [ret, conn] = GetConn(true);
-        if (ret != E_OK || conn == nullptr) {
-            LOG_ERROR("The database is busy or closed %{public}d", ret);
-        } else {
+        if (ret == E_OK && conn != nullptr) {
             ret = conn->UpdateTrackerMatrix(rdbChangedData, true);
             if (ret != E_OK) {
                 LOG_ERROR("Update matrix file err: %{public}d", ret);
             }
+        } else {
+            LOG_ERROR("The database is busy or closed %{public}d", ret);
         }
     }
 }
