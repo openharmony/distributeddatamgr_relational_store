@@ -291,8 +291,8 @@ ohos::data::relationalStore::Asset ResultSetImpl::GetAsset(int32_t columnIndex)
     int errCode = resultSet->GetAsset(columnIndex, result);
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return aniret;
-    } else
-        CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), aniret);
+    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), aniret);
     return ani_rdbutils::AssetToAni(result);
 }
 
@@ -304,8 +304,8 @@ array<ohos::data::relationalStore::Asset> ResultSetImpl::GetAssets(int32_t colum
     int errCode = resultSet->GetAssets(columnIndex, result);
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return {};
-    } else
-        CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), {});
+    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), {});
     std::vector<ohos::data::relationalStore::Asset> resultTemp;
     std::transform(result.begin(), result.end(), std::back_inserter(resultTemp),
         [](const OHOS::NativeRdb::AssetValue &asset) { return ani_rdbutils::AssetToAni(asset); });
@@ -331,8 +331,8 @@ array<float> ResultSetImpl::GetFloat32Array(int32_t columnIndex)
     int errCode = resultSet->GetFloat32Array(columnIndex, result);
     if (errCode == OHOS::NativeRdb::E_NULL_OBJECT) {
         return {};
-    } else
-        CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), {});
+    }
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, resultSet->GetLastErrorMsg(), {});
     return array<float>(::taihe::copy_data_t{}, result.data(), result.size());
 }
 

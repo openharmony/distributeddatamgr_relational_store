@@ -1366,12 +1366,8 @@ void RdbStoreImpl::LockRowSync(weak::RdbPredicates predicates)
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_THROW_PARAM_ERROR(rdbPredicateNative != nullptr, "predicates", "an RdbPredicates.", RDB_DO_NOTHING);
-    if (rdbPredicateNative.get() != nullptr) {
-        int errCode = store->ModifyLockStatus(*rdbPredicateNative, true);
-        CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
-    } else {
-        LOG_ERROR("rdbPredicateNative.get() is nullptr");
-    }
+    int errCode = store->ModifyLockStatus(*rdbPredicateNative, true);
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
 }
 
 void RdbStoreImpl::UnlockRowSync(weak::RdbPredicates predicates)
@@ -1380,12 +1376,8 @@ void RdbStoreImpl::UnlockRowSync(weak::RdbPredicates predicates)
     ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
     auto rdbPredicateNative = ani_rdbutils::GetNativePredicatesFromTaihe(predicates);
     ASSERT_THROW_PARAM_ERROR(rdbPredicateNative != nullptr, "predicates", "an RdbPredicates.", RDB_DO_NOTHING);
-    if (rdbPredicateNative.get() != nullptr) {
-        int errCode = store->ModifyLockStatus(*rdbPredicateNative, false);
-        CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
-    } else {
-        LOG_ERROR("rdbPredicateNative.get() is nullptr");
-    }
+    int errCode = store->ModifyLockStatus(*rdbPredicateNative, false);
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
 }
 
 ResultSet RdbStoreImpl::QueryLockedRowSync(weak::RdbPredicates predicates, optional_view<array<string>> columns)
