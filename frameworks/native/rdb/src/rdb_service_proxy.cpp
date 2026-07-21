@@ -437,8 +437,7 @@ int32_t RdbServiceProxy::AfterOpen(const RdbSyncerParam &param)
     return status;
 }
 
-int32_t RdbServiceProxy::RegisterMatrix(const RdbSyncerParam &param,
-    std::string &matrixFilePath, std::map<std::string, uint64_t> &matrixTables, uint64_t &fullSyncOffset)
+int32_t RdbServiceProxy::RegisterMatrix(const RdbSyncerParam &param, MatrixFileInfo &fileInfo)
 {
     MessageParcel reply;
     int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REGISTER_MATRIX), reply, param);
@@ -447,8 +446,8 @@ int32_t RdbServiceProxy::RegisterMatrix(const RdbSyncerParam &param,
             SqliteUtils::Anonymous(param.storeName_).c_str());
         return RDB_ERROR;
     }
-    if (!ITypesUtil::Unmarshal(reply, matrixFilePath, matrixTables, fullSyncOffset)) {
-        LOG_ERROR("unmarshal matrixFilePath and matrixTables failed.");
+    if (!ITypesUtil::Unmarshal(reply, fileInfo.matrixFilePath, fileInfo.matrixTables, fileInfo.fullSyncOffset)) {
+        LOG_ERROR("unmarshal MatrixFileInfo failed.");
         status = RDB_ERROR;
     }
     return status;

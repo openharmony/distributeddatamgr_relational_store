@@ -1785,7 +1785,7 @@ int SqliteConnection::SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fi
         .fullSyncOffset = fileInfo.fullSyncOffset
     };
     auto status = SetTrackerMatrixInfo(dbHandle_, info);
-    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+    return SqliteUtils::ConvertDBStatusNative(status);
 }
 
 int SqliteConnection::UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &changedData, bool isFull)
@@ -1798,7 +1798,7 @@ int SqliteConnection::UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &
     }
     DistributedDB::MatrixFileUpdateConfig fileConfig = {.isFullSync = isFull};
     auto status = UpdateMatrixFile(dbHandle_, changedTables, fileConfig);
-    return status == DistributedDB::DBStatus::OK ? E_OK : E_ERROR;
+    return SqliteUtils::ConvertDBStatusNative(status);
 }
 
 int32_t SqliteConnection::Repair(const RdbStoreConfig &config)

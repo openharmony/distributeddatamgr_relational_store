@@ -145,7 +145,7 @@ int RdbStoreImpl::InnerOpen()
     }
 
     if (config_.IsSearchable()) {
-        RegisterMatrix(shared_from_this(), syncerParam_);
+        RegisterMatrix(shared_from_this(), connectionPool_, syncerParam_);
     }
 
     int errCode = RegisterDataChangeCallback();
@@ -277,7 +277,8 @@ void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
     }
 }
 
-void RdbStoreImpl::RegisterMatrix(std::shared_ptr<RdbStoreImpl> thisPtr, const RdbParam &param, int32_t retry)
+void RdbStoreImpl::RegisterMatrix(std::shared_ptr<RdbStoreImpl> thisPtr, std::weak_ptr<ConnectionPool> weakPool,
+    const RdbParam &param, int32_t retry)
 {
     if (thisPtr == nullptr) {
         LOG_ERROR("RegisterMatrix failed, thisPtr is nullptr.");
@@ -293,24 +294,30 @@ void RdbStoreImpl::RegisterMatrix(std::shared_ptr<RdbStoreImpl> thisPtr, const R
         if (errCode == E_SERVICE_NOT_FOUND && pool != nullptr && retry < MAX_RETRY_TIMES) {
             retry++;
             LOG_INFO("RegisterMatrix set retry schedule times: %{public}d", retry);
-            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [thisPtr, param, retry]() {
-                RegisterMatrix(thisPtr, param, retry);
+            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [thisPtr, weakPool, param, retry]() {
+                RegisterMatrix(thisPtr, weakPool, param, retry);
             });
         }
         return;
     }
     DistributedRdb::MatrixFileInfo fileInfo = {};
-    errCode = service->RegisterMatrix(param,
-        fileInfo.matrixFilePath, fileInfo.matrixTables, fileInfo.fullSyncOffset);
+    errCode = service->RegisterMatrix(param, fileInfo);
     if (errCode != E_OK) {
         LOG_ERROR("RegisterMatrix failed, err: %{public}d, storeName: %{public}s.", errCode,
             SqliteUtils::Anonymous(param.storeName_).c_str());
         return;
     }
 
-    auto [ret, conn] = thisPtr->GetConn(true);
-    if (ret != E_OK || conn == nullptr) {
-        LOG_ERROR("Database is busy or closed when register matrix %{public}d.", ret);
+    auto connPool = weakPool.lock();
+    if (connPool == nullptr) {
+        LOG_ERROR("ConnectionPool is released when register matrix, storeName: %{public}s.",
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+        return;
+    }
+    auto conn = connPool->AcquireConnection(true);
+    if (conn == nullptr) {
+        LOG_ERROR("Database is busy when register matrix, storeName: %{public}s.",
+            SqliteUtils::Anonymous(param.storeName_).c_str());
         return;
     }
 

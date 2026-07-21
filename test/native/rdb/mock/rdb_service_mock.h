@@ -64,8 +64,7 @@ public:
 
     MOCK_METHOD(int32_t, AfterOpen, (const RdbSyncerParam &param), (override));
 
-    MOCK_METHOD(int32_t, RegisterMatrix, (const RdbSyncerParam &param, std::string &matrixFilePath,
-        (std::map<std::string, uint64_t> &matrixTables), uint64_t &fullSyncOffset), (override));
+    MOCK_METHOD(int32_t, RegisterMatrix, (const RdbSyncerParam &param, MatrixFileInfo &fileInfo), (override));
 
     MOCK_METHOD(int32_t, Delete, (const RdbSyncerParam &param), (override));
 

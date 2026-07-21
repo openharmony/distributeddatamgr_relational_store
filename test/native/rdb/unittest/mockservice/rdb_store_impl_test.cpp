@@ -2882,7 +2882,7 @@ HWTEST_F(RdbStoreImplConditionTest, UpdateMatrixTest_001, TestSize.Level2)
 HWTEST_F(RdbStoreImplConditionTest, UpdateMatrixTest_002, TestSize.Level2)
 {
     auto mockRdbService = std::make_shared<MockRdbService>();
-    EXPECT_CALL(*mockRdbService, RegisterMatrix(_, _, _, _)).WillRepeatedly(Return(E_OK));
+    EXPECT_CALL(*mockRdbService, RegisterMatrix(_, _)).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
         .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
  
@@ -2907,5 +2907,6 @@ HWTEST_F(RdbStoreImplConditionTest, UpdateMatrixTest_002, TestSize.Level2)
 HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_Nullptr_Test, TestSize.Level2)
 {
     OHOS::DistributedRdb::RdbSyncerParam param;
-    RdbStoreImpl::RegisterMatrix(nullptr, param, 0);
+    std::weak_ptr<ConnectionPool> emptyPool;
+    RdbStoreImpl::RegisterMatrix(nullptr, emptyPool, param, 0);
 }

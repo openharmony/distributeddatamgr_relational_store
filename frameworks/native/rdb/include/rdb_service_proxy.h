@@ -90,8 +90,7 @@ public:
 
     int32_t AfterOpen(const RdbSyncerParam &param) override;
 
-    int32_t RegisterMatrix(const RdbSyncerParam &param,
-        std::string &matrixFilePath, std::map<std::string, uint64_t> &matrixTables, uint64_t &fullSyncOffset) override;
+    int32_t RegisterMatrix(const RdbSyncerParam &param, MatrixFileInfo &fileInfo) override;
 
     int32_t ReportStatistic(const RdbSyncerParam &param, const RdbStatEvent &statEvent) override;
 
