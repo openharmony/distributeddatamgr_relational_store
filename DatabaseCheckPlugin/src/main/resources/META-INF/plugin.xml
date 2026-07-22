@@ -1,0 +1,132 @@
+<!--
+  Copyright (c) 2025 Huawei Device Co., Ltd.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.example.DatabaseCheck</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>DatabaseCheck</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+    Database Robustness Rules Checker for OpenHarmony Applications.<br>
+    <em>Checks JavaScript/TypeScript code for database rule violations.</em><br>
+    <br>
+    <strong>Compatible with:</strong><br>
+    • IntelliJ IDEA (Community & Ultimate)<br>
+    • DevEco Studio<br>
+    • Other IntelliJ-based IDEs<br>
+    <br>
+    No additional plugins required for basic functionality.
+  ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+    <!-- <depends optional="true">JavaScript</depends> -->
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Database Robustness Rule Inspections -->
+        <localInspection 
+            displayName="Rule 1: Prohibit Non-RDB Interface Usage"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule1"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule1NonRdbInterfaceInspection"/>
+            
+        <localInspection 
+            displayName="Rule 2: Database File Copy Operations"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule2"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule2DatabaseCopyInspection"/>
+            
+        <localInspection 
+            displayName="Rule 3: Transaction Usage Optimization"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule3"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule3TransactionUsageInspection"/>
+            
+        <localInspection 
+            displayName="Rule 4: Transaction Commit and Rollback"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule4"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule4TransactionCommitInspection"/>
+            
+        <localInspection 
+            displayName="Rule 5: Transaction Nesting and Thread Safety"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule5"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule5TransactionNestingInspection"/>
+            
+        <localInspection 
+            displayName="Rule 6: Database Deletion with Handle Closure"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule6"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule6DatabaseDeletionInspection"/>
+            
+        <localInspection 
+            displayName="Rule 7: Database Directory and File Permission Validation"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule7"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule7DatabasePermissionInspection"/>
+            
+        <localInspection 
+            displayName="Rule 9: Database Error Code Handling and Retry Logic"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule9"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule9DatabaseErrorHandlingInspection"/>
+            
+        <localInspection 
+            displayName="Rule 12: SQLite Pragma Restriction"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule12"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule12PragmaRestrictionInspection"/>
+            
+        <localInspection 
+            displayName="Rule 14: Database Configuration Consistency"
+            groupName="Database Robustness Rules"
+            shortName="DatabaseRule14"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.example.databasecheck.inspections.Rule14DatabaseConfigConsistencyInspection"/>
+            
+        
+    </extensions>
+</idea-plugin>

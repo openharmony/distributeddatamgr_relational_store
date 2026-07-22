@@ -367,6 +367,86 @@ HWTEST_F(ConnectionTest, DeleteSyncedData_Test_002, TestSize.Level2)
 }
 
 /**
+ * @tc.name: C_ErrMsg_001
+ * @tc.desc: Verify GetLastErrorMsg chain (RdbStoreImpl → conn → sqlite3_errmsg) when SQL has syntax error.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, C_ErrMsg_001, TestSize.Level1)
+{
+    RdbHelper::DeleteRdbStore(rdbStorePath);
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    ConnectionTestOpenCallback helper;
+    int errCode = E_OK;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    // "CREAATE" is a misspelled keyword — prepare fails with a syntax error
+    auto [ret, value] = store->Execute("CREAATE TABLE errmsg_test(id int)");
+    EXPECT_NE(ret, E_OK);
+    std::string errMsg = store->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("syntax"), std::string::npos);
+
+    RdbHelper::DeleteRdbStore(rdbStorePath);
+}
+
+/**
+ * @tc.name: C_ErrMsg_002
+ * @tc.desc: Verify GetLastErrorMsg chain when inserting into a non-existent table.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, C_ErrMsg_002, TestSize.Level1)
+{
+    RdbHelper::DeleteRdbStore(rdbStorePath);
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    ConnectionTestOpenCallback helper;
+    int errCode = E_OK;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    auto [ret, value] = store->Execute("INSERT INTO errmsg_nonexistent_tbl VALUES(1)");
+    EXPECT_NE(ret, E_OK);
+    std::string errMsg = store->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("no such table"), std::string::npos);
+
+    RdbHelper::DeleteRdbStore(rdbStorePath);
+}
+
+/**
+ * @tc.name: C_ErrMsg_003
+ * @tc.desc: Verify GetLastErrorMsg chain when creating a duplicate table.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionTest, C_ErrMsg_003, TestSize.Level1)
+{
+    RdbHelper::DeleteRdbStore(rdbStorePath);
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    ConnectionTestOpenCallback helper;
+    int errCode = E_OK;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    // First creation succeeds
+    auto [ret1, val1] = store->Execute("CREATE TABLE errmsg_dup(id int)");
+    EXPECT_EQ(ret1, E_OK);
+    // Second creation fails — table already exists
+    auto [ret2, val2] = store->Execute("CREATE TABLE errmsg_dup(id int)");
+    EXPECT_NE(ret2, E_OK);
+    std::string errMsg = store->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("already exists"), std::string::npos);
+
+    RdbHelper::DeleteRdbStore(rdbStorePath);
+}
+
+/**
  * @tc.name: InnerOpen_DbNotExist_CreateNecessaryFalse
  * @tc.desc: InnerOpen returns E_DB_NOT_EXIST when db not exist and IsCreateNecessary=false
  * @tc.type: FUNC
