@@ -77,7 +77,7 @@ export default function rdbErrMsgRangeTest() {
     function assertColumnRange(e: any): void {
       console.log(`${TAG} 14800013 code:${e.code}, message:${e.message}`);
       expect(e.code == 14800013).assertTrue();
-      expect(e.message.includes("The column index is")).assertTrue();
+      expect(e.message.includes("The columnIndex")).assertTrue();
     }
 
     async function rsAtFirstRow(sql: string): Promise<data_relationalStore.ResultSet> {

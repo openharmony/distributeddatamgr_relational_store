@@ -1084,6 +1084,31 @@ std::string SqliteUtils::GetParentModes(const std::string &path, int pathDepth)
     return result.empty() ? "no_parent" : result;
 }
 
+std::pair<std::string, std::string> SqliteUtils::DiagnoseAccessFailure(const std::string &path)
+{
+    // Walk from root to leaf, find the first segment where current process can't access
+    size_t pos = 0;
+    while (pos != std::string::npos) {
+        size_t nextPos = path.find('/', pos + 1);
+        std::string segment = (nextPos != std::string::npos) ? path.substr(0, nextPos) : path;
+        pos = nextPos;
+        if (segment.empty()) {
+            continue;
+        }
+        if (access(segment.c_str(), X_OK) == 0) {
+            continue; // can access, no problem
+        }
+        // access failed, get mode info for diagnosis
+        struct stat st {};
+        if (stat(segment.c_str(), &st) != 0) {
+            return { segment, "mode=0, acl_gid_exec=0" };
+        }
+        bool hasAcl = HasAccessAcl(segment, static_cast<int32_t>(GetGid()));
+        return { segment, SqliteUtils::GetModeInfo(st.st_mode) + ", acl_gid_exec=" + std::to_string(hasAcl) };
+    }
+    return {};
+}
+
 bool SqliteUtils::IsUseAsyncRestore(const RdbStoreConfig &config, const std::string &newPath,
     const std::string &backupPath)
 {

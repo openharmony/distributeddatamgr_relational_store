@@ -61,10 +61,8 @@ void ThrowInnerError(int errCode, const std::string &errMsg)
 
 void ThrowInnerErrorExt(int errCode, const std::string &errMsg)
 {
-    auto innErr = std::make_shared<InnerErrorExt>(errCode, errMsg);
-    if (innErr != nullptr) {
-        taihe::set_business_error(innErr->GetCode(), innErr->GetMessage());
-    }
+    auto innErrExt = std::make_shared<InnerErrorExt>(errCode, errMsg);
+    ThrowError(innErrExt);
 }
 
 void ThrowNonSystemError()
@@ -73,12 +71,14 @@ void ThrowNonSystemError()
     ThrowError(innErr);
 }
 
-void ThrowParamError(const char *message)
+void ThrowParamError(const std::string &needed, const std::string &mustbe)
 {
-    if (message == nullptr) {
-        return;
+    std::shared_ptr<ParamError> paraErr;
+    if (mustbe.empty()) {
+        paraErr = std::make_shared<ParamError>(needed);
+    } else {
+        paraErr = std::make_shared<ParamError>(needed, mustbe);
     }
-    auto paraErr = std::make_shared<ParamError>(message);
     ThrowError(paraErr);
 }
 } // namespace RdbTaihe

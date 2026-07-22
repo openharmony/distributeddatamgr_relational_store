@@ -95,6 +95,7 @@ if (is_ohos) {
       "ipc:ipc_single",
       "kv_store:datamgr_common",
       "napi:ace_napi",
+      "node:node_header_notice",
     ]
 
     if (relational_store_api_metrics_enabled) {

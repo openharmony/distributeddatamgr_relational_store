@@ -120,6 +120,7 @@ ohos_shared_library("napi_rdb") {
       "ipc:ipc_single",
       "kv_store:datamgr_common",
       "napi:ace_napi",
+      "node:node_header_notice",
     ]
   }
 
@@ -190,6 +191,7 @@ ohos_shared_library("rdb") {
       "hilog:libhilog",
       "hitrace:hitrace_meter",
       "napi:ace_napi",
+      "node:node_header_notice",
     ]
   }
 

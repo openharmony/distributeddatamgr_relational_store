@@ -1,0 +1,27 @@
+{
+  "app": {
+    "bundleName": "com.example.testapp",
+    "version": {
+      "code": 1000000,
+      "name": "1.0.0"
+    }
+  },
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "EntryAbility",
+    "deviceTypes": ["phone", "tablet"],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [],
+    "metadata": [
+      {
+        "name": "ArkTSPartialUpdate",
+        "value": "false"
+      }
+    ],
+    "allowToBackupRestore": true
+  }
+}

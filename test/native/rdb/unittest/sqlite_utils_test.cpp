@@ -24,6 +24,7 @@
 #include <string>
 #include <iostream>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "acl.h"
 #include "rdb_platform.h"
 #include "rdb_errno.h"
@@ -832,4 +833,41 @@ HWTEST_F(SqliteUtilsTest, ConvertRdbStatusNative, TestSize.Level1)
     EXPECT_EQ(ret, E_ERROR);
     ret = SqliteUtils::ConvertRdbStatusNative(RdbStatus::RDB_NO_META);
     EXPECT_EQ(ret, E_ERROR);
+}
+
+/**
+ * @tc.name: DiagnoseAccessFailure_001
+ * @tc.desc: All directories traversable but file doesn't exist, report file as blocked with mode=0
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, DiagnoseAccessFailure_001, TestSize.Level1)
+{
+    std::string databaseDir = "/data/test/diag001";
+    auto ret = MkDir(databaseDir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    EXPECT_EQ(ret, 0) << "mkdir failed: " << std::strerror(errno);
+    std::string fileDir = "/data/test/diag001/rdb";
+    ret = MkDir(fileDir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    EXPECT_EQ(ret, 0) << "mkdir failed: " << std::strerror(errno);
+    std::string dbPath = "/data/test/diag001/rdb/test.db";
+    // All parent dirs are traversable, but the file doesn't exist
+    auto [blocked, diag] = SqliteUtils::DiagnoseAccessFailure(dbPath);
+    EXPECT_EQ(blocked, dbPath);
+    EXPECT_TRUE(diag.find("mode=0") != std::string::npos);
+    std::remove(fileDir.c_str());
+    std::remove(databaseDir.c_str());
+}
+
+/**
+ * @tc.name: DiagnoseAccessFailure_002
+ * @tc.desc: Non-existent path segment, access fails and stat fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, DiagnoseAccessFailure_002, TestSize.Level1)
+{
+    // Use a path under a non-existent directory
+    std::string dbPath = "/nonexistent_dir_for_diag002/test.db";
+    auto [blocked, diag] = SqliteUtils::DiagnoseAccessFailure(dbPath);
+    // /nonexistent_dir_for_diag003 does not exist, reported as blocked with mode=0
+    EXPECT_EQ(blocked, "/nonexistent_dir_for_diag002");
+    EXPECT_TRUE(diag.find("mode=0") != std::string::npos);
 }

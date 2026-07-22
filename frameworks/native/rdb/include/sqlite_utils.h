@@ -109,6 +109,7 @@ public:
     static std::string FormatDebugInfoBrief(const std::map<std::string, DebugInfo> &debugs, const std::string &header);
     static std::string FormatDfxInfo(const DfxInfo &dfxInfo);
     static std::string GetParentModes(const std::string &path, int pathDepth = PATH_DEPTH);
+    static std::pair<std::string, std::string> DiagnoseAccessFailure(const std::string &path);
     static std::string GetFileStatInfo(const DebugInfo &debugInfo);
     static bool HasDefaultAcl(const std::string &path, int32_t gid);
     static bool HasAccessAcl(const std::string &path, int32_t gid);

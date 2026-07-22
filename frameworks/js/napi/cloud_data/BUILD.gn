@@ -67,6 +67,7 @@ ohos_shared_library("clouddata") {
     "ipc:ipc_single",
     "kv_store:datamgr_common",
     "napi:ace_napi",
+    "node:node_header_notice",
   ]
 
   subsystem_name = "distributeddatamgr"

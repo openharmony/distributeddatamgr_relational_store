@@ -62,6 +62,7 @@ ohos_shared_library("sendablerelationalstore") {
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "node:node_header_notice",
   ]
 
   subsystem_name = "distributeddatamgr"

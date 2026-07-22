@@ -113,7 +113,7 @@ void RdbStepResultSetTest::GenerateDefaultTable()
     std::string insertSql = "INSERT INTO test (data1, data2, data3, data4, data5, data6, data7, data8) VALUES "
                             "(?, ?, ?, ?, ?, ?, ?, ?);";
     /* insert first entry data */
-    AssetValue asset {
+    AssetValue asset{
         .version = 0,
         .name = "123",
         .uri = "my test path",
@@ -136,7 +136,7 @@ void RdbStepResultSetTest::GenerateDefaultTable()
     /* insert second entry data */
     args.clear();
     args.push_back("2");
-    args.push_back(-5); // set int value -5
+    args.push_back(-5);  // set int value -5
     args.push_back(2.5); // set float value 2.5
     args.push_back(ValueObject());
     args.push_back(asset);
@@ -148,7 +148,7 @@ void RdbStepResultSetTest::GenerateDefaultTable()
     /* insert third entry data */
     args.clear();
     args.push_back("hello world");
-    args.push_back(3); // set int value 3
+    args.push_back(3);   // set int value 3
     args.push_back(1.8); // set float value 1.8
     args.push_back(ValueObject());
     args.push_back(asset);
@@ -381,6 +381,64 @@ HWTEST_F(RdbStepResultSetTest, Abnormal_ResultSetProxy001, TestSize.Level1)
     bool isNull;
     errCode = resultSet->IsColumnNull(1, isNull);
     EXPECT_NE(E_OK, errCode);
+}
+
+/**
+ * @tc.name: RS_ErrMsg_001
+ * @tc.desc: Verify StepResultSet GetLastErrorMsg returns non-empty message after GoToNextRow past the last row.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, RS_ErrMsg_001, TestSize.Level1)
+{
+    store->ExecuteSql("DROP TABLE IF EXISTS test");
+    store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY, data1 TEXT)");
+    auto resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    // Empty table — GoToNextRow returns E_ROW_OUT_RANGE and sets lastErrMsg_
+    int ret = resultSet->GoToNextRow();
+    EXPECT_NE(ret, E_OK);
+    std::string errMsg = resultSet->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    resultSet->Close();
+    store->ExecuteSql("DROP TABLE IF EXISTS test");
+}
+
+/**
+ * @tc.name: RS_ErrMsg_002
+ * @tc.desc: Verify StepResultSet GetLastErrorMsg delegates to conn_ when no error has been set.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, RS_ErrMsg_002, TestSize.Level1)
+{
+    store->ExecuteSql("DROP TABLE IF EXISTS test");
+    store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY, data1 TEXT)");
+    store->ExecuteSql("INSERT INTO test(data1) VALUES('hello')");
+    auto resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    // No error occurred — GetLastErrorMsg delegates to conn_->GetLastErrorMsg()
+    std::string errMsg = resultSet->GetLastErrorMsg();
+    EXPECT_FALSE(errMsg.empty());
+    EXPECT_NE(errMsg.find("not an error"), std::string::npos);
+    resultSet->Close();
+    store->ExecuteSql("DROP TABLE IF EXISTS test");
+}
+
+/**
+ * @tc.name: RS_ErrMsg_003
+ * @tc.desc: Verify StepResultSet GetLastErrorMsg returns empty string after Close when no error was set.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStepResultSetTest, RS_ErrMsg_003, TestSize.Level1)
+{
+    store->ExecuteSql("DROP TABLE IF EXISTS test");
+    store->ExecuteSql("CREATE TABLE test (id INTEGER PRIMARY KEY, data1 TEXT)");
+    auto resultSet = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    // Close the result set — conn_ becomes nullptr, lastErrMsg_ is empty
+    resultSet->Close();
+    std::string errMsg = resultSet->GetLastErrorMsg();
+    EXPECT_TRUE(errMsg.empty());
+    store->ExecuteSql("DROP TABLE IF EXISTS test");
 }
 } // namespace NativeRdb
 } // namespace OHOS
