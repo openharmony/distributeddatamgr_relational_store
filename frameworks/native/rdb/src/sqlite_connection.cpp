@@ -280,6 +280,24 @@ RdbStoreConfig SqliteConnection::GetSlaveRdbStoreConfig(const RdbStoreConfig &rd
     return rdbStoreConfig;
 }
 
+int SqliteConnection::CheckDbNotExist(const RdbStoreConfig &config, const std::string &dbPath)
+{
+    bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
+    if (!isDbFileExist && (!config.IsCreateNecessary())) {
+        int savedErrno = errno;
+        auto [blocked, diag] = SqliteUtils::DiagnoseAccessFailure(dbPath);
+        LOG_ERROR(
+            "db not exist, dbPath=%{public}s, errno=%{public}d, blocked=%{public}s, blockedLen=%{public}zu, %{public}s",
+            SqliteUtils::Anonymous(dbPath).c_str(), savedErrno, SqliteUtils::Anonymous(blocked).c_str(),
+            blocked.size(), diag.c_str());
+        Reportor::ReportFault(
+            RdbFaultDbFileEvent(RdbFaultType::FT_EX_FILE, E_DB_NOT_EXIST, config,
+                "db not exist, errno=" + std::to_string(savedErrno) + ", blocked=" + blocked + ", " + diag));
+        return E_DB_NOT_EXIST;
+    }
+    return E_OK;
+}
+
 int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 {
     std::string dbPath;
@@ -289,14 +307,10 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
     SetTokenizer(config);
 
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
-    bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
-    if (!isDbFileExist && (!config.IsCreateNecessary())) {
-        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_EX_FILE, E_DB_NOT_EXIST, config, "db not exist"));
-        LOG_ERROR("db not exist errno is %{public}d", errno);
-        return E_DB_NOT_EXIST;
+    errCode = CheckDbNotExist(config, dbPath);
+    if (errCode != E_OK) {
+        return errCode;
     }
-#endif
     isReadOnly_ = !isWriter_ || config.IsReadOnly();
     uint32_t openFileFlags = config.IsReadOnly() ? (SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
                                                  : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
