@@ -444,7 +444,7 @@ int32_t RdbServiceProxy::RegisterMatrix(const RdbSyncerParam &param, MatrixFileI
     if (status != RDB_OK) {
         LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
             SqliteUtils::Anonymous(param.storeName_).c_str());
-        return RDB_ERROR;
+        return status;
     }
     if (!ITypesUtil::Unmarshal(reply, fileInfo.matrixFilePath, fileInfo.matrixTables, fileInfo.fullSyncOffset)) {
         LOG_ERROR("unmarshal MatrixFileInfo failed.");

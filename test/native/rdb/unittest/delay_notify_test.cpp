@@ -139,10 +139,9 @@ HWTEST_F(DelayNotifyTest, UpdateNotify_P2p_Test_001, TestSize.Level1)
 
     auto changedData = RdbChangedData();
     auto rdbChangeProperties = RdbChangeProperties();
-    rdbChangeProperties.isP2pSyncDataChange = true;   // only isP2pSyncDataChange is true
+    rdbChangeProperties.isP2pSyncDataChange = true;
     changedData.tableData.insert_or_assign("P2p_Table", rdbChangeProperties);
     delayNotifier->UpdateNotify(changedData);
-    // Branch② executed: the table should be aggregated and tableChanged_ should be set.
     EXPECT_TRUE(delayNotifier->tableChanged_);
     EXPECT_EQ(delayNotifier->changedData_.tableData.count("P2p_Table"), 1u);
 }
@@ -167,10 +166,9 @@ HWTEST_F(DelayNotifyTest, UpdateNotify_Knowledge_Test_001, TestSize.Level1)
 
     auto changedData = RdbChangedData();
     auto rdbChangeProperties = RdbChangeProperties();
-    rdbChangeProperties.isKnowledgeDataChange = true;   // only isKnowledgeDataChange is true
+    rdbChangeProperties.isKnowledgeDataChange = true;
     changedData.tableData.insert_or_assign("Knowledge_Table", rdbChangeProperties);
     delayNotifier->UpdateNotify(changedData);
-    // Branch② executed: the table should be aggregated and tableChanged_ should be set.
     EXPECT_TRUE(delayNotifier->tableChanged_);
     EXPECT_EQ(delayNotifier->changedData_.tableData.count("Knowledge_Table"), 1u);
 }
@@ -196,10 +194,9 @@ HWTEST_F(DelayNotifyTest, UpdateNotify_Both_Test_001, TestSize.Level1)
     auto changedData = RdbChangedData();
     auto rdbChangeProperties = RdbChangeProperties();
     rdbChangeProperties.isP2pSyncDataChange = true;
-    rdbChangeProperties.isKnowledgeDataChange = true;   // both flags are true
+    rdbChangeProperties.isKnowledgeDataChange = true;
     changedData.tableData.insert_or_assign("Both_Table", rdbChangeProperties);
     delayNotifier->UpdateNotify(changedData);
-    // Branch② executed: the table should be aggregated and tableChanged_ should be set.
     EXPECT_TRUE(delayNotifier->tableChanged_);
     EXPECT_EQ(delayNotifier->changedData_.tableData.count("Both_Table"), 1u);
 }
