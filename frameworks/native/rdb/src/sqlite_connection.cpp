@@ -282,7 +282,6 @@ RdbStoreConfig SqliteConnection::GetSlaveRdbStoreConfig(const RdbStoreConfig &rd
 
 int SqliteConnection::CheckDbNotExist(const RdbStoreConfig &config, const std::string &dbPath)
 {
-#if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
     if (!isDbFileExist && (!config.IsCreateNecessary())) {
         int savedErrno = errno;
@@ -296,7 +295,6 @@ int SqliteConnection::CheckDbNotExist(const RdbStoreConfig &config, const std::s
                 "db not exist, errno=" + std::to_string(savedErrno) + ", blocked=" + blocked + ", " + diag));
         return E_DB_NOT_EXIST;
     }
-#endif
     return E_OK;
 }
 
