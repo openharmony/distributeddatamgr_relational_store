@@ -34,6 +34,7 @@ ohos_taihe("run_taihe") {
 }
 
 taihe_shared_library("relationalstore_ani") {
+  branch_protector_ret = "pac_ret"
   taihe_generated_file_path = "$taihe_generated_file_path"
   subsystem_name = "$subsystem_name"
   part_name = "$part_name"
