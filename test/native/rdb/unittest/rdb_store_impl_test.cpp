@@ -2621,11 +2621,11 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_001, TestSize.Level2)
     std::shared_ptr<Connection> connOld = poolA->AcquireConnection(false);
     ASSERT_NE(connOld, nullptr);
 
-    EXPECT_EQ(E_DATABASE_BUSY, storeA->Release(1));
+    EXPECT_EQ(E_DATABASE_BUSY, storeA->Release(1000));
     EXPECT_NE(nullptr, implA->GetPool());
 
     connOld.reset();
-    EXPECT_EQ(E_OK, storeA->Release(1));
+    EXPECT_EQ(E_OK, storeA->Release(1000));
     EXPECT_EQ(nullptr, implA->GetPool());
 
     EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
@@ -2670,11 +2670,11 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_ResultSet_001, TestSize.Lev
     std::shared_ptr<ResultSet> resultSet = storeA->QueryByStep("SELECT * FROM test");
     ASSERT_NE(resultSet, nullptr);
 
-    EXPECT_EQ(E_DATABASE_BUSY, storeA->Release(1));
+    EXPECT_EQ(E_DATABASE_BUSY, storeA->Release(1000));
     EXPECT_NE(nullptr, implA->GetPool());
 
     EXPECT_EQ(E_OK, resultSet->Close());
-    EXPECT_EQ(E_OK, storeA->Release(1));
+    EXPECT_EQ(E_OK, storeA->Release(1000));
     EXPECT_EQ(nullptr, implA->GetPool());
 
     EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
@@ -2718,22 +2718,22 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_ResultSet_001, TestSize.Leve
     }
     ASSERT_NE(nullptr, impl->GetPool());
 
-    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1));
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1000));
     EXPECT_NE(nullptr, impl->GetPool());
     EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('b', 2);"));
 
     EXPECT_EQ(E_OK, resultSets[0]->Close());
     resultSets.erase(resultSets.begin());
-    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1));
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1000));
 
     for (size_t i = 0; i + 1 < resultSets.size(); i++) {
         EXPECT_EQ(E_OK, resultSets[i]->Close());
     }
-    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1));
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1000));
 
     EXPECT_EQ(E_OK, resultSets.back()->Close());
     resultSets.clear();
-    EXPECT_EQ(E_OK, store->Release(1));
+    EXPECT_EQ(E_OK, store->Release(1000));
     EXPECT_EQ(nullptr, impl->GetPool());
 
     RdbHelper::ClearStoreCache(config);
@@ -2766,7 +2766,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_Transaction_001, TestSize.Le
     ASSERT_NE(transaction, nullptr);
     ASSERT_NE(nullptr, impl->GetPool());
 
-    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1));
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release(1000));
     EXPECT_NE(nullptr, impl->GetPool());
     ValuesBucket row;
     row.Put("name", "a");
@@ -2774,7 +2774,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_Transaction_001, TestSize.Le
     EXPECT_EQ(E_OK, transaction->Insert("test", row).first);
     EXPECT_EQ(E_OK, transaction->Commit());
 
-    EXPECT_EQ(E_OK, store->Release(1));
+    EXPECT_EQ(E_OK, store->Release(1000));
     EXPECT_EQ(nullptr, impl->GetPool());
 
     RdbHelper::ClearStoreCache(config);

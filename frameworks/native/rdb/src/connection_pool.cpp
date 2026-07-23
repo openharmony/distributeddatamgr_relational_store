@@ -283,14 +283,14 @@ std::shared_ptr<Conn> ConnPool::AcquireConnection(bool isReadOnly)
     return Acquire(isReadOnly);
 }
 
-std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(int32_t time)
+std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(std::chrono::milliseconds ms)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_WAIT);
     using namespace std::chrono;
     std::pair<SharedConn, SharedConns> result;
     auto &[writer, readers] = result;
-    auto interval = duration_cast<milliseconds>(seconds(time));
+    auto interval = ms;
     auto start = steady_clock::now();
     auto [res, writerNodes] = writers_.AcquireAll(interval);
     if (!res || writerNodes.empty()) {
@@ -584,7 +584,7 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
 int ConnPool::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
 {
     int errCode = E_OK;
-    auto [connection, readers] = AcquireAll(WAIT_TIME);
+    auto [connection, readers] = AcquireAll(std::chrono::seconds(WAIT_TIME));
     if (connection == nullptr) {
         return E_DATABASE_BUSY;
     }

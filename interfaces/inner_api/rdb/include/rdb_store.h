@@ -654,12 +654,12 @@ public:
     virtual int32_t RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam);
 
     /**
-     * @brief Hard close: drain all connections (wait up to waitTime seconds for borrowed ones to
+     * @brief Hard close: drain all connections (wait up to waitTime milliseconds for borrowed ones to
      *        be returned), then close them. On timeout the pool is restored and E_DATABASE_BUSY
      *        is returned.
-     * @param waitTime Timeout in seconds for draining all connections.
+     * @param waitTime Timeout in milliseconds for draining all connections.
      */
-    virtual int Release(int32_t waitTime = 2);
+    virtual int Release(int32_t waitTime = 2000);
 
     /**
      * @brief Check the current database is memory database.
