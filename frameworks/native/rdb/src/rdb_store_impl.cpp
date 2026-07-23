@@ -202,6 +202,10 @@ int RdbStoreImpl::Release(int32_t waitTime)
         std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
         pool = std::move(connectionPool_);
     }
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (service != nullptr) {
+        service->Disable(syncerParam_);
+    }
     if (pool != nullptr) {
         auto acquired = pool->AcquireAll(waitTime);
         if (acquired.first == nullptr) {
@@ -211,6 +215,9 @@ int RdbStoreImpl::Release(int32_t waitTime)
                 std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
                 connectionPool_ = std::move(pool);
             }
+            if (service != nullptr) {
+                service->Enable(syncerParam_);
+            }
             return E_DATABASE_BUSY;
         }
     }
@@ -219,6 +226,9 @@ int RdbStoreImpl::Release(int32_t waitTime)
         if (knowledgeSchemaHelper_ != nullptr) {
             knowledgeSchemaHelper_->Close();
         }
+    }
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
     }
     return E_OK;
 }
