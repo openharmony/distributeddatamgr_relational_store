@@ -2900,13 +2900,13 @@ HWTEST_F(RdbStoreImplConditionTest, UpdateMatrixTest_002, TestSize.Level2)
 }
 
 /**
- * @tc.name: RegisterMatrix_Nullptr_Test
- * @tc.desc: Test RegisterMatrix when thisPtr is nullptr
+ * @tc.name: RegisterMatrix_EmptyPool_Test
+ * @tc.desc: Test RegisterMatrix when weakPool is empty
  * @tc.type: FUNC
  */
-HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_Nullptr_Test, TestSize.Level2)
+HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_EmptyPool_Test, TestSize.Level2)
 {
     OHOS::DistributedRdb::RdbSyncerParam param;
     std::weak_ptr<ConnectionPool> emptyPool;
-    RdbStoreImpl::RegisterMatrix(nullptr, emptyPool, param, 0);
+    RdbStoreImpl::RegisterMatrix(emptyPool, param, 0);
 }

@@ -65,7 +65,7 @@ private:
     std::weak_ptr<RdbStoreObserver> observer_;
 };
 
-class RdbStoreImpl : public RdbStore, public std::enable_shared_from_this<RdbStoreImpl> {
+class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
     ~RdbStoreImpl() override;
@@ -185,8 +185,7 @@ private:
     };
 
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
-    static void RegisterMatrix(std::shared_ptr<RdbStoreImpl> thisPtr, std::weak_ptr<ConnectionPool> weakPool,
-        const RdbParam &param, int32_t retry = 0);
+    static void RegisterMatrix(std::weak_ptr<ConnectionPool> weakPool, const RdbParam &param, int32_t retry = 0);
     int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
     int32_t CreatePool(bool &created);
     static void RegisterDataChangeCallback(

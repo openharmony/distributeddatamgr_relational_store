@@ -145,7 +145,7 @@ int RdbStoreImpl::InnerOpen()
     }
 
     if (config_.IsSearchable()) {
-        RegisterMatrix(shared_from_this(), connectionPool_, syncerParam_);
+        RegisterMatrix(connectionPool_, syncerParam_);
     }
 
     int errCode = RegisterDataChangeCallback();
@@ -272,13 +272,8 @@ void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
     }
 }
 
-void RdbStoreImpl::RegisterMatrix(std::shared_ptr<RdbStoreImpl> thisPtr, std::weak_ptr<ConnectionPool> weakPool,
-    const RdbParam &param, int32_t retry)
+void RdbStoreImpl::RegisterMatrix(std::weak_ptr<ConnectionPool> weakPool, const RdbParam &param, int32_t retry)
 {
-    if (thisPtr == nullptr) {
-        LOG_ERROR("RegisterMatrix failed, thisPtr is nullptr.");
-        return;
-    }
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (errCode != E_OK || service == nullptr) {
         if (errCode != E_INVALID_ARGS) {
@@ -289,8 +284,8 @@ void RdbStoreImpl::RegisterMatrix(std::shared_ptr<RdbStoreImpl> thisPtr, std::we
         if (errCode == E_SERVICE_NOT_FOUND && pool != nullptr && retry < MAX_RETRY_TIMES) {
             retry++;
             LOG_INFO("RegisterMatrix set retry schedule times: %{public}d", retry);
-            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [thisPtr, weakPool, param, retry]() {
-                RegisterMatrix(thisPtr, weakPool, param, retry);
+            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [weakPool, param, retry]() {
+                RegisterMatrix(weakPool, param, retry);
             });
         }
         return;
