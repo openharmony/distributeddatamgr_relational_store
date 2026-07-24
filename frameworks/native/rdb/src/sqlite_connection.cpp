@@ -59,6 +59,8 @@ using namespace std::chrono;
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
 using Reportor = RdbFaultHiViewReporter;
 constexpr const char *INTEGRITIES[] = { nullptr, "PRAGMA quick_check", "PRAGMA integrity_check" };
+constexpr const char *QUERY_TABLE_COUNT_SQL = "SELECT COUNT(*) FROM sqlite_master WHERE type='table'";
+constexpr const char *QUERY_INDEX_COUNT_SQL = "SELECT COUNT(*) FROM sqlite_master WHERE type='index'";
 constexpr SqliteConnection::Suffix SqliteConnection::FILE_SUFFIXES[];
 constexpr int SqliteConnection::DEFAULT_BUSY_TIMEOUT_MS;
 constexpr int SqliteConnection::BACKUP_PAGES_PRE_STEP; // 1024 * 4 * 12800 == 50m
@@ -1670,38 +1672,41 @@ ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<Slav
         config_.GetHaMode() == HAMode::SINGLE || *status == SlaveStatus::BACKING_UP) {
         return ExchangeStrategy::NOT_HANDLE;
     }
-    const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
-    const std::string qIndexSql = "SELECT COUNT(*) FROM sqlite_master WHERE type='index';";
-    auto [mRet, mObj] = ExecuteForValue(querySql);
-    auto [mIdxRet, mIdxObj] = ExecuteForValue(qIndexSql);
-    if (mRet == E_SQLITE_CORRUPT || mIdxRet == E_SQLITE_CORRUPT) {
-        LOG_WARN("main abnormal, err:%{public}d", mRet);
-        return ExchangeStrategy::RESTORE;
-    }
-    int64_t mCount = static_cast<int64_t>(mObj);
-    int64_t mIdxCount = static_cast<int64_t>(mIdxObj);
     // trigger mode only does restore, not backup
     if (config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
-        return mCount == 0 ? ExchangeStrategy::RESTORE : ExchangeStrategy::NOT_HANDLE;
+        return ExchangeCompareInTrigger(false);
     }
     if (*status == SlaveStatus::DB_CLOSING) {
         return ExchangeStrategy::NOT_HANDLE;
     }
+    // Allow binlog replay in non-open-database scenarios.
+    if (IsSupportBinlog(config_) && isRelpay) {
+        SqliteConnection::ReplayBinlog(config_.GetPath(), slaveConnection_, false);
+    }
+    auto sCountRes = slaveConnection_->ExecuteForValue(QUERY_TABLE_COUNT_SQL);
+    auto sIdxCountRes = slaveConnection_->ExecuteForValue(QUERY_INDEX_COUNT_SQL);
+    auto [mRet, mObj] = ExecuteForValue(QUERY_TABLE_COUNT_SQL);
+    auto [mIdxRet, mIdxObj] = ExecuteForValue(QUERY_INDEX_COUNT_SQL);
+    // The main database is corrupt; attempt to restore from the slave.
+    if (mRet == E_SQLITE_CORRUPT || mIdxRet == E_SQLITE_CORRUPT) {
+        LOG_WARN("main abnormal, err:%{public}d", mRet);
+        return ExchangeStrategy::RESTORE;
+    }
+    // The previous backup was interrupted; back up again to recover.
     if (*status == SlaveStatus::BACKUP_INTERRUPT) {
         return ExchangeStrategy::BACKUP;
     }
-    if (IsSupportBinlog(config_)) {
-        if (isRelpay || (mCount == 0 && !SqliteUtils::IsUseAsyncRestore(config_, config_.GetPath(),
-                                            SqliteUtils::GetSlavePath(config_.GetPath())))) {
-            SqliteConnection::ReplayBinlog(config_.GetPath(), slaveConnection_, false);
-        } else if (mCount == 0) {
-            LOG_INFO("main empty");
-            return ExchangeStrategy::RESTORE;
-        } else {
-            return ExchangeStrategy::PENDING_BACKUP;
-        }
+    int64_t mCount = static_cast<int64_t>(mObj);
+    int64_t mIdxCount = static_cast<int64_t>(mIdxObj);
+    if (mCount == 0) {
+        return ExchangeCompareWithMainEmpty(isRelpay, sCountRes);
     }
-    return CompareWithSlave(mCount, mIdxCount);
+
+    // Decide whether to back up; defer the comparison to the async path.
+    if (IsSupportBinlog(config_) && !isRelpay) {
+        return ExchangeStrategy::PENDING_BACKUP;
+    }
+    return CompareWithSlave(mCount, mIdxCount, sCountRes, sIdxCountRes);
 }
 
 int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema)
@@ -2262,12 +2267,11 @@ int SqliteConnection::SqliteBackupCheckpoint(bool isRestore, std::shared_ptr<Sla
     return E_OK;
 }
 
-ExchangeStrategy SqliteConnection::CompareWithSlave(int64_t mCount, int64_t mIdxCount)
+ExchangeStrategy SqliteConnection::CompareWithSlave(int64_t mCount, int64_t mIdxCount,
+    const std::pair<int, ValueObject> &sCountRes, const std::pair<int, ValueObject> &sIdxCountRes)
 {
-    const std::string querySql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table';";
-    const std::string qIndexSql = "SELECT COUNT(*) FROM sqlite_master WHERE type='index';";
-    auto [sRet, sObj] = slaveConnection_->ExecuteForValue(querySql);
-    auto [sInxRet, sInxObj] = slaveConnection_->ExecuteForValue(qIndexSql);
+    const auto &[sRet, sObj] = sCountRes;
+    const auto &[sInxRet, sInxObj] = sIdxCountRes;
     if (sRet == E_SQLITE_CORRUPT || sInxRet == E_SQLITE_CORRUPT) {
         LOG_WARN("slave db abnormal, need backup, err:%{public}d", sRet);
         return ExchangeStrategy::BACKUP;
@@ -2277,10 +2281,6 @@ ExchangeStrategy SqliteConnection::CompareWithSlave(int64_t mCount, int64_t mIdx
     if ((mCount == sCount && mIdxCount == sIdxCount) && !SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
         LOG_INFO("equal, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
         return ExchangeStrategy::NOT_HANDLE;
-    }
-    if (mCount == 0) {
-        LOG_INFO("main empty, main:%{public}" PRId64 ",slave:%{public}" PRId64, mCount, sCount);
-        return ExchangeStrategy::RESTORE;
     }
     LOG_INFO("backup, main:[%{public}" PRId64 ",%{public}" PRId64 "], slave:[%{public}" PRId64 ",%{public}" PRId64 "]",
         mCount, mIdxCount, sCount, sIdxCount);
@@ -2323,6 +2323,79 @@ Sqlite3BinlogMode SqliteConnection::GetBinlogMode(const RdbStoreConfig &config)
         return Sqlite3BinlogMode::ROW_FOR_SEARCH;
     }
     return Sqlite3BinlogMode::ROW;
+}
+
+ExchangeStrategy SqliteConnection::ExchangeCompareInTrigger(bool isReplayed)
+{
+    auto [sRet, sObj] = slaveConnection_->ExecuteForValue(QUERY_TABLE_COUNT_SQL);
+    // The slave database is corrupt; cannot restore from it.
+    if (sRet == E_SQLITE_CORRUPT) {
+        LOG_WARN("[trigger]slave db abnormal, not handle, err:%{public}d", sRet);
+        return ExchangeStrategy::NOT_HANDLE;
+    }
+    auto [mRet, mObj] = ExecuteForValue(QUERY_TABLE_COUNT_SQL);
+    auto [mIdxRet, mIdxObj] = ExecuteForValue(QUERY_INDEX_COUNT_SQL);
+    // The main database is corrupt; attempt to restore from the slave.
+    if (mRet == E_SQLITE_CORRUPT || mIdxRet == E_SQLITE_CORRUPT) {
+        LOG_WARN("[trigger]main abnormal, err:%{public}d", mRet);
+        return ExchangeStrategy::RESTORE;
+    }
+    int64_t sCount = static_cast<int64_t>(sObj);
+    int64_t mCount = static_cast<int64_t>(mObj);
+    int64_t mIdxCount = static_cast<int64_t>(mIdxObj);
+    // The main database is not empty; no restore is needed.
+    if (mCount != 0) {
+        return ExchangeStrategy::NOT_HANDLE;
+    }
+    // The main database is empty but the slave has data; attempt to restore.
+    if (sCount > 0) {
+        LOG_WARN("[trigger]main empty, main:[%{public}" PRId64 ",%{public}" PRId64 "], slave:"
+            "%{public}" PRId64, mCount, mIdxCount, sCount);
+        return ExchangeStrategy::RESTORE;
+    }
+    // Binlog has already been replayed; no further comparison is needed.
+    if (isReplayed) {
+        return ExchangeStrategy::NOT_HANDLE;
+    }
+    // Recovery scenario: both main and slave are empty but the binlog still has pending
+    // entries; replay the binlog and re-compare to decide whether to restore.
+    if (IsSupportBinlog(config_)) {
+        SqliteConnection::ReplayBinlog(config_.GetPath(), slaveConnection_, false);
+        return ExchangeCompareInTrigger(true);
+    }
+    return ExchangeStrategy::NOT_HANDLE;
+}
+
+ExchangeStrategy SqliteConnection::ExchangeCompareWithMainEmpty(bool isReplayed,
+    const std::pair<int, ValueObject> &sCountRes)
+{
+    // The main database is empty but the slave has data; attempt to restore.
+    const auto &[scRet, scObj] = sCountRes;
+    int64_t sCount = static_cast<int64_t>(scObj);
+    if (scRet != E_SQLITE_CORRUPT && sCount > 0) {
+        LOG_INFO("main empty, slave:%{public}" PRId64, sCount);
+        return ExchangeStrategy::RESTORE;
+    }
+    // Both main and slave are empty and the binlog has already been replayed; nothing to do.
+    if (isReplayed) {
+        return ExchangeStrategy::NOT_HANDLE;
+    }
+    // Recovery scenario: both main and slave are empty but the binlog still has pending
+    // entries; replay the binlog and re-compare to decide whether to restore
+    // (skipped when async restore is in use, since the slave count stays stale until it finishes).
+    if (IsSupportBinlog(config_) && !SqliteUtils::IsUseAsyncRestore(config_, config_.GetPath(),
+        SqliteUtils::GetSlavePath(config_.GetPath()))) {
+        SqliteConnection::ReplayBinlog(config_.GetPath(), slaveConnection_, false);
+        auto [sRet, sObj] = slaveConnection_->ExecuteForValue(QUERY_TABLE_COUNT_SQL);
+        auto [mRet, mObj] = ExecuteForValue(QUERY_TABLE_COUNT_SQL);
+        sCount = static_cast<int64_t>(sObj);
+        int64_t mCount = static_cast<int64_t>(mObj);
+        if (sRet != E_SQLITE_CORRUPT && mCount == 0 && sCount > 0) {
+            LOG_INFO("main empty, slave:%{public}" PRId64, sCount);
+            return ExchangeStrategy::RESTORE;
+        }
+    }
+    return ExchangeStrategy::NOT_HANDLE;
 }
 } // namespace NativeRdb
 } // namespace OHOS

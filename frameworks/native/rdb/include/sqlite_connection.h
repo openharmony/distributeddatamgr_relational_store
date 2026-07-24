@@ -151,7 +151,10 @@ private:
     int RegisterHookIfNecessary();
     std::pair<int32_t, Stmt> CreateStatementInner(
         const std::string &sql, SConn conn, sqlite3 *db, bool isFromReplica, const std::string &returningSql = "");
-    ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount);
+    ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount,
+        const std::pair<int, ValueObject> &sCountRes, const std::pair<int, ValueObject> &sIdxCountRes);
+    ExchangeStrategy ExchangeCompareInTrigger(bool isReplayed);
+    ExchangeStrategy ExchangeCompareWithMainEmpty(bool isReplayed, const std::pair<int, ValueObject> &sCountRes);
     void DeleteCorruptSlave(const std::string &path);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite, bool isReusableReplica = false);
