@@ -147,7 +147,6 @@ void SqliteFunctionRegistry::MergeAsset(ValueObject::Asset &oldAsset, ValueObjec
                 oldAsset.uri != newAsset.uri || oldAsset.path != newAsset.path ||
                 oldAsset.extension != newAsset.extension) {
                 if (oldAsset.modifyTime != newAsset.modifyTime || oldAsset.size != newAsset.size ||
-                    oldAsset.extension != newAsset.extension ||
                     oldAsset.uri == newAsset.uri || oldAsset.path == newAsset.path) {
                     oldAsset.expiresTime = newAsset.expiresTime;
                     oldAsset.hash = newAsset.hash;
