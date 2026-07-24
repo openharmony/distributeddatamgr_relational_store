@@ -67,6 +67,7 @@ ohos_shared_library("cj_relational_store_ffi") {
       "ability_runtime:abilitykit_native",
       "ability_runtime:napi_base_context",
       "ability_runtime:napi_common",
+      "bounds_checking_function:libsec_shared",
       "c_utils:utils",
       "common_event_service:cesfwk_innerkits",
       "hilog:libhilog",
@@ -75,6 +76,7 @@ ohos_shared_library("cj_relational_store_ffi") {
       "napi:ace_napi",
       "napi:cj_bind_ffi",
       "napi:cj_bind_native",
+      "node:node_header_notice",
     ]
   } else {
     defines += [ "PREVIEWER" ]
