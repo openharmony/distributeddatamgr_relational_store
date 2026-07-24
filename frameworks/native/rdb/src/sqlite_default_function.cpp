@@ -160,7 +160,6 @@ void SqliteFunctionRegistry::MergeAsset(ValueObject::Asset &oldAsset, ValueObjec
                 oldAsset.path = newAsset.path;
                 oldAsset.extension = newAsset.extension;
             }
-            }
             return;
         default:
             return;
