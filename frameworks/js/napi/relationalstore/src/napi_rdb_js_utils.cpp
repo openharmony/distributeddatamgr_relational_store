@@ -46,7 +46,6 @@ using namespace OHOS::Rdb;
 using namespace NativeRdb;
 using RelationalStoreJsKit::ParamError;
 using namespace RelationalStoreJsKit;
-static constexpr size_t EXTENSION_MAX_SIZE = 512;
 template<>
 int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
 {
@@ -66,9 +65,6 @@ int32_t Convert2Value(napi_env env, napi_value jsValue, Asset &output)
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "size", output.size), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "path", output.path), napi_invalid_arg);
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "extension", output.extension, true), napi_invalid_arg);
-    if (output.extension.size() > EXTENSION_MAX_SIZE) {
-        output.extension = output.extension.substr(0, EXTENSION_MAX_SIZE);
-    }
     NAPI_CALL_RETURN_ERR(GetNamedProperty(env, jsValue, "status", output.status, true), napi_invalid_arg);
     if (output.status != AssetValue::STATUS_DELETE) {
         output.status = AssetValue::STATUS_UNKNOWN;
