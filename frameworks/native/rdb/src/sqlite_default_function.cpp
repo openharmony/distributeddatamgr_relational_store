@@ -133,6 +133,7 @@ void SqliteFunctionRegistry::MergeAsset(ValueObject::Asset &oldAsset, ValueObjec
         oldAsset.hash = "";
         oldAsset.modifyTime = "";
         oldAsset.size = "";
+        oldAsset.extension = "";
         return;
     }
     auto status = static_cast<int32_t>(oldAsset.status & ~0xF0000000);
@@ -156,6 +157,8 @@ void SqliteFunctionRegistry::MergeAsset(ValueObject::Asset &oldAsset, ValueObjec
                 oldAsset.modifyTime = newAsset.modifyTime;
                 oldAsset.size = newAsset.size;
                 oldAsset.path = newAsset.path;
+                oldAsset.extension = newAsset.extension;
+            }
             }
             return;
         default:
