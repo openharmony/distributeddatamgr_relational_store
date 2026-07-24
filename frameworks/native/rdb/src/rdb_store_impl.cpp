@@ -145,7 +145,7 @@ int RdbStoreImpl::InnerOpen()
     }
 
     if (config_.IsSearchable()) {
-        RegisterMatrix(connectionPool_, syncerParam_);
+        RegisterMatrix(config_, syncerParam_);
     }
 
     int errCode = RegisterDataChangeCallback();
@@ -272,7 +272,7 @@ void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
     }
 }
 
-void RdbStoreImpl::RegisterMatrix(std::weak_ptr<ConnectionPool> weakPool, const RdbParam &param, int32_t retry)
+void RdbStoreImpl::RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry)
 {
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (errCode != E_OK || service == nullptr) {
@@ -284,8 +284,8 @@ void RdbStoreImpl::RegisterMatrix(std::weak_ptr<ConnectionPool> weakPool, const 
         if (errCode == E_SERVICE_NOT_FOUND && pool != nullptr && retry < MAX_RETRY_TIMES) {
             retry++;
             LOG_INFO("RegisterMatrix set retry schedule times: %{public}d", retry);
-            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [weakPool, param, retry]() {
-                RegisterMatrix(weakPool, param, retry);
+            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [config, param, retry]() {
+                RegisterMatrix(config, param, retry);
             });
         }
         return;
@@ -298,16 +298,10 @@ void RdbStoreImpl::RegisterMatrix(std::weak_ptr<ConnectionPool> weakPool, const 
         return;
     }
 
-    auto connPool = weakPool.lock();
-    if (connPool == nullptr) {
-        LOG_ERROR("ConnectionPool is released when register matrix, storeName: %{public}s.",
-            SqliteUtils::Anonymous(param.storeName_).c_str());
-        return;
-    }
-    auto conn = connPool->AcquireConnection(true);
-    if (conn == nullptr) {
-        LOG_ERROR("Database is busy when register matrix, storeName: %{public}s.",
-            SqliteUtils::Anonymous(param.storeName_).c_str());
+    auto [ret, conn] = Connection::Create(config, false);
+    if (ret != E_OK || conn == nullptr) {
+        LOG_ERROR("Create connection failed when register matrix, ret: %{public}d, storeName: %{public}s.",
+            ret, SqliteUtils::Anonymous(param.storeName_).c_str());
         return;
     }
 
