@@ -185,6 +185,7 @@ private:
     };
 
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
+    static void RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry = 0);
     int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
     int32_t CreatePool(bool &created);
     static void RegisterDataChangeCallback(

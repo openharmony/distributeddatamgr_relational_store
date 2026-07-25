@@ -437,6 +437,22 @@ int32_t RdbServiceProxy::AfterOpen(const RdbSyncerParam &param)
     return status;
 }
 
+int32_t RdbServiceProxy::RegisterMatrix(const RdbSyncerParam &param, MatrixFileInfo &fileInfo)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REGISTER_MATRIX), reply, param);
+    if (status != RDB_OK) {
+        LOG_ERROR("status:%{public}d, bundleName:%{public}s, storeName:%{public}s", status, param.bundleName_.c_str(),
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+        return status;
+    }
+    if (!ITypesUtil::Unmarshal(reply, fileInfo.matrixFilePath, fileInfo.matrixTables, fileInfo.fullSyncOffset)) {
+        LOG_ERROR("unmarshal MatrixFileInfo failed.");
+        status = RDB_ERROR;
+    }
+    return status;
+}
+
 int32_t RdbServiceProxy::ReportStatistic(const RdbSyncerParam &param, const RdbStatEvent &statEvent)
 {
     MessageParcel reply;

@@ -480,5 +480,16 @@ int RdConnection::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc 
     return E_OK;
 }
 
+int RdConnection::SetMatrixFileInfo([[gnu::unused]] const DistributedRdb::MatrixFileInfo &fileInfo)
+{
+    return E_NOT_SUPPORT;
+}
+
+int RdConnection::UpdateTrackerMatrix([[gnu::unused]] const DistributedRdb::RdbChangedData &rdbChangedData,
+    [[gnu::unused]] bool isFull)
+{
+    return E_NOT_SUPPORT;
+}
+
 } // namespace NativeRdb
 } // namespace OHOS

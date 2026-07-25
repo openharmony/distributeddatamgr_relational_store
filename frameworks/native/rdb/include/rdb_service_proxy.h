@@ -90,6 +90,8 @@ public:
 
     int32_t AfterOpen(const RdbSyncerParam &param) override;
 
+    int32_t RegisterMatrix(const RdbSyncerParam &param, MatrixFileInfo &fileInfo) override;
+
     int32_t ReportStatistic(const RdbSyncerParam &param, const RdbStatEvent &statEvent) override;
 
     int32_t Delete(const RdbSyncerParam &param) override;

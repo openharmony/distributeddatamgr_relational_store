@@ -54,6 +54,16 @@ struct KnowledgeSourceSchema {
     std::set<std::string> knowledgeColNames;
     std::map<std::string, std::set<std::string>> columnsToVerify;
 };
+
+struct MatrixFileInfo {
+    std::string matrixFilePath;
+    std::map<std::string, uint64_t> matrixTables;
+    uint64_t fullSyncOffset = 0u;
+};
+
+struct MatrixFileUpdateConfig {
+    bool isFullSync = false;
+};
 }
 
 DistributedDB::DBStatus SetKnowledgeSourceSchema(sqlite3 *db, const DistributedDB::KnowledgeSourceSchema &schema);
@@ -64,6 +74,11 @@ DistributedDB::DBStatus ArchiveSyncedData(sqlite3 *db, const std::string &tableN
 
 DistributedDB::DBStatus DeleteSyncedData(sqlite3 *db, const std::string &tableName,
     const std::vector<std::vector<DistributedDB::Type>> &keys);
+
+DistributedDB::DBStatus SetTrackerMatrixInfo(sqlite3 *db, const DistributedDB::MatrixFileInfo &matrixFileInfo);
+
+DistributedDB::DBStatus UpdateMatrixFile(sqlite3 *db, const std::vector<std::string> &changedData,
+    const DistributedDB::MatrixFileUpdateConfig &config);
 
 void Clean(bool isOpenSslClean);
 

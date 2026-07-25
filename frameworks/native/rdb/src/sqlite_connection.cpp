@@ -1797,6 +1797,30 @@ int SqliteConnection::DeleteSyncedData(const std::string &table,
     return SqliteUtils::ConvertDBStatusNative(status);
 }
 
+int SqliteConnection::SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fileInfo)
+{
+    DistributedDB::MatrixFileInfo info = {
+        .matrixFilePath = fileInfo.matrixFilePath,
+        .matrixTables = fileInfo.matrixTables,
+        .fullSyncOffset = fileInfo.fullSyncOffset
+    };
+    auto status = SetTrackerMatrixInfo(dbHandle_, info);
+    return SqliteUtils::ConvertDBStatusNative(status);
+}
+
+int SqliteConnection::UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &changedData, bool isFull)
+{
+    std::vector<std::string> changedTables;
+    for (const auto& pair : changedData.tableData) {
+        if (pair.second.isTrackedDataChange) {
+            changedTables.emplace_back(pair.first);
+        }
+    }
+    DistributedDB::MatrixFileUpdateConfig fileConfig = {.isFullSync = isFull};
+    auto status = UpdateMatrixFile(dbHandle_, changedTables, fileConfig);
+    return SqliteUtils::ConvertDBStatusNative(status);
+}
+
 int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
 {
     std::shared_ptr<SqliteConnection> connection = std::make_shared<SqliteConnection>(config, true);

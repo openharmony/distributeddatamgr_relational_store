@@ -116,5 +116,84 @@ HWTEST_F(DelayNotifyTest, UpdateNotify_Test_001, TestSize.Level1)
     rdbChangeProperties.isTrackedDataChange = true;
     changedData.tableData.insert_or_assign("UpdateNotify_Test_001", rdbChangeProperties);
     delayNotifier->UpdateNotify(changedData);
-    EXPECT_TRUE(block->GetValue());
+    EXPECT_FALSE(block->GetValue());
+}
+
+/**
+* @tc.name: UpdateNotify_P2p_Test_001
+* @tc.desc: Check UpdateNotify() processes the table when isP2pSyncDataChange is true.
+*           Covers branch② of "if (!isP2pSyncDataChange && !isKnowledgeDataChange)".
+* @tc.type: FUNC
+*/
+HWTEST_F(DelayNotifyTest, UpdateNotify_P2p_Test_001, TestSize.Level1)
+{
+    auto delayNotifier = std::make_shared<DelayNotify>();
+    delayNotifier->SetExecutorPool(std::make_shared<OHOS::ExecutorPool>(1, 1));
+    auto block = std::make_shared<OHOS::BlockData<bool>>(1, false);
+    delayNotifier->SetTask([block](const RdbChangedData &, const RdbNotifyConfig &){
+        block->SetValue(true);
+        return 0;
+    });
+    delayNotifier->delaySyncTaskId_ = 1;
+    delayNotifier->isInitialized_ = true;
+
+    auto changedData = RdbChangedData();
+    auto rdbChangeProperties = RdbChangeProperties();
+    rdbChangeProperties.isP2pSyncDataChange = true;
+    changedData.tableData.insert_or_assign("P2p_Table", rdbChangeProperties);
+    delayNotifier->UpdateNotify(changedData);
+    EXPECT_EQ(delayNotifier->changedData_.tableData.count("P2p_Table"), 1u);
+}
+
+/**
+* @tc.name: UpdateNotify_Knowledge_Test_001
+* @tc.desc: Check UpdateNotify() processes the table when isKnowledgeDataChange is true.
+*           Covers branch② of "if (!isP2pSyncDataChange && !isKnowledgeDataChange)".
+* @tc.type: FUNC
+*/
+HWTEST_F(DelayNotifyTest, UpdateNotify_Knowledge_Test_001, TestSize.Level1)
+{
+    auto delayNotifier = std::make_shared<DelayNotify>();
+    delayNotifier->SetExecutorPool(std::make_shared<OHOS::ExecutorPool>(1, 1));
+    auto block = std::make_shared<OHOS::BlockData<bool>>(1, false);
+    delayNotifier->SetTask([block](const RdbChangedData &, const RdbNotifyConfig &){
+        block->SetValue(true);
+        return 0;
+    });
+    delayNotifier->delaySyncTaskId_ = 1;
+    delayNotifier->isInitialized_ = true;
+
+    auto changedData = RdbChangedData();
+    auto rdbChangeProperties = RdbChangeProperties();
+    rdbChangeProperties.isKnowledgeDataChange = true;
+    changedData.tableData.insert_or_assign("Knowledge_Table", rdbChangeProperties);
+    delayNotifier->UpdateNotify(changedData);
+    EXPECT_EQ(delayNotifier->changedData_.tableData.count("Knowledge_Table"), 1u);
+}
+
+/**
+* @tc.name: UpdateNotify_Both_Test_001
+* @tc.desc: Check UpdateNotify() processes the table when both isP2pSyncDataChange and
+*           isKnowledgeDataChange are true. Covers branch② of the judgment.
+* @tc.type: FUNC
+*/
+HWTEST_F(DelayNotifyTest, UpdateNotify_Both_Test_001, TestSize.Level1)
+{
+    auto delayNotifier = std::make_shared<DelayNotify>();
+    delayNotifier->SetExecutorPool(std::make_shared<OHOS::ExecutorPool>(1, 1));
+    auto block = std::make_shared<OHOS::BlockData<bool>>(1, false);
+    delayNotifier->SetTask([block](const RdbChangedData &, const RdbNotifyConfig &){
+        block->SetValue(true);
+        return 0;
+    });
+    delayNotifier->delaySyncTaskId_ = 1;
+    delayNotifier->isInitialized_ = true;
+
+    auto changedData = RdbChangedData();
+    auto rdbChangeProperties = RdbChangeProperties();
+    rdbChangeProperties.isP2pSyncDataChange = true;
+    rdbChangeProperties.isKnowledgeDataChange = true;
+    changedData.tableData.insert_or_assign("Both_Table", rdbChangeProperties);
+    delayNotifier->UpdateNotify(changedData);
+    EXPECT_EQ(delayNotifier->changedData_.tableData.count("Both_Table"), 1u);
 }
