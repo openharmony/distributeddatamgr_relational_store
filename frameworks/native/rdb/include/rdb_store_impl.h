@@ -165,7 +165,6 @@ public:
     int RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> &pool,
         const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason);
 
-
 protected:
     std::string GetLogTableName(const std::string &tableName) override;
 
