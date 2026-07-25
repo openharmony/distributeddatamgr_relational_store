@@ -2782,6 +2782,33 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_Transaction_001, TestSize.Le
 }
 
 /**
+ * @tc.name: RdbStore_UpdateMatrixFile_001
+ * @tc.desc: test register matrix
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_UpdateMatrixFile_001, TestSize.Level0)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RDB_TEST_PATH + "matrixTest.db");
+    config.SetBundleName("");
+    config.SetSearchable(true);
+    RdbStoreImplTestOpenCallback helper;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+
+    ValuesBucket row;
+    row.Put("id", 1);
+    row.Put("name", "name1");
+    row.Put("age", 18);
+    int64_t id;
+    errCode = store->Insert(id, "test", row);
+    EXPECT_EQ(errCode, E_OK);
+
+    RdbHelper::DeleteRdbStore(config);
+}
+
+/**
  * @tc.name: R_ErrMsg_001
  * @tc.desc: Verify RdbStoreImpl GetLastErrorMsg when executing SQL with syntax error.
  * @tc.type: FUNC

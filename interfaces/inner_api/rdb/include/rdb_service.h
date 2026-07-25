@@ -84,6 +84,8 @@ public:
 
     virtual int32_t AfterOpen(const RdbSyncerParam &param) = 0;
 
+    virtual int32_t RegisterMatrix(const RdbSyncerParam &param, MatrixFileInfo &fileInfo) = 0;
+
     // only use param.storeName_
     virtual int32_t Delete(const RdbSyncerParam &param) = 0;
 

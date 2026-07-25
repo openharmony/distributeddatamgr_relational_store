@@ -72,6 +72,8 @@ public:
     int RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc func) override;
     int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
     void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount) override;
+    int SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fileInfo) override;
+    int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) override;
 
 private:
     static constexpr int MAX_VARIABLE_NUM = 32766;

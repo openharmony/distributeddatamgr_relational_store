@@ -143,6 +143,11 @@ int RdbStoreImpl::InnerOpen()
     if (config_.GetDBType() == DB_VECTOR || (!config_.IsSearchable() && !config_.GetEnableSemanticIndex())) {
         return E_OK;
     }
+
+    if (config_.IsSearchable()) {
+        RegisterMatrix(config_, syncerParam_);
+    }
+
     int errCode = RegisterDataChangeCallback();
     if (errCode != E_OK) {
         LOG_ERROR("RegisterCallBackObserver is failed, err is %{public}d.", errCode);
@@ -195,6 +200,21 @@ void RdbStoreImpl::Close()
     }
 }
 
+int RdbStoreImpl::RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> &pool,
+    const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason)
+{
+    if (pool != nullptr) {
+        pool->Dump(true, reason);
+        pool->Dump(false, reason);
+        std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
+        connectionPool_ = std::move(pool);
+    }
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
+    }
+    return E_DATABASE_BUSY;
+}
+
 int RdbStoreImpl::Release(const ReleaseOption &option)
 {
     auto start = steady_clock::now();
@@ -211,29 +231,11 @@ int RdbStoreImpl::Release(const ReleaseOption &option)
         auto used = duration_cast<milliseconds>(steady_clock::now() - start);
         auto remain = milliseconds(option.waitTime) - used;
         if (remain <= milliseconds::zero()) {
-            pool->Dump(true, "Release budget exhausted");
-            pool->Dump(false, "Release budget exhausted");
-            {
-                std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
-                connectionPool_ = std::move(pool);
-            }
-            if (service != nullptr) {
-                service->Enable(syncerParam_);
-            }
-            return E_DATABASE_BUSY;
+            return RestorePoolOnTimeout(pool, service, "Release budget exhausted");
         }
         auto acquired = pool->AcquireAll(remain);
         if (acquired.first == nullptr) {
-            pool->Dump(true, "Release AcquireAll timeout");
-            pool->Dump(false, "Release AcquireAll timeout");
-            {
-                std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
-                connectionPool_ = std::move(pool);
-            }
-            if (service != nullptr) {
-                service->Enable(syncerParam_);
-            }
-            return E_DATABASE_BUSY;
+            return RestorePoolOnTimeout(pool, service, "Release AcquireAll timeout");
         }
     }
     {
@@ -318,6 +320,43 @@ void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
         LOG_ERROR("AfterOpen failed, err: %{public}d, storeName: %{public}s.", err,
             SqliteUtils::Anonymous(param.storeName_).c_str());
     }
+}
+
+void RdbStoreImpl::RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry)
+{
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
+    if (errCode != E_OK || service == nullptr) {
+        if (errCode != E_INVALID_ARGS) {
+            LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", errCode,
+                SqliteUtils::Anonymous(param.storeName_).c_str());
+        }
+        auto pool = TaskExecutor::GetInstance().GetExecutor();
+        if (errCode == E_SERVICE_NOT_FOUND && pool != nullptr && retry < MAX_RETRY_TIMES) {
+            retry++;
+            LOG_INFO("RegisterMatrix set retry schedule times: %{public}d", retry);
+            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [config, param, retry]() {
+                RegisterMatrix(config, param, retry);
+            });
+        }
+        return;
+    }
+    DistributedRdb::MatrixFileInfo fileInfo = {};
+    errCode = service->RegisterMatrix(param, fileInfo);
+    if (errCode != E_OK) {
+        LOG_ERROR("RegisterMatrix failed, err: %{public}d, storeName: %{public}s.", errCode,
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+        return;
+    }
+
+    auto [ret, conn] = Connection::Create(config, false);
+    if (ret != E_OK || conn == nullptr) {
+        LOG_ERROR("Create connection failed when register matrix, ret: %{public}d, storeName: %{public}s.",
+            ret, SqliteUtils::Anonymous(param.storeName_).c_str());
+        return;
+    }
+
+    errCode = conn->SetMatrixFileInfo(fileInfo);
+    LOG_INFO("Set tracker matrix info res: %{public}d", errCode);
 }
 
 RdbStore::ModifyTime RdbStoreImpl::GetModifyTime(
@@ -491,6 +530,17 @@ void RdbStoreImpl::NotifyDataChange()
     DistributedRdb::RdbChangedData rdbChangedData;
     if (delayNotifier_ != nullptr) {
         delayNotifier_->UpdateNotify(rdbChangedData, true);
+    }
+    if (config_.IsSearchable()) {
+        auto [ret, conn] = GetConn(true);
+        if (ret == E_OK && conn != nullptr) {
+            ret = conn->UpdateTrackerMatrix(rdbChangedData, true);
+            if (ret != E_OK) {
+                LOG_ERROR("Update matrix file err: %{public}d", ret);
+            }
+        } else {
+            LOG_ERROR("The database is busy or closed %{public}d", ret);
+        }
     }
 }
 
@@ -3525,7 +3575,7 @@ bool RdbStoreImpl::IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &r
 bool RdbStoreImpl::IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData)
 {
     for (const auto &item : rdbChangedData.tableData) {
-        if (item.second.isP2pSyncDataChange || item.second.isTrackedDataChange) {
+        if (item.second.isP2pSyncDataChange) {
             return true;
         }
     }

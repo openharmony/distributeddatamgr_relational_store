@@ -162,6 +162,9 @@ public:
     std::string GetName();
     int32_t ExchangeSlaverToMaster();
     void Close();
+    int RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> &pool,
+        const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason);
+
 
 protected:
     std::string GetLogTableName(const std::string &tableName) override;
@@ -186,6 +189,7 @@ private:
     };
 
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
+    static void RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry = 0);
     int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
     int32_t CreatePool(bool &created);
     static void RegisterDataChangeCallback(

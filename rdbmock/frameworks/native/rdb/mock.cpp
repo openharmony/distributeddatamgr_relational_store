@@ -114,6 +114,24 @@ API_EXPORT DistributedDB::DBStatus CleanDeletedData(sqlite3 *db, const std::stri
     return DBStatus::OK;
 }
 
+API_EXPORT DistributedDB::DBStatus SetTrackerMatrixInfo(sqlite3 *db,
+    const DistributedDB::MatrixFileInfo &matrixFileInfo)
+{
+    (void)db;
+    (void)matrixFileInfo;
+    return DBStatus::OK;
+}
+
+API_EXPORT DistributedDB::DBStatus UpdateMatrixFile(sqlite3 *db,
+    const std::vector<std::string> &changedData,
+    const DistributedDB::MatrixFileUpdateConfig &config)
+{
+    (void)db;
+    (void)changedData;
+    (void)config;
+    return DBStatus::OK;
+}
+
 API_EXPORT DistributedDB::DBStatus ArchiveSyncedData(sqlite3 *db, const std::string &tableName, uint64_t cursor)
 {
     (void)db;

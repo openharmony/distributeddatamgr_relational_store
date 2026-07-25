@@ -502,6 +502,12 @@ struct RdbChangedData {
     std::map<std::string, RdbChangeProperties> tableData;
 };
 
+struct MatrixFileInfo {
+    std::string matrixFilePath;
+    std::map<std::string, uint64_t> matrixTables;
+    uint64_t fullSyncOffset = 0u;
+};
+
 class SqlObserver {
 public:
     struct SqlExecutionInfo {

@@ -86,6 +86,8 @@ public:
     int DeleteSyncedData(const std::string &table, const std::vector<std::vector<PRIKey>> &keys) override;
     int32_t RegisterReplayCallback(const RdbStoreConfig &config, const ReplayCallBack &replayCallback) override;
     void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount = false) override;
+    int SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fileInfo) override;
+    int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) override;
     static bool IsSupportBinlog(const RdbStoreConfig &config);
 
 protected:
@@ -151,7 +153,10 @@ private:
     int RegisterHookIfNecessary();
     std::pair<int32_t, Stmt> CreateStatementInner(
         const std::string &sql, SConn conn, sqlite3 *db, bool isFromReplica, const std::string &returningSql = "");
-    ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount);
+    ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount,
+        const std::pair<int, ValueObject> &sCountRes, const std::pair<int, ValueObject> &sIdxCountRes);
+    ExchangeStrategy ExchangeCompareInTrigger(bool isReplayed);
+    ExchangeStrategy ExchangeCompareWithMainEmpty(bool isReplayed, const std::pair<int, ValueObject> &sCountRes);
     void DeleteCorruptSlave(const std::string &path);
     static std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerCreate(
         const RdbStoreConfig &config, bool isWrite, bool isReusableReplica = false);
