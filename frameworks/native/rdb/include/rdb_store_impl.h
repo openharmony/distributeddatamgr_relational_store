@@ -100,7 +100,7 @@ public:
     int Commit() override;
     int Commit(int64_t trxId) override;
     bool IsInTransaction() override;
-    int Release(int32_t waitTime) override;
+    int Release(const ReleaseOption &option) override;
     int32_t SetTokenizer(Tokenizer tokenizer) override;
     bool IsOpen() const override;
     std::string GetPath() override;

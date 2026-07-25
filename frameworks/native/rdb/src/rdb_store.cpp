@@ -530,9 +530,9 @@ int RdbStore::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
     return E_NOT_SUPPORT;
 }
 
-int RdbStore::Release(int32_t waitTime)
+int RdbStore::Release(const ReleaseOption &option)
 {
-    (void)waitTime;
+    (void)option;
     return E_NOT_SUPPORT;
 }
 

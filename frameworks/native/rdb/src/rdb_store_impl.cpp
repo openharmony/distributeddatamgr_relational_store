@@ -195,8 +195,9 @@ void RdbStoreImpl::Close()
     }
 }
 
-int RdbStoreImpl::Release(int32_t waitTime)
+int RdbStoreImpl::Release(const ReleaseOption &option)
 {
+    auto start = steady_clock::now();
     std::shared_ptr<ConnectionPool> pool;
     {
         std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
@@ -207,7 +208,21 @@ int RdbStoreImpl::Release(int32_t waitTime)
         service->Disable(syncerParam_);
     }
     if (pool != nullptr) {
-        auto acquired = pool->AcquireAll(std::chrono::milliseconds(waitTime));
+        auto used = duration_cast<milliseconds>(steady_clock::now() - start);
+        auto remain = milliseconds(option.waitTime) - used;
+        if (remain <= milliseconds::zero()) {
+            pool->Dump(true, "Release budget exhausted");
+            pool->Dump(false, "Release budget exhausted");
+            {
+                std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
+                connectionPool_ = std::move(pool);
+            }
+            if (service != nullptr) {
+                service->Enable(syncerParam_);
+            }
+            return E_DATABASE_BUSY;
+        }
+        auto acquired = pool->AcquireAll(remain);
         if (acquired.first == nullptr) {
             pool->Dump(true, "Release AcquireAll timeout");
             pool->Dump(false, "Release AcquireAll timeout");
