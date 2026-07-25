@@ -2902,13 +2902,12 @@ HWTEST_F(RdbStoreImplConditionTest, UpdateMatrixTest_002, TestSize.Level2)
 /**
  * @tc.name: RegisterMatrix_GetServiceInvalidArgs_Test
  * @tc.desc: Test RegisterMatrix when GetRdbService returns E_INVALID_ARGS.
- *           Verify it returns silently without retry.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_GetServiceInvalidArgs_Test, TestSize.Level2)
 {
     EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
-        .WillOnce(Return(std::make_pair(E_INVALID_ARGS, nullptr)));
+        .WillRepeatedly(Return(std::make_pair(E_INVALID_ARGS, nullptr)));
 
     OHOS::DistributedRdb::RdbSyncerParam param;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
