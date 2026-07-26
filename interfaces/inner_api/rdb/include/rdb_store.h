@@ -666,7 +666,7 @@ public:
      *        E_DATABASE_BUSY is returned.
      * @param option Release options, see {@link ReleaseOption}.
      */
-    virtual int Release(const ReleaseOption &option = {});
+    virtual int Release(const ReleaseOption &option = { 2000 });
 
     /**
      * @brief Check the current database is memory database.
