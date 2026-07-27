@@ -2782,6 +2782,20 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_Transaction_001, TestSize.Le
 }
 
 /**
+ * @tc.name: RdbStore_ClearStoreCache_002
+ * @tc.desc: ClearStoreCache returns E_INVALID_FILE_PATH when config has
+ *           MODE_MEMORY with non-OWNER role (GetDbPath returns E_NOT_SUPPORT).
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ClearStoreCache_002, TestSize.Level2)
+{
+    RdbStoreConfig config("clearcache_err_test.db");
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetRoleType(VISITOR);
+    EXPECT_EQ(E_INVALID_FILE_PATH, RdbHelper::ClearStoreCache(config));
+}
+
+/**
  * @tc.name: RdbStore_UpdateMatrixFile_001
  * @tc.desc: test register matrix
  * @tc.type: FUNC

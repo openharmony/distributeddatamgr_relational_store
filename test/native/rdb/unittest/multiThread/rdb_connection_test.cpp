@@ -213,3 +213,43 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Connection_0002, TestSize.Lev
     EXPECT_EQ(block2->GetValue(), E_OK);
     EXPECT_NE(taskId1, taskId2);
 }
+
+/**
+ * @tc.name: MultiThread_Release_OldHandle_0001
+ *           After one thread fully releases the store and clears the cache, another thread holding its
+ *           own shared_ptr copy still sees the stale handle alive but its pool gone.
+ * @tc.desc: 1.thread A (main): store->Release() + RdbHelper::ClearStoreCache(), then store.reset()
+ *           2.thread B (executor): with its own shared_ptr copy, Insert returns E_ALREADY_CLOSED and
+ *                       QuerySql returns nullptr after A finishes, with no crash.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_OldHandle_0001, TestSize.Level2)
+{
+    // gate: A -> B "release finished"; writeBlock/readBlock: B -> A results.
+    auto gate = std::make_shared<BlockData<int32_t>>(3, false);
+    auto writeBlock = std::make_shared<BlockData<int32_t>>(3, false);
+    auto readBlock = std::make_shared<BlockData<int32_t>>(3, false);
+
+    // Thread B captures its own shared_ptr copy, so the RdbStoreImpl object stays alive even after
+    // thread A drops its reference; only the connection pool is gone after Release.
+    auto taskIdB = executors_->Execute([store = store_, gate, writeBlock, readBlock]() {
+        gate->GetValue(); // wait until thread A has fully finished Release + ClearStoreCache
+        int64_t rowId = -1;
+        ValuesBucket row;
+        row.Put("name", "nameX");
+        row.Put("age", 99);
+        writeBlock->SetValue(store->Insert(rowId, "test", row));
+        // The query API has no error-code slot; report success when it returns nullptr.
+        readBlock->SetValue(store->QuerySql("SELECT * FROM test") == nullptr ? E_OK : E_ERROR);
+    });
+
+    // Thread A (main): fully release and clear the cache, then drop the reference.
+    EXPECT_EQ(E_OK, store_->Release());
+    EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(RDB_TEST_PATH + DATABASE_NAME));
+    store_ = nullptr;
+    gate->SetValue(E_OK); // signal thread B that release is finished
+
+    EXPECT_EQ(E_ALREADY_CLOSED, writeBlock->GetValue());
+    EXPECT_EQ(E_OK, readBlock->GetValue());
+    EXPECT_NE(taskIdB, 0);
+}
