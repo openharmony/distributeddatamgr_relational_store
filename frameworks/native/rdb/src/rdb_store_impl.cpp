@@ -221,6 +221,9 @@ int RdbStoreImpl::Release(const ReleaseOption &option)
     std::shared_ptr<ConnectionPool> pool;
     {
         std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
+        if (connectionPool_ == nullptr) {
+            return E_ALREADY_CLOSED;
+        }
         pool = std::move(connectionPool_);
     }
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
