@@ -2553,6 +2553,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_001, TestSize.Level2)
     const std::string db = RDB_TEST_PATH + "release_basic_test.db";
     RdbHelper::DeleteRdbStore(db);
     RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
     RdbStoreImplTestOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -2577,6 +2578,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ClearStoreCache_001, TestSize.Level2)
     const std::string db = RDB_TEST_PATH + "clearcache_test.db";
     RdbHelper::DeleteRdbStore(db);
     RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
     RdbStoreImplTestOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(config, 1, helper, errCode);
@@ -2608,6 +2610,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_001, TestSize.Level2)
     RdbHelper::DeleteRdbStore(db);
 
     RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
     RdbStoreImplTestOpenCallback helper;
     int errCode = E_OK;
 
@@ -2656,6 +2659,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_ResultSet_001, TestSize.Lev
     RdbStoreConfig config(db);
     config.SetJournalMode(JournalMode::MODE_WAL);
     config.SetReadConSize(4);
+    config.SetBundleName("com.example.distributed.rdb");
     RdbStoreImplTestOpenCallback helper;
     int errCode = E_OK;
 
@@ -2701,6 +2705,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_ResultSet_001, TestSize.Leve
     RdbStoreConfig config(db);
     config.SetJournalMode(JournalMode::MODE_WAL);
     config.SetReadConSize(8);
+    config.SetBundleName("com.example.distributed.rdb");
     RdbStoreImplTestOpenCallback helper;
     int errCode = E_OK;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
