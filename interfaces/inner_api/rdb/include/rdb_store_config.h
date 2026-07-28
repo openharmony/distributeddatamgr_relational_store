@@ -907,6 +907,11 @@ public:
     void SetVersion(ConfigVersion version);
 
     ConfigVersion GetVersion() const;
+
+    bool IsLocalOnly() const;
+
+    void SetLocalOnly(bool isLocalOnly);
+
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
@@ -963,6 +968,7 @@ private:
     static constexpr int MAX_TIMEOUT = 300; // seconds
     static constexpr int MIN_TIMEOUT = 1;   // seconds
     bool allowRebuilt_ = false;
+    bool isLocalOnly_ = false;
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
     ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;

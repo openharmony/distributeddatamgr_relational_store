@@ -1402,3 +1402,73 @@ HWTEST_F(RdbStoreConfigTest, RdbStoreConfigSetSilentAccessible_002, TestSize.Lev
     EXPECT_EQ(errCode, E_OK);
     store = nullptr;
 }
+
+/**
+ * @tc.name: RdbStoreConfig_042
+ * @tc.desc: test RdbStoreConfig interfaces: SetLocalOnly/IsLocalOnly
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_042, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+
+    EXPECT_FALSE(config.IsLocalOnly());
+
+    config.SetLocalOnly(true);
+    EXPECT_TRUE(config.IsLocalOnly());
+
+    config.SetLocalOnly(false);
+    EXPECT_FALSE(config.IsLocalOnly());
+}
+
+/**
+ * @tc.name: RdbStoreConfig_043
+ * @tc.desc: test RdbStoreConfig open database with isLocalOnly set to true
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_043, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test_local_only.db";
+    RdbStoreConfig config(dbPath);
+    config.SetLocalOnly(true);
+    EXPECT_TRUE(config.IsLocalOnly());
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    int ret = store->Insert(id, "test", values);
+    EXPECT_EQ(ret, E_OK);
+
+    store = nullptr;
+    RdbHelper::ClearCache();
+    RdbHelper::DeleteRdbStore(dbPath);
+}
+
+/**
+ * @tc.name: RdbStoreConfig_044
+ * @tc.desc: test RdbStoreConfig isLocalOnly does not affect normal open when false
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreConfigTest, RdbStoreConfig_044, TestSize.Level1)
+{
+    const std::string dbPath = RDB_TEST_PATH + "config_test.db";
+    RdbStoreConfig config(dbPath);
+    config.SetLocalOnly(false);
+    EXPECT_FALSE(config.IsLocalOnly());
+
+    ConfigTestOpenCallback helper;
+    int errCode = E_ERROR;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(dbPath);
+}
