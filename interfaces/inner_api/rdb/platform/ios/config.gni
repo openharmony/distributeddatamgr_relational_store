@@ -45,7 +45,10 @@ native_rdb_platform_defines = [
 
 native_rdb_platform_ldflags = []
 
-native_rdb_platform_sources = []
+native_rdb_platform_sources = [
+  "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp",
+  "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
+]
 
 native_rdb_platform_deps = [
   "${relational_store_innerapi_path}/appdatafwk:relational_common_base",

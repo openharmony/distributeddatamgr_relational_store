@@ -19,6 +19,7 @@
 #include "itypes_util.h"
 #include "rdb_service.h"
 #include "rdb_types.h"
+#include "rdb_values_bucket_types_util.h"
 #include "value_object.h"
 #include "values_bucket.h"
 
@@ -60,18 +61,6 @@ bool Marshalling(const RdbOperation &input, MessageParcel &data);
 template<>
 bool Unmarshalling(RdbOperation &output, MessageParcel &data);
 template<>
-bool Marshalling(const ValueObject &input, MessageParcel &data);
-template<>
-bool Unmarshalling(ValueObject &output, MessageParcel &data);
-template<>
-bool Marshalling(const ValuesBucket &input, MessageParcel &data);
-template<>
-bool Unmarshalling(ValuesBucket &output, MessageParcel &data);
-template<>
-bool Marshalling(const Asset &input, MessageParcel &data);
-template<>
-bool Unmarshalling(Asset &output, MessageParcel &data);
-template<>
 bool Marshalling(const ProgressDetail &input, MessageParcel &data);
 template<>
 bool Unmarshalling(ProgressDetail &output, MessageParcel &data);
@@ -91,10 +80,6 @@ template<>
 bool Marshalling(const Origin &input, MessageParcel &data);
 template<>
 bool Unmarshalling(Origin &output, MessageParcel &data);
-template<>
-bool Marshalling(const BigInt &input, MessageParcel &data);
-template<>
-bool Unmarshalling(BigInt &output, MessageParcel &data);
 template<>
 bool Marshalling(const DebugInfo &input, MessageParcel &data);
 template<>

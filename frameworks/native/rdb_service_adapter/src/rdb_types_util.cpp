@@ -84,37 +84,6 @@ bool Marshalling(const SubOption &input, MessageParcel &data)
 }
 
 template<>
-bool Marshalling(const ValueObject &input, MessageParcel &data)
-{
-    return Marshal(data, input.value);
-}
-template<>
-bool Unmarshalling(ValueObject &output, MessageParcel &data)
-{
-    return Unmarshal(data, output.value);
-}
-template<>
-bool Marshalling(const ValuesBucket &input, MessageParcel &data)
-{
-    return Marshal(data, input.values_);
-}
-template<>
-bool Unmarshalling(ValuesBucket &output, MessageParcel &data)
-{
-    return Unmarshal(data, output.values_);
-}
-
-template<>
-bool Marshalling(const Asset &input, MessageParcel &data)
-{
-    return Marshal(data, input.version, input.name, input.size, input.modifyTime, input.uri);
-}
-template<>
-bool Unmarshalling(Asset &output, MessageParcel &data)
-{
-    return Unmarshal(data, output.version, output.name, output.size, output.modifyTime, output.uri);
-}
-template<>
 bool Marshalling(const ProgressDetail &input, MessageParcel &data)
 {
     return Marshal(data, input.progress, input.code, input.details, input.message);
@@ -187,23 +156,6 @@ bool Marshalling(const Reference &input, MessageParcel &data)
     return Marshal(data, input.sourceTable, input.targetTable, input.refFields);
 }
 
-template<>
-bool Marshalling(const BigInt &input, MessageParcel &data)
-{
-    return Marshal(data, input.Sign(), input.Value());
-}
-
-template<>
-bool Unmarshalling(BigInt &output, MessageParcel &data)
-{
-    int32_t sign = 0;
-    std::vector<uint64_t> value;
-    if (!Unmarshal(data, sign, value)) {
-        return false;
-    }
-    output = BigInt(sign, std::move(value));
-    return true;
-}
 template<>
 bool Marshalling(const DebugInfo &input, MessageParcel &data)
 {

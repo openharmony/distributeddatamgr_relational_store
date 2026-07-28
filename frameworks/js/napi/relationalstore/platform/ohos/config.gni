@@ -45,7 +45,6 @@ relationalstore_js_platform_deps += deps_eventhandler
 relationalstore_js_platform_deps += deps_hilog
 relationalstore_js_platform_deps += deps_hitrace
 relationalstore_js_platform_deps += deps_napi
-relationalstore_js_platform_deps += deps_bounds_checking_function
 relationalstore_js_platform_deps += deps_ipc_single
 
 relationalstore_js_platform_external_deps = [

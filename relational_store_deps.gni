@@ -79,13 +79,6 @@ declare_args() {
     relational_store_eventhandler_enabled = false
   }
 
-  if (!defined(global_parts_info) ||
-      defined(global_parts_info.thirdparty_bounds_checking_function)) {
-    relational_store_bounds_checking_function_enabled = true
-  } else {
-    relational_store_bounds_checking_function_enabled = false
-  }
-
   if (defined(global_parts_info) &&
       defined(global_parts_info.communication_ipc)) {
     relational_store_ipc_enabled = true
@@ -349,16 +342,8 @@ if (relational_store_common_event_service_enabled) {
   deps_common_event_service = [ "${relational_store_mock_external_kit_path}/common_event_service:cesfwk_innerkits" ]
 }
 
-if (relational_store_bounds_checking_function_enabled) {
-  external_deps_bounds_checking_function =
-      [ "bounds_checking_function:libsec_shared" ]
-  deps_bounds_checking_function = []
-} else {
-  external_deps_bounds_checking_function = []
-  deps_bounds_checking_function = [
-    "${relational_store_mock_external_kit_path}/bounds_checking_function:libsec_shared",
-  ]
-}
+external_deps_bounds_checking_function =
+    [ "bounds_checking_function:libsec_shared" ]
 
 if (relational_store_api_metrics_enabled) {
   external_deps_api_metrics = [ "api_metrics:histogrammanager" ]

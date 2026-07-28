@@ -34,6 +34,7 @@ config("module_private_config") {
     "${relational_store_native_path}/rdb_crypt",
     "${relational_store_native_path}/rdb_device_manager_adapter/include",
     "${relational_store_base_path}/test/native/rdb/unittest",
+    "${relational_store_native_path}/rdb_service_adapter/include",
   ]
 
   defines = [ "RELATIONAL_STORE" ]
@@ -90,6 +91,7 @@ ohos_unittest("DynamicLoadTest") {
     "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
     "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_values_bucket_types_util.cpp",
     "${relational_store_native_path}/rdb/src/silent_proxy.cpp",
     "${relational_store_native_path}/rdb/src/security_policy.cpp",
     "${relational_store_native_path}/rdb/src/share_block.cpp",
@@ -112,6 +114,19 @@ ohos_unittest("DynamicLoadTest") {
     "${relational_store_native_path}/rdb/src/values_bucket.cpp",
     "${relational_store_native_path}/rdb/src/values_buckets.cpp",
   ]
+
+  if (is_ohos) {
+    sources += [
+      "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
+      "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
+      "${relational_store_native_path}/rdb_service_adapter/src/marshal_utils_impl.cpp",
+      "${relational_store_native_path}/rdb_service_adapter/src/rdb_manager_impl.cpp",
+      "${relational_store_native_path}/rdb_service_adapter/src/rdb_notifier_stub.cpp",
+      "${relational_store_native_path}/rdb_service_adapter/src/rdb_service_proxy.cpp",
+      "${relational_store_native_path}/rdb_service_adapter/src/rdb_types_util.cpp",
+      "${relational_store_native_path}/rdb_service_adapter/src/result_set_proxy.cpp",
+    ]
+  }
 
   configs = [ ":module_private_config" ]
 
@@ -141,9 +156,7 @@ ohos_unittest("DynamicLoadTest") {
 
   deps = [
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-    "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
     "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
-    "${relational_store_native_path}/rdb_service_adapter:rdb_service_adapter",
   ]
   deps += deps_file_api
   deps += deps_hilog

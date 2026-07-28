@@ -78,7 +78,7 @@
                 "taihe_ffi_gen",
                 "node"
             ],
-            "third_party": [ "sqlite" ]
+            "third_party": [ "bounds_checking_function", "sqlite" ]
         },
         "build": {
             "sub_component": [

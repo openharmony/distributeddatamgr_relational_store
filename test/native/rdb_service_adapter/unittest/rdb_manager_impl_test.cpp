@@ -113,7 +113,7 @@ HWTEST_F(RdbManagerImplTest, GetRdbService_003, TestSize.Level2)
     auto& manager = RdbManager::GetInstance();
     auto [status, service] = manager.GetRdbService(param);
     
-    EXPECT_EQ(status, 0);
+    EXPECT_EQ(status, NativeRdb::E_INVALID_ARGS);
 }
 
 /**

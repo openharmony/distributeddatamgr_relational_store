@@ -14,13 +14,6 @@ import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 import("platform/common.gni")
 
-if (!is_ohos && !is_android && !is_ios) {
-  base_sources += [ "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
-                    "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp",
-  ]
-} else if (is_android || is_ios) {
-  base_sources += [ "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp" ]
-}
 if (is_ohos) {
   import("platform/ohos/config.gni")
 } else if (is_mingw) {
@@ -33,11 +26,6 @@ if (is_ohos) {
   import("platform/ios/config.gni")
 } else if (is_linux) {
   import("platform/linux/config.gni")
-}
-
-if (native_rdb_platform_add_mock_source) {
-  base_sources +=
-      [ "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp" ]
 }
 
 config("native_rdb_config") {
@@ -148,33 +136,6 @@ if (native_rdb_platform_has_static_library) {
 
     subsystem_name = native_rdb_common_subsystem_name
     part_name = native_rdb_common_part_name
-  }
-
-  ohos_static_library("native_rdb_type_utils") {
-    branch_protector_ret = "pac_ret"
-    sanitize = {
-      boundary_sanitize = true
-      ubsan = true
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-    }
-
-    sources = [ "${relational_store_native_path}/rdb/src/rdb_types_util.cpp" ]
-
-    configs = [ ":native_rdb_config" ]
-
-    external_deps = [
-      "c_utils:utils",
-      "hilog:libhilog",
-      "ipc:ipc_core",
-      "kv_store:datamgr_common",
-    ]
-
-    public_configs = [ ":native_rdb_public_config" ]
-
-    subsystem_name = "distributeddatamgr"
-    part_name = "relational_store"
   }
 } else if (is_mingw) {
   config("native_rdb_config") {
