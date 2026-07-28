@@ -100,6 +100,7 @@ public:
     int Commit() override;
     int Commit(int64_t trxId) override;
     bool IsInTransaction() override;
+    int Release(const ReleaseOption &option) override;
     int32_t SetTokenizer(Tokenizer tokenizer) override;
     bool IsOpen() const override;
     std::string GetPath() override;
@@ -161,6 +162,8 @@ public:
     std::string GetName();
     int32_t ExchangeSlaverToMaster();
     void Close();
+    int RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> &pool,
+        const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason);
 
 protected:
     std::string GetLogTableName(const std::string &tableName) override;

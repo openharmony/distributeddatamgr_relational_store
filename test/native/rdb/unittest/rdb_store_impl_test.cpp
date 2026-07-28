@@ -2544,6 +2544,263 @@ HWTEST_F(RdbStoreImplTest, InitSaDb001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RdbStore_Release_001
+ * @tc.desc: Test RdbStore::Release() hard-closes the connection pool; later operations fail.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_basic_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+    ASSERT_EQ(E_OK, store->Release());
+    EXPECT_NE(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_ClearStoreCache_001
+ * @tc.desc: ClearStoreCache evicts the cached store so the next GetRdbStore yields a fresh instance.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ClearStoreCache_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "clearcache_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+
+    ASSERT_EQ(E_OK, storeA->Release());
+    EXPECT_NE(E_OK, storeA->ExecuteSql(CREATE_TABLE_TEST));
+    EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
+
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    EXPECT_NE(storeA.get(), storeB.get());
+    EXPECT_EQ(E_OK, storeB->ExecuteSql(CREATE_TABLE_TEST));
+
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_ReleaseAndReopen_001
+ * @tc.desc: While a borrowed connection is held, Release times out with E_DATABASE_BUSY and the pool
+ *           is restored; once the connection is returned, Release succeeds. ClearStoreCache + reopen
+ *           then yields a fresh store/pool.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_reopen_test.db";
+    RdbHelper::DeleteRdbStore(db);
+
+    RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    auto implA = std::static_pointer_cast<RdbStoreImpl>(storeA);
+    std::shared_ptr<ConnectionPool> poolA = implA->GetPool();
+    ASSERT_NE(poolA, nullptr);
+
+    std::shared_ptr<Connection> connOld = poolA->AcquireConnection(false);
+    ASSERT_NE(connOld, nullptr);
+
+    EXPECT_EQ(E_DATABASE_BUSY, storeA->Release({ 1000 }));
+    EXPECT_NE(nullptr, implA->GetPool());
+
+    connOld.reset();
+    EXPECT_EQ(E_OK, storeA->Release({ 1000 }));
+    EXPECT_EQ(nullptr, implA->GetPool());
+
+    EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    auto implB = std::static_pointer_cast<RdbStoreImpl>(storeB);
+    std::shared_ptr<ConnectionPool> poolB = implB->GetPool();
+    ASSERT_NE(poolB, nullptr);
+
+    EXPECT_NE(storeA.get(), storeB.get());
+    EXPECT_NE(poolA.get(), poolB.get());
+    EXPECT_NE(nullptr, poolB->AcquireConnection(false));
+
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_ReleaseAndReopen_ResultSet_001
+ * @tc.desc: With WAL an open ResultSet holds a read connection; Release times out with E_DATABASE_BUSY
+ *           until the ResultSet is closed, then succeeds. ClearStoreCache + reopen yields a fresh handle.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ReleaseAndReopen_ResultSet_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_reopen_resultset_test.db";
+    RdbHelper::DeleteRdbStore(db);
+
+    RdbStoreConfig config(db);
+    config.SetJournalMode(JournalMode::MODE_WAL);
+    config.SetReadConSize(4);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+
+    std::shared_ptr<RdbStore> storeA = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeA, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, storeA->ExecuteSql(CREATE_TABLE_TEST));
+    auto implA = std::static_pointer_cast<RdbStoreImpl>(storeA);
+    std::shared_ptr<ConnectionPool> poolA = implA->GetPool();
+    ASSERT_NE(poolA, nullptr);
+
+    std::shared_ptr<ResultSet> resultSet = storeA->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+
+    EXPECT_EQ(E_DATABASE_BUSY, storeA->Release({ 1000 }));
+    EXPECT_NE(nullptr, implA->GetPool());
+
+    EXPECT_EQ(E_OK, resultSet->Close());
+    EXPECT_EQ(E_OK, storeA->Release({ 1000 }));
+    EXPECT_EQ(nullptr, implA->GetPool());
+
+    EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(config));
+    std::shared_ptr<RdbStore> storeB = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(storeB, nullptr);
+    auto implB = std::static_pointer_cast<RdbStoreImpl>(storeB);
+    EXPECT_NE(storeA.get(), storeB.get());
+    EXPECT_NE(poolA.get(), implB->GetPool().get());
+
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_Release_Timeout_ResultSet_001
+ * @tc.desc: Release returns E_DATABASE_BUSY while ResultSets still hold read connections, and E_OK
+ *           once the last one is closed. Bounded-wait semantics: Release never blocks past waitTime.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_ResultSet_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_timeout_resultset_test.db";
+    RdbHelper::DeleteRdbStore(db);
+
+    RdbStoreConfig config(db);
+    config.SetJournalMode(JournalMode::MODE_WAL);
+    config.SetReadConSize(8);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+    EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('a', 1);"));
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
+
+    std::vector<std::shared_ptr<ResultSet>> resultSets;
+    for (int i = 0; i < 5; i++) {
+        auto rs = store->QueryByStep("SELECT * FROM test");
+        ASSERT_NE(rs, nullptr);
+        resultSets.push_back(rs);
+    }
+    ASSERT_NE(nullptr, impl->GetPool());
+
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release({ 1000 }));
+    EXPECT_NE(nullptr, impl->GetPool());
+    EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('b', 2);"));
+
+    EXPECT_EQ(E_OK, resultSets[0]->Close());
+    resultSets.erase(resultSets.begin());
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release({ 1000 }));
+
+    for (size_t i = 0; i + 1 < resultSets.size(); i++) {
+        EXPECT_EQ(E_OK, resultSets[i]->Close());
+    }
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release({ 1000 }));
+
+    EXPECT_EQ(E_OK, resultSets.back()->Close());
+    resultSets.clear();
+    EXPECT_EQ(E_OK, store->Release({ 1000 }));
+    EXPECT_EQ(nullptr, impl->GetPool());
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_Release_Timeout_Transaction_001
+ * @tc.desc: Release returns E_DATABASE_BUSY while an open Transaction still borrows a connection, and
+ *           E_OK after the transaction is closed. Bounded-wait semantics: Release never blocks past
+ *           waitTime.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_Timeout_Transaction_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_timeout_transaction_test.db";
+    RdbHelper::DeleteRdbStore(db);
+
+    RdbStoreConfig config(db);
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
+
+    auto [beginErr, transaction] = store->CreateTransaction(Transaction::IMMEDIATE);
+    ASSERT_EQ(E_OK, beginErr);
+    ASSERT_NE(transaction, nullptr);
+    ASSERT_NE(nullptr, impl->GetPool());
+
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release({ 1000 }));
+    EXPECT_NE(nullptr, impl->GetPool());
+    ValuesBucket row;
+    row.Put("name", "a");
+    row.Put("age", 1);
+    EXPECT_EQ(E_OK, transaction->Insert("test", row).first);
+    EXPECT_EQ(E_OK, transaction->Commit());
+
+    EXPECT_EQ(E_OK, store->Release({ 1000 }));
+    EXPECT_EQ(nullptr, impl->GetPool());
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_ClearStoreCache_002
+ * @tc.desc: ClearStoreCache returns E_INVALID_FILE_PATH when config has
+ *           MODE_MEMORY with non-OWNER role (GetDbPath returns E_NOT_SUPPORT).
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_ClearStoreCache_002, TestSize.Level2)
+{
+    RdbStoreConfig config("clearcache_err_test.db");
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetRoleType(VISITOR);
+    EXPECT_EQ(E_INVALID_FILE_PATH, RdbHelper::ClearStoreCache(config));
+}
+
+/**
  * @tc.name: RdbStore_UpdateMatrixFile_001
  * @tc.desc: test register matrix
  * @tc.type: FUNC
@@ -2558,7 +2815,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_UpdateMatrixFile_001, TestSize.Level0)
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(store, nullptr);
     ASSERT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
- 
+
     ValuesBucket row;
     row.Put("id", 1);
     row.Put("name", "name1");
@@ -2566,7 +2823,7 @@ HWTEST_F(RdbStoreImplTest, RdbStore_UpdateMatrixFile_001, TestSize.Level0)
     int64_t id;
     errCode = store->Insert(id, "test", row);
     EXPECT_EQ(errCode, E_OK);
- 
+
     RdbHelper::DeleteRdbStore(config);
 }
 

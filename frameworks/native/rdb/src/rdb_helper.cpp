@@ -141,6 +141,19 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
     return E_OK;
 }
 
+int RdbHelper::ClearStoreCache(const RdbStoreConfig &config)
+{
+    std::string dbFile;
+    auto errCode = SqliteGlobalConfig::GetDbPath(config, dbFile);
+    if (errCode != E_OK || dbFile.empty()) {
+        return E_INVALID_FILE_PATH;
+    }
+    RdbStoreManager::GetInstance().Remove(dbFile, false);
+    LOG_INFO("Clear store cache, dbType:%{public}d, path %{public}s", config.GetDBType(),
+        SqliteUtils::Anonymous(dbFile).c_str());
+    return E_OK;
+}
+
 std::shared_ptr<RdbStore> RdbHelper::GetRdb(const RdbStoreConfig &config)
 {
     return RdbStoreManager::GetInstance().GetRdb(config);

@@ -530,6 +530,12 @@ int RdbStore::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
     return E_NOT_SUPPORT;
 }
 
+int RdbStore::Release(const ReleaseOption &option)
+{
+    (void)option;
+    return E_NOT_SUPPORT;
+}
+
 std::pair<int32_t, int32_t> RdbStore::UpdateDistributedInfo(
     const DistributedRdb::DistributedInfo &distributedInfo, const AbsRdbPredicates &predicates)
 {

@@ -200,6 +200,59 @@ void RdbStoreImpl::Close()
     }
 }
 
+int RdbStoreImpl::RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> &pool,
+    const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason)
+{
+    if (pool != nullptr) {
+        pool->Dump(true, reason);
+        pool->Dump(false, reason);
+        std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
+        connectionPool_ = std::move(pool);
+    }
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
+    }
+    return E_DATABASE_BUSY;
+}
+
+int RdbStoreImpl::Release(const ReleaseOption &option)
+{
+    auto start = steady_clock::now();
+    std::shared_ptr<ConnectionPool> pool;
+    {
+        std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
+        if (connectionPool_ == nullptr) {
+            return E_ALREADY_CLOSED;
+        }
+        pool = std::move(connectionPool_);
+    }
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (service != nullptr) {
+        service->Disable(syncerParam_);
+    }
+    if (pool != nullptr) {
+        auto used = duration_cast<milliseconds>(steady_clock::now() - start);
+        auto remain = milliseconds(option.waitTime) - used;
+        if (remain <= milliseconds::zero()) {
+            return RestorePoolOnTimeout(pool, service, "Release budget exhausted");
+        }
+        auto acquired = pool->AcquireAll(remain);
+        if (acquired.first == nullptr) {
+            return RestorePoolOnTimeout(pool, service, "Release AcquireAll timeout");
+        }
+    }
+    {
+        std::lock_guard<decltype(helperMutex_)> autoLock(helperMutex_);
+        if (knowledgeSchemaHelper_ != nullptr) {
+            knowledgeSchemaHelper_->Close();
+        }
+    }
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
+    }
+    return E_OK;
+}
+
 std::shared_ptr<ConnectionPool> RdbStoreImpl::GetPool() const
 {
     std::shared_lock<decltype(poolMutex_)> lock(poolMutex_);
@@ -2395,7 +2448,7 @@ int RdbStoreImpl::AttachInner(const RdbStoreConfig &config, const std::string &a
         return E_ALREADY_CLOSED;
     }
     Suspender suspender(Suspender::SQL_LOG);
-    auto [conn, readers] = pool->AcquireAll(waitTime);
+    auto [conn, readers] = pool->AcquireAll(std::chrono::seconds(waitTime));
     if (conn == nullptr) {
         return E_DATABASE_BUSY;
     }
@@ -2499,7 +2552,7 @@ std::pair<int32_t, int32_t> RdbStoreImpl::Detach(const std::string &attachName, 
     if (pool == nullptr) {
         return { E_ALREADY_CLOSED, 0 };
     }
-    auto [connection, readers] = pool->AcquireAll(waitTime);
+    auto [connection, readers] = pool->AcquireAll(std::chrono::seconds(waitTime));
     if (connection == nullptr) {
         return { E_DATABASE_BUSY, 0 };
     }

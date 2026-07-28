@@ -53,7 +53,7 @@ public:
     SharedConn Acquire(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
     // this interface is only provided for resultSet
     SharedConn AcquireRef(bool isReadOnly, std::chrono::milliseconds ms = INVALID_TIME);
-    std::pair<SharedConn, SharedConns> AcquireAll(int32_t time);
+    std::pair<SharedConn, SharedConns> AcquireAll(std::chrono::milliseconds ms);
     std::pair<int32_t, SharedConn> DisableWal();
     int32_t EnableWal();
     int32_t Dump(bool isWriter, const char *header);
