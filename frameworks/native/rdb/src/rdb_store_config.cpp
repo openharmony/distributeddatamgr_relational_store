@@ -608,6 +608,16 @@ bool RdbStoreConfig::GetAllowRebuild() const
     return allowRebuilt_;
 }
 
+bool RdbStoreConfig::IsLocalOnly() const
+{
+    return isLocalOnly_;
+}
+
+void RdbStoreConfig::SetLocalOnly(bool isLocalOnly)
+{
+    isLocalOnly_ = isLocalOnly;
+}
+
 void RdbStoreConfig::SetIntegrityCheck(IntegrityCheck checkType)
 {
     checkType_ = checkType;
