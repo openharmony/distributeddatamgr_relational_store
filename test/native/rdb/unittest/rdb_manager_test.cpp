@@ -193,3 +193,66 @@ HWTEST_F(RdbManagerTest, GetRdbService_ThreadSafety_004, TestSize.Level1)
         EXPECT_EQ(result, results[0]);
     }
 }
+
+/**
+ * @tc.name: RdbManagerTest_GetRdbService_LocalOnly_001
+ * @tc.desc: Verify GetRdbService returns E_NOT_SUPPORT when isLocalOnly_ is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbManagerTest, GetRdbService_LocalOnly_001, TestSize.Level1)
+{
+    auto& manager = RdbManager::GetInstance();
+    auto param = CreateValidParam();
+    param.isLocalOnly_ = true;
+
+    auto [status, service] = manager.GetRdbService(param);
+
+    EXPECT_EQ(status, E_NOT_SUPPORT);
+    EXPECT_EQ(service, nullptr);
+}
+
+/**
+ * @tc.name: RdbManagerTest_GetRdbService_LocalOnly_002
+ * @tc.desc: Verify isLocalOnly_ takes priority over empty bundleName check
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbManagerTest, GetRdbService_LocalOnly_002, TestSize.Level1)
+{
+    auto& manager = RdbManager::GetInstance();
+    RdbSyncerParam param;
+    param.bundleName_ = "";
+    param.storeName_ = "test.db";
+    param.isLocalOnly_ = true;
+
+    auto [status, service] = manager.GetRdbService(param);
+
+    EXPECT_EQ(status, E_NOT_SUPPORT);
+    EXPECT_EQ(service, nullptr);
+}
+
+/**
+ * @tc.name: RdbManagerTest_GetRdbService_LocalOnly_003
+ * @tc.desc: Verify GetRdbService does not skip when isLocalOnly_ is false
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbManagerTest, GetRdbService_LocalOnly_003, TestSize.Level1)
+{
+    auto& manager = RdbManager::GetInstance();
+    auto param = CreateValidParam();
+    param.isLocalOnly_ = false;
+
+    auto [status, service] = manager.GetRdbService(param);
+
+    EXPECT_NE(status, E_SERVICE_NOT_FOUND);
+}
+
+/**
+ * @tc.name: RdbManagerTest_GetRdbService_LocalOnly_Default
+ * @tc.desc: Verify isLocalOnly_ defaults to false
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbManagerTest, GetRdbService_LocalOnly_Default, TestSize.Level1)
+{
+    RdbSyncerParam param;
+    EXPECT_FALSE(param.isLocalOnly_);
+}

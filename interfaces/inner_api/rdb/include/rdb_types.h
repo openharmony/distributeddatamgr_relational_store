@@ -140,6 +140,7 @@ struct RdbSyncerParam {
     std::string assetTempPath_ = {};
     bool assetDownloadOnDemand_ = false;
     std::string dbPath_ = "";
+    bool isLocalOnly_ = false;
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);

@@ -279,6 +279,7 @@ RdbStoreConfig SqliteConnection::GetSlaveRdbStoreConfig(const RdbStoreConfig &rd
     rdbStoreConfig.SetHaMode(rdbConfig.GetHaMode());
 
     rdbStoreConfig.SetCryptoParam(rdbConfig.GetCryptoParam());
+    rdbStoreConfig.SetLocalOnly(rdbConfig.IsLocalOnly());
     return rdbStoreConfig;
 }
 
@@ -1549,6 +1550,7 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     param.haMode_ = config.GetHaMode();
     param.password_ = {};
     param.subUser_ = config.GetSubUser();
+    param.isLocalOnly_ = config.IsLocalOnly();
     std::vector<std::vector<uint8_t>> keys;
     auto [svcErr, service] = DistributedRdb::RdbManager::GetInstance().GetRdbService(param);
     if (svcErr != E_OK || service == nullptr) {

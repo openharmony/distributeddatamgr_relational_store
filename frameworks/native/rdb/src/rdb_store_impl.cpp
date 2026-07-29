@@ -118,6 +118,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.user_ = config.GetPromiseInfo().user_;
     syncerParam_.permissionNames_ = config.GetPromiseInfo().permissionNames_;
     syncerParam_.subUser_ = config.GetSubUser();
+    syncerParam_.isLocalOnly_ = config.IsLocalOnly();
     syncerParam_.dfxInfo_.lastOpenTime_ = RdbTimeUtils::GetCurSysTimeWithMs();
     std::string serverPath = config.GetServerPath();
     if (!serverPath.empty() && (serverPath.find(syncerParam_.bundleName_) != std::string::npos) &&
