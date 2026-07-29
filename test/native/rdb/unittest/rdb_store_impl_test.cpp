@@ -2836,7 +2836,7 @@ HWTEST_F(RdbStoreImplTest, R_ErrMsg_001, TestSize.Level1)
 {
     // "CREAATE" is a misspelled keyword — prepare fails with a syntax error
     auto [ret, value] = store_->Execute("CREAATE TABLE r_errmsg_test(id int)");
-    EXPECT_NE(ret, E_OK);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
     std::string errMsg = store_->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("syntax"), std::string::npos);
@@ -2850,7 +2850,7 @@ HWTEST_F(RdbStoreImplTest, R_ErrMsg_001, TestSize.Level1)
 HWTEST_F(RdbStoreImplTest, R_ErrMsg_002, TestSize.Level1)
 {
     auto [ret, value] = store_->Execute("INSERT INTO r_errmsg_nonexistent_tbl VALUES(1)");
-    EXPECT_NE(ret, E_OK);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
     std::string errMsg = store_->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("no such table"), std::string::npos);
@@ -2867,7 +2867,7 @@ HWTEST_F(RdbStoreImplTest, R_ErrMsg_003, TestSize.Level1)
     EXPECT_EQ(ret1, E_OK);
     // Second creation fails — table already exists
     auto [ret2, val2] = store_->Execute("CREATE TABLE r_errmsg_dup(id int)");
-    EXPECT_NE(ret2, E_OK);
+    EXPECT_EQ(ret2, E_SQLITE_ERROR);
     std::string errMsg = store_->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("already exists"), std::string::npos);
@@ -2886,7 +2886,7 @@ HWTEST_F(RdbStoreImplTest, R_ErrMsg_004, TestSize.Level1)
     EXPECT_EQ(ret2, E_OK);
     // Second insert violates the PRIMARY KEY uniqueness constraint
     auto [ret3, val3] = store_->Execute("INSERT INTO r_errmsg_unique VALUES(1)");
-    EXPECT_NE(ret3, E_OK);
+    EXPECT_EQ(ret3, E_SQLITE_CONSTRAINT);
     std::string errMsg = store_->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("UNIQUE constraint"), std::string::npos);

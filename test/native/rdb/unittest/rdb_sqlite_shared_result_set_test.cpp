@@ -1698,3 +1698,25 @@ HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_005, TestSize.Level
     auto res = sqliteSharedRst->OnGo(0, 0);
     EXPECT_EQ(res, E_ALREADY_CLOSED);
 }
+
+/**
+ * @tc.name: SqliteSharedResultSet_ErrMsg_001
+ * @tc.desc: Verify GetLastErrorMsg keeps BuildRowRangeCtx text after OnGo returns E_ROW_OUT_RANGE
+ *           when cached rowCount_ exceeds actual rows (data deleted after query).
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbSqliteSharedResultSetTest, SqliteSharedResultSet_ErrMsg_001, TestSize.Level1)
+{
+    GenerateDefaultTable();
+    std::vector<std::string> selectionArgs;
+    std::shared_ptr<ResultSet> rstSet =
+        RdbSqliteSharedResultSetTest::store->QuerySql("SELECT * FROM test", selectionArgs);
+    ASSERT_NE(rstSet, nullptr);
+    int ret = RdbSqliteSharedResultSetTest::store->ExecuteSql("DELETE FROM test");
+    ASSERT_EQ(ret, E_OK);
+    EXPECT_EQ(rstSet->GoToRow(1), E_ROW_OUT_RANGE);
+    std::string errMsg = rstSet->GetLastErrorMsg();
+    EXPECT_NE(errMsg.find("The row index is"), std::string::npos);
+    EXPECT_NE(errMsg.find("row count is"), std::string::npos);
+    rstSet->Close();
+}

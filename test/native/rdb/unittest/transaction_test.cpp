@@ -768,7 +768,7 @@ HWTEST_F(TransactionTest, T_ErrMsg_001, TestSize.Level1)
 
     // "CREAATE" is a misspelled keyword -- prepare fails with a syntax error
     auto [execRet, value] = transaction->Execute("CREAATE TABLE t_errmsg_test(id int)");
-    EXPECT_NE(execRet, E_OK);
+    EXPECT_EQ(execRet, E_SQLITE_ERROR);
     std::string errMsg = transaction->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("syntax"), std::string::npos);
@@ -789,7 +789,7 @@ HWTEST_F(TransactionTest, T_ErrMsg_002, TestSize.Level1)
     ASSERT_NE(transaction, nullptr);
 
     auto [execRet, value] = transaction->Execute("INSERT INTO t_errmsg_nonexist VALUES(1)");
-    EXPECT_NE(execRet, E_OK);
+    EXPECT_EQ(execRet, E_SQLITE_ERROR);
     std::string errMsg = transaction->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("no such table"), std::string::npos);
