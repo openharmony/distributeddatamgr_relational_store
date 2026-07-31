@@ -243,7 +243,7 @@ HWTEST_F(RdbManagerTest, GetRdbService_LocalOnly_003, TestSize.Level1)
 
     auto [status, service] = manager.GetRdbService(param);
 
-    EXPECT_NE(status, E_SERVICE_NOT_FOUND);
+    EXPECT_EQ(status, E_OK);
 }
 
 /**
