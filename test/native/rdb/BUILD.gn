@@ -81,6 +81,10 @@ ohos_unittest("NativeRdbMultiProcessTest") {
     "unittest/common.cpp",
     "unittest/multiProcess/rdb_store_multiprocess_createDB_test.cpp",
     "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+    "${relational_store_native_path}/rdb/src/string_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
   ]
   include_dirs = [
     "${relational_store_common_path}/include",
@@ -428,6 +432,14 @@ ohos_unittest("NativeRdbTest") {
       "${relational_store_native_path}/rdb_service_adapter/src/rdb_types_util.cpp",
       "${relational_store_native_path}/rdb_service_adapter/src/result_set_proxy.cpp",
     ]
+  }
+
+  # Host product only: upstream c_utils excludes ashmem.cpp from its host build,
+  # so the Ashmem symbols referenced by shared_block.cpp are absent on host. Vendor
+  # the implementation here under host only; device builds still get Ashmem from
+  # c_utils, avoiding duplicate definitions.
+  if (is_host_product) {
+    sources += [ "${relational_store_mock_path}/external_inner_kit/c_utils/ashmem.cpp" ]
   }
 
   configs = [ ":module_private_config" ]

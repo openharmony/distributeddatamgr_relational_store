@@ -22,6 +22,13 @@ config("appdatafwk_config") {
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_common_path}/include",
   ]
+  # Host product only: put the in-repo linux/ashmem.h shim on the include path so
+  # that <ashmem.h> from c_utils (which unconditionally includes <linux/ashmem.h>,
+  # unavailable on the host kernel) can be compiled. Device builds keep resolving
+  # <linux/ashmem.h> to the real kernel header because this dir is absent then.
+  if (is_host_product) {
+    include_dirs += [ "${relational_store_mock_path}/external_inner_kit/c_utils/host_include" ]
+  }
   if (!is_mingw && !is_mac) {
     cflags_cc = [ "-fvisibility=hidden" ]
   }
@@ -34,6 +41,9 @@ config("appdatafwk_public_config") {
     "${relational_store_innerapi_path}/rdb/include",
     "${relational_store_common_path}/include",
   ]
+  if (is_host_product) {
+    include_dirs += [ "${relational_store_common_path}/host_include" ]
+  }
 }
 
 config("common_public_config") {
@@ -146,6 +156,13 @@ ohos_shared_library("native_appdatafwk") {
 
   sources =
       [ "${relational_store_native_path}/appdatafwk/src/shared_block.cpp" ]
+  # Host product only: upstream c_utils excludes ashmem.cpp from its host build
+  # (and unconditionally requires <linux/ashmem.h> in the header), so the Ashmem
+  # symbols are absent on host. Vendor the implementation here under host only;
+  # device builds still get Ashmem from c_utils, avoiding duplicate definitions.
+  if (is_host_product) {
+    sources += [ "${relational_store_mock_path}/external_inner_kit/c_utils/ashmem.cpp" ]
+  }
 
   configs = [ ":appdatafwk_config" ]
 
