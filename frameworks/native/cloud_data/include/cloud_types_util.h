@@ -20,6 +20,8 @@
 #include "common_types.h"
 #include "itypes_util.h"
 #include "values_bucket.h"
+#include "rdb_types.h"
+#include "big_integer.h"
 
 namespace OHOS::ITypesUtil {
 using Participant = OHOS::CloudData::Participant;
@@ -44,6 +46,9 @@ using CloudSubscribeType = OHOS::CloudData::CloudSubscribeType;
 using ProgressDetail = DistributedRdb::ProgressDetail;
 using TableDetail = DistributedRdb::TableDetail;
 using Statistic = DistributedRdb::Statistic;
+using RdbPredicates = DistributedRdb::PredicatesMemo;
+using RdbOperation = DistributedRdb::RdbPredicateOperation;
+using BigInt = NativeRdb::BigInteger;
 
 template<>
 bool Marshalling(const Participant &input, MessageParcel &data);
@@ -128,5 +133,20 @@ bool Unmarshalling(TableDetail &output, MessageParcel &data);
 
 template<>
 bool Unmarshalling(Statistic &output, MessageParcel &data);
+
+template<>
+bool Marshalling(const RdbOperation &input, MessageParcel &data);
+
+template<>
+bool Unmarshalling(RdbOperation &output, MessageParcel &data);
+
+template<>
+bool Marshalling(const RdbPredicates &input, MessageParcel &data);
+
+template<>
+bool Marshalling(const BigInt &input, MessageParcel &data);
+
+template<>
+bool Unmarshalling(BigInt &output, MessageParcel &data);
 } // namespace OHOS::ITypesUtil
 #endif // OHOS_DISTRIBUTED_DATA_CLOUD_CLOUD_TYPES_UTIL_H

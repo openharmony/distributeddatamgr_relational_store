@@ -98,7 +98,7 @@ int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param)
     return RDB_OK;
 }
 
-int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param, sptr<IRemoteObject> notifier)
+int32_t RdbServiceProxy::InitNotifier(const RdbSyncerParam &param, const sptr<IRemoteObject> &notifier)
 {
     MessageParcel reply;
     int32_t status =

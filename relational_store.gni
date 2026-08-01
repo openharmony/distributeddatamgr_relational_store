@@ -28,11 +28,14 @@ declare_args() {
     relational_store_dm_part_is_enabled = false
   }
 
-  relational_store_api_metrics_enabled = true
-  if (defined(global_parts_info) &&
-      !defined(global_parts_info.hiviewdfx_api_metrics_ext)) {
-    relational_store_api_metrics_enabled = false
+  if (!defined(global_parts_info) ||
+      defined(global_parts_info.developtools_ace_ets2bundle)) {
+      relational_store_support_es2abc = true
+  } else {
+      relational_store_support_es2abc = false
   }
+
+  relational_store_support_jsapi_test = (target_os == "ohos")
 }
 
 common_tool_path = "//foundation/distributeddatamgr/kv_store/frameworks/common"
@@ -68,6 +71,14 @@ datashare_path =
     "//foundation/distributeddatamgr/data_share/interfaces/inner_api"
 
 ipc_path = "//foundation/communication/ipc/interfaces/innerkits"
+
+ipc_core_inner_kit_path = "${relational_store_mock_path}/external_inner_kit/ipc_core/include"
+    
+samgr_inner_kit_path = "${relational_store_mock_path}/external_inner_kit/samgr/include"
+
+huks_inner_kit_path = "${relational_store_mock_path}/external_inner_kit/huks/include"
+
+access_token_inner_kit_path = "${relational_store_mock_path}/external_inner_kit/access_token/include"
 
 kvstore_path = "//foundation/distributeddatamgr/kv_store/frameworks"
 
@@ -139,4 +150,5 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/value_object.cpp",
   "${relational_store_native_path}/rdb/src/values_bucket.cpp",
   "${relational_store_native_path}/rdb/src/values_buckets.cpp",
+  "${relational_store_native_path}/rdb/src/marshal_utils.cpp",
 ]

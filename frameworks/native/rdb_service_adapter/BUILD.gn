@@ -1,0 +1,87 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import(
+    "//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
+
+config("rdb_service_adapter_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_native_path}/dfx/include",
+    "${relational_store_common_path}/include",
+  ]
+
+  cflags = [
+    "-Wno-c99-designator",
+    "-Werror=vla",
+  ]
+
+  defines = [
+    "RELATIONAL_STORE",
+    "SQLITE_HAS_CODEC",
+    "RDB_TRACE_ON",
+    "SQLITE_DISTRIBUTE_RELATIONAL",
+  ]
+}
+
+ohos_static_library("rdb_service_adapter") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    boundary_sanitize = true
+    ubsan = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  sources = [
+    "src/marshal_utils_impl.cpp",
+    "src/rdb_manager_impl.cpp",
+    "src/rdb_notifier_stub.cpp",
+    "src/rdb_service_proxy.cpp",
+    "src/rdb_types_util.cpp",
+    "src/result_set_proxy.cpp",
+  ]
+
+  configs = [ ":rdb_service_adapter_config" ]
+
+  cflags_cc = [
+    "-fvisibility=hidden",
+    "-Werror=vla",
+  ]
+
+  deps = []
+  deps += deps_hilog
+  deps += deps_hisysevent
+  deps += deps_hitrace
+  deps += deps_ipc_core
+  deps += deps_samgr
+
+  external_deps = [
+    "c_utils:utils",
+    "kv_store:datamgr_common",
+  ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_hisysevent
+  external_deps += external_deps_hitrace
+  external_deps += external_deps_ipc_core
+  external_deps += external_deps_samgr
+
+  subsystem_name = "distributeddatamgr"
+  part_name = "relational_store"
+}

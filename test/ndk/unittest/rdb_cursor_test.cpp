@@ -58,7 +58,7 @@ void RdbNativeCursorTest::SetUpTestCase(void)
     int errCode = 0;
     char table[] = "test";
     cursorTestRdbStore_ = OH_Rdb_GetOrOpen(&config_, &errCode);
-    EXPECT_NE(cursorTestRdbStore_, NULL);
+    EXPECT_NE(cursorTestRdbStore_, nullptr);
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     errCode = OH_Rdb_Execute(cursorTestRdbStore_, createTableSql);
@@ -190,7 +190,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_001, TestSize.Level1)
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->goToNextRow(cursor);
 
     OH_ColumnType type;
@@ -234,7 +234,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_002, TestSize.Level1)
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     int columnIndex;
     errCode = cursor->getColumnIndex(cursor, "data1", &columnIndex);
@@ -274,7 +274,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_003, TestSize.Level1)
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
 
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     char name[10];
     errCode = cursor->getColumnName(cursor, 1, name, 10);
@@ -315,7 +315,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_004, TestSize.Level1)
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     int rowCount = 0;
     cursor->getRowCount(cursor, &rowCount);
@@ -380,7 +380,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_005, TestSize.Level1)
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     int rowCount = 0;
     int errCode = cursor->getRowCount(nullptr, &rowCount);
@@ -427,7 +427,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_006, TestSize.Level1)
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, columnNames, len);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
 
     int64_t data2Value;
     int errCode = cursor->getInt64(nullptr, 1, &data2Value);
@@ -474,7 +474,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_007, TestSize.Level1)
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
 
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->goToNextRow(cursor);
 
     OH_ColumnType type;
@@ -502,7 +502,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_008, TestSize.Level1)
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
 
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->goToNextRow(cursor);
 
     OH_ColumnType type;
@@ -564,7 +564,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_009, TestSize.Level1)
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
 
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->goToNextRow(cursor);
 
     OH_ColumnType type;
@@ -583,7 +583,7 @@ HWTEST_F(RdbNativeCursorTest, RDB_Native_cursor_test_009, TestSize.Level1)
     errCode = cursor->getAssets(cursor, 2, assets, &assetCount);
     EXPECT_EQ(assetCount, 2);
     Data_Asset *asset = assets[1];
-    EXPECT_NE(asset, NULL);
+    EXPECT_NE(asset, nullptr);
 
     char name[10] = "";
     size_t nameLength = 10;
@@ -686,7 +686,7 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetAssets_test_011, TestSize.Level
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
 
     OH_Cursor *cursor = OH_Rdb_Query(cursorTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     cursor->goToNextRow(cursor);
 
     OH_ColumnType type;
@@ -711,7 +711,7 @@ HWTEST_F(RdbNativeCursorTest, Abnormal_cursor_GetAssets_test_011, TestSize.Level
     EXPECT_NE(errCode, OH_Rdb_ErrCode::RDB_OK);
 
     Data_Asset *asset = OH_Data_Asset_CreateOne();
-    EXPECT_NE(asset, NULL);
+    EXPECT_NE(asset, nullptr);
     // if cursor is nullptr
     errCode = cursor->getAsset(nullptr, 1, asset);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);

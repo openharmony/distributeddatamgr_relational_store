@@ -217,4 +217,43 @@ bool Unmarshalling(Statistic &output, MessageParcel &data)
 {
     return Unmarshal(data, output.total, output.success, output.failed, output.untreated);
 }
+
+template<>
+bool Marshalling(const RdbOperation &input, MessageParcel &data)
+{
+    return Marshal(data, static_cast<int32_t>(input.operator_), input.field_, input.values_);
+}
+
+template<>
+bool Unmarshalling(RdbOperation &output, MessageParcel &data)
+{
+    int32_t option;
+    auto ret = Unmarshal(data, option, output.field_, output.values_);
+    output.operator_ = static_cast<decltype(output.operator_)>(option);
+    return ret;
+}
+
+template<>
+bool Marshalling(const RdbPredicates &input, MessageParcel &data)
+{
+    return Marshal(data, input.tables_, input.devices_, input.operations_);
+}
+
+template<>
+bool Marshalling(const BigInt &input, MessageParcel &data)
+{
+    return Marshal(data, input.Sign(), input.Value());
+}
+
+template<>
+bool Unmarshalling(BigInt &output, MessageParcel &data)
+{
+    int32_t sign = 0;
+    std::vector<uint64_t> value;
+    if (!Unmarshal(data, sign, value)) {
+        return false;
+    }
+    output = BigInt(sign, std::move(value));
+    return true;
+}
 } // namespace OHOS::ITypesUtil

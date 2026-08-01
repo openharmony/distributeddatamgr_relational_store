@@ -14,6 +14,7 @@
  */
 
 #include "sqlite_utils.h"
+#include "rdb_sql_utils.h"
 
 #include <gtest/gtest.h>
 
@@ -227,8 +228,7 @@ HWTEST_F(SqliteUtilsTest, SqliteUtils_Test_0027, TestSize.Level1)
 {
     std::string filePath = "/data/test/SqliteUtils_Test_0027";
     std::string subPath = filePath + "/bin001";
-    std::error_code ec;
-    std::filesystem::create_directories(filePath, ec);
+    RdbSqlUtils::CreateDirectory(filePath);
     std::ofstream src(subPath.c_str(), std::ios::binary);
     ASSERT_TRUE(src.is_open());
     src.close();

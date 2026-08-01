@@ -57,7 +57,7 @@ void RdbNativeAssetTest::SetUpTestCase(void)
     mkdir(config_.dataBaseDir, 0770);
     int errCode = 0;
     assetTestRdbStore_ = OH_Rdb_GetOrOpen(&config_, &errCode);
-    EXPECT_NE(assetTestRdbStore_, NULL);
+    EXPECT_NE(assetTestRdbStore_, nullptr);
     CreateAssetTable();
 }
 

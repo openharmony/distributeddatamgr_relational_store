@@ -57,7 +57,7 @@ void RdbCursorGetSizeTest::SetUpTestCase(void)
     int errCode = 0;
     char table[] = "test";
     rdbStore_ = OH_Rdb_GetOrOpen(&config_, &errCode);
-    ASSERT_NE(rdbStore_, NULL);
+    ASSERT_NE(rdbStore_, nullptr);
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     errCode = OH_Rdb_Execute(rdbStore_, createTableSql);
@@ -104,7 +104,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_Rdb_Query(rdbStore_, predicates, columnNames, len);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     cursor->goToNextRow(cursor);
 
@@ -119,7 +119,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_001, TestSize.Level0)
 
     char querySql[] = "SELECT * FROM test";
     OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(rdbStore_, querySql);
-    ASSERT_NE(cursor1, NULL);
+    ASSERT_NE(cursor1, nullptr);
 
     cursor1->goToNextRow(cursor1);
 
@@ -145,7 +145,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_002, TestSize.Level0)
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
 
     OH_Cursor *cursor = OH_Rdb_Query(rdbStore_, predicates, columnNames, len);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     cursor->goToNextRow(cursor);
 
@@ -160,7 +160,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_002, TestSize.Level0)
 
     char querySql[] = "SELECT * FROM test";
     OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(rdbStore_, querySql);
-    ASSERT_NE(cursor1, NULL);
+    ASSERT_NE(cursor1, nullptr);
 
     cursor1->goToNextRow(cursor1);
 
@@ -186,7 +186,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
 
     OH_Cursor *cursor = OH_Rdb_Query(rdbStore_, predicates, columnNames, len);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     cursor->goToNextRow(cursor);
 
@@ -202,7 +202,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_003, TestSize.Level0)
 
     char querySql[] = "SELECT * FROM test";
     OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(rdbStore_, querySql);
-    ASSERT_NE(cursor1, NULL);
+    ASSERT_NE(cursor1, nullptr);
 
     cursor1->goToNextRow(cursor1);
 
@@ -228,7 +228,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_004, TestSize.Level0)
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
 
     OH_Cursor *cursor = OH_Rdb_Query(rdbStore_, predicates, columnNames, len);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     cursor->goToNextRow(cursor);
 
@@ -246,7 +246,7 @@ HWTEST_F(RdbCursorGetSizeTest, Normal_cursor_GetSize_test_004, TestSize.Level0)
 
     char querySql[] = "SELECT * FROM test";
     OH_Cursor *cursor1 = OH_Rdb_ExecuteQuery(rdbStore_, querySql);
-    ASSERT_NE(cursor1, NULL);
+    ASSERT_NE(cursor1, nullptr);
 
     cursor1->goToNextRow(cursor1);
 

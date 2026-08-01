@@ -15,6 +15,7 @@
 import("//build/config/features.gni")
 import("//build/test.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 ##############################fuzztest##########################################
 ohos_fuzztest("CloudNotifierStubFuzzTest") {
@@ -52,10 +53,14 @@ ohos_fuzztest("CloudNotifierStubFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-    "kv_store:datamgr_common",
   ]
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ipc_core
+  external_deps += external_deps_datamgr_common
+
+  deps += deps_hilog
+  deps += deps_ipc_core
+  deps += deps_datamgr_common
 }
 
 ###############################################################################

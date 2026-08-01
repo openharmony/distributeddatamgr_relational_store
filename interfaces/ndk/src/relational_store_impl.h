@@ -16,11 +16,13 @@
 #ifndef RELATIONAL_STORE_IMPL_H
 #define RELATIONAL_STORE_IMPL_H
 
+#include <atomic>
 #include <list>
 #include <memory>
 
 #include "oh_predicates.h"
 #include "rdb_store.h"
+#include "rdb_types.h"
 #include "relational_store.h"
 
 namespace OHOS {

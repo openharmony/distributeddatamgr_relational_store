@@ -12,85 +12,52 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("platform/common.gni")
 
-if (!is_ohos && !is_android && !is_ios) {
-  base_sources += [ "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
-                    "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp",
-  ]
-} else if (is_android || is_ios) {
-  base_sources += [ "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp" ]
+if (is_ohos) {
+  import("platform/ohos/config.gni")
+} else if (is_mingw) {
+  import("platform/mingw/config.gni")
+} else if (is_mac) {
+  import("platform/mac/config.gni")
+} else if (is_android) {
+  import("platform/android/config.gni")
+} else if (is_ios) {
+  import("platform/ios/config.gni")
+} else if (is_linux) {
+  import("platform/linux/config.gni")
 }
 
-if (is_ohos && !build_ohos_sdk) {
-  config("native_rdb_config") {
-    visibility = [ ":*" ]
+config("native_rdb_config") {
+  visibility = [ ":*" ]
 
-    cflags = [
-      "-Wno-c99-designator",
-      "-Werror=vla",
-    ]
-    include_dirs = [
-      "include",
-      "${relational_store_common_path}/include",
-      "${relational_store_native_path}/rdb_crypt",
-      "${relational_store_native_path}/rdb/include",
-      "${relational_store_native_path}/rd/include",
-      "${relational_store_native_path}/dfx/include",
-      "${relational_store_native_path}/obs_mgr_adapter",
-    ]
+  cflags = native_rdb_platform_cflags
+  include_dirs = native_rdb_platform_include_dirs
 
-    if (!support_jsapi) {
-      include_dirs += [
-        "${relational_store_mock_path}/frameworks/native/rdb/mock_security",
-      ]
-    }
+  defines = native_rdb_platform_defines
+}
 
-    defines = [
-      "RELATIONAL_STORE",
-      "SQLITE_HAS_CODEC",
-      "RDB_TRACE_ON",
-    ]
+config("native_rdb_public_config") {
+  visibility = [ ":*" ]
 
-    defines += [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
-    if (!defined(global_parts_info) ||
-        defined(global_parts_info.distributeddatamgr_arkdata_database_core)) {
-      defines += [ "ARKDATA_DATABASE_CORE_ENABLE" ]
-    }
-  }
+  include_dirs = native_rdb_platform_public_include_dirs
+}
 
-  config("native_rdb_public_config") {
-    visibility = [ ":*" ]
-
-    include_dirs = [
-      "include",
-      "${relational_store_common_path}/include",
-      "${relational_store_innerapi_path}/appdatafwk/include",
-      "${relational_store_native_path}/rdb/include",
-      "${relational_store_native_path}/rd/include",
-      "${relational_store_native_path}/dfx/include",
-      "${relational_store_native_path}/obs_mgr_adapter",
-      "../cloud_data/include",
-      "../common_type/include",
-    ]
-  }
-
+if (native_rdb_platform_target_type == "ohos_shared_library") {
   ohos_shared_library("native_rdb") {
     branch_protector_ret = "pac_ret"
-    sanitize = {
-      boundary_sanitize = true
-      ubsan = true
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
+    if (defined(native_rdb_platform_sanitize)) {
+      sanitize = native_rdb_platform_sanitize
     }
 
-    part_name = "relational_store"
-    sources = base_sources
+    part_name = native_rdb_common_part_name
+    sources = base_sources + native_rdb_platform_sources
 
     configs = [ ":native_rdb_config" ]
 
-    ldflags = [ "-Wl,--exclude-libs,ALL" ]
-    cflags_cc = [
+    ldflags = native_rdb_platform_ldflags
+    cflags_cc = native_rdb_platform_cflags_cc
+    cflags_cc += [
       "-fvisibility=hidden",
       "-fvisibility-inlines-hidden",
       "-fno-unwind-tables",
@@ -98,152 +65,77 @@ if (is_ohos && !build_ohos_sdk) {
       "-Os",
       "-Werror=vla",
     ]
-    sources += [
-      "${relational_store_native_path}/rd/src/grd_api_manager.cpp",
-      "${relational_store_native_path}/rd/src/rd_connection.cpp",
-      "${relational_store_native_path}/rd/src/rd_statement.cpp",
-      "${relational_store_native_path}/rd/src/rd_utils.cpp",
-      "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
-      "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
-      "${relational_store_native_path}/rdb/src/share_block.cpp",
-      "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
-      "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
-    ]
-
-    deps = [
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-      "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
-      "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
-    ]
-
-    external_deps = [
-      "c_utils:utils",
-      "file_api:securitylabel",
-      "hilog:libhilog",
-      "hisysevent:libhisysevent",
-      "hitrace:hitrace_meter",
-      "ipc:ipc_core",
-      "json:nlohmann_json_static",
-      "kv_store:database_utils",
-      "kv_store:datamgr_common",
-      "kv_store:distributeddb_client",
-      "openssl:libcrypto_shared",
-      "samgr:samgr_proxy",
-      "sqlite:sqlite",
-      "sqlite:sqliteicu",
-    ]
-
-    defines = []
-    if (arkdata_db_core_is_exists) {
-      defines += [ "ARKDATA_DB_CORE_IS_EXISTS" ]
+    if (defined(native_rdb_platform_libs)) {
+      libs = native_rdb_platform_libs
     }
-    if (!support_jsapi) {
-      external_deps -= [ "file_api:securitylabel" ]
+
+    deps = native_rdb_platform_deps
+
+    external_deps = native_rdb_platform_external_deps
+
+    if (defined(native_rdb_platform_innerapi_tags)) {
+      innerapi_tags = native_rdb_platform_innerapi_tags
     }
 
     public_configs = [ ":native_rdb_public_config" ]
-    innerapi_tags = [
-      "platformsdk",
-      "sasdk",
-    ]
-    subsystem_name = "distributeddatamgr"
+    subsystem_name = native_rdb_common_subsystem_name
   }
+} else if (native_rdb_platform_target_type == "ohos_source_set") {
+  ohos_source_set("native_rdb") {
+    part_name = native_rdb_common_part_name
+    sources = base_sources + native_rdb_platform_sources
 
+    configs = [ ":native_rdb_config" ]
+
+    cflags_cc = native_rdb_platform_cflags_cc
+
+    deps = native_rdb_platform_deps
+
+    external_deps = native_rdb_platform_external_deps
+
+    public_configs = [ ":native_rdb_public_config" ]
+    subsystem_name = native_rdb_common_subsystem_name
+  }
+}
+
+if (native_rdb_platform_has_extra_source_set) {
   ohos_source_set("native_rdb_src") {
     branch_protector_ret = "pac_ret"
-    sanitize = {
-      boundary_sanitize = true
-      ubsan = true
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
+    if (defined(native_rdb_platform_sanitize)) {
+      sanitize = native_rdb_platform_sanitize
     }
 
-    sources = base_sources
+    sources = base_sources + native_rdb_platform_sources
 
     configs = [ ":native_rdb_config" ]
 
-    ldflags = [ "-Wl,--exclude-libs,ALL" ]
+    ldflags = native_rdb_platform_ldflags
 
-    sources += [
-      "${relational_store_native_path}/rd/src/grd_api_manager.cpp",
-      "${relational_store_native_path}/rd/src/rd_connection.cpp",
-      "${relational_store_native_path}/rd/src/rd_statement.cpp",
-      "${relational_store_native_path}/rd/src/rd_utils.cpp",
-      "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_manager_impl.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_notifier_stub.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_service_proxy.cpp",
-      "${relational_store_native_path}/rdb/src/rdb_types_util.cpp",
-      "${relational_store_native_path}/rdb/src/result_set_proxy.cpp",
-      "${relational_store_native_path}/rdb/src/share_block.cpp",
-      "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
-      "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
-    ]
+    deps = native_rdb_platform_deps
 
-    deps = [
-      "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
-      "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
-      "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
-    ]
-
-    external_deps = [
-      "c_utils:utils",
-      "file_api:securitylabel",
-      "hilog:libhilog",
-      "hisysevent:libhisysevent",
-      "hitrace:hitrace_meter",
-      "ipc:ipc_core",
-      "json:nlohmann_json_static",
-      "kv_store:database_utils",
-      "kv_store:datamgr_common",
-      "kv_store:distributeddb_client",
-      "openssl:libcrypto_shared",
-      "samgr:samgr_proxy",
-      "sqlite:sqlite",
-      "sqlite:sqliteicu",
-    ]
-    if (!support_jsapi) {
-      external_deps -= [ "file_api:securitylabel" ]
-    }
+    external_deps = native_rdb_platform_external_deps
 
     public_configs = [ ":native_rdb_public_config" ]
 
-    subsystem_name = "distributeddatamgr"
-    part_name = "relational_store"
+    subsystem_name = native_rdb_common_subsystem_name
+    part_name = native_rdb_common_part_name
   }
+}
 
-  ohos_static_library("native_rdb_type_utils") {
-    branch_protector_ret = "pac_ret"
-    sanitize = {
-      boundary_sanitize = true
-      ubsan = true
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-    }
-
-    sources = [ "${relational_store_native_path}/rdb/src/rdb_types_util.cpp" ]
+if (native_rdb_platform_has_static_library) {
+  ohos_static_library("native_rdb_static") {
+    sources = base_sources + native_rdb_platform_sources
 
     configs = [ ":native_rdb_config" ]
 
-    external_deps = [
-      "c_utils:utils",
-      "hilog:libhilog",
-      "ipc:ipc_core",
-      "kv_store:datamgr_common",
-    ]
+    deps = native_rdb_platform_deps
+
+    cflags_cc = native_rdb_platform_cflags_cc
 
     public_configs = [ ":native_rdb_public_config" ]
 
-    subsystem_name = "distributeddatamgr"
-    part_name = "relational_store"
+    subsystem_name = native_rdb_common_subsystem_name
+    part_name = native_rdb_common_part_name
   }
 } else if (is_mingw) {
   config("native_rdb_config") {

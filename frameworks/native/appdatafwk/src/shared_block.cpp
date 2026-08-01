@@ -25,6 +25,7 @@
 #include <iostream>
 
 #include "logger.h"
+#include "message_parcel.h"
 #include "string_ex.h"
 
 namespace OHOS {

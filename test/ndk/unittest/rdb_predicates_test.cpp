@@ -61,7 +61,7 @@ void RdbNativePredicatesTest::SetUpTestCase(void)
     int errCode = 0;
     char table[] = "test";
     predicatesTestRdbStore_ = OH_Rdb_GetOrOpen(&config_, &errCode);
-    EXPECT_NE(predicatesTestRdbStore_, NULL);
+    EXPECT_NE(predicatesTestRdbStore_, nullptr);
 
     char createTableSql[] = "CREATE TABLE test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
@@ -137,7 +137,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_001, TestSize.Level
     predicates->equalTo(predicates, "data3", valueObject)->endWrap(predicates);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
@@ -162,7 +162,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_002, TestSize.Level
     predicates->notEqualTo(predicates, "data1", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(errCode, 0);
@@ -188,7 +188,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_003, TestSize.Level
     predicates->greaterThan(predicates, "data5", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
@@ -249,7 +249,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_004, TestSize.Level
     predicates->greaterThanOrEqualTo(predicates, "data5", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 3);
@@ -274,7 +274,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_005, TestSize.Level
     predicates->lessThan(predicates, "data5", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 0);
@@ -299,7 +299,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_006, TestSize.Level
     predicates->lessThanOrEqualTo(predicates, "data5", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -321,7 +321,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_007, TestSize.Level
     predicates->isNull(predicates, "data4");
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
@@ -342,7 +342,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_008, TestSize.Level
     predicates->isNotNull(predicates, "data4");
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -371,7 +371,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_009, TestSize.Level
     predicates->between(predicates, "data3", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -397,7 +397,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_010, TestSize.Level
     predicates->notBetween(predicates, "data2", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
@@ -422,7 +422,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_011, TestSize.Level
     predicates->distinct(predicates);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -455,7 +455,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_012, TestSize.Level
     predicates->in(predicates, "data1", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
@@ -481,7 +481,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_013, TestSize.Level
     predicates->notIn(predicates, "data1", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -509,7 +509,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_014, TestSize.Level
     predicates->like(predicates, "data2", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 3);
@@ -533,7 +533,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_015, TestSize.Level
     predicates->groupBy(predicates, columnNames, len);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 3);
@@ -561,7 +561,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_016, TestSize.Level
     predicates->equalTo(predicates, "data3", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -586,7 +586,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_017, TestSize.Level
     predicates->equalTo(predicates, "data1", valueObject);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 1);
@@ -595,7 +595,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_017, TestSize.Level
     predicates->clear(predicates);
     predicates->notEqualTo(predicates, "data1", valueObject);
     cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
 
@@ -612,10 +612,10 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_018, TestSize.Level
 {
     char *table = NULL;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates(table);
-    EXPECT_EQ(predicates, NULL);
+    EXPECT_EQ(predicates, nullptr);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_EQ(cursor, NULL);
+    EXPECT_EQ(cursor, nullptr);
 }
 
 /**
@@ -626,7 +626,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_018, TestSize.Level
 HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_019, TestSize.Level1)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    EXPECT_NE(predicates, NULL);
+    EXPECT_NE(predicates, nullptr);
 
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
@@ -682,7 +682,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_019, TestSize.Level
 HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_020, TestSize.Level1)
 {
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    EXPECT_NE(predicates, NULL);
+    EXPECT_NE(predicates, nullptr);
 
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
     const char *data1Value = "zhangSan";
@@ -1019,7 +1019,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_031, TestSize.Level
     ret = OH_Predicates_NotLike(predicates, "data2", data2Value);
 
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 2);
@@ -1058,7 +1058,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_032, TestSize.Level
 
     ret = OH_Predicates_Glob(predicates, "data5", data5Value);
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 0);
@@ -1069,7 +1069,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_032, TestSize.Level
     EXPECT_NE(predicates, nullptr);
     ret = OH_Predicates_Glob(predicates, "data5", data5Value2);
     cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 3);
@@ -1107,7 +1107,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_033, TestSize.Level
 
     ret = OH_Predicates_NotGlob(predicates, "data5", data5Value);
     OH_Cursor *cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     int rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 3);
@@ -1118,7 +1118,7 @@ HWTEST_F(RdbNativePredicatesTest, RDB_Native_predicates_test_033, TestSize.Level
     EXPECT_NE(predicates, nullptr);
     ret = OH_Predicates_NotGlob(predicates, "data5", data5Value2);
     cursor = OH_Rdb_Query(predicatesTestRdbStore_, predicates, NULL, 0);
-    EXPECT_NE(cursor, NULL);
+    EXPECT_NE(cursor, nullptr);
     rowCount = 0;
     errCode = cursor->getRowCount(cursor, &rowCount);
     EXPECT_EQ(rowCount, 0);

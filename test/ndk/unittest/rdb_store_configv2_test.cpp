@@ -85,7 +85,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_001, TestSize.Level1)
     int errCode = 0;
     auto config = InitRdbConfig();
     auto storeConfigV2TestRdbStore = OH_Rdb_CreateOrOpen(config, &errCode);
-    EXPECT_NE(storeConfigV2TestRdbStore, NULL);
+    EXPECT_NE(storeConfigV2TestRdbStore, nullptr);
     char createTableSql[] = "CREATE TABLE store_test (id INTEGER PRIMARY KEY AUTOINCREMENT, data1 TEXT, data2 INTEGER, "
                             "data3 FLOAT, data4 BLOB, data5 TEXT);";
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(storeConfigV2TestRdbStore, createTableSql));
@@ -389,7 +389,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_ICU_TEST002, TestSize.Level1)
 
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_SetTokenizer(config, Rdb_Tokenizer::RDB_ICU_TOKENIZER));
     auto storeConfigV2TestRdbStore = OH_Rdb_CreateOrOpen(config, &errCode);
-    EXPECT_NE(storeConfigV2TestRdbStore, NULL);
+    EXPECT_NE(storeConfigV2TestRdbStore, nullptr);
 
     char createTableSql[] = "CREATE VIRTUAL TABLE example USING fts4(name, content, tokenize=icu zh_CN);";
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, OH_Rdb_Execute(storeConfigV2TestRdbStore, createTableSql));
@@ -536,7 +536,7 @@ HWTEST_F(RdbNativeStoreConfigV2Test, RDB_Native_store_test_012, TestSize.Level1)
     EXPECT_NE(confg, nullptr);
 
     OH_Rdb_CryptoParam *crypto = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(crypto, NULL);
+    EXPECT_NE(crypto, nullptr);
 
     auto ret = OH_Rdb_SetCryptoParam(nullptr, crypto);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);

@@ -19,6 +19,7 @@
 #include <cinttypes>
 #include <cstdint>
 #include <vector>
+#include <string>
 
 #include "abs_shared_block.h"
 #include "rdb_visibility.h"

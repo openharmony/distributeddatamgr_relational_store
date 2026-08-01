@@ -13,6 +13,8 @@
 
 import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import(
+    "//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 config("native_rdb_ndk_utils_public_config") {
   visibility = [ ":*" ]
@@ -46,12 +48,13 @@ ohos_shared_library("native_rdb_ndk_utils") {
   ]
 
   deps = [ "${relational_store_innerapi_path}/rdb:native_rdb" ]
+  deps += deps_hilog
 
   external_deps = [
     "c_utils:utils",
-    "hilog:libhilog",
     "kv_store:datamgr_common",
   ]
+  external_deps += external_deps_hilog
   public_configs = [ ":native_rdb_ndk_utils_public_config" ]
 
   part_name = "relational_store"

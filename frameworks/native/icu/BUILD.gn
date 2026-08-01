@@ -13,6 +13,8 @@
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import(
+    "//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 group("build_module") {
   deps = []
@@ -46,12 +48,15 @@ ohos_shared_library("relational_store_icu") {
 
   sources = [ "${relational_store_native_path}/icu/src/icu_collect.cpp" ]
 
+  deps = []
+  deps += deps_hilog
+
   external_deps = [
-    "hilog:libhilog",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
     "sqlite:sqlite",
   ]
+  external_deps += external_deps_hilog
   if (is_android) {
     external_deps += [ "${plugins_path}/libs/icu:icu_android" ]
   } else if (is_ios) {

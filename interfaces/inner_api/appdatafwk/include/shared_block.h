@@ -22,11 +22,11 @@
 #include <string>
 
 #include "abs_shared_block.h"
-#include "message_parcel.h"
 #include "rdb_visibility.h"
 #include "securec.h"
 
 namespace OHOS {
+class MessageParcel;
 namespace AppDataFwk {
 /**
  * @brief The constant indicates the error is due to an invalid row record.

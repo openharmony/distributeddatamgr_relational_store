@@ -19,7 +19,6 @@
 #include "itypes_util.h"
 #include "rdb_service.h"
 #include "rdb_types.h"
-#include "rdb_visibility.h"
 #include "value_object.h"
 #include "values_bucket.h"
 
@@ -49,61 +48,61 @@ using DebugInfo = DistributedRdb::RdbDebugInfo;
 using StatReporter = DistributedRdb::RdbStatEvent;
 using RdbDfxInfo = DistributedRdb::RdbDfxInfo;
 template<>
-API_EXPORT bool Marshalling(const SyncerParam &input, MessageParcel &data);
+bool Marshalling(const SyncerParam &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(SyncerParam &output, MessageParcel &data);
+bool Unmarshalling(SyncerParam &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const RdbPredicates &input, MessageParcel &data);
+bool Marshalling(const RdbPredicates &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(RdbPredicates &output, MessageParcel &data);
+bool Unmarshalling(RdbPredicates &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const RdbOperation &input, MessageParcel &data);
+bool Marshalling(const RdbOperation &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(RdbOperation &output, MessageParcel &data);
+bool Unmarshalling(RdbOperation &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const ValueObject &input, MessageParcel &data);
+bool Marshalling(const ValueObject &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(ValueObject &output, MessageParcel &data);
+bool Unmarshalling(ValueObject &output, MessageParcel &data);
 template<>
 API_EXPORT bool Marshalling(const ValuesBucket &input, MessageParcel &data);
 template<>
 API_EXPORT bool Unmarshalling(ValuesBucket &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const Asset &input, MessageParcel &data);
+bool Marshalling(const Asset &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(Asset &output, MessageParcel &data);
+bool Unmarshalling(Asset &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const ProgressDetail &input, MessageParcel &data);
+bool Marshalling(const ProgressDetail &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(ProgressDetail &output, MessageParcel &data);
+bool Unmarshalling(ProgressDetail &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const TableDetail &input, MessageParcel &data);
+bool Marshalling(const TableDetail &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(TableDetail &output, MessageParcel &data);
+bool Unmarshalling(TableDetail &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const Statistic &input, MessageParcel &data);
+bool Marshalling(const Statistic &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(Statistic &output, MessageParcel &data);
+bool Unmarshalling(Statistic &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const PrimaryKeys &input, MessageParcel &data);
+bool Marshalling(const PrimaryKeys &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(PrimaryKeys &output, MessageParcel &data);
+bool Unmarshalling(PrimaryKeys &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const Origin &input, MessageParcel &data);
+bool Marshalling(const Origin &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(Origin &output, MessageParcel &data);
+bool Unmarshalling(Origin &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const BigInt &input, MessageParcel &data);
+bool Marshalling(const BigInt &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(BigInt &output, MessageParcel &data);
+bool Unmarshalling(BigInt &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const DebugInfo &input, MessageParcel &data);
+bool Marshalling(const DebugInfo &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(DebugInfo &output, MessageParcel &data);
+bool Unmarshalling(DebugInfo &output, MessageParcel &data);
 template<>
-API_EXPORT bool Marshalling(const RdbDfxInfo &input, MessageParcel &data);
+bool Marshalling(const RdbDfxInfo &input, MessageParcel &data);
 template<>
-API_EXPORT bool Unmarshalling(RdbDfxInfo &output, MessageParcel &data);
+bool Unmarshalling(RdbDfxInfo &output, MessageParcel &data);
 
 template<>
 bool Marshalling(const NotifyConfig &input, MessageParcel &data);

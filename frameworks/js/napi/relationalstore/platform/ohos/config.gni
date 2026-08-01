@@ -1,0 +1,64 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import(
+    "//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
+
+relationalstore_js_platform_include_dirs = [
+  "include",
+  "${relational_store_common_path}/include",
+  "${relational_store_js_common_path}/include",
+  "${relational_store_napi_path}/relationalstore/include",
+]
+
+relationalstore_js_platform_cflags_cc = []
+
+relationalstore_js_platform_defines = [ "SQLITE_DISTRIBUTE_RELATIONAL" ]
+
+relationalstore_js_platform_sources = [
+  "${relational_store_js_common_path}/src/js_ability.cpp",
+  "src/napi_rdb_histogram_reporter.cpp",
+  "src/napi_rdb_store_observer.cpp",
+]
+
+if (relational_store_data_share_enabled) {
+  relationalstore_js_platform_sources += [ "src/napi_data_share_adapter.cpp" ]
+}
+
+relationalstore_js_platform_deps = [
+  "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+  "${relational_store_innerapi_path}/rdb:native_rdb",
+]
+relationalstore_js_platform_deps += deps_ability_runtime
+relationalstore_js_platform_deps += deps_common_event_service
+relationalstore_js_platform_deps += deps_eventhandler
+relationalstore_js_platform_deps += deps_hilog
+relationalstore_js_platform_deps += deps_hitrace
+relationalstore_js_platform_deps += deps_napi
+relationalstore_js_platform_deps += deps_ipc_single
+
+relationalstore_js_platform_external_deps = [
+  "c_utils:utils",
+  "kv_store:datamgr_common",
+]
+relationalstore_js_platform_external_deps += external_deps_ability_runtime
+relationalstore_js_platform_external_deps += external_deps_common_event_service
+relationalstore_js_platform_external_deps += external_deps_eventhandler
+relationalstore_js_platform_external_deps += external_deps_hilog
+relationalstore_js_platform_external_deps += external_deps_hitrace
+relationalstore_js_platform_external_deps += external_deps_napi
+relationalstore_js_platform_external_deps +=
+    external_deps_bounds_checking_function
+relationalstore_js_platform_external_deps += external_deps_ipc_single
+
+relationalstore_js_platform_target_type = "ohos_shared_library"

@@ -104,7 +104,7 @@ void RdbPerformanceTest::SetUpTestCase(void)
     mkdir(config_.dataBaseDir, 0770);
     int errCode = 0;
     g_performanStore = OH_Rdb_GetOrOpen(&config_, &errCode);
-    EXPECT_NE(g_performanStore, NULL);
+    EXPECT_NE(g_performanStore, nullptr);
 
     g_options = OH_RdbTrans_CreateOptions();
     EXPECT_NE(g_options, nullptr);
@@ -299,17 +299,17 @@ HWTEST_F(RdbPerformanceTest, RDB_UpdateWithConflictResolution_test_004, TestSize
 {
     int ret = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("store_test");
-    EXPECT_NE(predicates, NULL);
+    EXPECT_NE(predicates, nullptr);
 
     OH_VObject *valueObject = OH_Rdb_CreateValueObject();
-    EXPECT_NE(valueObject, NULL);
+    EXPECT_NE(valueObject, nullptr);
     const char *data1Value = "zhangSan";
     valueObject->putText(valueObject, data1Value);
 
     predicates->equalTo(predicates, "data1", valueObject);
 
     OH_VBucket *valueBucket = OH_Rdb_CreateValuesBucket();
-    EXPECT_NE(valueBucket, NULL);
+    EXPECT_NE(valueBucket, nullptr);
     valueBucket->putText(valueBucket, "data1", "liSi");
     valueBucket->putInt64(valueBucket, "data2", 13800);
     valueBucket->putReal(valueBucket, "data3", 200.1);
@@ -354,7 +354,7 @@ HWTEST_F(RdbPerformanceTest, RDB_AttachAndDetach_test_005, TestSize.Level1)
 
     int errCode = 0;
     auto tmpStore = OH_Rdb_CreateOrOpen(attachConfig, &errCode);
-    EXPECT_NE(tmpStore, NULL);
+    EXPECT_NE(tmpStore, nullptr);
     OH_Rdb_CloseStore(tmpStore);
 
     size_t attachedNumber = 0;

@@ -59,7 +59,7 @@ void RdbCryptoParamTest::TearDown(void)
 HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_001, TestSize.Level1)
 {
     auto obj = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(obj, NULL);
+    EXPECT_NE(obj, nullptr);
 
     auto ret = OH_Rdb_DestroyCryptoParam(nullptr);
     EXPECT_EQ(ret, RDB_E_INVALID_ARGS);
@@ -81,7 +81,7 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_001, TestSize.Level1)
 HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_002, TestSize.Level1)
 {
     OH_Rdb_CryptoParam *obj = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(obj, NULL);
+    EXPECT_NE(obj, nullptr);
 
     const uint8_t key[] = "12345678";
     auto ret = OH_Crypto_SetEncryptionKey(nullptr, key, sizeof(key) - 1);
@@ -102,7 +102,7 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_002, TestSize.Level1)
 HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_003, TestSize.Level1)
 {
     OH_Rdb_CryptoParam *obj = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(obj, NULL);
+    EXPECT_NE(obj, nullptr);
 
     // -1 is iteration times
     auto ret = OH_Crypto_SetIteration(obj, -1);
@@ -124,7 +124,7 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_003, TestSize.Level1)
 HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_004, TestSize.Level1)
 {
     OH_Rdb_CryptoParam *obj = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(obj, NULL);
+    EXPECT_NE(obj, nullptr);
 
     // 3 is invalid encryption
     auto ret = OH_Crypto_SetEncryptionAlgo(obj, 3);
@@ -145,7 +145,7 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_004, TestSize.Level1)
 HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_005, TestSize.Level1)
 {
     OH_Rdb_CryptoParam *obj = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(obj, NULL);
+    EXPECT_NE(obj, nullptr);
 
     // 3 is invalid hdc
     auto ret = OH_Crypto_SetHmacAlgo(obj, 3);
@@ -167,7 +167,7 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_005, TestSize.Level1)
 HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_006, TestSize.Level1)
 {
     OH_Rdb_CryptoParam *obj = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(obj, NULL);
+    EXPECT_NE(obj, nullptr);
 
     // 3 is invalid kdf
     auto ret = OH_Crypto_SetKdfAlgo(obj, 3);
@@ -188,7 +188,7 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_006, TestSize.Level1)
 HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_007, TestSize.Level1)
 {
     OH_Rdb_CryptoParam *obj = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(obj, NULL);
+    EXPECT_NE(obj, nullptr);
 
     int64_t pageSize = -1;
     auto ret = OH_Crypto_SetCryptoPageSize(obj, pageSize);
@@ -231,7 +231,7 @@ HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_007, TestSize.Level1)
 HWTEST_F(RdbCryptoParamTest, RDB_Crypto_Param_test_008, TestSize.Level1)
 {
     OH_Rdb_CryptoParam *obj = OH_Rdb_CreateCryptoParam();
-    EXPECT_NE(obj, NULL);
+    EXPECT_NE(obj, nullptr);
 
     auto ret = OH_Crypto_SetEncryptionKey(obj, nullptr, -1);
     EXPECT_EQ(ret, RDB_OK);

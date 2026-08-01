@@ -20,7 +20,6 @@
 
 #include <vector>
 
-#include "iremote_object.h"
 #include "rdb_service.h"
 
 namespace OHOS {
@@ -55,7 +54,7 @@ public:
         (const RdbSyncerParam &param, const std::string &device, const std::string &sql,
             const std::vector<std::string> &selectionArgs),
         (override));
-    MOCK_METHOD(int32_t, InitNotifier, (const RdbSyncerParam &param, sptr<IRemoteObject> notifier), (override));
+    MOCK_METHOD(int32_t, InitNotifier, (const RdbSyncerParam &param, const sptr<IRemoteObject> &notifier), (override));
 
     MOCK_METHOD(int32_t, BeforeOpen, (RdbSyncerParam & param), (override));
 

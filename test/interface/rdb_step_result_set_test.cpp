@@ -22,7 +22,6 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
-#include "result_set_proxy.h"
 #include "sqlite_sql_builder.h"
 
 using namespace testing::ext;

@@ -24,9 +24,11 @@
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "napi_rdb_error.h"
-#include "result_set_bridge.h"
 
 namespace OHOS {
+namespace DataShare {
+class ResultSetBridge;
+}
 namespace RdbJsKit {
 class ResultSetProxy final : public JSProxy::JSEntity<NativeRdb::ResultSet, DataShare::ResultSetBridge> {
 public:
@@ -44,6 +46,8 @@ public:
     int apiversion = AppDataMgrJsKit::APIVERSION_8;
 
 private:
+    static std::shared_ptr<DataShare::ResultSetBridge> CreateBridge(
+        std::shared_ptr<NativeRdb::ResultSet> instance);
     static ResultSetProxy *GetInnerResultSet(napi_env env, napi_callback_info info, int &version);
     static ResultSetProxy *ParseInt32FieldByName(
         napi_env env, napi_callback_info info, int32_t &field, const std::string &fieldName);

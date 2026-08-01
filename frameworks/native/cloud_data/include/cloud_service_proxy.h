@@ -22,6 +22,7 @@
 #include "iremote_proxy.h"
 #include "cloud_notifier_stub.h"
 #include "cloud_types.h"
+#include <list>
 #include <map>
 #include <memory>
 #include <mutex>

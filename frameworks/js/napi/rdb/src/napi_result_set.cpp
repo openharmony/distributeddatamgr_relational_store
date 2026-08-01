@@ -26,7 +26,6 @@
 
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
 #include "abs_shared_result_set.h"
-#include "rdb_result_set_bridge.h"
 #include "shared_block.h"
 #include "string_ex.h"
 #endif
@@ -34,6 +33,9 @@
 using namespace OHOS::Rdb;
 using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
+namespace OHOS::DataShare {
+class ResultSetBridge;
+}
 
 namespace OHOS {
 namespace RdbJsKit {
@@ -100,6 +102,7 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> ResultSetProxy::GetNativeObject(n
     }
     return proxy->sharedResultSet_;
 }
+#endif
 
 std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
 {
@@ -109,9 +112,14 @@ std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::Create()
         return nullptr;
     }
     SetInstance(nullptr);
-    return std::make_shared<RdbDataShareAdapter::RdbResultSetBridge>(instance);
+    return CreateBridge(instance);
 }
-#endif
+
+__attribute__((weak)) std::shared_ptr<DataShare::ResultSetBridge> ResultSetProxy::CreateBridge(
+    std::shared_ptr<NativeRdb::ResultSet> instance)
+{
+    return nullptr;
+}
 
 napi_value ResultSetProxy::GetConstructor(napi_env env, int version)
 {

@@ -13,6 +13,7 @@
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
+import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 ohos_copy("relational_store_declaration") {
   sources = [ "./api" ]
@@ -75,8 +76,8 @@ ohos_shared_library("napi_rdb") {
 
     external_deps = [
       "bounds_checking_function:libsec_static",
-      "kv_store:datamgr_common",
     ]
+    external_deps += external_deps_datamgr_common
   } else {
     include_dirs = [
       "include",
@@ -102,26 +103,33 @@ ohos_shared_library("napi_rdb") {
     deps = [
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "${relational_store_innerapi_path}/rdb:native_rdb",
-      "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter",
     ]
+    deps += deps_ability_runtime
+    deps += deps_common_event_service
+    deps += deps_eventhandler
+    deps += deps_hilog
+    deps += deps_hitrace
+    deps += deps_ipc_single
+    deps += deps_datamgr_common
+    deps += deps_napi
 
     external_deps = [
-      "ability_runtime:abilitykit_native",
-      "ability_runtime:extensionkit_native",
-      "ability_runtime:napi_base_context",
-      "ability_runtime:napi_common",
-      "bounds_checking_function:libsec_shared",
       "c_utils:utils",
-      "common_event_service:cesfwk_innerkits",
-      "data_share:datashare_common_lite",
-      "eventhandler:libeventhandler",
-      "hilog:libhilog",
-      "hitrace:hitrace_meter",
-      "ipc:ipc_single",
-      "kv_store:datamgr_common",
-      "napi:ace_napi",
-      "node:node_header_notice",
     ]
+    external_deps += external_deps_ability_runtime
+    external_deps += external_deps_bounds_checking_function
+    external_deps += external_deps_common_event_service
+    external_deps += external_deps_eventhandler
+    external_deps += external_deps_hilog
+    external_deps += external_deps_hitrace
+    external_deps += external_deps_ipc_single
+    external_deps += external_deps_datamgr_common
+    external_deps += external_deps_napi
+    if (relational_store_data_share_enabled) {
+      sources += [ "src/napi_data_share_adapter.cpp" ]
+      deps += [ "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter" ]
+      external_deps += [ "data_share:datashare_common_lite" ]
+    }
   }
 
   subsystem_name = "distributeddatamgr"
@@ -180,19 +188,25 @@ ohos_shared_library("rdb") {
       ":napi_rdb",
       "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
       "${relational_store_innerapi_path}/rdb:native_rdb",
-      "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter",
     ]
+    deps += deps_ability_runtime
+    deps += deps_eventhandler
+    deps += deps_hilog
+    deps += deps_hitrace
+    deps += deps_napi
 
     external_deps = [
-      "ability_runtime:abilitykit_native",
-      "ability_runtime:napi_base_context",
       "c_utils:utils",
-      "data_share:datashare_common_lite",
-      "hilog:libhilog",
-      "hitrace:hitrace_meter",
-      "napi:ace_napi",
       "node:node_header_notice",
     ]
+    external_deps += external_deps_eventhandler
+    external_deps += external_deps_hilog
+    external_deps += external_deps_hitrace
+    external_deps += external_deps_napi
+    if (relational_store_data_share_enabled) {
+      deps += [ "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter" ]
+      external_deps += [ "data_share:datashare_common_lite" ]
+    }
   }
 
   subsystem_name = "distributeddatamgr"

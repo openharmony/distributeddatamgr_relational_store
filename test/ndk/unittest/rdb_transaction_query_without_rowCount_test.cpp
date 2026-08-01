@@ -63,7 +63,7 @@ void RdbTransactionQueryWithoutRowCountTest::SetUpTestCase(void)
     auto config = InitRdbConfig();
     char table[] = "test";
     rdbStore_ = OH_Rdb_CreateOrOpen(config, &errCode);
-    ASSERT_NE(rdbStore_, NULL);
+    ASSERT_NE(rdbStore_, nullptr);
     EXPECT_EQ(OH_Rdb_ErrCode::RDB_OK, errCode);
     char createTableSql[] = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "data1 TEXT, data2 INTEGER, data3 FLOAT, data4 BLOB);";
@@ -443,7 +443,7 @@ void RdbTransactionQueryWithoutRowCountTest::CheckResultSetForGetAsserts(OH_Curs
     errCode = cursor->getAssets(cursor, 2, assets, &assetCount); // columnIndex is 2
     EXPECT_EQ(assetCount, 2); // assetCount is 2
     Data_Asset *asset = assets[1];
-    ASSERT_NE(asset, NULL);
+    ASSERT_NE(asset, nullptr);
 
     char name[10] = "";
     size_t nameLength = 10;
@@ -493,12 +493,12 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_0
     ASSERT_NE(trans, nullptr);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, len);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     CheckAndDestroyCursor(cursor);
 
@@ -519,11 +519,11 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_0
     ASSERT_NE(trans, nullptr);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     // columnNames is nullptr
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     CheckAllAndDestroyCursor(cursor);
 
@@ -543,10 +543,10 @@ HWTEST_F(
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     // trans is nullptr
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(nullptr, predicates, columnNames, len);
     predicates->destroy(predicates);
-    ASSERT_EQ(cursor, NULL);
+    ASSERT_EQ(cursor, nullptr);
 
     OH_Rdb_Transaction *trans = nullptr;
     int ret = OH_Rdb_CreateTransaction(rdbStore_, options_, &trans);
@@ -555,7 +555,7 @@ HWTEST_F(
 
     // predicates is nullptr
     cursor = OH_RdbTrans_QueryWithoutRowCount(trans, nullptr, columnNames, len);
-    ASSERT_EQ(cursor, NULL);
+    ASSERT_EQ(cursor, nullptr);
 
     ret = OH_RdbTrans_Destroy(trans);
     EXPECT_EQ(ret, RDB_OK);
@@ -576,12 +576,12 @@ HWTEST_F(
     ASSERT_NE(trans, nullptr);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     const char *columnNames[] = { "data1", "data2", "data3", "data4" };
     // the size of columnNames is greater than len, the size of columnNames is 2
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, 2);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     cursor->goToNextRow(cursor);
 
@@ -645,11 +645,11 @@ HWTEST_F(
     ASSERT_NE(trans, nullptr);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     const char *columnNames[] = { "data1", "data2", "data3", "data4", "data5" };
     // the size of columnNames is greater than len, the size of columnNames is 5
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, 5);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     int errCode = cursor->goToNextRow(cursor);;
     // An error is reported when a field in a location is added.
@@ -673,12 +673,12 @@ HWTEST_F(
     ASSERT_NE(trans, nullptr);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     const char *columnNames[] = { nullptr, "data2", "data3", "data4" };
     int len = sizeof(columnNames) / sizeof(columnNames[0]);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, len);
     predicates->destroy(predicates);
-    ASSERT_EQ(cursor, NULL);
+    ASSERT_EQ(cursor, nullptr);
 
     ret = OH_RdbTrans_Destroy(trans);
     EXPECT_EQ(ret, RDB_OK);
@@ -700,10 +700,10 @@ HWTEST_F(
     ASSERT_NE(trans, nullptr);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, columnNames, len);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     cursor->goToNextRow(cursor);
 
@@ -767,10 +767,10 @@ HWTEST_F(
 
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
     cursor->goToNextRow(cursor);
 
     OH_ColumnType type;
@@ -787,10 +787,10 @@ HWTEST_F(
     cursor->destroy(cursor);
 
     predicates = OH_Rdb_CreatePredicates("asset_table");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
     cursor->goToNextRow(cursor);
     errCode = cursor->getColumnType(cursor, 1, &type);
     EXPECT_EQ(type, OH_ColumnType::TYPE_ASSET);
@@ -817,10 +817,10 @@ HWTEST_F(
 
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     OH_ColumnType type;
     // row out of bounds
@@ -861,10 +861,10 @@ HWTEST_F(
 
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     int columnIndex;
     errCode = cursor->getColumnIndex(cursor, "id", &columnIndex);
@@ -880,10 +880,10 @@ HWTEST_F(
     cursor->destroy(cursor);
 
     predicates = OH_Rdb_CreatePredicates("asset_table");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
     errCode = cursor->getColumnIndex(cursor, "data1", &columnIndex);
     EXPECT_EQ(columnIndex, 1);
     errCode = cursor->getColumnIndex(cursor, "data2", &columnIndex);
@@ -908,10 +908,10 @@ HWTEST_F(
 
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     int columnIndex;
     // cursor is nullptr
@@ -947,10 +947,10 @@ HWTEST_F(
 
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     char name[6];
     errCode = cursor->getColumnName(cursor, 0, name, 3);
@@ -966,10 +966,10 @@ HWTEST_F(
     cursor->destroy(cursor);
 
     predicates = OH_Rdb_CreatePredicates("asset_table");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     cursor = OH_Rdb_QueryWithoutRowCount(rdbStore_, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
     errCode = cursor->getColumnName(cursor, 1, name, 6);
     EXPECT_EQ(strcmp(name, "data1"), 0);
     errCode = cursor->getColumnName(cursor, 2, name, 6);
@@ -994,10 +994,10 @@ HWTEST_F(
 
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     char name[6];
     // cursor is nullptr
@@ -1035,10 +1035,10 @@ HWTEST_F(
 
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     int columnCount = 0;
     // cursor is nullptr
@@ -1068,10 +1068,10 @@ HWTEST_F(
 
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     int rowCount = 0;
     // getrowCount is not support
@@ -1097,10 +1097,10 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_0
 
     int errCode = 0;
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
     // cursor is nullptr
     errCode = cursor->goToNextRow(nullptr);
     EXPECT_EQ(errCode, OH_Rdb_ErrCode::RDB_E_INVALID_ARGS);
@@ -1124,10 +1124,10 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_0
     ASSERT_NE(trans, nullptr);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("test");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     CheckErrnoAndDestroyCursor(cursor);
 
@@ -1149,10 +1149,10 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_0
     ASSERT_NE(trans, nullptr);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     CheckResultSetForGetAssert(cursor);
 
@@ -1173,10 +1173,10 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QueryWithoutRowCount_0
     ASSERT_NE(trans, nullptr);
 
     OH_Predicates *predicates = OH_Rdb_CreatePredicates("asset_table");
-    ASSERT_NE(predicates, NULL);
+    ASSERT_NE(predicates, nullptr);
     OH_Cursor *cursor = OH_RdbTrans_QueryWithoutRowCount(trans, predicates, NULL, 0);
     predicates->destroy(predicates);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     CheckResultSetForGetAsserts(cursor);
 
@@ -1198,7 +1198,7 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCoun
 
     char querySql[] = "select data1, data2, data3, data4 from test;";
     OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, nullptr);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     CheckAndDestroyCursor(cursor);
 
@@ -1225,7 +1225,7 @@ HWTEST_F(RdbTransactionQueryWithoutRowCountTest, RdbTrans_QuerySqlWithoutRowCoun
     OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, values);
     ret = OH_Values_Destroy(values);
     EXPECT_EQ(ret, RDB_OK);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     cursor->goToNextRow(cursor);
 
@@ -1280,26 +1280,26 @@ HWTEST_F(
     char querySql[] = "select * from test;";
     // store is nullptr
     OH_Cursor *cursor = OH_RdbTrans_QuerySqlWithoutRowCount(nullptr, querySql, {});
-    ASSERT_EQ(cursor, NULL);
+    ASSERT_EQ(cursor, nullptr);
 
     // sql is nullptr
     cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, nullptr, {});
-    ASSERT_EQ(cursor, NULL);
+    ASSERT_EQ(cursor, nullptr);
 
     char querySql1[] = "select * from test where id = ?;";
     // the args of value is nullptr
     OH_Data_Values *values = OH_Values_Create();
     cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql1, values);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     // the SQL statement needs to bind parameters, but the parameters are not transferred
     cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql1, {});
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
     // the SQL statement does not need to be bound to parameters, but the parameter is transferred
     ret = OH_Values_PutInt(values, 1); // Add int value 1 to values
     EXPECT_EQ(ret, RDB_OK);
     cursor = OH_RdbTrans_QuerySqlWithoutRowCount(trans, querySql, values);
-    ASSERT_NE(cursor, NULL);
+    ASSERT_NE(cursor, nullptr);
 
     cursor->destroy(cursor);
     ret = OH_Values_Destroy(values);

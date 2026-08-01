@@ -49,7 +49,7 @@ RdbStore::ModifyTime::operator std::map<PRIKey, Date>()
         result_->GoToRow(i);
         int64_t timeStamp = 0;
         result_->GetLong(1, timeStamp);
-        PRIKey index = 0;
+        PRIKey index = int64_t{ 0 };
         if (isFromRowId_) {
             int64_t rowid = 0;
             result_->GetLong(0, rowid);
