@@ -111,6 +111,7 @@ public:
     int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey, bool verifyDb) override;
     int Backup() override;
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
+    int ForceRestore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
     int SetDistributedTables(const std::vector<std::string> &tables, int32_t type,
         const DistributedRdb::DistributedConfig &distributedConfig) override;
@@ -186,7 +187,6 @@ private:
         std::set<std::string> tables_;
         std::set<std::string> changes_;
     };
-
     static void AfterOpen(const RdbParam &param, int32_t retry = 0);
     static void RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry = 0);
     int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
@@ -260,12 +260,15 @@ private:
     void SwitchOver(bool isUseReplicaDb);
     bool TryAsyncRepair();
     bool IsInAsyncRestore(const std::string &dbPath);
-    int StartAsyncRestore(std::shared_ptr<ConnectionPool> pool) const;
+    int StartAsyncRestore(std::shared_ptr<ConnectionPool> pool, const bool isForceRestore = false) const;
     int StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatus);
     int RestoreInner(
-        const std::string &destPath, const std::vector<uint8_t> &newKey, std::shared_ptr<ConnectionPool> pool);
+        const std::string &destPath, const std::vector<uint8_t> &newKey, const bool isForceRestore,
+        std::shared_ptr<ConnectionPool> pool);
+    int RestoreCommon(const std::string &backupPath, const std::vector<uint8_t> &newKey, const bool isForceRestore);
     bool IsInvalidDistributedConfig(const DistributedRdb::DistributedConfig &distributedConfig);
-    static int32_t RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path);
+    static int32_t RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path,
+        const bool isForceRestore = false);
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
     static void ReplayCallbackImpl(const RdbStoreConfig &config);

@@ -43,7 +43,7 @@ public:
         const std::string &sql, SConn conn, const std::string &returningSql = "") override;
     std::pair<int32_t, Stmt> CreateReplicaStatement(
         const std::string &sql, SConn conn, const std::string &returningSql = "") override;
-    int CheckReplicaForRestore() override;
+    int CheckReplicaForRestore(const bool isForceRestore) override;
     void Interrupt() override;
     int32_t GetDBType() const override;
     bool IsWriter() const override;
@@ -63,7 +63,7 @@ public:
     int32_t Backup(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey, bool isAsync,
         std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb = true) override;
     int32_t Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        std::shared_ptr<SlaveStatus> slaveStatus) override;
+        std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore) override;
     ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay) override;
     int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) override;
     int CleanDirtyLog(const std::string &table, uint64_t cursor) override;

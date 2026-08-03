@@ -489,7 +489,7 @@ int32_t ConnPool::SetTokenizer(Tokenizer tokenizer)
  * Rename the backed up database.
  */
 int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::string &backupPath,
-    const std::vector<uint8_t> &newKey, std::shared_ptr<SlaveStatus> slaveStatus)
+    const std::vector<uint8_t> &newKey, std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore)
 {
     if (!writers_.IsFull() || config_.GetPath() == backupPath || newPath == backupPath) {
         LOG_ERROR("Connection pool is busy now!");
@@ -503,7 +503,7 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
             return retVal;
         }
 
-        retVal = conn->Restore(backupPath, newKey, slaveStatus);
+        retVal = conn->Restore(backupPath, newKey, slaveStatus, isForceRestore);
         if (retVal != E_OK) {
             LOG_ERROR("Restore failed, errCode:0x%{public}x", retVal);
             return retVal;
@@ -517,18 +517,18 @@ int ConnPool::ChangeDbFileForRestore(const std::string &newPath, const std::stri
         }
         return retVal;
     }
-    return RestoreByDbSqliteType(newPath, backupPath, slaveStatus);
+    return RestoreByDbSqliteType(newPath, backupPath, slaveStatus, isForceRestore);
 }
 
 int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath,
-    std::shared_ptr<SlaveStatus> slaveStatus)
+    std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore)
 {
     if (SqliteUtils::IsSlaveDbName(backupPath) && config_.GetHaMode() != HAMode::SINGLE) {
         auto connection = AcquireConnection(false);
         if (connection == nullptr) {
             return E_DATABASE_BUSY;
         }
-        return connection->Restore(backupPath, {}, slaveStatus);
+        return connection->Restore(backupPath, {}, slaveStatus, isForceRestore);
     }
 
     return RestoreMasterDb(newPath, backupPath);

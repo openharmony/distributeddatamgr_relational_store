@@ -593,9 +593,9 @@ int32_t SqliteConnection::CheckReplicaIntegrity(const RdbStoreConfig &config)
     return connection->VerifySlaveIntegrity();
 }
 
-int SqliteConnection::CheckReplicaForRestore()
+int SqliteConnection::CheckReplicaForRestore(const bool isForceRestore)
 {
-    return ExchangeVerify(true);
+    return ExchangeVerify(true, isForceRestore);
 }
 
 std::pair<int, std::shared_ptr<Statement>> SqliteConnection::CreateStatement(
@@ -1485,10 +1485,11 @@ int32_t SqliteConnection::Backup(const std::string &databasePath, const std::vec
     return E_OK;
 }
 
-int32_t SqliteConnection::Restore(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-    std::shared_ptr<SlaveStatus> slaveStatus)
+int32_t SqliteConnection::Restore(
+    const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
+    std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore)
 {
-    return ExchangeSlaverToMaster(true, true, slaveStatus);
+    return ExchangeSlaverToMaster(true, true, slaveStatus, isForceRestore);
 };
 
 int SqliteConnection::LoadExtension(const RdbStoreConfig &config, sqlite3 *dbHandle)
@@ -1574,41 +1575,58 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
     return errCode;
 }
 
-int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus)
+int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus,
+    const bool isForceRestore)
 {
     bool isNeedSetAcl = SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
                         SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID);
     *curStatus = SlaveStatus::BACKING_UP;
-    int err = verifyDb ? ExchangeVerify(isRestore) : E_OK;
+    int err = verifyDb ? ExchangeVerify(isRestore, isForceRestore) : E_OK;
     if (err != E_OK) {
+        ReleaseTempSlaveConnection();
         *curStatus = SlaveStatus::UNDEFINED;
         return err;
     }
-
+    if (isRestore && verifyDb && isForceRestore) {
+        err = SqliteNativeCorruptedBackup(curStatus);
+        if (err != E_OK) {
+            ReleaseTempSlaveConnection();
+            return err;
+        }
+    }
     err = SqliteNativeBackup(isRestore, curStatus, isNeedSetAcl);
     if (err != E_OK) {
+        ReleaseTempSlaveConnection();
         return err;
     }
+    if (isRestore && isForceRestore) {
+        SqliteUtils::SetSlaveValid(config_.GetPath());
+    }
     if (!isRestore && IsSupportBinlog(config_) && config_.GetHaMode() != HAMode::SINGLE) {
-        LOG_INFO("reset binlog start");
-        sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
-        SetBinlog();
-        err = sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_ALL_MODE);
-        if (err != SQLITE_OK) {
-            sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
-            SqliteUtils::SetSlaveInvalid(config_.GetPath());
-        }
-        if (isNeedSetAcl) {
-            std::string binlogDir = config_.GetPath() + SUFFIX_BINLOG;
-            bool setBinlog = SqliteUtils::SetDbDirGid(binlogDir, SERVICE_GID, true);
-            if (!setBinlog) {
-                LOG_ERROR("SetBinlog fail, bundleName is %{public}s, store is %{public}s.",
-                    config_.GetBundleName().c_str(), SqliteUtils::Anonymous(config_.GetName()).c_str());
-            }
-        }
-        LOG_INFO("reset binlog finished, %{public}d", err);
+        (void)ResetBinlog(isNeedSetAcl);
     }
     return E_OK;
+}
+
+int SqliteConnection::ResetBinlog(bool isNeedSetAcl)
+{
+    LOG_INFO("reset binlog start");
+    sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
+    SetBinlog();
+    int err = sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_ALL_MODE);
+    if (err != SQLITE_OK) {
+        sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
+        SqliteUtils::SetSlaveInvalid(config_.GetPath());
+    }
+    if (isNeedSetAcl) {
+        std::string binlogDir = config_.GetPath() + SUFFIX_BINLOG;
+        if (!SqliteUtils::SetDbDirGid(binlogDir, SERVICE_GID, true)) {
+            LOG_ERROR("SetBinlog fail, bundleName is %{public}s, store is %{public}s.",
+                config_.GetBundleName().c_str(), SqliteUtils::Anonymous(config_.GetName()).c_str());
+        }
+    }
+    LOG_INFO("reset binlog finished, %{public}d", err);
+    return err;
 }
 
 int SqliteConnection::SqliteBackupStep(bool isRestore, sqlite3_backup *pBackup, std::shared_ptr<SlaveStatus> curStatus)
@@ -1666,6 +1684,50 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveSt
         return rc == E_CANCEL ? E_CANCEL : SQLiteError::ErrNo(rc);
     }
     return SqliteBackupCheckpoint(isRestore, curStatus);
+}
+
+int SqliteConnection::SqliteNativeCorruptedBackup(std::shared_ptr<SlaveStatus> curStatus)
+{
+    LOG_INFO("native backup start");
+    RdbStoreConfig slaveCfg = GetSlaveRdbStoreConfig(config_);
+    slaveCfg.SetPath(SqliteUtils::GetMasterBackupPath(config_.GetPath()));
+    slaveCfg.SetName(SqliteUtils::GetMasterBackupPath(config_.GetName()));
+
+    auto [err, slaveConn] = CreateSlaveConnection(slaveCfg, SlaveOpenPolicy::FORCE_OPEN);
+    if (err != E_OK) {
+        return err;
+    }
+
+    sqlite3 *dbFrom = dbHandle_;
+    sqlite3 *dbTo =  slaveConn->dbHandle_;
+    sqlite3_backup *pBackup = sqlite3_backup_init(dbTo, "main", dbFrom, "main");
+    if (pBackup == nullptr) {
+        LOG_WARN("slave backup init failed");
+        *curStatus = SlaveStatus::UNDEFINED;
+        return E_OK;
+    }
+
+    int rc = SQLITE_OK;
+    do {
+        rc = sqlite3_backup_step(pBackup, BACKUP_ALL_STEP);
+        LOG_INFO("backup slave process cur/total:%{public}d/%{public}d, rs:%{public}d,%{public}d",
+            sqlite3_backup_pagecount(pBackup) - sqlite3_backup_remaining(pBackup), sqlite3_backup_pagecount(pBackup),
+            rc, 0);
+    } while (sqlite3_backup_pagecount(pBackup) != 0 && (rc == SQLITE_OK || rc == SQLITE_BUSY || rc == SQLITE_LOCKED));
+    (void)sqlite3_backup_finish(pBackup);
+    if (rc != SQLITE_DONE) {
+        LOG_ERROR("backup slave err:%{public}d", rc);
+        return SQLiteError::ErrNo(rc);
+    }
+    return E_OK;
+}
+
+void SqliteConnection::ReleaseTempSlaveConnection()
+{
+    if (isReleaseTempSlaveConn_) {
+        slaveConnection_ = nullptr;
+        isReleaseTempSlaveConn_ = false;
+    }
 }
 
 ExchangeStrategy SqliteConnection::GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay)
@@ -1864,15 +1926,18 @@ int32_t SqliteConnection::Repair(const RdbStoreConfig &config)
     return ret;
 }
 
-int SqliteConnection::ExchangeVerify(bool isRestore)
+int SqliteConnection::ExchangeVerify(bool isRestore, const bool isForceRestore)
 {
     if (isRestore) {
         SqliteConnection::ReplayBinlog(config_);
-        int err = VerifySlaveIntegrity();
+        int err = VerifySlaveIntegrity(isForceRestore);
         if (err != E_OK) {
             return err;
         }
         if (IsDbVersionBelowSlave()) {
+            return E_OK;
+        }
+        if (isForceRestore) {
             return E_OK;
         }
         if (SqliteUtils::IsSlaveInvalid(config_.GetPath())) {
@@ -1936,10 +2001,11 @@ std::pair<int32_t, std::shared_ptr<SqliteConnection>> SqliteConnection::InnerCre
     return result;
 }
 
-int SqliteConnection::VerifySlaveIntegrity()
+int SqliteConnection::VerifySlaveIntegrity(const bool isForceRestore)
 {
-    if (slaveConnection_ == nullptr) {
-        return E_ALREADY_CLOSED;
+    int ret = VerifyOrCreateTempSlaveConnection(isForceRestore);
+    if (ret != E_OK) {
+        return ret;
     }
 
     RdbStoreConfig slaveCfg = GetSlaveRdbStoreConfig(config_);
@@ -1984,6 +2050,25 @@ int SqliteConnection::VerifySlaveIntegrity()
             err, errno);
         SqliteUtils::SetSlaveInvalid(config_.GetPath());
         return E_SQLITE_CORRUPT;
+    }
+    return E_OK;
+}
+
+int SqliteConnection::VerifyOrCreateTempSlaveConnection(const bool isForceRestore)
+{
+    if (isForceRestore && slaveConnection_ == nullptr) {
+        auto [err, slaveConn] = CreateSlaveConnection(GetSlaveRdbStoreConfig(config_),
+            SlaveOpenPolicy::FORCE_OPEN);
+        if (err != E_OK) {
+            LOG_ERROR("slave %{public}d when verify integrity", err);
+            return err;
+        }
+        if (slaveConnection_ == nullptr) {
+            slaveConnection_ = slaveConn;
+            isReleaseTempSlaveConn_ = true;
+        }
+    } else if (slaveConnection_ == nullptr) {
+        return E_ALREADY_CLOSED;
     }
     return E_OK;
 }

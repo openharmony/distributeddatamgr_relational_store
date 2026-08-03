@@ -81,6 +81,7 @@ public:
     static bool IsSlaveDbName(const std::string &fileName);
     static bool DeleteFiles(const std::vector<std::string> &filePaths);
     static std::string GetSlavePath(const std::string &name);
+    static std::string GetMasterBackupPath(const std::string &name);
     static int SetSlaveInvalid(const std::string &dbPath);
     static int SetSlaveInterrupted(const std::string &dbPath);
     static int SetSlaveRestoring(const std::string &dbPath, bool isRestore = true);

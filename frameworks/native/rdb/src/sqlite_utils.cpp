@@ -649,6 +649,17 @@ std::string SqliteUtils::GetSlavePath(const std::string &name)
     return name.substr(0, pos) + slaveSuffix;
 }
 
+std::string SqliteUtils::GetMasterBackupPath(const std::string &name)
+{
+    std::string suffix(".db");
+    std::string slaveSuffix("_master_corrupted.db");
+    auto pos = name.rfind(suffix);
+    if (pos == std::string::npos || pos < name.length() - suffix.length()) {
+        return name + slaveSuffix;
+    }
+    return name.substr(0, pos) + slaveSuffix;
+}
+
 const char *SqliteUtils::HmacAlgoDescription(int32_t hmacAlgo)
 {
     HmacAlgo hmacEnum = static_cast<HmacAlgo>(hmacAlgo);

@@ -682,6 +682,14 @@ public:
     virtual int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey = {});
 
     /**
+     * @brief ForceRestores a database from a specified database file.
+     *
+     * @param backupPath  Indicates the name that saves the database file path.
+     * @param newKey Indicates the database new key.
+     */
+    virtual int ForceRestore(const std::string &backupPath, const std::vector<uint8_t> &newKey = {});
+
+    /**
      * @brief Set table to be distributed table.
      *
      * @param tables Indicates the tables name you want to set.

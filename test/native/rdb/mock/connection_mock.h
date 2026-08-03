@@ -43,7 +43,7 @@ public:
         (const std::string &sql, SConn conn, const std::string &returningSql), (override));
     MOCK_METHOD((std::pair<int32_t, Stmt>), CreateReplicaStatement,
         (const std::string &sql, SConn conn, const std::string &returningSql), (override));
-    MOCK_METHOD(int, CheckReplicaForRestore, (), (override));
+    MOCK_METHOD(int, CheckReplicaForRestore, (const bool isForceRestore), (override));
     MOCK_METHOD(int32_t, Rekey, (const RdbStoreConfig::CryptoParam &cryptoParam), (override));
     MOCK_METHOD(int32_t, GetDBType, (), (const, override));
     MOCK_METHOD(bool, IsWriter, (), (const, override));
@@ -66,7 +66,7 @@ public:
     MOCK_METHOD(void, Interrupt, (), (override));
     MOCK_METHOD(int32_t, Restore,
         (const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-            std::shared_ptr<SlaveStatus> slaveStatus),
+            std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore),
         (override));
     MOCK_METHOD(ExchangeStrategy, GenerateExchangeStrategy, (std::shared_ptr<SlaveStatus> status,
         bool isReplay), (override));
