@@ -30,6 +30,9 @@ config("ability_runtime_config") {
     "${relational_store_mock_external_kit_path}/bundle_framework/include/bundlemgr",
     "${relational_store_mock_external_kit_path}/common_event_service/include",
   ]
+  if (is_linux) {
+    include_dirs += [ "${relational_store_mock_external_kit_path}/c_utils/host_include" ]
+  }
 }
 
 ohos_source_set("abilitykit_native") {

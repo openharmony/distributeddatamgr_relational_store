@@ -16,15 +16,19 @@
 /**
  * @file linux/ashmem.h
  *
- * @brief Host product only: provides the ashmem ioctl command definitions as a
- * compile-time placeholder so that <ashmem.h> from c_utils can be compiled on a
- * host product build, where the kernel header <linux/ashmem.h> is unavailable.
+ * @brief Compile-time placeholder for the ashmem ioctl command definitions.
+ * <ashmem.h> from c_utils unconditionally includes <linux/ashmem.h>, which the
+ * host kernel does not provide. Targets that pull in c_utils' ashmem header
+ * (the real native_appdatafwk SharedBlock, or the mock IPC message_parcel.h)
+ * add this directory to their include path only under is_linux builds so
+ * <linux/ashmem.h> resolves to this shim.
  *
- * The host kernel does not implement the ashmem capability, so these commands
- * are never exercised at runtime; they exist only to let host product builds
- * compile. This shim is put on the include path only when is_host_product is
- * true, so device builds still resolve <linux/ashmem.h> to the real kernel
- * header.
+ * The host kernel has no ashmem capability, so these commands are never
+ * exercised at runtime; the macros exist only so the code compiles. Ohos
+ * device builds do not carry this directory, so they keep resolving
+ * <linux/ashmem.h> to the real kernel header; mock targets that carry it
+ * under is_linux are stubs and never invoke the ioctls, so the placeholder
+ * values are harmless.
  */
 
 #ifndef RELATIONAL_STORE_HOST_LINUX_ASHMEM_H
