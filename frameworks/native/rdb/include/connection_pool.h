@@ -75,6 +75,8 @@ public:
     SharedConn AcquireById(bool isReadOnly, int32_t id);
 
 private:
+    bool AcquireReaders(SharedConns &readers, std::chrono::milliseconds remain);
+    bool AcquireTrans(std::chrono::milliseconds remain);
     struct ConnNode {
         bool using_ = false;
         int32_t tid_ = 0;
