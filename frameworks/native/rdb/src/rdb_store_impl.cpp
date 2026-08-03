@@ -238,7 +238,7 @@ int RdbStoreImpl::Release(const ReleaseOption &option)
             return RestorePoolOnTimeout(pool, service, "Release budget exhausted");
         }
         auto acquired = pool->AcquireAll(remain);
-        if (acquired.first == nullptr) {
+        if (acquired.first == nullptr && acquired.second.empty()) {
             return RestorePoolOnTimeout(pool, service, "Release AcquireAll timeout");
         }
     }

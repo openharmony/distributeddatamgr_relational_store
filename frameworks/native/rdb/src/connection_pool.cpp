@@ -293,13 +293,18 @@ std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(std::chrono::millisecond
     auto interval = ms;
     auto start = steady_clock::now();
     auto [res, writerNodes] = writers_.AcquireAll(interval);
-    if (!res || writerNodes.empty()) {
+    if (!res) {
         return {};
     }
-    writer = Convert2AutoConn(writerNodes.front());
+    if (!writerNodes.empty()) {
+        writer = Convert2AutoConn(writerNodes.front());
+        if (writer == nullptr) {
+            return {};
+        }
+    }
 
     auto usedTime = duration_cast<milliseconds>(steady_clock::now() - start);
-    if (writer == nullptr || usedTime >= interval) {
+    if (usedTime >= interval) {
         return {};
     }
 
