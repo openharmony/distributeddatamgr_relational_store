@@ -271,8 +271,8 @@ bool RawDataParser::InnerAsset::Marshal(Serializable::json &node) const
     SetValue(node[GET_NAME(size)], asset_.size);
     SetValue(node[GET_NAME(hash)], asset_.hash);
     SetValue(node[GET_NAME(path)], asset_.path);
-    SetValue(node[GET_NAME(extension)], asset_.extension);
     SetValue(node[GET_NAME(status)], asset_.status);
+    SetValue(node[GET_NAME(extension)], asset_.extension);
     return true;
 }
 bool RawDataParser::InnerAsset::Unmarshal(const Serializable::json &node)
