@@ -221,7 +221,7 @@ HWTEST_F(RdbSqliteStatementTest, S_ErrMsg_002, TestSize.Level0)
 
     // Trigger a syntax error by preparing invalid SQL on the same connection
     auto [badErr, badStmt] = conn->CreateStatement("SELCT * FROM test", conn);
-    EXPECT_NE(badErr, E_OK);
+    EXPECT_EQ(badErr, E_SQLITE_ERROR);
     EXPECT_EQ(badStmt, nullptr);
 
     // The valid statement's GetLastErrorMsg reads sqlite3_errmsg on the shared db handle
@@ -257,7 +257,7 @@ HWTEST_F(RdbSqliteStatementTest, S_ErrMsg_003, TestSize.Level0)
 
     // Trigger "no such table" by preparing INSERT into a non-existent table
     auto [badErr, badStmt] = conn->CreateStatement("INSERT INTO no_such_table VALUES(1)", conn);
-    EXPECT_NE(badErr, E_OK);
+    EXPECT_EQ(badErr, E_SQLITE_ERROR);
     EXPECT_EQ(badStmt, nullptr);
 
     std::string result = statement->GetLastErrorMsg();
@@ -295,7 +295,7 @@ HWTEST_F(RdbSqliteStatementTest, S_ErrMsg_004, TestSize.Level0)
     // Reset and execute again — fails with "table already exists"
     statement->Reset();
     execRet = statement->Execute();
-    EXPECT_NE(execRet, E_OK);
+    EXPECT_EQ(execRet, E_SQLITE_ERROR);
 
     std::string result = statement->GetLastErrorMsg();
     EXPECT_FALSE(result.empty());

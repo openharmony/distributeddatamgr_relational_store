@@ -1199,7 +1199,7 @@ HWTEST_F(RdbTransDBTest, TD_ErrMsg_001, TestSize.Level1)
 {
     // "CREAATE" is a misspelled keyword — prepare fails with a syntax error
     auto [errCode, value] = transDB_->Execute("CREAATE TABLE td_errmsg_test(id int)");
-    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(errCode, E_SQLITE_ERROR);
     std::string errMsg = transDB_->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("syntax"), std::string::npos);
@@ -1213,7 +1213,7 @@ HWTEST_F(RdbTransDBTest, TD_ErrMsg_001, TestSize.Level1)
 HWTEST_F(RdbTransDBTest, TD_ErrMsg_002, TestSize.Level1)
 {
     auto [errCode, value] = transDB_->Execute("INSERT INTO td_errmsg_nonexist VALUES(1)");
-    EXPECT_NE(errCode, E_OK);
+    EXPECT_EQ(errCode, E_SQLITE_ERROR);
     std::string errMsg = transDB_->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("no such table"), std::string::npos);
@@ -1230,7 +1230,7 @@ HWTEST_F(RdbTransDBTest, TD_ErrMsg_003, TestSize.Level1)
     EXPECT_EQ(ret1, E_OK);
     // Second creation fails — table already exists
     auto [ret2, val2] = transDB_->Execute("CREATE TABLE td_errmsg_dup(id int)");
-    EXPECT_NE(ret2, E_OK);
+    EXPECT_EQ(ret2, E_SQLITE_ERROR);
     std::string errMsg = transDB_->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("already exists"), std::string::npos);

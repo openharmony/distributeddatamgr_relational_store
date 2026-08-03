@@ -384,7 +384,7 @@ HWTEST_F(ConnectionTest, C_ErrMsg_001, TestSize.Level1)
 
     // "CREAATE" is a misspelled keyword — prepare fails with a syntax error
     auto [ret, value] = store->Execute("CREAATE TABLE errmsg_test(id int)");
-    EXPECT_NE(ret, E_OK);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
     std::string errMsg = store->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("syntax"), std::string::npos);
@@ -409,7 +409,7 @@ HWTEST_F(ConnectionTest, C_ErrMsg_002, TestSize.Level1)
     ASSERT_EQ(errCode, E_OK);
 
     auto [ret, value] = store->Execute("INSERT INTO errmsg_nonexistent_tbl VALUES(1)");
-    EXPECT_NE(ret, E_OK);
+    EXPECT_EQ(ret, E_SQLITE_ERROR);
     std::string errMsg = store->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("no such table"), std::string::npos);
@@ -438,7 +438,7 @@ HWTEST_F(ConnectionTest, C_ErrMsg_003, TestSize.Level1)
     EXPECT_EQ(ret1, E_OK);
     // Second creation fails — table already exists
     auto [ret2, val2] = store->Execute("CREATE TABLE errmsg_dup(id int)");
-    EXPECT_NE(ret2, E_OK);
+    EXPECT_EQ(ret2, E_SQLITE_ERROR);
     std::string errMsg = store->GetLastErrorMsg();
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("already exists"), std::string::npos);
