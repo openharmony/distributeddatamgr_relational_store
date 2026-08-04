@@ -2801,57 +2801,6 @@ HWTEST_F(RdbStoreImplTest, RdbStore_ClearStoreCache_002, TestSize.Level2)
 }
 
 /**
- * @tc.name: RdbStore_Release_ReadOnly_001
- * @tc.desc: A read-only store has no writers_ pool (its writers_ container stays empty because
- *           ConnectionPool::Init skips writers_ for read-only configs). Release should still
- *           succeed by draining only the readers_ pool. This case exercises the AcquireAll path
- *           where writers_ is an empty pool and is expected NOT to be treated as a failure.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbStoreImplTest, RdbStore_Release_ReadOnly_001, TestSize.Level2)
-{
-    const std::string db = RDB_TEST_PATH + "release_readonly_test.db";
-    RdbHelper::DeleteRdbStore(db);
-
-    // Step 1: create the db as an OWNER in WAL mode so that a readers_ pool exists, and seed data.
-    RdbStoreConfig ownerConfig(db);
-    ownerConfig.SetJournalMode(JournalMode::MODE_WAL);
-    ownerConfig.SetReadConSize(4);
-    ownerConfig.SetBundleName("com.example.distributed.rdb");
-    RdbStoreImplTestOpenCallback helper;
-    int errCode = E_OK;
-    std::shared_ptr<RdbStore> ownerStore = RdbHelper::GetRdbStore(ownerConfig, 1, helper, errCode);
-    ASSERT_NE(ownerStore, nullptr);
-    ASSERT_EQ(E_OK, errCode);
-    EXPECT_EQ(E_OK, ownerStore->ExecuteSql(CREATE_TABLE_TEST));
-    EXPECT_EQ(E_OK, ownerStore->ExecuteSql("INSERT INTO test (name, age) VALUES ('a', 1);"));
-    ownerStore = nullptr;
-    EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(ownerConfig));
-
-    // Step 2: reopen as read-only. A read-only store has no writers_ pool.
-    RdbStoreConfig readOnlyConfig(db, StorageMode::MODE_DISK, true);
-    readOnlyConfig.SetJournalMode(JournalMode::MODE_WAL);
-    readOnlyConfig.SetReadConSize(4);
-    readOnlyConfig.SetBundleName("com.example.distributed.rdb");
-    std::shared_ptr<RdbStore> readOnlyStore = RdbHelper::GetRdbStore(readOnlyConfig, 1, helper, errCode);
-    ASSERT_NE(readOnlyStore, nullptr);
-    ASSERT_EQ(E_OK, errCode);
-
-    // A query borrows a read connection; close it so nothing holds a reader when Release runs.
-    auto resultSet = readOnlyStore->QueryByStep("SELECT * FROM test");
-    ASSERT_NE(resultSet, nullptr);
-    EXPECT_EQ(E_OK, resultSet->Close());
-
-    // Release should succeed: there are no outstanding connections and the empty writers_ pool
-    // must not cause AcquireAll to fail.
-    EXPECT_EQ(E_OK, readOnlyStore->Release());
-
-    RdbHelper::ClearStoreCache(readOnlyConfig);
-    readOnlyStore = nullptr;
-    RdbHelper::DeleteRdbStore(db);
-}
-
-/**
  * @tc.name: RdbStore_UpdateMatrixFile_001
  * @tc.desc: test register matrix
  * @tc.type: FUNC
@@ -2942,3 +2891,54 @@ HWTEST_F(RdbStoreImplTest, R_ErrMsg_004, TestSize.Level1)
     EXPECT_FALSE(errMsg.empty());
     EXPECT_NE(errMsg.find("UNIQUE constraint"), std::string::npos);
 }
+/**
+ * @tc.name: RdbStore_Release_ReadOnly_001
+ * @tc.desc: A read-only store has no writers_ pool (its writers_ container stays empty because
+ *           ConnectionPool::Init skips writers_ for read-only configs). Release should still
+ *           succeed by draining only the readers_ pool. This case exercises the AcquireAll path
+ *           where writers_ is an empty pool and is expected NOT to be treated as a failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_ReadOnly_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_readonly_test.db";
+    RdbHelper::DeleteRdbStore(db);
+
+    // Step 1: create the db as an OWNER in WAL mode so that a readers_ pool exists, and seed data.
+    RdbStoreConfig ownerConfig(db);
+    ownerConfig.SetJournalMode(JournalMode::MODE_WAL);
+    ownerConfig.SetReadConSize(4);
+    ownerConfig.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> ownerStore = RdbHelper::GetRdbStore(ownerConfig, 1, helper, errCode);
+    ASSERT_NE(ownerStore, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, ownerStore->ExecuteSql(CREATE_TABLE_TEST));
+    EXPECT_EQ(E_OK, ownerStore->ExecuteSql("INSERT INTO test (name, age) VALUES ('a', 1);"));
+    ownerStore = nullptr;
+    EXPECT_EQ(E_OK, RdbHelper::ClearStoreCache(ownerConfig));
+
+    // Step 2: reopen as read-only. A read-only store has no writers_ pool.
+    RdbStoreConfig readOnlyConfig(db, StorageMode::MODE_DISK, true);
+    readOnlyConfig.SetJournalMode(JournalMode::MODE_WAL);
+    readOnlyConfig.SetReadConSize(4);
+    readOnlyConfig.SetBundleName("com.example.distributed.rdb");
+    std::shared_ptr<RdbStore> readOnlyStore = RdbHelper::GetRdbStore(readOnlyConfig, 1, helper, errCode);
+    ASSERT_NE(readOnlyStore, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+
+    // A query borrows a read connection; close it so nothing holds a reader when Release runs.
+    auto resultSet = readOnlyStore->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(resultSet, nullptr);
+    EXPECT_EQ(E_OK, resultSet->Close());
+
+    // Release should succeed: there are no outstanding connections and the empty writers_ pool
+    // must not cause AcquireAll to fail.
+    EXPECT_EQ(E_OK, readOnlyStore->Release());
+
+    RdbHelper::ClearStoreCache(readOnlyConfig);
+    readOnlyStore = nullptr;
+    RdbHelper::DeleteRdbStore(db);
+}
+
