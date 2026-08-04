@@ -3033,3 +3033,35 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_TimeoutOption_001, TestSize.Level2)
     RdbHelper::DeleteRdbStore(db);
 }
 
+/**
+ * @tc.name: RdbStore_Release_ClearMetadata_001
+ * @tc.desc: Release with clearMetadata=true succeeds and the store is closed afterwards. In the UT
+ *           environment the distributed service is unavailable (GetRdbService returns null), so the
+ *           Delete branch is skipped; the case verifies the option does not break Release and the
+ *           pool is still drained (subsequent CRUD fails).
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_ClearMetadata_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_clear_metadata_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+
+    // Release with clearMetadata=true; even though the service is null in UT, Release must succeed.
+    OHOS::NativeRdb::RdbStore::ReleaseOption option { 3000, true };
+    EXPECT_EQ(E_OK, store->Release(option));
+
+    // The pool is drained; subsequent CRUD fails.
+    EXPECT_EQ(E_ALREADY_CLOSED, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('a', 1);"));
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+

@@ -250,10 +250,10 @@ int RdbStoreImpl::Release(const ReleaseOption &option)
     }
     if (service != nullptr) {
         service->Enable(syncerParam_);
-        if (option.disableDdms) {
+        if (option.clearMetadata) {
             auto deleteErr = service->Delete(syncerParam_);
             if (deleteErr != E_OK) {
-                LOG_ERROR("Release Delete ddms metadata failed, err:%{public}d, name:%{public}s.",
+                LOG_ERROR("Release clearMetadata failed, err:%{public}d, name:%{public}s.",
                     deleteErr, SqliteUtils::Anonymous(config_.GetName()).c_str());
             }
         }
