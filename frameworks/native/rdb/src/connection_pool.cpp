@@ -355,7 +355,14 @@ std::pair<int32_t, SharedConns> ConnPool::AcquireTrans(std::chrono::milliseconds
         trans_.Enable();
         return { E_ERROR, {} };
     }
-    return { E_OK, {} };
+    SharedConns transConns;
+    for (auto &node : trans) {
+        auto conn = Convert2AutoConn(node);
+        if (conn != nullptr) {
+            transConns.push_back(conn);
+        }
+    }
+    return { E_OK, std::move(transConns) };
 }
 
 std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::milliseconds ms)
