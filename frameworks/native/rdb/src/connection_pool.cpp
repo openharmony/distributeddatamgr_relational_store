@@ -312,17 +312,17 @@ std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(std::chrono::millisecond
         return result;
     }
 
-    auto [readersErr, readersAcquired] = AcquireReaders(interval - usedTime);
+    int32_t readersErr;
+    std::tie(readersErr, readers) = AcquireReaders(interval - usedTime);
     if (readersErr != E_OK) {
         return {};
     }
-    readers = std::move(readersAcquired);
 
     usedTime = duration_cast<milliseconds>(steady_clock::now() - start);
     if (usedTime >= interval) {
         return {};
     }
-    auto [transErr, transAcquired] = AcquireTrans(interval - usedTime);
+    auto [transErr, trans] = AcquireTrans(interval - usedTime);
     if (transErr != E_OK) {
         return {};
     }
@@ -349,20 +349,20 @@ std::pair<int32_t, SharedConns> ConnPool::AcquireReaders(std::chrono::millisecon
 
 std::pair<int32_t, SharedConns> ConnPool::AcquireTrans(std::chrono::milliseconds remain)
 {
+    SharedConns trans;
     trans_.Disable();
-    auto [res, trans] = trans_.AcquireAll(remain);
+    auto [res, nodes] = trans_.AcquireAll(remain);
     if (!res) {
         trans_.Enable();
         return { E_ERROR, {} };
     }
-    SharedConns transConns;
-    for (auto &node : trans) {
+    for (auto &node : nodes) {
         auto conn = Convert2AutoConn(node);
         if (conn != nullptr) {
-            transConns.push_back(conn);
+            trans.push_back(conn);
         }
     }
-    return { E_OK, std::move(transConns) };
+    return { E_OK, std::move(trans) };
 }
 
 std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::milliseconds ms)
