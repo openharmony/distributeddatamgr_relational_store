@@ -658,6 +658,7 @@ public:
      */
     struct ReleaseOption {
         int32_t waitTime = 2000; // milliseconds
+        bool disableDdms = false; // if true, delete server-side DDMS metadata after release succeeds
     };
 
     /**

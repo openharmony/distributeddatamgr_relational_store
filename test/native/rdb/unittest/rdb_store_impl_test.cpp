@@ -2942,3 +2942,94 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_ReadOnly_001, TestSize.Level2)
     RdbHelper::DeleteRdbStore(db);
 }
 
+/**
+ * @tc.name: RdbStore_Release_CrudFails_001
+ * @tc.desc: After Release succeeds (connection pool drained), all CRUD operations (Insert, Update,
+ *           Delete, QuerySql) fail because the pool is gone. Insert/Update/Delete return
+ *           E_ALREADY_CLOSED; QuerySql returns nullptr.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_CrudFails_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_crud_fails_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+
+    // Seed a row so Update/Delete have a target.
+    int64_t rowId = -1;
+    ValuesBucket seed;
+    seed.Put("name", std::string("seed"));
+    seed.Put("age", 1);
+    EXPECT_EQ(E_OK, store->Insert(rowId, "test", seed));
+
+    // Release drains the pool; afterwards the store has no connections.
+    ASSERT_EQ(E_OK, store->Release());
+
+    // Insert fails.
+    int64_t newRowId = -1;
+    ValuesBucket ins;
+    ins.Put("name", std::string("x"));
+    ins.Put("age", 2);
+    EXPECT_EQ(E_ALREADY_CLOSED, store->Insert(newRowId, "test", ins));
+
+    // Update fails.
+    int changedRows = -1;
+    ValuesBucket upd;
+    upd.Put("age", 3);
+    AbsRdbPredicates updPred("test");
+    updPred.EqualTo("id", std::to_string(rowId));
+    EXPECT_EQ(E_ALREADY_CLOSED, store->Update(changedRows, upd, updPred));
+
+    // Delete fails.
+    int deletedRows = -1;
+    AbsRdbPredicates delPred("test");
+    delPred.EqualTo("id", std::to_string(rowId));
+    EXPECT_EQ(E_ALREADY_CLOSED, store->Delete(deletedRows, delPred));
+
+    // QuerySql returns nullptr (the query API has no error-code slot).
+    EXPECT_EQ(nullptr, store->QuerySql("SELECT * FROM test"));
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_Release_TimeoutOption_001
+ * @tc.desc: Release honors the waitTime option. waitTime=0 exhausts the budget immediately and
+ *           returns E_DATABASE_BUSY (the pool is restored); a positive waitTime succeeds with E_OK
+ *           when no connection is outstanding.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_TimeoutOption_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_timeout_option_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+
+    // waitTime=0: the budget is already exhausted before AcquireAll, so Release returns
+    // E_DATABASE_BUSY and restores the pool (store stays usable).
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release({ 0 }));
+    EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('a', 1);"));
+
+    // A positive waitTime with no outstanding connections drains the pool and succeeds.
+    EXPECT_EQ(E_OK, store->Release({ 3000 }));
+    EXPECT_EQ(E_ALREADY_CLOSED, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('b', 2);"));
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+
