@@ -162,7 +162,7 @@ public:
     std::string GetName();
     int32_t ExchangeSlaverToMaster();
     void Close();
-    int RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> &pool,
+    int RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> pool,
         const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason);
 
 protected:
