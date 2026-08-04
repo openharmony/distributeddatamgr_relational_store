@@ -223,17 +223,11 @@ int RdbStoreImpl::Release(const ReleaseOption &option)
     {
         std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
         if (connectionPool_ == nullptr) {
-            LOG_ERROR("Release failed, database already closed, name:%{public}s.",
-                SqliteUtils::Anonymous(config_.GetName()).c_str());
             return E_ALREADY_CLOSED;
         }
         pool = std::move(connectionPool_);
     }
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
-    if (err != E_OK) {
-        LOG_ERROR("Release GetRdbService failed, err:%{public}d, name:%{public}s.",
-            err, SqliteUtils::Anonymous(config_.GetName()).c_str());
-    }
     if (service != nullptr) {
         service->Disable(syncerParam_);
     }
@@ -241,14 +235,10 @@ int RdbStoreImpl::Release(const ReleaseOption &option)
         auto used = duration_cast<milliseconds>(steady_clock::now() - start);
         auto remain = milliseconds(option.waitTime) - used;
         if (remain <= milliseconds::zero()) {
-            LOG_ERROR("Release budget exhausted, waitTime:%{public}d, name:%{public}s.",
-                option.waitTime, SqliteUtils::Anonymous(config_.GetName()).c_str());
             return RestorePoolOnTimeout(pool, service, "Release budget exhausted");
         }
         auto acquired = pool->AcquireAll(remain);
         if (acquired.first == nullptr && acquired.second.empty()) {
-            LOG_ERROR("Release AcquireAll failed, remain:%{public}lldms, name:%{public}s.",
-                remain.count(), SqliteUtils::Anonymous(config_.GetName()).c_str());
             return RestorePoolOnTimeout(pool, service, "Release AcquireAll timeout");
         }
     }
