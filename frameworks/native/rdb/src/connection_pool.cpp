@@ -313,7 +313,7 @@ std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(std::chrono::millisecond
     }
 
     int32_t readersErr;
-    std::tie(readersErr, readers) = AcquireReaders(interval - usedTime);
+    std::tie(readersErr, readers) = AcquireContainer(readers_, interval - usedTime);
     if (readersErr != E_OK) {
         return {};
     }
@@ -322,47 +322,29 @@ std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(std::chrono::millisecond
     if (usedTime >= interval) {
         return {};
     }
-    auto [transErr, trans] = AcquireTrans(interval - usedTime);
+    auto [transErr, trans] = AcquireContainer(trans_, interval - usedTime);
     if (transErr != E_OK) {
         return {};
     }
     return result;
 }
 
-std::pair<int32_t, SharedConns> ConnPool::AcquireReaders(std::chrono::milliseconds remain)
+std::pair<int32_t, SharedConns> ConnPool::AcquireContainer(Container &container, std::chrono::milliseconds remain)
 {
-    SharedConns readers;
-    readers_.Disable();
-    auto [res, nodes] = readers_.AcquireAll(remain);
+    SharedConns conns;
+    container.Disable();
+    auto [res, nodes] = container.AcquireAll(remain);
     if (!res) {
-        readers_.Enable();
+        container.Enable();
         return { E_ERROR, {} };
     }
     for (auto &node : nodes) {
         auto conn = Convert2AutoConn(node);
         if (conn != nullptr) {
-            readers.push_back(conn);
+            conns.push_back(conn);
         }
     }
-    return { E_OK, std::move(readers) };
-}
-
-std::pair<int32_t, SharedConns> ConnPool::AcquireTrans(std::chrono::milliseconds remain)
-{
-    SharedConns trans;
-    trans_.Disable();
-    auto [res, nodes] = trans_.AcquireAll(remain);
-    if (!res) {
-        trans_.Enable();
-        return { E_ERROR, {} };
-    }
-    for (auto &node : nodes) {
-        auto conn = Convert2AutoConn(node);
-        if (conn != nullptr) {
-            trans.push_back(conn);
-        }
-    }
-    return { E_OK, std::move(trans) };
+    return { E_OK, std::move(conns) };
 }
 
 std::shared_ptr<Conn> ConnPool::Acquire(bool isReadOnly, std::chrono::milliseconds ms)
