@@ -201,7 +201,7 @@ void RdbStoreImpl::Close()
     }
 }
 
-int RdbStoreImpl::RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> &pool,
+int RdbStoreImpl::RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> pool,
     const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason)
 {
     if (pool != nullptr) {
@@ -238,7 +238,7 @@ int RdbStoreImpl::Release(const ReleaseOption &option)
             return RestorePoolOnTimeout(pool, service, "Release budget exhausted");
         }
         auto acquired = pool->AcquireAll(remain);
-        if (acquired.first == nullptr) {
+        if (acquired.first == nullptr && acquired.second.empty()) {
             return RestorePoolOnTimeout(pool, service, "Release AcquireAll timeout");
         }
     }
@@ -250,6 +250,13 @@ int RdbStoreImpl::Release(const ReleaseOption &option)
     }
     if (service != nullptr) {
         service->Enable(syncerParam_);
+        if (option.clearMetadata) {
+            auto deleteErr = service->Delete(syncerParam_);
+            if (deleteErr != E_OK) {
+                LOG_ERROR("Release clearMetadata failed, err:%{public}d, name:%{public}s.",
+                    deleteErr, SqliteUtils::Anonymous(config_.GetName()).c_str());
+            }
+        }
     }
     return E_OK;
 }
