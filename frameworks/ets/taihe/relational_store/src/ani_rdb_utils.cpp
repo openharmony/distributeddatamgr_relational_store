@@ -127,6 +127,9 @@ OHOS::NativeRdb::AssetValue AssetToNative(::ohos::data::relationalStore::Asset c
         value.status = AssetValue::STATUS_UNKNOWN;
     }
     value.hash = value.modifyTime + "_" + value.size;
+    if (asset.extension.has_value()) {
+        value.extension = std::string(asset.extension.value());
+    }
     return value;
 }
 
@@ -150,6 +153,9 @@ std::vector<OHOS::NativeRdb::AssetValue> AssetsToNative(
     asset.path = value.path;
     auto status = static_cast<OHOS::NativeRdb::AssetValue::Status>(value.status & ~0xF0000000);
     asset.status = taihe::optional<TaiheAssetStatus>::make(AssetStatusToAni(status));
+    if (!value.extension.empty()) {
+        asset.extension = taihe::optional<taihe::string>::make(taihe::string(value.extension));
+    }
     return asset;
 }
 

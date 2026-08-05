@@ -67,6 +67,7 @@ struct Asset {
     modifyTime: String;
     size: String;
     status: Optional<AssetStatus>;
+    extension: Optional<String>;
 }
 
 union ValueType {
