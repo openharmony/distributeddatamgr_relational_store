@@ -215,7 +215,7 @@ std::pair<int32_t, RdConnection::Stmt> RdConnection::CreateReplicaStatement([[gn
     return { E_NOT_SUPPORT, nullptr };
 }
 
-int RdConnection::CheckReplicaForRestore()
+int RdConnection::CheckReplicaForRestore(const bool isForceRestore)
 {
     return E_NOT_SUPPORT;
 }
@@ -402,7 +402,7 @@ int32_t RdConnection::Backup(const std::string &databasePath, const std::vector<
 
 int32_t RdConnection::Restore(
     const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-    std::shared_ptr<SlaveStatus> slaveStatus)
+    std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore)
 {
     auto ret = RdUtils::RdDbClose(dbHandle_, 0);
     if (ret != E_OK) {

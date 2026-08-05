@@ -74,6 +74,10 @@ public:
     int64_t GetRestoreTime(HAMode haMode, bool isOpenSlave = true);
     void CreateFakeBinlogFiles(int count);
     void CorruptDbHeader(const std::string &fileName);
+    void SetupManualTriggerDb(int &errCode);
+    void CorruptMainDbFile();
+    void WriteAfterCorruption(int64_t changeId, int changeCount, int64_t id, int dataSize);
+    void WriteTransactionAfterRestore(int64_t changeId, int changeCount, int64_t id, int dataSize);
 
     static const std::string databaseName;
     static const std::string slaveDatabaseName;
@@ -1112,6 +1116,51 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_018, TestSize.Level0)
     WaitForBinlogReplayFinish();
 }
 
+void RdbDoubleWriteBinlogTest::SetupManualTriggerDb(int &errCode)
+{
+    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
+    if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
+        RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
+    }
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+}
+
+void RdbDoubleWriteBinlogTest::CorruptMainDbFile()
+{
+    std::fstream file(RdbDoubleWriteBinlogTest::databaseName, std::ios::in | std::ios::out | std::ios::binary);
+    ASSERT_TRUE(file.is_open());
+    file.seekp(0x8000, std::ios::beg);
+    ASSERT_TRUE(file.good());
+    char bytes[128];
+    int bytesLen = 128;
+    std::fill_n(bytes, bytesLen, 0xff);
+    file.write(bytes, bytesLen);
+    file.flush();
+    file.close();
+    CorruptDbHeader(databaseName);
+    SqliteUtils::DeleteFile(RdbDoubleWriteBinlogTest::databaseName + "-dwr");
+}
+
+void RdbDoubleWriteBinlogTest::WriteAfterCorruption(int64_t changeId, int changeCount, int64_t id, int dataSize)
+{
+    Update(changeId, changeCount);
+    Insert(id, 1, false, dataSize);
+    EXPECT_EQ(store->Commit(), E_OK);
+}
+
+void RdbDoubleWriteBinlogTest::WriteTransactionAfterRestore(
+    int64_t changeId, int changeCount, int64_t id, int dataSize)
+{
+    EXPECT_EQ(store->BeginTransaction(), E_OK);
+    Update(changeId, changeCount);
+    Insert(id, 1, false, dataSize);
+    EXPECT_EQ(store->Commit(), E_OK);
+}
+
 /**
  * @tc.name: RdbStore_Binlog_019
  * @tc.desc: open MAIN_REPLICA db when replica is invalid,
@@ -2008,4 +2057,90 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_034, TestSize.Level1)
     EXPECT_LT(totalCost, fiveSecondsUs);
     LOG_INFO("RdbStore_Binlog_034 total insert cost: %{public}" PRId64 " us", totalCost);
     WaitForBinlogReplayFinish();
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_036
+ * @tc.desc: test slave checkpoint does not block writes in MANUAL_TRIGGER mode with binlog
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_036, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
+    if (CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName)) {
+        RemoveFolder(RdbDoubleWriteBinlogTest::binlogDatabaseName);
+    }
+    int errCode = E_OK;
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    store = nullptr;
+    SqliteUtils::SetSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName);
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_NE(store, nullptr);
+    EXPECT_EQ(store->ForceRestore(std::string(""), {}), E_OK);
+
+    int ret = store->BeginTransaction();
+    EXPECT_EQ(ret, E_OK);
+    id = 5000;
+    int batchCount = 100;
+    int dataSize = 100;
+    Insert(id, batchCount, false, dataSize);
+    ret = store->Commit();
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_037
+ * @tc.desc: open MANUAL_TRIGGER db, write, corrupt db, check backup with verify and no verify
+ * @tc.type: FUNC
+*/
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_037, TestSize.Level0)
+{
+    int errCode = E_OK;
+    SetupManualTriggerDb(errCode);
+    Insert(1, 100);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+
+    CorruptMainDbFile();
+    SqliteUtils::SetSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(store->ExecuteSql("PRAGMA integrity_check"), E_SQLITE_CORRUPT);
+
+    WriteAfterCorruption(1, 99, 5000, 100);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(store->ForceRestore(std::string(""), {}), E_OK);
+    EXPECT_EQ(store->ExecuteSql("PRAGMA integrity_check"), E_OK);
+    WriteTransactionAfterRestore(2, 4, 6000, 100);
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_038
+ * @tc.desc: open MANUAL_TRIGGER db, write, corrupt db, check backup with verify and no verify
+ * @tc.type: FUNC
+*/
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_038, TestSize.Level0)
+{
+    int errCode = E_OK;
+    SetupManualTriggerDb(errCode);
+    Insert(1, 100);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+
+    CorruptMainDbFile();
+    SqliteUtils::SetSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_EQ(store->ExecuteSql("PRAGMA integrity_check"), E_SQLITE_CORRUPT);
+
+    WriteAfterCorruption(1, 99, 5000, 100);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(store->ForceRestore(std::string(""), {}), E_OK);
+    EXPECT_EQ(store->ExecuteSql("PRAGMA integrity_check"), E_OK);
+    WriteTransactionAfterRestore(2, 4, 6000, 100);
 }

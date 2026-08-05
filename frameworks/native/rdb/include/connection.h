@@ -76,7 +76,7 @@ public:
     virtual std::pair<int32_t, Stmt> CreateReplicaStatement(
         const std::string &sql, SConn conn, const std::string &returningSql = "") = 0;
     virtual void Interrupt() = 0;
-    virtual int CheckReplicaForRestore() = 0;
+    virtual int CheckReplicaForRestore(const bool isForceRestore = false) = 0;
     virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) = 0;
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
@@ -96,7 +96,7 @@ public:
         std::shared_ptr<SlaveStatus> slaveStatus, bool verifyDb = true) = 0;
     virtual int32_t Restore(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey,
-        std::shared_ptr<SlaveStatus> slaveStatus) = 0;
+        std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore = false) = 0;
     virtual ExchangeStrategy GenerateExchangeStrategy(std::shared_ptr<SlaveStatus> status, bool isRelpay = true) = 0;
     virtual int SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchema &schema) = 0;
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor) = 0;

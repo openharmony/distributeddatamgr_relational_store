@@ -503,6 +503,13 @@ int RdbStore::Restore(const std::string &backupPath, const std::vector<uint8_t> 
     return E_NOT_SUPPORT;
 }
 
+int RdbStore::ForceRestore(const std::string &backupPath, const std::vector<uint8_t> &newKey)
+{
+    (void)backupPath;
+    (void)newKey;
+    return E_NOT_SUPPORT;
+}
+
 int RdbStore::SetDistributedTables(
     const std::vector<std::string> &tables, int32_t type, const DistributedRdb::DistributedConfig &distributedConfig)
 {
