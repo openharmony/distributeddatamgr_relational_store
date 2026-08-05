@@ -75,7 +75,6 @@ public:
     SharedConn AcquireById(bool isReadOnly, int32_t id);
 
 private:
-    std::pair<int32_t, SharedConns> AcquireContainer(Container &container, std::chrono::milliseconds remain);
     struct ConnNode {
         bool using_ = false;
         int32_t tid_ = 0;
@@ -131,6 +130,8 @@ private:
         int32_t ExtendNode();
         int32_t RelDetails(std::shared_ptr<ConnNode> node);
     };
+
+    std::pair<int32_t, SharedConns> AcquireContainer(Container &container, std::chrono::milliseconds remain);
 
     explicit ConnectionPool(std::shared_ptr<RdbStoreConfig> configHolder, const RdbStoreConfig &storeConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> Init(bool isAttach = false, bool needWriter = false);
