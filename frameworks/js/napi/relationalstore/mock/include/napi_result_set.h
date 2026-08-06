@@ -26,6 +26,9 @@
 #include "result_set.h"
 
 namespace OHOS {
+namespace DataShare {
+class ResultSetBridge;
+}
 namespace RelationalStoreJsKit {
 using namespace OHOS::NativeRdb;
 class ResultSetProxy final : public JSProxy::JSProxy<NativeRdb::ResultSet> {
@@ -38,7 +41,11 @@ public:
     static napi_value NewInstance(napi_env env, std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static napi_value GetConstructor(napi_env env);
 
+    std::shared_ptr<DataShare::ResultSetBridge> Create();
+
 private:
+    static std::shared_ptr<DataShare::ResultSetBridge> CreateBridge(
+        std::shared_ptr<NativeRdb::ResultSet> instance);
     static std::pair<int, std::vector<RowEntity>> GetRows(ResultSet &resultSet, int32_t maxCount, int32_t position);
 
     static napi_value Initialize(napi_env env, napi_callback_info info);
