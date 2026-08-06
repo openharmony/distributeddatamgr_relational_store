@@ -660,10 +660,10 @@ namespace cloudExtension {
             if (typeof value === 'number') {
               if (value!.toString().indexOf('.') !== -1) {
                 reply.writeInt(FieldType.REAL)
-                reply.writeFloat(value as double);
+                reply.writeFloat(value);
               } else {
                 reply.writeInt(FieldType.NUMBER);
-                reply.writeLong(value as long);
+                reply.writeLong(Double.toLong(value));
               }
             } else if (typeof value === 'string') {
               reply.writeInt(FieldType.TEXT);
