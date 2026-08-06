@@ -56,11 +56,10 @@ native_rdb_platform_deps = [
   "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
   "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
   "//third_party/sqlite:sqlite_static",
+  "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_ios",
 ]
-native_rdb_platform_deps += deps_hilog
 
 native_rdb_platform_external_deps = [ "c_utils:utils" ]
-native_rdb_platform_external_deps += external_deps_hilog
 
 native_rdb_platform_public_include_dirs = [
   "include",
