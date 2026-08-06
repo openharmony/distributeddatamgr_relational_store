@@ -844,6 +844,9 @@ ohos::data::relationalStore::Statistic StatisticToTaihe(const OHOS::DistributedR
 uintptr_t ColumnTypeToTaihe(const OHOS::DistributedRdb::ColumnType columnType)
 {
     ani_env *env = taihe::get_env();
+    if (env == nullptr) {
+        return 0;
+    }
     ani_enum enumType;
     if (ANI_OK != env->FindEnum("@ohos.data.relationalStore.relationalStore.ColumnType", &enumType)) {
         LOG_ERROR("Find enum failed.");
