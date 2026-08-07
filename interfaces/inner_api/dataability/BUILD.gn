@@ -49,6 +49,7 @@ config("native_dataability_public_config") {
 
 ohos_shared_library("native_dataability") {
   branch_protector_ret = "pac_ret"
+  branch_protector_frt = "bti"
   sanitize = {
     boundary_sanitize = true
     ubsan = true
