@@ -2430,7 +2430,7 @@ int32_t SqliteConnection::OpenSSLCleanUp()
 
 Sqlite3BinlogMode SqliteConnection::GetBinlogMode(const RdbStoreConfig &config)
 {
-    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER) {
+    if (config.GetHaMode() == HAMode::MANUAL_TRIGGER && config.IsSearchable()) {
         return Sqlite3BinlogMode::ROW_FOR_SEARCH;
     }
     return Sqlite3BinlogMode::ROW;
