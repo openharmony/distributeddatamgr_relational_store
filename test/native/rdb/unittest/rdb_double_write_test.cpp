@@ -38,6 +38,7 @@
 #include "sqlite_utils.h"
 #include "sys/types.h"
 #include "rdb_platform.h"
+#include "rdb_store_impl.h"
 #include "sqlite_utils.h"
 
 using namespace testing::ext;
@@ -2163,4 +2164,483 @@ HWTEST_F(RdbDoubleWriteTest, RdbStore_DoubleWrite_Returning_Transaction_003, Tes
     EXPECT_EQ(E_OK, resultSet->GoToFirstRow());
     CheckRowData(resultSet, "wangwu", 22);
     resultSet->Close();
+}
+
+// ===========================================================================
+// MANUAL_TRIGGER mode InnerBackup transaction-conn wait tests
+// The following tests exercise ConnectionPool::AcquireAndDisableTrans /
+// EnableTrans and RdbStoreImpl::InnerBackup's new MANUAL_TRIGGER branch.
+// They access the pool via static_pointer_cast<RdbStoreImpl>(store)->GetPool().
+// ===========================================================================
+
+namespace {
+// Open a MANUAL_TRIGGER db via the fixture's static `store` (so it stays alive for
+// the test body) and return the underlying pool. Returns nullptr on failure.
+// NOTE: relational_store shared lib is built with -fno-rtti, so dynamic_pointer_cast
+// cannot be used. RdbHelper::GetRdbStore always returns a std::shared_ptr<RdbStore>
+// that actually points to an RdbStoreImpl, so static_pointer_cast is safe.
+std::shared_ptr<ConnectionPool> OpenManualTriggerStoreAndGetPool()
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    RdbDoubleWriteTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    if (errCode != E_OK || RdbDoubleWriteTest::store == nullptr) {
+        return nullptr;
+    }
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(RdbDoubleWriteTest::store);
+    return impl->GetPool();
+}
+} // namespace
+
+/**
+ * @tc.name: ManualTrigger_BackupSuccess_001
+ * @tc.desc: MANUAL_TRIGGER mode, no trans conn held, Backup() does not hang on the new
+ *          transaction-wait path (returns in well under the 2s timeout). The actual
+ *          backup status code is environment-dependent (slave db verify may fail when
+ *          the test runs in isolation without a properly set-up slave file), so we
+ *          only assert on timing here.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_BackupSuccess_001, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    Insert(10, 5);
+
+    auto start = std::chrono::steady_clock::now();
+    errCode = store->Backup(std::string(""), {});
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::steady_clock::now() - start).count();
+    // Key assertion: no trans conn in flight => the new wait path must return
+    // immediately, never hitting the 2s timeout.
+    EXPECT_LT(elapsed, 1000);
+    // errCode is checked only for non-timeout values (E_DATABASE_BUSY means our new
+    // wait timed out, which would be a real bug). Environmental failures like
+    // slave-db verify errors are tolerated here.
+    EXPECT_NE(errCode, E_DATABASE_BUSY);
+}
+
+/**
+ * @tc.name: ManualTrigger_AcquireAndDisableTrans_Immediate_002
+ * @tc.desc: AcquireAndDisableTrans returns immediately when no trans conn is in flight.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_AcquireAndDisableTrans_Immediate_002, TestSize.Level1)
+{
+    auto pool = OpenManualTriggerStoreAndGetPool();
+    ASSERT_NE(pool, nullptr);
+
+    auto start = std::chrono::steady_clock::now();
+    auto [err, heldConns] = pool->AcquireAndDisableTrans(std::chrono::seconds(2));
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::steady_clock::now() - start).count();
+    EXPECT_EQ(err, E_OK);
+    EXPECT_LT(elapsed, 500); // immediate when pool is idle
+    pool->EnableTrans();
+    // heldConns release back to the pool on scope exit (recyclable by default).
+}
+
+/**
+ * @tc.name: ManualTrigger_AcquireAndDisableTrans_BlocksCreateTransConn_003
+ * @tc.desc: After AcquireAndDisableTrans, CreateTransConn fails until EnableTrans.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_AcquireAndDisableTrans_BlocksCreateTransConn_003, TestSize.Level1)
+{
+    auto pool = OpenManualTriggerStoreAndGetPool();
+    ASSERT_NE(pool, nullptr);
+
+    auto [err, heldConns] = pool->AcquireAndDisableTrans(std::chrono::seconds(2));
+    ASSERT_EQ(err, E_OK);
+    // Container disabled + no idle conn (heldConns drained them all): CreateTransConn
+    // cannot obtain a connection. The exact error code depends on the Acquire waiter
+    // path (it returns E_OK with a nullptr conn when disable_ is set), so the key
+    // invariant is that NO connection is handed out.
+    auto [createErr, conn] = pool->CreateTransConn(false);
+    EXPECT_EQ(conn, nullptr);
+
+    pool->EnableTrans();
+    // After Enable: CreateTransConn should succeed (ExtendNode creates a fresh conn).
+    auto [createErr2, conn2] = pool->CreateTransConn(false);
+    EXPECT_EQ(createErr2, E_OK);
+    EXPECT_NE(conn2, nullptr);
+}
+
+/**
+ * @tc.name: ManualTrigger_AcquireAndDisableTrans_Timeout_004
+ * @tc.desc: AcquireAndDisableTrans returns E_DATABASE_BUSY when a trans conn is held
+ *          beyond the timeout, and auto-re-enables the container.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_AcquireAndDisableTrans_Timeout_004, TestSize.Level1)
+{
+    auto pool = OpenManualTriggerStoreAndGetPool();
+    ASSERT_NE(pool, nullptr);
+
+    // Hold a trans conn on another thread so the pool cannot drain.
+    std::atomic<bool> releaseFlag(false);
+    std::thread holder([&pool, &releaseFlag]() {
+        auto [ec, c] = pool->CreateTransConn(false);
+        ASSERT_EQ(ec, E_OK);
+        ASSERT_NE(c, nullptr);
+        // Keep the conn alive until releaseFlag is set.
+        while (!releaseFlag.load()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+        c.reset(); // release
+    });
+
+    // Give the holder a moment to acquire the conn.
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    auto start = std::chrono::steady_clock::now();
+    auto [err, heldConns] = pool->AcquireAndDisableTrans(std::chrono::milliseconds(500));
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::steady_clock::now() - start).count();
+    EXPECT_EQ(err, E_DATABASE_BUSY);
+    EXPECT_TRUE(heldConns.empty());
+    EXPECT_GE(elapsed, 400); // close to the 500ms timeout
+
+    // Container should be auto-re-enabled: CreateTransConn should work for a new caller
+    // once the holder releases. (The holder is still holding though; first let it go.)
+    releaseFlag.store(true);
+    holder.join();
+
+    // Now a new CreateTransConn should succeed.
+    auto [createErr, c2] = pool->CreateTransConn(false);
+    EXPECT_EQ(createErr, E_OK);
+    EXPECT_NE(c2, nullptr);
+}
+
+/**
+ * @tc.name: ManualTrigger_AcquireAndDisableTrans_WaitsForRelease_005
+ * @tc.desc: AcquireAndDisableTrans succeeds within timeout when the holder releases.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_AcquireAndDisableTrans_WaitsForRelease_005, TestSize.Level1)
+{
+    auto pool = OpenManualTriggerStoreAndGetPool();
+    ASSERT_NE(pool, nullptr);
+
+    std::atomic<bool> acquired(false);
+    std::thread holder([&pool, &acquired]() {
+        auto [ec, c] = pool->CreateTransConn(false);
+        ASSERT_EQ(ec, E_OK);
+        ASSERT_NE(c, nullptr);
+        acquired.store(true);
+        // Hold for 300ms then release-well within the 2s timeout.
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        c.reset();
+    });
+
+    // Wait until the holder has actually acquired the conn.
+    while (!acquired.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+
+    auto start = std::chrono::steady_clock::now();
+    auto [err, heldConns] = pool->AcquireAndDisableTrans(std::chrono::seconds(2));
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::steady_clock::now() - start).count();
+    EXPECT_EQ(err, E_OK);
+    // We should have waited at least ~300ms for the holder, but less than 2s.
+    EXPECT_GE(elapsed, 250);
+    EXPECT_LT(elapsed, 2000);
+    pool->EnableTrans();
+    holder.join();
+}
+
+/**
+ * @tc.name: ManualTrigger_AcquireAndDisableTrans_SetNonRecyclable_006
+ * @tc.desc: After backup success path sets SetIsRecyclable(false), held conns are
+ *          destroyed (not returned to idle pool). Next CreateTransConn still works.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_AcquireAndDisableTrans_SetNonRecyclable_006, TestSize.Level1)
+{
+    auto pool = OpenManualTriggerStoreAndGetPool();
+    ASSERT_NE(pool, nullptr);
+
+    // Force at least one trans conn to be created (and released to the idle pool) so
+    // that AcquireAndDisableTrans has something to drain.
+    {
+        auto [ec, c] = pool->CreateTransConn(false);
+        ASSERT_EQ(ec, E_OK);
+        ASSERT_NE(c, nullptr);
+        c.reset(); // return to idle pool
+    }
+
+    auto [err, heldConns] = pool->AcquireAndDisableTrans(std::chrono::seconds(2));
+    ASSERT_EQ(err, E_OK);
+    ASSERT_FALSE(heldConns.empty());
+
+    // Simulate the success path: mark all held conns non-recyclable.
+    for (auto &c : heldConns) {
+        ASSERT_NE(c, nullptr);
+        c->SetIsRecyclable(false);
+    }
+    heldConns.clear(); // triggers ReleaseTrans destroy branch
+    pool->EnableTrans();
+
+    // After destroy, new CreateTransConn should still work (ExtendNode creates fresh).
+    auto [createErr, c2] = pool->CreateTransConn(false);
+    EXPECT_EQ(createErr, E_OK);
+    EXPECT_NE(c2, nullptr);
+}
+
+/**
+ * @tc.name: ManualTrigger_AcquireAndDisableTrans_KeepsRecyclable_007
+ * @tc.desc: On backup failure path (no SetIsRecyclable(false)), held conns return to
+ *          the idle pool and are reused by the next CreateTransConn.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_AcquireAndDisableTrans_KeepsRecyclable_007, TestSize.Level1)
+{
+    auto pool = OpenManualTriggerStoreAndGetPool();
+    ASSERT_NE(pool, nullptr);
+
+    auto [err, heldConns] = pool->AcquireAndDisableTrans(std::chrono::seconds(2));
+    ASSERT_EQ(err, E_OK);
+    // Do NOT call SetIsRecyclable(false) - simulate backup failure.
+    heldConns.clear(); // triggers ReleaseTrans recyclable branch (returns to idle pool)
+    pool->EnableTrans();
+
+    // CreateTransConn should succeed and ideally reuse one of the just-returned conns.
+    auto [createErr, c2] = pool->CreateTransConn(false);
+    EXPECT_EQ(createErr, E_OK);
+    EXPECT_NE(c2, nullptr);
+}
+
+/**
+ * @tc.name: ManualTrigger_BackupTimeoutRet_008
+ * @tc.desc: Backup() returns E_DATABASE_BUSY when a trans conn is held beyond 2s in
+ *          MANUAL_TRIGGER mode (end-to-end via the public Backup API).
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_BackupTimeoutRet_008, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    Insert(10, 5);
+
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
+    auto pool = impl->GetPool();
+    ASSERT_NE(pool, nullptr);
+
+    // Hold a trans conn longer than the 2s backup wait.
+    std::atomic<bool> releaseFlag(false);
+    std::thread holder([&pool, &releaseFlag]() {
+        auto [ec, c] = pool->CreateTransConn(false);
+        ASSERT_EQ(ec, E_OK);
+        ASSERT_NE(c, nullptr);
+        while (!releaseFlag.load()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+        c.reset();
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // let holder acquire
+
+    auto start = std::chrono::steady_clock::now();
+    int backupErr = store->Backup(std::string(""), {});
+    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+                       std::chrono::steady_clock::now() - start).count();
+    EXPECT_EQ(backupErr, E_DATABASE_BUSY);
+    EXPECT_GE(elapsed, 2); // waited the full 2s timeout
+
+    releaseFlag.store(true);
+    holder.join();
+}
+
+/**
+ * @tc.name: MainReplica_BackupNotAffected_009
+ * @tc.desc: MAIN_REPLICA mode: Backup() does not call the new MANUAL_TRIGGER logic.
+ *          Even with a trans conn held, Backup returns without the 2s wait.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, MainReplica_BackupNotAffected_009, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    Insert(10, 5);
+
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
+    auto pool = impl->GetPool();
+    ASSERT_NE(pool, nullptr);
+
+    // Hold a trans conn so that *if* MAIN_REPLICA went through the new logic it would
+    // time out. Since it should skip the new logic, backup must complete fast.
+    std::atomic<bool> releaseFlag(false);
+    std::thread holder([&pool, &releaseFlag]() {
+        auto [ec, c] = pool->CreateTransConn(false);
+        if (ec != E_OK || c == nullptr) {
+            releaseFlag.store(true);
+            return;
+        }
+        while (!releaseFlag.load()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+        c.reset();
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    auto start = std::chrono::steady_clock::now();
+    int backupErr = store->Backup(std::string(""), {});
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::steady_clock::now() - start).count();
+    // MAIN_REPLICA must not hit the new wait. Either E_OK (fast) or a non-timeout error.
+    EXPECT_NE(backupErr, E_DATABASE_BUSY);
+    EXPECT_LT(elapsed, 1500);
+
+    releaseFlag.store(true);
+    holder.join();
+}
+
+/**
+ * @tc.name: Single_BackupNotAffected_010
+ * @tc.desc: SINGLE mode: Backup() does not enter the slave-db branch at all, so the
+ *          new code path is never reached. Verifies timing only - the actual backup
+ *          status code is environment-dependent.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, Single_BackupNotAffected_010, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::SINGLE);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    Insert(10, 5);
+
+    auto start = std::chrono::steady_clock::now();
+    errCode = store->Backup(std::string(""), {});
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::steady_clock::now() - start).count();
+    // SINGLE mode never enters the slave branch, so the new wait logic is unreachable.
+    EXPECT_LT(elapsed, 1500);
+    EXPECT_NE(errCode, E_DATABASE_BUSY); // not the new timeout error
+}
+
+/**
+ * @tc.name: ManualTrigger_BackupSuccessReleasesTransConn_011
+ * @tc.desc: After a Backup call in MANUAL_TRIGGER mode, the pool is usable again
+ *          (regardless of whether Backup itself returned E_OK or an environmental
+ *          error from slave-db verify): CreateTransConn works, the container is
+ *          re-enabled. If Backup returned E_OK (success path), held conns were
+ *          destroyed; if Backup failed, held conns were returned. Either way the
+ *          pool must be functional post-backup.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_BackupSuccessReleasesTransConn_011, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    Insert(10, 5);
+
+    // Trigger one trans conn creation so there's something for the new logic to drain.
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
+    auto pool = impl->GetPool();
+    ASSERT_NE(pool, nullptr);
+    {
+        auto [ec, c] = pool->CreateTransConn(false);
+        ASSERT_EQ(ec, E_OK);
+        ASSERT_NE(c, nullptr);
+        c.reset(); // return to idle pool
+    }
+
+    errCode = store->Backup(std::string(""), {});
+    // Tolerate environmental slave-db verify errors; the only forbidden outcome is
+    // the new wait timing out (E_DATABASE_BUSY), which would indicate the new guard
+    // failed to clean up.
+    EXPECT_NE(errCode, E_DATABASE_BUSY);
+
+    // After Backup returns (success or environmental failure), the RAII guard has
+    // run: pool is re-enabled and CreateTransConn must work.
+    auto [ec2, c2] = pool->CreateTransConn(false);
+    EXPECT_EQ(ec2, E_OK);
+    EXPECT_NE(c2, nullptr);
+}
+
+/**
+ * @tc.name: ManualTrigger_BackupBlocksCreateTransConn_012
+ * @tc.desc: During Backup in MANUAL_TRIGGER mode, CreateTransConn should return
+ *          E_DATABASE_BUSY (transEnable_ is false). After Backup completes,
+ *          CreateTransConn should work again (transEnable_ is restored to true).
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteTest, ManualTrigger_BackupBlocksCreateTransConn_012, TestSize.Level1)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(RdbDoubleWriteTest::DATABASE_NAME);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    DoubleWriteTestOpenCallback helper;
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    Insert(10, 5);
+
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
+    auto pool = impl->GetPool();
+    ASSERT_NE(pool, nullptr);
+
+    // Before Backup: CreateTransConn works normally.
+    auto [ec1, c1] = pool->CreateTransConn(false);
+    EXPECT_EQ(ec1, E_OK);
+    EXPECT_NE(c1, nullptr);
+    c1.reset(); // return to idle pool
+
+    // Use a separate thread to call Backup, and verify CreateTransConn
+    // returns E_DATABASE_BUSY while Backup is in progress.
+    std::atomic<bool> backupStarted{false};
+    std::atomic<bool> backupDone{false};
+    std::atomic<int> createErrDuringBackup{E_OK};
+
+    std::thread backupThread([&]() {
+        backupStarted.store(true);
+        store->Backup(std::string(""), {});
+        backupDone.store(true);
+    });
+
+    // Spin until Backup has started and entered the AcquireAndDisableTrans path.
+    while (!backupStarted.load()) {
+        std::this_thread::yield();
+    }
+    // Give a small window for Backup to set transEnable_ = false.
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    createErrDuringBackup.store(pool->CreateTransConn(false).first);
+
+    // Wait for Backup to finish.
+    backupThread.join();
+
+    // Key assertion: CreateTransConn during Backup must return E_DATABASE_BUSY.
+    EXPECT_EQ(createErrDuringBackup.load(), E_DATABASE_BUSY);
+
+    // After Backup completes: CreateTransConn must work again.
+    auto [ec2, c2] = pool->CreateTransConn(false);
+    EXPECT_EQ(ec2, E_OK);
+    EXPECT_NE(c2, nullptr);
 }

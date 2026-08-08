@@ -868,7 +868,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_018, TestSize.Leve
     store = InitStore(HAMode::MANUAL_TRIGGER);
     ASSERT_NE(store, nullptr);
 
-    int code = store->Backup();
+    int code = store->Backup("", {});
     EXPECT_EQ(code, E_OK);
 
     auto resultSet = store->QuerySql("SELECT * FROM test");
@@ -953,7 +953,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_019, TestSize.Leve
     int backupCode = E_INVALID_ARGS;
     std::thread thread([store, blockData, &backupCode]() {
         blockData->SetValue(true);
-        backupCode = store->Backup();
+        backupCode = store->Backup("", {});
         blockData->SetValue(true);
     });
     ASSERT_TRUE(blockData->GetValue());
@@ -978,12 +978,12 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_020, TestSize.Leve
 {
     auto store = InitStoreV2();
     ASSERT_NE(store, nullptr);
-    int code = store->Backup();
+    int code = store->Backup("", {});
     EXPECT_EQ(code, E_NOT_SUPPORT); // SINGLE is not support
 
     store = nullptr;
     store = InitStoreV2(true);
-    code = store->Backup();
+    code = store->Backup("", {});
     EXPECT_EQ(code, E_NOT_SUPPORT); // readOnly is not support
     store = nullptr;
     char databaseName[] = "/data/test/new_backup_test.db";
@@ -999,7 +999,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_021, TestSize.Leve
 {
     auto store = InitStoreV2(false, StorageMode::MODE_MEMORY);
     ASSERT_NE(store, nullptr);
-    int code = store->Backup();
+    int code = store->Backup("", {});
     EXPECT_EQ(code, E_NOT_SUPPORT); // MODE_MEMORY is not support
     store = nullptr;
     char databaseName[] = "/data/test/new_backup_test.db";
@@ -1018,7 +1018,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_022, TestSize.Leve
     }
     auto store = InitStoreV2(false, StorageMode::MODE_DISK, HAMode::SINGLE, DB_VECTOR);
     ASSERT_NE(store, nullptr);
-    int code = store->Backup();
+    int code = store->Backup("", {});
     EXPECT_EQ(code, E_NOT_SUPPORT);
     char databaseName[] = "/data/test/new_backup_test.db";
     store = nullptr;
@@ -1035,7 +1035,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_023, TestSize.Leve
     auto store = InitStore(HAMode::MANUAL_TRIGGER);
     ASSERT_NE(store, nullptr);
 
-    int code = store->Backup();
+    int code = store->Backup("", {});
     EXPECT_EQ(code, E_NOT_SUPPORT);
 
     store = nullptr;
@@ -1072,7 +1072,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_024, TestSize.Leve
     ASSERT_NE(salveStore, nullptr);
     EXPECT_EQ(code, E_OK) << "GetRdbStore failed, code:" << code;
 
-    code = store->Backup();
+    code = store->Backup("", {});
     EXPECT_EQ(code, E_ALREADY_CLOSED);
     salveStore = nullptr;
     RdbHelper::DeleteRdbStore(databaseSalveName);
@@ -1115,7 +1115,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_025, TestSize.Leve
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(5)); // Sleep 5 milliseconds
     ASSERT_TRUE(blockData->GetValue());
-    int code = store->Backup();
+    int code = store->Backup("", {});
     EXPECT_EQ(code, E_DATABASE_BUSY);
     thread.join();
     store = nullptr;
@@ -1172,7 +1172,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_026, TestSize.Leve
     store = InitStore(HAMode::MANUAL_TRIGGER, false);
     ASSERT_NE(store, nullptr);
 
-    int errCode = store->Backup();
+    int errCode = store->Backup("", {});
     EXPECT_EQ(errCode, E_SQLITE_CORRUPT);
 
     RdbHelper::DeleteRdbStore(databaseName);

@@ -65,6 +65,7 @@ struct RdbFaultType {
     static constexpr const char *FT_SQLITE = "SQLITE";
     static constexpr const char *FT_WAL_OVER_LIMIT = "WAL_OVER_LIMIT";
     static constexpr const char *FT_HMAC_FILE = "HMAC_FILE";
+    static constexpr const char *FT_BACKUP = "BACKUP_BUSY";
     static constexpr const char *VISITOR_FAULT = "VISITOR_FAULT";
     static constexpr const char *BUNDLE_NAME_COMMON = "common";
     static constexpr const char *INTERFACE_USED = "INTERFACE_USED";

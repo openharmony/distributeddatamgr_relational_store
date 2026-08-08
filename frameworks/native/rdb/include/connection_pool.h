@@ -39,6 +39,11 @@ class ExecutorPool;
 namespace NativeRdb {
 class ConnectionPool : public std::enable_shared_from_this<ConnectionPool> {
 public:
+    enum ConnType:uint32_t {
+        READ = 1,
+        WRITE = 2,
+        TRANS = 4
+    };
     using SharedConn = std::shared_ptr<Connection>;
     using SharedConns = std::vector<SharedConn>;
     static constexpr std::chrono::milliseconds INVALID_TIME = std::chrono::milliseconds(0);
@@ -73,6 +78,17 @@ public:
     void CloseAllConnections();
     bool IsInTransaction();
     void SetInTransaction(bool isInTransaction);
+
+    void Interrupt(uint32_t type);
+    // Disables the transaction container (blocks new transaction connection creation) and
+    // waits up to timeout for all in-flight transaction connections to be returned.
+    // On success returns {E_OK, heldConns}; caller must keep heldConns alive until backup
+    // finishes, then call EnableTrans(). To force-destroy the held conns, set each conn
+    // non-recyclable via SetIsRecyclable(false) before destructing heldConns.
+    // On timeout returns {E_DATABASE_BUSY, {}}; the container has been auto-re-enabled.
+    std::pair<int32_t, SharedConns> AcquireAndDisableTrans(std::chrono::milliseconds timeout);
+    // Re-enables the transaction container. Pair with AcquireAndDisableTrans.
+    void EnableTrans();
     SharedConn AcquireById(bool isReadOnly, int32_t id);
 
 private:
@@ -113,8 +129,8 @@ private:
         int32_t SetTokenizer(Tokenizer tokenizer);
         std::pair<int, std::shared_ptr<ConnNode>> Acquire(std::chrono::milliseconds milliS);
         std::pair<bool, std::list<std::shared_ptr<ConnNode>>> AcquireAll(std::chrono::milliseconds milliS);
-        std::pair<int32_t, std::shared_ptr<ConnNode>> Create();
         void InitMembers(Creator creator, int32_t max, int32_t timeout, bool disable);
+        int Interrupt();
 
         void Disable();
         void Enable();
@@ -171,6 +187,7 @@ private:
     bool transactionUsed_;
     bool isAttach_ = false;
     std::atomic<bool> isInTransaction_ = false;
+    std::atomic<bool> transEnable_ = true;
     std::atomic<uint32_t> transCount_ = 0;
     std::atomic<std::chrono::steady_clock::time_point> failedTime_;
 };

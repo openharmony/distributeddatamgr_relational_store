@@ -65,6 +65,39 @@ private:
     std::weak_ptr<RdbStoreObserver> observer_;
 };
 
+/**
+ * @brief RAII guard that holds drained transaction connections during MANUAL_TRIGGER backup.
+ *
+ * On destruction:
+ *   1. If releaseNow is true, marks each held connection non-recyclable so that
+ *      ConnectionPool::Container::ReleaseTrans destroys them (instead of returning to idle pool).
+ *   2. Releases heldConns (triggers RAII release via Convert2AutoConn lambda).
+ *   3. If pool is non-null, re-enables the transaction container via pool->EnableTrans().
+ *
+ * Construct an empty guard when not in MANUAL_TRIGGER mode; its destructor is a no-op.
+ */
+class TransAcquireGuard {
+public:
+    std::shared_ptr<ConnectionPool> pool;
+    ConnectionPool::SharedConns heldConns;
+    bool releaseNow = false; // set to true only when backup succeeds
+
+    ~TransAcquireGuard();
+
+    /**
+     * @brief Factory: blocks new trans conns and waits up to 2s for existing ones to drain.
+     * @param pool The connection pool (by value; cheap copy of shared_ptr).
+     * @return {errCode, guard}. On success guard holds the drained conns and pool.
+     *         On timeout returns {E_DATABASE_BUSY, empty guard}; the container is already
+     *         auto-re-enabled by AcquireAndDisableTrans, and the returned guard's destructor
+     *         is a no-op (pool is null). If pool is null, returns {E_OK, empty guard}.
+     */
+    static std::pair<int32_t, TransAcquireGuard> FromPool(std::shared_ptr<ConnectionPool> pool);
+
+private:
+    void MarkHeldConnsNonRecyclable() const;
+};
+
 class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
@@ -109,7 +142,6 @@ public:
     bool IsHoldingConnection() override;
     bool IsSlaveDiffFromMaster() const override;
     int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey, bool verifyDb) override;
-    int Backup() override;
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     int ForceRestore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     int Count(int64_t &outValue, const AbsRdbPredicates &predicates) override;
@@ -210,6 +242,9 @@ private:
         const RdbParam &param, const Options &option, const Memo &predicates, const AsyncDetail &async);
     int InnerBackup(const std::string &databasePath,
         const std::vector<uint8_t> &destEncryptKey = std::vector<uint8_t>(), bool verifyDb = true);
+    // Backs up to slave db file; for MANUAL_TRIGGER mode blocks new trans conns and
+    // waits up to 2s for existing ones to drain before performing the backup.
+    int BackupSlaveDb(const std::string &databasePath, bool verifyDb);
     ModifyTime GetModifyTimeByRowId(const std::string &logTable, std::vector<PRIKey> &keys);
     std::string GetUri(const std::string &event);
     int SubscribeLocal(const SubscribeOption &option, std::shared_ptr<RdbStoreObserver> observer);
@@ -312,7 +347,6 @@ private:
     mutable std::string lastErrMsg_;
     mutable std::mutex errMutex_;
     std::list<std::weak_ptr<Transaction>> transactions_;
-    std::list<std::weak_ptr<Connection>> conns_;
     std::mutex helperMutex_;
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> knowledgeSchemaHelper_;
     std::atomic<bool> isKnowledgeSchemaReady_{ false };
