@@ -2144,3 +2144,30 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_038, TestSize.Level0)
     EXPECT_EQ(store->ExecuteSql("PRAGMA integrity_check"), E_OK);
     WriteTransactionAfterRestore(2, 4, 6000, 100);
 }
+
+/**
+ * @tc.name: RdbStore_Binlog_039
+ * @tc.desc: test MANUAL_TRIGGER db with isSearchable=false uses ROW binlog mode instead of ROW_FOR_SEARCH
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_039, TestSize.Level0)
+{
+    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    config.SetSearchable(false);
+    int errCode = E_OK;
+    DoubleWriteBinlogTestOpenCallback helper;
+    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+
+    int64_t id = 1;
+    int count = 100;
+    Insert(id, count);
+    CheckNumber(store, count);
+
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    ASSERT_TRUE(CheckFolderExist(binlogDatabaseName));
+    EXPECT_FALSE(SqliteUtils::IsSlaveInvalid(databaseName));
+    WaitForBinlogReplayFinish();
+}
