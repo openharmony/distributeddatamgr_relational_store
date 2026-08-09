@@ -2586,12 +2586,14 @@ HWTEST_F(RdbDoubleWriteTest, ManualTrigger_BackupSuccessReleasesTransConn_011, T
 
 /**
  * @tc.name: ManualTrigger_BackupBlocksCreateTransConn_012
- * @tc.desc: While Backup is draining transaction connections in MANUAL_TRIGGER mode,
- *          CreateTransConn must return E_DATABASE_BUSY (transEnable_ is false). After
- *          Backup finishes, CreateTransConn works again.
- *          Determinism: a trans conn is held on purpose so Backup's AcquireAndDisableTrans
- *          blocks in AcquireAll (up to 2s) with transEnable_ already set false, giving a
- *          guaranteed window in which CreateTransConn must observe E_DATABASE_BUSY.
+ * @tc.desc: During Backup in MANUAL_TRIGGER mode, CreateTransConn must return
+ *          E_DATABASE_BUSY (transEnable_ is false). After Backup completes,
+ *          CreateTransConn works again (transEnable_ is restored to true).
+ *          The db is populated with a large blob so the physical sqlite backup
+ *          (conn->Backup) runs for several seconds. BackupSlaveDb holds the
+ *          TransAcquireGuard across that whole backup, so transEnable_ stays false
+ *          for the entire backup; CreateTransConn called in that interval is
+ *          guaranteed to observe E_DATABASE_BUSY.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDoubleWriteTest, ManualTrigger_BackupBlocksCreateTransConn_012, TestSize.Level1)
@@ -2603,50 +2605,49 @@ HWTEST_F(RdbDoubleWriteTest, ManualTrigger_BackupBlocksCreateTransConn_012, Test
     store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_EQ(errCode, E_OK);
     ASSERT_NE(store, nullptr);
-    Insert(10, 5);
+    // Write enough data (~100MB) so the physical backup runs for several seconds.
+    // That keeps transEnable_ = false for a window long enough to observe reliably.
+    Insert(10, 1000, false, 100 * 1024);
 
     auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
     auto pool = impl->GetPool();
     ASSERT_NE(pool, nullptr);
 
-    // Hold one trans conn and keep it alive. This makes trans_ non-empty (total_ >= 1),
-    // so Backup's AcquireAndDisableTrans -> AcquireAll cannot finish (use_count != 1) and
-    // blocks up to the 2s timeout. transEnable_ is already false during that wait.
-    auto [heldEc, heldConn] = pool->CreateTransConn(false);
-    ASSERT_EQ(heldEc, E_OK);
-    ASSERT_NE(heldConn, nullptr);
+    // Before Backup: CreateTransConn works normally.
+    auto [ec1, c1] = pool->CreateTransConn(false);
+    EXPECT_EQ(ec1, E_OK);
+    EXPECT_NE(c1, nullptr);
+    c1.reset(); // return to idle pool
 
-    std::atomic<bool> backupStarted(false);
+    // Run Backup on a separate thread. BackupSlaveDb sets transEnable_ = false and keeps
+    // it false for the whole backup via the TransAcquireGuard RAII (restored only on return).
+    std::atomic<bool> backupDone(false);
     std::atomic<int> createErrDuringBackup(E_OK);
     std::thread backupThread([&]() {
-        backupStarted.store(true);
-        // Backup enters BackupSlaveDb -> AcquireAndDisableTrans: sets transEnable_=false,
-        // then AcquireAll blocks because heldConn is still outstanding.
         (void)store->Backup(std::string(""), {});
+        backupDone.store(true);
     });
 
-    // Wait until Backup has had a chance to enter AcquireAndDisableTrans. Because heldConn
-    // forces AcquireAll to wait up to 2s, transEnable_ stays false for that whole window.
-    while (!backupStarted.load()) {
-        std::this_thread::yield();
-    }
-    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
-    while (createErrDuringBackup.load() != E_DATABASE_BUSY && std::chrono::steady_clock::now() < deadline) {
+    // Poll CreateTransConn until it observes the closed gate (E_DATABASE_BUSY). Once Backup
+    // has entered BackupSlaveDb's AcquireAndDisableTrans, transEnable_ is false for the whole
+    // multi-second backup, so this observation is guaranteed within the deadline. The poll
+    // must not gate on backupDone: Backup may finish between iterations and re-enable the gate.
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(15);
+    while (createErrDuringBackup.load() != E_DATABASE_BUSY &&
+           std::chrono::steady_clock::now() < deadline) {
         if (pool->CreateTransConn(false).first == E_DATABASE_BUSY) {
             createErrDuringBackup.store(E_DATABASE_BUSY);
-            break;
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    // Release the held conn so AcquireAll can finish and Backup can proceed/return.
-    heldConn.reset();
     backupThread.join();
 
-    // Key assertion: CreateTransConn observed E_DATABASE_BUSY while Backup was draining.
+    // Key assertion: CreateTransConn during Backup must return E_DATABASE_BUSY.
     EXPECT_EQ(createErrDuringBackup.load(), E_DATABASE_BUSY);
 
-    // After Backup completes: transEnable_ is restored, CreateTransConn works again.
+    // After Backup completes: CreateTransConn must work again.
     auto [ec2, c2] = pool->CreateTransConn(false);
     EXPECT_EQ(ec2, E_OK);
     EXPECT_NE(c2, nullptr);
