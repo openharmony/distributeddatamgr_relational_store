@@ -953,7 +953,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_019, TestSize.Leve
     int backupCode = E_INVALID_ARGS;
     std::thread thread([store, blockData, &backupCode]() {
         blockData->SetValue(true);
-        backupCode = store->Backup("", {});
+        backupCode = store->Backup("", {}, false);
         blockData->SetValue(true);
     });
     ASSERT_TRUE(blockData->GetValue());
