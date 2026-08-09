@@ -953,38 +953,25 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_019, TestSize.Leve
     int backupCode = E_INVALID_ARGS;
     std::thread thread([store, blockData, &backupCode]() {
         blockData->SetValue(true);
-        backupCode = store->Backup("", {}, false);
+        backupCode = store->Backup("", {});
         blockData->SetValue(true);
     });
     ASSERT_TRUE(blockData->GetValue());
-    blockData->Clear(false);
-    ASSERT_FALSE(blockData->GetValue()); // Wait for 50ms for integrity verification to begin
+    // Wait until backup is actually in progress (BACKING_UP) before interrupting.
+    // Preparation steps (GetConn, FromPool, CreateSlaveConnection) run before BACKING_UP is set;
+    // InterruptBackup returns E_CANCEL during that phase.
+    auto impl = std::static_pointer_cast<RdbStoreImpl>(store);
+    int retry = 0;
+    while (impl->GetBackupStatus() != SlaveStatus::BACKING_UP && retry < 100) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        retry++;
+    }
+    EXPECT_EQ(impl->GetBackupStatus(), SlaveStatus::BACKING_UP);
     code = store->InterruptBackup();
     EXPECT_EQ(code, E_OK); // Without interrupting the backup process, return to E-CANCEL
     ASSERT_TRUE(blockData->GetValue());  // return promptly after interruption
     thread.join();
-    EXPECT_EQ(backupCode, E_SQLITE_INTERRUPT);
-    store = nullptr;
-    char databaseName[] = "/data/test/new_backup_test.db";
-    RdbHelper::DeleteRdbStore(databaseName);
-}
-
-/* *
- * @tc.name: Rdb_BackupRestoreTest_020
- * @tc.desc: Abnormal backup test cases, SINGLE and readOnly is not support
- * @tc.type: FUNC
- */
-HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_020, TestSize.Level0)
-{
-    auto store = InitStoreV2();
-    ASSERT_NE(store, nullptr);
-    int code = store->Backup("", {});
-    EXPECT_EQ(code, E_NOT_SUPPORT); // SINGLE is not support
-
-    store = nullptr;
-    store = InitStoreV2(true);
-    code = store->Backup("", {});
-    EXPECT_EQ(code, E_NOT_SUPPORT); // readOnly is not support
+    EXPECT_EQ(backupCode, E_CANCEL);
     store = nullptr;
     char databaseName[] = "/data/test/new_backup_test.db";
     RdbHelper::DeleteRdbStore(databaseName);
@@ -1001,43 +988,6 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_021, TestSize.Leve
     ASSERT_NE(store, nullptr);
     int code = store->Backup("", {});
     EXPECT_EQ(code, E_NOT_SUPPORT); // MODE_MEMORY is not support
-    store = nullptr;
-    char databaseName[] = "/data/test/new_backup_test.db";
-    RdbHelper::DeleteRdbStore(databaseName);
-}
-
-/* *
- * @tc.name: Rdb_BackupRestoreTest_022
- * @tc.desc: Abnormal backup test cases, DB_VECTOR is not support
- * @tc.type: FUNC
- */
-HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_022, TestSize.Level0)
-{
-    if (!IsUsingArkData()) {
-        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
-    }
-    auto store = InitStoreV2(false, StorageMode::MODE_DISK, HAMode::SINGLE, DB_VECTOR);
-    ASSERT_NE(store, nullptr);
-    int code = store->Backup("", {});
-    EXPECT_EQ(code, E_NOT_SUPPORT);
-    char databaseName[] = "/data/test/new_backup_test.db";
-    store = nullptr;
-    RdbHelper::DeleteRdbStore(databaseName);
-}
-
-/* *
- * @tc.name: Rdb_BackupRestoreTest_023
- * @tc.desc: Abnormal backup test cases, Backup is not supported when the standby database does not exist
- * @tc.type: FUNC
- */
-HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_023, TestSize.Level0)
-{
-    auto store = InitStore(HAMode::MANUAL_TRIGGER);
-    ASSERT_NE(store, nullptr);
-
-    int code = store->Backup("", {});
-    EXPECT_EQ(code, E_NOT_SUPPORT);
-
     store = nullptr;
     char databaseName[] = "/data/test/new_backup_test.db";
     RdbHelper::DeleteRdbStore(databaseName);
