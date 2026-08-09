@@ -2245,7 +2245,9 @@ HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_003, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    RdbStoreImplConditionTestOpenCallback helper;
     auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    ASSERT_EQ(storeImpl->Init(0, helper), E_OK);
     *(storeImpl->slaveStatus_) = BACKING_UP;
     auto res = storeImpl->InterruptBackup();
     EXPECT_EQ(E_OK, res);
