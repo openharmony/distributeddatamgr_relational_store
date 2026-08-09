@@ -2614,24 +2614,29 @@ HWTEST_F(RdbDoubleWriteTest, ManualTrigger_BackupBlocksCreateTransConn_012, Test
 
     // Use a separate thread to call Backup, and verify CreateTransConn
     // returns E_DATABASE_BUSY while Backup is in progress.
-    std::atomic<bool> backupStarted{false};
     std::atomic<bool> backupDone{false};
     std::atomic<int> createErrDuringBackup{E_OK};
 
     std::thread backupThread([&]() {
-        backupStarted.store(true);
         store->Backup(std::string(""), {});
         backupDone.store(true);
     });
 
-    // Spin until Backup has started and entered the AcquireAndDisableTrans path.
-    while (!backupStarted.load()) {
-        std::this_thread::yield();
+    // Backup sets transEnable_ = false only after it has acquired its write conn
+    // and entered AcquireAndDisableTrans, which may take an arbitrary amount of
+    // time. Poll CreateTransConn until it observes the closed gate (E_DATABASE_BUSY).
+    // Do NOT gate the loop on backupDone: Backup may finish between iterations and
+    // re-enable the gate, which would let the loop exit without ever observing BUSY
+    // even though the window existed. Rely on the deadline alone for termination.
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (createErrDuringBackup.load() != E_DATABASE_BUSY &&
+           std::chrono::steady_clock::now() < deadline) {
+        if (pool->CreateTransConn(false).first == E_DATABASE_BUSY) {
+            createErrDuringBackup.store(E_DATABASE_BUSY);
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
     }
-    // Give a small window for Backup to set transEnable_ = false.
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-
-    createErrDuringBackup.store(pool->CreateTransConn(false).first);
 
     // Wait for Backup to finish.
     backupThread.join();
