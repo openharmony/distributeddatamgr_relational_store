@@ -2337,9 +2337,8 @@ int RdbStoreImpl::BackupSlaveDb(const std::string &databasePath, bool verifyDb)
         }
     }
     errCode = conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
-    if (errCode == E_OK) {
-        guard.releaseNow = true; // force-destroy all trans conns after a successful backup
-    }
+    // force-destroy all trans conns after a successful backup; otherwise return them to the pool
+    guard.releaseNow = (errCode == E_OK);
     if (SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID)) {
         SetFileGid(config_, SERVICE_GID);
     }

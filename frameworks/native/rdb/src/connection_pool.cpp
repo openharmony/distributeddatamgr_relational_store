@@ -282,7 +282,6 @@ std::pair<int32_t, ConnectionPool::SharedConns> ConnPool::AcquireAndDisableTrans
     if (!res) {
         transEnable_ = true;                   // timeout: re-enable
         trans_.Dump("BACKUP NO TRANS", transCount_ + isInTransaction_);
-        LOG_WARN("AcquireAndDisableTrans timeout, transCount:%{public}u", transCount_.load());
         return { E_DATABASE_BUSY, {} };
     }
     SharedConns conns;
