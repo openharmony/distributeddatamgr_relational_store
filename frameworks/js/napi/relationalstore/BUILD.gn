@@ -40,6 +40,7 @@ ohos_copy("relational_store_declaration") {
 
 ohos_shared_library("relationalstore") {
   branch_protector_ret = "pac_ret"
+  branch_protector_frt = "bti"
   include_dirs = relationalstore_js_platform_include_dirs
   cflags_cc = relationalstore_js_platform_cflags_cc
   defines = relationalstore_js_platform_defines

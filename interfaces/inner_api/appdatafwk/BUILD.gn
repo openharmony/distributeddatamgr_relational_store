@@ -93,6 +93,7 @@ if (is_android || is_ios) {
   ohos_shared_library("relational_common_base") {
     if (is_ohos) {
       branch_protector_ret = "pac_ret"
+      branch_protector_frt = "bti"
       sanitize = {
         boundary_sanitize = true
         ubsan = true
@@ -145,6 +146,7 @@ if (is_android || is_ios) {
 ohos_shared_library("native_appdatafwk") {
   if (is_ohos) {
     branch_protector_ret = "pac_ret"
+    branch_protector_frt = "bti"
     sanitize = {
       boundary_sanitize = true
       ubsan = true
