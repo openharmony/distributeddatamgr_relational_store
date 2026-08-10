@@ -244,9 +244,10 @@ HWTEST_F(RdbDoubleWriteConcurrentTest, RdbStore_DoubleWrite_023, TestSize.Level1
     Insert(id, count, false, strSize);
     LOG_INFO("RdbStore_DoubleWrite_023 insert finish");
 
-    std::thread thread([this]() {
+    int backupCode = E_OK;
+    std::thread thread([this, &backupCode]() {
         LOG_INFO("RdbStore_DoubleWrite_023 t1 backup begin");
-        EXPECT_EQ(store->Backup(std::string(""), {}), E_CANCEL);
+        backupCode = store->Backup(std::string(""), {});
         LOG_INFO("RdbStore_DoubleWrite_023 t1 backup end");
     });
     LOG_INFO("RdbStore_DoubleWrite_023 begin interrupt");
@@ -254,15 +255,17 @@ HWTEST_F(RdbDoubleWriteConcurrentTest, RdbStore_DoubleWrite_023, TestSize.Level1
     LOG_INFO("RdbStore_DoubleWrite_023 interrupt end");
     EXPECT_EQ(store->GetBackupStatus(), SlaveStatus::BACKUP_INTERRUPT);
     thread.join();
+    EXPECT_EQ(backupCode, E_CANCEL);
 
-    std::thread thread1([this]() {
+    std::thread thread1([this, &backupCode]() {
         LOG_INFO("RdbStore_DoubleWrite_023 t2 backup begin");
-        EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+        backupCode = store->Backup(std::string(""), {});
         LOG_INFO("RdbStore_DoubleWrite_023 t2 backup end");
     });
     WaitForBackupFinish(BACKUP_FINISHED);
     LOG_INFO("RdbStore_DoubleWrite_023 wait finish");
     thread1.join();
+    EXPECT_EQ(backupCode, E_OK);
 
     RdbStoreConfig slaveConfig(RdbDoubleWriteConcurrentTest::SLAVE_DATABASE_NAME);
     RdbDoubleWriteConcurrentTest::Callback slaveHelper;

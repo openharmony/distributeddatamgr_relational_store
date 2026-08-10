@@ -261,10 +261,49 @@ void ConnPool::SetInTransaction(bool isInTransaction)
     isInTransaction_.store(isInTransaction);
 }
 
+void ConnectionPool::Interrupt(uint32_t type)
+{
+    if ((type | READ) == READ) {
+        readers_.Interrupt();
+    }
+    if ((type | WRITE) == WRITE) {
+        writers_.Interrupt();
+    }
+    if ((type | TRANS) == TRANS) {
+        trans_.Interrupt();
+    }
+}
+
+std::pair<int32_t, ConnectionPool::SharedConns> ConnPool::AcquireAndDisableTrans(
+    std::chrono::milliseconds timeout)
+{
+    transEnable_ = false;               // block new trans conn creation
+    auto [res, nodes] = trans_.AcquireAll(timeout);   // wait for all in-flight conns to return
+    if (!res) {
+        transEnable_ = true;                   // timeout: re-enable
+        trans_.Dump("BACKUP NO TRANS", transCount_ + isInTransaction_);
+        return { E_DATABASE_BUSY, {} };
+    }
+    SharedConns conns;
+    for (auto &node : nodes) {
+        // isTrans=true so that release goes through ReleaseTrans, which honors SetIsRecyclable(false)
+        auto conn = Convert2AutoConn(node, true);
+        if (conn != nullptr) {
+            conns.push_back(conn);
+        }
+    }
+    return { E_OK, std::move(conns) };
+}
+
+void ConnPool::EnableTrans()
+{
+    transEnable_ = true;
+}
+
 std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn(bool limited)
 {
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_WAIT);
-    if (transCount_.load() >= MAX_TRANS && limited) {
+    if (!transEnable_.load() || (transCount_.load() >= MAX_TRANS && limited)) {
         trans_.Dump("NO TRANS", transCount_ + isInTransaction_);
         writers_.Dump("NO TRANS WRITE", transCount_ + isInTransaction_);
         return { E_DATABASE_BUSY, nullptr };
@@ -707,6 +746,21 @@ void ConnPool::Container::InitMembers(Creator creator, int32_t max, int32_t time
         timeout_ = std::chrono::seconds(timeout);
     }
     cond_.notify_all();
+}
+
+int ConnectionPool::Container::Interrupt()
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    for (auto it = details_.begin(); it != details_.end();) {
+        auto conn = it->lock();
+        if (conn == nullptr || conn->connect_ == nullptr) {
+            it = details_.erase(it);
+            continue;
+        }
+        conn->connect_->Interrupt();
+        ++it;
+    }
+    return E_OK;
 }
 
 std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Initialize(

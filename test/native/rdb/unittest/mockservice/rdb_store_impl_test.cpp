@@ -2243,12 +2243,19 @@ HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_001, TestSize.Level2)
  */
 HWTEST_F(RdbStoreImplConditionTest, InterruptBackup_Test_003, TestSize.Level2)
 {
+    int errCode = E_OK;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     config.SetHaMode(HAMode::MANUAL_TRIGGER);
-    auto storeImpl = std::make_shared<RdbStoreImpl>(config);
+    RdbStoreImplConditionTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    auto storeImpl = std::static_pointer_cast<RdbStoreImpl>(store);
     *(storeImpl->slaveStatus_) = BACKING_UP;
     auto res = storeImpl->InterruptBackup();
     EXPECT_EQ(E_OK, res);
+    store = nullptr;
+    RdbHelper::DeleteRdbStore(RdbStoreImplConditionTest::DATABASE_NAME);
 }
 
 /**

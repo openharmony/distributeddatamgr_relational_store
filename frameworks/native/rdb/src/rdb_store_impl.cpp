@@ -97,6 +97,41 @@ constexpr char const *INVALID_PATH_PART = "..";
 constexpr int32_t SERVICE_GID = 3012;
 constexpr int64_t TIME_OUT = 1500;
 
+TransAcquireGuard::~TransAcquireGuard()
+{
+    if (releaseNow) {
+        MarkHeldConnsNonRecyclable();
+    }
+    heldConns.clear(); // triggers RAII release (destroy on success, return on failure)
+    if (pool != nullptr) {
+        pool->EnableTrans();
+    }
+}
+
+void TransAcquireGuard::MarkHeldConnsNonRecyclable() const
+{
+    for (const auto &c : heldConns) {
+        if (c != nullptr) {
+            c->SetIsRecyclable(false); // ReleaseTrans will total_-- instead of push_back
+        }
+    }
+}
+
+std::pair<int32_t, TransAcquireGuard> TransAcquireGuard::FromPool(std::shared_ptr<ConnectionPool> pool)
+{
+    TransAcquireGuard guard;
+    if (pool == nullptr) {
+        return { E_OK, std::move(guard) }; // nothing to wait on; container untouched
+    }
+    auto [waitErr, heldConns] = pool->AcquireAndDisableTrans(std::chrono::seconds(2));
+    if (waitErr != E_OK) {
+        return { waitErr, std::move(guard) }; // container already auto-re-enabled; guard.pool is null
+    }
+    guard.pool = pool;
+    guard.heldConns = std::move(heldConns);
+    return { E_OK, std::move(guard) };
+}
+
 void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 {
     syncerParam_.bundleName_ = config.GetBundleName();
@@ -2158,56 +2193,6 @@ std::string RdbStoreImpl::GetSlaveName(const std::string &path)
     return std::string(path, 0, pos) + slaveSuffix;
 }
 
-int RdbStoreImpl::Backup()
-{
-    if (isReadOnly_ || isMemoryRdb_ || config_.GetDBType() != DB_SQLITE || config_.GetHaMode() == HAMode::SINGLE) {
-        return E_NOT_SUPPORT;
-    }
-    Suspender suspender(Suspender::SQL_LOG);
-    std::string destPath = GetSlaveName(config_.GetPath());
-    if (access(destPath.c_str(), F_OK) != 0) {
-        LOG_ERROR("The backup path can not access: %{public}s", SqliteUtils::Anonymous(destPath).c_str());
-        return E_NOT_SUPPORT;
-    }
-    // using read conn for integrity verification
-    auto [errCode, conn] = GetConn(true);
-    if (errCode != E_OK || conn == nullptr) {
-        return errCode;
-    }
-    std::shared_ptr<Statement> statement;
-    std::tie(errCode, statement) = conn->CreateStatement("PRAGMA quick_check", conn);
-    if (errCode != E_OK || statement == nullptr) {
-        SetLastErrorMsg(conn->GetLastErrorMsg());
-        return errCode;
-    }
-    {
-        std::lock_guard<decltype(mutex_)> guard(mutex_);
-        for (auto it = conns_.begin(); it != conns_.end();) {
-            if (it->expired()) {
-                it = conns_.erase(it);
-            } else {
-                it++;
-            }
-        }
-        conns_.push_back(conn);
-    }
-    ValueObject value;
-    std::tie(errCode, value) = statement->ExecuteForValue();
-    if (errCode != E_OK || (static_cast<std::string>(value) != "ok")) {
-        LOG_ERROR(
-            "Main db verification failed. [%{public}d, %{public}s]", errCode, static_cast<std::string>(value).c_str());
-        return errCode == E_OK ? E_SQLITE_CORRUPT : errCode;
-    }
-    // release read conn
-    statement = nullptr;
-    // Obtain write conn for backup
-    std::tie(errCode, conn) = GetConn(false);
-    if (errCode != E_OK || conn == nullptr) {
-        return errCode;
-    }
-    return conn->Backup(destPath, {}, false, slaveStatus_, false);
-}
-
 /**
  * Backup a database from a specified encrypted or unencrypted database file.
  * Support skipping verification.
@@ -2298,15 +2283,7 @@ int RdbStoreImpl::InnerBackup(
     }
 
     if (config_.GetHaMode() != HAMode::SINGLE && SqliteUtils::IsSlaveDbName(databasePath)) {
-        auto [errCode, conn] = GetConn(false);
-        if (errCode != E_OK) {
-            return errCode;
-        }
-        errCode = conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
-        if (SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID)) {
-            SetFileGid(config_, SERVICE_GID);
-        }
-        return errCode;
+        return BackupSlaveDb(databasePath, verifyDb);
     }
     Suspender suspender(Suspender::SQL_LOG);
     auto config = config_;
@@ -2340,6 +2317,32 @@ int RdbStoreImpl::InnerBackup(
     errCode = statement->Prepare(GlobalExpr::DETACH_BACKUP_SQL);
     int res = statement->Execute();
     return (res == E_OK) ? ret : res;
+}
+
+int RdbStoreImpl::BackupSlaveDb(const std::string &databasePath, bool verifyDb)
+{
+    auto [errCode, conn] = GetConn(false);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    TransAcquireGuard guard; // empty no-op guard unless MANUAL_TRIGGER fills it below
+    if (config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
+        std::tie (errCode, guard) = TransAcquireGuard::FromPool(GetPool());
+        if (errCode != E_OK) {
+            LOG_ERROR("BackupSlaveDb AcquireAndDisableTrans failed, errCode:%{public}d, "
+                "path:%{public}s", errCode, SqliteUtils::Anonymous(config_.GetPath()).c_str());
+            Reportor::ReportFault(
+                RdbFaultEvent(RdbFaultType::FT_BACKUP, errCode, config_.GetBundleName(), "BackupSlaveTransBusy"));
+            return errCode; // E_DATABASE_BUSY; container already auto-re-enabled
+        }
+    }
+    errCode = conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
+    // force-destroy all trans conns after a successful backup; otherwise return them to the pool
+    guard.releaseNow = (errCode == E_OK);
+    if (SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID)) {
+        SetFileGid(config_, SERVICE_GID);
+    }
+    return errCode;
 }
 
 std::pair<int32_t, RdbStoreImpl::Stmt> RdbStoreImpl::BeginExecuteSql(const std::string &sql)
@@ -3274,22 +3277,18 @@ int RdbStoreImpl::InterruptBackup()
     if (config_.GetHaMode() != HAMode::MANUAL_TRIGGER) {
         return E_NOT_SUPPORT;
     }
-    std::list<std::weak_ptr<Connection>> conns;
-    {
-        std::lock_guard<decltype(mutex_)> guard(mutex_);
-        conns = std::move(conns_);
+    // If the backup has not started, do not interrupt it
+    if (*slaveStatus_ != SlaveStatus::BACKING_UP) {
+        return E_CANCEL;
     }
-    for (auto it = conns.begin(); it != conns.end(); ++it) {
-        auto conn = it->lock();
-        if (conn != nullptr) {
-            conn->Interrupt();
-        }
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        return E_ALREADY_CLOSED;
     }
-    if (*slaveStatus_ == SlaveStatus::BACKING_UP) {
-        *slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
-        return E_OK;
-    }
-    return conns.empty() ? E_CANCEL : E_OK;
+    // The MANUAL_TRIGGER mode uses write links for backup
+    pool->Interrupt(ConnectionPool::WRITE);
+    *slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
+    return E_OK;
 }
 
 int32_t RdbStoreImpl::GetBackupStatus() const
