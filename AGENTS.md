@@ -15,7 +15,7 @@
 3. 读取一个与任务领域匹配的专题页（`docs/error_code_layers.md` 或 `docs/dynamic_loading.md`）。
 4. 规划验证时，见本文件"编译和测试方法"章节。
 
-> 编辑代码前 **MUST** 自述：① 任务类别；② 已加载的文档；③ 命中的约束（如“接口层 NEVER 破坏兼容”）。无匹配约束时显式说明“无”。
+> 编辑代码前 **MUST** 自述：① 任务类别；② 已加载的文档；③ 命中的约束（如“接口层 NEVER 破坏兼容”）。无匹配约束时显式说明“无”。**自述在首次回复开头给出，后续每次编辑前若有变化则更新**。
 
 # 仓库定位
 
@@ -149,13 +149,13 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 
 ## Do-not / Ask-before 清单
 
-| 类别 | 规则 |
-| --- | --- |
-| Ask-before | 修改 DB 表结构 / on-disk 存储格式 / 序列化：**MUST** 先做升级兼容（旧库可读），**NEVER** 直接改存量存储格式 |
-| Ask-before | 修改生成代码（如有 codegen 产物）：**MUST** 改源头模板/生成器，**NEVER** 手改生成产物 |
-| Ask-before | 新增/修改权限、安全、鉴权相关接口：**MUST** 走安全评审，**NEVER** 自行放宽权限校验 |
-| Do-not | **NEVER** 自行实现 `kv_store:datamgr_common` 已有同等能力的工具类 |
-| Do-not | **NEVER** 在未跑编译+单测前 claim done |
+| 类别 | 规则 | 升级通道 |
+| --- | --- | --- |
+| Ask-before | 修改 DB 表结构 / on-disk 存储格式 / 序列化：**MUST** 先做升级兼容（旧库可读），**NEVER** 直接改存量存储格式 | 开 Issue 标 SIG_DataManagement，走兼容性评审 |
+| Ask-before | 修改生成代码（如有 codegen 产物）：**MUST** 改源头模板/生成器，**NEVER** 手改生成产物 | 先问用户确认 codegen 源头再改 |
+| Ask-before | 新增/修改权限、安全、鉴权相关接口：**MUST** 走安全评审，**NEVER** 自行放宽权限校验 | 提交安全 SIG 评审，未通过 NEVER 合入 |
+| Do-not | **NEVER** 自行实现 `kv_store:datamgr_common` 已有同等能力的工具类 | — |
+| Do-not | **NEVER** 在未跑编译+单测前 claim done | — |
 
 # 编译和测试方法
 
@@ -166,6 +166,10 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 1. **格式化**（按用户需要）：修改完代码后 MUST 先询问用户是否需要格式化，按用户意愿执行。用户同意时运行：
    ```bash
    ${OHOS_ROOT}/prebuilts/clang/ohos/linux-x86_64/llvm/bin/clang-format --style=file -i <修改的文件>
+   ```
+   可选静态分析（同一工具链；用编译产物目录的 compile_commands.json，未生成则跳过）：
+   ```bash
+   ${OHOS_ROOT}/prebuilts/clang/ohos/linux-x86_64/llvm/bin/clang-tidy -p=<build-out-dir> <修改的文件>
    ```
 
 2. **编译构建**（MUST，确认修改不引入编译错误）：
