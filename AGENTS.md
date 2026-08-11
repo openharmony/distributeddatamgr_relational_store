@@ -15,6 +15,8 @@
 3. 读取一个与任务领域匹配的专题页（`docs/error_code_layers.md` 或 `docs/dynamic_loading.md`）。
 4. 规划验证时，见本文件"编译和测试方法"章节。
 
+> 编辑代码前 **MUST** 自述：① 任务类别；② 已加载的文档；③ 命中的约束（如“接口层 NEVER 破坏兼容”）。无匹配约束时显式说明“无”。
+
 # 仓库定位
 
 `relational_store` 是 OpenHarmony 关系型数据库组件。在 OpenHarmony 源码树中的位置是：
@@ -90,6 +92,8 @@ relational_store/
 
 禁止循环依赖。如有 **MUST** 单列并给出整改 Issue。
 
+> 嵌套指引：本仓库无嵌套 `AGENTS.md`/`CLAUDE.md`；更深的专题文档见 `docs/*.md`（按下方“知识路由”按需加载）。
+
 # 知识路由
 
 ## 触发式文档加载
@@ -143,6 +147,16 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 | "这个依赖直接加上就行" | native_rdb 支持动态卸载，直接加依赖会破坏卸载能力。 |
 | "析构漏取消注册，补上" | 行为已 release 即事实契约，修复反而破坏兼容；要改走新增路径，不动存量。 |
 
+## Do-not / Ask-before 清单
+
+| 类别 | 规则 |
+| --- | --- |
+| Ask-before | 修改 DB 表结构 / on-disk 存储格式 / 序列化：**MUST** 先做升级兼容（旧库可读），**NEVER** 直接改存量存储格式 |
+| Ask-before | 修改生成代码（如有 codegen 产物）：**MUST** 改源头模板/生成器，**NEVER** 手改生成产物 |
+| Ask-before | 新增/修改权限、安全、鉴权相关接口：**MUST** 走安全评审，**NEVER** 自行放宽权限校验 |
+| Do-not | **NEVER** 自行实现 `kv_store:datamgr_common` 已有同等能力的工具类 |
+| Do-not | **NEVER** 在未跑编译+单测前 claim done |
+
 # 编译和测试方法
 
 > 修改类任务完成后 MUST 执行以下验证步骤（格式化按用户意愿，修改完代码后询问用户是否执行；编译构建和单元测试 NEVER 跳过）。
@@ -165,3 +179,9 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
    ```
 
 > Claim "done" MUST 有编译构建和单元测试 2 步验证结果；格式化按用户意愿，不强制。
+
+## 完成回复与验证回退
+
+- 最终回复 **MUST** 给出：编译结果、单测结果（或明确“未验证”原因）；**NEVER** 仅凭静态推断 claim done。
+- 验证无法运行（无环境/依赖缺失）时 **MUST** 说明原因，请用户在真机/CI 验证，**NEVER** 跳过直接交付。
+- 涉及接口改动时 **MUST** 对照 `interfaces/ndk/include/` 与 `interfaces/inner_api/` 声明确认签名未变（API 兼容性检查）。
