@@ -2,15 +2,18 @@
 
 本文件是 AI Agent 处理本仓库任务时的轻量入口。先读本文件，再按任务类型只加载匹配的详细文档页。
 
+> 本文件**只保留路由与原则**，不内联任何专题详情。具体规范 / 体系 / 约定 **MUST** 按"知识路由"表按需加载对应 `docs/*.md`。
+
 # 阅读策略
 
 不要一开始就读取 `docs/` 下的所有文件。
 
 默认只读本文件。涉及需求设计或代码开发时，最多按需加载：
 
-1. 如果影响范围不清楚，读取 `docs/rdb_native.md` 了解核心类关系和目录结构。
-2. 读取一个与任务领域匹配的专题页（`docs/error_code_layers.md` 或 `docs/dynamic_loading.md`）。
-3. 规划验证时，见本文件"编译和测试方法"章节。
+1. **代码开发/修改任务**：**MUST** 加载 [`docs/code_standards.md`](docs/code_standards.md)（强制规范 R1～R10、反馈闭环）。
+2. 如果影响范围不清楚，读取 `docs/rdb_native.md` 了解核心类关系和目录结构。
+3. 读取一个与任务领域匹配的专题页（`docs/error_code_layers.md` 或 `docs/dynamic_loading.md`）。
+4. 规划验证时，见本文件"编译和测试方法"章节。
 
 # 仓库定位
 
@@ -98,6 +101,7 @@ relational_store/
 | `跨模块` / `新服务接入` / `rdb_native` / `connection_pool`   | `docs/rdb_native.md`                               | 跨模块改动 MUST 不破坏 inner_api 兼容        |
 | `加密` / `crypt` / `HUKS` / `rdb_crypt`                      | `docs/error_code_layers.md` + `docs/rdb_native.md` | 加密相关改动 MUST 通过 rdb_crypt 适配层      |
 | `云同步` / `cloud` / `cloud_data`                            | `docs/rdb_native.md`                               | 云同步 MUST 通过 IPC 与 native_rdb 交互      |
+| 任何代码修改/新增任务 / `函数行数` / `入参` / `拆分` / 写代码前 | `docs/code_standards.md`                           | 开工前 MUST 完整阅读 R1～R10 规则            |
 
 # 专家经验
 
