@@ -154,6 +154,7 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 | 类别 | 边界 | 详情去哪读 |
 | --- | --- | --- |
 | Do-not | SQLite 分层：上层类（`RdbStoreImpl`/`StepResultSet`/`SqliteSharedResultSet` 等）不可直接调用 `sqlite3*` 系函数 | `docs/rdb_native.md` "SQLite 分层约束" |
+| Do-not | Taihe 生成产物（`*.ani.cpp`/`*.abi.c`，由 `ohos_taihe` 从 `.taihe` IDL 生成到构建输出目录）NEVER 手改；改接口 MUST 改 `frameworks/ets/taihe/*/idl/*.taihe` 后重新生成；`*.impl.cpp` 为手写实现，可编辑 | `frameworks/ets/taihe/*/BUILD.gn`（`ohos_taihe`/`copy_taihe_idl`）、`bundle.json:78`（`taihe_ffi_gen`） |
 | Ask-before | `Connection`/`Statement` 抽象层加接口须评估职责归属，NEVER 把 `RdbStoreImpl` 编排逻辑下沉 | `docs/rdb_native.md` "Connection 职责" |
 | Ask-before | 新增错误码须同步 NDK `relational_store_error_code.h` 与 JS `napi_rdb_error.cpp` 映射表，NEVER 给存量接口加新返回码 | `docs/error_code_layers.md` "新增错误码指导原则" |
 | Ask-before | 新增导出头文件须同步 `bundle.json` 的 `inner_kits[].header.header_files` | `bundle.json` + 编码规范"导出约定" |
