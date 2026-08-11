@@ -149,13 +149,14 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 
 ## Do-not / Ask-before 清单
 
-| 类别 | 规则 | 升级通道 |
+> 仅列尚未在「核心原则/已知陷阱」中出现的边界，每条只做指路，详情见对应专题文档（遵循本文件"不内联专题详情"原则，`AGENTS.md:5`）。
+
+| 类别 | 边界 | 详情去哪读 |
 | --- | --- | --- |
-| Ask-before | 修改 DB 表结构 / on-disk 存储格式 / 序列化：**MUST** 先做升级兼容（旧库可读），**NEVER** 直接改存量存储格式 | 开 Issue 标 SIG_DataManagement，走兼容性评审 |
-| Ask-before | 修改生成代码（如有 codegen 产物）：**MUST** 改源头模板/生成器，**NEVER** 手改生成产物 | 先问用户确认 codegen 源头再改 |
-| Ask-before | 新增/修改权限、安全、鉴权相关接口：**MUST** 走安全评审，**NEVER** 自行放宽权限校验 | 提交安全 SIG 评审，未通过 NEVER 合入 |
-| Do-not | **NEVER** 自行实现 `kv_store:datamgr_common` 已有同等能力的工具类 | — |
-| Do-not | **NEVER** 在未跑编译+单测前 claim done | — |
+| Do-not | SQLite 分层：上层类（`RdbStoreImpl`/`StepResultSet`/`SqliteSharedResultSet` 等）不可直接调用 `sqlite3*` 系函数 | `docs/rdb_native.md` "SQLite 分层约束" |
+| Ask-before | `Connection`/`Statement` 抽象层加接口须评估职责归属，NEVER 把 `RdbStoreImpl` 编排逻辑下沉 | `docs/rdb_native.md` "Connection 职责" |
+| Ask-before | 新增错误码须同步 NDK `relational_store_error_code.h` 与 JS `napi_rdb_error.cpp` 映射表，NEVER 给存量接口加新返回码 | `docs/error_code_layers.md` "新增错误码指导原则" |
+| Ask-before | 新增导出头文件须同步 `bundle.json` 的 `inner_kits[].header.header_files` | `bundle.json` + 编码规范"导出约定" |
 
 # 编译和测试方法
 
