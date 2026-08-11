@@ -1250,7 +1250,7 @@ void RdbStoreImpl::InitDelayNotifier()
                     realHelper->DonateKnowledgeData(rdbChangedData);
                 }
             }
-            if (!IsNotifyService(rdbChangedData)) {
+            if (!IsNotifyService(rdbChangedData, rdbNotifyConfig)) {
                 return E_OK;
             }
             auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
@@ -3597,8 +3597,12 @@ bool RdbStoreImpl::IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &r
     return false;
 }
 
-bool RdbStoreImpl::IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData)
+bool RdbStoreImpl::IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData,
+    const DistributedRdb::RdbNotifyConfig &rdbNotifyConfig)
 {
+    if (rdbNotifyConfig.isFull_ == true) {
+        return true;
+    }
     for (const auto &item : rdbChangedData.tableData) {
         if (item.second.isP2pSyncDataChange) {
             return true;
