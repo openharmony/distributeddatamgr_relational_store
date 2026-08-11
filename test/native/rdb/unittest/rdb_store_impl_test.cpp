@@ -3065,3 +3065,20 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_ClearMetadata_001, TestSize.Level2)
     RdbHelper::DeleteRdbStore(db);
 }
 
+/**
+ * @tc.name: IsNotifyService_Test_001
+ * @tc.desc: isFull_ is true, should return true
+ *           (covers branch: rdbNotifyConfig.isFull_ == true or false).
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, IsNotifyService_Test_001, TestSize.Level1)
+{
+    DistributedRdb::RdbChangedData changedData;
+    DistributedRdb::RdbNotifyConfig notifyConfig;
+    notifyConfig.isFull_ = true;
+    EXPECT_TRUE(RdbStoreImpl::IsNotifyService(changedData, notifyConfig));
+
+    notifyConfig.isFull_ = false;
+    EXPECT_FALSE(RdbStoreImpl::IsNotifyService(changedData, notifyConfig));
+}
+

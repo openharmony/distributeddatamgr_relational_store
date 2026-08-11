@@ -305,7 +305,8 @@ private:
     static int32_t RestoreWithPool(std::shared_ptr<ConnectionPool> pool, const std::string &path,
         const bool isForceRestore = false);
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
-    static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData);
+    static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData,
+ 	    const DistributedRdb::RdbNotifyConfig &rdbNotifyConfig);
     static void ReplayCallbackImpl(const RdbStoreConfig &config);
     std::pair<int32_t, std::vector<std::string>> ConvertToUuids(const std::vector<std::string> &devices);
 
