@@ -21,6 +21,9 @@ config("samgr_config") {
     "${relational_store_mock_external_kit_path}/ipc/include",
     "${relational_store_mock_external_kit_path}/safwk/include",
   ]
+  if (is_linux) {
+    include_dirs += [ "${relational_store_mock_external_kit_path}/c_utils/host_include" ]
+  }
 }
 
 ohos_static_library("samgr_proxy") {

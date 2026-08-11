@@ -14,14 +14,14 @@
  */
 
 // This file is vendored from commonlibrary/c_utils/base/src/ashmem.cpp and is
-// compiled only for host product builds. On host product the upstream c_utils
+// compiled only for Linux host builds. On Linux host the upstream c_utils
 // excludes ashmem.cpp from its build (and its header unconditionally includes
 // <linux/ashmem.h>, which the host kernel does not provide), so the Ashmem
 // symbols are missing and relational_store's SharedBlock fails to link. To keep
 // the host build self-contained without modifying c_utils, the implementation is
-// duplicated here, compiled under is_host_product only, and the ASHMEM_* ioctl
+// duplicated here, compiled under is_linux only, and the ASHMEM_* ioctl
 // macros come from the in-repo shim host_include/linux/ashmem.h instead of the
-// kernel header. On device builds (is_host_product == false) this file is not
+// kernel header. On device builds (is_linux == false) this file is not
 // compiled, so c_utils remains the single provider of the Ashmem symbols and no
 // duplicate-definition conflict occurs. Runtime on host is never exercised: the
 // host kernel has no /dev/ashmem, so Ashmem::CreateAshmem returns nullptr and
