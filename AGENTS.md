@@ -2,15 +2,20 @@
 
 本文件是 AI Agent 处理本仓库任务时的轻量入口。先读本文件，再按任务类型只加载匹配的详细文档页。
 
+> 本文件**只保留路由与原则**，不内联任何专题详情。具体规范 / 体系 / 约定 **MUST** 按"知识路由"表按需加载对应 `docs/*.md`。
+
 # 阅读策略
 
 不要一开始就读取 `docs/` 下的所有文件。
 
 默认只读本文件。涉及需求设计或代码开发时，最多按需加载：
 
-1. 如果影响范围不清楚，读取 `docs/rdb_native.md` 了解核心类关系和目录结构。
-2. 读取一个与任务领域匹配的专题页（`docs/error_code_layers.md` 或 `docs/dynamic_loading.md`）。
-3. 规划验证时，见本文件"编译和测试方法"章节。
+1. **代码开发/修改任务**：**MUST** 加载 [`docs/code_standards.md`](docs/code_standards.md)（强制规范 R1～R10、反馈闭环）。
+2. 如果影响范围不清楚，读取 `docs/rdb_native.md` 了解核心类关系和目录结构。
+3. 读取一个与任务领域匹配的专题页（`docs/error_code_layers.md` 或 `docs/dynamic_loading.md`）。
+4. 规划验证时，见本文件"编译和测试方法"章节。
+
+> 编辑代码前 **MUST** 自述：① 任务类别；② 已加载的文档；③ 命中的约束（如“接口层 NEVER 破坏兼容”）。无匹配约束时显式说明“无”。**自述在首次回复开头给出，后续每次编辑前若有变化则更新**。
 
 # 仓库定位
 
@@ -87,6 +92,8 @@ relational_store/
 
 禁止循环依赖。如有 **MUST** 单列并给出整改 Issue。
 
+> 嵌套指引：本仓库无嵌套 `AGENTS.md`/`CLAUDE.md`；更深的专题文档见 `docs/*.md`（按下方“知识路由”按需加载）。
+
 # 知识路由
 
 ## 触发式文档加载
@@ -98,6 +105,7 @@ relational_store/
 | `跨模块` / `新服务接入` / `rdb_native` / `connection_pool`   | `docs/rdb_native.md`                               | 跨模块改动 MUST 不破坏 inner_api 兼容        |
 | `加密` / `crypt` / `HUKS` / `rdb_crypt`                      | `docs/error_code_layers.md` + `docs/rdb_native.md` | 加密相关改动 MUST 通过 rdb_crypt 适配层      |
 | `云同步` / `cloud` / `cloud_data`                            | `docs/rdb_native.md`                               | 云同步 MUST 通过 IPC 与 native_rdb 交互      |
+| 任何代码修改/新增任务 / `函数行数` / `入参` / `拆分` / 写代码前 | `docs/code_standards.md`                           | 开工前 MUST 完整阅读 R1～R10 规则            |
 
 # 专家经验
 
@@ -139,6 +147,18 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 | "这个依赖直接加上就行" | native_rdb 支持动态卸载，直接加依赖会破坏卸载能力。 |
 | "析构漏取消注册，补上" | 行为已 release 即事实契约，修复反而破坏兼容；要改走新增路径，不动存量。 |
 
+## Do-not / Ask-before 清单
+
+> 仅列尚未在「核心原则/已知陷阱」中出现的边界，每条只做指路，详情见对应专题文档（遵循本文件"不内联专题详情"原则，`AGENTS.md:5`）。
+
+| 类别 | 边界 | 详情去哪读 |
+| --- | --- | --- |
+| Do-not | SQLite 分层：上层类（`RdbStoreImpl`/`StepResultSet`/`SqliteSharedResultSet` 等）不可直接调用 `sqlite3*` 系函数 | `docs/rdb_native.md` "SQLite 分层约束" |
+| Do-not | Taihe 生成产物（`*.ani.cpp`/`*.abi.c`，由 `ohos_taihe` 从 `.taihe` IDL 生成到构建输出目录）NEVER 手改；改接口 MUST 改 `frameworks/ets/taihe/*/idl/*.taihe` 后重新生成；`*.impl.cpp` 为手写实现，可编辑 | `frameworks/ets/taihe/*/BUILD.gn`（`ohos_taihe`/`copy_taihe_idl`）、`bundle.json:78`（`taihe_ffi_gen`） |
+| Ask-before | `Connection`/`Statement` 抽象层加接口须评估职责归属，NEVER 把 `RdbStoreImpl` 编排逻辑下沉 | `docs/rdb_native.md` "Connection 职责" |
+| Ask-before | 新增错误码须同步 NDK `relational_store_error_code.h` 与 JS `napi_rdb_error.cpp` 映射表，NEVER 给存量接口加新返回码 | `docs/error_code_layers.md` "新增错误码指导原则" |
+| Ask-before | 新增导出头文件须同步 `bundle.json` 的 `inner_kits[].header.header_files` | `bundle.json` + 编码规范"导出约定" |
+
 # 编译和测试方法
 
 > 修改类任务完成后 MUST 执行以下验证步骤（格式化按用户意愿，修改完代码后询问用户是否执行；编译构建和单元测试 NEVER 跳过）。
@@ -148,6 +168,10 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 1. **格式化**（按用户需要）：修改完代码后 MUST 先询问用户是否需要格式化，按用户意愿执行。用户同意时运行：
    ```bash
    ${OHOS_ROOT}/prebuilts/clang/ohos/linux-x86_64/llvm/bin/clang-format --style=file -i <修改的文件>
+   ```
+   可选静态分析（同一工具链；用编译产物目录的 compile_commands.json，未生成则跳过）：
+   ```bash
+   ${OHOS_ROOT}/prebuilts/clang/ohos/linux-x86_64/llvm/bin/clang-tidy -p=<build-out-dir> <修改的文件>
    ```
 
 2. **编译构建**（MUST，确认修改不引入编译错误）：
@@ -161,3 +185,9 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
    ```
 
 > Claim "done" MUST 有编译构建和单元测试 2 步验证结果；格式化按用户意愿，不强制。
+
+## 完成回复与验证回退
+
+- 最终回复 **MUST** 给出：编译结果、单测结果（或明确“未验证”原因）；**NEVER** 仅凭静态推断 claim done。
+- 验证无法运行（无环境/依赖缺失）时 **MUST** 说明原因，请用户在真机/CI 验证，**NEVER** 跳过直接交付。
+- 涉及接口改动时 **MUST** 对照 `interfaces/ndk/include/` 与 `interfaces/inner_api/` 声明确认签名未变（API 兼容性检查）。
