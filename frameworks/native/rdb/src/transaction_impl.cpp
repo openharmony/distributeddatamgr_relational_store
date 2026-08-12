@@ -23,6 +23,7 @@
 #include "rdb_trace.h"
 #include "trans_db.h"
 #include "rdb_perfStat.h"
+#include "sqlite_utils.h"
 
 using namespace OHOS::Rdb;
 namespace OHOS::NativeRdb {
@@ -102,6 +103,7 @@ int32_t TransactionImpl::Begin(int32_t type)
 
 int32_t TransactionImpl::Commit()
 {
+    LOG_DEBUG("Commit start %{public}s}", SqliteUtils::Anonymous(path_).c_str());
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard lock(mutex_);
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS_END, seqId_);
@@ -129,6 +131,7 @@ int32_t TransactionImpl::Commit()
 
 int32_t TransactionImpl::Rollback()
 {
+    LOG_DEBUG("Rollback start %{public}s}", SqliteUtils::Anonymous(path_).c_str());
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     std::lock_guard lock(mutex_);
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS_END, seqId_);

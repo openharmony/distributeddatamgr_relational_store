@@ -1043,7 +1043,7 @@ std::string SqliteUtils::FormatDebugInfoBrief(const std::map<std::string, DebugI
     oss << header << ":";
     for (auto &[name, debugInfo] : debugs) {
         oss << "<" << name << ",0x" << std::hex << debugInfo.inode_ << "," << std::dec << debugInfo.size_ << ","
-            << std::oct << debugInfo.mode_ << ">";
+            << debugInfo.gid_ << "," << debugInfo.uid_ << "," << std::oct << debugInfo.mode_ << ">";
     }
     return oss.str();
 }
@@ -1106,13 +1106,14 @@ std::pair<std::string, std::string> SqliteUtils::DiagnoseAccessFailure(const std
         if (segment.empty()) {
             continue;
         }
-        if (access(segment.c_str(), X_OK) == 0) {
-            continue; // can access, no problem
-        }
-        // access failed, get mode info for diagnosis
         struct stat st {};
         if (stat(segment.c_str(), &st) != 0) {
             return { segment, "mode=0, acl_gid_exec=0" };
+        }
+        // Directory: check traverse permission (X_OK); File: check read/write permission (R_OK | W_OK)
+        int checkMode = S_ISDIR(st.st_mode) ? X_OK : (R_OK | W_OK);
+        if (access(segment.c_str(), checkMode) == 0) {
+            continue; // can access, no problem
         }
         bool hasAcl = HasAccessAcl(segment, static_cast<int32_t>(GetGid()));
         return { segment, SqliteUtils::GetModeInfo(st.st_mode) + ", acl_gid_exec=" + std::to_string(hasAcl) };

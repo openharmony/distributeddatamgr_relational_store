@@ -286,16 +286,17 @@ RdbStoreConfig SqliteConnection::GetSlaveRdbStoreConfig(const RdbStoreConfig &rd
 int SqliteConnection::CheckDbNotExist(const RdbStoreConfig &config, const std::string &dbPath)
 {
     bool isDbFileExist = access(dbPath.c_str(), F_OK) == 0;
-    if (!isDbFileExist && (!config.IsCreateNecessary())) {
+    if (!isDbFileExist && !config.IsCreateNecessary()) {
         int savedErrno = errno;
-        auto [blocked, diag] = SqliteUtils::DiagnoseAccessFailure(dbPath);
+        auto [blockedPath, msg] = SqliteUtils::DiagnoseAccessFailure(dbPath);
         LOG_ERROR(
-            "db not exist, dbPath=%{public}s, errno=%{public}d, blocked=%{public}s, blockedLen=%{public}zu, %{public}s",
-            SqliteUtils::Anonymous(dbPath).c_str(), savedErrno, SqliteUtils::Anonymous(blocked).c_str(),
-            blocked.size(), diag.c_str());
+            "db not exist, dbPath=%{public}s, errno=%{public}d, blockedPath=%{public}s, "
+            "blockedPathLen=%{public}zu, %{public}s",
+            SqliteUtils::Anonymous(dbPath).c_str(), savedErrno,
+            SqliteUtils::Anonymous(blockedPath).c_str(), blockedPath.size(), msg.c_str());
         Reportor::ReportFault(
             RdbFaultDbFileEvent(RdbFaultType::FT_EX_FILE, E_DB_NOT_EXIST, config,
-                "db not exist, errno=" + std::to_string(savedErrno) + ", blocked=" + blocked + ", " + diag));
+                "db not exist, errno=" + std::to_string(savedErrno) + ", blockedPath=" + blockedPath + ", " + msg));
         return E_DB_NOT_EXIST;
     }
     return E_OK;
@@ -367,16 +368,21 @@ int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFl
             return E_SQLITE_CORRUPT;
         }
         if (errCode == SQLITE_CANTOPEN) {
-            std::pair<int32_t, RdbDebugInfo> fileInfo = SqliteUtils::Stat(dbPath);
-            if (fileInfo.first != E_OK) {
-                LOG_ERROR("The stat error, errno=%{public}d, parent dir modes: %{public}s", errno,
-                    SqliteUtils::GetParentModes(dbPath).c_str());
-            }
+            auto [blockedPath, diagMsg] = SqliteUtils::DiagnoseAccessFailure(dbPath);
+            // stat the actual blocked segment; when a parent dir blocks access, stat(dbPath) would
+            // return zeros (unreachable), so stat blockedPath instead (fall back to dbPath if none blocked)
+            std::pair<int32_t, RdbDebugInfo> blockedInfo =
+                blockedPath.empty() ? SqliteUtils::Stat(dbPath) : SqliteUtils::Stat(blockedPath);
+            LOG_ERROR("fail to openDB, dbPath=%{public}s, errno=%{public}d, blockedPath=%{public}s, %{public}s, "
+                "[%{public}d,%{public}d,%{public}o]",
+                SqliteUtils::Anonymous(dbPath).c_str(), errno,
+                SqliteUtils::Anonymous(blockedPath).c_str(), diagMsg.c_str(),
+                blockedInfo.second.gid_, blockedInfo.second.uid_, blockedInfo.second.mode_);
             Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_OPEN, E_SQLITE_CANTOPEN, config_,
                 "failed to openDB errno[ " + std::to_string(errno) + "]," +
-                    SqliteUtils::GetFileStatInfo(fileInfo.second) +
-                    "parent dir modes:" + SqliteUtils::GetParentModes(dbPath),
-                true));
+                    SqliteUtils::GetFileStatInfo(blockedInfo.second) +
+                    "blockedPath=" + blockedPath + ", " + diagMsg +
+                    ", parent dir modes:" + SqliteUtils::GetParentModes(dbPath), true));
         }
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM)
         auto const pos = dbPath.find_last_of("\\/");
