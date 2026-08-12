@@ -263,13 +263,13 @@ void ConnPool::SetInTransaction(bool isInTransaction)
 
 void ConnectionPool::Interrupt(uint32_t type)
 {
-    if ((type | READ) == READ) {
+    if ((type & READ) != 0) {
         readers_.Interrupt();
     }
-    if ((type | WRITE) == WRITE) {
+    if ((type & WRITE) != 0) {
         writers_.Interrupt();
     }
-    if ((type | TRANS) == TRANS) {
+    if ((type & TRANS) != 0) {
         trans_.Interrupt();
     }
 }
