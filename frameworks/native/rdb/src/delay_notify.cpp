@@ -31,7 +31,7 @@ DelayNotify::~DelayNotify()
     if (delaySyncTaskId_ != TaskExecutor::INVALID_TASK_ID) {
         pool_->Remove(delaySyncTaskId_, true);
     }
-    if (task_ != nullptr && changedData_.tableData.size() > 0) {
+    if (task_ != nullptr && (changedData_.tableData.size() > 0 || isFull_)) {
         DistributedRdb::RdbNotifyConfig rdbNotifyConfig;
         rdbNotifyConfig.delay_ = 0;
         rdbNotifyConfig.isFull_ = isFull_;
