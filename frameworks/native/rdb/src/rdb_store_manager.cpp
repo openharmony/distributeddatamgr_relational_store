@@ -120,7 +120,9 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     // If configured to SUPPORT, always need ACL
     // If configured to NOSUPPORT, never need ACL
     // If it is a distributeddata request, never need ACL
+    // If it is a local-only database, never need ACL
     bool isNeedAcl = (RdbMgr::GetInstance().IsProxy()) && (config.GetRoleType() == OWNER) &&
+                    (!config.IsLocalOnly()) &&
                     (config.IsSearchable() ||
                     (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::SUPPORT) ||
                     (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::UNKNOWN &&
