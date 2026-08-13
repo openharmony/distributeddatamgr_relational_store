@@ -189,6 +189,38 @@ export default function RdbStoreDataChangeTestEts() {
     })
 
     /**
+     * @tc.name Normal Test unregister all observers by omitting the callback.
+     * @tc.number testEvent003
+     * @tc.desc 1. Register callbacks for event, then off all by omitting the callback
+     */
+    it('testEvent003',  0, async  (done:Function) => {
+      console.log(TAG + "************* testEvent003 start *************");
+      let status1 = 0;
+      let status2 = 0;
+      let storeObserver1 = () => {
+        console.info(TAG + " storeObserver1 into");
+        status1 = 1;
+      };
+      let storeObserver2 = () => {
+        console.info(TAG + " storeObserver2 into");
+        status2 = 1;
+      };
+      rdbStore?.on('event', true, storeObserver1);
+      rdbStore?.on('event', true, storeObserver2);
+      rdbStore?.emit('event');
+      await sleep(500);
+      expect(status1).assertEqual(1);
+      expect(status2).assertEqual(1);
+      rdbStore?.off('event', true);
+      rdbStore?.emit('event');
+      await sleep(500);
+      expect(status1).assertEqual(1);
+      expect(status2).assertEqual(1);
+      console.log(TAG + "************* testEvent003 end *************");
+      done();
+    })
+
+    /**
      * @tc.name Normal Test creating multiple rdbstore objects and registering callbacks.
      * @tc.number testStatistics001
      * @tc.desc 1. Register callback for statistics
