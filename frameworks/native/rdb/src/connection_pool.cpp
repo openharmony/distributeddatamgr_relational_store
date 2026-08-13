@@ -89,6 +89,8 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
     if (repairErrCode == E_OK) {
         rebuiltType = RebuiltType::REPAIRED;
     } else if (storeConfig.GetAllowRebuild()) {
+        Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_CURD, E_DFX_REBUILD, storeConfig,
+            "Rebuild", true));
         Connection::Delete(storeConfig);
         rebuiltType = RebuiltType::REBUILT;
     } else if (storeConfig.IsEncrypt() && errCode == E_INVALID_SECRET_KEY) {

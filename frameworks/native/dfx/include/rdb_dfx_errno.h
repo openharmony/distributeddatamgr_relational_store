@@ -132,6 +132,16 @@ static constexpr int E_DFX_RETAIN_DEVICE_DATA = (E_DFX_BASE + 0x15);
  * @brief Only use for dfx, the interface of updating distributed info is used.
  */
 static constexpr int E_DFX_UPDATE_DISTRIBUTED_INFO = (E_DFX_BASE + 0x16);
+
+/**
+ * @brief Only use for dfx, database is rebuilt due to corruption.
+ */
+static constexpr int E_DFX_REBUILD = (E_DFX_BASE + 0x17);
+
+/**
+ * @brief Only use for dfx, delete rdb store.
+ */
+static constexpr int E_DFX_DELETE_RDB_STORE = (E_DFX_BASE + 0x18);
 } // namespace NativeRdb
 } // namespace OHOS
 

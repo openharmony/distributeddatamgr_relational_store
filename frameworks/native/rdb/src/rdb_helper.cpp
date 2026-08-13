@@ -133,6 +133,8 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
     if (access(dbFile.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(config, shouldClose);
     }
+    Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_CURD, E_DFX_DELETE_RDB_STORE, config,
+        "DeleteRdbStore", true));
     Reportor::ReportRestore(Reportor::Create(config, E_OK, "RestoreType:Delete", false));
     Connection::Delete(config);
     RdbSecurityManager::GetInstance().DelAllKeyFiles(dbFile);

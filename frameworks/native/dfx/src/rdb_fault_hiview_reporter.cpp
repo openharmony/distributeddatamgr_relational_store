@@ -31,6 +31,7 @@
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
+#include "rdb_platform.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "rdb_time_utils.h"
@@ -129,7 +130,7 @@ void RdbFaultHiViewReporter::ReportCorrupted(const RdbCorruptedEvent &eventInfo)
 {
     std::string bundleName = GetBundleName(eventInfo.bundleName);
     if (bundleName.empty()) {
-        return;
+        bundleName = std::to_string(GetUid());
     }
     std::string moduleName = eventInfo.moduleName;
     std::string storeType = eventInfo.storeType;
@@ -299,12 +300,10 @@ std::atomic<uint8_t> *RdbFaultHiViewReporter::GetFaultCounter(int32_t errCode)
     return nullptr;
 }
 
-bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_t errCode)
+bool RdbFaultHiViewReporter::IsReportFault(int32_t errCode)
 {
-    if (bundleName.empty()) {
-        return false;
-    }
-    if ((errCode == E_DFX_RETAIN_DEVICE_DATA) || (errCode == E_DFX_UPDATE_DISTRIBUTED_INFO)) {
+    if ((errCode == E_DFX_RETAIN_DEVICE_DATA) || (errCode == E_DFX_UPDATE_DISTRIBUTED_INFO) ||
+        (errCode == E_DFX_REBUILD) || (errCode == E_DFX_DELETE_RDB_STORE)) {
         return true;
     }
     auto *counter = GetFaultCounter(errCode);
@@ -322,7 +321,7 @@ bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_
 
 void RdbFaultHiViewReporter::ReportFault(const RdbFaultEvent &faultEvent)
 {
-    if (!IsReportFault(faultEvent.GetBundleName(), faultEvent.GetErrCode())) {
+    if (!IsReportFault(faultEvent.GetErrCode())) {
         return;
     }
     faultEvent.Report();
@@ -333,7 +332,11 @@ RdbFaultEvent::RdbFaultEvent(const std::string &faultType, int32_t errorCode, co
 {
     faultType_ = faultType;
     errorCode_ = errorCode;
-    bundleName_ = bundleName;
+    if (bundleName.empty()) {
+        bundleName_ = std::to_string(GetUid());
+    } else {
+        bundleName_ = bundleName;
+    }
     custLog_ = custLog;
 }
 
