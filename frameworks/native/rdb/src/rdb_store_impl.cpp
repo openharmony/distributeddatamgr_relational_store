@@ -36,6 +36,7 @@
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_common.h"
+#include "rdb_db_info_manager.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_local_db_observer.h"
@@ -1583,6 +1584,11 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
             LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path_).c_str(), errCode);
             return errCode;
         }
+    }
+    // Record open diagnostics only on success; failure paths return early above
+    // and never reach here, so the dfx file is never written for a failed open.
+    if (errCode == E_OK) {
+        RdbDbInfoManager::GetInstance().RecordOpen(config_, created);
     }
     initStatus_ = errCode;
     return initStatus_;
