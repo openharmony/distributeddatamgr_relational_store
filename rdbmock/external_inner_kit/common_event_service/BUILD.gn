@@ -20,6 +20,9 @@ config("common_event_service_config") {
     "include",
     "${relational_store_mock_external_kit_path}/ipc/include",
   ]
+  if (is_linux) {
+    include_dirs += [ "${relational_store_mock_external_kit_path}/c_utils/host_include" ]
+  }
 }
 
 ohos_source_set("cesfwk_innerkits") {

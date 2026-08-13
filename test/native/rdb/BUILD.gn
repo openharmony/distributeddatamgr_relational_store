@@ -434,11 +434,11 @@ ohos_unittest("NativeRdbTest") {
     ]
   }
 
-  # Host product only: upstream c_utils excludes ashmem.cpp from its host build,
+  # Linux host only: upstream c_utils excludes ashmem.cpp from its host build,
   # so the Ashmem symbols referenced by shared_block.cpp are absent on host. Vendor
   # the implementation here under host only; device builds still get Ashmem from
   # c_utils, avoiding duplicate definitions.
-  if (is_host_product) {
+  if (is_linux) {
     sources += [ "${relational_store_mock_path}/external_inner_kit/c_utils/ashmem.cpp" ]
   }
 

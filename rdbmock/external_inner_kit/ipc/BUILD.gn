@@ -15,10 +15,13 @@ import("//build/ohos.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
-SUBSYSTEM_DIR = "//foundation/distributeddatamgr/relational_store"
-
 config("ipc_all_deps_config") {
-  include_dirs = [ "$SUBSYSTEM_DIR/rdbmock/external_inner_kit/ipc/include" ]
+  include_dirs = [
+    "${relational_store_mock_external_kit_path}/ipc/include",
+  ]
+  if (is_linux) {
+    include_dirs += [ "${relational_store_mock_external_kit_path}/c_utils/host_include" ]
+  }
   defines = []
   if (current_os == "ohos") {
     defines += [ "OHOS_PLATFORM" ]
