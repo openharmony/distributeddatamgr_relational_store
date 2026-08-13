@@ -303,7 +303,7 @@ std::atomic<uint8_t> *RdbFaultHiViewReporter::GetFaultCounter(int32_t errCode)
 bool RdbFaultHiViewReporter::IsReportFault(int32_t errCode)
 {
     if ((errCode == E_DFX_RETAIN_DEVICE_DATA) || (errCode == E_DFX_UPDATE_DISTRIBUTED_INFO) ||
-        errCode == E_DFX_REBUILD) {
+        (errCode == E_DFX_REBUILD) || (errCode == E_DFX_DELETE_RDB_STORE)) {
         return true;
     }
     auto *counter = GetFaultCounter(errCode);
