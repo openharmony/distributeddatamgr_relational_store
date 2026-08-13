@@ -3373,6 +3373,8 @@ int32_t RdbStoreImpl::GetDbType() const
 
 std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction(int32_t type)
 {
+    LOG_DEBUG("CreateTransaction start name:%{public}s, type:%{public}d.",
+        SqliteUtils::Anonymous(config_.GetName()).c_str(), type);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, nullptr };

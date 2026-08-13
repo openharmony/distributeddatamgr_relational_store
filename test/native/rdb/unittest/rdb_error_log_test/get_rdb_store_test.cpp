@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <memory>
@@ -590,4 +591,53 @@ HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_011, TestSize.Level1)
     storeA = nullptr;
 
     RdbHelper::DeleteRdbStore(path1);
+}
+
+/**
+ * @tc.name: GetRdbStoreTest_012
+ * @tc.desc: cover the SQLITE_CANTOPEN branch in SqliteConnection::OpenDatabase. Open via
+ *           GetRdbStore first, then replace the db file path with a directory so that reopening
+ *           fails with EISDIR -> SQLITE_CANTOPEN, which exercises the 维测 log path
+ *           (Stat + DiagnoseAccessFailure + LOG_ERROR with [gid,uid,mode] + ReportFault).
+ *           A directory placeholder is used because the test process runs with privileges that
+ *           bypass DAC, so chmod/chown cannot reliably trigger CANTOPEN; EISDIR is uid-independent.
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RdbStoreStoreMultiTest, GetRdbStoreTest_012, TestSize.Level1)
+{
+    std::string path = "/data/test/cantopen_store.db";
+    std::string walPath = path + "-wal";
+    std::string shmPath = path + "-shm";
+    RdbHelper::DeleteRdbStore(path);
+
+    // 1. open via GetRdbStore, creates the db file
+    int version = 1;
+    RdbStoreConfig config(path);
+    config.SetBundleName("com.ohos.test");
+    RDBCallback helper;
+    int errCode = E_OK;
+    auto store = RdbHelper::GetRdbStore(config, version, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    // 2. release the store so the cached weak_ptr expires, then remove the db files
+    store = nullptr;
+    SqliteUtils::DeleteFile(path);
+    SqliteUtils::DeleteFile(walPath);
+    SqliteUtils::DeleteFile(shmPath);
+
+    // 3. replace the db file path with a directory -> sqlite3_open_v2 returns EISDIR ->
+    //    SQLITE_CANTOPEN (deterministic regardless of process uid)
+    ASSERT_EQ(mkdir(path.c_str(), 0777), 0);
+
+    // 4. reopen -> CANTOPEN branch fires (Stat + DiagnoseAccessFailure + LOG_ERROR + ReportFault)
+    auto store2 = RdbHelper::GetRdbStore(config, version, helper, errCode);
+    EXPECT_EQ(store2, nullptr);
+    EXPECT_EQ(errCode, E_SQLITE_CANTOPEN);
+
+    // 5. cleanup: remove the placeholder dir, then clear cache and any leftover wal/shm
+    EXPECT_EQ(rmdir(path.c_str()), 0);
+    RdbHelper::DeleteRdbStore(path);
 }

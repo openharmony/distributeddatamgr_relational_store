@@ -68,12 +68,12 @@ std::shared_ptr<ConnPool> ConnPool::Create(
     }
     std::string dbPath;
     (void)SqliteGlobalConfig::GetDbPath(config, dbPath);
-    LOG_INFO("code:%{public}d app[%{public}s:%{public}s] area[%{public}s] "
-             "cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]"
+    LOG_WARN("code:%{public}d app[%{public}s:%{public}s] area[%{public}s] "
+             "cfg[%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d,%{public}d]"
              "%{public}s, pathSize:%{public}zu",
         errCode, config.GetBundleName().c_str(), config.GetModuleName().c_str(),
         SqliteUtils::GetArea(dbPath).c_str(), config.GetDBType(), config.GetHaMode(), config.IsEncrypt(),
-        config.GetArea(), config.GetSecurityLevel(), config.GetRoleType(), config.IsReadOnly(),
+        config.GetArea(), config.GetSecurityLevel(), config.GetRoleType(), config.IsReadOnly(), config.IsSearchable(),
         SqliteUtils::FormatDebugInfoBrief(Connection::Collect(config),
         SqliteUtils::Anonymous(config.GetName())).c_str(), dbPath.size());
     return errCode == E_OK ? pool : nullptr;

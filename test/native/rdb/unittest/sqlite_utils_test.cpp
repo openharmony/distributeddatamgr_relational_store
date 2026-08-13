@@ -867,7 +867,7 @@ HWTEST_F(SqliteUtilsTest, DiagnoseAccessFailure_002, TestSize.Level1)
     // Use a path under a non-existent directory
     std::string dbPath = "/nonexistent_dir_for_diag002/test.db";
     auto [blocked, diag] = SqliteUtils::DiagnoseAccessFailure(dbPath);
-    // /nonexistent_dir_for_diag003 does not exist, reported as blocked with mode=0
+    // nonexistent_dir_for_diag002 does not exist, reported as blocked with mode=0
     EXPECT_EQ(blocked, "/nonexistent_dir_for_diag002");
     EXPECT_TRUE(diag.find("mode=0") != std::string::npos);
 }
