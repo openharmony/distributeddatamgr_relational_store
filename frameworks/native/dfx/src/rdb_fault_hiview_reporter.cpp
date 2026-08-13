@@ -91,8 +91,7 @@ RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
     { E_DFX_VALUELESS_BY_EXCEPTION, 0 },
     { E_DFX_TYPE_INDEX_OUT_OF_RANGE, 0 },
     { E_DFX_SILENT_PROXY_QUERY, 0 },
-    { E_DFX_INTERFACE_USED, 0 },
-    { E_DFX_REBUILD, 0 }
+    { E_DFX_INTERFACE_USED, 0 }
 };
 
 RdbFaultEvent::~RdbFaultEvent() = default;
@@ -301,13 +300,10 @@ std::atomic<uint8_t> *RdbFaultHiViewReporter::GetFaultCounter(int32_t errCode)
     return nullptr;
 }
 
-bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_t errCode)
+bool RdbFaultHiViewReporter::IsReportFault(int32_t errCode)
 {
-    std::string name = bundleName;
-    if (name.empty()) {
-        name = std::to_string(GetUid());
-    }
-    if ((errCode == E_DFX_RETAIN_DEVICE_DATA) || (errCode == E_DFX_UPDATE_DISTRIBUTED_INFO)) {
+    if ((errCode == E_DFX_RETAIN_DEVICE_DATA) || (errCode == E_DFX_UPDATE_DISTRIBUTED_INFO) ||
+        errCode == E_DFX_REBUILD) {
         return true;
     }
     auto *counter = GetFaultCounter(errCode);
@@ -325,7 +321,7 @@ bool RdbFaultHiViewReporter::IsReportFault(const std::string &bundleName, int32_
 
 void RdbFaultHiViewReporter::ReportFault(const RdbFaultEvent &faultEvent)
 {
-    if (!IsReportFault(faultEvent.GetBundleName(), faultEvent.GetErrCode())) {
+    if (!IsReportFault(faultEvent.GetErrCode())) {
         return;
     }
     faultEvent.Report();
@@ -336,7 +332,11 @@ RdbFaultEvent::RdbFaultEvent(const std::string &faultType, int32_t errorCode, co
 {
     faultType_ = faultType;
     errorCode_ = errorCode;
-    bundleName_ = bundleName;
+    if (bundleName.empty()) {
+        bundleName_ = std::to_string(GetUid());
+    } else {
+        bundleName_ = bundleName;
+    }
     custLog_ = custLog;
 }
 

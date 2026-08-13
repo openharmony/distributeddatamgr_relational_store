@@ -129,7 +129,7 @@ private:
     static void Update(std::map<std::string, DebugInfo> &localInfos, const std::map<std::string, DebugInfo> &infos);
     static void CreateCorruptedFlag(const std::string &dbPath);
     static void DeleteCorruptedFlag(const std::string &dbPath);
-    static bool IsReportFault(const std::string &bundleName, int32_t errCode);
+    static bool IsReportFault(int32_t errCode);
     static std::atomic<uint8_t> *GetFaultCounter(int32_t errCode);
     static Collector collector_;
     static RdbFaultCode faultCounters_[];
