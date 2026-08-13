@@ -94,7 +94,7 @@ std::pair<RebuiltType, std::shared_ptr<ConnectionPool>> ConnPool::HandleDataCorr
         auto fileInfo = SqliteUtils::Stat(dbPath);
         std::string statInfo = (fileInfo.first == E_OK) ? SqliteUtils::GetFileStatInfo(fileInfo.second) : "";
         Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_OPEN, E_DFX_REBUILD,
-            storeConfig.GetBundleName(), "AllowRebuild" + statInfo));
+            storeConfig.GetBundleName(), storeConfig.GetName() + ":AllowRebuild" + statInfo));
         Connection::Delete(storeConfig);
         rebuiltType = RebuiltType::REBUILT;
     } else if (storeConfig.IsEncrypt() && errCode == E_INVALID_SECRET_KEY) {
