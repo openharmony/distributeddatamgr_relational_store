@@ -32,7 +32,8 @@ declare_args() {
   }
 
   if (defined(global_parts_info) &&
-      defined(global_parts_info.hiviewdfx_hilog)) {
+      (defined(global_parts_info.hiviewdfx_hilog) ||
+       defined(global_parts_info.hiviewdfx_hilog_override))) {
     relational_store_hilog_enabled = true
   } else {
     relational_store_hilog_enabled = false

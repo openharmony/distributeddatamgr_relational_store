@@ -49,7 +49,7 @@ ohos_shared_library("relationalstore") {
 
   external_deps = relationalstore_js_platform_external_deps
   external_deps += external_deps_api_metrics
-  cflags_cc = [
+  cflags_cc += [
     "-Os",
     "-fno-unwind-tables",
     "-fno-asynchronous-unwind-tables",
