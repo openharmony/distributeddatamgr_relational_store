@@ -35,14 +35,14 @@ namespace NativeRdb {
  */
 
 struct PermissionInfo : public Serializable {
-    uint32_t mode = 0;       // st_mode
-    std::string acl;         // getfacl-style text from Acl::Dump(), "" if none
+    uint32_t mode = 0; // st_mode
+    std::string acl;   // getfacl-style text from Acl::Dump(), "" if none
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
 };
 
 struct TimeInfo : public Serializable {
-    int64_t ctime = 0;       // seconds
+    int64_t ctime = 0; // seconds
     int64_t atime = 0;
     int64_t mtime = 0;
     bool Marshal(json &obj) const override;
@@ -50,8 +50,8 @@ struct TimeInfo : public Serializable {
 };
 
 struct FileInfo : public Serializable {
-    int64_t node = 0;        // inode
-    int64_t size = 0;        // bytes
+    int64_t node = 0; // inode
+    int64_t size = 0; // bytes
     PermissionInfo permission;
     TimeInfo time;
     bool Marshal(json &obj) const override;
@@ -111,7 +111,7 @@ struct LastOpenDbInfo : public Serializable {
     BinlogInfo binlog;
     ConfigInfo config;
     KeyInfo key;
-    std::string time;        // human-readable "YYYY-MM-DD HH:MM:SS.mmm"
+    std::string time; // human-readable "YYYY-MM-DD HH:MM:SS.mmm"
     CallerInfo callerInfo;
     int32_t integrityResult = 0;
     bool created = false;
@@ -184,8 +184,7 @@ struct RdbDbInfoRecord : public Serializable {
 
 // Compute changed-field name list ("main.db.node", "main.wal.size", ...) between
 // two DbFileInfo snapshots. Empty if identical.
-std::vector<std::string> DiffDbFileInfo(const std::string &prefix, const DbFileInfo &before,
-    const DbFileInfo &after);
+std::vector<std::string> DiffDbFileInfo(const std::string &prefix, const DbFileInfo &before, const DbFileInfo &after);
 
 // Epoch milliseconds (int64). RdbTimeUtils only returns human-readable strings,
 // so start/end timing is computed here.

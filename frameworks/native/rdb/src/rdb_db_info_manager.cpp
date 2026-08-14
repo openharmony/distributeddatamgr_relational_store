@@ -16,16 +16,17 @@
 #define LOG_TAG "RdbDbInfoManager"
 #include "rdb_db_info_manager.h"
 
-#include <cerrno>
-#include <cstdio>
-#include <cstring>
 #include <dirent.h>
 #include <fcntl.h>
-#include <fstream>
-#include <functional>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
+#include <fstream>
+#include <functional>
 
 #include "acl.h"
 #include "ipc_skeleton.h"
@@ -80,7 +81,10 @@ public:
             fd_ = -1;
         }
     }
-    bool IsLocked() const { return fd_ >= 0; }
+    bool IsLocked() const
+    {
+        return fd_ >= 0;
+    }
     DfxFileLock(const DfxFileLock &) = delete;
     DfxFileLock &operator=(const DfxFileLock &) = delete;
 
@@ -220,8 +224,7 @@ ConfigInfo RdbDbInfoManager::BuildConfigInfo(const RdbStoreConfig &config)
     return info;
 }
 
-void RdbDbInfoManager::WithRecord(const std::string &dbPath,
-    const std::function<void(RdbDbInfoRecord &)> &mutator)
+void RdbDbInfoManager::WithRecord(const std::string &dbPath, const std::function<void(RdbDbInfoRecord &)> &mutator)
 {
     std::string lockPath = dbPath + LOCK_SUFFIX;
     DfxFileLock lock(lockPath);
@@ -253,8 +256,7 @@ void RdbDbInfoManager::RecordOpen(const RdbStoreConfig &config, bool created)
     info.callerInfo = CollectCaller();
     info.integrityResult = 0; // open succeeded => integrity acceptable
     info.created = created;
-    info.keyPresent =
-        RdbSecurityManager::GetInstance().IsKeyFileExists(dbPath, RdbSecurityManager::PUB_KEY_FILE);
+    info.keyPresent = RdbSecurityManager::GetInstance().IsKeyFileExists(dbPath, RdbSecurityManager::PUB_KEY_FILE);
 
     // Compare against the prior main snapshot inside the same flock critical
     // section; record dbInfoChange only when something actually changed.

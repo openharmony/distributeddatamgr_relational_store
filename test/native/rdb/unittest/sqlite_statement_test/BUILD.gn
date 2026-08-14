@@ -141,6 +141,7 @@ ohos_unittest("SqliteStatementTest") {
   external_deps += external_deps_distributeddata_inner
   external_deps += external_deps_distributeddb_client
   external_deps += external_deps_samgr
+  external_deps += external_deps_ipc_core
 
   deps = [
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",

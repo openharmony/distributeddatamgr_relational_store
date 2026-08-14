@@ -305,6 +305,7 @@ ohos_unittest("SilentProxyTest") {
   external_deps += external_deps_distributeddb
   external_deps += external_deps_distributeddb_client
   external_deps += external_deps_samgr
+  external_deps += external_deps_ipc_core
 
   deps = [
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",

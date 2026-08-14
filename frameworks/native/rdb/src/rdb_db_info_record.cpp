@@ -26,8 +26,7 @@ namespace OHOS {
 namespace NativeRdb {
 int64_t NowMs()
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch())
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
         .count();
 }
 
@@ -320,8 +319,7 @@ bool RdbDbInfoRecord::Unmarshal(const json &obj)
     return true;
 }
 
-static void DiffFileInfo(const std::string &prefix, const FileInfo &a, const FileInfo &b,
-    std::vector<std::string> &out)
+static void DiffFileInfo(const std::string &prefix, const FileInfo &a, const FileInfo &b, std::vector<std::string> &out)
 {
     if (a.node != b.node) {
         out.push_back(prefix + ".node");
@@ -346,8 +344,7 @@ static void DiffFileInfo(const std::string &prefix, const FileInfo &a, const Fil
     }
 }
 
-std::vector<std::string> DiffDbFileInfo(const std::string &prefix, const DbFileInfo &before,
-    const DbFileInfo &after)
+std::vector<std::string> DiffDbFileInfo(const std::string &prefix, const DbFileInfo &before, const DbFileInfo &after)
 {
     std::vector<std::string> out;
     DiffFileInfo(prefix + ".db", before.db, after.db, out);
@@ -360,8 +357,7 @@ RdbDfxTrace::RdbDfxTrace(DfxOp op, std::string dbPath, std::string backupPath, c
     : op_(op), dbPath_(dbPath), backupPath_(backupPath), startTime_(NowMs()),
       caller_(RdbDbInfoManager::GetInstance().CollectCaller()),
       beforeMain_(RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbPath)),
-      beforeBackup_(!backupPath.empty() ? RdbDbInfoManager::GetInstance().CollectDbFileInfo(backupPath)
-                                        : DbFileInfo()),
+      beforeBackup_(!backupPath.empty() ? RdbDbInfoManager::GetInstance().CollectDbFileInfo(backupPath) : DbFileInfo()),
       resultRef_(resultRef)
 {
 }

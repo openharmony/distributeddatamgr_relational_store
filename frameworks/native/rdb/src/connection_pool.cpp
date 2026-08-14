@@ -74,7 +74,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(
         errCode, config.GetBundleName().c_str(), config.GetModuleName().c_str(),
         SqliteUtils::GetArea(dbPath).c_str(), config.GetDBType(), config.GetHaMode(), config.IsEncrypt(),
         config.GetArea(), config.GetSecurityLevel(), config.GetRoleType(), config.IsReadOnly(), config.IsSearchable(),
-        SqliteUtils::Anonymous(config.GetName())).c_str());
+        SqliteUtils::Anonymous(config.GetName()).c_str());
     auto debugInfos = Connection::Collect(config);
     LOG_INFO("stat:%{public}s", SqliteUtils::FormatDebugInfo(debugInfos, "").c_str());
     return errCode == E_OK ? pool : nullptr;
