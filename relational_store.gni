@@ -115,6 +115,8 @@ base_sources = [
   "${relational_store_native_path}/rdb/src/global_resource.cpp",
   "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
   "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_db_info_manager.cpp",
+  "${relational_store_native_path}/rdb/src/rdb_db_info_record.cpp",
   "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
   "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
   "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
