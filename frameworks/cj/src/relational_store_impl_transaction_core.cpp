@@ -26,12 +26,6 @@ using namespace OHOS::FFI;
 namespace OHOS {
 namespace Relational {
 
-OHOS::FFI::RuntimeType *TransactionImpl::GetClassType()
-{
-    static OHOS::FFI::RuntimeType runtimeType = OHOS::FFI::RuntimeType::Create<OHOS::FFI::FFIData>("TransactionImpl");
-    return &runtimeType;
-}
-
 TransactionImpl::TransactionImpl(std::shared_ptr<NativeRdb::Transaction> tx)
     : transaction_(tx)
 {

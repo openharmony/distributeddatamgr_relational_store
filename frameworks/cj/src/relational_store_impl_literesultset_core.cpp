@@ -24,12 +24,6 @@ using namespace OHOS::FFI;
 namespace OHOS {
 namespace Relational {
 
-OHOS::FFI::RuntimeType *LiteResultSetImpl::GetClassType()
-{
-    static OHOS::FFI::RuntimeType runtimeType = OHOS::FFI::RuntimeType::Create<OHOS::FFI::FFIData>("LiteResultSetImpl");
-    return &runtimeType;
-}
-
 LiteResultSetImpl::LiteResultSetImpl(std::shared_ptr<NativeRdb::ResultSet> resultSet)
     : resultSet_(resultSet)
 {

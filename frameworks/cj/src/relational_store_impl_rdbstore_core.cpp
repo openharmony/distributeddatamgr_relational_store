@@ -28,12 +28,6 @@ RdbStoreImpl::RdbStoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore)
     rdbStore_ = rdbStore;
 }
 
-OHOS::FFI::RuntimeType* RdbStoreImpl::GetClassType()
-{
-    static OHOS::FFI::RuntimeType runtimeType = OHOS::FFI::RuntimeType::Create<OHOS::FFI::FFIData>("RdbStoreImpl");
-    return &runtimeType;
-}
-
 std::shared_ptr<OHOS::NativeRdb::RdbStore> RdbStoreImpl::GetRdbStore()
 {
     std::lock_guard<std::mutex> lock(observerMutex_);

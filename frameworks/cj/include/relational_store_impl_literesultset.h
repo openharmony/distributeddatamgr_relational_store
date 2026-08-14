@@ -54,7 +54,6 @@ public:
 private:
     friend class OHOS::FFI::RuntimeType;
     friend class OHOS::FFI::TypeBase;
-    static OHOS::FFI::RuntimeType *GetClassType();
 
     std::shared_ptr<NativeRdb::ResultSet> resultSet_;
 
