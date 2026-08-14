@@ -26,12 +26,8 @@ namespace OHOS {
 namespace Relational {
 
 class LiteResultSetImpl : public OHOS::FFI::FFIData {
+    DECL_TYPE(LiteResultSetImpl, OHOS::FFI::FFIData)
 public:
-    OHOS::FFI::RuntimeType *GetRuntimeType() override
-    {
-        return GetClassType();
-    }
-
     explicit LiteResultSetImpl(std::shared_ptr<NativeRdb::ResultSet> resultSet);
 
     int32_t GetColumnIndex(char *columnName, int32_t *rtnCode);
@@ -54,7 +50,6 @@ public:
 private:
     friend class OHOS::FFI::RuntimeType;
     friend class OHOS::FFI::TypeBase;
-    static OHOS::FFI::RuntimeType *GetClassType();
 
     std::shared_ptr<NativeRdb::ResultSet> resultSet_;
 

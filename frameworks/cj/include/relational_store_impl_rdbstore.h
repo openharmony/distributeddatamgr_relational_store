@@ -97,12 +97,8 @@ private:
 };
 
 class RdbStoreImpl : public OHOS::FFI::FFIData {
+    DECL_TYPE(RdbStoreImpl, OHOS::FFI::FFIData)
 public:
-    OHOS::FFI::RuntimeType *GetRuntimeType() override
-    {
-        return GetClassType();
-    }
-
     explicit RdbStoreImpl(std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore);
 
     std::shared_ptr<NativeRdb::ResultSet> Query(RdbPredicatesImpl &predicates, char **column, int64_t columnSize);
@@ -189,7 +185,6 @@ public:
 private:
     friend class OHOS::FFI::RuntimeType;
     friend class OHOS::FFI::TypeBase;
-    static OHOS::FFI::RuntimeType *GetClassType();
     std::vector<OHOS::NativeRdb::ValueObject> bindArgs;
     std::shared_ptr<OHOS::NativeRdb::RdbStore> GetRdbStore();
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;

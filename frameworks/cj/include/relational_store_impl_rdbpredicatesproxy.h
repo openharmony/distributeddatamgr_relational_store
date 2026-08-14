@@ -27,12 +27,8 @@
 namespace OHOS {
 namespace Relational {
 class RdbPredicatesImpl : public OHOS::FFI::FFIData {
+    DECL_TYPE(RdbPredicatesImpl, OHOS::FFI::FFIData)
 public:
-    OHOS::FFI::RuntimeType *GetRuntimeType() override
-    {
-        return GetClassType();
-    }
-
     explicit RdbPredicatesImpl(const char *tableName);
 
     explicit RdbPredicatesImpl(std::shared_ptr<NativeRdb::RdbPredicates> predicates);
@@ -129,8 +125,6 @@ private:
     friend class OHOS::FFI::RuntimeType;
 
     friend class OHOS::FFI::TypeBase;
-
-    static OHOS::FFI::RuntimeType *GetClassType();
 };
 } // namespace Relational
 } // namespace OHOS

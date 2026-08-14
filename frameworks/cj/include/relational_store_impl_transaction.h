@@ -27,12 +27,8 @@ namespace OHOS {
 namespace Relational {
 
 class TransactionImpl : public OHOS::FFI::FFIData {
+    DECL_TYPE(TransactionImpl, OHOS::FFI::FFIData)
 public:
-    OHOS::FFI::RuntimeType *GetRuntimeType() override
-    {
-        return GetClassType();
-    }
-
     explicit TransactionImpl(std::shared_ptr<NativeRdb::Transaction> tx);
 
     int32_t Commit();
@@ -56,7 +52,6 @@ public:
 private:
     friend class OHOS::FFI::RuntimeType;
     friend class OHOS::FFI::TypeBase;
-    static OHOS::FFI::RuntimeType *GetClassType();
 
     std::shared_ptr<NativeRdb::Transaction> transaction_;
 };

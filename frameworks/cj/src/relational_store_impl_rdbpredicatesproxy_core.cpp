@@ -29,13 +29,6 @@ RdbPredicatesImpl::RdbPredicatesImpl(std::shared_ptr<NativeRdb::RdbPredicates> p
     predicates_ = predicates;
 }
 
-OHOS::FFI::RuntimeType* RdbPredicatesImpl::GetClassType()
-{
-    static OHOS::FFI::RuntimeType runtimeType =
-        OHOS::FFI::RuntimeType::Create<OHOS::FFI::FFIData>("RdbPredicatesImpl");
-    return &runtimeType;
-}
-
 std::shared_ptr<NativeRdb::RdbPredicates> RdbPredicatesImpl::GetPredicates()
 {
     return predicates_;

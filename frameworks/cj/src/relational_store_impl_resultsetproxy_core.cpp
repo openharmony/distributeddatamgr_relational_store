@@ -31,12 +31,6 @@ ResultSetImpl::ResultSetImpl(std::shared_ptr<NativeRdb::ResultSet> resultSet)
     resultSetValue = resultSet;
 }
 
-OHOS::FFI::RuntimeType* ResultSetImpl::GetClassType()
-{
-    static OHOS::FFI::RuntimeType runtimeType = OHOS::FFI::RuntimeType::Create<OHOS::FFI::FFIData>("ResultSetImpl");
-    return &runtimeType;
-}
-
 CArrStr ResultSetImpl::GetAllColumnNames()
 {
     std::vector<std::string> colNames;
