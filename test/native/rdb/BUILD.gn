@@ -353,6 +353,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/delay_notify_test.cpp",
     "unittest/raw_data_parser_test.cpp",
     "unittest/rd_utils_test.cpp",
+    "unittest/rdb_db_info_test.cpp",
     "unittest/rdb_distributed_test.cpp",
     "unittest/rdb_double_write_test.cpp",
     "unittest/rdb_encrypt_decrypt_test.cpp",
