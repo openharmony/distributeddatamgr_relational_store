@@ -50,12 +50,6 @@ public:
     // file changed since the prior record, writes dbInfoChange.
     void RecordOpen(const RdbStoreConfig &config, bool created);
 
-    // RAII trace destructor commits via these:
-    void CommitDelete(const std::string &dbPath, const DeleteRecord &rec);
-    void CommitRestore(const std::string &dbPath, const BackupRecord &rec);
-    void CommitBackup(const std::string &dbPath, const BackupRecord &rec);
-    void CommitRebuild(const std::string &dbPath, const RebuildRecord &rec);
-
     // Utilities used by RdbDfxTrace.
     DbFileInfo CollectDbFileInfo(const std::string &dbPath);
     CallerInfo CollectCaller();

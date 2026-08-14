@@ -19,7 +19,6 @@
 #include <unistd.h>
 
 #include <cstdio>
-#include <fstream>
 #include <string>
 
 #include "rdb_db_info_manager.h"
@@ -37,24 +36,6 @@ constexpr const char *LOCK_SUFFIX = ".rdbdfx.lock";
 std::string DfxPath()
 {
     return std::string(TEST_DB_PATH) + DFX_SUFFIX;
-}
-
-bool ReadFile(const std::string &path, std::string &out)
-{
-    std::ifstream ifs(path, std::ios::binary | std::ios::ate);
-    if (!ifs.is_open()) {
-        return false;
-    }
-    std::streamsize size = ifs.tellg();
-    if (size < 0) {
-        return false;
-    }
-    ifs.seekg(0, std::ios::beg);
-    out.resize(static_cast<size_t>(size));
-    if (size > 0 && !ifs.read(&out[0], size)) {
-        return false;
-    }
-    return true;
 }
 
 void CreateTestFile(const std::string &path)
@@ -137,80 +118,6 @@ HWTEST_F(RdbDbInfoTest, RdbDbInfoRecord_MarshalUnmarshal_001, TestSize.Level1)
     EXPECT_EQ(restored.lastOpenDbInfo.callerInfo.pid, 1234);
     EXPECT_EQ(restored.lastOpenDbInfo.callerInfo.uid, 5678);
     EXPECT_EQ(restored.lastOpenDbInfo.time, "2025-01-01 00:00:00.000");
-}
-
-/**
- * @tc.name: RdbDbInfoRecord_MarshalUnmarshal_002
- * @tc.desc: Test DeleteRecord Marshal/Unmarshal round-trip.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDbInfoRecord_MarshalUnmarshal_002, TestSize.Level1)
-{
-    DeleteRecord rec;
-    rec.startTime = 1000;
-    rec.endTime = 2000;
-    rec.dbInfo.db.node = 12345;
-    rec.dbInfo.db.size = 67890;
-    rec.dbInfo.db.permission.mode = 0644;
-    rec.dbInfo.db.permission.acl = "user::rwx\ngroup::rwx";
-    rec.callerInfo.pid = 100;
-    rec.callerInfo.uid = 200;
-
-    std::string json = Serializable::Marshall(rec);
-    EXPECT_FALSE(json.empty());
-
-    DeleteRecord restored;
-    EXPECT_TRUE(Serializable::Unmarshall(json, restored));
-    EXPECT_EQ(restored.startTime, 1000);
-    EXPECT_EQ(restored.endTime, 2000);
-    EXPECT_EQ(restored.dbInfo.db.node, 12345);
-    EXPECT_EQ(restored.dbInfo.db.size, 67890);
-    EXPECT_EQ(restored.dbInfo.db.permission.mode, 0644u);
-    EXPECT_EQ(restored.dbInfo.db.permission.acl, "user::rwx\ngroup::rwx");
-    EXPECT_EQ(restored.callerInfo.pid, 100);
-    EXPECT_EQ(restored.callerInfo.uid, 200u);
-}
-
-/**
- * @tc.name: RdbDbInfoRecord_MarshalUnmarshal_003
- * @tc.desc: Test BackupRecord and RebuildRecord Marshal/Unmarshal round-trip.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDbInfoRecord_MarshalUnmarshal_003, TestSize.Level1)
-{
-    BackupRecord brec;
-    brec.startTime = 100;
-    brec.endTime = 200;
-    brec.result = 0;
-    brec.callerInfo.pid = 10;
-    brec.beforeDbInfo.mainDbInfo.db.node = 1;
-    brec.afterDbInfo.mainDbInfo.db.node = 2;
-
-    std::string bjson = Serializable::Marshall(brec);
-    EXPECT_FALSE(bjson.empty());
-    BackupRecord brestored;
-    EXPECT_TRUE(Serializable::Unmarshall(bjson, brestored));
-    EXPECT_EQ(brestored.startTime, 100);
-    EXPECT_EQ(brestored.endTime, 200);
-    EXPECT_EQ(brestored.beforeDbInfo.mainDbInfo.db.node, 1);
-    EXPECT_EQ(brestored.afterDbInfo.mainDbInfo.db.node, 2);
-
-    RebuildRecord rrec;
-    rrec.startTime = 300;
-    rrec.endTime = 400;
-    rrec.result = 1;
-    rrec.oldDbInfo.db.node = 5;
-    rrec.newDbInfo.db.node = 6;
-
-    std::string rjson = Serializable::Marshall(rrec);
-    EXPECT_FALSE(rjson.empty());
-    RebuildRecord rrestored;
-    EXPECT_TRUE(Serializable::Unmarshall(rjson, rrestored));
-    EXPECT_EQ(rrestored.startTime, 300);
-    EXPECT_EQ(rrestored.endTime, 400);
-    EXPECT_EQ(rrestored.result, 1);
-    EXPECT_EQ(rrestored.oldDbInfo.db.node, 5);
-    EXPECT_EQ(rrestored.newDbInfo.db.node, 6);
 }
 
 /**
@@ -303,19 +210,6 @@ HWTEST_F(RdbDbInfoTest, DiffDbFileInfo_003, TestSize.Level1)
 }
 
 /**
- * @tc.name: NowMs_001
- * @tc.desc: NowMs returns a positive epoch millisecond value.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, NowMs_001, TestSize.Level1)
-{
-    int64_t t1 = NowMs();
-    EXPECT_GT(t1, 0);
-    int64_t t2 = NowMs();
-    EXPECT_GE(t2, t1);
-}
-
-/**
  * @tc.name: RdbDbInfoManager_GetInstance_001
  * @tc.desc: GetInstance returns the same singleton reference.
  * @tc.type: FUNC
@@ -361,161 +255,6 @@ HWTEST_F(RdbDbInfoTest, RdbDbInfoManager_CollectCaller_001, TestSize.Level1)
     CallerInfo info = RdbDbInfoManager::GetInstance().CollectCaller();
     EXPECT_GE(info.pid, 0);
     EXPECT_GE(info.uid, 0u);
-}
-
-/**
- * @tc.name: RdbDbInfoManager_CommitDelete_001
- * @tc.desc: CommitDelete writes delete record to dfx json.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDbInfoManager_CommitDelete_001, TestSize.Level1)
-{
-    DeleteRecord rec;
-    rec.startTime = 1000;
-    rec.endTime = 2000;
-    rec.dbInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(TEST_DB_PATH);
-    rec.callerInfo.pid = 42;
-
-    RdbDbInfoManager::GetInstance().CommitDelete(TEST_DB_PATH, rec);
-
-    std::string content;
-    EXPECT_TRUE(ReadFile(DfxPath(), content));
-    EXPECT_FALSE(content.empty());
-    EXPECT_TRUE(content.find("deleteStore") != std::string::npos);
-    EXPECT_TRUE(content.find("\"pid\":42") != std::string::npos);
-}
-
-/**
- * @tc.name: RdbDbInfoManager_CommitBackup_001
- * @tc.desc: CommitBackup writes backup record to dfx json.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDbInfoManager_CommitBackup_001, TestSize.Level1)
-{
-    BackupRecord rec;
-    rec.startTime = 100;
-    rec.endTime = 200;
-    rec.result = 0;
-    rec.callerInfo.pid = 7;
-
-    RdbDbInfoManager::GetInstance().CommitBackup(TEST_DB_PATH, rec);
-
-    std::string content;
-    EXPECT_TRUE(ReadFile(DfxPath(), content));
-    EXPECT_FALSE(content.empty());
-    EXPECT_TRUE(content.find("backup") != std::string::npos);
-    EXPECT_TRUE(content.find("\"pid\":7") != std::string::npos);
-}
-
-/**
- * @tc.name: RdbDbInfoManager_CommitRestore_001
- * @tc.desc: CommitRestore writes restore record to dfx json.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDbInfoManager_CommitRestore_001, TestSize.Level1)
-{
-    BackupRecord rec;
-    rec.startTime = 300;
-    rec.endTime = 400;
-    rec.result = 0;
-    rec.callerInfo.pid = 9;
-
-    RdbDbInfoManager::GetInstance().CommitRestore(TEST_DB_PATH, rec);
-
-    std::string content;
-    EXPECT_TRUE(ReadFile(DfxPath(), content));
-    EXPECT_FALSE(content.empty());
-    EXPECT_TRUE(content.find("restore") != std::string::npos);
-    EXPECT_TRUE(content.find("\"pid\":9") != std::string::npos);
-}
-
-/**
- * @tc.name: RdbDbInfoManager_CommitRebuild_001
- * @tc.desc: CommitRebuild writes rebuild record to dfx json.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDbInfoManager_CommitRebuild_001, TestSize.Level1)
-{
-    RebuildRecord rec;
-    rec.startTime = 500;
-    rec.endTime = 600;
-    rec.result = 1;
-    rec.callerInfo.pid = 11;
-
-    RdbDbInfoManager::GetInstance().CommitRebuild(TEST_DB_PATH, rec);
-
-    std::string content;
-    EXPECT_TRUE(ReadFile(DfxPath(), content));
-    EXPECT_FALSE(content.empty());
-    EXPECT_TRUE(content.find("rebuild") != std::string::npos);
-    EXPECT_TRUE(content.find("\"pid\":11") != std::string::npos);
-}
-
-/**
- * @tc.name: RdbDfxTrace_Delete_001
- * @tc.desc: RdbDfxTrace RAII guard commits delete record on destruction.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDfxTrace_Delete_001, TestSize.Level1)
-{
-    {
-        RdbDfxTrace trace(DfxOp::DELETE, TEST_DB_PATH);
-    }
-    std::string content;
-    EXPECT_TRUE(ReadFile(DfxPath(), content));
-    EXPECT_FALSE(content.empty());
-    EXPECT_TRUE(content.find("deleteStore") != std::string::npos);
-}
-
-/**
- * @tc.name: RdbDfxTrace_Rebuild_001
- * @tc.desc: RdbDfxTrace RAII guard commits rebuild record on destruction.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDfxTrace_Rebuild_001, TestSize.Level1)
-{
-    {
-        int result = 0;
-        RdbDfxTrace trace(DfxOp::REBUILD, TEST_DB_PATH, "", &result);
-    }
-    std::string content;
-    EXPECT_TRUE(ReadFile(DfxPath(), content));
-    EXPECT_FALSE(content.empty());
-    EXPECT_TRUE(content.find("rebuild") != std::string::npos);
-}
-
-/**
- * @tc.name: RdbDfxTrace_Backup_001
- * @tc.desc: RdbDfxTrace RAII guard commits backup record on destruction.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDfxTrace_Backup_001, TestSize.Level1)
-{
-    {
-        int result = 0;
-        RdbDfxTrace trace(DfxOp::BACKUP, TEST_DB_PATH, "", &result);
-    }
-    std::string content;
-    EXPECT_TRUE(ReadFile(DfxPath(), content));
-    EXPECT_FALSE(content.empty());
-    EXPECT_TRUE(content.find("backup") != std::string::npos);
-}
-
-/**
- * @tc.name: RdbDfxTrace_Restore_001
- * @tc.desc: RdbDfxTrace RAII guard commits restore record on destruction.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDbInfoTest, RdbDfxTrace_Restore_001, TestSize.Level1)
-{
-    {
-        int result = 0;
-        RdbDfxTrace trace(DfxOp::RESTORE, TEST_DB_PATH, "", &result);
-    }
-    std::string content;
-    EXPECT_TRUE(ReadFile(DfxPath(), content));
-    EXPECT_FALSE(content.empty());
-    EXPECT_TRUE(content.find("restore") != std::string::npos);
 }
 
 /**

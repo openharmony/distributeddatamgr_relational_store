@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -276,26 +276,6 @@ void RdbDbInfoManager::RecordOpen(const RdbStoreConfig &config, bool created)
         r.dbInfoChange.time = info.time;
         r.dbInfoChange.callerInfo = info.callerInfo;
     });
-}
-
-void RdbDbInfoManager::CommitDelete(const std::string &dbPath, const DeleteRecord &rec)
-{
-    WithRecord(dbPath, [&rec](RdbDbInfoRecord &r) { r.deleteStore = rec; });
-}
-
-void RdbDbInfoManager::CommitRestore(const std::string &dbPath, const BackupRecord &rec)
-{
-    WithRecord(dbPath, [&rec](RdbDbInfoRecord &r) { r.restore = rec; });
-}
-
-void RdbDbInfoManager::CommitBackup(const std::string &dbPath, const BackupRecord &rec)
-{
-    WithRecord(dbPath, [&rec](RdbDbInfoRecord &r) { r.backup = rec; });
-}
-
-void RdbDbInfoManager::CommitRebuild(const std::string &dbPath, const RebuildRecord &rec)
-{
-    WithRecord(dbPath, [&rec](RdbDbInfoRecord &r) { r.rebuild = rec; });
 }
 } // namespace NativeRdb
 } // namespace OHOS

@@ -16,20 +16,11 @@
 #define LOG_TAG "RdbDbInfoRecord"
 #include "rdb_db_info_record.h"
 
-#include <chrono>
 #include <utility>
 #include <vector>
 
-#include "rdb_db_info_manager.h"
-
 namespace OHOS {
 namespace NativeRdb {
-int64_t NowMs()
-{
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
-        .count();
-}
-
 bool PermissionInfo::Marshal(json &obj) const
 {
     SetValue(obj[GET_NAME(mode)], mode);
@@ -221,90 +212,10 @@ bool DbInfoChange::Unmarshal(const json &obj)
     return true;
 }
 
-bool DeleteRecord::Marshal(json &obj) const
-{
-    SetValue(obj[GET_NAME(startTime)], startTime);
-    SetValue(obj[GET_NAME(endTime)], endTime);
-    SetValue(obj[GET_NAME(dbInfo)], dbInfo);
-    SetValue(obj[GET_NAME(callerInfo)], callerInfo);
-    return true;
-}
-
-bool DeleteRecord::Unmarshal(const json &obj)
-{
-    GetValue(obj, GET_NAME(startTime), startTime);
-    GetValue(obj, GET_NAME(endTime), endTime);
-    GetValue(obj, GET_NAME(dbInfo), dbInfo);
-    GetValue(obj, GET_NAME(callerInfo), callerInfo);
-    return true;
-}
-
-bool DbInfoPair::Marshal(json &obj) const
-{
-    SetValue(obj[GET_NAME(backupDbInfo)], backupDbInfo);
-    SetValue(obj[GET_NAME(mainDbInfo)], mainDbInfo);
-    return true;
-}
-
-bool DbInfoPair::Unmarshal(const json &obj)
-{
-    GetValue(obj, GET_NAME(backupDbInfo), backupDbInfo);
-    GetValue(obj, GET_NAME(mainDbInfo), mainDbInfo);
-    return true;
-}
-
-bool BackupRecord::Marshal(json &obj) const
-{
-    SetValue(obj[GET_NAME(startTime)], startTime);
-    SetValue(obj[GET_NAME(endTime)], endTime);
-    SetValue(obj[GET_NAME(beforeDbInfo)], beforeDbInfo);
-    SetValue(obj[GET_NAME(afterDbInfo)], afterDbInfo);
-    SetValue(obj[GET_NAME(result)], result);
-    SetValue(obj[GET_NAME(callerInfo)], callerInfo);
-    return true;
-}
-
-bool BackupRecord::Unmarshal(const json &obj)
-{
-    GetValue(obj, GET_NAME(startTime), startTime);
-    GetValue(obj, GET_NAME(endTime), endTime);
-    GetValue(obj, GET_NAME(beforeDbInfo), beforeDbInfo);
-    GetValue(obj, GET_NAME(afterDbInfo), afterDbInfo);
-    GetValue(obj, GET_NAME(result), result);
-    GetValue(obj, GET_NAME(callerInfo), callerInfo);
-    return true;
-}
-
-bool RebuildRecord::Marshal(json &obj) const
-{
-    SetValue(obj[GET_NAME(startTime)], startTime);
-    SetValue(obj[GET_NAME(endTime)], endTime);
-    SetValue(obj[GET_NAME(oldDbInfo)], oldDbInfo);
-    SetValue(obj[GET_NAME(newDbInfo)], newDbInfo);
-    SetValue(obj[GET_NAME(result)], result);
-    SetValue(obj[GET_NAME(callerInfo)], callerInfo);
-    return true;
-}
-
-bool RebuildRecord::Unmarshal(const json &obj)
-{
-    GetValue(obj, GET_NAME(startTime), startTime);
-    GetValue(obj, GET_NAME(endTime), endTime);
-    GetValue(obj, GET_NAME(oldDbInfo), oldDbInfo);
-    GetValue(obj, GET_NAME(newDbInfo), newDbInfo);
-    GetValue(obj, GET_NAME(result), result);
-    GetValue(obj, GET_NAME(callerInfo), callerInfo);
-    return true;
-}
-
 bool RdbDbInfoRecord::Marshal(json &obj) const
 {
     SetValue(obj[GET_NAME(lastOpenDbInfo)], lastOpenDbInfo);
     SetValue(obj[GET_NAME(dbInfoChange)], dbInfoChange);
-    SetValue(obj[GET_NAME(deleteStore)], deleteStore);
-    SetValue(obj[GET_NAME(restore)], restore);
-    SetValue(obj[GET_NAME(backup)], backup);
-    SetValue(obj[GET_NAME(rebuild)], rebuild);
     return true;
 }
 
@@ -312,10 +223,6 @@ bool RdbDbInfoRecord::Unmarshal(const json &obj)
 {
     GetValue(obj, GET_NAME(lastOpenDbInfo), lastOpenDbInfo);
     GetValue(obj, GET_NAME(dbInfoChange), dbInfoChange);
-    GetValue(obj, GET_NAME(deleteStore), deleteStore);
-    GetValue(obj, GET_NAME(restore), restore);
-    GetValue(obj, GET_NAME(backup), backup);
-    GetValue(obj, GET_NAME(rebuild), rebuild);
     return true;
 }
 
@@ -351,77 +258,6 @@ std::vector<std::string> DiffDbFileInfo(const std::string &prefix, const DbFileI
     DiffFileInfo(prefix + ".wal", before.wal, after.wal, out);
     DiffFileInfo(prefix + ".shm", before.shm, after.shm, out);
     return out;
-}
-
-RdbDfxTrace::RdbDfxTrace(DfxOp op, std::string dbPath, std::string backupPath, const int *resultRef)
-    : op_(op), dbPath_(dbPath), backupPath_(backupPath), startTime_(NowMs()),
-      caller_(RdbDbInfoManager::GetInstance().CollectCaller()),
-      beforeMain_(RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbPath)),
-      beforeBackup_(!backupPath.empty() ? RdbDbInfoManager::GetInstance().CollectDbFileInfo(backupPath) : DbFileInfo()),
-      resultRef_(resultRef)
-{
-}
-
-void RdbDfxTrace::SetBackupPath(const std::string &backupPath)
-{
-    backupPath_ = backupPath;
-    if (!backupPath_.empty()) {
-        beforeBackup_ = RdbDbInfoManager::GetInstance().CollectDbFileInfo(backupPath_);
-    }
-}
-
-RdbDfxTrace::~RdbDfxTrace()
-{
-    // noexcept-friendly: every call below uses return codes / no-throw json.
-    int32_t result = (resultRef_ != nullptr) ? *resultRef_ : 0;
-    int64_t endTime = NowMs();
-    auto &mgr = RdbDbInfoManager::GetInstance();
-    switch (op_) {
-        case DfxOp::DELETE: {
-            DeleteRecord rec;
-            rec.startTime = startTime_;
-            rec.endTime = endTime;
-            rec.dbInfo = beforeMain_;
-            rec.callerInfo = caller_;
-            mgr.CommitDelete(dbPath_, rec);
-            break;
-        }
-        case DfxOp::REBUILD: {
-            DbFileInfo afterMain = mgr.CollectDbFileInfo(dbPath_);
-            RebuildRecord rec;
-            rec.startTime = startTime_;
-            rec.endTime = endTime;
-            rec.oldDbInfo = beforeMain_;
-            rec.newDbInfo = afterMain;
-            rec.result = result;
-            rec.callerInfo = caller_;
-            mgr.CommitRebuild(dbPath_, rec);
-            break;
-        }
-        case DfxOp::RESTORE:
-        case DfxOp::BACKUP: {
-            DbFileInfo afterMain = mgr.CollectDbFileInfo(dbPath_);
-            DbFileInfo afterBackup;
-            if (!backupPath_.empty()) {
-                afterBackup = mgr.CollectDbFileInfo(backupPath_);
-            }
-            BackupRecord rec;
-            rec.startTime = startTime_;
-            rec.endTime = endTime;
-            rec.beforeDbInfo.backupDbInfo = beforeBackup_;
-            rec.beforeDbInfo.mainDbInfo = beforeMain_;
-            rec.afterDbInfo.backupDbInfo = afterBackup;
-            rec.afterDbInfo.mainDbInfo = afterMain;
-            rec.result = result;
-            rec.callerInfo = caller_;
-            if (op_ == DfxOp::RESTORE) {
-                mgr.CommitRestore(dbPath_, rec);
-            } else {
-                mgr.CommitBackup(dbPath_, rec);
-            }
-            break;
-        }
-    }
 }
 } // namespace NativeRdb
 } // namespace OHOS
