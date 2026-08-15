@@ -120,7 +120,9 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     // If configured to SUPPORT, always need ACL
     // If configured to NOSUPPORT, never need ACL
     // If it is a distributeddata request, never need ACL
+    // If it is a local-only database, never need ACL
     bool isNeedAcl = (RdbMgr::GetInstance().IsProxy()) && (config.GetRoleType() == OWNER) &&
+                    (!config.IsLocalOnly()) &&
                     (config.IsSearchable() ||
                     (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::SUPPORT) ||
                     (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::UNKNOWN &&
@@ -255,6 +257,7 @@ DistributedRdb::RdbSyncerParam RdbStoreManager::GetSyncParam(const RdbStoreConfi
     syncerParam.user_ = config.GetPromiseInfo().user_;
     syncerParam.permissionNames_ = config.GetPromiseInfo().permissionNames_;
     syncerParam.subUser_ = config.GetSubUser();
+    syncerParam.isLocalOnly_ = config.IsLocalOnly();
     return syncerParam;
 }
 
@@ -358,6 +361,7 @@ bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
         param.area_ = config.GetArea();
         param.hapName_ = config.GetModuleName();
         param.customDir_ = config.GetCustomDir();
+        param.isLocalOnly_ = config.IsLocalOnly();
         auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (err != E_OK || service == nullptr) {
             LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);

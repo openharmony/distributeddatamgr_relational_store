@@ -168,6 +168,9 @@ RdbManagerImpl::Factory::~Factory()
 
 std::pair<int32_t, std::shared_ptr<RdbService>> RdbManagerImpl::GetRdbService(const RdbSyncerParam &param)
 {
+    if (param.isLocalOnly_) {
+        return { E_NOT_SUPPORT, nullptr };
+    }
     if (param.bundleName_.empty()) {
         return { E_INVALID_ARGS, nullptr };
     }
