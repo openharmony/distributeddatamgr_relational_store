@@ -32,6 +32,7 @@ namespace {
 constexpr const char *TEST_DB_PATH = "/data/test/rdbdfx_test.db";
 constexpr const char *DFX_SUFFIX = ".rdbdfx.json";
 constexpr const char *LOCK_SUFFIX = ".rdbdfx.lock";
+static constexpr int WRITE_LEN = 4;
 
 std::string DfxPath()
 {
@@ -42,7 +43,6 @@ void CreateTestFile(const std::string &path)
 {
     int fd = open(path.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd >= 0) {
-        static constexpr size_t WRITE_LEN = 4;
         write(fd, "test", WRITE_LEN);
         close(fd);
     }
