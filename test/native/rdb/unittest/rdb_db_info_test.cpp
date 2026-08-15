@@ -42,7 +42,8 @@ void CreateTestFile(const std::string &path)
 {
     int fd = open(path.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd >= 0) {
-        write(fd, "test", 4);
+        static constexpr size_t WRITE_LEN = 4;
+        write(fd, "test", WRITE_LEN);
         close(fd);
     }
 }
