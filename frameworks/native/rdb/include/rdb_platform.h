@@ -38,6 +38,15 @@ static UNUSED_FUNCTION uint32_t GetUid()
 #endif
 }
 
+static UNUSED_FUNCTION int32_t GetPid()
+{
+#ifdef WINDOWS_PLATFORM
+    return 0;
+#else
+    return static_cast<int32_t>(getpid());
+#endif
+}
+
 static UNUSED_FUNCTION uint32_t GetGid()
 {
 #ifdef WINDOWS_PLATFORM

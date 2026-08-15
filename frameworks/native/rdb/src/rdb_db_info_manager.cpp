@@ -29,7 +29,6 @@
 #include <functional>
 
 #include "acl.h"
-#include "ipc_skeleton.h"
 #include "rdb_errno.h"
 #include "rdb_platform.h"
 #include "rdb_security_manager.h"
@@ -137,9 +136,9 @@ RdbDbInfoManager &RdbDbInfoManager::GetInstance()
 CallerInfo RdbDbInfoManager::CollectCaller()
 {
     CallerInfo info;
-    info.pid = static_cast<int32_t>(IPCSkeleton::GetCallingPid());
+    info.pid = GetPid();
     info.tid = static_cast<int32_t>(GetThreadId());
-    info.uid = static_cast<uint32_t>(IPCSkeleton::GetCallingUid());
+    info.uid = GetUid();
     info.gid = GetGid();
     return info;
 }

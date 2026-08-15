@@ -1043,7 +1043,9 @@ std::string SqliteUtils::FormatDebugInfoBrief(const std::map<std::string, DebugI
     oss << header << ":";
     for (auto &[name, debugInfo] : debugs) {
         oss << "<" << name << ",0x" << std::hex << debugInfo.inode_ << "," << std::dec << debugInfo.size_ << ","
-            << debugInfo.gid_ << "," << debugInfo.uid_ << "," << std::oct << debugInfo.mode_ << ">";
+            << debugInfo.gid_ << "," << debugInfo.uid_ << "," << std::oct << debugInfo.mode_ << ","
+            << std::dec << debugInfo.atime_.sec_ << "," << debugInfo.mtime_.sec_ << "," << debugInfo.ctime_.sec_
+            << ">";
     }
     return oss.str();
 }
