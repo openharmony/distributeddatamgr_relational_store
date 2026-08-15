@@ -160,6 +160,7 @@ public:
     
     void SetTask(Task task)
     {
+        std::lock_guard<std::mutex> lock(taskMutex_);
         task_ = std::move(task);
     }
     void Execute()
@@ -168,13 +169,18 @@ public:
     }
 private:
     Task task_;
-    std::mutex mutex_;
+    std::mutex taskMutex_;
 
     void ExecuteTask() override
     {
         StopTimer(false);
-        if (task_) {
-            task_();
+        Task task;
+        {
+            std::lock_guard<std::mutex> lock(taskMutex_);
+            task = task_;
+        }
+        if (task) {
+            task();
         }
     }
 };
