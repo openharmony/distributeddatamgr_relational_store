@@ -83,6 +83,7 @@ ohos_unittest("GlobalResourceTest") {
   external_deps += external_deps_datamgr_common
   external_deps += external_deps_distributeddb_client
   external_deps += external_deps_samgr
+  external_deps += external_deps_ipc_core
 
   deps = [
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
