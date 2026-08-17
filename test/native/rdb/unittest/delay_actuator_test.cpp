@@ -53,6 +53,9 @@ public:
         other.id_ = 0;
     }
 
+    TrackedTask &operator=(const TrackedTask &other) = delete;
+    TrackedTask &operator=(TrackedTask &&other) = delete;
+
     ~TrackedTask()
     {
         if (state_ != nullptr && id_ != 0 && state_->executingId.load() == id_) {
