@@ -231,23 +231,8 @@ static void DiffFileInfo(const std::string &prefix, const FileInfo &a, const Fil
     if (a.node != b.node) {
         out.push_back(prefix + ".node");
     }
-    if (a.size != b.size) {
-        out.push_back(prefix + ".size");
-    }
     if (a.permission.mode != b.permission.mode) {
-        out.push_back(prefix + ".mode");
-    }
-    if (a.permission.acl != b.permission.acl) {
-        out.push_back(prefix + ".acl");
-    }
-    if (a.time.ctime != b.time.ctime) {
-        out.push_back(prefix + ".ctime");
-    }
-    if (a.time.atime != b.time.atime) {
-        out.push_back(prefix + ".atime");
-    }
-    if (a.time.mtime != b.time.mtime) {
-        out.push_back(prefix + ".mtime");
+        out.push_back(prefix + ".mode:" + a.permission.mode + "->" + b.permission.mode);
     }
 }
 

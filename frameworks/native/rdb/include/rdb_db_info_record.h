@@ -35,7 +35,7 @@ namespace NativeRdb {
  */
 
 struct PermissionInfo : public Serializable {
-    uint32_t mode = 0; // st_mode
+    std::string mode; // st_mode in octal, e.g. "644"
     std::string acl;   // getfacl-style text from Acl::Dump(), "" if none
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;

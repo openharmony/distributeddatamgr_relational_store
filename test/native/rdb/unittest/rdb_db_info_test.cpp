@@ -141,73 +141,40 @@ HWTEST_F(RdbDbInfoTest, DiffDbFileInfo_001, TestSize.Level1)
 
 /**
  * @tc.name: DiffDbFileInfo_002
- * @tc.desc: DiffDbFileInfo returns changed field names for different snapshots.
+ * @tc.desc: DiffDbFileInfo detects node change.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDbInfoTest, DiffDbFileInfo_002, TestSize.Level1)
 {
     DbFileInfo a;
     a.db.node = 1;
-    a.db.size = 100;
     a.wal.node = 2;
 
     DbFileInfo b;
     b.db.node = 1;
-    b.db.size = 200;
     b.wal.node = 99;
 
     auto diff = DiffDbFileInfo("main", a, b);
-    EXPECT_EQ(diff.size(), 2u);
-    bool hasDbSize = false;
-    bool hasWalNode = false;
-    for (const auto &f : diff) {
-        if (f == "main.db.size") {
-            hasDbSize = true;
-        }
-        if (f == "main.wal.node") {
-            hasWalNode = true;
-        }
-    }
-    EXPECT_TRUE(hasDbSize);
-    EXPECT_TRUE(hasWalNode);
+    EXPECT_EQ(diff.size(), 1u);
+    EXPECT_EQ(diff[0], "main.wal.node");
 }
 
 /**
  * @tc.name: DiffDbFileInfo_003
- * @tc.desc: DiffDbFileInfo detects permission and time changes.
+ * @tc.desc: DiffDbFileInfo detects mode change with octal format.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbDbInfoTest, DiffDbFileInfo_003, TestSize.Level1)
 {
     DbFileInfo a;
-    a.db.permission.mode = 0644;
-    a.db.permission.acl = "user::rwx";
-    a.db.time.ctime = 1000;
+    a.db.permission.mode = "644";
 
     DbFileInfo b;
-    b.db.permission.mode = 0755;
-    b.db.permission.acl = "user::rwx\ngroup::rwx";
-    b.db.time.ctime = 2000;
+    b.db.permission.mode = "755";
 
     auto diff = DiffDbFileInfo("main", a, b);
-    EXPECT_GE(diff.size(), 3u);
-    bool hasMode = false;
-    bool hasAcl = false;
-    bool hasCtime = false;
-    for (const auto &f : diff) {
-        if (f == "main.db.mode") {
-            hasMode = true;
-        }
-        if (f == "main.db.acl") {
-            hasAcl = true;
-        }
-        if (f == "main.db.ctime") {
-            hasCtime = true;
-        }
-    }
-    EXPECT_TRUE(hasMode);
-    EXPECT_TRUE(hasAcl);
-    EXPECT_TRUE(hasCtime);
+    EXPECT_EQ(diff.size(), 1u);
+    EXPECT_EQ(diff[0], "main.db.mode:644->755");
 }
 
 /**
@@ -243,7 +210,7 @@ HWTEST_F(RdbDbInfoTest, RdbDbInfoManager_CollectDbFileInfo_002, TestSize.Level1)
     DbFileInfo info = RdbDbInfoManager::GetInstance().CollectDbFileInfo(TEST_DB_PATH);
     EXPECT_NE(info.db.node, 0);
     EXPECT_GT(info.db.size, 0);
-    EXPECT_NE(info.db.permission.mode, 0u);
+    EXPECT_FALSE(info.db.permission.mode.empty());
 }
 
 /**
