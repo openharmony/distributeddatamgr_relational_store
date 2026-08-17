@@ -136,7 +136,7 @@ HWTEST_F(DelayActuatorTest, Execute_002, TestSize.Level0)
 * @tc.desc: Replacing the task does not destroy a task that is being executed
 * @tc.type: FUNC
 * @tc.require:
-* @tc.author: ht
+* @tc.author: cjx
 */
 HWTEST_F(DelayActuatorTest, SetTask_001, TestSize.Level0)
 {
