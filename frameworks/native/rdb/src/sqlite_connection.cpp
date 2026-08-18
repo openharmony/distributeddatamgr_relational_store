@@ -1619,10 +1619,19 @@ int SqliteConnection::ResetBinlog(bool isNeedSetAcl)
     LOG_INFO("reset binlog start");
     sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
     SetBinlog();
-    int err = sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_ALL_MODE);
-    if (err != SQLITE_OK) {
-        sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
-        SqliteUtils::SetSlaveInvalid(config_.GetPath());
+    int err = SQLITE_OK;
+    if (IsRowForSearch()) {
+        err = sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_DONATED_MODE);
+        if (err != SQLITE_OK) {
+            LOG_WARN("clean donated data failed:%{public}d", err);
+        }
+    } else {
+        err = sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_ALL_MODE);
+        if (err != SQLITE_OK) {
+            LOG_ERROR("clean all data failed:%{public}d", err);
+            sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
+            SqliteUtils::SetSlaveInvalid(config_.GetPath());
+        }
     }
     if (isNeedSetAcl) {
         std::string binlogDir = config_.GetPath() + SUFFIX_BINLOG;
@@ -2218,6 +2227,10 @@ void SqliteConnection::BinlogOnFullFunc(void *pCtx, unsigned short currentCount,
         LOG_WARN("replica invalid, skip binlog replay. count:%{public}" PRIu16, currentCount);
         return;
     }
+    if (SqliteUtils::IsSlaveInterrupted(dbPath)) {
+        LOG_WARN("replica incomplete, skip binlog replay. count:%{public}" PRIu16, currentCount);
+        return;
+    }
     auto replayCallback = GetReplayCallback(dbPath);
     if (replayCallback != nullptr) {
         replayCallback();
@@ -2408,6 +2421,18 @@ void SqliteConnection::DeleteCorruptSlave(const std::string &path)
 {
     LOG_WARN("slave corrupt, rebuild:%{public}s, handle:%{public}d", SqliteUtils::Anonymous(path).c_str(),
         dbHandle_ != nullptr);
+    if (IsRowForSearch()) {
+        if (dbHandle_ != nullptr) {
+            int err = sqlite3_clean_binlog(dbHandle_, BinlogFileCleanModeE::BINLOG_FILE_CLEAN_DONATED_MODE);
+            if (err != SQLITE_OK) {
+                LOG_WARN("clean donated failed:%{public}d", err);
+            }
+        }
+        slaveConnection_ = nullptr;
+        (void)Delete(path);
+        SqliteUtils::SetSlaveInvalid(config_.GetPath());
+        return;
+    }
     if (dbHandle_ != nullptr) {
         sqlite3_db_config(dbHandle_, SQLITE_DBCONFIG_ENABLE_BINLOG, nullptr);
     }
@@ -2513,6 +2538,11 @@ ExchangeStrategy SqliteConnection::ExchangeCompareWithMainEmpty(bool isReplayed,
         }
     }
     return ExchangeStrategy::NOT_HANDLE;
+}
+
+bool SqliteConnection::IsRowForSearch()
+{
+    return GetBinlogMode(config_) == Sqlite3BinlogMode::ROW_FOR_SEARCH;
 }
 } // namespace NativeRdb
 } // namespace OHOS

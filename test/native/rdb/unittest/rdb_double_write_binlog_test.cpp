@@ -2171,3 +2171,32 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_039, TestSize.Level0)
     EXPECT_FALSE(SqliteUtils::IsSlaveInvalid(databaseName));
     WaitForBinlogReplayFinish();
 }
+
+/**
+ * @tc.name: RdbStore_Binlog_040
+ * @tc.desc: test clean donated mode after backuping
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_040, TestSize.Level0)
+{
+    InitDb(HAMode::MANUAL_TRIGGER, false, true);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    CheckNumber(store, count);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    ASSERT_TRUE(CheckFolderExist(binlogFirstFile));
+
+    store = nullptr;
+    CorruptDbHeader(slaveDatabaseName);
+    LOG_INFO("RdbStore_Binlog_040 reopen db");
+    InitDb(HAMode::MANUAL_TRIGGER, false, true);
+    ASSERT_TRUE(SqliteUtils::IsSlaveInvalid(databaseName));
+    ASSERT_TRUE(CheckFolderExist(binlogFirstFile));
+
+    LOG_INFO("RdbStore_Binlog_040 backup");
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    ASSERT_FALSE(SqliteUtils::IsSlaveInvalid(databaseName));
+}
