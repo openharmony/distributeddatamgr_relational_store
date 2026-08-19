@@ -70,7 +70,7 @@ int32_t TaiheRdbObserversData::OffDataChange(OHOS::DistributedRdb::SubscribeMode
             }
         }
         observers.clear();
-        LOG_INFO("Off all observes success, kit = ArkData.");
+        LOG_INFO("SubEvent op = off_all, kit = ArkData.");
         return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
@@ -147,7 +147,7 @@ int32_t TaiheRdbObserversData::OffCommon(std::string event, OHOS::DistributedRdb
             }
         }
         observers.clear();
-        LOG_INFO("Off all observes success, kit = ArkData, event: %{public}s", event.c_str());
+        LOG_INFO("SubEvent op = off_all, kit = ArkData, event: %{public}s", event.c_str());
         return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
@@ -222,7 +222,7 @@ int32_t TaiheRdbObserversData::OffAutoSyncProgress(std::optional<uintptr_t> opq,
             }
         }
         observers.clear();
-        LOG_INFO("Off all observes success, kit = ArkData.");
+        LOG_INFO("SubEvent op = off_all, kit = ArkData.");
         return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
@@ -297,7 +297,7 @@ int32_t TaiheRdbObserversData::OffStatistics(std::optional<uintptr_t> opq,
             }
         }
         observers.clear();
-        LOG_INFO("Off all observes success, kit = ArkData.");
+        LOG_INFO("SubEvent op = off_all, kit = ArkData.");
         return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
@@ -372,7 +372,7 @@ int32_t TaiheRdbObserversData::OffPerfStat(std::optional<uintptr_t> opq,
             }
         }
         observers.clear();
-        LOG_INFO("Off all observes success, kit = ArkData.");
+        LOG_INFO("SubEvent op = off_all, kit = ArkData.");
         return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();
@@ -447,7 +447,7 @@ int32_t TaiheRdbObserversData::OffSqliteErrorOccurred(std::optional<uintptr_t> o
             }
         }
         observers.clear();
-        LOG_INFO("Off all observes success, kit = ArkData.");
+        LOG_INFO("SubEvent op = off_all, kit = ArkData.");
         return OHOS::NativeRdb::E_OK;
     }
     ani_env *env = taihe::get_env();

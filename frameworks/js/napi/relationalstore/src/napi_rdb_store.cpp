@@ -1620,7 +1620,7 @@ napi_value RdbStoreProxy::UnRegisteredObserver(
         int errCode = GetInstance()->UnSubscribe(option, nullptr);
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         observers.erase(option.event);
-        LOG_INFO("Off all observes success, kit = ArkData, event: %{public}s", option.event.c_str());
+        LOG_INFO("SubEvent op = off_all, kit = ArkData, event = %{public}s", option.event.c_str());
     }
     return nullptr;
 }
