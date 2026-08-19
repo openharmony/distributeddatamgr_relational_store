@@ -1816,7 +1816,7 @@ int SqliteConnection::SetKnowledgeSchema(const DistributedRdb::RdbKnowledgeSchem
 
         status = SetKnowledgeSourceSchema(dbHandle_, sourceSchema);
         if (status != DistributedDB::DBStatus::OK) {
-            return E_ERROR;
+            return SqliteUtils::ConvertDBStatusNative(status);
         }
     }
     return E_OK;
