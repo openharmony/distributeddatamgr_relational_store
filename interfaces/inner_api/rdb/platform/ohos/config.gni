@@ -110,6 +110,7 @@ if (support_jsapi) {
 }
 native_rdb_platform_external_deps += external_deps_ipc_core
 native_rdb_platform_external_deps += external_deps_samgr
+native_rdb_platform_external_deps += external_deps_bounds_checking_function
 
 native_rdb_platform_public_include_dirs = [
   "include",

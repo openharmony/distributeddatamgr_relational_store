@@ -42,6 +42,7 @@ ohos_source_set("ipc_single") {
   external_deps = [ "c_utils:utils" ]
   external_deps += external_deps_access_token_libaccesstoken_sdk
   external_deps += external_deps_access_token_libtoken_setproc
+  external_deps += external_deps_bounds_checking_function
   part_name = "relational_store"
   subsystem_name = "distributeddatamgr"
 }

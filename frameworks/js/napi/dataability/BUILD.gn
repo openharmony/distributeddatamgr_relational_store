@@ -59,6 +59,7 @@ ohos_shared_library("dataability") {
   external_deps += external_deps_hilog
   external_deps += external_deps_ipc_single
   external_deps += external_deps_napi
+  external_deps += external_deps_bounds_checking_function
 
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"

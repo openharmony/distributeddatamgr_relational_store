@@ -74,6 +74,7 @@ ohos_shared_library("clouddata") {
   external_deps += external_deps_hitrace
   external_deps += external_deps_napi
   external_deps += external_deps_ipc_single
+  external_deps += external_deps_bounds_checking_function
 
   subsystem_name = "distributeddatamgr"
   part_name = "relational_store"

@@ -52,6 +52,7 @@ ohos_fuzztest("TransactionFuzzTest") {
   external_deps += external_deps_ipc_core
   external_deps += external_deps_datamgr_common
   external_deps += external_deps_distributeddb_client
+  external_deps += external_deps_bounds_checking_function
 
   deps += deps_hilog
   deps += deps_ipc_core

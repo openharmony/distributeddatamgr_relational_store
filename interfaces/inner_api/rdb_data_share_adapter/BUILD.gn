@@ -71,6 +71,7 @@ ohos_shared_library("rdb_data_share_adapter") {
     "kv_store:datamgr_common",
   ]
   external_deps += external_deps_hilog
+  external_deps += external_deps_bounds_checking_function
 
   public_configs = [ ":rdb_data_share_adapter_public_config" ]
 

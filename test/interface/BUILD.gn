@@ -107,6 +107,7 @@ ohos_unittest("RdbInterfaceTest") {
   external_deps += external_deps_distributeddb_client
   external_deps += external_deps_huks
   external_deps += external_deps_ipc_core
+  external_deps += external_deps_bounds_checking_function
 
   deps += deps_hilog
   deps += deps_database_utils

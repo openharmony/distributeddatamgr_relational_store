@@ -26,6 +26,7 @@ ohos_source_set("libhukssdk") {
   public_configs = [ ":huks_config" ]
   deps = []
   external_deps = [ "c_utils:utils" ]
+  external_deps += external_deps_bounds_checking_function
   part_name = "relational_store"
   subsystem_name = "distributeddatamgr"
 }
