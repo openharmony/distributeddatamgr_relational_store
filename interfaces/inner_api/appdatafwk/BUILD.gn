@@ -185,6 +185,7 @@ ohos_shared_library("native_appdatafwk") {
   ]
   external_deps += external_deps_hilog
   external_deps += external_deps_ipc_single
+  external_deps += external_deps_bounds_checking_function
 
   public_configs = [ ":appdatafwk_public_config" ]
 }
