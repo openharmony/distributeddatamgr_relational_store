@@ -168,7 +168,6 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
 
 int RdbStoreImpl::InnerOpen()
 {
-    isOpen_ = true;
     // Only owner mode can store metadata information.
     if (isReadOnly_ || isMemoryRdb_ || config_.IsCustomEncryptParam() || (config_.GetRoleType() != OWNER)) {
         return E_OK;
@@ -1569,7 +1568,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     }
     InitSyncerParam(config_, created);
     InitReportFunc(syncerParam_);
-    InnerOpen();
+    isOpen_ = true;
 
     if (config_.GetRoleType() == OWNER && !config_.IsReadOnly()) {
         errCode = SetSecurityLabel(config_);
@@ -1590,6 +1589,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     if (errCode == E_OK) {
         RdbDbInfoManager::GetInstance().RecordOpen(config_, created);
     }
+    InnerOpen();
     initStatus_ = errCode;
     return initStatus_;
 }
