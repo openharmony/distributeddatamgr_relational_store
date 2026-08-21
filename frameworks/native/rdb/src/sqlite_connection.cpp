@@ -1290,6 +1290,7 @@ int SqliteConnection::ClearCache(bool isForceClear)
             return usedBytes;
         };
         if (isForceClear || getUsedBytes() > config_.GetClearMemorySize()) {
+            LOG_WARN("clear db cache:%{public}d", getUsedBytes());
             sqlite3_db_release_memory(dbHandle_);
         }
     }
