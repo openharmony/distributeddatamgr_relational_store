@@ -1615,12 +1615,13 @@ napi_value RdbStoreProxy::UnRegisteredObserver(
         if (list.empty()) {
             observers.erase(option.event);
         }
+        LOG_INFO("Unsubscribe success, event: %{public}s", option.event.c_str());
     } else {
         int errCode = GetInstance()->UnSubscribe(option, nullptr);
         RDB_NAPI_ASSERT(env, errCode == E_OK, std::make_shared<InnerError>(errCode));
         observers.erase(option.event);
+        LOG_INFO("SubEvent op = off_all, kit = ArkData, event = %{public}s", option.event.c_str());
     }
-    LOG_INFO("Unsubscribe success, event: %{public}s", option.event.c_str());
     return nullptr;
 }
 
