@@ -14,6 +14,9 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 native_rdb_platform_include_dirs = [
+  "${kvstore_path}/libs/distributeddb/interfaces/include/relational",
+  "${kvstore_path}/libs/distributeddb/interfaces/include",
+  "${kvstore_path}/libs/distributeddb/include",
   "${relational_store_mock_path}/frameworks/native/rdb",
   "${relational_store_mock_path}/frameworks/native/win32",
   "${distributedfile_path}/mod_securitylabel",
@@ -47,11 +50,11 @@ native_rdb_platform_ldflags = []
 
 native_rdb_platform_sources = [
   "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp",
-  "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
 ]
 
 native_rdb_platform_deps = [
   "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+  "${kvstore_path}/libs/distributeddb/build/android:distributeddb_client_lite",
   "//commonlibrary/c_utils/base:utilsbase",
   "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
   "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
