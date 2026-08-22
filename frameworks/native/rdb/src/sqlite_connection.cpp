@@ -60,6 +60,9 @@ using RdbKeyFile = RdbSecurityManager::KeyFileType;
 using Reportor = RdbFaultHiViewReporter;
 constexpr const char *INTEGRITIES[] = { nullptr, "PRAGMA quick_check", "PRAGMA integrity_check" };
 constexpr const char *QUERY_TABLE_COUNT_SQL = "SELECT COUNT(*) FROM sqlite_master WHERE type='table'";
+constexpr const char *QUERY_USER_TABLE_COUNT_SQL = "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
+    " AND NAME NOT IN ('naturalbase_rdb_aux_metadata', 'ddms_data_search_aux_config',"
+    " 'sqlite_stat1', 'sqlite_sequence')";
 constexpr const char *QUERY_INDEX_COUNT_SQL = "SELECT COUNT(*) FROM sqlite_master WHERE type='index'";
 constexpr SqliteConnection::Suffix SqliteConnection::FILE_SUFFIXES[];
 constexpr int SqliteConnection::DEFAULT_BUSY_TIMEOUT_MS;
@@ -2469,13 +2472,13 @@ Sqlite3BinlogMode SqliteConnection::GetBinlogMode(const RdbStoreConfig &config)
 
 ExchangeStrategy SqliteConnection::ExchangeCompareInTrigger(bool isReplayed)
 {
-    auto [sRet, sObj] = slaveConnection_->ExecuteForValue(QUERY_TABLE_COUNT_SQL);
+    auto [sRet, sObj] = slaveConnection_->ExecuteForValue(QUERY_USER_TABLE_COUNT_SQL);
     // The slave database is corrupt; cannot restore from it.
     if (sRet == E_SQLITE_CORRUPT) {
         LOG_WARN("[trigger]slave db abnormal, not handle, err:%{public}d", sRet);
         return ExchangeStrategy::NOT_HANDLE;
     }
-    auto [mRet, mObj] = ExecuteForValue(QUERY_TABLE_COUNT_SQL);
+    auto [mRet, mObj] = ExecuteForValue(QUERY_USER_TABLE_COUNT_SQL);
     auto [mIdxRet, mIdxObj] = ExecuteForValue(QUERY_INDEX_COUNT_SQL);
     // The main database is corrupt; attempt to restore from the slave.
     if (mRet == E_SQLITE_CORRUPT || mIdxRet == E_SQLITE_CORRUPT) {

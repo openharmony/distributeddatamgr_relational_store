@@ -2200,3 +2200,26 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_040, TestSize.Level0)
     EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
     ASSERT_FALSE(SqliteUtils::IsSlaveInvalid(databaseName));
 }
+
+/**
+ * @tc.name: RdbStore_Binlog_040
+ * @tc.desc: test restore when dms table exist
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_041, TestSize.Level0)
+{
+    InitDb(HAMode::MANUAL_TRIGGER, false, true);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    store->ExecuteSql("CREATE TABLE IF NOT EXISTS ddms_data_search_aux_config(id INTEGER PRIMARY KEY);");
+    store = nullptr;
+
+    InitDb(HAMode::SINGLE, false, true);
+    store->ExecuteSql("DROP TABLE test");
+    store = nullptr;
+
+    InitDb(HAMode::MANUAL_TRIGGER, false, true);
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    CheckNumber(store, count);
+}
