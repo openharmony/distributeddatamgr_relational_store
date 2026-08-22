@@ -36,9 +36,7 @@
 #include "logger.h"
 #include "raw_data_parser.h"
 #include "rdb_common.h"
-#if !defined(CROSS_PLATFORM)
 #include "rdb_db_info_manager.h"
-#endif
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_local_db_observer.h"
@@ -1589,11 +1587,9 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     }
     // Record open diagnostics only on success; failure paths return early above
     // and never reach here, so the dfx file is never written for a failed open.
-#if !defined(CROSS_PLATFORM)
     if (errCode == E_OK) {
         RdbDbInfoManager::GetInstance().RecordOpen(config_, created);
     }
-#endif
     initStatus_ = errCode;
     return initStatus_;
 }
