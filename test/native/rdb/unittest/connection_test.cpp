@@ -22,6 +22,7 @@
 
 #include "common.h"
 #include "grd_type_export.h"
+#include "knowledge_types.h"
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
@@ -477,5 +478,27 @@ HWTEST_F(ConnectionTest, InnerOpen_DbNotExist_CreateNecessaryTrue, TestSize.Leve
     int ret = conn->InnerOpen(config);
     EXPECT_EQ(ret, E_OK);
     RdbHelper::DeleteRdbStore(dbPath);
+}
+
+HWTEST_F(ConnectionTest, SetKnowledgeSchema_001, TestSize.Level1)
+{
+    RdbStoreConfig config(rdbStorePath);
+    config.SetDBType(OHOS::NativeRdb::DBType::DB_SQLITE);
+    auto [errCode, conn] = Connection::Create(config, true);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    OHOS::DistributedRdb::RdbKnowledgeSchema emptySchema;
+    EXPECT_EQ(conn->SetKnowledgeSchema(emptySchema), E_OK);
+
+    OHOS::DistributedRdb::RdbKnowledgeSchema schema;
+    schema.dbName = "test_db";
+    OHOS::DistributedRdb::RdbKnowledgeTable table;
+    table.tableName = "test_table";
+    OHOS::DistributedRdb::RdbKnowledgeField field;
+    field.columnName = "content";
+    table.knowledgeFields.push_back(field);
+    schema.tables.push_back(table);
+    EXPECT_EQ(conn->SetKnowledgeSchema(schema), E_INVALID_ARGS);
 }
 } // namespace Test

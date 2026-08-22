@@ -16,9 +16,72 @@
 #include "delay_actuator.h"
 #include "block_data.h"
 
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
+
 #include <gtest/gtest.h>
 using namespace testing::ext;
 namespace OHOS::Test {
+namespace {
+constexpr std::chrono::seconds WAIT_TIMEOUT(2);
+
+struct TaskState {
+    std::atomic<uint64_t> nextId = 1;
+    std::atomic<uint64_t> executingId = 0;
+    std::atomic_bool executingTaskDestroyed = false;
+    std::mutex mutex;
+    std::condition_variable condition;
+    bool started = false;
+    bool released = false;
+    bool finished = false;
+};
+
+class TrackedTask final {
+public:
+    explicit TrackedTask(std::shared_ptr<TaskState> state) : state_(std::move(state)), id_(state_->nextId.fetch_add(1))
+    {
+    }
+
+    TrackedTask(const TrackedTask &other) : state_(other.state_), id_(state_->nextId.fetch_add(1))
+    {
+    }
+
+    TrackedTask(TrackedTask &&other) noexcept : state_(std::move(other.state_)), id_(other.id_)
+    {
+        other.id_ = 0;
+    }
+
+    TrackedTask &operator=(const TrackedTask &other) = delete;
+    TrackedTask &operator=(TrackedTask &&other) = delete;
+
+    ~TrackedTask()
+    {
+        if (state_ != nullptr && id_ != 0 && state_->executingId.load() == id_) {
+            state_->executingTaskDestroyed = true;
+        }
+    }
+
+    void operator()() const
+    {
+        auto state = state_;
+        state->executingId = id_;
+        std::unique_lock<std::mutex> lock(state->mutex);
+        state->started = true;
+        state->condition.notify_all();
+        state->condition.wait(lock, [state]() { return state->released; });
+        state->finished = true;
+        state->executingId = 0;
+        state->condition.notify_all();
+    }
+
+private:
+    std::shared_ptr<TaskState> state_;
+    uint64_t id_;
+};
+} // namespace
+
 class DelayActuatorTest : public testing::Test {
 public:
     static void SetUpTestCase(void){};
@@ -69,5 +132,34 @@ HWTEST_F(DelayActuatorTest, Execute_002, TestSize.Level0)
     delayActuator->Execute();
     EXPECT_EQ(blockData->GetValue(), 0);
     EXPECT_EQ(blockData->GetValue(), 1);
+}
+
+/**
+* @tc.name: SetTask_001
+* @tc.desc: Replacing the task does not destroy a task that is being executed
+* @tc.type: FUNC
+* @tc.require:
+* @tc.author: cjx
+*/
+HWTEST_F(DelayActuatorTest, SetTask_001, TestSize.Level0)
+{
+    auto state = std::make_shared<TaskState>();
+    auto delayActuator = std::make_shared<DelayActuator>(0, 1, ActuatorBase::INVALID_INTERVAL);
+    delayActuator->SetExecutorPool(std::make_shared<ExecutorPool>(1, 1));
+    delayActuator->SetTask(TrackedTask(state));
+    delayActuator->Execute();
+
+    std::unique_lock<std::mutex> lock(state->mutex);
+    bool started = state->condition.wait_for(lock, WAIT_TIMEOUT, [state]() { return state->started; });
+    lock.unlock();
+    delayActuator->SetTask([]() {});
+    EXPECT_TRUE(started);
+    EXPECT_FALSE(state->executingTaskDestroyed);
+
+    lock.lock();
+    state->released = true;
+    state->condition.notify_all();
+    bool finished = state->condition.wait_for(lock, WAIT_TIMEOUT, [state]() { return state->finished; });
+    EXPECT_TRUE(finished);
 }
 } // namespace OHOS::Test

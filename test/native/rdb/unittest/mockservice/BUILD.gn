@@ -143,6 +143,7 @@ ohos_unittest("NativeRdbConditionTest") {
   external_deps += external_deps_distributeddb
   external_deps += external_deps_distributeddb_client
   external_deps += external_deps_samgr
+  external_deps += external_deps_bounds_checking_function
 
   deps = [
     "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",

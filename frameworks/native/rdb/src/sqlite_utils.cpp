@@ -710,6 +710,7 @@ int SqliteUtils::SetSlaveInvalid(const std::string &dbPath)
     std::ofstream src((dbPath + SLAVE_FAILURE).c_str(), std::ios::binary);
     if (src.is_open()) {
         src.close();
+        LOG_WARN("set slave invalid:%{public}s", Anonymous(dbPath).c_str());
         return E_OK;
     }
     return E_ERROR;
