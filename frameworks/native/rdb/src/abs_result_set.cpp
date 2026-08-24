@@ -606,7 +606,8 @@ int AbsResultSet::GetAsset(int32_t col, ValueObject::Asset &value)
         LOG_ERROR("Failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
         return E_INVALID_OBJECT_TYPE;
     }
-    value = valueObject;
+    auto *asset = std::get_if<ValueObject::Asset>(&valueObject.value);
+    value = (asset != nullptr) ? std::move(*asset) : ValueObject::Asset{};
     return E_OK;
 }
 
@@ -626,7 +627,8 @@ int AbsResultSet::GetAssets(int32_t col, ValueObject::Assets &value)
         LOG_ERROR("Failed, type is %{public}d, col is %{public}d!", valueObject.GetType(), col);
         return E_INVALID_OBJECT_TYPE;
     }
-    value = valueObject;
+    auto *assets = std::get_if<ValueObject::Assets>(&valueObject.value);
+    value = (assets != nullptr) ? std::move(*assets) : ValueObject::Assets{};
     return E_OK;
 }
 
