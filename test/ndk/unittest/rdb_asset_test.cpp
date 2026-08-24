@@ -509,3 +509,98 @@ HWTEST_F(RdbNativeAssetTest, Normal_testCase_of_asset_for_getCreateTime_negative
 
     OH_Data_Asset_DestroyOne(asset);
 }
+
+/**
+ * @tc.number: RDB_Native_asset_test_0021
+ * @tc.name: Abnormal testCase of asset for getName with null output pointer.
+ * @tc.desc: 1.Create asset and SetName
+ *           2.Execute GetName (asset, nullptr, &nameLength)
+ *           3.Execute GetName (asset, name, nullptr)
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getName_null_output, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    int errCode = OH_Data_Asset_SetName(asset, "name");
+    EXPECT_EQ(errCode, RDB_OK);
+    char name[10] = "";
+    size_t nameLength = 10;
+    errCode = OH_Data_Asset_GetName(asset, nullptr, &nameLength);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_GetName(asset, name, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0022
+ * @tc.name: Abnormal testCase of asset for getUri with null output pointer.
+ * @tc.desc: 1.Create asset and SetUri
+ *           2.Execute GetUri (asset, nullptr, &uriLength)
+ *           3.Execute GetUri (asset, uri, nullptr)
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getUri_null_output, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    int errCode = OH_Data_Asset_SetUri(asset, "uri");
+    EXPECT_EQ(errCode, RDB_OK);
+    char uri[10] = "";
+    size_t uriLength = 10;
+    errCode = OH_Data_Asset_GetUri(asset, nullptr, &uriLength);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_GetUri(asset, uri, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0023
+ * @tc.name: Abnormal testCase of asset for getPath with null output pointer.
+ * @tc.desc: 1.Create asset and SetPath
+ *           2.Execute GetPath (asset, nullptr, &pathLength)
+ *           3.Execute GetPath (asset, path, nullptr)
+ *           4.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_of_asset_for_getPath_null_output, TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    int errCode = OH_Data_Asset_SetPath(asset, "path");
+    EXPECT_EQ(errCode, RDB_OK);
+    char path[10] = "";
+    size_t pathLength = 10;
+    errCode = OH_Data_Asset_GetPath(asset, nullptr, &pathLength);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_GetPath(asset, path, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
+}
+
+/**
+ * @tc.number: RDB_Native_asset_test_0024
+ * @tc.name: Abnormal testCase of asset for getCreateTime/getModifyTime/getSize/getStatus with null output pointer.
+ * @tc.desc: 1.Create asset
+ *           2.Execute GetCreateTime (asset, nullptr)
+ *           3.Execute GetModifyTime (asset, nullptr)
+ *           4.Execute GetSize (asset, nullptr)
+ *           5.Execute GetStatus (asset, nullptr)
+ *           6.Destroy asset
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbNativeAssetTest, Abnormal_testCase_for_getCreateTime_getModifyTime_getSize_getStatus_null_output,
+         TestSize.Level1)
+{
+    Data_Asset *asset = OH_Data_Asset_CreateOne();
+    int errCode = OH_Data_Asset_GetCreateTime(asset, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_GetModifyTime(asset, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_GetSize(asset, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    errCode = OH_Data_Asset_GetStatus(asset, nullptr);
+    EXPECT_EQ(errCode, RDB_E_INVALID_ARGS);
+    OH_Data_Asset_DestroyOne(asset);
+}
