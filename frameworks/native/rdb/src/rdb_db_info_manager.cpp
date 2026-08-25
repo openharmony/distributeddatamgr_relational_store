@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cinttypes>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -276,17 +277,17 @@ void RdbDbInfoManager::RecordOpen(const RdbStoreConfig &config, bool created)
         }
         auto fmtFile = [](const std::string &tag, const FileInfo &before, const FileInfo &after) {
             LOG_ERROR(
-                "%{public}s inode:0x%{public}llx->0x%{public}llx, "
+                "%{public}s inode:%{public}" PRId64 "->%{public}" PRId64 ", "
                 "mode:%{public}s->%{public}s, "
-                "atime:%{public}lld->%{public}lld, "
-                "mtime:%{public}lld->%{public}lld, "
-                "ctime:%{public}lld->%{public}lld",
+                "atime:%{public}" PRId64 "->%{public}" PRId64 ", "
+                "mtime:%{public}" PRId64 "->%{public}" PRId64 ", "
+                "ctime:%{public}" PRId64 "->%{public}" PRId64,
                 tag.c_str(),
-                static_cast<unsigned long long>(before.node), static_cast<unsigned long long>(after.node),
+                before.node, after.node,
                 before.permission.mode.c_str(), after.permission.mode.c_str(),
-                static_cast<long long>(before.time.atime), static_cast<long long>(after.time.atime),
-                static_cast<long long>(before.time.mtime), static_cast<long long>(after.time.mtime),
-                static_cast<long long>(before.time.ctime), static_cast<long long>(after.time.ctime));
+                before.time.atime, after.time.atime,
+                before.time.mtime, after.time.mtime,
+                before.time.ctime, after.time.ctime);
         };
         fmtFile("db", prevMain.db, info.main.db);
         fmtFile("wal", prevMain.wal, info.main.wal);
