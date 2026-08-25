@@ -842,11 +842,13 @@ int32_t ConnPool::Container::SetTokenizer(Tokenizer tokenizer)
 std::pair<int, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Acquire(std::chrono::milliseconds milliS)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    // Wait for an in-flight extension to settle before observing the pool state. This wait may exceed milliS because
+    // the extension callback is already running outside mutex_.
     cond_.wait(lock, [this]() { return count_ > 0 || !extending_; });
     auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
     auto deadline = std::chrono::steady_clock::now() + interval;
     if (max_ == 0) {
-        return {E_ERROR, nullptr};
+        return { E_ERROR, nullptr };
     }
     int errCode = E_OK;
     bool timedOut = false;
@@ -858,10 +860,11 @@ std::pair<int, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Acquire
             }
         }
         if (timedOut) {
-            return {errCode, nullptr};
+            return { errCode, nullptr };
         }
         timedOut = cond_.wait_until(lock, deadline) == std::cv_status::timeout;
         if (timedOut && extending_) {
+            // Do not return while the extension is still updating nodes_; return only after the state is consistent.
             cond_.wait(lock, [this]() { return count_ > 0 || !extending_; });
         }
     }
@@ -869,12 +872,12 @@ std::pair<int, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Acquire
         LOG_ERROR("Nodes is empty.count %{public}d max %{public}d total %{public}d left %{public}d right%{public}d",
             count_, max_, total_, left_, right_);
         count_ = 0;
-        return {E_ERROR, nullptr};
+        return { E_ERROR, nullptr };
     }
     auto node = nodes_.back();
     nodes_.pop_back();
     count_--;
-    return {E_OK, node};
+    return { E_OK, node };
 }
 
 int32_t ConnPool::Container::ExtendNode()

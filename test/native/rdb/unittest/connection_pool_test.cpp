@@ -47,6 +47,7 @@ class ConnectionPoolTest : public testing::Test {};
  */
 HWTEST_F(ConnectionPoolTest, AcquireExtendNodeDoesNotBlockReleaseTest, TestSize.Level1)
 {
+    // NativeRdbTest enables -fno-access-control for white-box connection-pool coverage.
     auto container = std::make_shared<ConnectionPool::Container>();
     RdbStoreConfig config(RDB_TEST_PATH + "connection_pool_test.db");
     auto initialConnection = std::make_shared<SqliteConnection>(config, false);
