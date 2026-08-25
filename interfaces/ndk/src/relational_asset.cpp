@@ -94,8 +94,9 @@ int OH_Data_Asset_SetStatus(Data_Asset *asset, Data_AssetStatus status)
 
 int OH_Data_Asset_GetName(Data_Asset *asset, char *name, size_t *length)
 {
-    if (asset == nullptr) {
-        LOG_ERROR("Asset get name error: asset is NULL ? %{public}d.", (asset == nullptr));
+    if (asset == nullptr || name == nullptr || length == nullptr) {
+        LOG_ERROR("Asset get name error: asset is NULL ? %{public}d, name is NULL ? %{public}d, "
+            "length is NULL ? %{public}d.", (asset == nullptr), (name == nullptr), (length == nullptr));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     size_t nameLength = asset->asset_.name.size();
@@ -114,8 +115,9 @@ int OH_Data_Asset_GetName(Data_Asset *asset, char *name, size_t *length)
 
 int OH_Data_Asset_GetUri(Data_Asset *asset, char *uri, size_t *length)
 {
-    if (asset == nullptr) {
-        LOG_ERROR("Asset get uri error: asset is NULL ? %{public}d.", (asset == nullptr));
+    if (asset == nullptr || uri == nullptr || length == nullptr) {
+        LOG_ERROR("Asset get uri error: asset is NULL ? %{public}d, uri is NULL ? %{public}d, "
+            "length is NULL ? %{public}d.", (asset == nullptr), (uri == nullptr), (length == nullptr));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     size_t uriLength = asset->asset_.uri.size();
@@ -135,8 +137,9 @@ int OH_Data_Asset_GetUri(Data_Asset *asset, char *uri, size_t *length)
 
 int OH_Data_Asset_GetPath(Data_Asset *asset, char *path, size_t *length)
 {
-    if (asset == nullptr) {
-        LOG_ERROR("Asset get path error: asset is NULL ? %{public}d.", (asset == nullptr));
+    if (asset == nullptr || path == nullptr || length == nullptr) {
+        LOG_ERROR("Asset get path error: asset is NULL ? %{public}d, path is NULL ? %{public}d, "
+            "length is NULL ? %{public}d.", (asset == nullptr), (path == nullptr), (length == nullptr));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     size_t pathLength = asset->asset_.path.size();
@@ -155,7 +158,9 @@ int OH_Data_Asset_GetPath(Data_Asset *asset, char *path, size_t *length)
 
 int OH_Data_Asset_GetCreateTime(Data_Asset *asset, int64_t *createTime)
 {
-    if (asset == nullptr) {
+    if (asset == nullptr || createTime == nullptr) {
+        LOG_ERROR("Asset get create time error: asset is NULL ? %{public}d, createTime is NULL ? %{public}d.",
+            (asset == nullptr), (createTime == nullptr));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     char *endPtr = nullptr;
@@ -169,7 +174,9 @@ int OH_Data_Asset_GetCreateTime(Data_Asset *asset, int64_t *createTime)
 
 int OH_Data_Asset_GetModifyTime(Data_Asset *asset, int64_t *modifyTime)
 {
-    if (asset == nullptr) {
+    if (asset == nullptr || modifyTime == nullptr) {
+        LOG_ERROR("Asset get modify time error: asset is NULL ? %{public}d, modifyTime is NULL ? %{public}d.",
+            (asset == nullptr), (modifyTime == nullptr));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     char *endPtr = nullptr;
@@ -183,7 +190,9 @@ int OH_Data_Asset_GetModifyTime(Data_Asset *asset, int64_t *modifyTime)
 
 int OH_Data_Asset_GetSize(Data_Asset *asset, size_t *size)
 {
-    if (asset == nullptr) {
+    if (asset == nullptr || size == nullptr) {
+        LOG_ERROR("Asset get size error: asset is NULL ? %{public}d, size is NULL ? %{public}d.",
+            (asset == nullptr), (size == nullptr));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     char *endPtr = nullptr;
@@ -197,7 +206,9 @@ int OH_Data_Asset_GetSize(Data_Asset *asset, size_t *size)
 
 int OH_Data_Asset_GetStatus(Data_Asset *asset, Data_AssetStatus *status)
 {
-    if (asset == nullptr) {
+    if (asset == nullptr || status == nullptr) {
+        LOG_ERROR("Asset get status error: asset is NULL ? %{public}d, status is NULL ? %{public}d.",
+            (asset == nullptr), (status == nullptr));
         return OH_Rdb_ErrCode::RDB_E_INVALID_ARGS;
     }
     *status = static_cast<Data_AssetStatus>(asset->asset_.status);
