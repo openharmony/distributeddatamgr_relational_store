@@ -569,7 +569,7 @@ void RdbCleanLogFuzz(FuzzedDataProvider &provider)
     if (RdbStoreFuzzTest::store_ == nullptr) {
         return;
     }
-    std::string tableName = provider.ConsumeRandomLengthString();
+    std::string tableName = provider.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::shared_ptr<RdbStore> &store = RdbStoreFuzzTest::store_;
     store->CleanDirtyLog(tableName, 0);
 }
