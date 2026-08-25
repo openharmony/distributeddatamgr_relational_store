@@ -351,6 +351,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/clean_device_dirty_data_test.cpp",
     "unittest/common.cpp",
     "unittest/connection_test.cpp",
+    "unittest/connection_pool_test.cpp",
     "unittest/convert_db_status_native_test.cpp",
     "unittest/delay_notify_test.cpp",
     "unittest/raw_data_parser_test.cpp",
