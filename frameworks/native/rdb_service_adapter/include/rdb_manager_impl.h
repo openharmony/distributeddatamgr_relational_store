@@ -16,6 +16,7 @@
 #ifndef DISTRIBUTED_RDB_RDB_MANAGER_IMPL_H
 #define DISTRIBUTED_RDB_RDB_MANAGER_IMPL_H
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -71,7 +72,7 @@ private:
     std::shared_ptr<RdbService> rdbService_;
     RdbSyncerParam param_;
     std::string bundleName_;
-    bool isProxy_ = true;
+    std::atomic<bool> isProxy_{ true };
 };
 } // namespace OHOS::DistributedRdb
 #endif

@@ -1823,7 +1823,9 @@ napi_value RdbStoreProxy::Sync(napi_env env, napi_callback_info info)
         RDB_NAPI_ASSERT_BASE(env, status == napi_ok,
             std::make_shared<InnerError>("failed(" + std::to_string(status) + ") to create promise"), nullptr);
     } else {
-        napi_get_undefined(env, &promise);
+        napi_status undefStatus = napi_get_undefined(env, &promise);
+        RDB_NAPI_ASSERT_BASE(env, undefStatus == napi_ok,
+            std::make_shared<InnerError>("failed(" + std::to_string(undefStatus) + ") to get undefined"), nullptr);
     }
     RDB_NAPI_ASSERT_BASE(env,
         context->predicatesProxy != nullptr && context->predicatesProxy->GetPredicates() != nullptr,
@@ -1909,7 +1911,9 @@ napi_value RdbStoreProxy::SyncEx(napi_env env, napi_callback_info info)
         RDB_NAPI_ASSERT_BASE(env, status == napi_ok,
             std::make_shared<InnerError>("failed(" + std::to_string(status) + ") to create promise"), nullptr);
     } else {
-        napi_get_undefined(env, &promise);
+        napi_status undefStatus = napi_get_undefined(env, &promise);
+        RDB_NAPI_ASSERT_BASE(env, undefStatus == napi_ok,
+            std::make_shared<InnerError>("failed(" + std::to_string(undefStatus) + ") to get undefined"), nullptr);
     }
 
     auto predicates = *context->rdbPredicates;
