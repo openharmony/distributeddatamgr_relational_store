@@ -23,12 +23,15 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cinttypes>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <functional>
+#include <sstream>
 
 #include "acl.h"
+#include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_platform.h"
 #include "rdb_security_manager.h"
@@ -39,6 +42,7 @@
 
 namespace OHOS {
 namespace NativeRdb {
+using namespace OHOS::Rdb;
 using OHOS::DATABASE_UTILS::Acl;
 
 namespace {
@@ -152,7 +156,9 @@ FileInfo RdbDbInfoManager::BuildFileInfo(const std::string &path)
     }
     fi.node = static_cast<int64_t>(debug.inode_);
     fi.size = static_cast<int64_t>(debug.size_);
-    fi.permission.mode = debug.mode_;
+    std::ostringstream modeOs;
+    modeOs << std::oct << debug.mode_;
+    fi.permission.mode = modeOs.str();
     fi.permission.acl = Acl::Dump(path, Acl::ACL_XATTR_ACCESS);
     fi.time.ctime = debug.ctime_.sec_;
     fi.time.atime = debug.atime_.sec_;
@@ -269,6 +275,23 @@ void RdbDbInfoManager::RecordOpen(const RdbStoreConfig &config, bool created)
         if (changed.empty()) {
             return;
         }
+        auto fmtFile = [](const std::string &tag, const FileInfo &before, const FileInfo &after) {
+            LOG_ERROR(
+                "%{public}s inode:%{public}" PRId64 "->%{public}" PRId64 ", "
+                "mode:%{public}s->%{public}s, "
+                "atime:%{public}" PRId64 "->%{public}" PRId64 ", "
+                "mtime:%{public}" PRId64 "->%{public}" PRId64 ", "
+                "ctime:%{public}" PRId64 "->%{public}" PRId64,
+                tag.c_str(),
+                before.node, after.node,
+                before.permission.mode.c_str(), after.permission.mode.c_str(),
+                before.time.atime, after.time.atime,
+                before.time.mtime, after.time.mtime,
+                before.time.ctime, after.time.ctime);
+        };
+        fmtFile("db", prevMain.db, info.main.db);
+        fmtFile("wal", prevMain.wal, info.main.wal);
+        fmtFile("shm", prevMain.shm, info.main.shm);
         r.dbInfoChange.before = prevMain;
         r.dbInfoChange.after = info.main;
         r.dbInfoChange.changedFields = changed;
