@@ -17,7 +17,6 @@
 
 #include <functional>
 
-#include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_rdb_error.h"
@@ -189,10 +188,6 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
         if (data == nullptr) {
             return;
         }
-        auto tid = JSDFManager::GetInstance().GetFreedTid(data);
-        if (tid != 0) {
-            LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
-        }
         ResultSetProxy *proxy = reinterpret_cast<ResultSetProxy *>(data);
         proxy->SetInstance(nullptr);
         delete proxy;
@@ -203,7 +198,6 @@ napi_value ResultSetProxy::InnerInitialize(napi_env env, napi_callback_info info
         finalize(env, proxy, nullptr);
         return nullptr;
     }
-    JSDFManager::GetInstance().AddNewInfo(proxy);
     return self;
 }
 

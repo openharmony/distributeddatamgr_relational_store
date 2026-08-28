@@ -16,7 +16,6 @@
 #define LOG_TAG "DataAbilityPredicatesProxy"
 #include "napi_data_ability_predicates.h"
 
-#include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_predicates_utils.h"
@@ -105,7 +104,6 @@ napi_value DataAbilityPredicatesProxy::New(napi_env env, napi_callback_info info
             delete proxy;
             return nullptr;
         }
-        JSDFManager::GetInstance().AddNewInfo(proxy);
         return thiz;
     }
 
@@ -163,10 +161,6 @@ std::shared_ptr<NativeRdb::DataAbilityPredicates> DataAbilityPredicatesProxy::Ge
 
 void DataAbilityPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
 {
-    auto tid = JSDFManager::GetInstance().GetFreedTid(nativeObject);
-    if (tid != 0) {
-        LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject) & LOWER_24_BITS_MASK);
-    }
     DataAbilityPredicatesProxy *proxy = static_cast<DataAbilityPredicatesProxy *>(nativeObject);
     if (proxy == nullptr) {
         return;

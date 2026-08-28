@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 
-#include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_async_call.h"
@@ -113,10 +112,6 @@ napi_value RdbStoreProxy::InnerInitialize(napi_env env, napi_callback_info info,
         if (data == nullptr) {
             return;
         }
-        auto tid = JSDFManager::GetInstance().GetFreedTid(data);
-        if (tid != 0) {
-            LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
-        }
         RdbStoreProxy *proxy = reinterpret_cast<RdbStoreProxy *>(data);
         proxy->rdbStore_ = std::move(nullptr);
         delete proxy;
@@ -132,7 +127,6 @@ napi_value RdbStoreProxy::InnerInitialize(napi_env env, napi_callback_info info,
         delete proxy;
         return nullptr;
     }
-    JSDFManager::GetInstance().AddNewInfo(proxy);
     return self;
 }
 
