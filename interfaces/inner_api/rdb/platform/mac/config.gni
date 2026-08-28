@@ -16,6 +16,7 @@ import("//foundation/distributeddatamgr/relational_store/relational_store_deps.g
 native_rdb_platform_include_dirs = [
   "${relational_store_mock_path}/frameworks/native/rdb",
   "${relational_store_mock_path}/frameworks/native/win32",
+  "${relational_store_mock_path}/frameworks/native/kvstore_mock",
   "${relational_store_common_path}/include",
   "//commonlibrary/c_utils/base/include",
   "include",
