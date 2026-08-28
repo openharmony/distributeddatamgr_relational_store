@@ -15,7 +15,6 @@
 #define LOG_TAG "RdbPredicatesProxy"
 #include "napi_rdb_predicates.h"
 
-#include "js_df_manager.h"
 #include "js_utils.h"
 #include "logger.h"
 #include "napi_rdb_error.h"
@@ -144,7 +143,6 @@ napi_value RdbPredicatesProxy::InnerNew(napi_env env, napi_callback_info info, i
             delete proxy;
             return nullptr;
         }
-        JSDFManager::GetInstance().AddNewInfo(proxy);
         return thiz;
     }
 
@@ -190,10 +188,6 @@ napi_value RdbPredicatesProxy::NewInstance(napi_env env, std::shared_ptr<NativeR
 
 void RdbPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
 {
-    auto tid = JSDFManager::GetInstance().GetFreedTid(nativeObject);
-    if (tid != 0) {
-        LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject) & LOWER_24_BITS_MASK);
-    }
     RdbPredicatesProxy *proxy = static_cast<RdbPredicatesProxy *>(nativeObject);
     if (proxy == nullptr) {
         return;

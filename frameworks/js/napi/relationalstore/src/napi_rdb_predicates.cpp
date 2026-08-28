@@ -18,7 +18,6 @@
 
 #include <cstdint>
 
-#include "js_df_manager.h"
 #include "js_native_api.h"
 #include "js_native_api_types.h"
 #include "js_utils.h"
@@ -123,7 +122,6 @@ napi_value RdbPredicatesProxy::New(napi_env env, napi_callback_info info)
             delete proxy;
             return nullptr;
         }
-        JSDFManager::GetInstance().AddNewInfo(proxy);
         return thiz;
     }
 
@@ -167,10 +165,6 @@ napi_value RdbPredicatesProxy::NewInstance(napi_env env, std::shared_ptr<NativeR
 
 void RdbPredicatesProxy::Destructor(napi_env env, void *nativeObject, void *)
 {
-    auto tid = JSDFManager::GetInstance().GetFreedTid(nativeObject);
-    if (tid != 0) {
-        LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(nativeObject) & LOWER_24_BITS_MASK);
-    }
     RdbPredicatesProxy *proxy = static_cast<RdbPredicatesProxy *>(nativeObject);
     if (proxy == nullptr) {
         return;

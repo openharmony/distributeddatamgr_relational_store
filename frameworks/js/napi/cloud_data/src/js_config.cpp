@@ -22,7 +22,6 @@
 #include "cloud_manager.h"
 #include "cloud_service.h"
 #include "js_cloud_utils.h"
-#include "js_df_manager.h"
 #include "js_error_utils.h"
 #include "js_strategy_context.h"
 #include "js_utils.h"
@@ -462,10 +461,6 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
             LOG_ERROR("data is nullptr.");
             return;
         }
-        auto tid = JSDFManager::GetInstance().GetFreedTid(data);
-        if (tid != 0) {
-            LOG_ERROR("(T:%{public}d) freed! data:0x%016" PRIXPTR, tid, uintptr_t(data) & LOWER_24_BITS_MASK);
-        }
         LOG_DEBUG("CloudConfig finalize.");
         auto *config = reinterpret_cast<JsConfig *>(data);
         ASSERT_VOID(config != nullptr, "finalize null!");
@@ -479,7 +474,6 @@ napi_value JsConfig::New(napi_env env, napi_callback_info info)
         finalize(env, cloudConfig, nullptr);
         return nullptr;
     }
-    JSDFManager::GetInstance().AddNewInfo(cloudConfig);
     return self;
 }
 
