@@ -16,6 +16,7 @@ import("//foundation/distributeddatamgr/relational_store/relational_store_deps.g
 native_rdb_platform_include_dirs = [
   "${relational_store_mock_path}/frameworks/native/rdb",
   "${relational_store_mock_path}/frameworks/native/win32",
+  "${relational_store_mock_path}/frameworks/native/kvstore_mock",
   "${relational_store_common_path}/include",
   "//commonlibrary/c_utils/base/include",
   "include",
@@ -47,6 +48,8 @@ native_rdb_platform_ldflags = []
 
 native_rdb_platform_sources = [
   "${relational_store_mock_path}/frameworks/native/win32/directory_ex.cpp",
+  "${relational_store_mock_path}/frameworks/native/win32/openssl/hmac.cpp", 
+  "${relational_store_mock_path}/frameworks/native/rdb/mock.cpp",
   "${relational_store_mock_path}/frameworks/native/rdb/shared_block_mock.cpp",
 ]
 
@@ -55,8 +58,7 @@ native_rdb_platform_deps = [
   "//commonlibrary/c_utils/base:utils",
   "//foundation/distributeddatamgr/kv_store/databaseutils:database_utils",
   "//foundation/distributeddatamgr/kv_store/interfaces/innerkits/distributeddata:distributeddata_inner_executor",
-  "${kvstore_path}/libs/distributeddb/build/mac:distributeddb",
-  "//third_party/sqlite:sqlite_static",
+  "//third_party/sqlite:sqlite_sdk",
 ]
 native_rdb_platform_deps += deps_hilog
 

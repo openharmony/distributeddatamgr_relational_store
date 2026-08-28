@@ -14,9 +14,6 @@ import("//foundation/distributeddatamgr/relational_store/relational_store.gni")
 import("//foundation/distributeddatamgr/relational_store/relational_store_deps.gni")
 
 native_rdb_platform_include_dirs = [
-  "${kvstore_path}/libs/distributeddb/interfaces/include/relational", 
-  "${kvstore_path}/libs/distributeddb/interfaces/include", 
-  "${kvstore_path}/libs/distributeddb/include",
   "${relational_store_mock_path}/frameworks/native/rdb",
   "${relational_store_mock_path}/frameworks/native/win32",
   "${distributedfile_path}/mod_securitylabel",
