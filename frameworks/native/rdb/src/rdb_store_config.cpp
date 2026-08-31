@@ -520,6 +520,16 @@ std::string RdbStoreConfig::GetServerPath() const
     return serverPath_;
 }
 
+void RdbStoreConfig::SetReplicaPath(const std::string &replicaPath)
+{
+    replicaPath_ = replicaPath;
+}
+
+std::string RdbStoreConfig::GetReplicaPath() const
+{
+    return replicaPath_;
+}
+
 bool RdbStoreConfig::IsSearchable() const
 {
     return isSearchable_;
@@ -839,6 +849,7 @@ std::string RdbStoreConfig::ToString() const
     oss << " pluginLibs size:" << pluginLibs_.size() << ",";
     oss << " area:" << area_ << ",";
     oss << " serverPath:" << SqliteUtils::Anonymous(serverPath_) << ",";
+    oss << " replicaPath:" << SqliteUtils::Anonymous(replicaPath_) << ",";
     return oss.str();
 }
 
@@ -865,6 +876,8 @@ std::string RdbStoreConfig::FormatCfg(const RdbStoreConfig &first, const RdbStor
     oss << " area:" << first.area_ << "->" << second.area_ << ",";
     oss << " serverPath:" << SqliteUtils::Anonymous(first.serverPath_) << "->"
         << SqliteUtils::Anonymous(second.serverPath_) << ",";
+    oss << " replicaPath:" << SqliteUtils::Anonymous(first.replicaPath_) << "->"
+        << SqliteUtils::Anonymous(second.replicaPath_) << ",";
     return oss.str();
 }
 
