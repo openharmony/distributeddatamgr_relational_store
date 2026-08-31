@@ -198,7 +198,9 @@ bool SqliteUtils::SetDbFileGid(const std::string &path, const std::vector<std::s
     uint16_t mode = Acl::R_RIGHT | Acl::W_RIGHT | Acl::E_RIGHT;
     std::string dbDir = StringUtils::ExtractFilePath(path);
     for (const auto &file : files) {
-        std::string dbPath = dbDir + file;
+        // Replica files may live in a custom replicaPath dir; such entries come in as
+        // absolute paths and must not be re-joined onto the master dir.
+        std::string dbPath = (!file.empty() && file.front() == '/') ? file : dbDir + file;
         struct stat fileStat;
         if (stat((dbPath).c_str(), &fileStat) != 0) {
             LOG_WARN("SetDbFileGid file is not exist. dir:%{public}s.", Anonymous(dbPath).c_str());
@@ -665,13 +667,45 @@ bool SqliteUtils::IsSlaveDbName(const std::string &fileName)
 
 std::string SqliteUtils::GetSlavePath(const std::string &name)
 {
-    std::string suffix(".db");
-    std::string slaveSuffix("_slave.db");
-    auto pos = name.rfind(suffix);
-    if (pos == std::string::npos || pos < name.length() - suffix.length()) {
-        return name + slaveSuffix;
+    auto pos = name.rfind(DB_SUFFIX);
+    if (pos == std::string::npos || pos < name.length() - std::string(DB_SUFFIX).length()) {
+        return name + SLAVE_SUFFIX;
     }
-    return name.substr(0, pos) + slaveSuffix;
+    return name.substr(0, pos) + SLAVE_SUFFIX;
+}
+
+std::string SqliteUtils::GetSlavePath(const RdbStoreConfig &config)
+{
+    const auto &custom = config.GetReplicaPath();
+    if (custom.empty()) {
+        return GetSlavePath(config.GetPath());
+    }
+    std::string dir = custom;
+    while (dir.length() > 1 && dir.back() == '/') {
+        dir.pop_back();
+    }
+    return dir + '/' + GetSlavePath(config.GetName());
+}
+
+bool SqliteUtils::IsValidReplicaPath(const std::string &replicaPath)
+{
+    if (replicaPath.empty()) {
+        return true;
+    }
+    if (replicaPath.front() != '/') {
+        LOG_WARN("replicaPath is not absolute:%{public}s", Anonymous(replicaPath).c_str());
+        return false;
+    }
+    struct stat dirStat;
+    if (stat(replicaPath.c_str(), &dirStat) != 0) {
+        LOG_WARN("replicaPath dir not exist:%{public}s, errno:%{public}d", Anonymous(replicaPath).c_str(), errno);
+        return false;
+    }
+    if (!S_ISDIR(dirStat.st_mode)) {
+        LOG_WARN("replicaPath is not a directory:%{public}s", Anonymous(replicaPath).c_str());
+        return false;
+    }
+    return true;
 }
 
 std::string SqliteUtils::GetMasterBackupPath(const std::string &name)
@@ -727,18 +761,30 @@ const char *SqliteUtils::EncryptAlgoDescription(int32_t encryptAlgo)
     }
 }
 
-int SqliteUtils::SetSlaveInvalid(const std::string &dbPath)
+int SqliteUtils::SetSlaveInvalid(const std::string &dbPath, SlaveInvalidReason reason)
 {
     if (IsSlaveInvalid(dbPath)) {
         return E_OK;
     }
-    std::ofstream src((dbPath + SLAVE_FAILURE).c_str(), std::ios::binary);
-    if (src.is_open()) {
-        src.close();
-        LOG_WARN("set slave invalid:%{public}s", Anonymous(dbPath).c_str());
-        return E_OK;
+    std::string filePath = dbPath + SLAVE_FAILURE;
+    std::ofstream src(filePath.c_str(), std::ios::binary | std::ios::trunc);
+    if (!src.is_open()) {
+        return E_ERROR;
     }
-    return E_ERROR;
+    int32_t idx = static_cast<int32_t>(reason);
+    const char *reasonStr = (idx >= 0 && idx < static_cast<int32_t>(sizeof(SLAVE_INVALID_REASON_STR)
+        / sizeof(SLAVE_INVALID_REASON_STR[0]))) ? SLAVE_INVALID_REASON_STR[idx] : "unknown";
+    auto timeStr = RdbTimeUtils::GetCurSysTimeWithMs();
+    src << timeStr << "\n" << reasonStr;
+    src.close();
+    LOG_WARN("set slave invalid:%{public}s, reason:%{public}s, time:%{public}s", Anonymous(dbPath).c_str(),
+        reasonStr, timeStr.c_str());
+    return E_OK;
+}
+
+int SqliteUtils::SetSlaveInvalid(const std::string &dbPath)
+{
+    return SetSlaveInvalid(dbPath, SlaveInvalidReason::OPEN_FAILED);
 }
 
 int SqliteUtils::SetSlaveInterrupted(const std::string &dbPath)

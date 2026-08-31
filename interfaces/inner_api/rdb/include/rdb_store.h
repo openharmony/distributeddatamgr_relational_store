@@ -798,6 +798,12 @@ public:
      */
     virtual bool IsSlaveDiffFromMaster() const;
 
+    /**
+     * @brief Check whether the slave database is currently available
+     * (successfully opened and not invalidated).
+     */
+    virtual bool IsSlaveAvailable() const;
+
     virtual int32_t GetDbType() const;
 
     virtual std::pair<int32_t, uint32_t> LockCloudContainer();

@@ -71,6 +71,8 @@ public:
         const std::string &sql, SConn conn, const std::string &returningSql = "") override;
     int CheckReplicaForRestore(const bool isForceRestore) override;
     bool IsWriter() const override;
+    bool IsSlaveAvailable() const override;
+    void MigrateReplica(const std::string &staleSlavePath, bool isResetBinlog) override;
     int SubscribeTableChanges(const Notifier &notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
@@ -143,6 +145,7 @@ private:
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
     std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(
         const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
+    std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerOpenSlave(const RdbStoreConfig &config);
     int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus,
         const bool isForceRestore = false);
     int ExchangeVerify(bool isRestore, const bool isForceRestore = false);

@@ -85,6 +85,8 @@ public:
     virtual int32_t Rekey(const RdbStoreConfig::CryptoParam &cryptoParam) = 0;
     virtual int32_t GetDBType() const = 0;
     virtual bool IsWriter() const = 0;
+    virtual bool IsSlaveAvailable() const { return false; }
+    virtual void MigrateReplica(const std::string &staleSlavePath, bool isResetBinlog) {}
     virtual int32_t ResetKey(const RdbStoreConfig &config) = 0;
     virtual int32_t TryCheckPoint(bool timeout) = 0;
     virtual int32_t LimitWalSize() = 0;
