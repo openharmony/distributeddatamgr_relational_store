@@ -112,7 +112,7 @@ private:
         static constexpr int32_t MAX_RIGHT = 0x4FFFFFFF;
         static constexpr int32_t MIN_TRANS_ID = 10000;
         bool disable_ = true;
-        bool extending_ = false;
+        int32_t extendingCount_ = 0;
         int max_ = 0;
         int total_ = 0;
         int count_ = 0;

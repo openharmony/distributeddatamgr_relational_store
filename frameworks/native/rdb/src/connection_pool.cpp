@@ -842,31 +842,22 @@ int32_t ConnPool::Container::SetTokenizer(Tokenizer tokenizer)
 std::pair<int, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Acquire(std::chrono::milliseconds milliS)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    // Wait for an in-flight extension to settle before observing the pool state. This wait may exceed milliS because
-    // the extension callback is already running outside mutex_.
-    cond_.wait(lock, [this]() { return count_ > 0 || !extending_; });
     auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
-    auto deadline = std::chrono::steady_clock::now() + interval;
     if (max_ == 0) {
         return { E_ERROR, nullptr };
     }
     int errCode = E_OK;
-    bool timedOut = false;
-    while (count_ == 0) {
-        if (!disable_ && !extending_) {
+    if (count_ == 0) {
+        if (!disable_) {
             errCode = ExtendNode(lock);
-            if (count_ > 0) {
-                break;
-            }
-        }
-        if (timedOut) {
+        } else if (!cond_.wait_for(lock, interval, [this]() { return count_ > 0 || !disable_; })) {
             return { errCode, nullptr };
+        } else if (count_ == 0) {
+            errCode = ExtendNode(lock);
         }
-        timedOut = cond_.wait_until(lock, deadline) == std::cv_status::timeout;
-        if (timedOut && extending_) {
-            // Do not return while the extension is still updating nodes_; return only after the state is consistent.
-            cond_.wait(lock, [this]() { return count_ > 0 || !extending_; });
-        }
+    }
+    if (errCode != E_OK) {
+        return { errCode, nullptr };
     }
     if (nodes_.empty()) {
         LOG_ERROR("Nodes is empty.count %{public}d max %{public}d total %{public}d left %{public}d right%{public}d",
@@ -895,11 +886,11 @@ int32_t ConnPool::Container::ExtendNode(std::unique_lock<std::mutex> &lock)
         return E_ERROR;
     }
     auto creator = creator_;
-    extending_ = true;
+    extendingCount_++;
     lock.unlock();
     auto [errCode, connection] = creator();
     lock.lock();
-    extending_ = false;
+    extendingCount_--;
     errCode = AddNode(errCode, std::move(connection));
     cond_.notify_all();
     return errCode;
@@ -922,7 +913,7 @@ int32_t ConnPool::Container::AddNode(int32_t errCode, std::shared_ptr<Connection
 
 void ConnPool::Container::WaitForExtension(std::unique_lock<std::mutex> &lock)
 {
-    cond_.wait(lock, [this]() { return !extending_; });
+    cond_.wait(lock, [this]() { return extendingCount_ == 0; });
 }
 
 std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Container::AcquireAll(
