@@ -37,6 +37,17 @@ struct CreatorGate {
     int started = 0;
     bool finish = false;
 };
+
+using AcquireResult = std::pair<int, std::shared_ptr<ConnectionPool::ConnNode>>;
+
+void VerifyAcquireResult(std::future<AcquireResult> &acquireResult,
+    const std::shared_ptr<ConnectionPool::Container> &container)
+{
+    auto [errCode, node] = acquireResult.get();
+    ASSERT_EQ(E_OK, errCode);
+    ASSERT_NE(nullptr, node);
+    EXPECT_EQ(E_OK, container->Release(node));
+}
 } // namespace
 
 class ConnectionPoolTest : public testing::Test {};
@@ -97,14 +108,8 @@ HWTEST_F(ConnectionPoolTest, AcquireExtendNodeDoesNotBlockReleaseTest, TestSize.
     }
     gate->condition.notify_all();
     EXPECT_EQ(E_OK, releaseResult.get());
-    auto [firstAcquireErr, firstAcquiredNode] = firstAcquireResult.get();
-    ASSERT_EQ(E_OK, firstAcquireErr);
-    ASSERT_NE(nullptr, firstAcquiredNode);
-    EXPECT_EQ(E_OK, container->Release(firstAcquiredNode));
-    auto [secondAcquireErr, secondAcquiredNode] = secondAcquireResult.get();
-    ASSERT_EQ(E_OK, secondAcquireErr);
-    ASSERT_NE(nullptr, secondAcquiredNode);
-    EXPECT_EQ(E_OK, container->Release(secondAcquiredNode));
+    VerifyAcquireResult(firstAcquireResult, container);
+    VerifyAcquireResult(secondAcquireResult, container);
 }
 
 /**
