@@ -848,12 +848,17 @@ std::pair<int, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Acquire
     }
     int errCode = E_OK;
     if (count_ == 0) {
-        if (!disable_) {
+        if (!disable_ && !extending_) {
             errCode = ExtendNode(lock);
-        } else if (!cond_.wait_for(lock, interval, [this]() { return count_ > 0 || !disable_; })) {
-            return { errCode, nullptr };
-        } else if (count_ == 0) {
-            errCode = ExtendNode(lock);
+        } else {
+            if (!cond_.wait_for(lock, interval, [this]() {
+                return count_ > 0 || (!disable_ && !extending_);
+            })) {
+                return { E_DATABASE_BUSY, nullptr };
+            }
+            if (count_ == 0 && !disable_) {
+                errCode = ExtendNode(lock);
+            }
         }
     }
     if (errCode != E_OK) {
@@ -886,11 +891,11 @@ int32_t ConnPool::Container::ExtendNode(std::unique_lock<std::mutex> &lock)
         return E_ERROR;
     }
     auto creator = creator_;
-    extendingCount_++;
+    extending_ = true;
     lock.unlock();
     auto [errCode, connection] = creator();
     lock.lock();
-    extendingCount_--;
+    extending_ = false;
     errCode = AddNode(errCode, std::move(connection));
     cond_.notify_all();
     return errCode;
@@ -913,7 +918,7 @@ int32_t ConnPool::Container::AddNode(int32_t errCode, std::shared_ptr<Connection
 
 void ConnPool::Container::WaitForExtension(std::unique_lock<std::mutex> &lock)
 {
-    cond_.wait(lock, [this]() { return extendingCount_ == 0; });
+    cond_.wait(lock, [this]() { return !extending_; });
 }
 
 std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Container::AcquireAll(
@@ -924,6 +929,10 @@ std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Contai
     auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
     auto time = std::chrono::steady_clock::now() + interval;
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    // Preserve a caller-owned disabled state after collecting all available nodes.
+    const bool wasDisabled = disable_;
+    // Prevent new connection creation while waiting for all existing nodes.
+    disable_ = true;
     WaitForExtension(lock);
     while (count < total_ && cond_.wait_until(lock, time, [this]() { return count_ > 0; })) {
         nodes.merge(std::move(nodes_));
@@ -936,6 +945,8 @@ std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Contai
         count_ = count;
         nodes_ = std::move(nodes);
         nodes.clear();
+        disable_ = wasDisabled;
+        cond_.notify_all();
         return {false, nodes};
     }
     auto func = [](const std::list<std::shared_ptr<ConnNode>> &nodes) -> bool {
@@ -957,6 +968,8 @@ std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Contai
         nodes_ = std::move(nodes);
         nodes.clear();
     }
+    disable_ = wasDisabled;
+    cond_.notify_all();
     return {!failed, nodes};
 }
 

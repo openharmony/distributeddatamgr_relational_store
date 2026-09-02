@@ -21,7 +21,6 @@
 #include <future>
 #include <memory>
 #include <mutex>
-#include <vector>
 
 #include "common.h"
 #include "rdb_errno.h"
@@ -40,13 +39,27 @@ struct CreatorGate {
 
 using AcquireResult = std::pair<int, std::shared_ptr<ConnectionPool::ConnNode>>;
 
-void VerifyAcquireResult(std::future<AcquireResult> &acquireResult,
-    const std::shared_ptr<ConnectionPool::Container> &container)
+bool WaitForCreator(const std::shared_ptr<CreatorGate> &gate)
+{
+    std::unique_lock<std::mutex> lock(gate->mutex);
+    return gate->condition.wait_for(lock, std::chrono::seconds(2), [gate]() { return gate->started == 1; });
+}
+
+void FinishCreator(const std::shared_ptr<CreatorGate> &gate)
+{
+    {
+        std::lock_guard<std::mutex> lock(gate->mutex);
+        gate->finish = true;
+    }
+    gate->condition.notify_all();
+}
+
+std::shared_ptr<ConnectionPool::ConnNode> GetAcquireNode(std::future<AcquireResult> &acquireResult)
 {
     auto [errCode, node] = acquireResult.get();
-    ASSERT_EQ(E_OK, errCode);
-    ASSERT_NE(nullptr, node);
-    EXPECT_EQ(E_OK, container->Release(node));
+    EXPECT_EQ(E_OK, errCode);
+    EXPECT_NE(nullptr, node);
+    return node;
 }
 } // namespace
 
@@ -54,7 +67,7 @@ class ConnectionPoolTest : public testing::Test {};
 
 /**
  * @tc.name: AcquireExtendNodeDoesNotBlockReleaseTest
- * @tc.desc: Concurrent slow connection creators must not hold the container mutex needed by Release.
+ * @tc.desc: A slow connection creator must not hold the container mutex needed by Release or start duplicates.
  * @tc.type: FUNC
  */
 HWTEST_F(ConnectionPoolTest, AcquireExtendNodeDoesNotBlockReleaseTest, TestSize.Level1)
@@ -69,47 +82,46 @@ HWTEST_F(ConnectionPoolTest, AcquireExtendNodeDoesNotBlockReleaseTest, TestSize.
     ASSERT_NE(nullptr, node);
 
     auto gate = std::make_shared<CreatorGate>();
-    auto delayedConnections = std::make_shared<std::vector<std::shared_ptr<Connection>>>();
-    delayedConnections->emplace_back(std::make_shared<SqliteConnection>(config, false));
-    delayedConnections->emplace_back(std::make_shared<SqliteConnection>(config, false));
+    auto delayedConnection = std::make_shared<SqliteConnection>(config, false);
     container->InitMembers(
-        [gate, delayedConnections]() {
+        [gate, delayedConnection]() {
             std::unique_lock<std::mutex> lock(gate->mutex);
-            auto index = gate->started++;
+            ++gate->started;
             gate->condition.notify_all();
             gate->condition.wait(lock, [gate]() { return gate->finish; });
-            return std::make_pair(E_OK, (*delayedConnections)[index]);
+            return std::make_pair(E_OK, delayedConnection);
         },
         1, 5, false);
 
     auto firstAcquireResult =
         std::async(std::launch::async, [container]() { return container->Acquire(std::chrono::seconds(5)); });
-    {
-        std::unique_lock<std::mutex> lock(gate->mutex);
-        EXPECT_TRUE(
-            gate->condition.wait_for(lock, std::chrono::seconds(2), [gate]() { return gate->started == 1; }));
-    }
+    EXPECT_TRUE(WaitForCreator(gate));
 
     auto secondAcquireResult =
         std::async(std::launch::async, [container]() { return container->Acquire(std::chrono::seconds(5)); });
+    EXPECT_EQ(std::future_status::timeout, secondAcquireResult.wait_for(std::chrono::milliseconds(100)));
     {
-        std::unique_lock<std::mutex> lock(gate->mutex);
-        EXPECT_TRUE(
-            gate->condition.wait_for(lock, std::chrono::seconds(2), [gate]() { return gate->started == 2; }));
+        std::lock_guard<std::mutex> lock(gate->mutex);
+        EXPECT_EQ(1, gate->started);
     }
 
     auto releaseResult =
         std::async(std::launch::async, [container, releaseNode = node]() { return container->Release(releaseNode); });
     EXPECT_EQ(std::future_status::ready, releaseResult.wait_for(std::chrono::seconds(2)));
 
+    FinishCreator(gate);
+    EXPECT_EQ(E_OK, releaseResult.get());
+    auto firstNode = GetAcquireNode(firstAcquireResult);
+    ASSERT_NE(nullptr, firstNode);
+    auto secondNode = GetAcquireNode(secondAcquireResult);
+    ASSERT_NE(nullptr, secondNode);
+    EXPECT_NE(firstNode, secondNode);
     {
         std::lock_guard<std::mutex> lock(gate->mutex);
-        gate->finish = true;
+        EXPECT_EQ(1, gate->started);
     }
-    gate->condition.notify_all();
-    EXPECT_EQ(E_OK, releaseResult.get());
-    VerifyAcquireResult(firstAcquireResult, container);
-    VerifyAcquireResult(secondAcquireResult, container);
+    EXPECT_EQ(E_OK, container->Release(firstNode));
+    EXPECT_EQ(E_OK, container->Release(secondNode));
 }
 
 /**
@@ -135,6 +147,12 @@ HWTEST_F(ConnectionPoolTest, AcquireWaitsForNodeWhenDisabledTest, TestSize.Level
             return std::make_pair(E_OK, unexpectedConnection);
         },
         1, 5, true);
+
+    auto timeoutAcquireResult =
+        std::async(std::launch::async, [container]() { return container->Acquire(std::chrono::milliseconds(100)); });
+    auto [timeoutErr, timeoutNode] = timeoutAcquireResult.get();
+    EXPECT_EQ(E_DATABASE_BUSY, timeoutErr);
+    EXPECT_EQ(nullptr, timeoutNode);
 
     auto acquireResult =
         std::async(std::launch::async, [container]() { return container->Acquire(std::chrono::seconds(5)); });
