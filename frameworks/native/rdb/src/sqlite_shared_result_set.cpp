@@ -168,6 +168,11 @@ int SqliteSharedResultSet::OnGo(int oldPosition, int newPosition)
     if ((uint32_t)newPosition < sharedBlock->GetStartPos() || (uint32_t)newPosition >= sharedBlock->GetLastPos() ||
         oldPosition == rowCount_) {
         auto errCode = FillBlock(newPosition);
+        if (errCode == E_SQLITE_INTERRUPT) {
+            LOG_WARN("resultSet interrupted, close it. err:%{public}d", errCode);
+            Close();
+            return errCode;
+        }
         if (errCode == E_NO_MORE_ROWS && rowCount_ != Statement::INVALID_COUNT) {
             rowCount_ = sharedBlock->GetLastPos() > INT_MAX ? Statement::INVALID_COUNT
                                                             : static_cast<int>(sharedBlock->GetLastPos());

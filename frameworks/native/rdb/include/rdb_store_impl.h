@@ -288,6 +288,7 @@ private:
     int HandleCloudSyncAfterSetDistributedTables(
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
+    void InterruptHolders(const std::shared_ptr<ConnectionPool> &pool);
     void SetLastErrorMsg(const std::string &msg) const;
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args,
         const ReturningConfig &config = {}, const std::string &returningSql = "");
