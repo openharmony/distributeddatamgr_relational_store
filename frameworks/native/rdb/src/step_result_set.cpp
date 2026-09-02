@@ -262,6 +262,11 @@ int StepResultSet::GoToNextRow()
         SetLastErrorMsg(BuildRowRangeCtx());
         return E_ROW_OUT_RANGE;
     } else {
+        if (errCode == E_SQLITE_INTERRUPT) {
+            LOG_WARN("resultSet interrupted, close it. err:%{public}d", errCode);
+            Close();
+            return errCode;
+        }
         SetLastErrorMsg(statement->GetLastErrorMsg());
         Reset();
         rowPos_ = rowCount_;

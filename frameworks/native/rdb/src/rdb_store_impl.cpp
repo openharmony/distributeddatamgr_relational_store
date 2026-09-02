@@ -257,6 +257,26 @@ int RdbStoreImpl::RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> pool,
     return E_DATABASE_BUSY;
 }
 
+void RdbStoreImpl::InterruptHolders(const std::shared_ptr<ConnectionPool> &pool)
+{
+    if (pool != nullptr) {
+        pool->Interrupt(ConnectionPool::READ | ConnectionPool::WRITE | ConnectionPool::TRANS);
+    }
+    std::list<std::weak_ptr<Transaction>> transactions;
+    {
+        std::lock_guard<decltype(mutex_)> guard(mutex_);
+        transactions = std::move(transactions_);
+        transactions_ = {};
+    }
+    for (auto &it : transactions) {
+        auto trans = it.lock();
+        if (trans != nullptr) {
+            trans->Close();
+        }
+    }
+    trxConnMap_.Clear();
+}
+
 int RdbStoreImpl::Release(const ReleaseOption &option)
 {
     WaitAfterOpen();
@@ -272,6 +292,9 @@ int RdbStoreImpl::Release(const ReleaseOption &option)
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
         service->Disable(syncerParam_);
+    }
+    if (option.interrupt) {
+        InterruptHolders(pool);
     }
     if (pool != nullptr) {
         auto used = duration_cast<milliseconds>(steady_clock::now() - start);
