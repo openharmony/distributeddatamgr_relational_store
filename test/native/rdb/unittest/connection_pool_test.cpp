@@ -30,6 +30,8 @@ using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
 namespace {
+constexpr std::chrono::seconds CREATOR_START_TIMEOUT(2);
+
 struct CreatorGate {
     std::mutex mutex;
     std::condition_variable condition;
@@ -42,7 +44,7 @@ using AcquireResult = std::pair<int, std::shared_ptr<ConnectionPool::ConnNode>>;
 bool WaitForCreator(const std::shared_ptr<CreatorGate> &gate)
 {
     std::unique_lock<std::mutex> lock(gate->mutex);
-    return gate->condition.wait_for(lock, std::chrono::seconds(2), [gate]() { return gate->started == 1; });
+    return gate->condition.wait_for(lock, CREATOR_START_TIMEOUT, [gate]() { return gate->started == 1; });
 }
 
 void FinishCreator(const std::shared_ptr<CreatorGate> &gate)

@@ -847,19 +847,14 @@ std::pair<int, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Acquire
         return { E_ERROR, nullptr };
     }
     int errCode = E_OK;
-    if (count_ == 0) {
-        if (!disable_ && !extending_) {
-            errCode = ExtendNode(lock);
-        } else {
-            if (!cond_.wait_for(lock, interval, [this]() {
-                return count_ > 0 || (!disable_ && !extending_);
-            })) {
-                return { E_DATABASE_BUSY, nullptr };
-            }
-            if (count_ == 0 && !disable_) {
-                errCode = ExtendNode(lock);
-            }
-        }
+    if (count_ == 0 && !disable_ && !extending_) {
+        errCode = ExtendNode(lock);
+    } else if (count_ == 0 && !cond_.wait_for(lock, interval, [this]() {
+                   return count_ > 0 || (!disable_ && !extending_);
+               })) {
+        return { E_DATABASE_BUSY, nullptr };
+    } else if (count_ == 0 && !disable_) {
+        errCode = ExtendNode(lock);
     }
     if (errCode != E_OK) {
         return { errCode, nullptr };
