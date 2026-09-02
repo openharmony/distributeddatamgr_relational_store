@@ -147,6 +147,8 @@ private:
     private:
         int32_t ExtendNode();
         int32_t ExtendNode(std::unique_lock<std::mutex> &lock);
+        int32_t AcquireNode(std::unique_lock<std::mutex> &lock,
+            std::chrono::milliseconds interval);
         int32_t AddNode(int32_t errCode, std::shared_ptr<Connection> connection);
         void WaitForExtension(std::unique_lock<std::mutex> &lock);
         int32_t RelDetails(std::shared_ptr<ConnNode> node);
