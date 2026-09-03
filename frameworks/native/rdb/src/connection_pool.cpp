@@ -22,6 +22,7 @@
 #include <iterator>
 #include <mutex>
 #include <sstream>
+#include <unistd.h>
 #include <vector>
 
 #include "connection.h"
@@ -58,6 +59,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(
         errCode = E_ERROR;
         return nullptr;
     }
+    CleanRestoreTempFile(config.GetPath());
     std::shared_ptr<Connection> conn;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
         std::tie(errCode, conn) = pool->Init();
@@ -586,31 +588,38 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
     return RestoreMasterDb(newPath, backupPath);
 }
 
-int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath)
+void ConnPool::CleanRestoreTempFile(const std::string &dbPath)
 {
-    if (!CheckIntegrity(backupPath)) {
-        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
-        return E_SQLITE_CORRUPT;
+    std::string tmpPath = dbPath + ".restore.tmp";
+    if (access(tmpPath.c_str(), F_OK) == 0) {
+        SqliteUtils::DeleteFile(tmpPath);
+        LOG_INFO("clean leftover restore tmp, %{public}s", SqliteUtils::Anonymous(tmpPath).c_str());
     }
-    auto walFile = backupPath + "-wal";
-    if (SqliteUtils::GetFileSize(walFile) != 0) {
-        LOG_ERROR("Wal file exist.");
-        return E_SQLITE_CORRUPT;
+}
+
+int ConnPool::PrepareRestoreTempFile(const std::string &backupPath, const std::string &tmpPath)
+{
+    SqliteUtils::DeleteFile(tmpPath);
+    auto backupSize = SqliteUtils::GetFileSize(backupPath);
+    if (backupSize <= 0) {
+        LOG_ERROR("invalid backup size %{public}zd, %{public}s", backupSize,
+            SqliteUtils::Anonymous(backupPath).c_str());
+        return E_INVALID_FILE_PATH;
     }
-
-    SqliteUtils::DeleteFile(backupPath + "-shm");
-    SqliteUtils::DeleteFile(backupPath + "-wal");
-
-    CloseAllConnections();
-    Connection::Delete(config_);
-
-    if (config_.GetPath() != newPath) {
-        RdbStoreConfig config(newPath);
-        config.SetPath(newPath);
-        Connection::Delete(config);
+    if (!SqliteUtils::AllocateFileSpace(tmpPath, backupSize)) {
+        LOG_ERROR("fallocate failed, keep current db, errno %{public}d, %{public}s", errno,
+            SqliteUtils::Anonymous(tmpPath).c_str());
+        return E_ERROR;
     }
+    if (!SqliteUtils::CopyFile(backupPath, tmpPath)) {
+        LOG_ERROR("copy to tmp failed, keep current db, %{public}s", SqliteUtils::Anonymous(tmpPath).c_str());
+        return E_ERROR;
+    }
+    return E_OK;
+}
 
-    bool copyRet = SqliteUtils::CopyFile(backupPath, newPath);
+int ConnPool::ReopenRestoredDb()
+{
     int32_t errCode = E_OK;
     std::shared_ptr<Connection> pool;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
@@ -628,9 +637,50 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         Connection::Delete(config_);
         std::tie(errCode, pool) = Init();
         LOG_WARN("Restore failed! rebuild res:%{public}d, path:%{public}s.", errCode,
-            SqliteUtils::Anonymous(backupPath).c_str());
+            SqliteUtils::Anonymous(config_.GetPath()).c_str());
     }
-    return copyRet ? errCode : E_ERROR;
+    return errCode;
+}
+
+int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath)
+{
+    CleanRestoreTempFile(newPath);
+    if (!CheckIntegrity(backupPath)) {
+        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
+        return E_SQLITE_CORRUPT;
+    }
+    if (SqliteUtils::GetFileSize(backupPath + "-wal") != 0) {
+        LOG_ERROR("Wal file exist, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
+        return E_SQLITE_CORRUPT;
+    }
+    SqliteUtils::DeleteFile(backupPath + "-shm");
+    SqliteUtils::DeleteFile(backupPath + "-wal");
+
+    std::string tmpPath = newPath + ".restore.tmp";
+    int errCode = PrepareRestoreTempFile(backupPath, tmpPath);
+    if (errCode != E_OK) {
+        SqliteUtils::DeleteFile(tmpPath);
+        return errCode;
+    }
+
+    CloseAllConnections();
+    if (config_.GetPath() != newPath) {
+        RdbStoreConfig config(newPath);
+        config.SetPath(newPath);
+        Connection::Delete(config);
+    } else {
+        SqliteUtils::DeleteFile(newPath + "-wal");
+        SqliteUtils::DeleteFile(newPath + "-shm");
+        SqliteUtils::DeleteFile(newPath + "-journal");
+    }
+    bool renamed = SqliteUtils::RenameFile(tmpPath, newPath);
+    if (!renamed) {
+        LOG_ERROR("rename tmp to db failed, errno %{public}d, %{public}s", errno,
+            SqliteUtils::Anonymous(newPath).c_str());
+        SqliteUtils::DeleteFile(tmpPath);
+    }
+    errCode = ReopenRestoredDb();
+    return renamed ? errCode : E_ERROR;
 }
 
 int ConnPool::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)

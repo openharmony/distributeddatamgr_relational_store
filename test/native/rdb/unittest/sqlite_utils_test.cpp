@@ -871,3 +871,56 @@ HWTEST_F(SqliteUtilsTest, DiagnoseAccessFailure_002, TestSize.Level1)
     EXPECT_EQ(blocked, "/nonexistent_dir_for_diag002");
     EXPECT_TRUE(diag.find("mode=0") != std::string::npos);
 }
+
+/**
+ * @tc.name: AllocateFileSpace001
+ * @tc.desc: length <= 0 returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, AllocateFileSpace001, TestSize.Level1)
+{
+    std::string filePath = "/data/test/alloc_invalid_len.db";
+    EXPECT_EQ(SqliteUtils::AllocateFileSpace(filePath, 0), false);
+    EXPECT_EQ(SqliteUtils::AllocateFileSpace(filePath, -1), false);
+    std::remove(filePath.c_str());
+}
+
+/**
+ * @tc.name: AllocateFileSpace002
+ * @tc.desc: open failed (non-existent parent dir) returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, AllocateFileSpace002, TestSize.Level1)
+{
+    std::string filePath = "/nonexistent_dir_for_alloc_002/test.db";
+    EXPECT_EQ(SqliteUtils::AllocateFileSpace(filePath, 1024), false);
+}
+
+/**
+ * @tc.name: AllocateFileSpace003
+ * @tc.desc: fallocate success returns true, file size matches
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, AllocateFileSpace003, TestSize.Level1)
+{
+    std::string filePath = "/data/test/alloc_success.db";
+    EXPECT_EQ(SqliteUtils::AllocateFileSpace(filePath, 4096), true);
+    struct stat st = {};
+    EXPECT_EQ(stat(filePath.c_str(), &st), 0);
+    EXPECT_EQ(st.st_size, 4096);
+    std::remove(filePath.c_str());
+}
+
+/**
+ * @tc.name: AllocateFileSpace004
+ * @tc.desc: fallocate failed (oversized length triggers ENOSPC) returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SqliteUtilsTest, AllocateFileSpace004, TestSize.Level1)
+{
+    std::string filePath = "/data/test/alloc_enospc.db";
+    // 1 TB, far beyond test environment disk space
+    int64_t oversized = 1099511627776LL;
+    EXPECT_EQ(SqliteUtils::AllocateFileSpace(filePath, oversized), false);
+    std::remove(filePath.c_str());
+}
