@@ -112,6 +112,7 @@ private:
         static constexpr int32_t MAX_RIGHT = 0x4FFFFFFF;
         static constexpr int32_t MIN_TRANS_ID = 10000;
         bool disable_ = true;
+        bool extending_ = false;
         int max_ = 0;
         int total_ = 0;
         int count_ = 0;
@@ -145,6 +146,11 @@ private:
 
     private:
         int32_t ExtendNode();
+        int32_t ExtendNode(std::unique_lock<std::mutex> &lock);
+        int32_t AcquireNode(std::unique_lock<std::mutex> &lock,
+            std::chrono::milliseconds interval);
+        int32_t AddNode(int32_t errCode, std::shared_ptr<Connection> connection);
+        void WaitForExtension(std::unique_lock<std::mutex> &lock);
         int32_t RelDetails(std::shared_ptr<ConnNode> node);
     };
 
