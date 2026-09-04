@@ -163,6 +163,7 @@ private:
         const std::string &tmpPath);
     int RestoreByCopy(const std::string &newPath, const std::string &backupPath);
     int ReopenRestoredDb();
+    static void CleanRestoreTempFile(const std::string &dbPath);
     bool CheckIntegrity(const std::string &dbPath);
     void DelayClearTrans();
     void ClearCache();

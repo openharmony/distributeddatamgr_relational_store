@@ -59,6 +59,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(
         errCode = E_ERROR;
         return nullptr;
     }
+    CleanRestoreTempFile(config.GetPath());
     std::shared_ptr<Connection> conn;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
         std::tie(errCode, conn) = pool->Init();
@@ -587,6 +588,17 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
     return RestoreMasterDb(newPath, backupPath);
 }
 
+void ConnPool::CleanRestoreTempFile(const std::string &dbPath)
+{
+    std::string tmpPath = dbPath + ".arkData_restore.tmp";
+    if (access(tmpPath.c_str(), F_OK) == 0) {
+        SqliteUtils::DeleteFile(tmpPath);
+        LOG_WARN("clean leftover restore tmp, %{public}s", SqliteUtils::Anonymous(tmpPath).c_str());
+        Reportor::ReportRAGFault("clean leftover restore tmp", "CleanRestoreTempFile",
+            RdbFaultType::BUNDLE_NAME_COMMON, E_DFX_IS_DELETE, E_DFX_IS_DELETE);
+    }
+}
+
 int ConnPool::ReopenRestoredDb()
 {
     int32_t errCode = E_OK;
@@ -678,7 +690,7 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         return errCode;
     }
 
-    std::string tmpPath = newPath + ".restore.tmp";
+    std::string tmpPath = newPath + ".arkData_restore.tmp";
     if (TryRestoreByRename(backupPath, newPath, tmpPath)) {
         return ReopenRestoredDb();
     }

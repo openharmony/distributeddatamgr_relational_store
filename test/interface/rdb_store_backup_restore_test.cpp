@@ -1159,7 +1159,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_027, TestSize.Leve
     EXPECT_EQ(rs->GoToFirstRow(), E_OK);
     rs->Close();
 
-    std::string tmpPath = std::string(DATABASE_NAME) + ".restore.tmp";
+    std::string tmpPath = std::string(DATABASE_NAME) + ".arkData_restore.tmp";
     std::ifstream tmpFile(tmpPath);
     EXPECT_FALSE(tmpFile.good());
     tmpFile.close();
@@ -1204,7 +1204,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_028, TestSize.Leve
     EXPECT_EQ(rs->GoToFirstRow(), E_OK);
     rs->Close();
 
-    std::string tmpPath = std::string(DATABASE_NAME) + ".restore.tmp";
+    std::string tmpPath = std::string(DATABASE_NAME) + ".arkData_restore.tmp";
     std::ifstream tmpFile(tmpPath);
     EXPECT_FALSE(tmpFile.good());
     tmpFile.close();
@@ -1262,7 +1262,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_030, TestSize.Leve
     store = nullptr;
     RdbHelper::ClearCache();
 
-    std::string tmpPath = std::string(DATABASE_NAME) + ".restore.tmp";
+    std::string tmpPath = std::string(DATABASE_NAME) + ".arkData_restore.tmp";
     std::ofstream tmpOut(tmpPath, std::ios::binary);
     ASSERT_TRUE(tmpOut.is_open());
     tmpOut << "leftover";
@@ -1305,7 +1305,7 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_031, TestSize.Leve
     store = nullptr;
     RdbHelper::ClearCache();
 
-    std::string tmpPath = std::string(DATABASE_NAME) + ".restore.tmp";
+    std::string tmpPath = std::string(DATABASE_NAME) + ".arkData_restore.tmp";
     std::ofstream tmpOut(tmpPath, std::ios::binary);
     ASSERT_TRUE(tmpOut.is_open());
     tmpOut << "partial copy interrupted";
@@ -1328,45 +1328,4 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_031, TestSize.Leve
     rs = store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
     EXPECT_EQ(rs->GoToFirstRow(), E_OK);
     rs->Close();
-}
-
-/**
- * @tc.name: Rdb_BackupRestoreTest_032
- * @tc.desc: restore entry cleans leftover tmp when backup corrupt (scheme B)
- * @tc.type: FUNC
- */
-HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_032, TestSize.Level2)
-{
-    int errCode = E_OK;
-    RdbStoreConfig config(DATABASE_NAME);
-    config.SetEncryptStatus(true);
-    RdbInterfaceBackupRestoreTestOpenCallback helper;
-    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    ASSERT_NE(store, nullptr);
-
-    int64_t id;
-    ValuesBucket values;
-    values.PutInt("id", 1);
-    values.PutString("name", std::string("zhangsan"));
-    EXPECT_EQ(store->Insert(id, "test", values), E_OK);
-    EXPECT_EQ(store->Backup(BACKUP_DATABASE_NAME), E_OK);
-
-    std::ofstream fsBackup(BACKUP_DATABASE_NAME, std::ios::binary | std::ios::out);
-    ASSERT_TRUE(fsBackup.is_open());
-    fsBackup.seekp(64);
-    fsBackup.write("corrupt", 7);
-    fsBackup.close();
-
-    std::string tmpPath = std::string(DATABASE_NAME) + ".restore.tmp";
-    std::ofstream tmpOut(tmpPath, std::ios::binary);
-    ASSERT_TRUE(tmpOut.is_open());
-    tmpOut << "leftover";
-    tmpOut.close();
-
-    EXPECT_EQ(store->Restore(BACKUP_DATABASE_NAME), E_SQLITE_CORRUPT);
-
-    std::ifstream tmpFile(tmpPath);
-    EXPECT_FALSE(tmpFile.good());
-    tmpFile.close();
 }
