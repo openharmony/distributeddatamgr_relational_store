@@ -48,6 +48,7 @@ using OHOS::DATABASE_UTILS::Acl;
 namespace {
 constexpr const char *DFX_SUFFIX = ".rdbdfx.json";
 constexpr const char *LOCK_SUFFIX = ".rdbdfx.lock";
+const uint64_t RDB_DFX_LOCK_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_DEFAULT, 0xD001650);
 
 /*
  * RAII single-layer flock. Mirrors SecurityManager::KeyFilesAutoLock
@@ -64,12 +65,13 @@ public:
         if (fd_ < 0) {
             return;
         }
+        fdsan_exchange_owner_tag(fd_, 0, RDB_DFX_LOCK_TAG);
         int rc = -1;
         do {
             rc = flock(fd_, LOCK_EX);
         } while (rc < 0 && errno == EINTR);
         if (rc < 0) {
-            close(fd_);
+            fdsan_close_with_tag(fd_, RDB_DFX_LOCK_TAG);
             fd_ = -1;
         }
     }
@@ -80,7 +82,7 @@ public:
             do {
                 rc = flock(fd_, LOCK_UN);
             } while (rc < 0 && errno == EINTR);
-            close(fd_);
+            fdsan_close_with_tag(fd_, RDB_DFX_LOCK_TAG);
             fd_ = -1;
         }
     }
