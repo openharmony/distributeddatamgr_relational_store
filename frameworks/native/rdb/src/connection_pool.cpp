@@ -642,9 +642,16 @@ bool ConnPool::TryRestoreByRename(const std::string &backupPath, const std::stri
         return false;
     }
     CloseAllConnections();
-    SqliteUtils::DeleteFile(newPath + "-wal");
-    SqliteUtils::DeleteFile(newPath + "-shm");
-    SqliteUtils::DeleteFile(newPath + "-journal");
+    auto dbFiles = Connection::GetDbFiles(config_);
+    auto dbPath = config_.GetPath();
+    auto pos = dbPath.find_last_of('/');
+    std::string dbDir = (pos == std::string::npos) ? "" : dbPath.substr(0, pos + 1);
+    std::string dbBase = (pos == std::string::npos) ? dbPath : dbPath.substr(pos + 1);
+    for (const auto &file : dbFiles) {
+        if (file != dbBase) {
+            SqliteUtils::DeleteFile(dbDir + file);
+        }
+    }
     if (!SqliteUtils::RenameFile(tmpPath, newPath)) {
         LOG_WARN("rename failed, fallback to copy, errno %{public}d, %{public}s", errno,
             SqliteUtils::Anonymous(newPath).c_str());

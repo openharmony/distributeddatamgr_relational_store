@@ -459,7 +459,7 @@ bool SqliteUtils::AllocateFileSpace(const std::string &filePath, int64_t length)
             Anonymous(filePath).c_str());
         return false;
     }
-    int fd = open(filePath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int fd = open(filePath.c_str(), O_RDWR | O_CREAT, 0666);
     if (fd < 0) {
         LOG_WARN("open for fallocate failed errno %{public}d %{public}s", errno, Anonymous(filePath).c_str());
         return false;
