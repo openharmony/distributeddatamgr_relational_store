@@ -15,6 +15,8 @@
 
 #include "fdsan_mock.h"
 
+// fdsan stubs mirror the OHOS musl libc API symbol names; see fdsan_mock.h.
+// NOLINTBEGIN
 __attribute__((visibility("default"))) uint64_t fdsan_create_owner_tag(fdsan_owner_type type, uint64_t tag)
 {
     (void)type;
@@ -22,12 +24,12 @@ __attribute__((visibility("default"))) uint64_t fdsan_create_owner_tag(fdsan_own
     return 0;
 }
 
-__attribute__((visibility("default"))) void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag,
-    uint64_t new_tag)
+__attribute__((visibility("default"))) void fdsan_exchange_owner_tag(int fd, uint64_t expectedTag,
+    uint64_t newTag)
 {
     (void)fd;
-    (void)expected_tag;
-    (void)new_tag;
+    (void)expectedTag;
+    (void)newTag;
 }
 
 __attribute__((visibility("default"))) int fdsan_close_with_tag(int fd, uint64_t tag)
@@ -36,3 +38,4 @@ __attribute__((visibility("default"))) int fdsan_close_with_tag(int fd, uint64_t
     (void)tag;
     return 0;
 }
+// NOLINTEND
