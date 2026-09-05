@@ -22,6 +22,7 @@
 #include <iterator>
 #include <mutex>
 #include <sstream>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <vector>
 
@@ -49,6 +50,20 @@ using PerfStat = DistributedRdb::PerfStat;
 using Reportor = RdbFaultHiViewReporter;
 constexpr int32_t TRANSACTION_TIMEOUT(2);
 constexpr int64_t WAIT_TIME = 2;
+
+TmpFileGuard::TmpFileGuard(const std::string &path) : path_(path) {}
+
+TmpFileGuard::~TmpFileGuard()
+{
+    if (!released_) {
+        SqliteUtils::DeleteFile(path_);
+    }
+}
+
+void TmpFileGuard::Release()
+{
+    released_ = true;
+}
 
 std::shared_ptr<ConnPool> ConnPool::Create(
     std::shared_ptr<RdbStoreConfig> configHolder, const RdbStoreConfig &config, int &errCode)
@@ -623,41 +638,55 @@ int ConnPool::ReopenRestoredDb()
     return errCode;
 }
 
-bool ConnPool::TryRestoreByRename(const std::string &backupPath, const std::string &newPath,
-    const std::string &tmpPath)
+bool ConnPool::TryRestoreByRename(const std::string &backupPath, const std::string &newPath)
 {
+    std::string tmpPath = newPath + ".arkData_restore.tmp";
     SqliteUtils::DeleteFile(tmpPath);
     auto backupSize = SqliteUtils::GetFileSize(backupPath);
     if (backupSize <= 0) {
         LOG_WARN("invalid backup size, fallback to copy, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
         return false;
     }
+    TmpFileGuard guard(tmpPath);
     if (!SqliteUtils::AllocateFileSpace(tmpPath, backupSize)) {
-        LOG_WARN("fallocate failed, fallback to copy, errno %{public}d, %{public}s", errno,
-            SqliteUtils::Anonymous(tmpPath).c_str());
         return false;
     }
     if (!SqliteUtils::CopyFile(backupPath, tmpPath)) {
-        LOG_WARN("copy to tmp failed, fallback to copy, %{public}s", SqliteUtils::Anonymous(tmpPath).c_str());
         return false;
     }
+    // Checkpoint WAL into the main db file before deleting WAL, so that deleting WAL won't lose data.
+    // Checkpoint failure does not block restore: the backup will replace the db anyway.
+    auto conn = AcquireConnection(false);
+    int32_t errCode = (conn == nullptr) ? E_ERROR : conn->TryCheckPoint(true);
+    if (errCode != E_OK) {
+        LOG_WARN("checkpoint failed, errCode %{public}d, continue restore, %{public}s", errCode,
+            SqliteUtils::Anonymous(newPath).c_str());
+    }
+    conn = nullptr;
     CloseAllConnections();
-    auto dbFiles = Connection::GetDbFiles(config_);
-    auto dbPath = config_.GetPath();
-    auto pos = dbPath.find_last_of('/');
-    std::string dbDir = (pos == std::string::npos) ? "" : dbPath.substr(0, pos + 1);
-    std::string dbBase = (pos == std::string::npos) ? dbPath : dbPath.substr(pos + 1);
-    for (const auto &file : dbFiles) {
-        if (file != dbBase) {
-            SqliteUtils::DeleteFile(dbDir + file);
-        }
+    SqliteUtils::DeleteFile(newPath + "-shm");
+    SqliteUtils::DeleteFile(newPath + "-wal");
+    struct stat st;
+    mode_t oldMode = 0660;
+    if (stat(newPath.c_str(), &st) == 0) {
+        oldMode = st.st_mode & 0777;
+    } else {
+        LOG_WARN("stat db failed, use default mode, errno %{public}d, %{public}s", errno,
+            SqliteUtils::Anonymous(newPath).c_str());
     }
     if (!SqliteUtils::RenameFile(tmpPath, newPath)) {
-        LOG_WARN("rename failed, fallback to copy, errno %{public}d, %{public}s", errno,
-            SqliteUtils::Anonymous(newPath).c_str());
         return false;
     }
-    SqliteUtils::DeleteFile(SqliteUtils::GetSlavePath(newPath));
+    Connection::DeleteAuxFiles(config_);
+    auto slavePath = SqliteUtils::GetSlavePath(config_.GetPath());
+    if (slavePath != backupPath) {
+        Connection::Delete(slavePath);
+    }
+    if (chmod(newPath.c_str(), oldMode) != 0) {
+        LOG_WARN("chmod after rename failed, errno %{public}d, %{public}s", errno,
+            SqliteUtils::Anonymous(newPath).c_str());
+    }
+    guard.Release();
     return true;
 }
 
@@ -697,11 +726,9 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         return errCode;
     }
 
-    std::string tmpPath = newPath + ".arkData_restore.tmp";
-    if (TryRestoreByRename(backupPath, newPath, tmpPath)) {
+    if (TryRestoreByRename(backupPath, newPath)) {
         return ReopenRestoredDb();
     }
-    SqliteUtils::DeleteFile(tmpPath);
     return RestoreByCopy(newPath, backupPath);
 }
 
