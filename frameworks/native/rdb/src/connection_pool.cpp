@@ -648,7 +648,9 @@ bool ConnPool::TryRestoreByRename(const std::string &backupPath, const std::stri
         return false;
     }
     TmpFileGuard guard(tmpPath);
-    if (!SqliteUtils::AllocateFileSpace(tmpPath, backupSize)) {
+    struct stat st;
+    mode_t oldMode = (stat(newPath.c_str(), &st) == 0) ? (st.st_mode & 0777) : 0660;
+    if (!SqliteUtils::AllocateFileSpace(tmpPath, backupSize, oldMode)) {
         return false;
     }
     if (!SqliteUtils::CopyFile(backupPath, tmpPath)) {
@@ -666,14 +668,6 @@ bool ConnPool::TryRestoreByRename(const std::string &backupPath, const std::stri
     CloseAllConnections();
     SqliteUtils::DeleteFile(newPath + "-shm");
     SqliteUtils::DeleteFile(newPath + "-wal");
-    struct stat st;
-    mode_t oldMode = 0660;
-    if (stat(newPath.c_str(), &st) == 0) {
-        oldMode = st.st_mode & 0777;
-    } else {
-        LOG_WARN("stat db failed, use default mode, errno %{public}d, %{public}s", errno,
-            SqliteUtils::Anonymous(newPath).c_str());
-    }
     if (!SqliteUtils::RenameFile(tmpPath, newPath)) {
         return false;
     }
@@ -681,10 +675,6 @@ bool ConnPool::TryRestoreByRename(const std::string &backupPath, const std::stri
     auto slavePath = SqliteUtils::GetSlavePath(config_.GetPath());
     if (slavePath != backupPath) {
         Connection::Delete(slavePath);
-    }
-    if (chmod(newPath.c_str(), oldMode) != 0) {
-        LOG_WARN("chmod after rename failed, errno %{public}d, %{public}s", errno,
-            SqliteUtils::Anonymous(newPath).c_str());
     }
     guard.Release();
     return true;

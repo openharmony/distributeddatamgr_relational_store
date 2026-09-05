@@ -452,14 +452,14 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
     return true;
 }
 
-bool SqliteUtils::AllocateFileSpace(const std::string &filePath, int64_t length)
+bool SqliteUtils::AllocateFileSpace(const std::string &filePath, int64_t length, mode_t mode)
 {
     if (length <= 0) {
         LOG_WARN("invalid length %{public}lld, %{public}s", static_cast<long long>(length),
             Anonymous(filePath).c_str());
         return false;
     }
-    int fd = open(filePath.c_str(), O_RDWR | O_CREAT, 0666);
+    int fd = open(filePath.c_str(), O_RDWR | O_CREAT, mode);
     if (fd < 0) {
         LOG_WARN("open for fallocate failed errno %{public}d %{public}s", errno, Anonymous(filePath).c_str());
         return false;

@@ -71,7 +71,7 @@ public:
     static bool DeleteFile(const std::string &filePath);
     static bool RenameFile(const std::string &srcFile, const std::string &destFile);
     static bool CopyFile(const std::string &srcFile, const std::string &destFile);
-    static bool AllocateFileSpace(const std::string &filePath, int64_t length);
+    static bool AllocateFileSpace(const std::string &filePath, int64_t length, mode_t mode = 0666);
     static size_t DeleteFolder(const std::string &folderPath, bool removeSelf = true);
     static size_t GetFileCount(const std::string &folderPath);
     API_EXPORT static std::string Anonymous(const std::string &srcFile);
