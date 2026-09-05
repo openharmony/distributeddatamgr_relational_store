@@ -55,14 +55,9 @@ TmpFileGuard::TmpFileGuard(const std::string &path) : path_(path) {}
 
 TmpFileGuard::~TmpFileGuard()
 {
-    if (!released_) {
+    if (access(path_.c_str(), F_OK) == 0) {
         SqliteUtils::DeleteFile(path_);
     }
-}
-
-void TmpFileGuard::Release()
-{
-    released_ = true;
 }
 
 std::shared_ptr<ConnPool> ConnPool::Create(
@@ -666,17 +661,9 @@ bool ConnPool::TryRestoreByRename(const std::string &backupPath, const std::stri
     }
     conn = nullptr;
     CloseAllConnections();
-    SqliteUtils::DeleteFile(newPath + "-shm");
-    SqliteUtils::DeleteFile(newPath + "-wal");
-    if (!SqliteUtils::RenameFile(tmpPath, newPath)) {
+    if (Connection::Rename(config_, tmpPath, backupPath) != E_OK) {
         return false;
     }
-    Connection::DeleteAuxFiles(config_);
-    auto slavePath = SqliteUtils::GetSlavePath(config_.GetPath());
-    if (slavePath != backupPath) {
-        Connection::Delete(slavePath);
-    }
-    guard.Release();
     return true;
 }
 

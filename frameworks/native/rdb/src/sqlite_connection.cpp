@@ -88,8 +88,8 @@ const int32_t SqliteConnection::regRepairer_ = Connection::RegisterRepairer(DB_S
 __attribute__((used))
 const int32_t SqliteConnection::regDeleter_ = Connection::RegisterDeleter(DB_SQLITE, SqliteConnection::Delete);
 __attribute__((used))
-const int32_t SqliteConnection::regAuxDeleter_ =
-    Connection::RegisterAuxDeleter(DB_SQLITE, SqliteConnection::DeleteAuxFiles);
+const int32_t SqliteConnection::regRenamer_ =
+    Connection::RegisterRenamer(DB_SQLITE, SqliteConnection::Rename);
 __attribute__((used))
 const int32_t SqliteConnection::regCollector_ = Connection::RegisterCollector(DB_SQLITE, SqliteConnection::Collect);
 __attribute__((used)) const int32_t SqliteConnection::regGetDbFileser_ =
@@ -125,25 +125,36 @@ int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
     return E_OK;
 }
 
-int32_t SqliteConnection::DeleteAuxFiles(const RdbStoreConfig &config)
+int32_t SqliteConnection::Rename(const RdbStoreConfig &config, const std::string &tmpPath,
+    const std::string &backupPath)
 {
     auto path = config.GetPath();
+    // 1. delete aux files (not db) before rename
+    Delete(path, true);
+    // 2. rename tmp to db
+    if (!SqliteUtils::RenameFile(tmpPath, path)) {
+        return E_ERROR;
+    }
+    // 3. delete binlog after rename success (avoid losing binlog if interrupted before rename)
     auto binlogFolder = GetBinlogFolderPath(path);
     size_t num = SqliteUtils::DeleteFolder(binlogFolder);
     if (num > 0 && IsSupportBinlog(config)) {
         LOG_INFO("removed %{public}zu binlog related items", num);
     }
-    for (const auto &suffix : FILE_SUFFIXES) {
-        if (suffix.suffix_[0] != '\0') {
-            SqliteUtils::DeleteFile(path + suffix.suffix_);
-        }
+    // 4. delete slave (protect backupPath)
+    auto slavePath = SqliteUtils::GetSlavePath(path);
+    if (slavePath != backupPath) {
+        Delete(slavePath);
     }
     return E_OK;
 }
 
-int32_t SqliteConnection::Delete(const std::string &path)
+int32_t SqliteConnection::Delete(const std::string &path, bool excludeDb)
 {
     for (const auto &suffix : FILE_SUFFIXES) {
+        if (excludeDb && suffix.suffix_[0] == '\0') {
+            continue;
+        }
         SqliteUtils::DeleteFile(path + suffix.suffix_);
     }
     return E_OK;

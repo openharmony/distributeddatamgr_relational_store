@@ -41,11 +41,9 @@ class TmpFileGuard {
 public:
     explicit TmpFileGuard(const std::string &path);
     ~TmpFileGuard();
-    void Release();
 
 private:
     std::string path_;
-    bool released_ = false;
 };
 class ConnectionPool : public std::enable_shared_from_this<ConnectionPool> {
 public:
