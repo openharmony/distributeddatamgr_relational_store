@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTEDDATAMGR_RELATIONAL_STORE_MOCK_H
-#define DISTRIBUTEDDATAMGR_RELATIONAL_STORE_MOCK_H
+#include "fdsan_mock.h"
 
-#include "refbase.h"
-
-namespace OHOS {
-namespace NativeRdb {
-__attribute__((visibility("default"))) int gettid();
+__attribute__((visibility("default"))) uint64_t fdsan_create_owner_tag(fdsan_owner_type type, uint64_t tag)
+{
+    (void)type;
+    (void)tag;
+    return 0;
 }
-} // namespace OHOS
 
-#endif //DISTRIBUTEDDATAMGR_RELATIONAL_STORE_MOCK_H
+__attribute__((visibility("default"))) void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag,
+    uint64_t new_tag)
+{
+    (void)fd;
+    (void)expected_tag;
+    (void)new_tag;
+}
+
+__attribute__((visibility("default"))) int fdsan_close_with_tag(int fd, uint64_t tag)
+{
+    (void)fd;
+    (void)tag;
+    return 0;
+}
