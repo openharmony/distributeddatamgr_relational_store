@@ -32,20 +32,12 @@ typedef enum {
     FDSAN_OWNER_TYPE_ZIP_ARCHIVE = 4,
 } fdsan_owner_type;
 
-typedef enum {
-    FDSAN_ERROR_LEVEL_DISABLED = 0,
-    FDSAN_ERROR_LEVEL_WARN_ONCE = 1,
-    FDSAN_ERROR_LEVEL_WARN_ALWAYS = 2,
-    FDSAN_ERROR_LEVEL_FATAL = 3,
-} fdsan_error_level;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 uint64_t fdsan_create_owner_tag(fdsan_owner_type type, uint64_t tag);
 void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t new_tag);
 int fdsan_close_with_tag(int fd, uint64_t tag);
-void fdsan_set_error_level(fdsan_error_level new_level);
 #ifdef __cplusplus
 }
 #endif

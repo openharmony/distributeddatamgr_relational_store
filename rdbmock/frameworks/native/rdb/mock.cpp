@@ -172,7 +172,3 @@ API_EXPORT int fdsan_close_with_tag(int fd, uint64_t tag)
     (void)tag;
     return close(fd);
 }
-API_EXPORT void fdsan_set_error_level(fdsan_error_level new_level)
-{
-    (void)new_level;
-}
