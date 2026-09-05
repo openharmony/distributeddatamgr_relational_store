@@ -154,3 +154,25 @@ API_EXPORT void Clean(bool isOpenSslClean)
     (void)isOpenSslClean;
     return;
 }
+
+API_EXPORT uint64_t fdsan_create_owner_tag(fdsan_owner_type type, uint64_t tag)
+{
+    (void)type;
+    (void)tag;
+    return 0;
+}
+API_EXPORT void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t new_tag)
+{
+    (void)fd;
+    (void)expected_tag;
+    (void)new_tag;
+}
+API_EXPORT int fdsan_close_with_tag(int fd, uint64_t tag)
+{
+    (void)tag;
+    return close(fd);
+}
+API_EXPORT void fdsan_set_error_level(fdsan_error_level new_level)
+{
+    (void)new_level;
+}
