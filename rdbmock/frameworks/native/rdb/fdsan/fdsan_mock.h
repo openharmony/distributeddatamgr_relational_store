@@ -35,7 +35,7 @@ extern "C" {
 #endif
 
 uint64_t fdsan_create_owner_tag(fdsan_owner_type type, uint64_t tag);
-void fdsan_exchange_owner_tag(int fd, uint64_t expectedTag, uint64_t newTag);
+void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t new_tag);
 int fdsan_close_with_tag(int fd, uint64_t tag);
 
 #ifdef __cplusplus

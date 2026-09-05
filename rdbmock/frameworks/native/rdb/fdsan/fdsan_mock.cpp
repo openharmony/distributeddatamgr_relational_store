@@ -14,25 +14,25 @@
  */
 
 #include "fdsan_mock.h"
+#include "rdb_visibility.h"
 
 // fdsan stubs mirror the OHOS musl libc API symbol names; see fdsan_mock.h.
 // NOLINTBEGIN
-__attribute__((visibility("default"))) uint64_t fdsan_create_owner_tag(fdsan_owner_type type, uint64_t tag)
+API_EXPORT uint64_t fdsan_create_owner_tag(fdsan_owner_type type, uint64_t tag)
 {
     (void)type;
     (void)tag;
     return 0;
 }
 
-__attribute__((visibility("default"))) void fdsan_exchange_owner_tag(int fd, uint64_t expectedTag,
-    uint64_t newTag)
+API_EXPORT void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t new_tag)
 {
     (void)fd;
-    (void)expectedTag;
-    (void)newTag;
+    (void)expected_tag;
+    (void)new_tag;
 }
 
-__attribute__((visibility("default"))) int fdsan_close_with_tag(int fd, uint64_t tag)
+API_EXPORT int fdsan_close_with_tag(int fd, uint64_t tag)
 {
     (void)fd;
     (void)tag;
