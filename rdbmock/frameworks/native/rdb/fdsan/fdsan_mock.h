@@ -18,10 +18,6 @@
 
 #include <cstdint>
 
-// The fdsan declarations mirror the OHOS musl libc API
-// (third_party/musl/.../include/stdio.h); the snake_case symbol names must
-// stay identical to the libc declarations, so the naming rule is silenced.
-// NOLINTBEGIN
 typedef enum {
     FDSAN_OWNER_TYPE_DEFAULT = 0,
     FDSAN_OWNER_TYPE_FILE = 1,
@@ -41,6 +37,5 @@ int fdsan_close_with_tag(int fd, uint64_t tag);
 #ifdef __cplusplus
 }
 #endif
-// NOLINTEND
 
 #endif // DISTRIBUTEDDATAMGR_RELATIONAL_STORE_FDSAN_MOCK_H

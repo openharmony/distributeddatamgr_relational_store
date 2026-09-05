@@ -16,8 +16,6 @@
 #include "fdsan_mock.h"
 #include "rdb_visibility.h"
 
-// fdsan stubs mirror the OHOS musl libc API symbol names; see fdsan_mock.h.
-// NOLINTBEGIN
 API_EXPORT uint64_t fdsan_create_owner_tag(fdsan_owner_type type, uint64_t tag)
 {
     (void)type;
@@ -38,4 +36,3 @@ API_EXPORT int fdsan_close_with_tag(int fd, uint64_t tag)
     (void)tag;
     return 0;
 }
-// NOLINTEND
