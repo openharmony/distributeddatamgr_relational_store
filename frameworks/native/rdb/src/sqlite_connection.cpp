@@ -129,19 +129,17 @@ int32_t SqliteConnection::Rename(const RdbStoreConfig &config, const std::string
     const std::string &backupPath)
 {
     auto path = config.GetPath();
-    // 1. delete aux files (not db) before rename
+    // delete aux files (not db) before rename
     Delete(path, true);
-    // 2. rename tmp to db
     if (!SqliteUtils::RenameFile(tmpPath, path)) {
         return E_ERROR;
     }
-    // 3. delete binlog after rename success (avoid losing binlog if interrupted before rename)
+    // delete binlog after rename success (avoid losing binlog if interrupted before rename)
     auto binlogFolder = GetBinlogFolderPath(path);
     size_t num = SqliteUtils::DeleteFolder(binlogFolder);
     if (num > 0 && IsSupportBinlog(config)) {
         LOG_INFO("removed %{public}zu binlog related items", num);
     }
-    // 4. delete slave (protect backupPath)
     auto slavePath = SqliteUtils::GetSlavePath(path);
     if (slavePath != backupPath) {
         Delete(slavePath);
