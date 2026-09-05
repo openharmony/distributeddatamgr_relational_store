@@ -227,7 +227,7 @@ bool RdbSecurityManager::SaveSecretKeyToDisk(const std::string &keyPath, const R
         std::lock_guard<std::mutex> lock(mutex_);
         auto fd = open(keyPath.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (fd >= 0) {
-            uint64_t tag = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_DEFAULT, 0xD001650);
+            uint64_t tag = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650);
             fdsan_exchange_owner_tag(fd, 0, tag);
             fdsan_close_with_tag(fd, tag);
             ret = SaveBufferToFile(keyPath, payload);
@@ -770,7 +770,7 @@ RdbSecurityManager::KeyFiles::~KeyFiles()
     if (lockFd_ < 0) {
         return;
     }
-    fdsan_close_with_tag(lockFd_, fdsan_create_owner_tag(FDSAN_OWNER_TYPE_DEFAULT, 0xD001650));
+    fdsan_close_with_tag(lockFd_, fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650));
     lockFd_ = -1;
 }
 
@@ -828,7 +828,7 @@ int32_t RdbSecurityManager::KeyFiles::Unlock()
 int32_t RdbSecurityManager::KeyFiles::DestroyLock()
 {
     if (lockFd_ >= 0) {
-        fdsan_close_with_tag(lockFd_, fdsan_create_owner_tag(FDSAN_OWNER_TYPE_DEFAULT, 0xD001650));
+        fdsan_close_with_tag(lockFd_, fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650));
         lockFd_ = -1;
     }
     SqliteUtils::DeleteFile(lock_);
@@ -845,7 +845,7 @@ bool RdbSecurityManager::KeyFiles::InitLockPath()
         lockFd_ = open(lock_.c_str(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (lockFd_ >= 0) {
             fdsan_exchange_owner_tag(lockFd_, 0,
-                fdsan_create_owner_tag(FDSAN_OWNER_TYPE_DEFAULT, 0xD001650));
+                fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650));
         }
     }
     if (lockFd_ < 0) {

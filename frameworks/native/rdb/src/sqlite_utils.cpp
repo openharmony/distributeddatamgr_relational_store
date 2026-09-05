@@ -921,7 +921,7 @@ void SqliteUtils::WriteSqlToFile(const std::string &comparePath, const std::stri
         LOG_ERROR("open file failed errno %{public}d %{public}s", errno, Anonymous(comparePath).c_str());
         return;
     }
-    uint64_t tag = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_DEFAULT, 0xD001650);
+    uint64_t tag = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650);
     fdsan_exchange_owner_tag(fd, 0, tag);
     if (flock(fd, LOCK_EX) == -1) {
         LOG_ERROR("Failed to lock file errno %{public}d %{public}s", errno, Anonymous(comparePath).c_str());

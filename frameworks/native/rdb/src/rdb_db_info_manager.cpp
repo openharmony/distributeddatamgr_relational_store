@@ -48,7 +48,7 @@ using OHOS::DATABASE_UTILS::Acl;
 namespace {
 constexpr const char *DFX_SUFFIX = ".rdbdfx.json";
 constexpr const char *LOCK_SUFFIX = ".rdbdfx.lock";
-const uint64_t RDB_DFX_LOCK_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_DEFAULT, 0xD001650);
+const uint64_t RDB_DFX_LOCK_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650);
 
 /*
  * RAII single-layer flock. Mirrors SecurityManager::KeyFilesAutoLock
