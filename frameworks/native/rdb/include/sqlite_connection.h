@@ -43,7 +43,7 @@ class SqliteConnection : public Connection {
 public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
     static int32_t Delete(const RdbStoreConfig &config);
-    static int32_t Delete(const std::string &path, bool excludeDb = false);
+    static int32_t Delete(const std::string &path);
     static int32_t Rename(const RdbStoreConfig &config, const std::string &tmpPath,
         const std::string &backupPath);
     static int32_t Repair(const RdbStoreConfig &config);

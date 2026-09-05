@@ -661,10 +661,7 @@ bool ConnPool::TryRestoreByRename(const std::string &backupPath, const std::stri
     }
     conn = nullptr;
     CloseAllConnections();
-    if (Connection::Rename(config_, tmpPath, backupPath) != E_OK) {
-        return false;
-    }
-    return true;
+    return Connection::Rename(config_, tmpPath, backupPath) == E_OK;
 }
 
 int ConnPool::RestoreByCopy(const std::string &newPath, const std::string &backupPath)
@@ -681,24 +678,24 @@ int ConnPool::RestoreByCopy(const std::string &newPath, const std::string &backu
     return copyRet ? errCode : E_ERROR;
 }
 
-int ConnPool::CheckBackup(const std::string &backupPath)
+int ConnPool::ValidateAndPruneDb(const std::string &sourcePath)
 {
-    if (!CheckIntegrity(backupPath)) {
-        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
+    if (!CheckIntegrity(sourcePath)) {
+        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(sourcePath).c_str());
         return E_SQLITE_CORRUPT;
     }
-    if (SqliteUtils::GetFileSize(backupPath + "-wal") != 0) {
-        LOG_ERROR("Wal file exist, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
+    if (SqliteUtils::GetFileSize(sourcePath + "-wal") != 0) {
+        LOG_ERROR("Wal file exist, %{public}s", SqliteUtils::Anonymous(sourcePath).c_str());
         return E_SQLITE_CORRUPT;
     }
-    SqliteUtils::DeleteFile(backupPath + "-shm");
-    SqliteUtils::DeleteFile(backupPath + "-wal");
+    SqliteUtils::DeleteFile(sourcePath + "-shm");
+    SqliteUtils::DeleteFile(sourcePath + "-wal");
     return E_OK;
 }
 
 int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath)
 {
-    int errCode = CheckBackup(backupPath);
+    int errCode = ValidateAndPruneDb(backupPath);
     if (errCode != E_OK) {
         return errCode;
     }

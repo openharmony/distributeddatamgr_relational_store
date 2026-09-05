@@ -166,7 +166,7 @@ private:
     int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath,
         std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore);
     int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
-    int CheckBackup(const std::string &backupPath);
+    int ValidateAndPruneDb(const std::string &sourcePath);
     bool TryRestoreByRename(const std::string &backupPath, const std::string &newPath);
     int RestoreByCopy(const std::string &newPath, const std::string &backupPath);
     int ReopenRestoredDb();

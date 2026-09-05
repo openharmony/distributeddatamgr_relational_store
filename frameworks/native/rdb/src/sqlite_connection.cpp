@@ -130,7 +130,11 @@ int32_t SqliteConnection::Rename(const RdbStoreConfig &config, const std::string
 {
     auto path = config.GetPath();
     // delete aux files (not db) before rename
-    Delete(path, true);
+    for (const auto &suffix : FILE_SUFFIXES) {
+        if (suffix.suffix_[0] != '\0') {
+            SqliteUtils::DeleteFile(path + suffix.suffix_);
+        }
+    }
     if (!SqliteUtils::RenameFile(tmpPath, path)) {
         return E_ERROR;
     }
@@ -147,12 +151,9 @@ int32_t SqliteConnection::Rename(const RdbStoreConfig &config, const std::string
     return E_OK;
 }
 
-int32_t SqliteConnection::Delete(const std::string &path, bool excludeDb)
+int32_t SqliteConnection::Delete(const std::string &path)
 {
     for (const auto &suffix : FILE_SUFFIXES) {
-        if (excludeDb && suffix.suffix_[0] == '\0') {
-            continue;
-        }
         SqliteUtils::DeleteFile(path + suffix.suffix_);
     }
     return E_OK;
