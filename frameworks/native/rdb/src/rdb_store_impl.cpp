@@ -186,7 +186,7 @@ int RdbStoreImpl::InnerOpen()
         return E_OK;
     }
     if (config_.IsSearchable()) {
-        RegisterMatrix(config_, syncerParam_);
+        RegisterMatrix(config_, syncerParam_, 0, GetPool());
     }
 
     int errCode = RegisterDataChangeCallback();
@@ -245,6 +245,10 @@ void RdbStoreImpl::Close()
 int RdbStoreImpl::RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> pool,
     const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason)
 {
+    if (statusInterrupted_ && slaveStatus_ != nullptr) {
+        *slaveStatus_ = statusBeforeInterrupt_;
+        statusInterrupted_ = false;
+    }
     if (pool != nullptr) {
         pool->Dump(true, reason);
         pool->Dump(false, reason);
@@ -260,7 +264,13 @@ int RdbStoreImpl::RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> pool,
 void RdbStoreImpl::InterruptHolders(const std::shared_ptr<ConnectionPool> &pool)
 {
     if (pool != nullptr) {
-        pool->Interrupt(ConnectionPool::READ | ConnectionPool::WRITE | ConnectionPool::TRANS);
+        pool->Interrupt(ConnectionPool::READ | ConnectionPool::WRITE | ConnectionPool::TRANS
+            | ConnectionPool::TEMP);
+    }
+    if (slaveStatus_ != nullptr) {
+        statusBeforeInterrupt_ = *slaveStatus_;
+        statusInterrupted_ = true;
+        *slaveStatus_ = SlaveStatus::DB_CLOSING;
     }
     std::list<std::weak_ptr<Transaction>> transactions;
     {
@@ -452,7 +462,8 @@ int RdbStoreImpl::WaitAfterOpen()
     return E_OK;
 }
 
-void RdbStoreImpl::RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry)
+void RdbStoreImpl::RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry,
+    std::weak_ptr<ConnectionPool> connPool)
 {
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (errCode != E_OK || service == nullptr) {
@@ -460,12 +471,12 @@ void RdbStoreImpl::RegisterMatrix(const RdbStoreConfig &config, const RdbParam &
             LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", errCode,
                 SqliteUtils::Anonymous(param.storeName_).c_str());
         }
-        auto pool = TaskExecutor::GetInstance().GetExecutor();
-        if (errCode == E_SERVICE_NOT_FOUND && pool != nullptr && retry < MAX_RETRY_TIMES) {
+        auto executor = TaskExecutor::GetInstance().GetExecutor();
+        if (errCode == E_SERVICE_NOT_FOUND && executor != nullptr && retry < MAX_RETRY_TIMES) {
             retry++;
             LOG_INFO("RegisterMatrix set retry schedule times: %{public}d", retry);
-            pool->Schedule(std::chrono::seconds(RETRY_INTERVAL), [config, param, retry]() {
-                RegisterMatrix(config, param, retry);
+            executor->Schedule(std::chrono::seconds(RETRY_INTERVAL), [config, param, connPool, retry]() {
+                RegisterMatrix(config, param, retry, connPool);
             });
         }
         return;
@@ -478,10 +489,15 @@ void RdbStoreImpl::RegisterMatrix(const RdbStoreConfig &config, const RdbParam &
         return;
     }
 
-    auto [ret, conn] = Connection::Create(config, false);
-    if (ret != E_OK || conn == nullptr) {
+    std::shared_ptr<Connection> conn;
+    if (auto realPool = connPool.lock()) {
+        std::tie(errCode, conn) = realPool->CreateConn(false, config);
+    } else {
+        std::tie(errCode, conn) = Connection::Create(config, false);
+    }
+    if (errCode != E_OK || conn == nullptr) {
         LOG_ERROR("Create connection failed when register matrix, ret: %{public}d, storeName: %{public}s.",
-            ret, SqliteUtils::Anonymous(param.storeName_).c_str());
+            errCode, SqliteUtils::Anonymous(param.storeName_).c_str());
         return;
     }
 
@@ -2383,7 +2399,7 @@ int RdbStoreImpl::InnerBackup(
     auto config = config_;
     config.SetHaMode(HAMode::SINGLE);
     config.SetCreateNecessary(false);
-    auto [result, conn] = CreateWritableConn(config);
+    auto [result, conn] = CreateWritableConn(config, GetPool());
     if (result != E_OK) {
         return result;
     }
@@ -3185,11 +3201,11 @@ int RdbStoreImpl::StartAsyncBackupIfNeed(std::shared_ptr<SlaveStatus> slaveStatu
     }
     auto config = config_;
     config.SetCreateNecessary(false);
-    taskPool->Execute([config, slaveStatus] {
+    taskPool->Execute([config, slaveStatus, connPool = std::weak_ptr<ConnectionPool>(GetPool())] {
         if (*slaveStatus == SlaveStatus::DB_CLOSING) {
             return;
         }
-        auto [result, conn] = CreateWritableConn(config);
+        auto [result, conn] = CreateWritableConn(config, connPool);
         if (result != E_OK || conn == nullptr) {
             return;
         }
@@ -3297,8 +3313,12 @@ int RdbStoreImpl::ForceRestore(const std::string &backupPath, const std::vector<
     return RestoreCommon(backupPath, newKey, true);
 }
 
-std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::CreateWritableConn(const RdbStoreConfig &config)
+std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::CreateWritableConn(
+    const RdbStoreConfig &config, const std::weak_ptr<ConnectionPool> &pool)
 {
+    if (auto realPool = pool.lock()) {
+        return realPool->CreateConn(true, config);
+    }
     auto [result, conn] = Connection::Create(config, true);
     if (result != E_OK || conn == nullptr) {
         LOG_ERROR("create connection failed, err:%{public}d", result);
@@ -3441,7 +3461,8 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     if (errCode != E_OK) {
         return errCode;
     }
-    conn->RegisterReplayCallback(config_, std::bind(&RdbStoreImpl::ReplayCallbackImpl, config_));
+    conn->RegisterReplayCallback(config_,
+        std::bind(&RdbStoreImpl::ReplayCallbackImpl, config_, std::weak_ptr<ConnectionPool>(GetPool())));
     auto strategy = conn->GenerateExchangeStrategy(slaveStatus_, false);
     if (strategy != ExchangeStrategy::NOT_HANDLE) {
         LOG_WARN("exchange st:%{public}d, %{public}s,", strategy, SqliteUtils::Anonymous(config_.GetName()).c_str());
@@ -3721,7 +3742,7 @@ int RdbStoreImpl::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc 
     return conn->RegisterAlgo(clstAlgoName, func);
 }
 
-void RdbStoreImpl::ReplayCallbackImpl(const RdbStoreConfig &config)
+void RdbStoreImpl::ReplayCallbackImpl(const RdbStoreConfig &config, std::weak_ptr<ConnectionPool> connPool)
 {
     auto lockFile = config.GetPath() + SqliteUtils::BINLOG_LOCK_FILE_SUFFIX;
     if (access(lockFile.c_str(), F_OK) != 0) {
@@ -3745,10 +3766,10 @@ void RdbStoreImpl::ReplayCallbackImpl(const RdbStoreConfig &config)
         readLock->Unlock();
         return;
     }
-    auto taskId = taskPool->Execute([cfg = config, readLock]() mutable {
+    auto taskId = taskPool->Execute([cfg = config, readLock, connPool]() mutable {
         LOG_INFO("task start: binlog replay for %{public}s", SqliteUtils::Anonymous(cfg.GetPath()).c_str());
         cfg.SetCreateNecessary(false);
-        auto [result, conn] = CreateWritableConn(cfg);
+        auto [result, conn] = CreateWritableConn(cfg, connPool);
         if (result != E_OK || conn == nullptr) {
             LOG_ERROR("task failed: binlog replay");
             readLock->Unlock();
