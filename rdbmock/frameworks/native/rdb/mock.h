@@ -17,7 +17,6 @@
 #define DISTRIBUTEDDATAMGR_RELATIONAL_STORE_MOCK_H
 
 #include "refbase.h"
-#include "fdsan/fdsan_mock.h"
 
 namespace OHOS {
 namespace NativeRdb {
