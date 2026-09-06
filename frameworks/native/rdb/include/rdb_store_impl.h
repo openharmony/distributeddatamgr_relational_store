@@ -229,7 +229,8 @@ private:
     static void AfterOpen(const RdbParam &param, int32_t retry = 0,
         const std::shared_ptr<std::promise<void>> &promise = nullptr);
     void AfterOpenAsync(const RdbParam &param);
-    static void RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry = 0);
+    static void RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry = 0,
+        std::weak_ptr<ConnectionPool> connPool = {});
     int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
     int32_t CreatePool(bool &created);
     static void RegisterDataChangeCallback(
@@ -267,7 +268,8 @@ private:
     int RegisterDataChangeCallback();
     void InitDelayNotifier();
     void TryDump(int32_t code, const char *dumpHeader);
-    static std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn(const RdbStoreConfig &config);
+    static std::pair<int32_t, std::shared_ptr<Connection>> CreateWritableConn(const RdbStoreConfig &config,
+        const std::weak_ptr<ConnectionPool> &pool = {});
     std::vector<ValueObject> CreateBackupBindArgs(
         const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey);
     std::pair<int32_t, Stmt> GetStatement(
@@ -317,7 +319,7 @@ private:
     static bool IsKnowledgeDataChange(const DistributedRdb::RdbChangedData &rdbChangedData);
     static bool IsNotifyService(const DistributedRdb::RdbChangedData &rdbChangedData,
  	    const DistributedRdb::RdbNotifyConfig &rdbNotifyConfig);
-    static void ReplayCallbackImpl(const RdbStoreConfig &config);
+    static void ReplayCallbackImpl(const RdbStoreConfig &config, std::weak_ptr<ConnectionPool> pool = {});
     std::pair<int32_t, std::vector<std::string>> ConvertToUuids(const std::vector<std::string> &devices);
 
     static constexpr char SCHEME_RDB[] = "rdb://";
@@ -336,6 +338,8 @@ private:
     uint32_t rebuild_ = RebuiltType::NONE;
     int32_t initStatus_ = -1;
     const std::shared_ptr<SlaveStatus> slaveStatus_ = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);
+    SlaveStatus statusBeforeInterrupt_ = SlaveStatus::UNDEFINED;
+    bool statusInterrupted_ = false;
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;
     std::shared_ptr<RdbStoreConfig> configHolder_;
