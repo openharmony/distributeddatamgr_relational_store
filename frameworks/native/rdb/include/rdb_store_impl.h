@@ -17,10 +17,12 @@
 #define NATIVE_RDB_RDB_STORE_IMPL_H
 
 #include <cstdint>
+#include <future>
 #include <list>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <shared_mutex>
 #include <thread>
 
@@ -102,7 +104,8 @@ class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
     ~RdbStoreImpl() override;
-    int32_t Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl = false);
+    int32_t Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl = false,
+        bool isSilentAccessible = false);
     std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
     std::pair<int32_t, Results> BatchInsert(
@@ -201,6 +204,10 @@ public:
 protected:
     std::string GetLogTableName(const std::string &tableName) override;
 
+public:
+    // Wait for the in-flight async AfterOpen so its service-side meta cannot race with a later close/release/delete.
+    int WaitAfterOpen() override;
+
 private:
     using Stmt = std::shared_ptr<Statement>;
     using RdbParam = DistributedRdb::RdbSyncerParam;
@@ -219,7 +226,9 @@ private:
         std::set<std::string> tables_;
         std::set<std::string> changes_;
     };
-    static void AfterOpen(const RdbParam &param, int32_t retry = 0);
+    static void AfterOpen(const RdbParam &param, int32_t retry = 0,
+        const std::shared_ptr<std::promise<void>> &promise = nullptr);
+    void AfterOpenAsync(const RdbParam &param);
     static void RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry = 0);
     int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
     int32_t CreatePool(bool &created);
@@ -313,6 +322,7 @@ private:
     static constexpr char SCHEME_RDB[] = "rdb://";
     static constexpr uint32_t EXPANSION = 2;
     static inline constexpr uint32_t INTERVAL = 200;
+    static inline constexpr uint32_t AFTER_OPEN_WAIT_INTERVAL = 2000;
     static inline constexpr uint32_t RETRY_INTERVAL = 5; // s
     static inline constexpr int32_t MAX_RETRY_TIMES = 5;
     static constexpr const char *ROW_ID = "ROWID";
@@ -321,6 +331,7 @@ private:
     bool isMemoryRdb_ = false;
     bool isUseReplicaDb_ = false;
     bool isNeedSetAcl_ = false;
+    bool isSilentAccessible_ = false;
     uint32_t rebuild_ = RebuiltType::NONE;
     int32_t initStatus_ = -1;
     const std::shared_ptr<SlaveStatus> slaveStatus_ = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);
@@ -350,6 +361,9 @@ private:
     std::list<std::weak_ptr<Transaction>> transactions_;
     std::mutex helperMutex_;
     std::shared_ptr<NativeRdb::KnowledgeSchemaHelper> knowledgeSchemaHelper_;
+    std::shared_ptr<std::promise<void>> afterOpenPromise_;
+    std::shared_future<void> afterOpenFuture_;
+    std::mutex afterOpenMutex_;
     std::atomic<bool> isKnowledgeSchemaReady_{ false };
 };
 } // namespace OHOS::NativeRdb
