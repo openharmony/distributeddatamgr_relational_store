@@ -37,6 +37,14 @@
 namespace OHOS {
 class ExecutorPool;
 namespace NativeRdb {
+class TmpFileGuard {
+public:
+    explicit TmpFileGuard(const std::string &path);
+    ~TmpFileGuard();
+
+private:
+    std::string path_;
+};
 class ConnectionPool : public std::enable_shared_from_this<ConnectionPool> {
 public:
     enum ConnType:uint32_t {
@@ -164,6 +172,11 @@ private:
     int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath,
         std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore);
     int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
+    int ValidateAndPruneDb(const std::string &sourcePath);
+    bool TryRestoreByRename(const std::string &backupPath, const std::string &newPath);
+    int RestoreByCopy(const std::string &newPath, const std::string &backupPath);
+    int ReopenRestoredDb();
+    static void CleanRestoreTempFile(const std::string &dbPath);
     bool CheckIntegrity(const std::string &dbPath);
     void DelayClearTrans();
     void ClearCache();

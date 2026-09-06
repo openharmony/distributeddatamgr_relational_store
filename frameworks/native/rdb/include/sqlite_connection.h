@@ -44,6 +44,8 @@ public:
     static std::pair<int32_t, std::shared_ptr<Connection>> Create(const RdbStoreConfig &config, bool isWrite);
     static int32_t Delete(const RdbStoreConfig &config);
     static int32_t Delete(const std::string &path);
+    static int32_t Rename(const RdbStoreConfig &config, const std::string &tmpPath,
+        const std::string &backupPath);
     static int32_t Repair(const RdbStoreConfig &config);
     static std::map<std::string, Info> Collect(const RdbStoreConfig &config);
     static std::vector<std::string> GetDbFiles(const RdbStoreConfig &config);
@@ -204,6 +206,7 @@ private:
     static const int32_t regCreator_;
     static const int32_t regRepairer_;
     static const int32_t regDeleter_;
+    static const int32_t regRenamer_;
     static const int32_t regCollector_;
     static const int32_t regGetDbFileser_;
     static const int32_t regReplicaChecker_;

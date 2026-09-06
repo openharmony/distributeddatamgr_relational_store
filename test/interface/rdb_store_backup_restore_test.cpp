@@ -1127,3 +1127,205 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_026, TestSize.Leve
 
     RdbHelper::DeleteRdbStore(databaseName);
 }
+
+/**
+ * @tc.name: Rdb_BackupRestoreTest_027
+ * @tc.desc: SINGLE restore success leaves no temp file and data is recovered
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_027, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    EXPECT_EQ(store->Insert(id, "test", values), E_OK);
+
+    EXPECT_EQ(store->Backup(BACKUP_DATABASE_NAME), E_OK);
+    int deleted = 0;
+    EXPECT_EQ(store->Delete(deleted, "test", "id = 1"), E_OK);
+
+    EXPECT_EQ(store->Restore(BACKUP_DATABASE_NAME), E_OK);
+
+    auto rs = store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    EXPECT_EQ(rs->GoToFirstRow(), E_OK);
+    rs->Close();
+
+    std::string tmpPath = std::string(DATABASE_NAME) + ".arkData_restore.tmp";
+    std::ifstream tmpFile(tmpPath);
+    EXPECT_FALSE(tmpFile.good());
+    tmpFile.close();
+}
+
+/**
+ * @tc.name: Rdb_BackupRestoreTest_028
+ * @tc.desc: SINGLE restore failed (corrupt backup) keeps current db and no temp leftover
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_028, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    EXPECT_EQ(store->Insert(id, "test", values), E_OK);
+    EXPECT_EQ(store->Backup(BACKUP_DATABASE_NAME), E_OK);
+    store = nullptr;
+
+    std::ofstream fs(BACKUP_DATABASE_NAME, std::ios::binary | std::ios::out);
+    ASSERT_TRUE(fs.is_open());
+    fs.seekp(64);
+    fs.write("corrupt", 7);
+    fs.close();
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    EXPECT_EQ(store->Restore(BACKUP_DATABASE_NAME), E_SQLITE_CORRUPT);
+
+    auto rs = store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    EXPECT_EQ(rs->GoToFirstRow(), E_OK);
+    rs->Close();
+
+    std::string tmpPath = std::string(DATABASE_NAME) + ".arkData_restore.tmp";
+    std::ifstream tmpFile(tmpPath);
+    EXPECT_FALSE(tmpFile.good());
+    tmpFile.close();
+}
+
+/**
+ * @tc.name: Rdb_BackupRestoreTest_029
+ * @tc.desc: SINGLE restore success then connection pool works for CRUD
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_029, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    EXPECT_EQ(store->Insert(id, "test", values), E_OK);
+    EXPECT_EQ(store->Backup(BACKUP_DATABASE_NAME), E_OK);
+    EXPECT_EQ(store->Restore(BACKUP_DATABASE_NAME), E_OK);
+
+    ValuesBucket newValues;
+    newValues.PutInt("id", 2);
+    newValues.PutString("name", std::string("lisi"));
+    int64_t newId = 0;
+    EXPECT_EQ(store->Insert(newId, "test", newValues), E_OK);
+    EXPECT_EQ(newId, 2);
+
+    auto rs = store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "lisi" });
+    EXPECT_EQ(rs->GoToFirstRow(), E_OK);
+    rs->Close();
+}
+
+/**
+ * @tc.name: Rdb_BackupRestoreTest_030
+ * @tc.desc: leftover restore tmp is cleaned when opening db
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_030, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+    store = nullptr;
+    RdbHelper::ClearCache();
+
+    std::string tmpPath = std::string(DATABASE_NAME) + ".arkData_restore.tmp";
+    std::ofstream tmpOut(tmpPath, std::ios::binary);
+    ASSERT_TRUE(tmpOut.is_open());
+    tmpOut << "leftover";
+    tmpOut.close();
+
+    std::ifstream checkTmp(tmpPath);
+    EXPECT_TRUE(checkTmp.good());
+    checkTmp.close();
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    std::ifstream tmpFile(tmpPath);
+    EXPECT_FALSE(tmpFile.good());
+    tmpFile.close();
+}
+
+/**
+ * @tc.name: Rdb_BackupRestoreTest_031
+ * @tc.desc: copy interrupted leaves leftover tmp, current db intact and next restore recovers
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_031, TestSize.Level2)
+{
+    int errCode = E_OK;
+    RdbStoreConfig config(DATABASE_NAME);
+    config.SetEncryptStatus(true);
+    RdbInterfaceBackupRestoreTestOpenCallback helper;
+    auto store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    int64_t id;
+    ValuesBucket values;
+    values.PutInt("id", 1);
+    values.PutString("name", std::string("zhangsan"));
+    EXPECT_EQ(store->Insert(id, "test", values), E_OK);
+    EXPECT_EQ(store->Backup(BACKUP_DATABASE_NAME), E_OK);
+    store = nullptr;
+    RdbHelper::ClearCache();
+
+    std::string tmpPath = std::string(DATABASE_NAME) + ".arkData_restore.tmp";
+    std::ofstream tmpOut(tmpPath, std::ios::binary);
+    ASSERT_TRUE(tmpOut.is_open());
+    tmpOut << "partial copy interrupted";
+    tmpOut.close();
+
+    store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    EXPECT_EQ(errCode, E_OK);
+    ASSERT_NE(store, nullptr);
+
+    std::ifstream tmpFile(tmpPath);
+    EXPECT_FALSE(tmpFile.good());
+    tmpFile.close();
+
+    auto rs = store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    EXPECT_EQ(rs->GoToFirstRow(), E_OK);
+    rs->Close();
+
+    EXPECT_EQ(store->Restore(BACKUP_DATABASE_NAME), E_OK);
+
+    rs = store->QuerySql("SELECT * FROM test WHERE name = ?", std::vector<std::string>{ "zhangsan" });
+    EXPECT_EQ(rs->GoToFirstRow(), E_OK);
+    rs->Close();
+}

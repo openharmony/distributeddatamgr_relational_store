@@ -452,6 +452,29 @@ bool SqliteUtils::CopyFile(const std::string &srcFile, const std::string &destFi
     return true;
 }
 
+bool SqliteUtils::AllocateFileSpace(const std::string &filePath, int64_t length, mode_t mode)
+{
+    if (length <= 0) {
+        LOG_WARN("invalid length %{public}" PRId64 "%{public}s", length, Anonymous(filePath).c_str());
+        return false;
+    }
+    int fd = open(filePath.c_str(), O_RDWR | O_CREAT, mode);
+    if (fd < 0) {
+        LOG_WARN("open for fallocate failed errno %{public}d %{public}s", errno, Anonymous(filePath).c_str());
+        return false;
+    }
+    int ret = fallocate(fd, 0, 0, static_cast<off_t>(length));
+    close(fd);
+    fd = -1;
+    if (ret != 0) {
+        LOG_WARN("fallocate failed ret %{public}d errno %{public}d %{public}s", ret, errno,
+            Anonymous(filePath).c_str());
+        SqliteUtils::DeleteFile(filePath);
+        return false;
+    }
+    return true;
+}
+
 std::string SqliteUtils::RemoveSuffix(const std::string &name)
 {
     std::string suffix(".db");
