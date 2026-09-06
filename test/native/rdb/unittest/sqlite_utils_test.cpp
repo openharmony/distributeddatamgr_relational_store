@@ -922,5 +922,8 @@ HWTEST_F(SqliteUtilsTest, AllocateFileSpace004, TestSize.Level1)
     // 1 TB, far beyond test environment disk space
     int64_t oversized = 1099511627776LL;
     EXPECT_EQ(SqliteUtils::AllocateFileSpace(filePath, oversized), false);
+    std::ifstream f(filePath);
+    EXPECT_FALSE(f.good());
+    f.close();
     std::remove(filePath.c_str());
 }
