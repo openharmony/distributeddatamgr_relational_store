@@ -25,6 +25,7 @@
 #include <fstream>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <sstream>
 #include <string>
 
@@ -175,11 +176,15 @@ int RdbStoreImpl::InnerOpen()
     if (config_.GetEnableSemanticIndex()) {
         SetKnowledgeSchema();
     }
-    AfterOpen(syncerParam_);
+    // Data-share silent accessible stores rely on the service-side meta, keep AfterOpen synchronous.
+    if (config_.IsSearchable() || isSilentAccessible_) {
+        AfterOpen(syncerParam_);
+    } else {
+        AfterOpenAsync(syncerParam_);
+    }
     if (config_.GetDBType() == DB_VECTOR || (!config_.IsSearchable() && !config_.GetEnableSemanticIndex())) {
         return E_OK;
     }
-
     if (config_.IsSearchable()) {
         RegisterMatrix(config_, syncerParam_);
     }
@@ -211,6 +216,7 @@ void RdbStoreImpl::InitReportFunc(const RdbParam &param)
 
 void RdbStoreImpl::Close()
 {
+    WaitAfterOpen();
     {
         std::unique_lock<decltype(poolMutex_)> lock(poolMutex_);
         if (connectionPool_) {
@@ -253,6 +259,7 @@ int RdbStoreImpl::RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> pool,
 
 int RdbStoreImpl::Release(const ReleaseOption &option)
 {
+    WaitAfterOpen();
     auto start = steady_clock::now();
     std::shared_ptr<ConnectionPool> pool;
     {
@@ -344,16 +351,24 @@ bool RdbStoreImpl::SetFileGid(const RdbStoreConfig &config, int32_t gid)
     return setDir && setDbFile && setBinlog;
 }
 
-void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
+void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry,
+    const std::shared_ptr<std::promise<void>> &promise)
 {
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
     if (err == E_NOT_SUPPORT) {
+        if (promise != nullptr) {
+            promise->set_value();
+        }
         return;
     }
     if (err != E_OK || service == nullptr) {
         if (err != E_INVALID_ARGS) {
             LOG_ERROR("GetRdbService failed, err: %{public}d, storeName: %{public}s.", err,
                 SqliteUtils::Anonymous(param.storeName_).c_str());
+        }
+        // Release the waiter on the first failure; retries continue in the background without it.
+        if (promise != nullptr) {
+            promise->set_value();
         }
         auto pool = TaskExecutor::GetInstance().GetExecutor();
         if (err == E_SERVICE_NOT_FOUND && pool != nullptr && retry < MAX_RETRY_TIMES) {
@@ -366,7 +381,52 @@ void RdbStoreImpl::AfterOpen(const RdbParam &param, int32_t retry)
     if (err != E_OK) {
         LOG_ERROR("AfterOpen failed, err: %{public}d, storeName: %{public}s.", err,
             SqliteUtils::Anonymous(param.storeName_).c_str());
+    } else {
+        LOG_INFO("AfterOpen finished, err:%{public}d, retry:%{public}d, storeName:%{public}s", err, retry,
+            SqliteUtils::Anonymous(param.storeName_).c_str());
     }
+    if (promise != nullptr) {
+        promise->set_value();
+    }
+}
+
+void RdbStoreImpl::AfterOpenAsync(const RdbParam &param)
+{
+    auto promise = std::make_shared<std::promise<void>>();
+    {
+        std::lock_guard<std::mutex> lock(afterOpenMutex_);
+        afterOpenPromise_ = promise;
+        afterOpenFuture_ = promise->get_future().share();
+    }
+    auto pool = TaskExecutor::GetInstance().GetExecutor();
+    if (pool == nullptr) {
+        AfterOpen(param, 0, promise);
+        return;
+    }
+    auto taskId = pool->Execute([promise, param]() { AfterOpen(param, 0, promise); });
+    if (taskId == TaskExecutor::INVALID_TASK_ID) {
+        AfterOpen(param, 0, promise);
+    }
+}
+
+int RdbStoreImpl::WaitAfterOpen()
+{
+    std::shared_future<void> future;
+    {
+        std::lock_guard<std::mutex> lock(afterOpenMutex_);
+        future = afterOpenFuture_;
+    }
+    if (!future.valid()) {
+        return E_OK;
+    }
+    if (future.wait_for(std::chrono::milliseconds(AFTER_OPEN_WAIT_INTERVAL)) != std::future_status::ready) {
+        LOG_WARN("Wait after open timeout, continue IPC, storeName:%{public}s", SqliteUtils::Anonymous(name_).c_str());
+        Reportor::ReportFault(RdbFaultEvent(RdbFaultType::FT_OPEN, E_DFX_WAIT_AFTER_OPEN_TIMEOUT,
+            config_.GetBundleName(),
+            config_.GetName() + " wait after open timeout:" + std::to_string(AFTER_OPEN_WAIT_INTERVAL) + "ms"));
+        return E_OK;
+    }
+    return E_OK;
 }
 
 void RdbStoreImpl::RegisterMatrix(const RdbStoreConfig &config, const RdbParam &param, int32_t retry)
@@ -607,6 +667,7 @@ int RdbStoreImpl::SetDistributedTables(
         LOG_WARN("The distributed tables to be set is empty.");
         return E_OK;
     }
+    WaitAfterOpen();
     auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (errCode != E_OK) {
         return errCode;
@@ -755,6 +816,7 @@ int32_t RdbStoreImpl::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         return E_ALREADY_CLOSED;
     }
 
+    WaitAfterOpen();
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
         service->Disable(syncerParam_);
@@ -791,6 +853,7 @@ int32_t RdbStoreImpl::RekeyEx(const RdbStoreConfig::CryptoParam &cryptoParam)
         return E_ALREADY_CLOSED;
     }
 
+    WaitAfterOpen();
     auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
     if (service != nullptr) {
         service->Disable(syncerParam_);
@@ -1540,11 +1603,12 @@ int32_t RdbStoreImpl::SetSecurityLabel(const RdbStoreConfig &config)
     return SecurityPolicy::SetSecurityLabel(config);
 }
 
-int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl)
+int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl, bool isSilentAccessible)
 {
     if (initStatus_ != -1) {
         return initStatus_;
     }
+    isSilentAccessible_ = isSilentAccessible;
     // If it is a distributeddata request, never need ACL
     isNeedSetAcl = RdbMgr::GetInstance().IsProxy() &&
                    (isNeedSetAcl || SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
@@ -1596,6 +1660,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
 
 RdbStoreImpl::~RdbStoreImpl()
 {
+    WaitAfterOpen();
     // ToD: Scenario for handling binlog replay interrupt
     auto [errCode, conn] = GetConn(false);
     if (errCode == E_OK && conn != nullptr) {

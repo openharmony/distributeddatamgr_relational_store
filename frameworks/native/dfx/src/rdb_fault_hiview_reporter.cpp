@@ -91,7 +91,8 @@ RdbFaultCode RdbFaultHiViewReporter::faultCounters_[] = {
     { E_DFX_VALUELESS_BY_EXCEPTION, 0 },
     { E_DFX_TYPE_INDEX_OUT_OF_RANGE, 0 },
     { E_DFX_SILENT_PROXY_QUERY, 0 },
-    { E_DFX_INTERFACE_USED, 0 }
+    { E_DFX_INTERFACE_USED, 0 },
+    { E_DFX_WAIT_AFTER_OPEN_TIMEOUT, 0 }
 };
 
 RdbFaultEvent::~RdbFaultEvent() = default;

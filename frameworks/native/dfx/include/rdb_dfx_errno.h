@@ -142,6 +142,11 @@ static constexpr int E_DFX_REBUILD = (E_DFX_BASE + 0x17);
  * @brief Only use for dfx, delete rdb store.
  */
 static constexpr int E_DFX_DELETE_RDB_STORE = (E_DFX_BASE + 0x18);
+
+/**
+ * @brief Only use for dfx, waiting for async AfterOpen timed out.
+ */
+static constexpr int E_DFX_WAIT_AFTER_OPEN_TIMEOUT = (E_DFX_BASE + 0x19);
 } // namespace NativeRdb
 } // namespace OHOS
 

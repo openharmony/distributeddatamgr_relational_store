@@ -121,13 +121,12 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
     // If configured to NOSUPPORT, never need ACL
     // If it is a distributeddata request, never need ACL
     // If it is a local-only database, never need ACL
+    bool isSilentAccessible = (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::SUPPORT) ||
+        (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::UNKNOWN &&
+            silentProxyManager_.IsSupportSilent(config.GetBundleName(), config.GetName()).second);
     bool isNeedAcl = (RdbMgr::GetInstance().IsProxy()) && (config.GetRoleType() == OWNER) &&
-                    (!config.IsLocalOnly()) &&
-                    (config.IsSearchable() ||
-                    (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::SUPPORT) ||
-                    (config.GetSilentAccessibleStatus() == SilentAccessibleStatus::UNKNOWN &&
-                        silentProxyManager_.IsSupportSilent(config.GetBundleName(), config.GetName()).second));
-    errCode = rdbStore->Init(version, openCallback, isNeedAcl);
+                    (!config.IsLocalOnly()) && (config.IsSearchable() || isSilentAccessible);
+    errCode = rdbStore->Init(version, openCallback, isNeedAcl, isSilentAccessible);
     if (errCode != E_OK) {
         if (modifyConfig.IsEncrypt() != config.IsEncrypt()) {
             rdbStore = nullptr;
@@ -135,7 +134,7 @@ std::shared_ptr<RdbStore> RdbStoreManager::GetRdbStore(
             if (rdbStore == nullptr) {
                 return rdbStore;
             }
-            errCode = rdbStore->Init(version, openCallback, isNeedAcl);
+            errCode = rdbStore->Init(version, openCallback, isNeedAcl, isSilentAccessible);
         }
         if (errCode != E_OK || rdbStore == nullptr) {
             rdbStore = nullptr;
@@ -333,25 +332,33 @@ bool RdbStoreManager::Destroy()
 
 bool RdbStoreManager::Remove(const std::string &path, bool shouldClose)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    configCache_.Delete(path);
-    auto it = storeCache_.find(path);
-    if (it != storeCache_.end()) {
-        auto rdbStore = it->second.lock();
-        LOG_INFO("store in use by %{public}ld holders", rdbStore.use_count());
-        if (rdbStore && shouldClose) {
-            rdbStore->Close();
+    std::shared_ptr<RdbStoreImpl> rdbStore;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        configCache_.Delete(path);
+        auto it = storeCache_.find(path);
+        if (it == storeCache_.end()) {
+            return false;
         }
+        rdbStore = it->second.lock();
+        LOG_INFO("store in use by %{public}ld holders", rdbStore.use_count());
         storeCache_.erase(it); // clean invalid store ptr
-        return true;
+        if (rdbStore == nullptr) {
+            return true;
+        }
     }
-
-    return false;
+    // Outside the lock: WaitAfterOpen/Close may block.
+    rdbStore->WaitAfterOpen();
+    if (shouldClose) {
+        rdbStore->Close();
+    }
+    return true;
 }
 
 bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
 {
     auto path = config.GetPath();
+    bool removed = Remove(path, shouldClose);
     auto tokens = StringUtils::Split(path, "/");
     if (!tokens.empty()) {
         DistributedRdb::RdbSyncerParam param;
@@ -365,16 +372,15 @@ bool RdbStoreManager::Delete(const RdbStoreConfig &config, bool shouldClose)
         auto [err, service] = RdbMgr::GetInstance().GetRdbService(param);
         if (err != E_OK || service == nullptr) {
             LOG_DEBUG("GetRdbService failed, err is %{public}d.", err);
-            return Remove(path, shouldClose);
+            return removed;
         }
         err = service->Delete(param);
         if (err != E_OK) {
             LOG_ERROR("service delete store, storeName:%{public}s, err = %{public}d",
                 SqliteUtils::Anonymous(param.storeName_).c_str(), err);
-            return Remove(path, shouldClose);
         }
     }
-    return Remove(path, shouldClose);
+    return removed;
 }
 
 std::string RdbStoreManager::GetSelfBundleName()
