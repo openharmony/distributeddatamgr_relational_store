@@ -463,8 +463,10 @@ bool SqliteUtils::AllocateFileSpace(const std::string &filePath, int64_t length,
         LOG_WARN("open for fallocate failed errno %{public}d %{public}s", errno, Anonymous(filePath).c_str());
         return false;
     }
+    uint64_t tag = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650);
+    fdsan_exchange_owner_tag(fd, 0, tag);
     int ret = fallocate(fd, 0, 0, static_cast<off_t>(length));
-    close(fd);
+    fdsan_close_with_tag(fd, tag);
     fd = -1;
     if (ret != 0) {
         LOG_WARN("fallocate failed ret %{public}d errno %{public}d %{public}s", ret, errno,
