@@ -115,20 +115,24 @@ void AniAsyncCall::CallCallback(ani_env *env, std::shared_ptr<AniContext> ctx)
         return;
     }
     ani_status status = ANI_OK;
-    ani_ref args[ARG_BUTT] = {nullptr, nullptr};
+    ani_ref args[ARG_BUTT] = { nullptr, nullptr };
     auto err = ctx->error_;
     if (err != nullptr) {
         if (ani_utils::CreateBusinessError(env, err->GetCode(), err->GetMessage(), args[ARG_ERROR]) != ANI_OK) {
             return;
         }
     } else {
-        if (env->GetUndefined(&args[ARG_ERROR]) != ANI_OK) {
-            LOG_ERROR("GetUndefined for ARG_ERROR failed.");
+        status = env->GetUndefined(&args[ARG_ERROR]);
+        if (status != ANI_OK) {
+            LOG_ERROR("GetUndefined for ARG_ERROR failed, status = %{public}d", status);
+            return;
         }
     }
     if (ctx->result_ == nullptr) {
-        if (env->GetUndefined(&args[ARG_DATA]) != ANI_OK) {
-            LOG_ERROR("GetUndefined for ARG_DATA failed.");
+        status = env->GetUndefined(&args[ARG_DATA]);
+        if (status != ANI_OK) {
+            LOG_ERROR("GetUndefined for ARG_DATA failed, status = %{public}d", status);
+            return;
         }
     } else {
         args[ARG_DATA] = ctx->result_;
@@ -139,5 +143,5 @@ void AniAsyncCall::CallCallback(ani_env *env, std::shared_ptr<AniContext> ctx)
         LOG_ERROR("FunctionalObject_Call failed status = %{public}d", status);
     }
 }
-}
-}
+} // namespace RdbTaihe
+} // namespace OHOS

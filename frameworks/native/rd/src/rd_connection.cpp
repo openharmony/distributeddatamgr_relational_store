@@ -304,10 +304,11 @@ int32_t RdConnection::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
         return errCode;
     }
     dbHandle_ = nullptr;
-
-    std::string configStr = GetConfigStr(config_.GetEncryptKey(), config_.IsEncrypt());
+    std::vector<uint8_t> oldKey = config_.GetEncryptKey();
+    std::string configStr = GetConfigStr(oldKey, config_.IsEncrypt());
     errCode = RdUtils::RdDbRekey(dbPath.c_str(), configStr.c_str(), key);
     RdUtils::ClearAndZeroString(configStr);
+    oldKey.assign(oldKey.size(), 0);
     if (errCode != E_OK) {
         LOG_ERROR("Rekey failed, errCode = %{public}d, errno = %{public}d", errCode, errno);
         key.assign(key.size(), 0);

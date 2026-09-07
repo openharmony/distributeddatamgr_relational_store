@@ -1408,7 +1408,17 @@ int SqliteConnection::TryCheckPoint(bool timeout)
             }
         }
     });
-    std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle_, "main"));
+    const char *dbFile = sqlite3_db_filename(dbHandle_, "main");
+    if (dbFile == nullptr) {
+        LOG_ERROR("Failed to get database filename");
+        return E_ERROR;
+    }
+    const char *walFile = sqlite3_filename_wal(dbFile);
+    if (walFile == nullptr) {
+        LOG_ERROR("No WAL file for database");
+        return E_ERROR;
+    }
+    std::string walName = walFile;
     ssize_t size = SqliteUtils::GetFileSize(walName);
     if (size < 0) {
         LOG_ERROR("Invalid size for WAL:%{public}s size:%{public}zd", SqliteUtils::Anonymous(walName).c_str(), size);
