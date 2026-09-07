@@ -31,6 +31,9 @@ using namespace OHOS::NativeRdb;
 
 namespace {
 constexpr std::chrono::seconds CREATOR_START_TIMEOUT(2);
+constexpr std::chrono::seconds ACQUIRE_TIMEOUT(5);
+constexpr std::chrono::milliseconds WAITER_START_TIMEOUT(100);
+constexpr std::chrono::seconds RELEASE_WAKE_TIMEOUT(1);
 
 struct CreatorGate {
     std::mutex mutex;
@@ -63,9 +66,90 @@ std::shared_ptr<ConnectionPool::ConnNode> GetAcquireNode(std::future<AcquireResu
     EXPECT_NE(nullptr, node);
     return node;
 }
+
+std::shared_ptr<ConnectionPool::ConnNode> PrepareMixedWaiters(
+    const std::shared_ptr<ConnectionPool::Container> &container, const RdbStoreConfig &config,
+    const std::shared_ptr<CreatorGate> &gate)
+{
+    auto connection = std::make_shared<SqliteConnection>(config, false);
+    connection->SetIsRecyclable(true);
+    auto [errCode, node] = container->Initialize(
+        [connection]() { return std::make_pair(E_OK, connection); }, 1, ACQUIRE_TIMEOUT.count(), false, true);
+    EXPECT_EQ(E_OK, errCode);
+    auto delayedConnection = std::make_shared<SqliteConnection>(config, false);
+    container->InitMembers(
+        [gate, delayedConnection]() {
+            std::unique_lock<std::mutex> lock(gate->mutex);
+            ++gate->started;
+            gate->condition.notify_all();
+            gate->condition.wait(lock, [gate]() { return gate->finish; });
+            return std::make_pair(E_OK, delayedConnection);
+        },
+        1, ACQUIRE_TIMEOUT.count(), false);
+    return node;
+}
+
+void CheckReleaseWithMixedWaiters(bool transaction)
+{
+    auto container = std::make_shared<ConnectionPool::Container>();
+    RdbStoreConfig config(RDB_TEST_PATH + "connection_pool_test.db");
+    auto gate = std::make_shared<CreatorGate>();
+    auto node = PrepareMixedWaiters(container, config, gate);
+    ASSERT_NE(nullptr, node);
+    auto growing = std::async(std::launch::async, [container]() { return container->Acquire(ACQUIRE_TIMEOUT); });
+    EXPECT_TRUE(WaitForCreator(gate));
+
+    auto waiting = std::make_shared<std::promise<void>>();
+    auto extensionWaiter = std::async(std::launch::async, [container, waiting]() {
+        std::unique_lock<std::mutex> lock(container->mutex_);
+        waiting->set_value();
+        // Signal while holding the pool mutex so the next acquirer follows this waiter.
+        container->WaitForExtension(lock);
+    });
+    waiting->get_future().wait();
+    auto acquiring = std::async(std::launch::async, [container]() { return container->Acquire(ACQUIRE_TIMEOUT); });
+    EXPECT_EQ(std::future_status::timeout, acquiring.wait_for(WAITER_START_TIMEOUT));
+
+    EXPECT_EQ(E_OK, transaction ? container->ReleaseTrans(node) : container->Release(node));
+    // The returned node must be usable before either extension completion or the acquire timeout.
+    EXPECT_EQ(std::future_status::ready, acquiring.wait_for(RELEASE_WAKE_TIMEOUT));
+    EXPECT_EQ(std::future_status::timeout, extensionWaiter.wait_for(std::chrono::seconds(0)));
+    EXPECT_EQ(std::future_status::timeout, growing.wait_for(std::chrono::seconds(0)));
+
+    // Always unblock and join workers before checking results, even if a wakeup assertion failed.
+    FinishCreator(gate);
+    extensionWaiter.get();
+    auto acquiredNode = GetAcquireNode(acquiring);
+    auto createdNode = GetAcquireNode(growing);
+    EXPECT_EQ(node, acquiredNode);
+    ASSERT_NE(nullptr, acquiredNode);
+    ASSERT_NE(nullptr, createdNode);
+    EXPECT_EQ(E_OK, container->Release(acquiredNode));
+    EXPECT_EQ(E_OK, container->Release(createdNode));
+}
 } // namespace
 
 class ConnectionPoolTest : public testing::Test {};
+
+/**
+ * @tc.name: ReleaseWakesAcquireWithExtensionWaiterTest
+ * @tc.desc: Release wakes node waiters even when an earlier waiter is waiting for extension completion.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionPoolTest, ReleaseWakesAcquireWithExtensionWaiterTest, TestSize.Level1)
+{
+    CheckReleaseWithMixedWaiters(false);
+}
+
+/**
+ * @tc.name: ReleaseTransWakesAcquireWithExtensionWaiterTest
+ * @tc.desc: Recycling a transaction node wakes Acquire while a slow extension and its waiter remain blocked.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ConnectionPoolTest, ReleaseTransWakesAcquireWithExtensionWaiterTest, TestSize.Level1)
+{
+    CheckReleaseWithMixedWaiters(true);
+}
 
 /**
  * @tc.name: AcquireExtendNodeDoesNotBlockReleaseTest
