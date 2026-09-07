@@ -16,6 +16,7 @@ import("//foundation/distributeddatamgr/relational_store/relational_store_deps.g
 native_rdb_platform_include_dirs = [
   "include",
   "${relational_store_common_path}/include",
+  "${relational_store_mock_path}/frameworks/native/rdb/fdsan",
   "${relational_store_native_path}/rdb_crypt",
   "${relational_store_native_path}/rdb/include",
   "${relational_store_native_path}/rd/include",
@@ -24,6 +25,7 @@ native_rdb_platform_include_dirs = [
 ]
 
 native_rdb_platform_cflags = [
+  "-includefdsan_mock.h",
   "-Wno-c99-designator",
   "-Werror=vla",
 ]
@@ -50,6 +52,7 @@ if (arkdata_db_core_is_exists) {
 native_rdb_platform_ldflags = [ "-Wl,--exclude-libs,ALL" ]
 
 native_rdb_platform_sources = [
+  "${relational_store_mock_path}/frameworks/native/rdb/fdsan/fdsan_mock.cpp",
   "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
   "${relational_store_native_path}/rd/src/grd_api_manager.cpp",
   "${relational_store_native_path}/rd/src/rd_connection.cpp",

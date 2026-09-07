@@ -463,8 +463,10 @@ bool SqliteUtils::AllocateFileSpace(const std::string &filePath, int64_t length,
         LOG_WARN("open for fallocate failed errno %{public}d %{public}s", errno, Anonymous(filePath).c_str());
         return false;
     }
+    uint64_t tag = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650);
+    fdsan_exchange_owner_tag(fd, 0, tag);
     int ret = fallocate(fd, 0, 0, static_cast<off_t>(length));
-    close(fd);
+    fdsan_close_with_tag(fd, tag);
     fd = -1;
     if (ret != 0) {
         LOG_WARN("fallocate failed ret %{public}d errno %{public}d %{public}s", ret, errno,
@@ -942,18 +944,20 @@ void SqliteUtils::WriteSqlToFile(const std::string &comparePath, const std::stri
     int fd = open(comparePath.c_str(), O_RDWR | O_CREAT, 0660);
     if (fd == -1) {
         LOG_ERROR("open file failed errno %{public}d %{public}s", errno, Anonymous(comparePath).c_str());
-        return ;
+        return;
     }
+    uint64_t tag = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650);
+    fdsan_exchange_owner_tag(fd, 0, tag);
     if (flock(fd, LOCK_EX) == -1) {
         LOG_ERROR("Failed to lock file errno %{public}d %{public}s", errno, Anonymous(comparePath).c_str());
-        close(fd);
-        return ;
+        fdsan_close_with_tag(fd, tag);
+        return;
     }
     std::ofstream outFile(comparePath, std::ios::app);
     if (!outFile) {
         flock(fd, LOCK_UN);
-        close(fd);
-        return ;
+        fdsan_close_with_tag(fd, tag);
+        return;
     }
 
     outFile << sql << "\n";
@@ -961,7 +965,7 @@ void SqliteUtils::WriteSqlToFile(const std::string &comparePath, const std::stri
     if (flock(fd, LOCK_UN) == -1) {
         LOG_ERROR("Failed to unlock file errno %{public}d %{public}s", errno, Anonymous(comparePath).c_str());
     }
-    close(fd);
+    fdsan_close_with_tag(fd, tag);
 }
 
 std::string SqliteUtils::GetErrInfoFromMsg(const std::string &message, const std::string &errStr)

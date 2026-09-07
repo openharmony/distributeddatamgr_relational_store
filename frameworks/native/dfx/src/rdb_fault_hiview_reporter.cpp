@@ -206,7 +206,9 @@ void RdbFaultHiViewReporter::CreateCorruptedFlag(const std::string &dbPath)
             SqliteUtils::Anonymous(flagFilename).c_str(), errno);
         return;
     }
-    close(fd);
+    uint64_t tag = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650);
+    fdsan_exchange_owner_tag(fd, 0, tag);
+    fdsan_close_with_tag(fd, tag);
 }
 
 void RdbFaultHiViewReporter::DeleteCorruptedFlag(const std::string &dbPath)
