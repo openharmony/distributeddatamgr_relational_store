@@ -99,7 +99,7 @@ int32_t RdbStoreImpl::Update(ValuesBucket valuesBucket, RdbPredicatesImpl &predi
         *errCode = NativeRdb::E_ALREADY_CLOSED;
         return 0;
     }
-    int32_t affectedRows;
+    int32_t affectedRows = 0;
     NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucket(valuesBucket);
     *errCode = store->UpdateWithConflictResolution(affectedRows, predicates.GetPredicates()->GetTableName(),
         nativeValuesBucket, predicates.GetPredicates()->GetWhereClause(), predicates.GetPredicates()->GetBindArgs(),
@@ -115,7 +115,7 @@ int32_t RdbStoreImpl::UpdateEx(ValuesBucketEx valuesBucket, RdbPredicatesImpl &p
         *errCode = NativeRdb::E_ALREADY_CLOSED;
         return 0;
     }
-    int32_t affectedRows;
+    int32_t affectedRows = 0;
     NativeRdb::ValuesBucket nativeValuesBucket = ConvertFromValueBucketEx(valuesBucket);
     *errCode = store->UpdateWithConflictResolution(affectedRows, predicates.GetPredicates()->GetTableName(),
         nativeValuesBucket, predicates.GetPredicates()->GetWhereClause(), predicates.GetPredicates()->GetBindArgs(),

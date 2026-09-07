@@ -21,6 +21,7 @@ namespace OHOS::NativeRdb {
 static Connection::Creator g_creators[DB_BUTT] = { nullptr, nullptr };
 static Connection::Repairer g_repairers[DB_BUTT] = { nullptr, nullptr };
 static Connection::Deleter g_fileDeleter[DB_BUTT] = { nullptr, nullptr };
+static Connection::Renamer g_renamers[DB_BUTT] = { nullptr, nullptr };
 static Connection::Collector g_collectors[DB_BUTT] = { nullptr, nullptr };
 static Connection::GetDbFileser g_getDbFileser[DB_BUTT] = { nullptr, nullptr };
 static Connection::ReplicaChecker g_replicaCheckers[DB_BUTT] = { nullptr, nullptr };
@@ -67,6 +68,20 @@ int32_t Connection::Delete(const RdbStoreConfig &config)
     }
 
     return deleter(config);
+}
+
+int32_t Connection::Rename(const RdbStoreConfig &config, const std::string &tmpPath,
+    const std::string &backupPath)
+{
+    auto dbType = config.GetDBType();
+    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
+        return E_INVALID_ARGS;
+    }
+    auto renamer = g_renamers[dbType];
+    if (renamer == nullptr) {
+        return E_NOT_SUPPORT;
+    }
+    return renamer(config, tmpPath, backupPath);
 }
 
 std::map<std::string, Connection::Info> Connection::Collect(const RdbStoreConfig &config)
@@ -166,6 +181,18 @@ int32_t Connection::RegisterDeleter(int32_t dbType, Deleter deleter)
     }
 
     g_fileDeleter[dbType] = deleter;
+    return E_OK;
+}
+
+int32_t Connection::RegisterRenamer(int32_t dbType, Renamer renamer)
+{
+    if (dbType < static_cast<int32_t>(DB_SQLITE) || dbType >= static_cast<int32_t>(DB_BUTT)) {
+        return E_INVALID_ARGS;
+    }
+    if (g_renamers[dbType] != nullptr) {
+        return E_OK;
+    }
+    g_renamers[dbType] = renamer;
     return E_OK;
 }
 

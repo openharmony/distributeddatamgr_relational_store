@@ -88,6 +88,9 @@ const int32_t SqliteConnection::regRepairer_ = Connection::RegisterRepairer(DB_S
 __attribute__((used))
 const int32_t SqliteConnection::regDeleter_ = Connection::RegisterDeleter(DB_SQLITE, SqliteConnection::Delete);
 __attribute__((used))
+const int32_t SqliteConnection::regRenamer_ =
+    Connection::RegisterRenamer(DB_SQLITE, SqliteConnection::Rename);
+__attribute__((used))
 const int32_t SqliteConnection::regCollector_ = Connection::RegisterCollector(DB_SQLITE, SqliteConnection::Collect);
 __attribute__((used)) const int32_t SqliteConnection::regGetDbFileser_ =
     Connection::RegisterGetDbFileser(DB_SQLITE, SqliteConnection::GetDbFiles);
@@ -119,6 +122,32 @@ int32_t SqliteConnection::Delete(const RdbStoreConfig &config)
     auto slavePath = SqliteUtils::GetSlavePath(path);
     Delete(slavePath);
     Delete(path);
+    return E_OK;
+}
+
+int32_t SqliteConnection::Rename(const RdbStoreConfig &config, const std::string &tmpPath,
+    const std::string &backupPath)
+{
+    auto path = config.GetPath();
+    // delete aux files (not db) before rename
+    for (const auto &suffix : FILE_SUFFIXES) {
+        if (suffix.suffix_[0] != '\0') {
+            SqliteUtils::DeleteFile(path + suffix.suffix_);
+        }
+    }
+    if (!SqliteUtils::RenameFile(tmpPath, path)) {
+        return E_ERROR;
+    }
+    // delete binlog after rename success (avoid losing binlog if interrupted before rename)
+    auto binlogFolder = GetBinlogFolderPath(path);
+    size_t num = SqliteUtils::DeleteFolder(binlogFolder);
+    if (num > 0 && IsSupportBinlog(config)) {
+        LOG_INFO("removed %{public}zu binlog related items", num);
+    }
+    auto slavePath = SqliteUtils::GetSlavePath(path);
+    if (slavePath != backupPath) {
+        Delete(slavePath);
+    }
     return E_OK;
 }
 

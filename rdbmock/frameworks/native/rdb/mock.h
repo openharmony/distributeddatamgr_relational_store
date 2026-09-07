@@ -18,6 +18,21 @@
 
 #include "refbase.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+static inline int fallocate(int fd, int mode, long long offset, long long len)
+{
+    (void)fd;
+    (void)mode;
+    (void)offset;
+    (void)len;
+    return -1;
+}
+#ifdef __cplusplus
+}
+#endif
+
 namespace OHOS {
 namespace NativeRdb {
 __attribute__((visibility("default"))) int gettid();

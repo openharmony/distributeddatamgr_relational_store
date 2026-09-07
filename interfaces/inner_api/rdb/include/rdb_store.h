@@ -924,6 +924,12 @@ public:
 
 protected:
     virtual std::string GetLogTableName(const std::string &tableName);
+
+public:
+    /**
+     * @brief Wait for the in-flight async AfterOpen so its service-side meta cannot race with a later operation.
+     */
+    virtual int WaitAfterOpen() { return E_OK; }
 };
 } // namespace OHOS::NativeRdb
 #endif

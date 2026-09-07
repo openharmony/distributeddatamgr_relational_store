@@ -22,6 +22,8 @@
 #include <iterator>
 #include <mutex>
 #include <sstream>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <vector>
 
 #include "connection.h"
@@ -49,6 +51,15 @@ using Reportor = RdbFaultHiViewReporter;
 constexpr int32_t TRANSACTION_TIMEOUT(2);
 constexpr int64_t WAIT_TIME = 2;
 
+TmpFileGuard::TmpFileGuard(const std::string &path) : path_(path) {}
+
+TmpFileGuard::~TmpFileGuard()
+{
+    if (access(path_.c_str(), F_OK) == 0) {
+        SqliteUtils::DeleteFile(path_);
+    }
+}
+
 std::shared_ptr<ConnPool> ConnPool::Create(
     std::shared_ptr<RdbStoreConfig> configHolder, const RdbStoreConfig &config, int &errCode)
 {
@@ -58,6 +69,7 @@ std::shared_ptr<ConnPool> ConnPool::Create(
         errCode = E_ERROR;
         return nullptr;
     }
+    CleanRestoreTempFile(config.GetPath());
     std::shared_ptr<Connection> conn;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
         std::tie(errCode, conn) = pool->Init();
@@ -586,31 +598,19 @@ int ConnPool::RestoreByDbSqliteType(const std::string &newPath, const std::strin
     return RestoreMasterDb(newPath, backupPath);
 }
 
-int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath)
+void ConnPool::CleanRestoreTempFile(const std::string &dbPath)
 {
-    if (!CheckIntegrity(backupPath)) {
-        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
-        return E_SQLITE_CORRUPT;
+    std::string tmpPath = dbPath + ".arkData_restore.tmp";
+    if (access(tmpPath.c_str(), F_OK) == 0) {
+        SqliteUtils::DeleteFile(tmpPath);
+        LOG_WARN("clean leftover restore tmp, %{public}s", SqliteUtils::Anonymous(tmpPath).c_str());
+        Reportor::ReportRAGFault("clean leftover restore tmp", "CleanRestoreTempFile",
+            RdbFaultType::BUNDLE_NAME_COMMON, E_DFX_IS_DELETE, E_DFX_IS_DELETE);
     }
-    auto walFile = backupPath + "-wal";
-    if (SqliteUtils::GetFileSize(walFile) != 0) {
-        LOG_ERROR("Wal file exist.");
-        return E_SQLITE_CORRUPT;
-    }
+}
 
-    SqliteUtils::DeleteFile(backupPath + "-shm");
-    SqliteUtils::DeleteFile(backupPath + "-wal");
-
-    CloseAllConnections();
-    Connection::Delete(config_);
-
-    if (config_.GetPath() != newPath) {
-        RdbStoreConfig config(newPath);
-        config.SetPath(newPath);
-        Connection::Delete(config);
-    }
-
-    bool copyRet = SqliteUtils::CopyFile(backupPath, newPath);
+int ConnPool::ReopenRestoredDb()
+{
     int32_t errCode = E_OK;
     std::shared_ptr<Connection> pool;
     for (uint32_t retry = 0; retry < ITERS_COUNT; ++retry) {
@@ -628,9 +628,82 @@ int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &bac
         Connection::Delete(config_);
         std::tie(errCode, pool) = Init();
         LOG_WARN("Restore failed! rebuild res:%{public}d, path:%{public}s.", errCode,
-            SqliteUtils::Anonymous(backupPath).c_str());
+            SqliteUtils::Anonymous(config_.GetPath()).c_str());
     }
+    return errCode;
+}
+
+bool ConnPool::TryRestoreByRename(const std::string &backupPath, const std::string &newPath)
+{
+    std::string tmpPath = newPath + ".arkData_restore.tmp";
+    SqliteUtils::DeleteFile(tmpPath);
+    auto backupSize = SqliteUtils::GetFileSize(backupPath);
+    if (backupSize <= 0) {
+        LOG_WARN("invalid backup size, fallback to copy, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
+        return false;
+    }
+    TmpFileGuard guard(tmpPath);
+    struct stat st;
+    mode_t oldMode = (stat(newPath.c_str(), &st) == 0) ? (st.st_mode & 0777) : 0660;
+    if (!SqliteUtils::AllocateFileSpace(tmpPath, backupSize, oldMode)) {
+        return false;
+    }
+    if (!SqliteUtils::CopyFile(backupPath, tmpPath)) {
+        return false;
+    }
+    // Checkpoint WAL into the main db file before deleting WAL, so that deleting WAL won't lose data.
+    // Checkpoint failure does not block restore: the backup will replace the db anyway.
+    auto conn = AcquireConnection(false);
+    int32_t errCode = (conn == nullptr) ? E_ERROR : conn->TryCheckPoint(true);
+    if (errCode != E_OK) {
+        LOG_WARN("checkpoint failed, errCode %{public}d, continue restore, %{public}s", errCode,
+            SqliteUtils::Anonymous(newPath).c_str());
+    }
+    conn = nullptr;
+    CloseAllConnections();
+    return Connection::Rename(config_, tmpPath, backupPath) == E_OK;
+}
+
+int ConnPool::RestoreByCopy(const std::string &newPath, const std::string &backupPath)
+{
+    CloseAllConnections();
+    Connection::Delete(config_);
+    if (config_.GetPath() != newPath) {
+        RdbStoreConfig config(newPath);
+        config.SetPath(newPath);
+        Connection::Delete(config);
+    }
+    bool copyRet = SqliteUtils::CopyFile(backupPath, newPath);
+    int errCode = ReopenRestoredDb();
     return copyRet ? errCode : E_ERROR;
+}
+
+int ConnPool::ValidateAndPruneDb(const std::string &sourcePath)
+{
+    if (!CheckIntegrity(sourcePath)) {
+        LOG_ERROR("backup file is corrupted, %{public}s", SqliteUtils::Anonymous(sourcePath).c_str());
+        return E_SQLITE_CORRUPT;
+    }
+    if (SqliteUtils::GetFileSize(sourcePath + "-wal") != 0) {
+        LOG_ERROR("Wal file exist, %{public}s", SqliteUtils::Anonymous(sourcePath).c_str());
+        return E_SQLITE_CORRUPT;
+    }
+    SqliteUtils::DeleteFile(sourcePath + "-shm");
+    SqliteUtils::DeleteFile(sourcePath + "-wal");
+    return E_OK;
+}
+
+int ConnPool::RestoreMasterDb(const std::string &newPath, const std::string &backupPath)
+{
+    int errCode = ValidateAndPruneDb(backupPath);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+
+    if (TryRestoreByRename(backupPath, newPath)) {
+        return ReopenRestoredDb();
+    }
+    return RestoreByCopy(newPath, backupPath);
 }
 
 int ConnPool::Rekey(const RdbStoreConfig::CryptoParam &cryptoParam)
@@ -742,6 +815,8 @@ void ConnPool::Container::InitMembers(Creator creator, int32_t max, int32_t time
 {
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
+        disable_ = true;
+        WaitForExtension(lock);
         disable_ = disable;
         max_ = max;
         creator_ = creator;
@@ -753,6 +828,7 @@ void ConnPool::Container::InitMembers(Creator creator, int32_t max, int32_t time
 int ConnectionPool::Container::Interrupt()
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    WaitForExtension(lock);
     for (auto it = details_.begin(); it != details_.end();) {
         auto conn = it->lock();
         if (conn == nullptr || conn->connect_ == nullptr) {
@@ -771,6 +847,8 @@ std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Ini
     std::shared_ptr<ConnNode> connNode = nullptr;
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
+        disable_ = true;
+        WaitForExtension(lock);
         disable_ = disable;
         max_ = max;
         creator_ = creator;
@@ -797,6 +875,7 @@ std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Ini
 int32_t ConnPool::Container::ConfigLocale(const std::string &locale)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    WaitForExtension(lock);
     for (auto it = details_.begin(); it != details_.end();) {
         auto conn = it->lock();
         if (conn == nullptr || conn->connect_ == nullptr) {
@@ -816,6 +895,7 @@ int32_t ConnPool::Container::ConfigLocale(const std::string &locale)
 int32_t ConnPool::Container::SetTokenizer(Tokenizer tokenizer)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    WaitForExtension(lock);
     for (auto it = details_.begin(); it != details_.end();) {
         auto conn = it->lock();
         if (conn == nullptr || conn->connect_ == nullptr) {
@@ -837,33 +917,42 @@ std::pair<int, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Acquire
     std::unique_lock<decltype(mutex_)> lock(mutex_);
     auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
     if (max_ == 0) {
-        return {E_ERROR, nullptr};
+        return { E_ERROR, nullptr };
     }
     int errCode = E_OK;
-    auto waiter = [this, &errCode]() -> bool {
-        if (count_ > 0) {
-            return true;
-        }
-
-        if (disable_) {
-            return false;
-        }
-        errCode = ExtendNode();
-        return errCode == E_OK;
-    };
-    if (cond_.wait_for(lock, interval, waiter)) {
-        if (nodes_.empty()) {
-            LOG_ERROR("Nodes is empty.count %{public}d max %{public}d total %{public}d left %{public}d right%{public}d",
-                count_, max_, total_, left_, right_);
-            count_ = 0;
-            return {E_ERROR, nullptr};
-        }
-        auto node = nodes_.back();
-        nodes_.pop_back();
-        count_--;
-        return {E_OK, node};
+    if (count_ == 0) {
+        errCode = AcquireNode(lock, interval);
     }
-    return {errCode, nullptr};
+    if (errCode != E_OK) {
+        return { errCode, nullptr };
+    }
+    if (nodes_.empty()) {
+        LOG_ERROR("Nodes is empty.count %{public}d max %{public}d total %{public}d left %{public}d right%{public}d",
+            count_, max_, total_, left_, right_);
+        count_ = 0;
+        return { E_ERROR, nullptr };
+    }
+    auto node = nodes_.back();
+    nodes_.pop_back();
+    count_--;
+    return { E_OK, node };
+}
+
+int32_t ConnPool::Container::AcquireNode(std::unique_lock<std::mutex> &lock,
+    std::chrono::milliseconds interval)
+{
+    if (!disable_ && !extending_) {
+        return ExtendNode(lock);
+    }
+    if (!cond_.wait_for(lock, interval, [this]() {
+        return count_ > 0 || (!disable_ && !extending_);
+    })) {
+        return E_DATABASE_BUSY;
+    }
+    if (count_ == 0 && !disable_) {
+        return ExtendNode(lock);
+    }
+    return E_OK;
 }
 
 int32_t ConnPool::Container::ExtendNode()
@@ -871,18 +960,44 @@ int32_t ConnPool::Container::ExtendNode()
     if (creator_ == nullptr) {
         return E_ERROR;
     }
-    auto [errCode, conn] = creator_();
-    if (conn == nullptr) {
+    auto [errCode, connection] = creator_();
+    return AddNode(errCode, std::move(connection));
+}
+
+int32_t ConnPool::Container::ExtendNode(std::unique_lock<std::mutex> &lock)
+{
+    if (creator_ == nullptr) {
+        return E_ERROR;
+    }
+    auto creator = creator_;
+    extending_ = true;
+    lock.unlock();
+    auto [errCode, connection] = creator();
+    lock.lock();
+    extending_ = false;
+    errCode = AddNode(errCode, std::move(connection));
+    cond_.notify_all();
+    return errCode;
+}
+
+int32_t ConnPool::Container::AddNode(int32_t errCode, std::shared_ptr<Connection> connection)
+{
+    if (connection == nullptr) {
         return errCode;
     }
-    auto node = std::make_shared<ConnNode>(conn);
+    auto node = std::make_shared<ConnNode>(connection);
     node->id_ = right_++;
-    conn->SetId(node->id_);
+    connection->SetId(node->id_);
     nodes_.push_back(node);
     details_.push_back(node);
     count_++;
     total_++;
     return E_OK;
+}
+
+void ConnPool::Container::WaitForExtension(std::unique_lock<std::mutex> &lock)
+{
+    cond_.wait(lock, [this]() { return !extending_; });
 }
 
 std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Container::AcquireAll(
@@ -893,6 +1008,11 @@ std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Contai
     auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
     auto time = std::chrono::steady_clock::now() + interval;
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    // Preserve a caller-owned disabled state after collecting all available nodes.
+    const bool wasDisabled = disable_;
+    // Prevent new connection creation while waiting for all existing nodes.
+    disable_ = true;
+    WaitForExtension(lock);
     while (count < total_ && cond_.wait_until(lock, time, [this]() { return count_ > 0; })) {
         nodes.merge(std::move(nodes_));
         nodes_.clear();
@@ -904,6 +1024,8 @@ std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Contai
         count_ = count;
         nodes_ = std::move(nodes);
         nodes.clear();
+        disable_ = wasDisabled;
+        cond_.notify_all();
         return {false, nodes};
     }
     auto func = [](const std::list<std::shared_ptr<ConnNode>> &nodes) -> bool {
@@ -925,12 +1047,15 @@ std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Contai
         nodes_ = std::move(nodes);
         nodes.clear();
     }
+    disable_ = wasDisabled;
+    cond_.notify_all();
     return {!failed, nodes};
 }
 
 std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::AcquireById(int32_t id)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    WaitForExtension(lock);
     if (count_ == 0) {
         return nullptr;
     }
@@ -956,14 +1081,21 @@ std::shared_ptr<ConnPool::ConnNode> ConnPool::Container::AcquireById(int32_t id)
 
 void ConnPool::Container::Disable()
 {
-    disable_ = true;
-    cond_.notify_one();
+    {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        disable_ = true;
+        WaitForExtension(lock);
+    }
+    cond_.notify_all();
 }
 
 void ConnPool::Container::Enable()
 {
-    disable_ = false;
-    cond_.notify_one();
+    {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        disable_ = false;
+    }
+    cond_.notify_all();
 }
 
 int32_t ConnPool::Container::Release(std::shared_ptr<ConnNode> node)
@@ -1042,9 +1174,10 @@ int32_t ConnPool::Container::Clear()
     std::list<std::weak_ptr<ConnNode>> details;
     {
         std::unique_lock<decltype(mutex_)> lock(mutex_);
+        disable_ = true;
+        WaitForExtension(lock);
         nodes = std::move(nodes_);
         details = std::move(details_);
-        disable_ = true;
         total_ = 0;
         count_ = 0;
         if (right_ > MAX_RIGHT) {
@@ -1061,12 +1194,14 @@ int32_t ConnPool::Container::Clear()
 bool ConnPool::Container::IsFull()
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    WaitForExtension(lock);
     return total_ == count_;
 }
 
 bool ConnPool::Container::Empty()
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    WaitForExtension(lock);
     return total_ == 0;
 }
 
@@ -1114,6 +1249,7 @@ int32_t ConnPool::Container::Dump(const char *header, int32_t count)
 int32_t ConnectionPool::Container::ClearUnusedTrans(std::shared_ptr<ConnectionPool> pool)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
+    WaitForExtension(lock);
     int transCount = total_;
     for (auto it = nodes_.begin(); it != nodes_.end();) {
         auto unusedDuration = std::chrono::steady_clock::now() - (*it)->time_;

@@ -37,6 +37,14 @@
 namespace OHOS {
 class ExecutorPool;
 namespace NativeRdb {
+class TmpFileGuard {
+public:
+    explicit TmpFileGuard(const std::string &path);
+    ~TmpFileGuard();
+
+private:
+    std::string path_;
+};
 class ConnectionPool : public std::enable_shared_from_this<ConnectionPool> {
 public:
     enum ConnType:uint32_t {
@@ -112,6 +120,7 @@ private:
         static constexpr int32_t MAX_RIGHT = 0x4FFFFFFF;
         static constexpr int32_t MIN_TRANS_ID = 10000;
         bool disable_ = true;
+        bool extending_ = false;
         int max_ = 0;
         int total_ = 0;
         int count_ = 0;
@@ -145,6 +154,11 @@ private:
 
     private:
         int32_t ExtendNode();
+        int32_t ExtendNode(std::unique_lock<std::mutex> &lock);
+        int32_t AcquireNode(std::unique_lock<std::mutex> &lock,
+            std::chrono::milliseconds interval);
+        int32_t AddNode(int32_t errCode, std::shared_ptr<Connection> connection);
+        void WaitForExtension(std::unique_lock<std::mutex> &lock);
         int32_t RelDetails(std::shared_ptr<ConnNode> node);
     };
 
@@ -158,6 +172,11 @@ private:
     int RestoreByDbSqliteType(const std::string &newPath, const std::string &backupPath,
         std::shared_ptr<SlaveStatus> slaveStatus, const bool isForceRestore);
     int RestoreMasterDb(const std::string &newPath, const std::string &backupPath);
+    int ValidateAndPruneDb(const std::string &sourcePath);
+    bool TryRestoreByRename(const std::string &backupPath, const std::string &newPath);
+    int RestoreByCopy(const std::string &newPath, const std::string &backupPath);
+    int ReopenRestoredDb();
+    static void CleanRestoreTempFile(const std::string &dbPath);
     bool CheckIntegrity(const std::string &dbPath);
     void DelayClearTrans();
     void ClearCache();
