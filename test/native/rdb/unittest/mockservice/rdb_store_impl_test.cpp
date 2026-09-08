@@ -18,6 +18,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <chrono>
+#include <thread>
+
 #include "common.h"
 #include "connection_mock.h"
 #include "dataobs_mgr_client_mock.h"
@@ -2919,4 +2923,56 @@ HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_GetServiceInvalidArgs_Test, T
     OHOS::DistributedRdb::RdbSyncerParam param;
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     RdbStoreImpl::RegisterMatrix(config, param, 0);
+}
+
+/**
+ * @tc.name: RegisterMatrix_NoPoolFallback_Test
+ * @tc.desc: RegisterMatrix without a pool (service ready) falls back to a direct
+ *           Connection::Create for the matrix connection.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_NoPoolFallback_Test, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, RegisterMatrix(_, _)).WillRepeatedly(Return(E_OK));
+
+    OHOS::DistributedRdb::RdbSyncerParam param;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    RdbStoreImpl::RegisterMatrix(config, param, 0); // no pool passed: fallback connection is created
+}
+
+/**
+ * @tc.name: RegisterMatrix_ServiceNotFoundRetry_Test
+ * @tc.desc: GetRdbService returns E_SERVICE_NOT_FOUND first, so RegisterMatrix schedules a retry
+ *           on the task executor; the retry finds the service and registers the matrix.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_ServiceNotFoundRetry_Test, TestSize.Level2)
+{
+    auto oldExecutor = TaskExecutor::GetInstance().GetExecutor();
+    auto executor = std::make_shared<OHOS::ExecutorPool>(1, 0, "RegisterMatrixRetry");
+    TaskExecutor::GetInstance().SetExecutor(executor);
+
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    std::atomic<int32_t> calls(0);
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Invoke([&](const RdbSyncerParam &) {
+        return calls.fetch_add(1) == 0 ? std::make_pair(E_SERVICE_NOT_FOUND, std::shared_ptr<RdbService>())
+                                       : std::make_pair(E_OK, mockRdbService);
+    }));
+    EXPECT_CALL(*mockRdbService, RegisterMatrix(_, _)).WillRepeatedly(Return(E_OK));
+
+    OHOS::DistributedRdb::RdbSyncerParam param;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    RdbStoreImpl::RegisterMatrix(config, param, 0); // first call: service missing, retry scheduled
+
+    // The scheduled retry runs after RETRY_INTERVAL and finds the service.
+    for (int retry = 0; retry < 100 && calls.load() < 2; ++retry) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    EXPECT_GE(calls.load(), 2);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // let the retry finish its work
+
+    TaskExecutor::GetInstance().SetExecutor(oldExecutor);
 }
