@@ -40,8 +40,6 @@ using namespace OHOS::NativeRdb;
 using namespace OHOS::AppDataMgrJsKit;
 using namespace OHOS::AppDataMgrJsKit::JSUtils;
 
-#define REPORT() JSUtils::ReportInterfaceUsed(std::string("relationalstore::") + __FUNCTION__)
-
 namespace OHOS {
 namespace RelationalStoreJsKit {
 constexpr int32_t PARAM_LENGTH_MAX = 256;
@@ -217,9 +215,6 @@ napi_value DeleteRdbStore(napi_env env, napi_callback_info info)
     context->SetAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
-    if (context->isAsync_ != true) {
-        REPORT();
-    }
     return ASYNC_CALL(env, context);
 }
 
@@ -455,7 +450,6 @@ napi_value InitRdbHelper(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStore", GetRdbStore, ASYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("getRdbStoreSync", GetRdbStoreSync, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStore", DeleteRdbStore, ASYNC),
-        DECLARE_NAPI_FUNCTION_WITH_DATA("deleteRdbStoreSync", DeleteRdbStore, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("isVectorSupported", IsVectorSupported, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("isTokenizerSupported", IsTokenizerSupported, SYNC),
         DECLARE_NAPI_FUNCTION_WITH_DATA("getInsertSqlInfo", GetInsertSqlInfo, SYNC),
