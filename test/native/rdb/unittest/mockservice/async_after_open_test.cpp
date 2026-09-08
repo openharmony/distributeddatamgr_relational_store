@@ -247,6 +247,36 @@ HWTEST_F(AsyncAfterOpenTest, AfterOpenServiceNotFoundRetries, TestSize.Level1)
 }
 
 /* *
+ * @tc.name: RegisterMatrixServiceNotFoundRetries
+ * @tc.desc: GetRdbService returns E_SERVICE_NOT_FOUND first, so RegisterMatrix schedules a
+ *           retry on the task executor; the retry finds the service and registers the matrix
+ *           with a directly created connection (no pool passed).
+ * @tc.type: FUNC
+ */
+HWTEST_F(AsyncAfterOpenTest, RegisterMatrixServiceNotFoundRetries, TestSize.Level1)
+{
+    auto service = std::make_shared<MockRdbService>();
+    std::atomic<int32_t> calls(0);
+    EXPECT_CALL(*manager_, GetRdbService(_)).WillRepeatedly(Invoke([&](const RdbSyncerParam &) {
+        return calls.fetch_add(1) == 0 ? std::make_pair(E_SERVICE_NOT_FOUND, std::shared_ptr<RdbService>())
+                                       : std::make_pair(E_OK, service);
+    }));
+    EXPECT_CALL(*service, RegisterMatrix(_, _)).WillRepeatedly(Return(E_OK));
+
+    auto config = MakeConfig("/data/test/register_matrix_retry.db");
+    RdbSyncerParam param;
+    // First call: the service is missing, a retry is scheduled after RETRY_INTERVAL
+    RdbStoreImpl::RegisterMatrix(config, param, 0);
+
+    // The scheduled retry runs after RETRY_INTERVAL and finds the service.
+    for (int retry = 0; retry < 100 && calls.load() < 2; ++retry) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    EXPECT_GE(calls.load(), 2);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // let the retry finish its work
+}
+
+/* *
  * @tc.name: AfterOpenAsyncPoolNullFallbackSync
  * @tc.desc: AfterOpenAsync with pool==nullptr falls back to synchronous AfterOpen
  * @tc.type: FUNC

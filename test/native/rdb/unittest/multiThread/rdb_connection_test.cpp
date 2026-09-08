@@ -361,7 +361,8 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_Write_0001,
  * @tc.desc: 1.thread A: confirms the QuerySql path with a cheap scan, then keeps long
  *                     cross-join scans of QuerySql result sets in flight
  *           2.thread B (main): Release with interrupt returns E_OK; the scan thread A is
- *           running aborts with E_SQLITE_INTERRUPT and every connection is returned in budget.
+ *           running aborts with E_SQLITE_INTERRUPT, or the worker's next round observes the
+ *           closed pool with E_ALREADY_CLOSED, and every connection is returned in budget.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_QuerySql_0001, TestSize.Level2)
@@ -394,11 +395,14 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_QuerySql_00
         queryBlock->SetValue(lastErr);
     });
 
-    // Release right after the path is confirmed; the interrupt aborts the scan thread A is
-    // running, the resultSet reports E_SQLITE_INTERRUPT, and the connection returns in budget.
+    // Release right after the path is confirmed: the interrupt aborts the running scan and the
+    // worker reports E_SQLITE_INTERRUPT, or the release wins the race into the worker's next
+    // round and that QuerySql observes the closed pool (E_ALREADY_CLOSED). Either way the
+    // worker stops and every connection is returned in budget.
     EXPECT_EQ(E_OK, started->GetValue());
     EXPECT_EQ(E_OK, store_->Release(InterruptReleaseOption()));
-    EXPECT_EQ(E_SQLITE_INTERRUPT, queryBlock->GetValue());
+    auto lastErr = queryBlock->GetValue();
+    EXPECT_TRUE(lastErr == E_SQLITE_INTERRUPT || lastErr == E_ALREADY_CLOSED) << "lastErr: " << lastErr;
     EXPECT_EQ(nullptr, store_->QuerySql("SELECT * FROM test"));
 }
 
