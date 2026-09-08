@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <unistd.h>
 
 #include "block_data.h"
 #include "common.h"
@@ -3249,3 +3250,103 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_Interrupt_Modes_001, TestSize.Level2
     RdbHelper::DeleteRdbStore(db);
 }
 
+/**
+ * @tc.name: RdbStore_Release_Interrupt_Timeout_001
+ * @tc.desc: Release with interrupt also times out on an idle resultSet: no statement is running,
+ *           so the interrupt flag has nothing to abort and the borrowed read connection cannot
+ *           be drained; the failed release restores the pool and the slave status, and the
+ *           store keeps working afterwards.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_Interrupt_Timeout_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_interrupt_timeout_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+    EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('x', 0);"));
+
+    auto holder = store->QueryByStep("SELECT * FROM test");
+    ASSERT_NE(holder, nullptr);
+    EXPECT_EQ(E_OK, holder->GoToNextRow()); // borrow a read connection and keep it idle
+
+    EXPECT_EQ(E_DATABASE_BUSY, store->Release({ 500, false, true }));
+
+    holder->Close();
+    // The failed release restored the pool and the slave status: the store works on.
+    EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('a', 1);"));
+    EXPECT_EQ(E_OK, store->Release({ 2000, false, true }));
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_Release_Interrupt_ExpiredTransaction_001
+ * @tc.desc: A transaction object destroyed without commit leaves an expired entry in the store's
+ *           transaction list; Release with interrupt skips the expired entry and still succeeds.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Release_Interrupt_ExpiredTransaction_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "release_interrupt_expired_trans_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+
+    {
+        auto [createErr, transaction] = store->CreateTransaction(Transaction::IMMEDIATE);
+        ASSERT_EQ(E_OK, createErr);
+        ASSERT_NE(transaction, nullptr);
+        EXPECT_EQ(E_OK, transaction->Execute("INSERT INTO test (name, age) VALUES ('a', 1)").first);
+    } // the transaction is destroyed without commit: its entry in the store expires
+
+    RdbStore::ReleaseOption option { 2000, false, true };
+    ASSERT_EQ(E_OK, store->Release(option));
+    EXPECT_EQ(E_ALREADY_CLOSED, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('b', 2);"));
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+}
+
+/**
+ * @tc.name: RdbStore_Backup_SourceFileRemoved_001
+ * @tc.desc: When the source database file is gone, the backup path cannot create its temporary
+ *           connection (the source is opened without creating) and Backup fails cleanly.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplTest, RdbStore_Backup_SourceFileRemoved_001, TestSize.Level2)
+{
+    const std::string db = RDB_TEST_PATH + "backup_source_removed_test.db";
+    RdbHelper::DeleteRdbStore(db);
+    RdbStoreConfig config(db);
+    config.SetBundleName("com.example.distributed.rdb");
+    RdbStoreImplTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(store, nullptr);
+    ASSERT_EQ(E_OK, errCode);
+    EXPECT_EQ(E_OK, store->ExecuteSql(CREATE_TABLE_TEST));
+    EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('a', 1);"));
+
+    ASSERT_EQ(0, unlink(db.c_str()));
+    EXPECT_NE(E_OK, store->Backup(RDB_TEST_PATH + "backup_source_removed_dst.db", std::vector<uint8_t>()));
+    // The store itself keeps working on its pooled connections.
+    EXPECT_EQ(E_OK, store->ExecuteSql("INSERT INTO test (name, age) VALUES ('b', 2);"));
+
+    RdbHelper::ClearStoreCache(config);
+    RdbHelper::DeleteRdbStore(db);
+    RdbHelper::DeleteRdbStore(RDB_TEST_PATH + "backup_source_removed_dst.db");
+}
