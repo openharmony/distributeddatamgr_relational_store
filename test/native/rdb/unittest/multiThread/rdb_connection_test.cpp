@@ -40,6 +40,7 @@ constexpr const char *FILL_RELEASE_TABLE =
     "INSERT INTO test(name, age) SELECT 'name_' || x, x FROM cnt;";
 constexpr const char *LONG_QUERY_PART = "SELECT count(*) FROM test a, test b WHERE a.id <= 50";
 constexpr int RELEASE_INTERRUPT_DELAY_US = 200 * 1000;
+constexpr int32_t QUERY_ROUND_NUM = 100;
 
 static RdbStore::ReleaseOption InterruptReleaseOption()
 {
@@ -357,28 +358,33 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_Write_0001,
 
 /**
  * @tc.name: MultiThread_Release_Interrupt_QuerySql_0001
- * @tc.desc: 1.thread A: one confirmed QuerySql round, then keeps querying
- *           2.thread B (main): Release with interrupt returns E_OK; later rounds of thread A
- *           get nullptr (E_ALREADY_CLOSED) and every connection is returned within budget.
+ * @tc.desc: 1.thread A: confirms the QuerySql path with a cheap scan, then keeps long
+ *                     cross-join scans of QuerySql result sets in flight
+ *           2.thread B (main): Release with interrupt returns E_OK; the scan thread A is
+ *           running aborts with E_SQLITE_INTERRUPT and every connection is returned in budget.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_QuerySql_0001, TestSize.Level2)
 {
     EXPECT_EQ(E_OK, store_->ExecuteSql(FILL_RELEASE_TABLE));
-    auto started = std::make_shared<BlockData<int32_t>>(3, false);
-    auto queryBlock = std::make_shared<BlockData<int32_t>>(3, false);
+    auto started = std::make_shared<BlockData<int32_t>>(3, -1);
+    auto queryBlock = std::make_shared<BlockData<int32_t>>(3, -1);
     executors_->Execute([store = store_, started, queryBlock]() {
-        auto resultSet = store->QuerySql(LONG_QUERY_PART);
-        if (resultSet == nullptr) {
+        // a cheap scan first, so the confirmation never eats the gate budget on a loaded host
+        auto first = store->QuerySql("SELECT count(*) FROM test");
+        if (first == nullptr) {
+            started->SetValue(E_ERROR);
             queryBlock->SetValue(E_ERROR);
             return;
         }
-        int lastErr = resultSet->GoToNextRow(); // the first round succeeds
-        resultSet->Close();
-        started->SetValue(E_OK);                // signal: the QuerySql path is confirmed working
-        for (int32_t i = 0; i < 20 && lastErr == E_OK; i++) {
-            resultSet = store->QuerySql(LONG_QUERY_PART);
-            if (resultSet == nullptr) {         // the pool is gone after the release
+        int lastErr = first->GoToNextRow();
+        first->Close();
+        started->SetValue(lastErr);
+        // each round runs the cross join inside QuerySql and GoToNextRow, so a scan is in
+        // flight almost all the time and the interrupt lands inside a running one
+        for (int32_t i = 0; i < QUERY_ROUND_NUM && lastErr == E_OK; i++) {
+            auto resultSet = store->QuerySql(LONG_QUERY_PART);
+            if (resultSet == nullptr) { // the pool is gone after the release
                 lastErr = E_ALREADY_CLOSED;
                 break;
             }
@@ -388,11 +394,11 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_QuerySql_00
         queryBlock->SetValue(lastErr);
     });
 
-    // Release right after the first round is confirmed; later rounds get nullptr and the loop
-    // stops with E_ALREADY_CLOSED, with every connection returned within budget.
+    // Release right after the path is confirmed; the interrupt aborts the scan thread A is
+    // running, the resultSet reports E_SQLITE_INTERRUPT, and the connection returns in budget.
     EXPECT_EQ(E_OK, started->GetValue());
     EXPECT_EQ(E_OK, store_->Release(InterruptReleaseOption()));
-    EXPECT_EQ(E_ALREADY_CLOSED, queryBlock->GetValue());
+    EXPECT_EQ(E_SQLITE_INTERRUPT, queryBlock->GetValue());
     EXPECT_EQ(nullptr, store_->QuerySql("SELECT * FROM test"));
 }
 
