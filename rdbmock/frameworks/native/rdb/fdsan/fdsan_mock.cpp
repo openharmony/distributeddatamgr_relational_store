@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <unistd.h>
+
 #include "fdsan_mock.h"
 #include "rdb_visibility.h"
 
@@ -32,7 +34,6 @@ API_EXPORT void fdsan_exchange_owner_tag(int fd, uint64_t expected_tag, uint64_t
 
 API_EXPORT int fdsan_close_with_tag(int fd, uint64_t tag)
 {
-    (void)fd;
     (void)tag;
-    return 0;
+    return close(fd);
 }
