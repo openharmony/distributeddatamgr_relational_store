@@ -245,10 +245,6 @@ void RdbStoreImpl::Close()
 int RdbStoreImpl::RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> pool,
     const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason)
 {
-    if (statusInterrupted_ && slaveStatus_ != nullptr) {
-        *slaveStatus_ = statusBeforeInterrupt_;
-        statusInterrupted_ = false;
-    }
     if (pool != nullptr) {
         pool->Dump(true, reason);
         pool->Dump(false, reason);
@@ -267,10 +263,8 @@ void RdbStoreImpl::InterruptHolders(const std::shared_ptr<ConnectionPool> &pool)
         pool->Interrupt(ConnectionPool::READ | ConnectionPool::WRITE | ConnectionPool::TRANS
             | ConnectionPool::TEMP);
     }
-    if (slaveStatus_ != nullptr) {
-        statusBeforeInterrupt_ = *slaveStatus_;
-        statusInterrupted_ = true;
-        *slaveStatus_ = SlaveStatus::DB_CLOSING;
+    if (slaveStatus_ != nullptr && *slaveStatus_ == SlaveStatus::BACKING_UP) {
+        *slaveStatus_ = SlaveStatus::BACKUP_INTERRUPT;
     }
     std::list<std::weak_ptr<Transaction>> transactions;
     {
