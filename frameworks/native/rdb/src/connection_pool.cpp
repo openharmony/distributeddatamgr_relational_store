@@ -300,11 +300,7 @@ std::pair<int32_t, ConnectionPool::SharedConn> ConnPool::CreateConn(bool isWrite
         LOG_ERROR("create temp connection failed, err:%{public}d", errCode);
         return { errCode, nullptr };
     }
-    auto node = std::make_shared<ConnNode>(conn);
-    temps_.Register(node);
-    return { E_OK, std::shared_ptr<Connection>(conn.get(), [node](Connection *) mutable {
-        node = nullptr;
-    }) };
+    return { E_OK, temps_.Create(conn, std::weak_ptr<ConnectionPool>(shared_from_this())) };
 }
 
 std::pair<int32_t, ConnectionPool::SharedConns> ConnPool::AcquireAndDisableTrans(
@@ -1211,11 +1207,13 @@ int32_t ConnPool::Container::Clear()
     return 0;
 }
 
-void ConnPool::Container::Register(std::shared_ptr<ConnNode> node)
+std::shared_ptr<Connection> ConnPool::Container::Create(
+    const std::shared_ptr<Connection> &conn, const std::weak_ptr<ConnectionPool> &owner)
 {
-    if (node == nullptr || node->connect_ == nullptr) {
-        return;
+    if (conn == nullptr) {
+        return nullptr;
     }
+    auto node = std::make_shared<ConnNode>(conn);
     std::unique_lock<decltype(mutex_)> lock(mutex_);
     for (auto it = details_.begin(); it != details_.end();) {
         if (it->expired()) {
@@ -1227,6 +1225,25 @@ void ConnPool::Container::Register(std::shared_ptr<ConnNode> node)
     node->id_ = right_++;
     node->connect_->SetId(node->id_);
     details_.push_back(node);
+    lock.unlock();
+    return std::shared_ptr<Connection>(conn.get(), [node, owner](Connection *) mutable {
+        node = nullptr;                 // the registration lapses with the handle
+        if (auto pool = owner.lock()) { // and its entry is purged from the registry at once
+            pool->temps_.Remove();
+        }
+    });
+}
+
+void ConnPool::Container::Remove()
+{
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    for (auto it = details_.begin(); it != details_.end();) {
+        if (it->expired()) {
+            it = details_.erase(it);
+        } else {
+            it++;
+        }
+    }
 }
 
 bool ConnPool::Container::IsFull()

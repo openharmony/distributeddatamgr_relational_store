@@ -338,8 +338,6 @@ private:
     uint32_t rebuild_ = RebuiltType::NONE;
     int32_t initStatus_ = -1;
     const std::shared_ptr<SlaveStatus> slaveStatus_ = std::make_shared<SlaveStatus>(SlaveStatus::UNDEFINED);
-    SlaveStatus statusBeforeInterrupt_ = SlaveStatus::UNDEFINED;
-    bool statusInterrupted_ = false;
     int64_t vSchema_ = 0;
     std::atomic<int64_t> newTrxId_ = 1;
     std::shared_ptr<RdbStoreConfig> configHolder_;

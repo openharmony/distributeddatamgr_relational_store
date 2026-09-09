@@ -153,7 +153,8 @@ private:
         int32_t Dump(const char *header, int32_t count);
         int32_t ClearUnusedTrans(std::shared_ptr<ConnectionPool> pool);
         std::shared_ptr<ConnNode> AcquireById(int32_t id);
-        void Register(std::shared_ptr<ConnNode> node);
+        std::shared_ptr<Connection> Create(
+            const std::shared_ptr<Connection> &conn, const std::weak_ptr<ConnectionPool> &owner);
 
     private:
         int32_t ExtendNode();
@@ -163,6 +164,7 @@ private:
         int32_t AddNode(int32_t errCode, std::shared_ptr<Connection> connection);
         void WaitForExtension(std::unique_lock<std::mutex> &lock);
         int32_t RelDetails(std::shared_ptr<ConnNode> node);
+        void Remove();
     };
 
     std::pair<int32_t, SharedConns> AcquireContainer(Container &container, std::chrono::milliseconds remain);
