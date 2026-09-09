@@ -960,8 +960,10 @@ int PrepareGenerateKey(const RdbStoreConfig &config, const RdbStoreConfig::Crypt
     if (errCode != E_OK) {
         config.ResetEncryptKey(oldKey);
         config.SetEncryptStatus(oldEncryptStatus);
+        oldKey.assign(oldKey.size(), 0);
         return errCode;
     }
+    oldKey.assign(oldKey.size(), 0);
     return E_OK;
 }
 
