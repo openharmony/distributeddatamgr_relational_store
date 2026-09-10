@@ -103,7 +103,7 @@ void CheckReleaseWithMixedWaiters(bool transaction)
     auto extensionWaiter = std::async(std::launch::async, [container, waiting]() {
         std::unique_lock<std::mutex> lock(container->mutex_);
         waiting->set_value();
-        // Signal while holding the pool mutex so the next acquirer follows this waiter.
+        // Start the extension waiter before the second Acquire.
         container->WaitForExtension(lock);
     });
     waiting->get_future().wait();
@@ -111,12 +111,12 @@ void CheckReleaseWithMixedWaiters(bool transaction)
     EXPECT_EQ(std::future_status::timeout, acquiring.wait_for(WAITER_START_TIMEOUT));
 
     EXPECT_EQ(E_OK, transaction ? container->ReleaseTrans(node) : container->Release(node));
-    // The returned node must be usable before either extension completion or the acquire timeout.
+    // Acquire should wake as soon as the node is returned.
     EXPECT_EQ(std::future_status::ready, acquiring.wait_for(RELEASE_WAKE_TIMEOUT));
     EXPECT_EQ(std::future_status::timeout, extensionWaiter.wait_for(std::chrono::seconds(0)));
     EXPECT_EQ(std::future_status::timeout, growing.wait_for(std::chrono::seconds(0)));
 
-    // Always unblock and join workers before checking results, even if a wakeup assertion failed.
+    // Unblock the creator before joining the waiters.
     FinishCreator(gate);
     extensionWaiter.get();
     auto acquiredNode = GetAcquireNode(acquiring);
@@ -138,7 +138,7 @@ class ConnectionPoolTest : public testing::Test {};
  */
 HWTEST_F(ConnectionPoolTest, ReleaseWakesAcquireWithExtensionWaiterTest, TestSize.Level1)
 {
-    CheckReleaseWithMixedWaiters(false);
+    ASSERT_NO_FATAL_FAILURE(CheckReleaseWithMixedWaiters(false));
 }
 
 /**
@@ -148,7 +148,7 @@ HWTEST_F(ConnectionPoolTest, ReleaseWakesAcquireWithExtensionWaiterTest, TestSiz
  */
 HWTEST_F(ConnectionPoolTest, ReleaseTransWakesAcquireWithExtensionWaiterTest, TestSize.Level1)
 {
-    CheckReleaseWithMixedWaiters(true);
+    ASSERT_NO_FATAL_FAILURE(CheckReleaseWithMixedWaiters(true));
 }
 
 /**
