@@ -299,8 +299,9 @@ std::pair<int32_t, ConnectionPool::SharedConn> ConnPool::CreateConn(bool isWrite
     if (node == nullptr) {
         return { errCode, nullptr };
     }
+    auto holder = std::move(node);
     return { E_OK,
-        std::shared_ptr<Connection>(node->connect_.get(), [node](Connection *) mutable { node = nullptr; }) };
+        std::shared_ptr<Connection>(holder->connect_.get(), [holder](Connection *) mutable { holder = nullptr; }) };
 }
 
 std::pair<int32_t, ConnectionPool::SharedConns> ConnPool::AcquireAndDisableTrans(
