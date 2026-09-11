@@ -249,8 +249,8 @@ HWTEST_F(AsyncAfterOpenTest, AfterOpenServiceNotFoundRetries, TestSize.Level1)
 /* *
  * @tc.name: RegisterMatrixServiceNotFoundRetries
  * @tc.desc: GetRdbService returns E_SERVICE_NOT_FOUND first, so RegisterMatrix schedules a
- *           retry on the task executor; the retry finds the service and registers the matrix
- *           with a directly created connection (no pool passed).
+ *           retry on the task executor; the retry finds the service and registers the matrix,
+ *           then skips connection creation (no pool passed).
  * @tc.type: FUNC
  */
 HWTEST_F(AsyncAfterOpenTest, RegisterMatrixServiceNotFoundRetries, TestSize.Level1)

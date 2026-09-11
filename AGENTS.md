@@ -138,6 +138,7 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 - 共享资源 **MUST** 考虑多进程并发访问场景，跨进程访问通过 IPC（DataShare 用 `rdb_data_share_adapter` 做 IPC 隔离）；**NEVER** 忽略共享资源的多进程并发访问场景。
 - **MUST** 考虑 SA 进程未启动或不存在场景，做降级/容错处理（检查 SA 可用性后再调用，不可用时返回本地缓存或默认值）；**NEVER** 硬依赖 SA 进程。
 - **读写链接选用**：`RdbStore::BeginTransaction()` 的写事务只作用于写连接，读连接为独立快照、不在事务内。因此 **NEVER** 将存量代码的连接从写改读或从读改写（读操作看似应走读连接，但会破坏事务内 read-your-writes、并发与锁行为），否则属改变接口行为语义的破坏性变更。
+- **临时链接管理**：临时连接（InnerBackup / StartAsyncBackup / ReplayCallback / RegisterMatrix 等不入池借还的连接）**MUST** 通过 `ConnectionPool::CreateConn` 创建并纳入 `temps_` 统一管理（可被 `Interrupt` 打断、可被 `Dump` 观测、随句柄回收）；**NEVER** 直接调用 `Connection::Create` 创建游离临时连接。
 
 | Agent 会说的借口       | 现实                                                |
 | ---------------------- | --------------------------------------------------- |
