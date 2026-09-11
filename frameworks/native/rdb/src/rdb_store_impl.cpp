@@ -484,11 +484,13 @@ void RdbStoreImpl::RegisterMatrix(const RdbStoreConfig &config, const RdbParam &
     }
 
     std::shared_ptr<Connection> conn;
-    if (auto realPool = connPool.lock()) {
-        std::tie(errCode, conn) = realPool->CreateConn(false, config);
-    } else {
-        std::tie(errCode, conn) = Connection::Create(config, false);
+    auto realPool = connPool.lock();
+    if (realPool == nullptr) {
+        LOG_WARN("RegisterMatrix skipped, pool expired, storeName: %{public}s.",
+            SqliteUtils::Anonymous(param.storeName_).c_str());
+        return;
     }
+    std::tie(errCode, conn) = realPool->CreateConn(false, config);
     if (errCode != E_OK || conn == nullptr) {
         LOG_ERROR("Create connection failed when register matrix, ret: %{public}d, storeName: %{public}s.",
             errCode, SqliteUtils::Anonymous(param.storeName_).c_str());
@@ -3310,15 +3312,12 @@ int RdbStoreImpl::ForceRestore(const std::string &backupPath, const std::vector<
 std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::CreateWritableConn(
     const RdbStoreConfig &config, const std::weak_ptr<ConnectionPool> &pool)
 {
-    if (auto realPool = pool.lock()) {
-        return realPool->CreateConn(true, config);
+    auto realPool = pool.lock();
+    if (realPool == nullptr) {
+        LOG_WARN("CreateWritableConn skipped, pool expired.");
+        return { E_ERROR, nullptr };
     }
-    auto [result, conn] = Connection::Create(config, true);
-    if (result != E_OK || conn == nullptr) {
-        LOG_ERROR("create connection failed, err:%{public}d", result);
-        return { result, nullptr };
-    }
-    return { E_OK, conn };
+    return realPool->CreateConn(true, config);
 }
 
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
