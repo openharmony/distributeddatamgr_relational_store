@@ -483,17 +483,16 @@ void RdbStoreImpl::RegisterMatrix(const RdbStoreConfig &config, const RdbParam &
         return;
     }
 
-    std::shared_ptr<Connection> conn;
     auto realPool = connPool.lock();
     if (realPool == nullptr) {
         LOG_WARN("RegisterMatrix skipped, pool expired, storeName: %{public}s.",
             SqliteUtils::Anonymous(param.storeName_).c_str());
         return;
     }
-    std::tie(errCode, conn) = realPool->CreateConn(false, config);
-    if (errCode != E_OK || conn == nullptr) {
+    auto [createErr, conn] = realPool->CreateConn(false, config);
+    if (createErr != E_OK || conn == nullptr) {
         LOG_ERROR("Create connection failed when register matrix, ret: %{public}d, storeName: %{public}s.",
-            errCode, SqliteUtils::Anonymous(param.storeName_).c_str());
+            createErr, SqliteUtils::Anonymous(param.storeName_).c_str());
         return;
     }
 
