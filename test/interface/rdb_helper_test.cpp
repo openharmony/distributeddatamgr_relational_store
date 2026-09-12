@@ -381,7 +381,10 @@ HWTEST_F(RdbHelperTest, DeleteDatabase_011, TestSize.Level0)
     EXPECT_EQ(ret, E_OK);
 
     ret = store->Backup("backup.db");
-    EXPECT_EQ(ret, E_DB_NOT_EXIST);
+    // DeleteRdbStore closes the store (releases the connection pool), so Backup bails in
+    // CreateWritableConn with E_ERROR (pool expired) instead of reaching Connection::Create's
+    // file-existence probe that used to return E_DB_NOT_EXIST.
+    EXPECT_EQ(ret, E_ERROR);
 }
 
 /**
