@@ -79,6 +79,7 @@ private:
     static napi_value SetVersion(napi_env env, napi_callback_info info);
     static napi_value Restore(napi_env env, napi_callback_info info);
     static napi_value SetDistributedTables(napi_env env, napi_callback_info info);
+    static napi_value RequestFullDataDonation(napi_env env, napi_callback_info info);
     static napi_value RetainDeviceData(napi_env env, napi_callback_info info);
     static napi_value UpdateDistributedInfo(napi_env env, napi_callback_info info);
     static napi_value ObtainDistributedTableName(napi_env env, napi_callback_info info);
@@ -119,6 +120,7 @@ private:
     static constexpr int EVENT_HANDLE_NUM = 5;
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
+    static constexpr int TABLE_DONATION_MAX = 10;
 
     napi_value OnRemote(napi_env env, size_t argc, napi_value *argv);
     napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,  napi_value callback);

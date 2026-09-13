@@ -651,6 +651,25 @@ void RdbStoreImpl::NotifyDataChange()
     }
 }
 
+int RdbStoreImpl::RequestFullDataDonation(const std::vector<std::string> &tables)
+{
+    if (config_.GetDBType() == DB_VECTOR || isReadOnly_ || isMemoryRdb_) {
+        return E_NOT_SUPPORT_NEW;
+    }
+    WaitAfterOpen();
+    auto [errCode, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (errCode != E_OK || service == nullptr) {
+        LOG_ERROR("GetRdbService is failed, err is %{public}d.", errCode);
+        return errCode;
+    }
+    int32_t errorCode = service->RequestFullDataDonation(syncerParam_, true);
+    if (errorCode != E_OK) {
+        LOG_ERROR("Fail to request full donation, error=%{public}d.", errorCode);
+        return errorCode;
+    }
+    return E_OK;
+}
+
 int RdbStoreImpl::SetDistributedTables(
     const std::vector<std::string> &tables, int32_t type, const DistributedRdb::DistributedConfig &distributedConfig)
 {
