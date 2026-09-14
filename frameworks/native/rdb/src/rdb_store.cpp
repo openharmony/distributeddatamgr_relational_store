@@ -723,6 +723,12 @@ int RdbStore::SetSearchable(bool isSearchable)
     return E_NOT_SUPPORT;
 }
 
+int RdbStore::RequestFullDataDonation(const std::vector<std::string> &tables)
+{
+    (void)tables;
+    return E_NOT_SUPPORT;
+}
+
 std::string RdbStore::GetLogTableName(const std::string &tableName)
 {
     return "naturalbase_rdb_aux_" + tableName + "_log";

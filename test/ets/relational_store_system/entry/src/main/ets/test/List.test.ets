@@ -15,8 +15,10 @@
 import RetainDeviceData from './RetainDeviceData.test';
 import UpdateDistributedInfo from './UpdateDistributedInfo.test';
 import CleanDeviceDirtyData from './CleanDeviceDirtyData.test';
+import RequestFullDataDonation from './RequestFullDataDonation.test';
 export default function testsuite() {
   RetainDeviceData();
   UpdateDistributedInfo();
   CleanDeviceDirtyData();
+  RequestFullDataDonation();
 }

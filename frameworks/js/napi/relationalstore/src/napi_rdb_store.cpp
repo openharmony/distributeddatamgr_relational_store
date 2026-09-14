@@ -1619,6 +1619,7 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
 {
     properties.push_back(DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery));
     properties.push_back(DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables));
+    properties.push_back(DECLARE_NAPI_FUNCTION("requestFullDataDonation", RequestFullDataDonation));
     properties.push_back(DECLARE_NAPI_FUNCTION("retainDeviceData", RetainDeviceData));
     properties.push_back(DECLARE_NAPI_FUNCTION("updateDistributedInfo", UpdateDistributedInfo));
     properties.push_back(DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName));
@@ -1653,6 +1654,36 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         CHECK_RETURN_ERR(context->rdbStore != nullptr);
         return context->StealRdbStore()->SetDistributedTables(
             context->tablesNames, context->distributedType, context->distributedConfig);
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
+    };
+    context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+napi_value RdbStoreProxy::RequestFullDataDonation(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RdbStoreContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN_SET_E(argc == 1, std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+        CHECK_RETURN(OK == ParserThis(env, self, context));
+        RdbStoreProxy *obj = reinterpret_cast<RdbStoreProxy *>(context->boundObj);
+        CHECK_RETURN_SET_E(obj != nullptr && obj->IsSystemAppCalled(),
+            std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
+        CHECK_RETURN(OK == ParseTablesName(env, argv[0], context));
+        // tables is not empty and less than or equal to 10
+        CHECK_RETURN_SET_E(!context->tablesNames.empty() && context->tablesNames.size() <= TABLE_DONATION_MAX,
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        DistributedRdb::DistributedConfig config = { true };
+        config.isRebuild = true;
+        return context->StealRdbStore()->RequestFullDataDonation(context->tablesNames);
     };
     auto output = [context](napi_env env, napi_value &result) {
         napi_status status = napi_get_undefined(env, &result);
