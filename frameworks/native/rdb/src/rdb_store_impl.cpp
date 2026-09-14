@@ -94,7 +94,6 @@ static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
 static constexpr const char *ASYNC_RESTORE = "-async.restore";
-constexpr char const *SUFFIX_BINLOG = "_binlog/";
 constexpr char const *INVALID_PATH_PART = "..";
 constexpr int32_t SERVICE_GID = 3012;
 constexpr int64_t TIME_OUT = 1500;
@@ -381,7 +380,7 @@ bool RdbStoreImpl::SetFileGid(const RdbStoreConfig &config, int32_t gid)
         }
         setDir = setDir && setReplicaDir;
     }
-    std::string binlogDir = config.GetPath() + SUFFIX_BINLOG;
+    std::string binlogDir = SqliteUtils::GetBinlogFolderPath(config);
     bool setBinlog = SqliteUtils::SetDbDirGid(binlogDir, gid, true);
     if (!setBinlog) {
         LOG_ERROR("SetBinlog fail, bundleName is %{public}s, store is %{public}s.", config.GetBundleName().c_str(),
@@ -3802,7 +3801,7 @@ int RdbStoreImpl::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc 
 
 void RdbStoreImpl::ReplayCallbackImpl(const RdbStoreConfig &config, std::weak_ptr<ConnectionPool> connPool)
 {
-    auto lockFile = config.GetPath() + SqliteUtils::BINLOG_LOCK_FILE_SUFFIX;
+    auto lockFile = SqliteUtils::GetBinlogFolderPath(config) + SqliteUtils::BINLOG_LOCK_FILE_SUFFIX;
     if (access(lockFile.c_str(), F_OK) != 0) {
         LOG_WARN("binlog lock path does not exist for %{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
         return;

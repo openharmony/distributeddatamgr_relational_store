@@ -151,7 +151,7 @@ void RdbDoubleWriteBinlogTest::TearDownTestCase(void)
 void RdbDoubleWriteBinlogTest::SetUp(void)
 {
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    if (!SqliteConnection::IsSupportBinlog(config)) {
+    if (!SqliteUtils::IsSupportBinlog(config)) {
         GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     }
     testing::UnitTest *test = testing::UnitTest::GetInstance();
@@ -1939,7 +1939,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Lev
     mockApi.is_support_binlog = MockSupportBinlogOff;
     auto originalApi = sqlite3_export_relational_symbols;
     sqlite3_export_relational_symbols = &mockApi;
-    EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
+    EXPECT_EQ(SqliteUtils::IsSupportBinlog(config), false);
     LOG_INFO("----RdbStore_Binlog_Performance_005 binlog off----");
     auto T1 = GetRestoreTime(HAMode::MAIN_REPLICA);
 
@@ -1949,7 +1949,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Lev
     WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
     sqlite3_export_relational_symbols = originalApi;
-    EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), true);
+    EXPECT_EQ(SqliteUtils::IsSupportBinlog(config), true);
     LOG_INFO("----RdbStore_Binlog_Performance_005 binlog on----");
     auto T1_2 = GetRestoreTime(HAMode::MAIN_REPLICA);
     EXPECT_GT(T1 * 1.8, T1_2);
@@ -1970,7 +1970,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Lev
     mockApi.is_support_binlog = MockSupportBinlogOff;
     auto originalApi = sqlite3_export_relational_symbols;
     sqlite3_export_relational_symbols = &mockApi;
-    EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
+    EXPECT_EQ(SqliteUtils::IsSupportBinlog(config), false);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog off----");
     auto T1 = GetRestoreTime(HAMode::MANUAL_TRIGGER, false);
 
@@ -1980,7 +1980,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Lev
     WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
     sqlite3_export_relational_symbols = originalApi;
-    EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), true);
+    EXPECT_EQ(SqliteUtils::IsSupportBinlog(config), true);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog on----");
     auto T1_2 = GetRestoreTime(HAMode::MANUAL_TRIGGER, false);
     EXPECT_GT(T1 * 1.8, T1_2);
@@ -2222,395 +2222,4 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_041, TestSize.Level0)
     int count = 10;
     Insert(id, count);
     CheckNumber(store, count);
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_001
- * @tc.desc: Test in REPLICA mode, reopen the database with ReplicaPath as path A
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_001, TestSize.Level0)
-{
-    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    EXPECT_TRUE(config.GetReplicaPath().empty());
-    EXPECT_EQ(SqliteUtils::GetSlavePath(config), SqliteUtils::GetSlavePath(config.GetPath()));
-    EXPECT_EQ(SqliteUtils::GetSlavePath(config), RdbDoubleWriteBinlogTest::slaveDatabaseName);
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    store = nullptr;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    EXPECT_TRUE(store->IsSlaveAvailable());
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_002
- * @tc.desc: Test in REPLICA mode, reopen the database with ReplicaPath as path A
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_002, TestSize.Level0)
-{
-    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    std::string customSlaveDir = RDB_TEST_PATH + "custom_slave_dir_002";
-    std::string expectedSlaveFile = customSlaveDir + "/dual_write_binlog_test_slave.db";
-    if (CheckFolderExist(customSlaveDir)) {
-        RemoveFolder(customSlaveDir);
-    }
-    std::error_code ec;
-    std::filesystem::create_directories(customSlaveDir, ec);
-    ASSERT_TRUE(std::filesystem::is_directory(customSlaveDir));
-
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    config.SetReplicaPath(customSlaveDir);
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
-    EXPECT_EQ(SqliteUtils::GetSlavePath(config), expectedSlaveFile);
-
-    int64_t id = 1;
-    int count = 10;
-    Insert(id, count);
-    RdbDoubleWriteBinlogTest::CheckNumber(store, count);
-
-    LOG_INFO("---- reopen and verify slave generated at the custom dir");
-    store = nullptr;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
-    EXPECT_EQ(access(expectedSlaveFile.c_str(), F_OK), 0);
-    EXPECT_TRUE(store->IsSlaveAvailable());
-    RdbDoubleWriteBinlogTest::CheckNumber(store, count);
-
-    store = nullptr;
-    RemoveFolder(customSlaveDir);
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_003
- * @tc.desc: Test ReplicaPath from empty to patch A in REPLICA mode
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_003, TestSize.Level0)
-{
-    std::string customSlaveDir = RDB_TEST_PATH + "custom_slave_dir_003";
-    std::string expectedSlaveFile = customSlaveDir + "/dual_write_binlog_test_slave.db";
-    if (CheckFolderExist(customSlaveDir)) {
-        RemoveFolder(customSlaveDir);
-    }
-    std::error_code ec;
-    std::filesystem::create_directories(customSlaveDir, ec);
-
-    LOG_INFO("---- step1 open MAIN_REPLICA with the legacy default slave path and insert rows");
-    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
-    int64_t id = 1;
-    int count = 10;
-    Insert(id, count);
-    ASSERT_TRUE(OHOS::FileExists(RdbDoubleWriteBinlogTest::slaveDatabaseName));
-    store = nullptr;
-
-    LOG_INFO("---- step2 reopen MAIN_REPLICA with a custom slave dir;");
-    config.SetReplicaPath(customSlaveDir);
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(RdbDoubleWriteBinlogTest::store, nullptr);
-    WaitForBackupFinish(BACKUP_FINISHED);
-    ASSERT_FALSE(OHOS::FileExists(RdbDoubleWriteBinlogTest::slaveDatabaseName));
-    ASSERT_TRUE(OHOS::FileExists(expectedSlaveFile));
-    EXPECT_TRUE(store->IsSlaveAvailable());
-    EXPECT_FALSE(store->IsSlaveDiffFromMaster());
-    RdbDoubleWriteBinlogTest::CheckNumber(store, count);
-
-    store = nullptr;
-    RemoveFolder(customSlaveDir);
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_004
- * @tc.desc: Test ReplicaPath from path A to path B in REPLICA mode
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_004, TestSize.Level0)
-{
-    std::string dirA = RDB_TEST_PATH + "custom_slave_dirA_004";
-    std::string dirB = RDB_TEST_PATH + "custom_slave_dirB_004";
-    std::string expectedSlaveA = dirA + "/dual_write_binlog_test_slave.db";
-    std::string expectedSlaveB = dirB + "/dual_write_binlog_test_slave.db";
-    if (CheckFolderExist(dirA)) {
-        RemoveFolder(dirA);
-    }
-    if (CheckFolderExist(dirB)) {
-        RemoveFolder(dirB);
-    }
-    std::error_code ec;
-    std::filesystem::create_directories(dirA, ec);
-    std::filesystem::create_directories(dirB, ec);
-
-    LOG_INFO("---- step1: open with custom slave dir A and insert data");
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbStoreConfig configA(RdbDoubleWriteBinlogTest::databaseName);
-    configA.SetHaMode(HAMode::MAIN_REPLICA);
-    configA.SetReplicaPath(dirA);
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(configA, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    store->ExecuteSql("DELETE FROM test");
-    int64_t id = 1;
-    int count = 10;
-    Insert(id, count);
-    RdbDoubleWriteBinlogTest::CheckNumber(store, count);
-    EXPECT_TRUE(store->IsSlaveAvailable());
-    ASSERT_TRUE(OHOS::FileExists(expectedSlaveA));
-    store = nullptr;
-
-    RdbStoreConfig configB(RdbDoubleWriteBinlogTest::databaseName);
-    configB.SetHaMode(HAMode::MAIN_REPLICA);
-    configB.SetReplicaPath(dirB);
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(configB, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    EXPECT_EQ(errCode, E_OK);
-
-    ASSERT_TRUE(OHOS::FileExists(expectedSlaveA));
-    ASSERT_TRUE(OHOS::FileExists(expectedSlaveB));
-    EXPECT_TRUE(store->IsSlaveAvailable());
-    EXPECT_FALSE(SqliteUtils::IsSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName));
-    RdbDoubleWriteBinlogTest::CheckNumber(store, count);
-
-    store = nullptr;
-    RemoveFolder(dirA);
-    RemoveFolder(dirB);
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_005
- * @tc.desc: Test ReplicaPath from path A to empty in REPLICA mode
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_005, TestSize.Level0)
-{
-    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    std::string customSlaveDirA = RDB_TEST_PATH + "custom_slave_dir_a_005";
-    std::string expectedSlaveA = customSlaveDirA + "/dual_write_binlog_test_slave.db";
-    if (CheckFolderExist(customSlaveDirA)) {
-        RemoveFolder(customSlaveDirA);
-    }
-    std::error_code ec;
-    std::filesystem::create_directories(customSlaveDirA, ec);
-
-    LOG_INFO("---- step1 open with SetReplicaPath(dirA) and insert data ----");
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    config.SetReplicaPath(customSlaveDirA);
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    int64_t id = 1;
-    int count = 10;
-    Insert(id, count);
-    EXPECT_TRUE(store->IsSlaveAvailable());
-    ASSERT_TRUE(OHOS::FileExists(expectedSlaveA));
-
-    LOG_INFO("---- step2 clear custom slave path (legacy default), reopen ----");
-    store = nullptr;
-    RdbStoreConfig config2(RdbDoubleWriteBinlogTest::databaseName);
-    config2.SetHaMode(HAMode::MAIN_REPLICA);
-    DoubleWriteBinlogTestOpenCallback helper2;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config2, 1, helper2, errCode);
-    ASSERT_NE(store, nullptr);
-
-    EXPECT_TRUE(OHOS::FileExists(expectedSlaveA));
-    ASSERT_TRUE(OHOS::FileExists(RdbDoubleWriteBinlogTest::slaveDatabaseName));
-    EXPECT_TRUE(store->IsSlaveAvailable());
-    RdbDoubleWriteBinlogTest::CheckNumber(store, count);
-    RemoveFolder(customSlaveDirA);
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_006
- * @tc.desc: illegal slave dir (parent dir absent) degrades to master-only open
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_006, TestSize.Level0)
-{
-    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    std::string illegalSlaveDir = RDB_TEST_PATH + "no_such_dir_xyz/slave_dir_006";
-    config.SetHaMode(HAMode::MAIN_REPLICA);
-    config.SetReplicaPath(illegalSlaveDir);
-
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    LOG_INFO("RdbStore_ReplicaPath_006 open master with illegal slave dir");
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    EXPECT_EQ(errCode, E_OK);
-    EXPECT_NE(store, nullptr);
-
-    EXPECT_FALSE(store->IsSlaveAvailable());
-    EXPECT_TRUE(store->IsSlaveDiffFromMaster());
-    ASSERT_TRUE(SqliteUtils::IsSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName));
-
-    // master RW still normal
-    int64_t id = 1;
-    int count = 10;
-    Insert(id, count);
-    CheckNumber(store, count);
-
-    EXPECT_NE(access((illegalSlaveDir + "/dual_write_binlog_test_slave.db").c_str(), F_OK), 0);
-    EXPECT_NE(store->Backup(std::string(""), {}), E_OK);
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_007
- * @tc.desc: SINGLE mode: replicaPath config does not affect open; slave never available and no slave file at custom dir
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_007, TestSize.Level0)
-{
-    std::string customSlaveDir = RDB_TEST_PATH + "custom_slave_dir_single_007";
-    std::string expectedSlaveFile = customSlaveDir + "/dual_write_binlog_test_slave.db";
-    if (CheckFolderExist(customSlaveDir)) {
-        RemoveFolder(customSlaveDir);
-    }
-    std::error_code ec;
-    std::filesystem::create_directories(customSlaveDir, ec);
-
-    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    config.SetHaMode(HAMode::SINGLE);
-    config.SetReplicaPath(customSlaveDir);
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    EXPECT_FALSE(store->IsSlaveAvailable());
-    EXPECT_NE(access(expectedSlaveFile.c_str(), F_OK), 0);
-    store = nullptr;
-    RemoveFolder(customSlaveDir);
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_008
- * @tc.desc: Test trigger mode, replicate Path from empty to path A
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_008, TestSize.Level0)
-{
-    InitDb(HAMode::MANUAL_TRIGGER, false, false);
-    ASSERT_NE(store, nullptr);
-    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
-    store = nullptr;
-
-    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    std::string customSlaveDirA = RDB_TEST_PATH + "custom_slave_dir_a_008";
-    std::string expectedSlaveA = customSlaveDirA + "/dual_write_binlog_test_slave.db";
-    if (CheckFolderExist(customSlaveDirA)) {
-        RemoveFolder(customSlaveDirA);
-    }
-    std::error_code ec;
-    std::filesystem::create_directories(customSlaveDirA, ec);
-    config.SetHaMode(HAMode::MANUAL_TRIGGER);
-    config.SetReplicaPath(customSlaveDirA);
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-
-    LOG_INFO("---- step3 assert slave file exists and slave is available");
-    ASSERT_TRUE(OHOS::FileExists(RdbDoubleWriteBinlogTest::slaveDatabaseName));
-    ASSERT_FALSE(OHOS::FileExists(expectedSlaveA));
-    ASSERT_FALSE(store->IsSlaveAvailable());
-    EXPECT_TRUE(store->IsSlaveDiffFromMaster());
-
-    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
-    ASSERT_FALSE(OHOS::FileExists(RdbDoubleWriteBinlogTest::slaveDatabaseName));
-    ASSERT_TRUE(OHOS::FileExists(expectedSlaveA));
-    ASSERT_TRUE(store->IsSlaveAvailable());
-    EXPECT_FALSE(store->IsSlaveDiffFromMaster());
-
-    store = nullptr;
-    RemoveFolder(customSlaveDirA);
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_010
- * @tc.desc: Test trigger mode, replicate Path from path A to empty
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_010, TestSize.Level0)
-{
-    RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    std::string customSlaveDirA = RDB_TEST_PATH + "custom_slave_dir_a_010";
-    std::string expectedSlaveA = customSlaveDirA + "/dual_write_binlog_test_slave.db";
-    if (CheckFolderExist(customSlaveDirA)) {
-        RemoveFolder(customSlaveDirA);
-    }
-    std::error_code ec;
-    std::filesystem::create_directories(customSlaveDirA, ec);
-    config.SetHaMode(HAMode::MANUAL_TRIGGER);
-    config.SetReplicaPath(customSlaveDirA);
-    int errCode = E_OK;
-    DoubleWriteBinlogTestOpenCallback helper;
-    RdbDoubleWriteBinlogTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
-    ASSERT_NE(store, nullptr);
-    EXPECT_FALSE(OHOS::FileExists(expectedSlaveA));
-    EXPECT_FALSE(store->IsSlaveAvailable());
-
-    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
-    EXPECT_TRUE(OHOS::FileExists(expectedSlaveA));
-    EXPECT_TRUE(store->IsSlaveAvailable());
-    store = nullptr;
-
-    InitDb(HAMode::MANUAL_TRIGGER, false, false);
-    ASSERT_NE(store, nullptr);
-    EXPECT_TRUE(OHOS::FileExists(expectedSlaveA));
-    EXPECT_FALSE(store->IsSlaveAvailable());
-
-    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
-    EXPECT_TRUE(OHOS::FileExists(expectedSlaveA));
-    EXPECT_TRUE(store->IsSlaveAvailable());
-    ASSERT_TRUE(OHOS::FileExists(RdbDoubleWriteBinlogTest::slaveDatabaseName));
-    store = nullptr;
-    RemoveFolder(customSlaveDirA);
-}
-
-/**
- * @tc.name: RdbStore_ReplicaPath_012
- * @tc.desc: Test the content of the failure file
- * @tc.type: FUNC
- */
-HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_ReplicaPath_012, TestSize.Level0)
-{
-    EXPECT_TRUE(SqliteUtils::IsValidReplicaPath(RDB_TEST_PATH));
-    EXPECT_TRUE(SqliteUtils::IsValidReplicaPath(""));
-    EXPECT_FALSE(SqliteUtils::IsValidReplicaPath("relative/dir"));
-    EXPECT_FALSE(SqliteUtils::IsValidReplicaPath(RDB_TEST_PATH + "no_such_dir_012"));
-    std::string aFile = RDB_TEST_PATH + "not_a_dir_012.db";
-    SqliteUtils::DeleteFile(aFile);
-    std::ofstream f(aFile);
-    ASSERT_TRUE(f.is_open());
-    f << "x";
-    f.close();
-    EXPECT_FALSE(SqliteUtils::IsValidReplicaPath(aFile));
-    EXPECT_TRUE(SqliteUtils::IsValidReplicaPath(RDB_TEST_PATH + "/"));
-    SqliteUtils::DeleteFile(aFile);
-
-    EXPECT_EQ(SqliteUtils::SetSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName,
-        SqliteUtils::SlaveInvalidReason::PREPARE_FAILED), E_OK);
-    std::string failureFlagPath = RdbDoubleWriteBinlogTest::databaseName + "-slaveFailure";
-    std::ifstream failureFile(failureFlagPath);
-    ASSERT_TRUE(failureFile.is_open());
-    std::string firstLine;
-    std::string secondLine;
-    std::getline(failureFile, firstLine);
-    std::getline(failureFile, secondLine);
-    failureFile.close();
-    EXPECT_FALSE(firstLine.empty());
-    EXPECT_EQ(secondLine, std::string("prepare_failed"));
-    SqliteUtils::DeleteFile(failureFlagPath);
 }

@@ -377,7 +377,10 @@ ohos_unittest("NativeRdbTest") {
   ]
 
   if (is_ohos) {
-    sources += [ "unittest/rdb_double_write_binlog_test.cpp" ]
+    sources += [
+      "unittest/rdb_double_write_binlog_test.cpp",
+      "unittest/rdb_replica_path_test.cpp",
+    ]
   }
 
   sources += [
