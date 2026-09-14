@@ -101,6 +101,8 @@ public:
 
     int32_t SetSearchable(const RdbSyncerParam &param, bool isSearchable) override;
 
+    int32_t RequestFullDataDonation(const RdbSyncerParam &param, bool isRebuild) override;
+
     std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(const RdbSyncerParam &param,
         const PredicatesMemo &predicates, const std::vector<std::string> &columns) override;
     int32_t Disable(const RdbSyncerParam &param) override;

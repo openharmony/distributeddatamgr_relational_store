@@ -99,6 +99,7 @@ public:
         array_view<string> tables, DistributedType type, DistributedConfig const &config);
     void SetDistributedTablesWithOptionConfig(
         array_view<string> tables, optional_view<DistributedType> type, optional_view<DistributedConfig> config);
+    void RequestFullDataDonationAsync(array_view<string> tables);
     void RetainDeviceDataAsync(map_view<string, array<string>> retainDevices);
     int64_t UpdateDistributedInfoAsync(DistributedInfo info, weak::RdbPredicates predicates);
     string ObtainDistributedTableNameSync(string_view device, string_view table);

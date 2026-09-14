@@ -53,6 +53,7 @@ static constexpr int WAIT_TIME_DEFAULT = 2;
 static constexpr int WAIT_TIME_MIN = 1;
 static constexpr int WAIT_TIME_MAX = 300;
 static constexpr int TABLE_NAME_MAX = 256;
+static constexpr int TABLE_DONATION_MAX = 10;
 
 class DefaultOpenCallback : public OHOS::NativeRdb::RdbOpenCallback {
 public:
@@ -770,6 +771,21 @@ void RdbStoreImpl::SetDistributedTablesWithOptionConfig(
         return;
     }
     int errCode = store->SetDistributedTables(tableList, nativeTableType, nativeConfig);
+    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
+}
+
+void RdbStoreImpl::RequestFullDataDonationAsync(array_view<string> tables)
+{
+    ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, RDB_DO_NOTHING);
+    auto store = GetResource();
+    ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
+    ASSERT_THROW_INNER_ERROR(!tables.empty() && tables.size() <= TABLE_DONATION_MAX,
+        OHOS::NativeRdb::E_INVALID_ARGS, "", RDB_DO_NOTHING);
+    std::vector<std::string> tableList(tables.begin(), tables.end());
+    NativeDistributedConfig nativeConfig = { true };
+    nativeConfig.isRebuild = true;
+    int errCode = store->RequestFullDataDonation(tableList);
+
     CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
 }
 
