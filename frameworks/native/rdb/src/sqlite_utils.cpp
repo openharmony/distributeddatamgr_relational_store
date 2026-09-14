@@ -687,6 +687,24 @@ std::string SqliteUtils::GetSlavePath(const RdbStoreConfig &config)
     return dir + '/' + GetSlavePath(config.GetName());
 }
 
+std::string SqliteUtils::GetBinlogFolderPath(const std::string &dbPath)
+{
+    return dbPath + BINLOG_FOLDER_SUFFIX;
+}
+
+std::string SqliteUtils::GetBinlogFolderPath(const RdbStoreConfig &config)
+{
+    const auto &custom = config.GetReplicaPath();
+    if (custom.empty()) {
+        return GetBinlogFolderPath(config.GetPath());
+    }
+    std::string dir = custom;
+    while (dir.length() > 1 && dir.back() == '/') {
+        dir.pop_back();
+    }
+    return dir + '/' + StringUtils::ExtractFileName(config.GetPath()) + BINLOG_FOLDER_SUFFIX;
+}
+
 bool SqliteUtils::IsValidReplicaPath(const std::string &replicaPath)
 {
     if (replicaPath.empty()) {
@@ -705,6 +723,36 @@ bool SqliteUtils::IsValidReplicaPath(const std::string &replicaPath)
         LOG_WARN("replicaPath is not a directory:%{public}s", Anonymous(replicaPath).c_str());
         return false;
     }
+    return true;
+}
+
+bool SqliteUtils::MigrateBinlogFolder(const RdbStoreConfig &config)
+{
+    if (!IsSupportBinlog(config) || config.GetHaMode() == HAMode::SINGLE ||
+        config.GetReplicaPath().empty()) {
+        return true;
+    }
+    std::string src = GetBinlogFolderPath(config.GetPath());
+    std::string dst = GetBinlogFolderPath(config);
+    if (src == dst || access(src.c_str(), F_OK) != 0) {
+        return true;
+    }
+    if (access(dst.c_str(), F_OK) == 0) {
+        size_t num = DeleteFolder(dst);
+        LOG_WARN("migrate binlog, dst residue removed:%{public}zu", num);
+    }
+    if (rename(src.c_str(), dst.c_str()) == 0) {
+        LOG_INFO("migrate binlog by rename, %{public}s", Anonymous(dst).c_str());
+        return true;
+    }
+    int renameErr = errno;
+    if (renameErr != EXDEV) {
+        LOG_ERROR("migrate binlog rename failed, errno:%{public}d", renameErr);
+        DeleteFolder(src);
+        return false;
+    }
+    size_t num = DeleteFolder(src);
+    LOG_INFO("migrate binlog cross-fs, copied and removed:%{public}zu", num);
     return true;
 }
 
@@ -880,6 +928,21 @@ bool SqliteUtils::IsSlaveLarge(const std::string &dbPath)
         return fileInfo.second.size_ > SLAVE_ASYNC_REPAIR_CHECK_LIMIT;
     }
     return false;
+}
+
+bool SqliteUtils::IsSupportBinlog(const RdbStoreConfig &config)
+{
+#if !defined(CROSS_PLATFORM)
+    if (sqlite3_is_support_binlog == nullptr) {
+        return false;
+    }
+    if (sqlite3_is_support_binlog(config.GetName().c_str()) != SQLITE_OK) {
+        return false;
+    }
+    return !config.IsEncrypt() && !config.IsMemoryRdb();
+#else
+    return false;
+#endif
 }
 
 int SqliteUtils::SetSlaveRestoring(const std::string &dbPath, bool isRestore)

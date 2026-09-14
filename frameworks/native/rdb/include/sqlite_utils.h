@@ -60,7 +60,8 @@ public:
     static constexpr const char *SLAVE_RESTORE = "-restoring";
     static constexpr const char *DB_SUFFIX = ".db";
     static constexpr const char *SLAVE_SUFFIX = "_slave.db";
-    static constexpr const char *BINLOG_LOCK_FILE_SUFFIX = "_binlog/binlog_default.readIndex";
+    static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
+    static constexpr const char *BINLOG_LOCK_FILE_SUFFIX = "/binlog_default.readIndex";
     static constexpr ssize_t SLAVE_ASYNC_REPAIR_CHECK_LIMIT = 367001600; // 367001600 = 350 * 1024 * 1024
 
     enum class SlaveInvalidReason : int32_t {
@@ -106,7 +107,10 @@ public:
     static bool DeleteFiles(const std::vector<std::string> &filePaths);
     static std::string GetSlavePath(const std::string &name);
     static std::string GetSlavePath(const RdbStoreConfig &config);
+    static std::string GetBinlogFolderPath(const std::string &dbPath);
+    static std::string GetBinlogFolderPath(const RdbStoreConfig &config);
     static bool IsValidReplicaPath(const std::string &replicaPath);
+    static bool MigrateBinlogFolder(const RdbStoreConfig &config);
     static std::string GetMasterBackupPath(const std::string &name);
     static int SetSlaveInvalid(const std::string &dbPath, SlaveInvalidReason reason);
     static int SetSlaveInvalid(const std::string &dbPath);
@@ -115,6 +119,7 @@ public:
     static bool IsSlaveRestoring(const std::string &dbPath);
     static ssize_t GetDecompressedSize(const std::string &dbPath);
     static bool IsSlaveLarge(const std::string &dbPath);
+    static bool IsSupportBinlog(const RdbStoreConfig &config);
     static bool IsSlaveInvalid(const std::string &dbPath);
     static bool IsSlaveInterrupted(const std::string &dbPath);
     static void SetSlaveValid(const std::string &dbPath);
