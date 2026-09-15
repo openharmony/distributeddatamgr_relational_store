@@ -778,15 +778,12 @@ void RdbStoreImpl::RequestFullDataDonationAsync(array_view<string> tables)
 {
     ASSERT_THROW_NON_SYSTEM_ERROR(isSystemApp_, RDB_DO_NOTHING);
     auto store = GetResource();
-    ASSERT_THROW_INNER_ERROR(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
-    ASSERT_THROW_INNER_ERROR(!tables.empty() && tables.size() <= TABLE_DONATION_MAX,
+    ASSERT_THROW_INNER_ERROR_EXT(store != nullptr, OHOS::NativeRdb::E_ALREADY_CLOSED, "", RDB_DO_NOTHING);
+    ASSERT_THROW_INNER_ERROR_EXT(!tables.empty() && tables.size() <= TABLE_DONATION_MAX,
         OHOS::NativeRdb::E_INVALID_ARGS, "", RDB_DO_NOTHING);
     std::vector<std::string> tableList(tables.begin(), tables.end());
-    NativeDistributedConfig nativeConfig = { true };
-    nativeConfig.isRebuild = true;
     int errCode = store->RequestFullDataDonation(tableList);
-
-    CHECK_ERRCODE_THROW_INNER_ERROR(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
+    CHECK_ERRCODE_THROW_INNER_ERROR_EXT(errCode, store->GetLastErrorMsg(), RDB_DO_NOTHING);
 }
 
 void RdbStoreImpl::RetainDeviceDataAsync(map_view<string, array<string>> retainDevices)

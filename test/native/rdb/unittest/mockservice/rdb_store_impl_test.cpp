@@ -1438,13 +1438,19 @@ HWTEST_F(RdbStoreImplConditionTest, RequestFullDataDonation_Test_002, TestSize.L
 HWTEST_F(RdbStoreImplConditionTest, RequestFullDataDonation_Test_003, TestSize.Level2)
 {
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
-    config.SetReadOnly(true);
+    config.SetReadOnly(false);
     config.SetStorageMode(StorageMode::MODE_DISK);
     config.SetDBType(DB_SQLITE);
     RdbStoreImplConditionTestOpenCallback helper;
     int errCode;
     std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
     ASSERT_NE(store, nullptr) << "store is null";
+    store->ExecuteSql(RdbStoreImplConditionTestOpenCallback::CREATE_TABLE_TEST);
+    store = nullptr;
+    RdbHelper::ClearCache();
+    config.SetReadOnly(true);
+    store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "ROstore is null";
     std::vector<std::string> tables = { "employee" };
     auto res = store->RequestFullDataDonation(tables);
     EXPECT_EQ(E_NOT_SUPPORT_NEW, res);

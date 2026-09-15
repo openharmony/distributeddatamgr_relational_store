@@ -77,7 +77,7 @@ export default function RequestFullDataDonationNonSystem() {
         expect().assertFail();
       } catch (err) {
         console.info(`RequestFullDataDonationNonSystemTest0001 err, code is ${err.code}, message is ${err.message}`);
-        expect(err.code).assertEqual("202");
+        expect(err.code).assertEqual(202);
       }
       console.log(TAG + "************* RequestFullDataDonationNonSystemTest0001 end *************");
     })
