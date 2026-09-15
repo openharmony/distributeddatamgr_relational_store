@@ -1390,6 +1390,140 @@ HWTEST_F(RdbStoreImplConditionTest, SetSearchable_Test_002, TestSize.Level2)
 }
 
 /**
+ * @tc.name: RequestFullDataDonation_Test_001
+ * @tc.desc: Memory rdb returns E_NOT_SUPPORT_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RequestFullDataDonation_Test_001, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_MEMORY);
+    config.SetDBType(DB_SQLITE);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::vector<std::string> tables = { "employee" };
+    auto res = store->RequestFullDataDonation(tables);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, res);
+}
+
+/**
+ * @tc.name: RequestFullDataDonation_Test_002
+ * @tc.desc: Vector db returns E_NOT_SUPPORT_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RequestFullDataDonation_Test_002, TestSize.Level2)
+{
+    if (!IsUsingArkData()) {
+        GTEST_SKIP() << "Current testcase is not compatible from current rdb";
+    }
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_VECTOR);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::vector<std::string> tables = { "employee" };
+    auto res = store->RequestFullDataDonation(tables);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, res);
+}
+
+/**
+ * @tc.name: RequestFullDataDonation_Test_003
+ * @tc.desc: Read-only db returns E_NOT_SUPPORT_NEW
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RequestFullDataDonation_Test_003, TestSize.Level2)
+{
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    store->ExecuteSql(RdbStoreImplConditionTestOpenCallback::CREATE_TABLE_TEST);
+    store = nullptr;
+    RdbHelper::ClearCache();
+    config.SetReadOnly(true);
+    store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "ROstore is null";
+    std::vector<std::string> tables = { "employee" };
+    auto res = store->RequestFullDataDonation(tables);
+    EXPECT_EQ(E_NOT_SUPPORT_NEW, res);
+}
+
+/**
+ * @tc.name: RequestFullDataDonation_Test_004
+ * @tc.desc: Service unavailable returns error code
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RequestFullDataDonation_Test_004, TestSize.Level2)
+{
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_ERROR, nullptr)));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::vector<std::string> tables = { "employee" };
+    auto res = store->RequestFullDataDonation(tables);
+    EXPECT_EQ(E_ERROR, res);
+}
+
+/**
+ * @tc.name: RequestFullDataDonation_Test_005
+ * @tc.desc: Service returns E_OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RequestFullDataDonation_Test_005, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, RequestFullDataDonation(_, _)).WillOnce(Return(E_OK));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::vector<std::string> tables = { "employee" };
+    auto res = store->RequestFullDataDonation(tables);
+    EXPECT_EQ(E_OK, res);
+}
+
+/**
+ * @tc.name: RequestFullDataDonation_Test_006
+ * @tc.desc: Service returns error, expect error propagated
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RequestFullDataDonation_Test_006, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_)).WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, RequestFullDataDonation(_, _)).WillOnce(Return(E_DB_NOT_EXIST));
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    config.SetReadOnly(false);
+    config.SetStorageMode(StorageMode::MODE_DISK);
+    config.SetDBType(DB_SQLITE);
+    RdbStoreImplConditionTestOpenCallback helper;
+    int errCode = E_OK;
+    std::shared_ptr<RdbStore> store = RdbHelper::GetRdbStore(config, 0, helper, errCode);
+    ASSERT_NE(store, nullptr) << "store is null";
+    std::vector<std::string> tables = { "employee" };
+    auto res = store->RequestFullDataDonation(tables);
+    EXPECT_EQ(E_DB_NOT_EXIST, res);
+}
+
+/**
  * @tc.name: IsProxy_SkipAcl_Test_001
  * @tc.desc: When IsProxy returns false (service process), ACL should be skipped even for searchable store
  * @tc.type: FUNC

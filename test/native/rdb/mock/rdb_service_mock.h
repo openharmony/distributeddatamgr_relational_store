@@ -77,6 +77,8 @@ public:
 
     MOCK_METHOD(int32_t, SetSearchable, (const RdbSyncerParam &param, bool isSearchable), (override));
 
+    MOCK_METHOD(int32_t, RequestFullDataDonation, (const RdbSyncerParam &param, bool isRebuild), (override));
+
     MOCK_METHOD(int32_t, Disable, (const RdbSyncerParam &param), (override));
 
     MOCK_METHOD(int32_t, Enable, (const RdbSyncerParam &param), (override));

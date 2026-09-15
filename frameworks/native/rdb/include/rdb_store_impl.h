@@ -169,6 +169,7 @@ public:
     int UnregisterAutoSyncCallback(std::shared_ptr<DetailProgressObserver> observer) override;
     int Notify(const std::string &event) override;
     int SetSearchable(bool isSearchable) override;
+    int RequestFullDataDonation(const std::vector<std::string> &tables) override;
     ModifyTime GetModifyTime(
         const std::string &table, const std::string &columnName, std::vector<PRIKey> &keys) override;
     int GetRebuilt(RebuiltType &rebuilt) override;
