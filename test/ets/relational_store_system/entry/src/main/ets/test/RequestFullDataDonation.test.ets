@@ -165,7 +165,7 @@ export default function RequestFullDataDonation() {
         expect(null).assertFail();
       } catch (err) {
         console.info(`RequestFullDataDonationTest0003 err, code is ${err.code}, message is ${err.message}`);
-        expect(err.code).assertEqual("14800001");
+        expect(err.code).assertEqual(14800001);
       }
       console.log(TAG + "************* RequestFullDataDonationTest0003 end *************");
     })
@@ -209,7 +209,7 @@ export default function RequestFullDataDonation() {
         expect(null).assertFail();
       } catch (err) {
         console.info(`RequestFullDataDonationTest0005 err, code is ${err.code}, message is ${err.message}`);
-        expect(err.code).assertEqual("14800001");
+        expect(err.code).assertEqual(14800001);
       }
       console.log(TAG + "************* RequestFullDataDonationTest0005 end *************");
     })
@@ -231,7 +231,7 @@ export default function RequestFullDataDonation() {
         expect(null).assertFail();
       } catch (err) {
         console.info(`RequestFullDataDonationTest0006 err, code is ${err.code}, message is ${err.message}`);
-        expect(err.code).assertEqual("401");
+        expect(err.code).assertEqual(401);
       }
       console.log(TAG + "************* RequestFullDataDonationTest0006 end *************");
     })
@@ -253,7 +253,7 @@ export default function RequestFullDataDonation() {
         expect(null).assertFail();
       } catch (err) {
         console.info(`RequestFullDataDonationTest0007 err, code is ${err.code}, message is ${err.message}`);
-        expect(err.code).assertEqual("14800001");
+        expect(err.code).assertEqual(14800001);
       }
       console.log(TAG + "************* RequestFullDataDonationTest0007 end *************");
     })
@@ -276,7 +276,7 @@ export default function RequestFullDataDonation() {
         expect(null).assertFail();
       } catch (err) {
         console.info(`RequestFullDataDonationTest0008 err, code is ${err.code}, message is ${err.message}`);
-        expect(err.code).assertEqual("14800014");
+        expect(err.code).assertEqual(14800014);
       }
       console.log(TAG + "************* RequestFullDataDonationTest0008 end *************");
     })
@@ -284,7 +284,7 @@ export default function RequestFullDataDonation() {
     /**
      * @tc.number RequestFullDataDonationTest0009
      * @tc.name request full data donation on read-only database
-     * @tc.desc call requestFullDataDonation on a read-only db, expect 801 (E_NOT_SUPPORT)
+     * @tc.desc call requestFullDataDonation on a read-only db, expect 14800043 (E_NOT_SUPPORT)
      */
     it('RequestFullDataDonationTest0009', 0, async () => {
       console.log(TAG + "************* RequestFullDataDonationTest0009 start *************");
@@ -316,7 +316,7 @@ export default function RequestFullDataDonation() {
         expect(null).assertFail();
       } catch (err) {
         console.info(`RequestFullDataDonationTest0009 err, code is ${err.code}, message is ${err.message}`);
-        expect(err.code).assertEqual("14800043");
+        expect(err.code).assertEqual(14800043);
       }
       await rdbStoreRO?.close();
       rdbStoreRO = undefined;
