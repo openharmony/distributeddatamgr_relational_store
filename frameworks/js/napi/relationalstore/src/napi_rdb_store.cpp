@@ -64,6 +64,8 @@ namespace OHOS {
 namespace RelationalStoreJsKit {
 struct PredicatesProxy;
 
+static constexpr int TABLE_DONATION_MAX = 10;
+
 #define ASSERT_RETURN_SET_ERROR(assertion, paramError) \
     CHECK_RETURN_CORE(assertion, SetError(paramError), ERR)
 RdbStoreProxy::RdbStoreProxy() : napiRdbStoreData_(std::make_shared<NapiRdbStoreData>())
@@ -1619,6 +1621,7 @@ void RdbStoreProxy::AddDistributedFunctions(std::vector<napi_property_descriptor
 {
     properties.push_back(DECLARE_NAPI_FUNCTION("remoteQuery", RemoteQuery));
     properties.push_back(DECLARE_NAPI_FUNCTION("setDistributedTables", SetDistributedTables));
+    properties.push_back(DECLARE_NAPI_FUNCTION("requestFullDataDonation", RequestFullDataDonation));
     properties.push_back(DECLARE_NAPI_FUNCTION("retainDeviceData", RetainDeviceData));
     properties.push_back(DECLARE_NAPI_FUNCTION("updateDistributedInfo", UpdateDistributedInfo));
     properties.push_back(DECLARE_NAPI_FUNCTION("obtainDistributedTableName", ObtainDistributedTableName));
@@ -1659,6 +1662,46 @@ napi_value RdbStoreProxy::SetDistributedTables(napi_env env, napi_callback_info 
         CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerError>(E_ERROR));
     };
     context->SetAction(env, info, input, exec, output);
+
+    CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
+    return ASYNC_CALL(env, context);
+}
+
+struct RequestFullDataDonationContext : public EnhancedContext {
+    int32_t Parse(napi_env env, size_t argc, napi_value *argv, napi_value self)
+    {
+        ASSERT_RETURN_SET_ERROR(argc == 1, std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+        RdbStoreProxy *obj = GetNativeInstance(env, self);
+        ASSERT_RETURN_SET_ERROR(obj != nullptr, std::make_shared<ParamError>("RdbStore", "not nullptr."));
+        ASSERT_RETURN_SET_ERROR(obj->IsSystemAppCalled(), std::make_shared<InnerErrorExt>(NativeRdb::E_NON_SYSTEM_APP));
+        ASSERT_RETURN_SET_ERROR(
+            obj->GetInstance() != nullptr, std::make_shared<InnerError>(NativeRdb::E_ALREADY_CLOSED));
+        rdbStore = obj->GetInstance();
+        auto status = JSUtils::Convert2Value(env, argv[0], tablesNames);
+        ASSERT_RETURN_SET_ERROR(status == napi_ok, std::make_shared<InnerError>(E_PARAM_ERROR));
+        ASSERT_RETURN_SET_ERROR(!tablesNames.empty() && tablesNames.size() <= TABLE_DONATION_MAX,
+            std::make_shared<InnerErrorExt>(NativeRdb::E_INVALID_ARGS));
+        return OK;
+    }
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore = nullptr;
+    std::vector<std::string> tablesNames;
+};
+
+napi_value RdbStoreProxy::RequestFullDataDonation(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<RequestFullDataDonationContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) {
+        CHECK_RETURN(OK == context->Parse(env, argc, argv, self));
+    };
+    auto exec = [context]() -> int {
+        CHECK_RETURN_ERR(context->rdbStore != nullptr);
+        return context->rdbStore->RequestFullDataDonation(context->tablesNames);
+    };
+    auto output = [context](napi_env env, napi_value &result) {
+        napi_status status = napi_get_undefined(env, &result);
+        CHECK_RETURN_SET_E(status == napi_ok, std::make_shared<InnerErrorExt>(E_ERROR));
+    };
+    context->InitAction(env, info, input, exec, output);
 
     CHECK_RETURN_NULL(context->error == nullptr || context->error->GetCode() == OK);
     return ASYNC_CALL(env, context);

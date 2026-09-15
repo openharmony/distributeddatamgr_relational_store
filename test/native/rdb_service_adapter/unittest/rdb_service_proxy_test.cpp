@@ -184,4 +184,81 @@ HWTEST_F(RdbServiceProxyTest, DoSync_UnmarshalSuccess, TestSize.Level2)
     EXPECT_EQ(ret, RDB_OK);
 }
 
+/**
+ * @tc.name: RequestFullDataDonation_Success
+ * @tc.desc: Test RequestFullDataDonation when IPC returns RDB_OK
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbServiceProxyTest, RequestFullDataDonation_Success, TestSize.Level2)
+{
+    sptr<MockIRemoteObject> mockRemote = new MockIRemoteObject();
+
+    mockRemote->SetSendRequestCallback([](uint32_t code, MessageParcel &data,
+        MessageParcel &reply, MessageOption &option) {
+        if (!reply.WriteInt32(RDB_OK)) {
+            return -1;
+        }
+        return 0;
+    });
+
+    std::shared_ptr<RdbServiceProxy> proxy = std::make_shared<RdbServiceProxy>(mockRemote);
+
+    RdbSyncerParam param;
+    param.bundleName_ = "com.example.test";
+    param.storeName_ = "test.db";
+
+    int32_t ret = proxy->RequestFullDataDonation(param, true);
+    EXPECT_EQ(ret, RDB_OK);
+}
+
+/**
+ * @tc.name: RequestFullDataDonation_Failure
+ * @tc.desc: Test RequestFullDataDonation when IPC returns error
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbServiceProxyTest, RequestFullDataDonation_Failure, TestSize.Level2)
+{
+    sptr<MockIRemoteObject> mockRemote = new MockIRemoteObject();
+
+    mockRemote->SetSendRequestCallback([](uint32_t code, MessageParcel &data,
+        MessageParcel &reply, MessageOption &option) {
+        if (!reply.WriteInt32(RDB_ERROR)) {
+            return -1;
+        }
+        return 0;
+    });
+
+    std::shared_ptr<RdbServiceProxy> proxy = std::make_shared<RdbServiceProxy>(mockRemote);
+
+    RdbSyncerParam param;
+    param.bundleName_ = "com.example.test";
+    param.storeName_ = "test.db";
+
+    int32_t ret = proxy->RequestFullDataDonation(param, true);
+    EXPECT_EQ(ret, RDB_ERROR);
+}
+
+/**
+ * @tc.name: RequestFullDataDonation_SendRequestFail
+ * @tc.desc: Test RequestFullDataDonation when SendRequest itself fails
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbServiceProxyTest, RequestFullDataDonation_SendRequestFail, TestSize.Level2)
+{
+    sptr<MockIRemoteObject> mockRemote = new MockIRemoteObject();
+
+    mockRemote->SetSendRequestCallback([](uint32_t code, MessageParcel &data,
+        MessageParcel &reply, MessageOption &option) {
+        return -1;
+    });
+
+    std::shared_ptr<RdbServiceProxy> proxy = std::make_shared<RdbServiceProxy>(mockRemote);
+
+    RdbSyncerParam param;
+    param.bundleName_ = "com.example.test";
+    param.storeName_ = "test.db";
+
+    int32_t ret = proxy->RequestFullDataDonation(param, true);
+    EXPECT_EQ(ret, RDB_ERROR);
+}
 } // namespace Test

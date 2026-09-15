@@ -875,6 +875,8 @@ public:
      */
     virtual int SetSearchable(bool isSearchable);
 
+    virtual int RequestFullDataDonation(const std::vector<std::string> &tables);
+
     virtual int CleanDirtyLog(const std::string &table, uint64_t cursor = 0);
 
     virtual int InitKnowledgeSchema(const RdbKnowledgeSchema &schema);

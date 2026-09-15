@@ -652,6 +652,19 @@ int32_t RdbServiceProxy::SetSearchable(const RdbSyncerParam &param, bool isSearc
     return status;
 }
 
+int32_t RdbServiceProxy::RequestFullDataDonation(const RdbSyncerParam &param, bool isRebuild)
+{
+    MessageParcel reply;
+    int32_t status = IPC_SEND(
+        static_cast<uint32_t>(RdbServiceCode::RDB_SERVICE_CMD_REQUEST_FULL_DATA_DONATION), reply, param, isRebuild);
+    if (status != RDB_OK) {
+        LOG_ERROR("RdbServiceProxy RequestFullDataDonation fail, status:%{public}d, "
+                  "bundleName:%{public}s, storeName:%{public}s",
+            status, param.bundleName_.c_str(), SqliteUtils::Anonymous(param.storeName_).c_str());
+    }
+    return status;
+}
+
 int32_t RdbServiceProxy::NotifyDataChange(
     const RdbSyncerParam &param, const RdbChangedData &rdbChangedData, const RdbNotifyConfig &rdbNotifyConfig)
 {
