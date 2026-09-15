@@ -19,7 +19,7 @@
 | 场景 | 核心接口 | 保护目的 |
 | ---- | ---- | ---- |
 | SA 本地配置库 bundleName 打点归因 | `SetBundleName` + `SetLocalOnly` + `SetServerPath` + `SetIntegrityCheck` | 按 bundleName 定位异常责任方；不走 IPC 进程隔离；开库时完整性校验 |
-| 加密数据库密钥管理与 Selinux 权限依赖 | `SetBundleName` + `SetEncryptStatus` + `SetEncryptKey` + `SetEncryptAlgo` | 密钥由 ddms 统一记录，支持密钥丢失恢复与克隆；需配置 Selinux 权限 |
+| 加密数据库密钥注册与 ddms 兜底依赖 | `SetBundleName` + `SetEncryptStatus` + `SetEncryptKey` + `SetEncryptAlgo` | 密钥经 ddms 注册，客户端密钥异常或克隆场景可兜底；需配置 Selinux 权限 |
 
 ## 头文件总览
 
@@ -80,15 +80,15 @@ std::shared_ptr<RdbStore> CreateLocalConfigStore()
 }
 ```
 
-#### 场景 2：加密数据库密钥管理与 Selinux 权限依赖（SetBundleName + SetEncryptStatus + SetEncryptKey + SetEncryptAlgo）
+#### 场景 2：加密数据库密钥注册与 ddms 兜底依赖（SetBundleName + SetEncryptStatus + SetEncryptKey + SetEncryptAlgo）
 
-`some_sa` 需要一个**加密**的本地配置库。与场景 1 不同，加密数据库的密钥需由数据管理服务（ddms）统一记录，用于密钥丢失恢复和克隆场景。因此**不能**设置 `SetLocalOnly(true)`——`SetLocalOnly(true)` 会阻断到 ddms 的 IPC 链路，导致 ddms 无法记录密钥，密钥丢失后业务方将无法正常开库。
+`some_sa` 需要一个**加密**的本地配置库。加密数据库的密钥需经过数据管理服务（ddms）注册记录，以便在客户端密钥异常或克隆场景下由 ddms 兜底恢复。如果数据库**未走过 ddms 注册**，则密钥异常时或单设备/跨设备克隆场景下，ddms 无法对此兜底，业务方将无法正常开库。
 
 **关键约束**：
 
 1. **Selinux 权限**：业务进程必须配置对数据管理服务进程的 Selinux 权限，否则服务端无法记录该数据库的密钥
-2. **密钥丢失风险**：密钥丢失或直接修改加密属性（如变更 `SetEncryptAlgo`）后，业务方将无法正常开库
-3. **克隆依赖**：加密数据库克隆场景需依赖 ddms 记录的密钥信息，`SetLocalOnly(true)` 会阻断此链路
+2. **密钥异常兜底**：客户端密钥出现异常（丢失或被修改）后，若未在 ddms 注册，ddms 无法兜底恢复，业务方将无法正常开库
+3. **克隆依赖**：单设备克隆或跨设备克隆场景需依赖 ddms 记录的密钥信息，未注册的加密库无法完成克隆
 
 ```cpp
 #include "rdb/rdb_helper.h"
@@ -112,9 +112,10 @@ std::shared_ptr<RdbStore> CreateEncryptedConfigStore(const std::vector<uint8_t> 
     config.SetEncryptStatus(true);                      // 开启加密
     config.SetEncryptAlgo(EncryptAlgo::AES_256_GCM);   // 加密算法，默认 AES_256_GCM
     config.SetEncryptKey(key);                          // 密钥由业务方通过 HUKS 等安全途径获取
-    // 不设 SetLocalOnly(true)：加密数据库密钥需由 ddms 通过 IPC 记录，
-    // 用于密钥丢失恢复与克隆场景。若设为 true 则 ddms 无法记录密钥。
     config.SetIntegrityCheck(IntegrityCheck::QUICK);
+    // 加密数据库密钥需经过 ddms 注册记录：
+    // 若未注册，客户端密钥异常或单设备/跨设备克隆场景下 ddms 无法兜底，业务方将无法开库。
+    // 业务进程需配置对 ddms 进程的 Selinux 权限，否则服务端无法记录密钥。
 
     class Callback : public RdbOpenCallback {
         int OnCreate(RdbStore &store) override {
