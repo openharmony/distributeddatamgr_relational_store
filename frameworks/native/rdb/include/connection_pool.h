@@ -50,7 +50,8 @@ public:
     enum ConnType:uint32_t {
         READ = 1,
         WRITE = 2,
-        TRANS = 4
+        TRANS = 4,
+        TEMP = 8
     };
     using SharedConn = std::shared_ptr<Connection>;
     using SharedConns = std::vector<SharedConn>;
@@ -88,6 +89,7 @@ public:
     void SetInTransaction(bool isInTransaction);
 
     void Interrupt(uint32_t type);
+    std::pair<int32_t, SharedConn> CreateConn(bool isWriter, const RdbStoreConfig &config);
     // Disables the transaction container (blocks new transaction connection creation) and
     // waits up to timeout for all in-flight transaction connections to be returned.
     // On success returns {E_OK, heldConns}; caller must keep heldConns alive until backup
@@ -151,6 +153,7 @@ private:
         int32_t Dump(const char *header, int32_t count);
         int32_t ClearUnusedTrans(std::shared_ptr<ConnectionPool> pool);
         std::shared_ptr<ConnNode> AcquireById(int32_t id);
+        std::pair<int32_t, std::shared_ptr<ConnNode>> Create(bool isWriter, const RdbStoreConfig &config);
 
     private:
         int32_t ExtendNode();
@@ -197,6 +200,7 @@ private:
     Container writers_;
     Container readers_;
     Container trans_;
+    Container temps_;
     int32_t maxReader_ = 0;
 
     std::stack<BaseTransaction> transactionStack_;

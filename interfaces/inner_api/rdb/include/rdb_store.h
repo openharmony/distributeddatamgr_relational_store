@@ -653,6 +653,7 @@ public:
     struct ReleaseOption {
         int32_t waitTime = 2000; // milliseconds
         bool clearMetadata = false; // if true, delete server-side distributed metadata after release succeeds
+        bool interrupt = false;
     };
 
     /**
@@ -661,7 +662,7 @@ public:
      *        E_DATABASE_BUSY is returned.
      * @param option Release options, see {@link ReleaseOption}.
      */
-    virtual int Release(const ReleaseOption &option = { 2000, false });
+    virtual int Release(const ReleaseOption &option = { 2000, false, false });
 
     /**
      * @brief Check the current database is memory database.

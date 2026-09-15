@@ -120,6 +120,7 @@ private:
     static constexpr int EVENT_HANDLE_NUM = 5;
     static constexpr int WAIT_TIME_DEFAULT = 2;
     static constexpr int WAIT_TIME_LIMIT = 300;
+    static constexpr int TABLE_DONATION_MAX = 10;
 
     napi_value OnRemote(napi_env env, size_t argc, napi_value *argv);
     napi_value RegisteredObserver(napi_env env, const DistributedRdb::SubscribeOption &option,  napi_value callback);
