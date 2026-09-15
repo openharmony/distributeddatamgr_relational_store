@@ -3054,3 +3054,21 @@ HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_GetServiceInvalidArgs_Test, T
     RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
     RdbStoreImpl::RegisterMatrix(config, param, 0);
 }
+
+/**
+ * @tc.name: RegisterMatrix_PoolExpired_Test
+ * @tc.desc: RegisterMatrix with an expired pool (service ready) skips connection creation
+ *           instead of creating a free-floating temp connection.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbStoreImplConditionTest, RegisterMatrix_PoolExpired_Test, TestSize.Level2)
+{
+    auto mockRdbService = std::make_shared<MockRdbService>();
+    EXPECT_CALL(*mockRdbManagerImpl, GetRdbService(_))
+        .WillRepeatedly(Return(std::make_pair(E_OK, mockRdbService)));
+    EXPECT_CALL(*mockRdbService, RegisterMatrix(_, _)).WillRepeatedly(Return(E_OK));
+
+    OHOS::DistributedRdb::RdbSyncerParam param;
+    RdbStoreConfig config(RdbStoreImplConditionTest::DATABASE_NAME);
+    RdbStoreImpl::RegisterMatrix(config, param, 0); // no pool passed: connection creation is skipped
+}

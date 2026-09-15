@@ -163,6 +163,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::Init(bool isAttach, bo
         }
         trans_.InitMembers(create, MAX_TRANS, config.GetTransactionTime(), false);
     }
+    temps_.InitMembers(nullptr, 0, config.GetWriteTime(), true);
     isAttach_ = isAttach;
     maxReader_ = GetMaxReaders(config);
     // max read connect count is 64
@@ -263,6 +264,7 @@ void ConnPool::CloseAllConnections()
     writers_.Clear();
     readers_.Clear();
     trans_.Clear();
+    temps_.Clear();
 }
 
 bool ConnPool::IsInTransaction()
@@ -286,6 +288,20 @@ void ConnectionPool::Interrupt(uint32_t type)
     if ((type & TRANS) != 0) {
         trans_.Interrupt();
     }
+    if ((type & TEMP) != 0) {
+        temps_.Interrupt();
+    }
+}
+
+std::pair<int32_t, ConnectionPool::SharedConn> ConnPool::CreateConn(bool isWriter, const RdbStoreConfig &config)
+{
+    auto [errCode, node] = temps_.Create(isWriter, config);
+    if (node == nullptr) {
+        return { errCode, nullptr };
+    }
+    auto holder = std::move(node);
+    return { E_OK,
+        std::shared_ptr<Connection>(holder->connect_.get(), [holder](Connection *) mutable { holder = nullptr; }) };
 }
 
 std::pair<int32_t, ConnectionPool::SharedConns> ConnPool::AcquireAndDisableTrans(
@@ -764,6 +780,7 @@ int32_t ConnectionPool::Dump(bool isWriter, const char *header)
     if (!trans_.Empty() && isWriter) {
         trans_.Dump(header, transCount_ + isInTransaction_);
     }
+    temps_.Dump(header, 0);
     return E_OK;
 }
 
@@ -1189,6 +1206,29 @@ int32_t ConnPool::Container::Clear()
     nodes.clear();
     details.clear();
     return 0;
+}
+
+std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Create(
+    bool isWriter, const RdbStoreConfig &config)
+{
+    auto [errCode, conn] = Connection::Create(config, isWriter);
+    if (conn == nullptr) {
+        LOG_ERROR("create temp connection failed, err:%{public}d", errCode);
+        return { errCode, nullptr };
+    }
+    auto node = std::make_shared<ConnNode>(conn);
+    std::unique_lock<decltype(mutex_)> lock(mutex_);
+    for (auto it = details_.begin(); it != details_.end();) {
+        if (it->expired()) {
+            it = details_.erase(it);
+        } else {
+            it++;
+        }
+    }
+    node->id_ = right_++;
+    node->connect_->SetId(node->id_);
+    details_.push_back(node);
+    return { E_OK, node };
 }
 
 bool ConnPool::Container::IsFull()

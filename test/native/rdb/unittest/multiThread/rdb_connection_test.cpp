@@ -15,6 +15,8 @@
 
 #include <gtest/gtest.h>
 
+#include <unistd.h>
+
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -32,6 +34,21 @@
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::NativeRdb;
+
+constexpr const char *FILL_RELEASE_TABLE =
+    "WITH RECURSIVE cnt(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM cnt WHERE x<2000) "
+    "INSERT INTO test(name, age) SELECT 'name_' || x, x FROM cnt;";
+constexpr const char *LONG_QUERY_PART = "SELECT count(*) FROM test a, test b WHERE a.id <= 50";
+constexpr int RELEASE_INTERRUPT_DELAY_US = 200 * 1000;
+constexpr int32_t QUERY_ROUND_NUM = 100;
+
+static RdbStore::ReleaseOption InterruptReleaseOption()
+{
+    RdbStore::ReleaseOption option;
+    option.interrupt = true;
+    return option;
+}
+
 class RdbMultiThreadConnectionTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -252,4 +269,179 @@ HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_OldHandle_0001, TestS
     EXPECT_EQ(E_ALREADY_CLOSED, writeBlock->GetValue());
     EXPECT_EQ(E_OK, readBlock->GetValue());
     EXPECT_NE(taskIdB, 0);
+}
+
+/**
+ * @tc.name: MultiThread_Release_Interrupt_Query_0001
+ * @tc.desc: 1.thread A: traverses a resultSet row by row and holds it unclosed
+ *           2.thread B (main): Release with interrupt returns E_OK; thread A observes
+ *           E_SQLITE_INTERRUPT and the resultSet closes itself in its owning thread.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_Query_0001, TestSize.Level2)
+{
+    EXPECT_EQ(E_OK, store_->ExecuteSql(FILL_RELEASE_TABLE));
+    auto started = std::make_shared<BlockData<int32_t>>(3, false);
+    auto queryBlock = std::make_shared<BlockData<int32_t>>(3, false);
+    executors_->Execute([store = store_, started, queryBlock]() {
+        OHOS::DistributedRdb::QueryOptions options;
+        options.preCount = false;
+        options.isGotoNextRowReturnLastError = false;
+        auto resultSet = store->QueryByStep("SELECT * FROM test", std::vector<ValueObject>(), options);
+        if (resultSet == nullptr) {
+            queryBlock->SetValue(E_ERROR);
+            return;
+        }
+        int err = resultSet->GoToNextRow(); // row 0; the traversal is now in progress
+        started->SetValue(E_OK);            // signal: an in-use resultSet is being held
+        while (err == E_OK) {
+            usleep(1000);                   // the release may land on a running or resumed step
+            err = resultSet->GoToNextRow();
+        }
+        queryBlock->SetValue(err);
+        resultSet->Close();
+    });
+
+    // Release right after the traversal is confirmed in progress; the next step of thread A is
+    // interrupted and the resultSet closes itself, so the connection is returned in budget.
+    EXPECT_EQ(E_OK, started->GetValue());
+    EXPECT_EQ(E_OK, store_->Release(InterruptReleaseOption()));
+    EXPECT_EQ(E_SQLITE_INTERRUPT, queryBlock->GetValue());
+    EXPECT_EQ(nullptr, store_->QueryByStep("SELECT * FROM test"));
+}
+
+/**
+ * @tc.name: MultiThread_Release_Interrupt_Write_0001
+ * @tc.desc: 1.thread A: keeps inserting rows
+ *           2.thread B (main): Release with interrupt returns E_OK; thread A stops with
+ *           E_ALREADY_CLOSED.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_Write_0001, TestSize.Level2)
+{
+    auto writeBlock = std::make_shared<BlockData<int32_t>>(3, false);
+    executors_->Execute([store = store_, writeBlock]() {
+        int lastErr = E_OK;
+        int64_t rowId = -1;
+        for (int32_t i = 0; i < 2000; i++) {
+            ValuesBucket row;
+            row.PutString("name", "name_" + std::to_string(i));
+            row.PutInt("age", i);
+            lastErr = store->Insert(rowId, "test", row);
+            if (lastErr != E_OK) {
+                break;
+            }
+            usleep(1000);
+        }
+        writeBlock->SetValue(lastErr);
+    });
+
+    usleep(RELEASE_INTERRUPT_DELAY_US);
+    EXPECT_EQ(E_OK, store_->Release(InterruptReleaseOption()));
+    EXPECT_EQ(E_ALREADY_CLOSED, writeBlock->GetValue());
+    int64_t rowId = -1;
+    ValuesBucket row;
+    row.PutString("name", "name_after");
+    row.PutInt("age", 1);
+    EXPECT_EQ(E_ALREADY_CLOSED, store_->Insert(rowId, "test", row));
+
+    // Update and delete on the released store fail as well.
+    AbsRdbPredicates predicates("test");
+    predicates.EqualTo("name", "name_0");
+    ValuesBucket updateRow;
+    updateRow.PutString("name", "name_updated");
+    updateRow.PutInt("age", 2);
+    int changedRows = -1;
+    EXPECT_EQ(E_ALREADY_CLOSED, store_->Update(changedRows, updateRow, predicates));
+    EXPECT_EQ(E_ALREADY_CLOSED, store_->Delete(changedRows, predicates));
+}
+
+/**
+ * @tc.name: MultiThread_Release_Interrupt_QuerySql_0001
+ * @tc.desc: 1.thread A: confirms the QuerySql path with a cheap scan, then keeps long
+ *                     cross-join scans of QuerySql result sets in flight
+ *           2.thread B (main): Release with interrupt returns E_OK; the scan thread A is
+ *           running aborts with E_SQLITE_INTERRUPT, or the worker's next round observes the
+ *           closed pool with E_ALREADY_CLOSED, and every connection is returned in budget.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_QuerySql_0001, TestSize.Level2)
+{
+    EXPECT_EQ(E_OK, store_->ExecuteSql(FILL_RELEASE_TABLE));
+    auto started = std::make_shared<BlockData<int32_t>>(3, -1);
+    auto queryBlock = std::make_shared<BlockData<int32_t>>(3, -1);
+    executors_->Execute([store = store_, started, queryBlock]() {
+        // a cheap scan first, so the confirmation never eats the gate budget on a loaded host
+        auto first = store->QuerySql("SELECT count(*) FROM test");
+        if (first == nullptr) {
+            started->SetValue(E_ERROR);
+            queryBlock->SetValue(E_ERROR);
+            return;
+        }
+        int lastErr = first->GoToNextRow();
+        first->Close();
+        started->SetValue(lastErr);
+        // each round runs the cross join inside QuerySql and GoToNextRow, so a scan is in
+        // flight almost all the time and the interrupt lands inside a running one
+        for (int32_t i = 0; i < QUERY_ROUND_NUM && lastErr == E_OK; i++) {
+            auto resultSet = store->QuerySql(LONG_QUERY_PART);
+            if (resultSet == nullptr) { // the pool is gone after the release
+                lastErr = E_ALREADY_CLOSED;
+                break;
+            }
+            lastErr = resultSet->GoToNextRow();
+            resultSet->Close();
+        }
+        queryBlock->SetValue(lastErr);
+    });
+
+    // Release right after the path is confirmed: the interrupt aborts the running scan and the
+    // worker reports E_SQLITE_INTERRUPT, or the release wins the race into the worker's next
+    // round and that QuerySql observes the closed pool (E_ALREADY_CLOSED). Either way the
+    // worker stops and every connection is returned in budget.
+    EXPECT_EQ(E_OK, started->GetValue());
+    EXPECT_EQ(E_OK, store_->Release(InterruptReleaseOption()));
+    auto lastErr = queryBlock->GetValue();
+    EXPECT_TRUE(lastErr == E_SQLITE_INTERRUPT || lastErr == E_ALREADY_CLOSED) << "lastErr: " << lastErr;
+    EXPECT_EQ(nullptr, store_->QuerySql("SELECT * FROM test"));
+}
+
+/**
+ * @tc.name: MultiThread_Release_Interrupt_Gap_0001
+ * @tc.desc: 1.thread A: steps once, sleeps between two GoToNextRow calls (the interrupt lands in
+ *                     this gap), then steps again
+ *           2.thread B (main): Release with interrupt returns E_OK; the resumed step observes
+ *           the pending SQLITE_INTERRUPT immediately and the resultSet closes itself.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbMultiThreadConnectionTest, MultiThread_Release_Interrupt_Gap_0001, TestSize.Level2)
+{
+    EXPECT_EQ(E_OK, store_->ExecuteSql(FILL_RELEASE_TABLE));
+    auto started = std::make_shared<BlockData<int32_t>>(3, false);
+    auto gapBlock = std::make_shared<BlockData<int32_t>>(3, false);
+    auto afterBlock = std::make_shared<BlockData<int32_t>>(3, false);
+    executors_->Execute([store = store_, started, gapBlock, afterBlock]() {
+        OHOS::DistributedRdb::QueryOptions options;
+        options.preCount = false;
+        options.isGotoNextRowReturnLastError = false;
+        auto resultSet = store->QueryByStep("SELECT * FROM test", std::vector<ValueObject>(), options);
+        if (resultSet == nullptr) {
+            gapBlock->SetValue(E_ERROR);
+            afterBlock->SetValue(E_ERROR);
+            return;
+        }
+        (void)resultSet->GoToNextRow();  // row 0; the statement pauses mid-traversal
+        started->SetValue(E_OK);         // signal: entering the gap right away
+        usleep(500 * 1000);              // the interrupt lands inside this gap
+        gapBlock->SetValue(resultSet->GoToNextRow());       // resumed step: interrupted at once
+        afterBlock->SetValue(resultSet->GoToNextRow());     // resultSet already closed itself
+        resultSet->Close();              // idempotent
+    });
+
+    // Thread A has stepped once and is now sleeping between statements.
+    EXPECT_EQ(E_OK, started->GetValue());
+    usleep(100 * 1000); // make sure the interrupt falls inside the gap
+    EXPECT_EQ(E_OK, store_->Release(InterruptReleaseOption()));
+    EXPECT_EQ(E_SQLITE_INTERRUPT, gapBlock->GetValue());
+    EXPECT_EQ(E_ALREADY_CLOSED, afterBlock->GetValue());
 }
