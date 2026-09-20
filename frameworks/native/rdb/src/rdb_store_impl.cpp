@@ -3333,7 +3333,7 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::CreateWritableConn
     auto realPool = pool.lock();
     if (realPool == nullptr) {
         LOG_WARN("CreateWritableConn skipped, pool expired.");
-        return { E_ERROR, nullptr };
+        return { E_ALREADY_CLOSED, nullptr };
     }
     return realPool->CreateConn(true, config);
 }

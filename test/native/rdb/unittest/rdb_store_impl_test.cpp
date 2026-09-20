@@ -3118,6 +3118,8 @@ HWTEST_F(RdbStoreImplTest, RdbStore_Release_Interrupt_001, TestSize.Level2)
     EXPECT_EQ(E_ALREADY_CLOSED, store->Delete(changedRows, predicates));
     EXPECT_EQ(nullptr, store->QuerySql("SELECT * FROM test"));
     EXPECT_EQ(nullptr, store->QueryByStep("SELECT * FROM test"));
+    // Backup after Release bails in CreateWritableConn with the specific closed-store code too.
+    EXPECT_EQ(E_ALREADY_CLOSED, store->Backup(RDB_TEST_PATH + "release_interrupt_backup.db"));
     // A second release reports that the store is already released.
     EXPECT_EQ(E_ALREADY_CLOSED, store->Release(option));
 
