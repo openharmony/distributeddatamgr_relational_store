@@ -393,7 +393,6 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
             if (sql != nullptr) {
                 LOG_INFO("%{public}s : %{public}s, ", sql, SqliteUtils::Anonymous(config.GetName()).c_str());
                 std::tie(errCode, checkResult) = ExecuteForValue(sql);
-                // Audit: auto integrity check on open
                 IntegrityMode auditMode = (index == INTEGRITY_QUICK_CHECK_INDEX) ? IntegrityMode::QUICK
                                                                                   : IntegrityMode::FULL;
                 int auditResult = (errCode == E_OK && static_cast<std::string>(checkResult) == "ok")
