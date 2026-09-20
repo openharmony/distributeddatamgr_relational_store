@@ -1775,8 +1775,7 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     int64_t rowid = -1;
     auto errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args);
     if (errCode == E_OK && rowid > 0) {
-        constexpr int64_t SINGLE_ROW_COUNT = 1;
-        AuditInsert(table, SINGLE_ROW_COUNT);
+        AuditInsert(table, rowid);
     }
     if (errCode == E_OK) {
         DoCloudSync(table);
@@ -3117,14 +3116,14 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
 
 void RdbStoreImpl::AuditOpenOk()
 {
-    RdbAuditLogger::GetInstance().Init(config_);
-    RdbAuditLogger::GetInstance().OnOpenOk(config_);
+    RdbAuditLogger::GetInstance().Init(config_.IsAuditEnabled());
+    RdbAuditLogger::GetInstance().OnOpenOk(config_.GetPath());
 }
 
 void RdbStoreImpl::AuditOpenFail(int32_t errCode)
 {
-    RdbAuditLogger::GetInstance().Init(config_);
-    RdbAuditLogger::GetInstance().OnOpenFail(config_, errCode, OS_ERRNO_UNAVAILABLE);
+    RdbAuditLogger::GetInstance().Init(config_.IsAuditEnabled());
+    RdbAuditLogger::GetInstance().OnOpenFail(config_.GetPath(), errCode, OS_ERRNO_UNAVAILABLE);
 }
 
 void RdbStoreImpl::AuditInsert(const std::string &table, int64_t rows)
