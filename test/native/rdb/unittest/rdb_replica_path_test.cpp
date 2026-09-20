@@ -73,6 +73,7 @@ public:
         std::shared_ptr<RdbStore> &store, int num, int errCode = E_OK, const std::string &tableName = "test");
     static bool CheckFolderExist(const std::string &path);
     void RemoveFolder(const std::string &path);
+    static void DeleteDbFiles(const std::string &dbPath);
     static void Insert(int64_t start, int count, bool isSlave = false, int dataSize = 0);
     static void WaitForBackupFinish(int32_t expectStatus, int maxTimes = 4000);
     static void WaitForBinlogDelete(int maxTimes = 1000);
@@ -237,6 +238,15 @@ void RdbReplicaPathTest::RemoveFolder(const std::string &path)
         }
     }
     std::filesystem::remove(folder);
+}
+
+void RdbReplicaPathTest::DeleteDbFiles(const std::string &dbPath)
+{
+    static const std::vector<std::string> suffixes = { "", "-shm", "-wal", "-dwr", "-journal", "-slaveFailure",
+        "-syncInterrupt", "-lockcompress" };
+    for (const auto &suffix : suffixes) {
+        SqliteUtils::DeleteFile(dbPath + suffix);
+    }
 }
 
 /**
@@ -571,6 +581,61 @@ HWTEST_F(RdbReplicaPathTest, RdbStore_ReplicaPath_008, TestSize.Level0)
 }
 
 /**
+ * @tc.name: RdbStore_ReplicaPath_009
+ * @tc.desc: Test ReplicaPath from empty to path A, then delete all db files except replica path A, reopen and restore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbReplicaPathTest, RdbStore_ReplicaPath_009, TestSize.Level0)
+{
+    std::string customSlaveDirA = RDB_TEST_PATH + "custom_slave_dir_a_009";
+    std::string expectedSlaveA = customSlaveDirA + "/dual_write_binlog_test_slave.db";
+    if (CheckFolderExist(customSlaveDirA)) {
+        RemoveFolder(customSlaveDirA);
+    }
+    std::error_code ec;
+    std::filesystem::create_directories(customSlaveDirA, ec);
+
+    LOG_INFO("---- step1 open MAIN_REPLICA with the legacy default slave path and insert rows");
+    RdbStoreConfig config(RdbReplicaPathTest::databaseName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    int errCode = E_OK;
+    ReplicaPathTestOpenCallback helper;
+    RdbReplicaPathTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbReplicaPathTest::store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    store = nullptr;
+
+    LOG_INFO("---- step2 switch ReplicaPath from empty to custom slave dir A");
+    config.SetReplicaPath(customSlaveDirA);
+    RdbReplicaPathTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbReplicaPathTest::store, nullptr);
+    WaitForBackupFinish(BACKUP_FINISHED);
+    store = nullptr;
+
+    LOG_INFO("---- step3 delete all db files except the replica path A");
+    DeleteDbFiles(RdbReplicaPathTest::databaseName);
+    DeleteDbFiles(RdbReplicaPathTest::slaveDatabaseName);
+    SqliteUtils::DeleteFolder(RdbReplicaPathTest::binlogDatabaseName);
+    ASSERT_FALSE(OHOS::FileExists(RdbReplicaPathTest::databaseName));
+    ASSERT_TRUE(OHOS::FileExists(expectedSlaveA));
+
+    LOG_INFO("---- step4 reopen and restore data from the replica path A");
+    RdbReplicaPathTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbReplicaPathTest::store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_TRUE(OHOS::FileExists(RdbReplicaPathTest::databaseName));
+    EXPECT_TRUE(store->IsSlaveAvailable());
+    EXPECT_FALSE(SqliteUtils::IsSlaveInvalid(RdbReplicaPathTest::databaseName));
+    RdbReplicaPathTest::CheckNumber(store, count);
+
+    store = nullptr;
+    RemoveFolder(customSlaveDirA);
+}
+
+/**
  * @tc.name: RdbStore_ReplicaPath_010
  * @tc.desc: Test trigger mode, replicate Path from path A to empty
  * @tc.type: FUNC
@@ -645,5 +710,68 @@ HWTEST_F(RdbReplicaPathTest, RdbStore_ReplicaPath_012, TestSize.Level0)
     failureFile.close();
     EXPECT_FALSE(firstLine.empty());
     EXPECT_EQ(secondLine, std::string("prepare_failed"));
+    EXPECT_TRUE(SqliteUtils::IsSlaveInvalid(RdbReplicaPathTest::databaseName));
+
+    LOG_INFO("---- Legacy empty flag file should also be treated as invalid");
+    std::ofstream emptyFile(failureFlagPath, std::ios::trunc);
+    ASSERT_TRUE(emptyFile.is_open());
+    emptyFile.close();
+    EXPECT_TRUE(SqliteUtils::IsSlaveInvalid(RdbReplicaPathTest::databaseName));
     SqliteUtils::DeleteFile(failureFlagPath);
+}
+
+/**
+ * @tc.name: RdbStore_ReplicaPath_013
+ * @tc.desc: Test ReplicaPath from empty to path A, then delete all db files except replica path A, reopen and restore
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbReplicaPathTest, RdbStore_ReplicaPath_013, TestSize.Level0)
+{
+    std::string customSlaveDirA = RDB_TEST_PATH + "custom_slave_dir_a_013";
+    std::string expectedSlaveA = customSlaveDirA + "/dual_write_binlog_test_slave.db";
+    if (CheckFolderExist(customSlaveDirA)) {
+        RemoveFolder(customSlaveDirA);
+    }
+    std::error_code ec;
+    std::filesystem::create_directories(customSlaveDirA, ec);
+
+    LOG_INFO("---- step1 open MAIN_REPLICA with the legacy default slave path and insert rows");
+    RdbStoreConfig config(RdbReplicaPathTest::databaseName);
+    config.SetHaMode(HAMode::MANUAL_TRIGGER);
+    int errCode = E_OK;
+    ReplicaPathTestOpenCallback helper;
+    RdbReplicaPathTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbReplicaPathTest::store, nullptr);
+    store->ExecuteSql("DELETE FROM test");
+    int64_t id = 1;
+    int count = 10;
+    Insert(id, count);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    store = nullptr;
+
+    LOG_INFO("---- step2 switch ReplicaPath from empty to custom slave dir A");
+    config.SetReplicaPath(customSlaveDirA);
+    RdbReplicaPathTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbReplicaPathTest::store, nullptr);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+    store = nullptr;
+
+    LOG_INFO("---- step3 delete all db files except the replica path A");
+    DeleteDbFiles(RdbReplicaPathTest::databaseName);
+    DeleteDbFiles(RdbReplicaPathTest::slaveDatabaseName);
+    SqliteUtils::DeleteFolder(RdbReplicaPathTest::binlogDatabaseName);
+    ASSERT_FALSE(OHOS::FileExists(RdbReplicaPathTest::databaseName));
+    ASSERT_TRUE(OHOS::FileExists(expectedSlaveA));
+
+    LOG_INFO("---- step4 reopen and restore data from the replica path A");
+    RdbReplicaPathTest::store = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(RdbReplicaPathTest::store, nullptr);
+    EXPECT_EQ(errCode, E_OK);
+    EXPECT_TRUE(OHOS::FileExists(RdbReplicaPathTest::databaseName));
+    EXPECT_TRUE(store->IsSlaveAvailable());
+    EXPECT_FALSE(SqliteUtils::IsSlaveInvalid(RdbReplicaPathTest::databaseName));
+    RdbReplicaPathTest::CheckNumber(store, count);
+
+    store = nullptr;
+    RemoveFolder(customSlaveDirA);
 }
