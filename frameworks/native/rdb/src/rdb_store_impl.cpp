@@ -1775,7 +1775,8 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     int64_t rowid = -1;
     auto errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args);
     if (errCode == E_OK && rowid > 0) {
-        AuditInsert(table, rowid);
+        constexpr int64_t SINGLE_ROW_COUNT = 1;
+        AuditInsert(table, SINGLE_ROW_COUNT);
     }
     if (errCode == E_OK) {
         DoCloudSync(table);
@@ -1957,13 +1958,6 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
-    // Audit: business caller actively executing PRAGMA integrity_check / quick_check via query path.
-    // Note: result is not available here (lazy result set); recorded as triggered only.
-    if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
-        auto mode = RdbAuditUtils::ParsePragmaMode(sql);
-        RdbAuditLogger::GetInstance().OnIntegrity(
-            config_.GetPath(), IntegrityTrigger::ACTIVE, mode, AUDIT_RESULT_OK, "");
-    }
     return std::make_shared<SqliteSharedResultSet>(start, pool->AcquireRef(true), sql, bindArgs, path_);
 #else
     (void)sql;
@@ -1983,13 +1977,6 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     if (pool == nullptr) {
         LOG_ERROR("Database already closed.");
         return nullptr;
-    }
-    // Audit: business caller actively executing PRAGMA integrity_check / quick_check via query path.
-    // Note: result is not available here (lazy result set); recorded as triggered only.
-    if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
-        auto mode = RdbAuditUtils::ParsePragmaMode(sql);
-        RdbAuditLogger::GetInstance().OnIntegrity(
-            config_.GetPath(), IntegrityTrigger::ACTIVE, mode, AUDIT_RESULT_OK, "");
     }
     return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, options);
 }
@@ -2065,18 +2052,16 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         return errCode;
     }
     errCode = statement->Execute(args);
+    // Audit: PRAGMA integrity_check / quick_check (runs even on error for recording)
+    if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
+        RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE,
+            RdbAuditUtils::ParsePragmaMode(sql), errCode, "");
+    }
     if (errCode != E_OK) {
         SetLastErrorMsg(statement->GetLastErrorMsg());
         LOG_ERROR("failed, error:0x%{public}x app self can check the SQL:%{public}s", errCode,
             SqliteUtils::SqlAnonymous(sql).c_str());
         TryDump(errCode, "EXECUTE");
-    }
-    // Audit: business caller actively executing PRAGMA integrity_check / quick_check
-    if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
-        auto mode = RdbAuditUtils::ParsePragmaMode(sql);
-        RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE, mode, errCode, "");
-    }
-    if (errCode != E_OK) {
         return errCode;
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);

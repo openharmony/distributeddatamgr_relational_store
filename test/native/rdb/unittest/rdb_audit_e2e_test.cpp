@@ -35,6 +35,13 @@ using namespace OHOS::NativeRdb;
 
 namespace {
 constexpr const char *TEST_BASE_DIR = "/data/test/rdb_audit_e2e";
+constexpr size_t READ_BUF_SIZE = 4096;
+constexpr int TEST_ERR_CODE = 14;
+constexpr int TEST_OS_ERRNO = 13;
+constexpr int64_t TEST_DELETE_ROWS = 5;
+constexpr int64_t TEST_LARGE_INSERT_ROWS = 5000;
+constexpr int64_t TEST_SINGLE_INSERT_ROW = 1;
+constexpr int64_t THROTTLE_EXPIRE_OFFSET_MS = 61 * 1000;
 
 bool MakeDirRecursive(const std::string &path, mode_t mode)
 {
@@ -93,7 +100,7 @@ std::string ReadFileContent(const std::string &path)
         return "";
     }
     std::string content;
-    char buf[4096];
+    char buf[READ_BUF_SIZE];
     ssize_t n = 0;
     while ((n = read(fd, buf, sizeof(buf))) > 0) {
         content.append(buf, static_cast<size_t>(n));
@@ -214,7 +221,7 @@ HWTEST_F(RdbAuditE2ETest, OpenAndDelete_112, TestSize.Level0)
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config = MakeConfig();
     logger.OnOpenOk(config.GetPath());
-    logger.OnSqlAudit(config.GetPath(), "DELETE", "users", 5);
+    logger.OnSqlAudit(config.GetPath(), "DELETE", "users", TEST_DELETE_ROWS);
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_EQ(CountLines(content), static_cast<size_t>(2));
     EXPECT_NE(content.find("OPEN_OK"), std::string::npos);
@@ -246,12 +253,12 @@ HWTEST_F(RdbAuditE2ETest, LargeInsert_114, TestSize.Level0)
 {
     InitLogger();
     auto &logger = RdbAuditLogger::GetInstance();
-    logger.OnSqlAudit(std::string(TEST_BASE_DIR) + "/e2e_test.db", "INSERT", "logs", 5000);
+    logger.OnSqlAudit(std::string(TEST_BASE_DIR) + "/e2e_test.db", "INSERT", "logs", TEST_LARGE_INSERT_ROWS);
     // Accumulated within window, no write yet.
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_EQ(CountLines(content), static_cast<size_t>(0));
     // Expire window and flush.
-    logger.throttleMap_["SQL_AUDIT:INSERT:logs"].timestamp -= 61000;
+    logger.throttleMap_["SQL_AUDIT:INSERT:logs"].timestamp -= THROTTLE_EXPIRE_OFFSET_MS;
     logger.OnSqlAudit(std::string(TEST_BASE_DIR) + "/e2e_test.db", "INSERT", "logs", 1);
     content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_EQ(CountLines(content), static_cast<size_t>(1));
@@ -306,7 +313,7 @@ HWTEST_F(RdbAuditE2ETest, OpenFail_117, TestSize.Level0)
     InitLogger();
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config = MakeConfig();
-    logger.OnOpenFail(config.GetPath(), 14, 13);
+    logger.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_NE(content.find("\"evt\":\"OPEN_FAIL\""), std::string::npos);
     EXPECT_NE(content.find("\"rc\":14"), std::string::npos);
@@ -363,7 +370,7 @@ HWTEST_F(RdbAuditE2ETest, OpenFailThenOk_125, TestSize.Level0)
     InitLogger();
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config = MakeConfig();
-    logger.OnOpenFail(config.GetPath(), 14, 13);
+    logger.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
     logger.OnOpenOk(config.GetPath());
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_EQ(CountLines(content), static_cast<size_t>(2));

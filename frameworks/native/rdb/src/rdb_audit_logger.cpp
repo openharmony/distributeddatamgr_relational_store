@@ -52,12 +52,14 @@ constexpr const char *EVENTS_LOG_1 = "events.1.log";
 constexpr const char *EVENTS_LOCK = "events.lock";
 constexpr const char *LAST_OPEN_BIN = "last_open.bin";
 constexpr const char *LAST_INTEGRITY_BIN = "last_integrity.bin";
-constexpr int64_t THROTTLE_INTERVAL_MS = 60000; // 60 s
+constexpr int64_t THROTTLE_INTERVAL_MS = 60 * 1000; // 60 s
+constexpr size_t THROTTLE_MAP_MAX_SIZE = 64;
 
 // fdsan owner tag for all audit file descriptors. Matches the tag used by
 // other RDB fd owners (see 798261b5) so fdsan can detect double-close or
 // use-after-close across the component.
-const uint64_t AUDIT_FD_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650);
+constexpr uint64_t AUDIT_FD_TAG_ID = 0xD001650;
+const uint64_t AUDIT_FD_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, AUDIT_FD_TAG_ID);
 
 int64_t NowMs()
 {
@@ -227,7 +229,7 @@ void RdbAuditLogger::OnOpenOk(const std::string &dbPath)
     }
     std::string json = BuildOpenOkJson(dbPath);
     AppendEvent(json);
-    WriteLastOpen(dbPath, json);
+    WriteLastOpen(json);
 }
 
 void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno)
@@ -292,7 +294,7 @@ void RdbAuditLogger::OnIntegrity(
     // Only persist the baseline snapshot when integrity check succeeded,
     // preserving the last successful state for anomaly localization.
     if (result == 0) {
-        WriteLastIntegrity(dbPath, mode, json);
+        WriteLastIntegrity(json);
     }
 }
 
@@ -307,17 +309,6 @@ void RdbAuditLogger::OnDbDelete(const std::string &dbPath, const std::string &op
 }
 
 // --- Private helpers ---
-
-bool RdbAuditLogger::ShouldThrottle(const std::string &eventKey)
-{
-    int64_t now = NowMs();
-    auto it = throttleMap_.find(eventKey);
-    if (it != throttleMap_.end() && (now - it->second.timestamp) < THROTTLE_INTERVAL_MS) {
-        return true;
-    }
-    throttleMap_[eventKey] = {now, 0};
-    return false;
-}
 
 bool RdbAuditLogger::AccumulateOrFlush(const std::string &eventKey, int64_t rows, int64_t &flushRows)
 {
@@ -335,6 +326,16 @@ bool RdbAuditLogger::AccumulateOrFlush(const std::string &eventKey, int64_t rows
     }
     // Start new window with current rows.
     throttleMap_[eventKey] = {now, rows};
+    // Clean up expired entries to prevent unbounded growth.
+    if (throttleMap_.size() > THROTTLE_MAP_MAX_SIZE) {
+        for (auto mapIt = throttleMap_.begin(); mapIt != throttleMap_.end();) {
+            if (mapIt->first != eventKey && (now - mapIt->second.timestamp) >= THROTTLE_INTERVAL_MS) {
+                mapIt = throttleMap_.erase(mapIt);
+            } else {
+                ++mapIt;
+            }
+        }
+    }
     return false;
 }
 
@@ -371,12 +372,12 @@ void RdbAuditLogger::AppendEvent(const std::string &jsonLine)
     }
 }
 
-void RdbAuditLogger::WriteLastOpen(const std::string &dbPath, const std::string &snapshot)
+void RdbAuditLogger::WriteLastOpen(const std::string &snapshot)
 {
     WriteAtomicFile(auditDir_ + "/" + LAST_OPEN_BIN, snapshot);
 }
 
-void RdbAuditLogger::WriteLastIntegrity(const std::string &dbPath, IntegrityMode mode, const std::string &snapshot)
+void RdbAuditLogger::WriteLastIntegrity(const std::string &snapshot)
 {
     WriteAtomicFile(auditDir_ + "/" + LAST_INTEGRITY_BIN, snapshot);
 }
@@ -385,8 +386,8 @@ void RdbAuditLogger::WriteAtomicFile(const std::string &path, const std::string 
 {
     // Atomic: write to tmp file, fsync, rename — flock prevents concurrent tmp overwrite.
     std::string tmpPath = path + ".tmp";
-    if (lockFd_ >= 0) {
-        flock(lockFd_, LOCK_EX);
+    if (lockFd_ >= 0 && flock(lockFd_, LOCK_EX) != 0) {
+        LOG_WARN("WriteAtomicFile: flock LOCK_EX failed, errno=%{public}d, err=%{public}s", errno, strerror(errno));
     }
     int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     if (fd < 0) {
@@ -482,8 +483,6 @@ std::string RdbAuditLogger::BuildOpenOkJson(const std::string &dbPath)
     WriteFileInfo(os, "wal", fileInfo.wal);
     os << ",";
     WriteFileInfo(os, "shm", fileInfo.shm);
-    os << ",";
-    WriteFileInfo(os, "binlog", fileInfo.binlog);
     os << ",\"slave\":{";
     WriteFileInfo(os, "db", slaveInfo.db);
     os << ",";

@@ -174,7 +174,6 @@ DbFileInfo RdbDbInfoManager::CollectDbFileInfo(const std::string &dbPath)
     info.db = BuildFileInfo(dbPath);
     info.wal = BuildFileInfo(dbPath + "-wal");
     info.shm = BuildFileInfo(dbPath + "-shm");
-    info.binlog = BuildFileInfo(dbPath + "_binlog");
     size_t lastSlash = dbPath.rfind('/');
     if (lastSlash != std::string::npos) {
         info.parent = BuildFileInfo(dbPath.substr(0, lastSlash));

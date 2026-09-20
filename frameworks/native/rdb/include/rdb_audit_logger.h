@@ -79,9 +79,6 @@ private:
     RdbAuditLogger(const RdbAuditLogger &) = delete;
     RdbAuditLogger &operator=(const RdbAuditLogger &) = delete;
 
-    // Throttle: returns true if the same eventKey was seen within 60s.
-    bool ShouldThrottle(const std::string &eventKey);
-
     // Accumulate rows within a 60s window for INSERT/UPDATE.
     // Returns true if rows were accumulated (caller should not write).
     // Returns false if the window expired; flushRows is set to the previous
@@ -93,10 +90,10 @@ private:
     void AppendEvent(const std::string &jsonLine);
 
     // Atomic overwrite of last_open.bin (tmpfile -> rename).
-    void WriteLastOpen(const std::string &dbPath, const std::string &snapshot);
+    void WriteLastOpen(const std::string &snapshot);
 
     // Write to last_integrity.bin (tmpfile -> rename).
-    void WriteLastIntegrity(const std::string &dbPath, IntegrityMode mode, const std::string &snapshot);
+    void WriteLastIntegrity(const std::string &snapshot);
 
     // Atomic file write: tmpfile -> write -> fsync -> rename, protected by flock.
     // Used by WriteLastOpen / WriteLastIntegrity to avoid duplicated logic.
