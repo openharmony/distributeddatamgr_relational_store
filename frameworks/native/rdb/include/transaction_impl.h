@@ -20,9 +20,11 @@
 #include <vector>
 
 #include "connection.h"
+#include "sql_timeout_guard.h"
 #include "transaction.h"
 
 namespace OHOS::NativeRdb {
+class ConnectionPool;
 class RdbStore;
 class TransactionImpl : public Transaction {
 public:
@@ -49,21 +51,41 @@ public:
         const QueryOptions &options) override;
     std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args) override;
     std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;
+    std::pair<int32_t, int64_t> Insert(
+        const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config) override;
+    std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
+        Resolution resolution, const BatchInsertConfig &config) override;
+    std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
+        const UpdateConfig &config, Resolution resolution) override;
+    std::pair<int32_t, Results> Delete(
+        const AbsRdbPredicates &predicates, const DeleteConfig &config) override;
+    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
+        const QueryOptions &options, const QueryConfig &config) override;
+    std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
+        const QueryOptions &options, const QueryConfig &config) override;
+    std::pair<int32_t, ValueObject> Execute(
+        const std::string &sql, const Values &args, const ExecuteConfig &config) override;
+    std::pair<int32_t, Results> ExecuteExt(
+        const std::string &sql, const Values &args, const ExecuteConfig &config) override;
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(
         int32_t type, std::shared_ptr<Connection> connection, const std::string &path);
+    void SetPool(std::weak_ptr<ConnectionPool> pool);
 
 private:
     static std::string GetBeginSql(int32_t type);
     int32_t Begin(int32_t type);
     int32_t CloseInner(bool connRecycle = true);
     std::shared_ptr<RdbStore> GetStore();
+    std::shared_ptr<Connection> GetConnection();
     void AddResultSet(std::weak_ptr<ResultSet> resultSet);
+    std::unique_ptr<TimeoutGuard> MakeGuard();
 
     std::string path_;
     uint32_t seqId_ = 0;
     std::recursive_mutex mutex_;
     std::shared_ptr<RdbStore> store_;
     std::shared_ptr<Connection> connection_;
+    std::weak_ptr<ConnectionPool> pool_;
     std::vector<std::weak_ptr<ResultSet>> resultSets_;
 
     static const int32_t regCreator_;

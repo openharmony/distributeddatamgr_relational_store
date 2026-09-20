@@ -31,6 +31,7 @@
 
 #include "cache_result_set.h"
 #include "connection_pool.h"
+#include "deadline_scope.h"
 #include "delay_notify.h"
 #include "directory_ex.h"
 #include "knowledge_schema_helper.h"
@@ -64,9 +65,11 @@
 #include "step_result_set.h"
 #include "string_utils.h"
 #include "suspender.h"
+#include "sql_timeout_guard.h"
 #include "task_executor.h"
 #include "traits.h"
 #include "transaction.h"
+#include "transaction_impl.h"
 #include "values_buckets.h"
 #if !defined(CROSS_PLATFORM)
 #include "sqlite_shared_result_set.h"
@@ -98,6 +101,53 @@ constexpr char const *SUFFIX_BINLOG = "_binlog/";
 constexpr char const *INVALID_PATH_PART = "..";
 constexpr int32_t SERVICE_GID = 3012;
 constexpr int64_t TIME_OUT = 1500;
+namespace {
+struct TimeoutGuardResult {
+    std::unique_ptr<TimeoutGuard> guard;
+    int32_t errCode = E_OK;
+};
+
+TimeoutGuardResult MakeTimeoutGuard(
+    const std::shared_ptr<ConnectionPool> &pool, const std::shared_ptr<Connection> &conn)
+{
+    if (!DeadlineScope::Current().IsActive()) {
+        return { nullptr, E_OK };
+    }
+    if (DeadlineScope::Current().IsExhausted() || DeadlineScope::Current().RemainingMs() <= 0) {
+        return { nullptr, E_SQLITE_INTERRUPT };
+    }
+    if (pool == nullptr || conn == nullptr) {
+        return { nullptr, E_OK };
+    }
+    return { std::make_unique<TimeoutGuard>(conn, DeadlineScope::Current()), E_OK };
+}
+
+// Arm a mid-execution interrupt guard around statement->Execute(args). Returns the guard
+// error (E_SQLITE_INTERRUPT when the deadline is already exhausted) or the execute result,
+// so callers no longer need a local { guard; if (guardErr) return; execute; } block.
+int32_t ExecuteWithTimeout(const std::shared_ptr<ConnectionPool> &pool,
+    const std::shared_ptr<Statement> &stmt, const std::vector<ValueObject> &args)
+{
+    auto [timeoutGuard, guardErr] = MakeTimeoutGuard(pool, stmt->GetConnection());
+    if (guardErr != E_OK) {
+        return guardErr;
+    }
+    return stmt->Execute(args);
+}
+
+// Arm a mid-execution interrupt guard around statement->ExecuteForRows(args, maxCount).
+template <typename Args>
+std::pair<int32_t, std::vector<ValuesBucket>> ExecuteForRowsWithTimeout(
+    const std::shared_ptr<ConnectionPool> &pool, const std::shared_ptr<Statement> &stmt,
+    Args &&args, int32_t maxCount)
+{
+    auto [timeoutGuard, guardErr] = MakeTimeoutGuard(pool, stmt->GetConnection());
+    if (guardErr != E_OK) {
+        return { guardErr, {} };
+    }
+    return stmt->ExecuteForRows(std::forward<Args>(args), maxCount);
+}
+}
 
 TransAcquireGuard::~TransAcquireGuard()
 {
@@ -343,12 +393,44 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::GetConn(bool isRea
     if (pool == nullptr) {
         return { E_ALREADY_CLOSED, nullptr };
     }
-
     auto connection = pool->AcquireConnection(isRead);
     if (connection == nullptr) {
         return { E_DATABASE_BUSY, nullptr };
     }
     return { E_OK, connection };
+}
+
+ConnWithGuard RdbStoreImpl::GetConnWithTimeout(bool isRead)
+{
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        return { nullptr, nullptr, E_ALREADY_CLOSED };
+    }
+    auto acquireMs = ConnectionPool::INVALID_TIME;
+    if (DeadlineScope::Current().IsActive()) {
+        auto remaining = DeadlineScope::Current().RemainingMs();
+        if (remaining <= 0) {
+            // deadline exhausted before acquisition = timeout, not "busy"
+            return { nullptr, nullptr, E_SQLITE_INTERRUPT };
+        }
+        acquireMs = std::chrono::milliseconds(remaining);
+    }
+    auto conn = pool->AcquireConnection(isRead, acquireMs);
+    if (conn == nullptr) {
+        // Distinguish timeout (deadline exhausted during acquire) from genuine pool busy.
+        if (DeadlineScope::Current().IsActive() && DeadlineScope::Current().IsExhausted()) {
+            return { nullptr, nullptr, E_SQLITE_INTERRUPT };
+        }
+        return { nullptr, nullptr, E_DATABASE_BUSY };
+    }
+    if (DeadlineScope::Current().IsExhausted()) {
+        return { nullptr, nullptr, E_SQLITE_INTERRUPT };
+    }
+    std::unique_ptr<TimeoutGuard> guard;
+    if (DeadlineScope::Current().IsActive() && DeadlineScope::Current().RemainingMs() > 0) {
+        guard = std::make_unique<TimeoutGuard>(conn, DeadlineScope::Current());
+    }
+    return { conn, std::move(guard), E_OK };
 }
 
 bool RdbStoreImpl::SetFileGid(const RdbStoreConfig &config, int32_t gid)
@@ -1733,8 +1815,11 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
     return config_;
 }
 
-std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
+std::pair<int, int64_t> RdbStoreImpl::Insert(
+    const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config)
 {
+    // Canonical final impl: old overloads (non-config / ExecuteConfig) delegate here.
+    DeadlineScope scope(config.timeoutMs);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1820,8 +1905,11 @@ void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(
-    const std::string &table, const RefRows &rows, const ReturningConfig &config, Resolution resolution)
+    const std::string &table, const RefRows &rows, Resolution resolution, const BatchInsertConfig &cfg)
 {
+    // Canonical final impl: old overloads (ReturningConfig / ExecuteConfig) delegate here.
+    DeadlineScope scope(cfg.timeoutMs);
+    const ReturningConfig &config = cfg.returning;
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1835,8 +1923,8 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL, 0, rows.RowSize());
 
-    auto [code, conn] = GetConn(false);
-    if (code != E_OK || conn == nullptr) {
+    auto [conn, timeoutGuard, code] = GetConnWithTimeout(false);
+    if (conn == nullptr) {
         return { code, -1 };
     }
 
@@ -1871,7 +1959,8 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteBatchInsertReturning(const RdbS
     }
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
     std::vector<ValuesBucket> values;
-    std::tie(errCode, values) = statement->ExecuteForRows(std::ref(bindArgs.front()), config.maxReturningCount);
+    std::tie(errCode, values) =
+        ExecuteForRowsWithTimeout(GetPool(), statement, std::ref(bindArgs.front()), config.maxReturningCount);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         TryDump(errCode, "BATCH");
         return { errCode, -1 };
@@ -1886,9 +1975,12 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteBatchInsertReturning(const RdbS
     return { errCode, result };
 }
 
-std::pair<int32_t, Results> RdbStoreImpl::Update(
-    const Row &row, const AbsRdbPredicates &predicates, const ReturningConfig &config, Resolution resolution)
+std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const UpdateConfig &cfg, Resolution resolution)
 {
+    // Canonical final impl: old overloads (ReturningConfig / ExecuteConfig) delegate here.
+    DeadlineScope scope(cfg.timeoutMs);
+    const ReturningConfig &config = cfg.returning;
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1908,8 +2000,12 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(
     return { code, result };
 }
 
-std::pair<int32_t, Results> RdbStoreImpl::Delete(const AbsRdbPredicates &predicates, const ReturningConfig &config)
+std::pair<int32_t, Results> RdbStoreImpl::Delete(
+    const AbsRdbPredicates &predicates, const DeleteConfig &cfg)
 {
+    // Canonical final impl: old overloads (ReturningConfig / ExecuteConfig) delegate here.
+    DeadlineScope scope(cfg.timeoutMs);
+    const ReturningConfig &config = cfg.returning;
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -1931,6 +2027,14 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(const AbsRdbPredicates &predica
 
 std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql, const Values &bindArgs)
 {
+    // old calls new: non-config overload delegates to the per-op config canonical entry.
+    return QuerySql(sql, bindArgs, QueryConfig{});
+}
+
+std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(
+    const std::string &sql, const Values &bindArgs, const QueryConfig &config)
+{
+    DeadlineScope scope(config.timeoutMs);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (config_.GetDBType() == DB_VECTOR) {
         return nullptr;
@@ -1944,10 +2048,41 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
-    return std::make_shared<SqliteSharedResultSet>(start, pool->AcquireRef(true), sql, bindArgs, path_);
+    auto acquireMs = ConnectionPool::INVALID_TIME;
+    if (DeadlineScope::Current().IsActive()) {
+        auto remaining = DeadlineScope::Current().RemainingMs();
+        if (remaining <= 0) {
+            return nullptr;
+        }
+        acquireMs = std::chrono::milliseconds(remaining);
+    }
+    auto conn = pool->AcquireRef(true, acquireMs);
+    if (conn == nullptr) {
+        // Only the timeout path fails explicitly; the existing (non-timeout) path preserves
+        // baseline behavior of constructing a closed result set so JS/NAPI querySql still
+        // resolves with a (closed) ResultSet instead of rejecting.
+        if (config.timeoutMs > 0) {
+            return nullptr;
+        }
+    }
+    std::unique_ptr<TimeoutGuard> timeoutGuard;
+    if (conn != nullptr && DeadlineScope::Current().IsActive() && DeadlineScope::Current().RemainingMs() > 0) {
+        if (DeadlineScope::Current().IsExhausted()) {
+            return nullptr;
+        }
+        timeoutGuard = std::make_unique<TimeoutGuard>(conn, DeadlineScope::Current());
+    }
+    auto resultSet = std::make_shared<SqliteSharedResultSet>(
+        start, conn, sql, bindArgs, path_, std::move(timeoutGuard));
+    if (config.timeoutMs > 0 && DeadlineScope::Current().IsExhausted()) {
+        LOG_WARN("QuerySql: timeout exhausted during result set construction, returning nullptr");
+        return nullptr;
+    }
+    return resultSet;
 #else
     (void)sql;
     (void)bindArgs;
+    (void)config;
     return nullptr;
 #endif
 }
@@ -1955,6 +2090,14 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     const std::string &sql, const Values &args, const QueryOptions &options)
 {
+    // old calls new: non-config overload delegates to the per-op config canonical entry.
+    return QueryByStep(sql, args, options, QueryConfig{});
+}
+
+std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
+    const std::string &sql, const Values &args, const QueryOptions &options, const QueryConfig &config)
+{
+    DeadlineScope scope(config.timeoutMs);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
@@ -1964,7 +2107,36 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
-    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, options);
+    auto acquireMs = ConnectionPool::INVALID_TIME;
+    if (DeadlineScope::Current().IsActive()) {
+        auto remaining = DeadlineScope::Current().RemainingMs();
+        if (remaining <= 0) {
+            return nullptr;
+        }
+        acquireMs = std::chrono::milliseconds(remaining);
+    }
+    auto conn = pool->AcquireRef(true, acquireMs);
+    if (conn == nullptr) {
+        // Only the timeout path fails explicitly; the existing (non-timeout) path preserves
+        // baseline behavior of constructing a closed result set.
+        if (config.timeoutMs > 0) {
+            return nullptr;
+        }
+    }
+    std::unique_ptr<TimeoutGuard> timeoutGuard;
+    if (conn != nullptr && DeadlineScope::Current().IsActive() && DeadlineScope::Current().RemainingMs() > 0) {
+        if (DeadlineScope::Current().IsExhausted()) {
+            return nullptr;
+        }
+        timeoutGuard = std::make_unique<TimeoutGuard>(conn, DeadlineScope::Current());
+    }
+    auto resultSet = std::make_shared<StepResultSet>(
+        start, conn, sql, args, options, false, std::move(timeoutGuard));
+    if (config.timeoutMs > 0 && DeadlineScope::Current().IsExhausted()) {
+        LOG_WARN("QueryByStep: timeout exhausted during result set construction, returning nullptr");
+        return nullptr;
+    }
+    return resultSet;
 }
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
@@ -2037,7 +2209,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     if (statement == nullptr) {
         return errCode;
     }
-    errCode = statement->Execute(args);
+    errCode = ExecuteWithTimeout(GetPool(), statement, args);
     if (errCode != E_OK) {
         SetLastErrorMsg(statement->GetLastErrorMsg());
         LOG_ERROR("failed, error:0x%{public}x app self can check the SQL:%{public}s", errCode,
@@ -2047,7 +2219,8 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        HandleSchemaDDL(std::move(statement), sql);
+        // Schema refresh is best-effort; its result must not overwrite the successful DDL code.
+        (void)HandleSchemaDDL(std::move(statement), sql);
     }
     statement = nullptr;
     if (errCode == E_OK && (sqlType == SqliteUtils::STATEMENT_UPDATE || sqlType == SqliteUtils::STATEMENT_INSERT)) {
@@ -2056,8 +2229,11 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     return errCode;
 }
 
-std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const Values &args, int64_t trxId)
+std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(
+    const std::string &sql, const Values &args, int64_t trxId, const ExecuteConfig &config)
 {
+    // Canonical final impl: old overload Execute(sql,args,trxId) delegates here.
+    DeadlineScope scope(config.timeoutMs);
     ValueObject object;
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, object };
@@ -2082,7 +2258,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
         return { errCode != E_OK ? errCode : E_ERROR, object };
     }
 
-    errCode = statement->Execute(args);
+    errCode = ExecuteWithTimeout(GetPool(), statement, args);
     if (errCode != E_OK) {
         SetLastErrorMsg(statement->GetLastErrorMsg());
     }
@@ -2124,7 +2300,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        HandleSchemaDDL(std::move(statement), sql);
+        // Schema refresh is best-effort; its result must not overwrite the successful DDL code.
+        (void)HandleSchemaDDL(std::move(statement), sql);
     }
     return { code, ValueObject() };
 }
@@ -2212,7 +2389,7 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
         return errCode;
     }
     auto beginExec = std::chrono::steady_clock::now();
-    errCode = statement->Execute(args);
+    errCode = ExecuteWithTimeout(GetPool(), statement, args);
     if (errCode != E_OK) {
         SetLastErrorMsg(statement->GetLastErrorMsg());
         TryDump(errCode, "INSERT");
@@ -2248,7 +2425,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
         return { errCode, -1 };
     }
     std::vector<ValuesBucket> values;
-    std::tie(errCode, values) = statement->ExecuteForRows(args, config.maxReturningCount);
+    std::tie(errCode, values) = ExecuteForRowsWithTimeout(GetPool(), statement, args, config.maxReturningCount);
     TryDump(errCode, "UPG DEL");
     return GenerateResult(errCode, statement, std::move(values), true, config.defaultRowIndex);
 }
@@ -3365,7 +3542,15 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
     if (pool == nullptr) {
         return { E_ALREADY_CLOSED, nullptr };
     }
-    auto conn = pool->AcquireConnection(read);
+    auto acquireMs = ConnectionPool::INVALID_TIME;
+    if (DeadlineScope::Current().IsActive()) {
+        auto remaining = DeadlineScope::Current().RemainingMs();
+        if (remaining <= 0) {
+            return { E_DATABASE_BUSY, nullptr };
+        }
+        acquireMs = std::chrono::milliseconds(remaining);
+    }
+    auto conn = pool->AcquireConnection(read, acquireMs);
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, nullptr };
     }
@@ -3501,6 +3686,8 @@ std::pair<int32_t, std::shared_ptr<Transaction>> RdbStoreImpl::CreateTransaction
         TryDump(errCode, "TRANS");
         return { errCode, nullptr };
     }
+    auto transImpl = std::static_pointer_cast<TransactionImpl>(trans);
+    transImpl->SetPool(pool);
 
     std::lock_guard<decltype(mutex_)> guard(mutex_);
     for (auto it = transactions_.begin(); it != transactions_.end();) {

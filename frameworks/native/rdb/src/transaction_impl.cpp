@@ -17,6 +17,8 @@
 
 #include "transaction_impl.h"
 
+#include "connection_pool.h"
+#include "deadline_scope.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_store.h"
@@ -63,6 +65,29 @@ std::pair<int32_t, std::shared_ptr<Transaction>> TransactionImpl::Create(
         return { errorCode, nullptr };
     }
     return { E_OK, trans };
+}
+
+void TransactionImpl::SetPool(std::weak_ptr<ConnectionPool> pool)
+{
+    std::lock_guard lock(mutex_);
+    pool_ = std::move(pool);
+}
+
+std::unique_ptr<TimeoutGuard> TransactionImpl::MakeGuard()
+{
+    auto pool = pool_.lock();
+    if (pool == nullptr) {
+        return nullptr;
+    }
+    auto conn = GetConnection();
+    if (conn == nullptr) {
+        return nullptr;
+    }
+    const auto &token = DeadlineScope::Current();
+    if (!token.IsActive() || token.IsExhausted()) {
+        return nullptr;
+    }
+    return std::make_unique<TimeoutGuard>(conn, token);
 }
 
 std::string TransactionImpl::GetBeginSql(int32_t type)
@@ -185,6 +210,12 @@ std::shared_ptr<RdbStore> TransactionImpl::GetStore()
     return store_;
 }
 
+std::shared_ptr<Connection> TransactionImpl::GetConnection()
+{
+    std::lock_guard lock(mutex_);
+    return connection_;
+}
+
 std::string TransactionImpl::GetLastErrorMsg()
 {
     auto store = GetStore();
@@ -196,13 +227,7 @@ std::string TransactionImpl::GetLastErrorMsg()
 
 std::pair<int, int64_t> TransactionImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
 {
-    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
-    auto store = GetStore();
-    if (store == nullptr) {
-        LOG_ERROR("transaction already close");
-        return { E_ALREADY_CLOSED, -1 };
-    }
-    return store->Insert(table, row, resolution);
+    return Insert(table, row, resolution, InsertConfig{});
 }
 
 std::pair<int32_t, int64_t> TransactionImpl::BatchInsert(const std::string &table, const Rows &rows)
@@ -232,37 +257,19 @@ std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, c
 std::pair<int32_t, Results> TransactionImpl::BatchInsert(const std::string &table, const RefRows &rows,
     const ReturningConfig &config, Resolution resolution)
 {
-    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_, rows.RowSize());
-    auto store = GetStore();
-    if (store == nullptr) {
-        LOG_ERROR("transaction already close");
-        return { E_ALREADY_CLOSED, -1 };
-    }
-    return store->BatchInsert(table, rows, config, resolution);
+    return BatchInsert(table, rows, resolution, BatchInsertConfig{0, config});
 }
 
 std::pair<int32_t, Results> TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
     const ReturningConfig &config, Resolution resolution)
 {
-    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
-    auto store = GetStore();
-    if (store == nullptr) {
-        LOG_ERROR("transaction already close");
-        return { E_ALREADY_CLOSED, -1 };
-    }
-    return store->Update(row, predicates, config, resolution);
+    return Update(row, predicates, UpdateConfig{0, config}, resolution);
 }
 
 std::pair<int32_t, Results> TransactionImpl::Delete(
     const AbsRdbPredicates &predicates, const ReturningConfig &config)
 {
-    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
-    auto store = GetStore();
-    if (store == nullptr) {
-        LOG_ERROR("transaction already close");
-        return { E_ALREADY_CLOSED, -1 };
-    }
-    return store->Delete(predicates, config);
+    return Delete(predicates, DeleteConfig{0, config});
 }
 
 void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
@@ -274,21 +281,99 @@ void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
     const std::string &sql, const Values &args, const QueryOptions &options)
 {
-    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
-    auto store = GetStore();
-    if (store == nullptr) {
-        LOG_ERROR("transaction already close");
-        return nullptr;
-    }
-    auto resultSet = store->QueryByStep(sql, args, options);
-    if (resultSet != nullptr) {
-        AddResultSet(resultSet);
-    }
-    return resultSet;
+    return QueryByStep(sql, args, options, QueryConfig{});
 }
 
 std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
     const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options)
+{
+    return QueryByStep(predicates, columns, options, QueryConfig{});
+}
+
+std::pair<int32_t, ValueObject> TransactionImpl::Execute(const std::string &sql, const Values &args)
+{
+    return Execute(sql, args, ExecuteConfig{});
+}
+
+std::pair<int32_t, Results> TransactionImpl::ExecuteExt(const std::string &sql, const Values &args)
+{
+    return ExecuteExt(sql, args, ExecuteConfig{});
+}
+
+std::pair<int32_t, int64_t> TransactionImpl::Insert(
+    const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config)
+{
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    DeadlineScope scope(config.timeoutMs);
+    auto guard = MakeGuard();
+    auto [errCode, rowId] = store->Insert(table, row, resolution, config);
+    if (errCode == E_SQLITE_INTERRUPT) {
+        CloseInner(false);
+    }
+    return { errCode, rowId };
+}
+
+std::pair<int32_t, Results> TransactionImpl::BatchInsert(const std::string &table, const RefRows &rows,
+    Resolution resolution, const BatchInsertConfig &config)
+{
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_, rows.RowSize());
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    DeadlineScope scope(config.timeoutMs);
+    auto guard = MakeGuard();
+    auto result = store->BatchInsert(table, rows, resolution, config);
+    if (result.first == E_SQLITE_INTERRUPT) {
+        CloseInner(false);
+    }
+    return result;
+}
+
+std::pair<int32_t, Results> TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const UpdateConfig &config, Resolution resolution)
+{
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    DeadlineScope scope(config.timeoutMs);
+    auto guard = MakeGuard();
+    auto result = store->Update(row, predicates, config, resolution);
+    if (result.first == E_SQLITE_INTERRUPT) {
+        CloseInner(false);
+    }
+    return result;
+}
+
+std::pair<int32_t, Results> TransactionImpl::Delete(
+    const AbsRdbPredicates &predicates, const DeleteConfig &config)
+{
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return { E_ALREADY_CLOSED, -1 };
+    }
+    DeadlineScope scope(config.timeoutMs);
+    auto guard = MakeGuard();
+    auto result = store->Delete(predicates, config);
+    if (result.first == E_SQLITE_INTERRUPT) {
+        CloseInner(false);
+    }
+    return result;
+}
+
+std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
+    const std::string &sql, const Values &args, const QueryOptions &options, const QueryConfig &config)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -296,14 +381,41 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
         LOG_ERROR("transaction already close");
         return nullptr;
     }
-    auto resultSet = store->QueryByStep(predicates, columns, options);
+    DeadlineScope scope(config.timeoutMs);
+    auto guard = MakeGuard();
+    auto transStore = std::static_pointer_cast<TransDB>(store);
+    auto resultSet = transStore->QueryByStepWithGuard(sql, args, options, config, std::move(guard));
     if (resultSet != nullptr) {
         AddResultSet(resultSet);
+    } else if (config.timeoutMs > 0 && DeadlineScope::Current().IsExhausted()) {
+        CloseInner(false);
     }
     return resultSet;
 }
 
-std::pair<int32_t, ValueObject> TransactionImpl::Execute(const std::string &sql, const Values &args)
+std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
+    const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options,
+    const QueryConfig &config)
+{
+    PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
+    auto store = GetStore();
+    if (store == nullptr) {
+        LOG_ERROR("transaction already close");
+        return nullptr;
+    }
+    DeadlineScope scope(config.timeoutMs);
+    auto guard = MakeGuard();
+    auto resultSet = store->QueryByStep(predicates, columns, options);
+    if (resultSet != nullptr) {
+        AddResultSet(resultSet);
+    } else if (config.timeoutMs > 0 && DeadlineScope::Current().IsExhausted()) {
+        CloseInner(false);
+    }
+    return resultSet;
+}
+
+std::pair<int32_t, ValueObject> TransactionImpl::Execute(
+    const std::string &sql, const Values &args, const ExecuteConfig &config)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -311,16 +423,30 @@ std::pair<int32_t, ValueObject> TransactionImpl::Execute(const std::string &sql,
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, ValueObject() };
     }
-    return store->Execute(sql, args);
+    DeadlineScope scope(config.timeoutMs);
+    auto guard = MakeGuard();
+    auto transStore = std::static_pointer_cast<TransDB>(store);
+    auto result = transStore->ExecuteWithGuard(sql, args, 0, std::move(guard));
+    if (result.first == E_SQLITE_INTERRUPT) {
+        CloseInner(false);
+    }
+    return result;
 }
 
-std::pair<int32_t, Results> TransactionImpl::ExecuteExt(const std::string &sql, const Values &args)
+std::pair<int32_t, Results> TransactionImpl::ExecuteExt(
+    const std::string &sql, const Values &args, const ExecuteConfig &config)
 {
     auto store = GetStore();
     if (store == nullptr) {
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    return store->ExecuteExt(sql, args);
+    DeadlineScope scope(config.timeoutMs);
+    auto guard = MakeGuard();
+    auto result = store->ExecuteExt(sql, args);
+    if (result.first == E_SQLITE_INTERRUPT) {
+        CloseInner(false);
+    }
+    return result;
 }
 } // namespace OHOS::NativeRdb

@@ -26,6 +26,7 @@
 #include "abs_shared_result_set.h"
 #include "connection.h"
 #include "shared_block.h"
+#include "sql_timeout_guard.h"
 #include "statement.h"
 #include "value_object.h"
 
@@ -36,7 +37,8 @@ public:
     using Values = std::vector<ValueObject>;
     using Conn = std::shared_ptr<Connection>;
     using Time = std::chrono::steady_clock::time_point;
-    SqliteSharedResultSet(Time start, Conn conn, std::string sql, const Values &args, const std::string &path);
+    SqliteSharedResultSet(Time start, Conn conn, std::string sql, const Values &args, const std::string &path,
+        std::unique_ptr<TimeoutGuard> guard = nullptr);
     ~SqliteSharedResultSet() override;
     int Close() override;
     int32_t OnGo(int oldPosition, int newPosition) override;
@@ -72,6 +74,7 @@ private:
     std::shared_ptr<Statement> statement_;
     std::string qrySql_;
     std::vector<ValueObject> bindArgs_;
+    std::unique_ptr<TimeoutGuard> timeoutGuard_;
     std::mutex mutex_;
 };
 } // namespace NativeRdb

@@ -48,6 +48,8 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+
+thread_local DeadlineToken Statement::deadline_;
 using PerfStat = DistributedRdb::PerfStat;
 using Reportor = RdbFaultHiViewReporter;
 // Setting Data Precision
@@ -412,12 +414,22 @@ int SqliteStatement::Step()
 
 int SqliteStatement::InnerStep()
 {
+    if (IsDeadlineExhausted()) {
+        LOG_WARN("InnerStep: deadline exhausted before sqlite3_step, sql[%{public}s]",
+            SqliteUtils::SqlAnonymous(sql_).c_str());
+        return E_SQLITE_INTERRUPT;
+    }
+    LOG_INFO("InnerStep: deadline exhausted=%{public}d", IsDeadlineExhausted());
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_EXECUTE, seqId_);
     auto errCode = sqlite3_step(stmt_);
     auto db = sqlite3_db_handle(stmt_);
     TryNotifyErrorLog(errCode, db, sql_);
     int ret = SQLiteError::ErrNo(errCode);
+    if (errCode == SQLITE_INTERRUPT) {
+        LOG_WARN("InnerStep: sqlite3_step interrupted by timer during execution, sql[%{public}s]",
+            SqliteUtils::SqlAnonymous(sql_).c_str());
+    }
     if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
         Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret,
             (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "SqliteStatement::InnerStep")));
@@ -782,6 +794,11 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info, int retryTime) con
     if (info == nullptr) {
         return E_INVALID_ARGS;
     }
+    if (IsDeadlineExhausted()) {
+        LOG_WARN("FillBlockInfo: deadline exhausted before sqlite3_step, sql[%{public}s]",
+            SqliteUtils::SqlAnonymous(sql_).c_str());
+        return E_SQLITE_INTERRUPT;
+    }
     int32_t errCode = E_OK;
     if (SupportBlockInfo()) {
         errCode = FillSharedBlockOpt(info, stmt_, retryTime);
@@ -933,6 +950,11 @@ std::string SqliteStatement::GetLastErrorMsg() const
     auto dbHandle = sqlite3_db_handle(stmt_);
     std::string errMsg(sqlite3_errmsg(dbHandle));
     return errMsg;
+}
+
+std::shared_ptr<Connection> SqliteStatement::GetConnection() const
+{
+    return conn_;
 }
 
 int SqliteStatement::InnerFinalize()

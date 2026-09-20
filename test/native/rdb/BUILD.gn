@@ -244,6 +244,7 @@ ohos_unittest("SilentProxyTest") {
     "${relational_store_native_path}/rdb/src/security_policy.cpp",
     "${relational_store_native_path}/rdb/src/share_block.cpp",
     "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
+    "${relational_store_native_path}/rdb/src/sql_timeout_guard.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_default_function.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
@@ -370,9 +371,11 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_store_impl_test.cpp",
     "unittest/rdb_store_rekey_test.cpp",
     "unittest/rdb_store_rekey_vector_test.cpp",
+    "unittest/rdb_timeout_interrupt_test.cpp",
     "unittest/rdb_trans_db_test.cpp",
     "unittest/rdb_utils_test.cpp",
     "unittest/sqlite_utils_test.cpp",
+    "unittest/sql_timeout_guard_test.cpp",
     "unittest/transaction_test.cpp",
   ]
 
@@ -417,6 +420,7 @@ ohos_unittest("NativeRdbTest") {
     "${relational_store_native_path}/rdb/src/security_policy.cpp",
     "${relational_store_native_path}/rdb/src/share_block.cpp",
     "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
+    "${relational_store_native_path}/rdb/src/sql_timeout_guard.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_default_function.cpp",
     "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",

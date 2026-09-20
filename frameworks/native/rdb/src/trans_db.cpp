@@ -19,6 +19,7 @@
 #include <cstdint>
 
 #include "cache_result_set.h"
+#include "deadline_scope.h"
 #include "logger.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_trace.h"
@@ -36,8 +37,11 @@ TransDB::TransDB(std::shared_ptr<Connection> conn, const std::string &path) : co
     maxArgs_ = conn->GetMaxVariable();
 }
 
-std::pair<int, int64_t> TransDB::Insert(const std::string &table, const Row &row, Resolution resolution)
+std::pair<int, int64_t> TransDB::Insert(
+    const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config)
 {
+    // Canonical final impl: old overloads (non-config / ExecuteConfig) delegate here via base.
+    DeadlineScope scope(config.timeoutMs);
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto conflictClause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
     if (table.empty() || row.IsEmpty() || conflictClause == nullptr) {
@@ -110,9 +114,12 @@ std::pair<int, int64_t> TransDB::BatchInsert(const std::string &table, const Ref
     return { E_OK, int64_t(rows.RowSize()) };
 }
 
-std::pair<int32_t, Results> TransDB::BatchInsert(const std::string &table, const ValuesBuckets &rows,
-    const ReturningConfig &config, Resolution resolution)
+std::pair<int32_t, Results> TransDB::BatchInsert(const std::string &table, const RefRows &rows,
+    Resolution resolution, const BatchInsertConfig &cfg)
 {
+    // Canonical final impl: old overloads (ReturningConfig / ExecuteConfig) delegate here via base.
+    DeadlineScope scope(cfg.timeoutMs);
+    const ReturningConfig &config = cfg.returning;
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (rows.RowSize() == 0) {
         return { E_OK, 0 };
@@ -144,8 +151,11 @@ std::pair<int32_t, Results> TransDB::BatchInsert(const std::string &table, const
 }
 
 std::pair<int32_t, Results> TransDB::Update(const Row &row, const AbsRdbPredicates &predicates,
-    const ReturningConfig &config, Resolution resolution)
+    const UpdateConfig &cfg, Resolution resolution)
 {
+    // Canonical final impl: old overloads (ReturningConfig / ExecuteConfig) delegate here via base.
+    DeadlineScope scope(cfg.timeoutMs);
+    const ReturningConfig &config = cfg.returning;
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto clause = SqliteUtils::GetConflictClause(static_cast<int>(resolution));
     auto table = predicates.GetTableName();
@@ -191,8 +201,11 @@ std::pair<int32_t, Results> TransDB::Update(const Row &row, const AbsRdbPredicat
 }
 
 std::pair<int32_t, Results> TransDB::Delete(
-    const AbsRdbPredicates &predicates, const ReturningConfig &config)
+    const AbsRdbPredicates &predicates, const DeleteConfig &cfg)
 {
+    // Canonical final impl: old overloads (ReturningConfig / ExecuteConfig) delegate here via base.
+    DeadlineScope scope(cfg.timeoutMs);
+    const ReturningConfig &config = cfg.returning;
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto table = predicates.GetTableName();
     if (table.empty()) {
@@ -221,6 +234,15 @@ std::pair<int32_t, Results> TransDB::Delete(
 
 std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, const Values &args)
 {
+    // old calls new: non-config overload delegates to the per-op config canonical entry.
+    return QuerySql(sql, args, QueryConfig{});
+}
+
+std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(
+    const std::string &sql, const Values &args, const QueryConfig &config)
+{
+    // Canonical final impl: old overload delegates here via base.
+    DeadlineScope scope(config.timeoutMs);
 #if !defined(WINDOWS_PLATFORM) && !defined(MAC_PLATFORM) && !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto start = std::chrono::steady_clock::now();
@@ -234,15 +256,58 @@ std::shared_ptr<AbsSharedResultSet> TransDB::QuerySql(const std::string &sql, co
 
 std::shared_ptr<ResultSet> TransDB::QueryByStep(const std::string &sql, const Values &args, const QueryOptions &options)
 {
-    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
-    auto start = std::chrono::steady_clock::now();
-    return std::make_shared<StepResultSet>(start, conn_.lock(), sql, args, options, true);
+    // old calls new: non-config overload delegates to the config canonical entry.
+    return QueryByStep(sql, args, options, QueryConfig{});
 }
 
-std::pair<int32_t, ValueObject> TransDB::Execute(const std::string &sql, const Values &args, int64_t trxId)
+std::shared_ptr<ResultSet> TransDB::QueryByStep(
+    const std::string &sql, const Values &args, const QueryOptions &options, const QueryConfig &config)
+{
+    DeadlineScope scope(config.timeoutMs);
+    if (config.timeoutMs > 0 && scope.IsExhausted()) {
+        LOG_WARN("TransDB QueryByStep: timeout exhausted before execution");
+        return nullptr;
+    }
+    return QueryByStepWithGuard(sql, args, options, config, nullptr);
+}
+
+std::shared_ptr<ResultSet> TransDB::QueryByStepWithGuard(const std::string &sql, const Values &args,
+    const QueryOptions &options, const QueryConfig &config, std::unique_ptr<TimeoutGuard> guard)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
+    auto conn = conn_.lock();
+    if (conn == nullptr) {
+        return nullptr;
+    }
+    auto start = std::chrono::steady_clock::now();
+    auto resultSet = std::make_shared<StepResultSet>(start, conn, sql, args, options, true, std::move(guard));
+    if (config.timeoutMs > 0 && DeadlineScope::Current().IsExhausted()) {
+        LOG_WARN("TransDB QueryByStep: timeout exhausted during result set construction, returning nullptr");
+        return nullptr;
+    }
+    return resultSet;
+}
+
+std::pair<int32_t, ValueObject> TransDB::Execute(
+    const std::string &sql, const Values &args, int64_t trxId, const ExecuteConfig &config)
+{
+    // Canonical final impl: old overload Execute(sql,args,trxId) delegates here via base.
+    if (!config.returning.columns.empty()) {
+        LOG_ERROR("Execute does not support returning");
+        return { E_NOT_SUPPORT, ValueObject() };
+    }
+    DeadlineScope scope(config.timeoutMs);
+    return ExecuteWithGuard(sql, args, trxId, nullptr);
+}
+
+std::pair<int32_t, ValueObject> TransDB::ExecuteWithGuard(
+    const std::string &sql, const Values &args, int64_t trxId, std::unique_ptr<TimeoutGuard> guard)
+{
+    // guard (Tier 2) stays alive for the duration of this call, providing mid-execution sqlite3_interrupt.
+    // DeadlineScope (Tier 1) is set by the caller via ExecuteConfig overload.
+    (void)guard;
     (void)trxId;
+    DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     ValueObject object;
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (!SqliteUtils::IsSupportSqlForExecute(sqlType) && !SqliteUtils::IsSpecial(sqlType)) {

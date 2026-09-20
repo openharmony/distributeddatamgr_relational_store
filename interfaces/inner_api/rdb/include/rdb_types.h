@@ -16,6 +16,7 @@
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_H
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
+#include <chrono>
 #include <cinttypes>
 #include <cstdint>
 #include <functional>
@@ -568,6 +569,69 @@ struct ReturningConfig {
     std::vector<std::string> columns;
     int32_t maxReturningCount = DEFAULT_RETURNING_COUNT;
     int32_t defaultRowIndex = FIRST_ROW_INDEX;
+};
+
+struct ExecuteConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+};
+
+// Per-operation configs: each CRUD kind owns an independent config struct with its own fields,
+// so it can evolve (add operation-specific fields) without perturbing other operations. New
+// overloads accept these; existing signatures are unchanged.
+struct InsertConfig {
+    int64_t timeoutMs = 0;
+};
+
+struct BatchInsertConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+};
+
+struct UpdateConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+};
+
+struct DeleteConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+};
+
+struct QueryConfig {
+    int64_t timeoutMs = 0;
+};
+
+struct DeadlineToken {
+    std::chrono::steady_clock::time_point deadline{};
+    int64_t timeoutMs = 0;
+
+    bool IsActive() const
+    {
+        return timeoutMs > 0;
+    }
+    bool IsExhausted() const
+    {
+        return IsActive() && std::chrono::steady_clock::now() >= deadline;
+    }
+    int64_t RemainingMs() const
+    {
+        if (!IsActive()) {
+            return 0;
+        }
+        auto rem = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now())
+                       .count();
+        return rem > 0 ? rem : 0;
+    }
+    static DeadlineToken FromMs(int64_t ms)
+    {
+        DeadlineToken t;
+        if (ms > 0) {
+            t.timeoutMs = ms;
+            t.deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
+        }
+        return t;
+    }
 };
 
 class RdbStoreConfig;
