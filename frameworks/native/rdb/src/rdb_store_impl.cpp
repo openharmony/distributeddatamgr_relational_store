@@ -36,6 +36,8 @@
 #include "knowledge_schema_helper.h"
 #include "logger.h"
 #include "raw_data_parser.h"
+#include "rdb_audit_logger.h"
+#include "rdb_audit_utils.h"
 #include "rdb_common.h"
 #include "rdb_db_info_manager.h"
 #include "rdb_errno.h"
@@ -1689,6 +1691,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         connectionPool_ = nullptr;
         LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode,
             SqliteUtils::Anonymous(path_).c_str());
+        AuditOpenFail(errCode);
         return errCode;
     }
     if (isNeedSetAcl) {
@@ -1700,23 +1703,14 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     isOpen_ = true;
 
     if (config_.GetRoleType() == OWNER && !config_.IsReadOnly()) {
-        errCode = SetSecurityLabel(config_);
+        errCode = InitOwner(version, openCallback);
         if (errCode != E_OK) {
-            return errCode;
-        }
-        (void)ExchangeSlaverToMaster(true);
-        SwitchOver(true);
-        errCode = ProcessOpenCallback(version, openCallback);
-        SwitchOver(false);
-        if (errCode != E_OK) {
-            LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path_).c_str(), errCode);
             return errCode;
         }
     }
-    // Record open diagnostics only on success; failure paths return early above
-    // and never reach here, so the dfx file is never written for a failed open.
     if (errCode == E_OK) {
         RdbDbInfoManager::GetInstance().RecordOpen(config_, created);
+        AuditOpenOk();
     }
     InnerOpen();
     initStatus_ = errCode;
@@ -1780,6 +1774,9 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
 
     int64_t rowid = -1;
     auto errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args);
+    if (errCode == E_OK && rowid > 0) {
+        AuditInsert(table, 1);
+    }
     if (errCode == E_OK) {
         DoCloudSync(table);
     }
@@ -1793,7 +1790,6 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, -1 };
     }
-
     if (rows.RowSize() == 0) {
         return { E_OK, 0 };
     }
@@ -1809,37 +1805,21 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, -1 };
     }
-
     auto executeSqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable());
     BatchInsertArgsDfx(static_cast<int>(executeSqlArgs.size()));
     if (executeSqlArgs.empty()) {
         return { E_INVALID_ARGS, -1 };
     }
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
-    for (const auto &[sql, bindArgs] : executeSqlArgs) {
-        auto [errCode, statement] = GetStatement(sql, conn);
-        if (statement == nullptr) {
-            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
-                      "app self can check the SQL",
-                errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
-            return { E_OK, -1 };
-        }
-        for (const auto &args : bindArgs) {
-            auto errCode = statement->Execute(args);
-            if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-                pool->Dump(true, "BATCH");
-                return { errCode, -1 };
-            }
-            if (errCode != E_OK) {
-                LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
-                    errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
-                return { E_OK, -1 };
-            }
-        }
+    auto [errCode, result] = ExecuteBatchInsert(pool, conn, executeSqlArgs, table);
+    if (result == -1) {
+        return { errCode, -1 };
     }
     conn = nullptr;
+    int64_t insertedRows = int64_t(rows.RowSize());
+    AuditInsert(table, insertedRows);
     DoCloudSync(table);
-    return { E_OK, int64_t(rows.RowSize()) };
+    return { E_OK, insertedRows };
 }
 
 void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
@@ -1933,6 +1913,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, config, returningSql);
+    AuditUpdate(predicates.GetTableName(), result.changed);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1954,6 +1935,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(const AbsRdbPredicates &predica
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [code, result] = ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), config, returningSql);
+    AuditDelete(predicates.GetTableName(), result.changed);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1975,6 +1957,12 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
+    // Audit: business caller actively executing PRAGMA integrity_check / quick_check via query path.
+    // Note: result is not available here (lazy result set); recorded as triggered only.
+    if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
+        auto mode = RdbAuditUtils::ParsePragmaMode(sql);
+        RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE, mode, 0, "");
+    }
     return std::make_shared<SqliteSharedResultSet>(start, pool->AcquireRef(true), sql, bindArgs, path_);
 #else
     (void)sql;
@@ -1994,6 +1982,12 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     if (pool == nullptr) {
         LOG_ERROR("Database already closed.");
         return nullptr;
+    }
+    // Audit: business caller actively executing PRAGMA integrity_check / quick_check via query path.
+    // Note: result is not available here (lazy result set); recorded as triggered only.
+    if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
+        auto mode = RdbAuditUtils::ParsePragmaMode(sql);
+        RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE, mode, 0, "");
     }
     return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, options);
 }
@@ -2074,10 +2068,24 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         LOG_ERROR("failed, error:0x%{public}x app self can check the SQL:%{public}s", errCode,
             SqliteUtils::SqlAnonymous(sql).c_str());
         TryDump(errCode, "EXECUTE");
+    }
+    // Audit: business caller actively executing PRAGMA integrity_check / quick_check
+    if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
+        auto mode = RdbAuditUtils::ParsePragmaMode(sql);
+        RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE, mode, errCode, "");
+    }
+    if (errCode != E_OK) {
         return errCode;
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        // Audit: DROP TABLE / TRUNCATE TABLE always logged, table whitelist checked by logger.
+        // Parse table name from SQL for whitelist matching.
+        std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
+        if (!auditOp.empty()) {
+            std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
+            RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
+        }
         HandleSchemaDDL(std::move(statement), sql);
     }
     statement = nullptr;
@@ -2118,6 +2126,11 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
         SetLastErrorMsg(statement->GetLastErrorMsg());
     }
     TryDump(errCode, "EXECUTE");
+    // Audit: business caller actively executing PRAGMA integrity_check / quick_check
+    if (sqlType == SqliteUtils::STATEMENT_PRAGMA && RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
+        auto mode = RdbAuditUtils::ParsePragmaMode(sql);
+        RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE, mode, errCode, "");
+    }
     if (config_.IsVector()) {
         return { errCode, object };
     }
@@ -3096,6 +3109,79 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
         auto memo = AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
         InnerSync(param, option, memo, nullptr);
     });
+}
+
+void RdbStoreImpl::AuditOpenOk()
+{
+    RdbAuditLogger::GetInstance().Init(config_);
+    RdbAuditLogger::GetInstance().OnOpenOk(config_);
+}
+
+void RdbStoreImpl::AuditOpenFail(int32_t errCode)
+{
+    RdbAuditLogger::GetInstance().Init(config_);
+    RdbAuditLogger::GetInstance().OnOpenFail(config_, errCode, 0);
+}
+
+void RdbStoreImpl::AuditInsert(const std::string &table, int64_t rows)
+{
+    RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), "INSERT", table, rows);
+}
+
+void RdbStoreImpl::AuditUpdate(const std::string &table, int64_t rows)
+{
+    RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), "UPDATE", table, rows);
+}
+
+void RdbStoreImpl::AuditDelete(const std::string &table, int64_t rows)
+{
+    if (rows > 0) {
+        RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), "DELETE", table, rows);
+    }
+}
+
+int32_t RdbStoreImpl::InitOwner(int version, RdbOpenCallback &openCallback)
+{
+    int32_t errCode = SetSecurityLabel(config_);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    (void)ExchangeSlaverToMaster();
+    SwitchOver(true);
+    errCode = ProcessOpenCallback(version, openCallback);
+    SwitchOver(false);
+    if (errCode != E_OK) {
+        LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path_).c_str(), errCode);
+    }
+    return errCode;
+}
+
+std::pair<int32_t, int64_t> RdbStoreImpl::ExecuteBatchInsert(const std::shared_ptr<ConnectionPool> &pool,
+    const std::shared_ptr<Connection> &conn, const SqliteSqlBuilder::BatchRefSqls &executeSqlArgs,
+    const std::string &table)
+{
+    for (const auto &[sql, bindArgs] : executeSqlArgs) {
+        auto [errCode, statement] = GetStatement(sql, conn);
+        if (statement == nullptr) {
+            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
+                      "app self can check the SQL",
+                errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
+            return { E_OK, -1 };
+        }
+        for (const auto &args : bindArgs) {
+            errCode = statement->Execute(args);
+            if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+                pool->Dump(true, "BATCH");
+                return { errCode, -1 };
+            }
+            if (errCode != E_OK) {
+                LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
+                    errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
+                return { E_OK, -1 };
+            }
+        }
+    }
+    return { E_OK, 0 };
 }
 
 /**

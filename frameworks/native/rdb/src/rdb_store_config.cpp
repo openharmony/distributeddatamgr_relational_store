@@ -628,6 +628,16 @@ void RdbStoreConfig::SetLocalOnly(bool isLocalOnly)
     isLocalOnly_ = isLocalOnly;
 }
 
+bool RdbStoreConfig::IsAuditEnabled() const
+{
+    return isAuditEnabled_;
+}
+
+void RdbStoreConfig::SetAuditEnabled(bool isAuditEnabled)
+{
+    isAuditEnabled_ = isAuditEnabled;
+}
+
 void RdbStoreConfig::SetIntegrityCheck(IntegrityCheck checkType)
 {
     checkType_ = checkType;
