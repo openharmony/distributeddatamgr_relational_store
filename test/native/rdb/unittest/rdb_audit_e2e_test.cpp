@@ -153,7 +153,7 @@ void InitLogger()
     MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config = MakeConfig();
-    logger.Init(config);
+    logger.Init(config.IsAuditEnabled());
     // Init() probes /data/log/hiaudit/rdb and /data/storage/el2/log which are not
     // available in the test environment. For E2E testing, manually set up the audit
     // directory and fd.
@@ -213,7 +213,7 @@ HWTEST_F(RdbAuditE2ETest, OpenAndDelete_112, TestSize.Level0)
     InitLogger();
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config = MakeConfig();
-    logger.OnOpenOk(config);
+    logger.OnOpenOk(config.GetPath());
     logger.OnSqlAudit(config.GetPath(), "DELETE", "users", 5);
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_EQ(CountLines(content), static_cast<size_t>(2));
@@ -306,7 +306,7 @@ HWTEST_F(RdbAuditE2ETest, OpenFail_117, TestSize.Level0)
     InitLogger();
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config = MakeConfig();
-    logger.OnOpenFail(config, 14, 13);
+    logger.OnOpenFail(config.GetPath(), 14, 13);
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_NE(content.find("\"evt\":\"OPEN_FAIL\""), std::string::npos);
     EXPECT_NE(content.find("\"rc\":14"), std::string::npos);
@@ -329,11 +329,11 @@ HWTEST_F(RdbAuditE2ETest, AuditDisabled_119, TestSize.Level0)
     RdbStoreConfig config(std::string(TEST_BASE_DIR) + "/e2e_test.db");
     config.SetBundleName("e2e_test_app");
     // Audit not enabled — Init should be a no-op.
-    logger.Init(config);
+    logger.Init(config.IsAuditEnabled());
     EXPECT_FALSE(logger.initialized_);
     EXPECT_TRUE(logger.auditDir_.empty());
     // OnOpenOk should be a no-op (initialized_ = false).
-    logger.OnOpenOk(config);
+    logger.OnOpenOk(config.GetPath());
     EXPECT_FALSE(FileExists(std::string(TEST_BASE_DIR) + "/.audit/events.log"));
 }
 
@@ -363,8 +363,8 @@ HWTEST_F(RdbAuditE2ETest, OpenFailThenOk_125, TestSize.Level0)
     InitLogger();
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config = MakeConfig();
-    logger.OnOpenFail(config, 14, 13);
-    logger.OnOpenOk(config);
+    logger.OnOpenFail(config.GetPath(), 14, 13);
+    logger.OnOpenOk(config.GetPath());
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_EQ(CountLines(content), static_cast<size_t>(2));
     // First line should be OPEN_FAIL, second should be OPEN_OK.

@@ -27,8 +27,6 @@
 namespace OHOS {
 namespace NativeRdb {
 
-class RdbStoreConfig;
-
 // Directory mode for audit subdirectories: owner+group rw, others no access.
 constexpr mode_t AUDIT_DIR_MODE = 0660;
 
@@ -54,11 +52,11 @@ public:
     // has audit enabled (IsAuditEnabled), probes the audit directory and opens
     // the persistent events.log fd + inter-process lock file. Idempotent:
     // subsequent calls after a successful init are no-ops.
-    void Init(const RdbStoreConfig &config);
+    void Init(bool isAuditEnabled);
 
     // Event recording interfaces (one per AuditEvt).
-    void OnOpenOk(const RdbStoreConfig &config);
-    void OnOpenFail(const RdbStoreConfig &config, int rc, int osErrno);
+    void OnOpenOk(const std::string &dbPath);
+    void OnOpenFail(const std::string &dbPath, int rc, int osErrno);
     void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno);
 
     // SQL audit. Caller passes the actual affected row count.
@@ -111,8 +109,8 @@ private:
     std::string ExtractDbName(const std::string &dbPath) const;
 
     // Build jsonl lines for each event type.
-    std::string BuildOpenOkJson(const RdbStoreConfig &config);
-    std::string BuildOpenFailJson(const RdbStoreConfig &config, int rc, int osErrno);
+    std::string BuildOpenOkJson(const std::string &dbPath);
+    std::string BuildOpenFailJson(const std::string &dbPath, int rc, int osErrno);
     std::string BuildIoErrJson(const std::string &op, const std::string &file, int rc, int osErrno);
     std::string BuildSqlAuditJson(
         const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows);

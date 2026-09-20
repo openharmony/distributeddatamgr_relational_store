@@ -32,7 +32,6 @@
 #include "logger.h"
 #include "rdb_db_info_manager.h"
 #include "rdb_platform.h"
-#include "rdb_store_config.h"
 #include "rdb_time_utils.h"
 #include "sqlite_utils.h"
 
@@ -163,13 +162,13 @@ RdbAuditLogger::~RdbAuditLogger()
     }
 }
 
-void RdbAuditLogger::Init(const RdbStoreConfig &config)
+void RdbAuditLogger::Init(bool isAuditEnabled)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (initialized_) {
         return; // dir/fd already set up by a previous Init
     }
-    if (!config.IsAuditEnabled()) {
+    if (!isAuditEnabled) {
         return; // audit not requested for this store
     }
     // Probe audit directory: SA root first (per-uid sub-directory), then app
@@ -220,24 +219,24 @@ void RdbAuditLogger::Init(const RdbStoreConfig &config)
     initialized_ = true;
 }
 
-void RdbAuditLogger::OnOpenOk(const RdbStoreConfig &config)
+void RdbAuditLogger::OnOpenOk(const std::string &dbPath)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!initialized_) {
         return;
     }
-    std::string json = BuildOpenOkJson(config);
+    std::string json = BuildOpenOkJson(dbPath);
     AppendEvent(json);
-    WriteLastOpen(config.GetPath(), json);
+    WriteLastOpen(dbPath, json);
 }
 
-void RdbAuditLogger::OnOpenFail(const RdbStoreConfig &config, int rc, int osErrno)
+void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!initialized_) {
         return;
     }
-    AppendEvent(BuildOpenFailJson(config, rc, osErrno));
+    AppendEvent(BuildOpenFailJson(dbPath, rc, osErrno));
 }
 
 void RdbAuditLogger::OnIoError(const std::string &op, const std::string &file, int rc, int osErrno)
@@ -465,13 +464,13 @@ std::string RdbAuditLogger::ExtractDbName(const std::string &dbPath) const
     return name;
 }
 
-std::string RdbAuditLogger::BuildOpenOkJson(const RdbStoreConfig &config)
+std::string RdbAuditLogger::BuildOpenOkJson(const std::string &dbPath)
 {
     std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
-    auto fileInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(config.GetPath());
-    auto slaveInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(SqliteUtils::GetSlavePath(config.GetPath()));
-    std::string dbName = SqliteUtils::Anonymous(ExtractDbName(config.GetPath()));
+    auto fileInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbPath);
+    auto slaveInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(SqliteUtils::GetSlavePath(dbPath));
+    std::string dbName = SqliteUtils::Anonymous(ExtractDbName(dbPath));
 
     std::ostringstream os;
     os << "{\"evt\":\"OPEN_OK\",\"ts\":\"" << EscapeJson(ts) << "\""
@@ -496,17 +495,17 @@ std::string RdbAuditLogger::BuildOpenOkJson(const RdbStoreConfig &config)
     return os.str();
 }
 
-std::string RdbAuditLogger::BuildOpenFailJson(const RdbStoreConfig &config, int rc, int osErrno)
+std::string RdbAuditLogger::BuildOpenFailJson(const std::string &dbPath, int rc, int osErrno)
 {
     std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
-    std::string dbName = SqliteUtils::Anonymous(ExtractDbName(config.GetPath()));
+    std::string dbName = SqliteUtils::Anonymous(ExtractDbName(dbPath));
     std::ostringstream os;
     os << "{\"evt\":\"OPEN_FAIL\",\"ts\":\"" << EscapeJson(ts) << "\""
        << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
        << ",\"proc\":\"pid:" << caller.pid << ":tid:" << caller.tid << "\""
        << ",\"rc\":" << rc << ",\"os_errno\":" << osErrno << ",\"path\":\""
-       << EscapeJson(SqliteUtils::Anonymous(config.GetPath())) << "\"}";
+       << EscapeJson(SqliteUtils::Anonymous(dbPath)) << "\"}";
     return os.str();
 }
 
