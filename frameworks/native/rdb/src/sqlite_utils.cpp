@@ -850,7 +850,20 @@ int SqliteUtils::SetSlaveInterrupted(const std::string &dbPath)
 
 bool SqliteUtils::IsSlaveInvalid(const std::string &dbPath)
 {
-    return access((dbPath + SLAVE_FAILURE).c_str(), F_OK) == 0;
+    std::string filePath = dbPath + SLAVE_FAILURE;
+    if (access(filePath.c_str(), F_OK) != 0) {
+        return false;
+    }
+    std::string timeStr;
+    std::string reasonStr;
+    std::ifstream file(filePath, std::ios::binary);
+    if (file.is_open()) {
+        std::getline(file, timeStr);
+        std::getline(file, reasonStr);
+    }
+    LOG_WARN("slave is invalid:%{public}s, reason:%{public}s, time:%{public}s", Anonymous(dbPath).c_str(),
+        reasonStr.c_str(), timeStr.c_str());
+    return true;
 }
 
 bool SqliteUtils::IsSlaveInterrupted(const std::string &dbPath)

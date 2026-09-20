@@ -3462,7 +3462,7 @@ bool RdbStoreImpl::IsSlaveAvailable() const
     if (config_.GetHaMode() == HAMode::SINGLE || isMemoryRdb_) {
         return false;
     }
-    auto pool = connectionPool_;
+    auto pool = GetPool();
     if (pool == nullptr) {
         return false;
     }
@@ -3503,7 +3503,15 @@ void RdbStoreImpl::MigrateReplicaIfNeeded(const std::shared_ptr<Connection> &con
             SqliteUtils::Anonymous(oldDefaultSlavePath).c_str());
         return;
     }
+    // The service may still hold the stale default replica open; close it before deleting, then restore.
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (service != nullptr) {
+        service->Disable(syncerParam_);
+    }
     conn->MigrateReplica(oldDefaultSlavePath, isResetBinlog);
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
+    }
 }
 
 int32_t RdbStoreImpl::ExchangeSlaverToMaster(bool needMigrate)

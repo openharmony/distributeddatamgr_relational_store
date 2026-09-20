@@ -24,6 +24,7 @@
 
 #include <cerrno>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -1666,6 +1667,18 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
 int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus,
     const bool isForceRestore)
 {
+    std::optional<RdbSecurityManager::KeyFiles> replayLock;
+    if (SqliteUtils::IsSupportBinlog(config_) && !isRestore) {
+        std::string lockFile = SqliteUtils::GetBinlogFolderPath(config_) + SqliteUtils::BINLOG_LOCK_FILE_SUFFIX;
+        if (access(lockFile.c_str(), F_OK) == 0) {
+            replayLock.emplace(lockFile);
+            if (replayLock->Lock() != E_OK) {
+                LOG_WARN("ExchangeSlaverToMaster binlog replay lock failed, %{public}s",
+                    SqliteUtils::Anonymous(config_.GetPath()).c_str());
+                return E_DATABASE_BUSY;
+            }
+        }
+    }
     bool isNeedSetAcl = SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
                         SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_), SERVICE_GID);
     *curStatus = SlaveStatus::BACKING_UP;
