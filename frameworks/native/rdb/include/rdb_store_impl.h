@@ -261,6 +261,9 @@ private:
     std::pair<int32_t, int64_t> ExecuteBatchInsert(const std::shared_ptr<ConnectionPool> &pool,
         const std::shared_ptr<Connection> &conn, const SqliteSqlBuilder::BatchRefSqls &executeSqlArgs,
         const std::string &table);
+    std::pair<int32_t, int64_t> ExecuteBatchArgs(const std::shared_ptr<ConnectionPool> &pool,
+        const Stmt &statement, const std::vector<std::vector<SqliteSqlBuilder::RefValue>> &bindArgs,
+        const std::string &table);
     static int InnerSync(
         const RdbParam &param, const Options &option, const Memo &predicates, const AsyncDetail &async);
     int InnerBackup(const std::string &databasePath,
