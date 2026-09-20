@@ -23,6 +23,13 @@ namespace RdbAuditUtils {
 
 namespace {
 
+constexpr int KEYWORD_LEN_PRAGMA = 6;
+constexpr int KEYWORD_LEN_TABLE = 5;
+constexpr int KEYWORD_LEN_IF = 2;
+constexpr int KEYWORD_LEN_EXISTS = 6;
+constexpr int KEYWORD_LEN_DROP = 4;
+constexpr int KEYWORD_LEN_TRUNCATE = 8;
+
 size_t SkipSpaces(const std::string &sql, size_t pos)
 {
     while (pos < sql.size() && std::isspace(static_cast<unsigned char>(sql[pos]))) {
@@ -71,46 +78,47 @@ bool MatchKeyword(const std::string &sql, size_t pos, const char *word)
 bool MatchTableAfter(const std::string &sql, size_t pos, int keywordLen)
 {
     size_t after = SkipSpaces(sql, pos + keywordLen);
-    return after + 5 <= sql.size() && strncasecmp(sql.c_str() + after, "TABLE", 5) == 0;
+    return after + KEYWORD_LEN_TABLE <= sql.size() &&
+        strncasecmp(sql.c_str() + after, "TABLE", KEYWORD_LEN_TABLE) == 0;
 }
 
 size_t SkipIfExists(const std::string &sql, size_t pos)
 {
     pos = SkipSpaces(sql, pos);
-    if (pos + 2 > sql.size() || strncasecmp(sql.c_str() + pos, "IF", 2) != 0) {
+    if (pos + KEYWORD_LEN_IF > sql.size() || strncasecmp(sql.c_str() + pos, "IF", KEYWORD_LEN_IF) != 0) {
         return pos;
     }
-    pos = SkipSpaces(sql, pos + 2);
-    if (pos + 6 > sql.size() || strncasecmp(sql.c_str() + pos, "EXISTS", 6) != 0) {
+    pos = SkipSpaces(sql, pos + KEYWORD_LEN_IF);
+    if (pos + KEYWORD_LEN_EXISTS > sql.size() || strncasecmp(sql.c_str() + pos, "EXISTS", KEYWORD_LEN_EXISTS) != 0) {
         return pos;
     }
-    return SkipSpaces(sql, pos + 6);
+    return SkipSpaces(sql, pos + KEYWORD_LEN_EXISTS);
 }
 
 } // namespace
 
 bool IsPragmaIntegrityCheck(const std::string &sql)
 {
-    if (sql.size() < 6) { // minimum: "PRAGMA" = 6
+    if (sql.size() < KEYWORD_LEN_PRAGMA) { // minimum: "PRAGMA" = 6
         return false;
     }
     size_t pos = SkipSpaces(sql, 0);
-    if (pos + 6 > sql.size()) {
+    if (pos + KEYWORD_LEN_PRAGMA > sql.size()) {
         return false;
     }
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < KEYWORD_LEN_PRAGMA; ++i) {
         if (std::toupper(static_cast<unsigned char>(sql[pos + i])) != "PRAGMA"[i]) {
             return false;
         }
     }
-    pos = SkipSpaces(sql, pos + 6);
+    pos = SkipSpaces(sql, pos + KEYWORD_LEN_PRAGMA);
     return MatchPrefix(sql, pos, "integrity_check") || MatchPrefix(sql, pos, "quick_check");
 }
 
 IntegrityMode ParsePragmaMode(const std::string &sql)
 {
     size_t pos = SkipSpaces(sql, 0);
-    pos = SkipSpaces(sql, pos + 6); // skip "PRAGMA"
+    pos = SkipSpaces(sql, pos + KEYWORD_LEN_PRAGMA); // skip "PRAGMA"
     if (pos < sql.size() && std::tolower(static_cast<unsigned char>(sql[pos])) == 'q') {
         return IntegrityMode::QUICK;
     }
@@ -121,11 +129,11 @@ std::string ParseDropTruncateOp(const std::string &sql)
 {
     size_t pos = SkipSpaces(sql, 0);
     if (MatchKeyword(sql, pos, "DROP")) {
-        if (MatchTableAfter(sql, pos, 4)) {
+        if (MatchTableAfter(sql, pos, KEYWORD_LEN_DROP)) {
             return "DROP";
         }
     } else if (MatchKeyword(sql, pos, "TRUNCATE")) {
-        if (MatchTableAfter(sql, pos, 8)) {
+        if (MatchTableAfter(sql, pos, KEYWORD_LEN_TRUNCATE)) {
             return "TRUNCATE";
         }
     }

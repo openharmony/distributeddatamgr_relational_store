@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <mutex>
 #include <string>
+#include <sys/stat.h>
 #include <unordered_map>
 
 #include "rdb_audit_event.h"
@@ -27,6 +28,9 @@ namespace OHOS {
 namespace NativeRdb {
 
 class RdbStoreConfig;
+
+// Directory mode for audit subdirectories: owner+group rw, others no access.
+constexpr mode_t AUDIT_DIR_MODE = 0660;
 
 // Singleton audit logger that persists events to local audit files and
 // reports fault events via HiSysEvent. All write failures are best-effort:

@@ -66,14 +66,10 @@ int64_t NowMs()
     return std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
 }
 
-// Directory mode for audit subdirectories: owner+group rwx, others no access.
-// Matches the parent /data/log/hiaudit (0770 hiview:log) permission scheme.
-constexpr mode_t AUDIT_DIR_MODE = 0770;
-
 bool IsUnderAuditRoot(const std::string &path)
 {
-    return path.rfind(AUDIT_DIR_SA_ROOT, 0) == 0
-        || path.rfind(std::string(AUDIT_DIR_APP_ROOT) + "/" + AUDIT_DIR_APP_SUB, 0) == 0;
+    return path.rfind(AUDIT_DIR_SA_ROOT, 0) == 0 ||
+        path.rfind(std::string(AUDIT_DIR_APP_ROOT) + "/" + AUDIT_DIR_APP_SUB, 0) == 0;
 }
 
 bool TryMkDir(const std::string &path)
@@ -173,9 +169,9 @@ void RdbAuditLogger::Init(const RdbStoreConfig &config)
     if (initialized_) {
         return; // dir/fd already set up by a previous Init
     }
-    // if (!config.IsAuditEnabled()) {
-    //     return; // audit not requested for this store
-    // }
+    if (!config.IsAuditEnabled()) {
+        return; // audit not requested for this store
+    }
     // Probe audit directory: SA root first (per-uid sub-directory), then app
     // log root (rdb sub-directory). If neither exists, audit is disabled.
     struct stat st;
@@ -462,9 +458,9 @@ std::string RdbAuditLogger::ExtractDbName(const std::string &dbPath) const
 {
     size_t lastSlash = dbPath.rfind('/');
     std::string name = (lastSlash == std::string::npos) ? dbPath : dbPath.substr(lastSlash + 1);
-    // Strip .db suffix if present
-    if (name.size() > 3 && name.substr(name.size() - 3) == ".db") {
-        name = name.substr(0, name.size() - 3);
+    constexpr size_t DB_SUFFIX_LEN = 3; // length of ".db"
+    if (name.size() > DB_SUFFIX_LEN && name.substr(name.size() - DB_SUFFIX_LEN) == ".db") {
+        name = name.substr(0, name.size() - DB_SUFFIX_LEN);
     }
     return name;
 }

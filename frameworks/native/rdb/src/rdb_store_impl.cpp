@@ -1775,7 +1775,8 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     int64_t rowid = -1;
     auto errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args);
     if (errCode == E_OK && rowid > 0) {
-        AuditInsert(table, 1);
+        constexpr int64_t SINGLE_ROW_COUNT = 1;
+        AuditInsert(table, SINGLE_ROW_COUNT);
     }
     if (errCode == E_OK) {
         DoCloudSync(table);
@@ -1961,7 +1962,8 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
     // Note: result is not available here (lazy result set); recorded as triggered only.
     if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
         auto mode = RdbAuditUtils::ParsePragmaMode(sql);
-        RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE, mode, 0, "");
+        RdbAuditLogger::GetInstance().OnIntegrity(
+            config_.GetPath(), IntegrityTrigger::ACTIVE, mode, AUDIT_RESULT_OK, "");
     }
     return std::make_shared<SqliteSharedResultSet>(start, pool->AcquireRef(true), sql, bindArgs, path_);
 #else
@@ -1987,7 +1989,8 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     // Note: result is not available here (lazy result set); recorded as triggered only.
     if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
         auto mode = RdbAuditUtils::ParsePragmaMode(sql);
-        RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE, mode, 0, "");
+        RdbAuditLogger::GetInstance().OnIntegrity(
+            config_.GetPath(), IntegrityTrigger::ACTIVE, mode, AUDIT_RESULT_OK, "");
     }
     return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, options);
 }
@@ -2084,7 +2087,8 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
         if (!auditOp.empty()) {
             std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
-            RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
+            RdbAuditLogger::GetInstance().OnSqlAudit(
+                config_.GetPath(), auditOp, auditTbl, DROP_TRUNCATE_AFFECTED_ROWS);
         }
         HandleSchemaDDL(std::move(statement), sql);
     }
@@ -3120,7 +3124,7 @@ void RdbStoreImpl::AuditOpenOk()
 void RdbStoreImpl::AuditOpenFail(int32_t errCode)
 {
     RdbAuditLogger::GetInstance().Init(config_);
-    RdbAuditLogger::GetInstance().OnOpenFail(config_, errCode, 0);
+    RdbAuditLogger::GetInstance().OnOpenFail(config_, errCode, OS_ERRNO_UNAVAILABLE);
 }
 
 void RdbStoreImpl::AuditInsert(const std::string &table, int64_t rows)

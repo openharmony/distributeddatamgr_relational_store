@@ -150,7 +150,7 @@ RdbStoreConfig MakeConfig()
 
 void InitLogger()
 {
-    MakeDirRecursive(TEST_BASE_DIR, 0770);
+    MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config = MakeConfig();
     logger.Init(config);
@@ -159,7 +159,7 @@ void InitLogger()
     // directory and fd.
     if (!logger.initialized_) {
         std::string auditDir = std::string(TEST_BASE_DIR) + "/.audit/";
-        MakeDirRecursive(auditDir, 0770);
+        MakeDirRecursive(auditDir, AUDIT_DIR_MODE);
         logger.auditDir_ = auditDir;
         std::string logPath = auditDir + "events.log";
         logger.writeFd_ = open(logPath.c_str(), O_CREAT | O_APPEND | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
@@ -189,7 +189,7 @@ public:
     {
         ResetSingleton();
         RemoveDirRecursive(TEST_BASE_DIR);
-        MakeDirRecursive(TEST_BASE_DIR, 0770);
+        MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
     }
 
     void TearDown() override
@@ -324,7 +324,7 @@ HWTEST_F(RdbAuditE2ETest, AuditDisabled_119, TestSize.Level0)
 {
     // Audit not enabled: Init() should be a no-op.
     // Do NOT call InitLogger() which manually sets up the logger for testing.
-    MakeDirRecursive(TEST_BASE_DIR, 0770);
+    MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config(std::string(TEST_BASE_DIR) + "/e2e_test.db");
     config.SetBundleName("e2e_test_app");
