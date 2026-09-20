@@ -40,8 +40,10 @@ using namespace std::chrono;
 constexpr int64_t TIME_OUT = 1500;
 
 SqliteSharedResultSet::SqliteSharedResultSet(
-    Time start, Conn conn, std::string sql, const Values &args, const std::string &path)
-    : AbsSharedResultSet(path), conn_(std::move(conn)), qrySql_(std::move(sql)), bindArgs_(args)
+    Time start, Conn conn, std::string sql, const Values &args, const std::string &path,
+    std::unique_ptr<TimeoutGuard> guard)
+    : AbsSharedResultSet(path), conn_(std::move(conn)), qrySql_(std::move(sql)), bindArgs_(args),
+      timeoutGuard_(std::move(guard))
 {
     if (conn_ == nullptr) {
         isClosed_ = true;

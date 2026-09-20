@@ -33,7 +33,7 @@ int32_t Transaction::RegisterCreator(Creator creator)
 std::pair<int32_t, int64_t> Transaction::BatchInsert(
     const std::string &table, const RefRows &rows, Resolution resolution)
 {
-    auto [code, result] = BatchInsert(table, rows, {}, resolution);
+    auto [code, result] = BatchInsert(table, rows, ReturningConfig{}, resolution);
     return { code, result.changed };
 }
 
@@ -55,7 +55,7 @@ std::pair<int, int> Transaction::Update(
 std::pair<int32_t, int32_t> Transaction::Update(
     const Row &row, const AbsRdbPredicates &predicates, Resolution resolution)
 {
-    auto [code, result] = Update(row, predicates, {}, resolution);
+    auto [code, result] = Update(row, predicates, ReturningConfig{}, resolution);
     return { code, result.changed };
 }
 
@@ -76,7 +76,7 @@ std::pair<int32_t, int32_t> Transaction::Delete(
 
 std::pair<int32_t, int32_t> Transaction::Delete(const AbsRdbPredicates &predicates)
 {
-    auto [code, result] = Delete(predicates, {});
+    auto [code, result] = Delete(predicates, ReturningConfig{});
     return { code, result.changed };
 }
 
@@ -119,5 +119,59 @@ std::shared_ptr<ResultSet> Transaction::QueryByStep(
     const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options)
 {
     return nullptr;
+}
+
+std::pair<int32_t, int64_t> Transaction::Insert(
+    const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config)
+{
+    (void)config;
+    return Insert(table, row, resolution);
+}
+
+std::pair<int32_t, Results> Transaction::BatchInsert(const std::string &table, const RefRows &rows,
+    Resolution resolution, const BatchInsertConfig &config)
+{
+    return BatchInsert(table, rows, config.returning, resolution);
+}
+
+std::pair<int32_t, Results> Transaction::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const UpdateConfig &config, Resolution resolution)
+{
+    return Update(row, predicates, config.returning, resolution);
+}
+
+std::pair<int32_t, Results> Transaction::Delete(
+    const AbsRdbPredicates &predicates, const DeleteConfig &config)
+{
+    return Delete(predicates, config.returning);
+}
+
+std::shared_ptr<ResultSet> Transaction::QueryByStep(const std::string &sql, const Values &args,
+    const QueryOptions &options, const QueryConfig &config)
+{
+    (void)config;
+    return QueryByStep(sql, args, options);
+}
+
+std::shared_ptr<ResultSet> Transaction::QueryByStep(
+    const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options,
+    const QueryConfig &config)
+{
+    (void)config;
+    return QueryByStep(predicates, columns, options);
+}
+
+std::pair<int32_t, ValueObject> Transaction::Execute(
+    const std::string &sql, const Values &args, const ExecuteConfig &config)
+{
+    (void)config;
+    return Execute(sql, args);
+}
+
+std::pair<int32_t, Results> Transaction::ExecuteExt(
+    const std::string &sql, const Values &args, const ExecuteConfig &config)
+{
+    (void)config;
+    return ExecuteExt(sql, args);
 }
 } // namespace OHOS::NativeRdb

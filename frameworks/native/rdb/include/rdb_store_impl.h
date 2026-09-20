@@ -37,6 +37,7 @@
 #include "rdb_store_config.h"
 #include "rdb_types.h"
 #include "sqlite_statement.h"
+#include "sql_timeout_guard.h"
 #include "value_object.h"
 
 namespace OHOS {
@@ -100,28 +101,46 @@ private:
     void MarkHeldConnsNonRecyclable() const;
 };
 
+struct ConnWithGuard {
+    std::shared_ptr<Connection> conn;
+    std::unique_ptr<TimeoutGuard> guard;
+    int32_t errCode = E_OK;
+    explicit operator bool() const
+    {
+        return conn != nullptr;
+    }
+};
+
 class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
     ~RdbStoreImpl() override;
     int32_t Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl = false,
         bool isSilentAccessible = false);
-    std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
+    std::pair<int, int64_t> Insert(
+        const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
-    std::pair<int32_t, Results> BatchInsert(
-        const std::string &table, const RefRows &rows, const ReturningConfig &config, Resolution resolution) override;
+    std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
+        Resolution resolution, const BatchInsertConfig &config) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const ReturningConfig &config, Resolution resolution) override;
-    std::pair<int32_t, Results> Delete(const AbsRdbPredicates &predicates, const ReturningConfig &config) override;
+        const UpdateConfig &config, Resolution resolution) override;
+    std::pair<int32_t, Results> Delete(
+        const AbsRdbPredicates &predicates, const DeleteConfig &config) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
+    std::shared_ptr<AbsSharedResultSet> QuerySql(
+        const std::string &sql, const Values &args, const QueryConfig &config) override;
     std::shared_ptr<ResultSet> QueryByStep(
         const std::string &sql, const Values &args, const QueryOptions &options) override;
+    std::shared_ptr<ResultSet> QueryByStep(
+        const std::string &sql, const Values &args, const QueryOptions &options,
+        const QueryConfig &config) override;
     std::shared_ptr<ResultSet> RemoteQuery(
         const std::string &device, const AbsRdbPredicates &predicates, const Fields &columns, int &errCode) override;
     std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
         const AbsRdbPredicates &predicates, const Fields &columns) override;
     int ExecuteSql(const std::string &sql, const Values &args) override;
-    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
+    std::pair<int32_t, ValueObject> Execute(
+        const std::string &sql, const Values &args, int64_t trxId, const ExecuteConfig &config) override;
     std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql, const Values &args) override;
@@ -291,6 +310,7 @@ private:
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
     void InterruptHolders(const std::shared_ptr<ConnectionPool> &pool);
+    ConnWithGuard GetConnWithTimeout(bool isRead);
     void SetLastErrorMsg(const std::string &msg) const;
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args,
         const ReturningConfig &config = {}, const std::string &returningSql = "");

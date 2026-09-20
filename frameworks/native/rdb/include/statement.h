@@ -25,6 +25,7 @@
 #include "values_bucket.h"
 namespace OHOS::NativeRdb {
 struct SharedBlockInfo;
+class Connection;
 class Statement {
 public:
     static constexpr int32_t COLUMN_TYPE_INVALID = 0;
@@ -70,7 +71,18 @@ public:
 
     virtual std::string GetLastErrorMsg() const { return ""; }
 
+    virtual std::shared_ptr<Connection> GetConnection() const { return nullptr; }
+
     static constexpr int INVALID_COUNT = -1;
+
+    static void SetDeadline(const DeadlineToken &token) { deadline_ = token; }
+    static void ClearDeadline() { deadline_ = DeadlineToken{}; }
+    static bool IsDeadlineExhausted() { return deadline_.IsExhausted(); }
+    static const DeadlineToken &GetDeadline() { return deadline_; }
+    static DeadlineToken &MutableDeadline() { return deadline_; }
+
+private:
+    static thread_local DeadlineToken deadline_;
 };
 } // namespace OHOS::NativeRdb
 #endif // OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_STATEMENT_H
