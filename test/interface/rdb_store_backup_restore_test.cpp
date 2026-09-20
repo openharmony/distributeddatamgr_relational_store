@@ -481,9 +481,9 @@ HWTEST_F(RdbInterfaceBackupRestoreTest, Rdb_BackupRestoreTest_007, TestSize.Leve
 
     ret = store->Backup(BACKUP_DATABASE_NAME);
     // DeleteRdbStore closes the store (releases the connection pool), so Backup bails in
-    // CreateWritableConn with E_ERROR (pool expired) instead of reaching Connection::Create's
+    // CreateWritableConn with E_ALREADY_CLOSED (pool expired) instead of reaching Connection::Create's
     // file-existence probe that used to return E_DB_NOT_EXIST.
-    EXPECT_EQ(ret, E_ERROR);
+    EXPECT_EQ(ret, E_ALREADY_CLOSED);
 }
 
 /* *
