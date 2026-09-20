@@ -30,6 +30,7 @@
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_perfStat.h"
 #include "rdb_sql_log.h"
+#include "rdb_audit_logger.h"
 #include "rdb_sql_statistic.h"
 #include "rdb_types.h"
 #include "relational_store_client.h"
@@ -491,7 +492,11 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
             errCode, SqliteUtils::SqlAnonymous(sql_).c_str(), errno);
         auto db = sqlite3_db_handle(stmt_);
         // errno: 28 No space left on device
-        return (errCode == E_SQLITE_IOERR && sqlite3_system_errno(db) == 28) ? E_SQLITE_IOERR_FULL : errCode;
+        errCode = (errCode == E_SQLITE_IOERR && sqlite3_system_errno(db) == 28) ? E_SQLITE_IOERR_FULL : errCode;
+        if ((errCode == E_SQLITE_IOERR || errCode == E_SQLITE_IOERR_FULL) && config_ != nullptr) {
+            RdbAuditLogger::GetInstance().OnIoError("execute", config_->GetPath(), errCode, sqlite3_system_errno(db));
+        }
+        return errCode;
     }
 
     if (slave_) {
@@ -548,6 +553,10 @@ std::pair<int, std::vector<ValuesBucket>> SqliteStatement::ExecuteForRows(
         auto db = sqlite3_db_handle(stmt_);
         // errno: 28 No space left on device
         errCode = (errCode == E_SQLITE_IOERR && sqlite3_system_errno(db) == 28) ? E_SQLITE_IOERR_FULL : errCode;
+        if ((errCode == E_SQLITE_IOERR || errCode == E_SQLITE_IOERR_FULL) && config_ != nullptr) {
+            RdbAuditLogger::GetInstance().OnIoError(
+                "execute_for_rows", config_->GetPath(), errCode, sqlite3_system_errno(db));
+        }
         return ret;
     }
 

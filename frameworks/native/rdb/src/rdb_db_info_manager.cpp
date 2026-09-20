@@ -174,6 +174,11 @@ DbFileInfo RdbDbInfoManager::CollectDbFileInfo(const std::string &dbPath)
     info.db = BuildFileInfo(dbPath);
     info.wal = BuildFileInfo(dbPath + "-wal");
     info.shm = BuildFileInfo(dbPath + "-shm");
+    info.binlog = BuildFileInfo(dbPath + "_binlog");
+    size_t lastSlash = dbPath.rfind('/');
+    if (lastSlash != std::string::npos) {
+        info.parent = BuildFileInfo(dbPath.substr(0, lastSlash));
+    }
     return info;
 }
 
@@ -294,6 +299,7 @@ void RdbDbInfoManager::RecordOpen(const RdbStoreConfig &config, bool created)
         fmtFile("db", prevMain.db, info.main.db);
         fmtFile("wal", prevMain.wal, info.main.wal);
         fmtFile("shm", prevMain.shm, info.main.shm);
+        fmtFile("parent", prevMain.parent, info.main.parent);
         r.dbInfoChange.before = prevMain;
         r.dbInfoChange.after = info.main;
         r.dbInfoChange.changedFields = changed;

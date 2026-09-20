@@ -74,6 +74,8 @@ bool DbFileInfo::Marshal(json &obj) const
     SetValue(obj[GET_NAME(db)], db);
     SetValue(obj[GET_NAME(wal)], wal);
     SetValue(obj[GET_NAME(shm)], shm);
+    SetValue(obj[GET_NAME(binlog)], binlog);
+    SetValue(obj[GET_NAME(parent)], parent);
     return true;
 }
 
@@ -82,12 +84,14 @@ bool DbFileInfo::Unmarshal(const json &obj)
     GetValue(obj, GET_NAME(db), db);
     GetValue(obj, GET_NAME(wal), wal);
     GetValue(obj, GET_NAME(shm), shm);
+    GetValue(obj, GET_NAME(binlog), binlog);
+    GetValue(obj, GET_NAME(parent), parent);
     return true;
 }
 
 bool DbFileInfo::IsEmpty() const
 {
-    return db.node == 0 && wal.node == 0 && shm.node == 0;
+    return db.node == 0 && wal.node == 0 && shm.node == 0 && binlog.node == 0;
 }
 
 bool CallerInfo::Marshal(json &obj) const
@@ -242,6 +246,7 @@ std::vector<std::string> DiffDbFileInfo(const std::string &prefix, const DbFileI
     DiffFileInfo(prefix + ".db", before.db, after.db, out);
     DiffFileInfo(prefix + ".wal", before.wal, after.wal, out);
     DiffFileInfo(prefix + ".shm", before.shm, after.shm, out);
+    DiffFileInfo(prefix + ".parent", before.parent, after.parent, out);
     return out;
 }
 } // namespace NativeRdb

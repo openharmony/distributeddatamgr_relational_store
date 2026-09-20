@@ -610,6 +610,7 @@ std::string SqliteUtils::SqlAnonymous(const std::string &sql)
 
 std::string SqliteUtils::Anonymous(const std::string &srcFile)
 {
+    return srcFile;
     auto pre = srcFile.find("/");
     auto end = srcFile.rfind("/");
     if (pre == std::string::npos || end - pre < FILE_PATH_MINI_SIZE) {

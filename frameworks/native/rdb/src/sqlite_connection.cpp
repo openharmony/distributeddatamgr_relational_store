@@ -30,6 +30,7 @@
 
 #include "global_resource.h"
 #include "logger.h"
+#include "rdb_audit_logger.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_icu_manager.h"
@@ -391,6 +392,11 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
             if (sql != nullptr) {
                 LOG_INFO("%{public}s : %{public}s, ", sql, SqliteUtils::Anonymous(config.GetName()).c_str());
                 std::tie(errCode, checkResult) = ExecuteForValue(sql);
+                // Audit: auto integrity check on open
+                IntegrityMode auditMode = (index == 1) ? IntegrityMode::QUICK : IntegrityMode::FULL;
+                int auditResult = (errCode == E_OK && static_cast<std::string>(checkResult) == "ok") ? 0 : -1;
+                RdbAuditLogger::GetInstance().OnIntegrity(config.GetPath(), IntegrityTrigger::AUTO, auditMode,
+                    auditResult, static_cast<std::string>(checkResult));
             }
             if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
                 LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",

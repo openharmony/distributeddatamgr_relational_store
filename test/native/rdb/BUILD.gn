@@ -262,6 +262,8 @@ ohos_unittest("SilentProxyTest") {
     "${relational_store_native_path}/rdb/src/marshal_utils.cpp",
     "${relational_store_native_path}/rdb/src/values_bucket.cpp",
     "${relational_store_native_path}/rdb/src/values_buckets.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_logger.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_utils.cpp",
   ]
 
   include_dirs = [
@@ -355,6 +357,8 @@ ohos_unittest("NativeRdbTest") {
     "unittest/delay_notify_test.cpp",
     "unittest/raw_data_parser_test.cpp",
     "unittest/rd_utils_test.cpp",
+    "unittest/rdb_audit_logger_test.cpp",
+    "unittest/rdb_audit_e2e_test.cpp",
     "unittest/rdb_db_info_test.cpp",
     "unittest/rdb_distributed_test.cpp",
     "unittest/rdb_double_write_test.cpp",
@@ -404,6 +408,8 @@ ohos_unittest("NativeRdbTest") {
     "${relational_store_native_path}/rd/src/rd_connection.cpp",
     "${relational_store_native_path}/rd/src/rd_statement.cpp",
     "${relational_store_native_path}/rd/src/rd_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_logger.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_utils.cpp",
     "${relational_store_native_path}/rdb/src/rdb_db_info_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_db_info_record.cpp",
     "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
