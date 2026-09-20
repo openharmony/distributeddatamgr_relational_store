@@ -245,13 +245,14 @@ int32_t SqliteFunctionRegistry::IntegrityCheck(sqlite3 *dbHandle)
         // Audit: integrity check from import_db_from_path
         const char *dbPath = sqlite3_db_filename(dbHandle, "main");
         std::string dbPathStr = dbPath ? dbPath : "";
-        RdbAuditLogger::GetInstance().OnIntegrity(dbPathStr, IntegrityTrigger::ACTIVE, IntegrityMode::FULL, -1, "");
+        RdbAuditLogger::GetInstance().OnIntegrity(
+            dbPathStr, IntegrityTrigger::AUTO, IntegrityMode::FULL, AUDIT_RESULT_FAIL, "");
         return SQLITE_CORRUPT;
     }
     // Audit: integrity check passed from import_db_from_path
     const char *dbPath = sqlite3_db_filename(dbHandle, "main");
     RdbAuditLogger::GetInstance().OnIntegrity(
-        dbPath ? dbPath : "", IntegrityTrigger::ACTIVE, IntegrityMode::FULL, 0, "ok");
+        dbPath ? dbPath : "", IntegrityTrigger::AUTO, IntegrityMode::FULL, AUDIT_RESULT_OK, "ok");
     return SQLITE_OK;
 }
 

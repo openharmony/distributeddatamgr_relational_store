@@ -58,12 +58,11 @@ struct FileInfo : public Serializable {
     bool Unmarshal(const json &obj) override;
 };
 
-// Group of file info for db / wal / shm / binlog / parent directory.
+// Group of file info for db / wal / shm / parent directory.
 struct DbFileInfo : public Serializable {
     FileInfo db;
     FileInfo wal;
     FileInfo shm;
-    FileInfo binlog;
     FileInfo parent; // parent directory of the db file (UGO + ACL permissions)
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
