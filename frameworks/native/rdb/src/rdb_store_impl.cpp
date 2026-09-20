@@ -3171,17 +3171,28 @@ std::pair<int32_t, int64_t> RdbStoreImpl::ExecuteBatchInsert(const std::shared_p
                 errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
             return { E_OK, -1 };
         }
-        for (const auto &args : bindArgs) {
-            errCode = statement->Execute(args);
-            if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-                pool->Dump(true, "BATCH");
-                return { errCode, -1 };
-            }
-            if (errCode != E_OK) {
-                LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
-                    errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
-                return { E_OK, -1 };
-            }
+        auto [execErr, execRows] = ExecuteBatchArgs(pool, statement, bindArgs, table);
+        if (execRows < 0) {
+            return { execErr, -1 };
+        }
+    }
+    return { E_OK, 0 };
+}
+
+std::pair<int32_t, int64_t> RdbStoreImpl::ExecuteBatchArgs(const std::shared_ptr<ConnectionPool> &pool,
+    const Stmt &statement, const std::vector<std::vector<SqliteSqlBuilder::RefValue>> &bindArgs,
+    const std::string &table)
+{
+    for (const auto &args : bindArgs) {
+        auto errCode = statement->Execute(args);
+        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+            pool->Dump(true, "BATCH");
+            return { errCode, -1 };
+        }
+        if (errCode != E_OK) {
+            LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
+                errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
+            return { E_OK, -1 };
         }
     }
     return { E_OK, 0 };
