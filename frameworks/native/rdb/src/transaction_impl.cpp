@@ -76,18 +76,23 @@ void TransactionImpl::SetPool(std::weak_ptr<ConnectionPool> pool)
 std::unique_ptr<TimeoutGuard> TransactionImpl::MakeGuard()
 {
     auto pool = pool_.lock();
-    if (pool == nullptr) {
-        return nullptr;
-    }
     auto conn = GetConnection();
-    if (conn == nullptr) {
-        return nullptr;
-    }
     const auto &token = DeadlineScope::Current();
-    if (!token.IsActive() || token.IsExhausted()) {
+    LOG_WARN("MakeGuard: pool=%{public}d conn=%{public}d tokenActive=%{public}d tokenExhausted=%{public}d "
+             "remaining=%{public}lldms",
+        pool != nullptr, conn != nullptr, token.IsActive(), token.IsExhausted(),
+        static_cast<long long>(token.RemainingMs()));
+    if (pool == nullptr || conn == nullptr) {
+        LOG_WARN("MakeGuard: skip, pool/conn null");
         return nullptr;
     }
-    return std::make_unique<TimeoutGuard>(conn, token);
+    if (!token.IsActive() || token.IsExhausted()) {
+        LOG_WARN("MakeGuard: skip, token inactive/exhausted");
+        return nullptr;
+    }
+    auto guard = std::make_unique<TimeoutGuard>(conn, token);
+    LOG_WARN("MakeGuard: guard armed=%{public}d", guard != nullptr);
+    return guard;
 }
 
 std::string TransactionImpl::GetBeginSql(int32_t type)

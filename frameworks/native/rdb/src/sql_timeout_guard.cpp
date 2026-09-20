@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "SqlTimeoutGuard"
 #include "sql_timeout_guard.h"
 
 #include <chrono>
@@ -26,7 +27,13 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 TimeoutGuard::TimeoutGuard(std::shared_ptr<Connection> conn, const DeadlineToken &token)
 {
-    if (conn == nullptr || !token.IsActive() || token.RemainingMs() <= 0) {
+    LOG_WARN("TimeoutGuard: ctor conn=%{public}d tokenActive=%{public}d remaining=%{public}lldms",
+        conn != nullptr, token.IsActive(), static_cast<long long>(token.RemainingMs()));
+    // Use IsExhausted() (exact steady_clock compare), NOT RemainingMs()<=0: RemainingMs() truncates to
+    // milliseconds, so a sub-millisecond remaining (e.g. 950us of a 1ms timeout) returns 0 and would
+    // wrongly skip arming the timer even though the deadline is not yet reached.
+    if (conn == nullptr || !token.IsActive() || token.IsExhausted()) {
+        LOG_WARN("TimeoutGuard: not armed (conn/token invalid or deadline exhausted)");
         return;
     }
     auto executor = TaskExecutor::GetInstance().GetExecutor();
@@ -35,13 +42,21 @@ TimeoutGuard::TimeoutGuard(std::shared_ptr<Connection> conn, const DeadlineToken
         return;
     }
     std::weak_ptr<Connection> weakConn = conn;
-    auto delay = std::chrono::milliseconds(token.RemainingMs());
+    // Use the exact (sub-millisecond) remaining duration, not the ms-truncated RemainingMs().
+    auto delay = token.deadline - std::chrono::steady_clock::now();
     auto taskId = executor->Schedule(delay, [weakConn]() {
+        LOG_WARN("TimeoutGuard: timer fired, about to interrupt connection");
         auto c = weakConn.lock();
         if (c != nullptr) {
             c->Interrupt();
+            LOG_WARN("TimeoutGuard: Interrupt() returned");
+        } else {
+            LOG_WARN("TimeoutGuard: connection already released on timer fire");
         }
     });
+    LOG_WARN("TimeoutGuard: armed delay=%{public}lldus taskId=%{public}llu",
+        static_cast<long long>(std::chrono::duration_cast<std::chrono::microseconds>(delay).count()),
+        static_cast<unsigned long long>(taskId));
     // Remove(taskId, wait=true): if the task has not fired it is dropped; if it is currently
     // firing (Interrupt in progress) we wait for it to complete, so the connection is never
     // returned to the pool with a stale/pending interrupt. Remove(0) is a no-op.

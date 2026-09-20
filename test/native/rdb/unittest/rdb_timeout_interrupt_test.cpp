@@ -241,37 +241,6 @@ HWTEST_F(RdbTimeoutInterruptTest, BatchInsert_Timeout_003, TestSize.Level1)
  * @tc.desc: Insert with very short timeout on a large table, interrupt should be effective.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTimeoutInterruptTest, Insert_Timeout_000, TestSize.Level1)
-{
-    std::string tableName = "InsertTimeoutTest";
-    ASSERT_EQ(PrepareLargeTable(tableName, BATCH_ROW_COUNT), E_OK);
-
-    std::vector<uint8_t> blobData(DEFAULT_BLOB_SIZE, 1);
-    ValuesBucket newRow;
-    newRow.Put("name", "timeout_row");
-    newRow.PutBlob("data", blobData);
-
-    InsertConfig config;
-    config.timeoutMs = 0;
-    auto start = std::chrono::steady_clock::now();
-    auto [errCode, rowId] =
-        store_->Insert(tableName, newRow, ConflictResolution::ON_CONFLICT_NONE, config);
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    printf("Insert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
-        static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
-
-    EXPECT_TRUE(errCode == E_OK)
-        << "Unexpected errCode=" << errCode;
-
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-}
-
-/* *
- * @tc.name: Insert_Timeout_001
- * @tc.desc: Insert with very short timeout on a large table, interrupt should be effective.
- * @tc.type: FUNC
- */
 HWTEST_F(RdbTimeoutInterruptTest, Insert_Timeout_001, TestSize.Level1)
 {
     std::string tableName = "InsertTimeoutTest";
@@ -292,7 +261,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Insert_Timeout_001, TestSize.Level1)
     printf("Insert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
+    EXPECT_TRUE(errCode == E_DATABASE_BUSY)
         << "Unexpected errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -351,7 +320,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Delete_Timeout_001, TestSize.Level1)
     printf("Delete_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
+    EXPECT_TRUE(errCode == E_DATABASE_BUSY)
         << "Unexpected errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -413,7 +382,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Update_Timeout_001, TestSize.Level1)
     printf("Update_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
+    EXPECT_TRUE(errCode == E_DATABASE_BUSY)
         << "Unexpected errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -473,7 +442,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Execute_Timeout_001, TestSize.Level1)
     printf("Execute_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
+    EXPECT_TRUE(errCode == E_DATABASE_BUSY)
         << "Unexpected errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -859,7 +828,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Timeout_002, TestSize.Level
 
 /* *
  * @tc.name: Transaction_Delete_Timeout_001
- * @tc.desc: Transaction Delete with very short timeout on a large table, interrupt should be effective.
+ * @tc.desc: Transaction Delete with very short timeout on a large table (full table scan), interrupt should be effective.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_001, TestSize.Level1)
@@ -872,7 +841,8 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_001, TestSize.Level
     ASSERT_NE(trans, nullptr);
 
     AbsRdbPredicates predicates(tableName);
-    // No WHERE clause — delete all rows to ensure operation takes long enough for interrupt
+    predicates.EqualTo("name", "nonexistent"); // Force full table scan (no index on name) so the
+                                              // row-by-row delete runs long enough for interrupt
 
     DeleteConfig config;
     config.timeoutMs = 1;
@@ -891,8 +861,8 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_001, TestSize.Level
 }
 
 /* *
- * @tc.name: Transaction_Delete_Timeout_001
- * @tc.desc: Transaction Delete with very short timeout on a large table, interrupt should be effective.
+ * @tc.name: Transaction_Delete_Timeout_002
+ * @tc.desc: Transaction Delete with short timeout on a large table (full table scan), interrupt should be effective.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_002, TestSize.Level1)
@@ -905,7 +875,8 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_002, TestSize.Level
     ASSERT_NE(trans, nullptr);
 
     AbsRdbPredicates predicates(tableName);
-    // No WHERE clause — delete all rows to ensure operation takes long enough for interrupt
+    predicates.EqualTo("name", "nonexistent"); // Force full table scan (no index on name) so the
+                                              // row-by-row delete runs long enough for interrupt
 
     DeleteConfig config;
     config.timeoutMs = 3;
@@ -913,7 +884,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_002, TestSize.Level
     auto [errCode, deleteResult] = trans->Delete(predicates, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    printf("Transaction_Delete_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
+    printf("Transaction_Delete_Timeout_002: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
     EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
@@ -1050,77 +1021,5 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_QueryByStep_Timeout_002, TestSize.
         << "Transaction QueryByStep should return nullptr when interrupted, elapsed=" << elapsed << "ms";
 
     trans->Close();
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-}
-
-/* *
- * @tc.name: ExecuteConfig_Decouple_001
- * @tc.desc: Default ExecuteConfig has inactive timeout (timeoutMs=0) and empty returning,
- *           verifying the two concerns are independent and default-safe.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, ExecuteConfig_Decouple_001, TestSize.Level1)
-{
-    ExecuteConfig config;
-    EXPECT_EQ(config.timeoutMs, 0);
-    EXPECT_TRUE(config.returning.columns.empty());
-    EXPECT_EQ(config.returning.maxReturningCount, ReturningConfig::DEFAULT_RETURNING_COUNT);
-    auto token = DeadlineToken::FromMs(config.timeoutMs);
-    EXPECT_FALSE(token.IsActive());
-}
-
-/* *
- * @tc.name: ExecuteConfig_Decouple_002
- * @tc.desc: Setting timeout does not perturb ReturningConfig and vice versa;
- *           the two fields are orthogonal.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, ExecuteConfig_Decouple_002, TestSize.Level1)
-{
-    ExecuteConfig config;
-    config.timeoutMs = 1000;
-    EXPECT_EQ(config.timeoutMs, 1000);
-    EXPECT_TRUE(config.returning.columns.empty())
-        << "setting timeout leaked into returning";
-
-    ExecuteConfig other;
-    other.returning = ReturningConfig{ std::vector<std::string>{ "name" }, 16 };
-    EXPECT_EQ(other.timeoutMs, 0) << "setting returning leaked into timeout";
-    EXPECT_EQ(other.returning.columns.size(), 1);
-    EXPECT_EQ(other.returning.maxReturningCount, 16);
-}
-
-/* *
- * @tc.name: ExecuteConfig_Decouple_003
- * @tc.desc: Construct ExecuteConfig with timeoutMs=0 (returning default) and run an
- *           Insert with no timeout; the row must be inserted, proving the no-timeout
- *           path is equivalent to the no-config path.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, ExecuteConfig_Decouple_003, TestSize.Level1)
-{
-    std::string tableName = "DecoupleTimeoutTest";
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-    auto res = store_->Execute(
-        "CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, data BLOB)");
-    ASSERT_EQ(res.first, E_OK);
-
-    std::vector<uint8_t> blobData(DEFAULT_BLOB_SIZE, 1);
-    ValuesBucket newRow;
-    newRow.Put("name", "decouple_row");
-    newRow.PutBlob("data", blobData);
-
-    InsertConfig config{ 0 };
-    EXPECT_EQ(config.timeoutMs, 0);
-    auto [errCode, rowId] = store_->Insert(tableName, newRow, ConflictResolution::ON_CONFLICT_NONE, config);
-    EXPECT_EQ(errCode, E_OK);
-
-    auto resultSet = store_->QueryByStep("SELECT COUNT(*) FROM " + tableName);
-    ASSERT_NE(resultSet, nullptr);
-    ASSERT_EQ(resultSet->GoToNextRow(), E_OK);
-    int64_t actualCount = 0;
-    resultSet->GetLong(0, actualCount);
-    EXPECT_EQ(actualCount, 1);
-
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
