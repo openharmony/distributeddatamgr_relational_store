@@ -114,7 +114,6 @@ private:
     };
 
     int InnerOpen(const RdbStoreConfig &config);
-    void CheckIntegrityOnOpen(const RdbStoreConfig &config);
     int CheckDbNotExist(const RdbStoreConfig &config, const std::string &dbPath);
     int Configure(const RdbStoreConfig &config, std::string &dbPath);
     int SetPageSize(const RdbStoreConfig &config);
