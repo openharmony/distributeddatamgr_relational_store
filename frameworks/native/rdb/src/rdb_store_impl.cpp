@@ -1691,7 +1691,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         connectionPool_ = nullptr;
         LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode,
             SqliteUtils::Anonymous(path_).c_str());
-        AuditOpenFail(errCode);
+        auditLogger_.OnOpenFail(config_.GetPath(), errCode, 0, config_.IsAuditEnabled());
         return errCode;
     }
     if (isNeedSetAcl) {
@@ -1709,7 +1709,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         }
     }
     if (errCode == E_OK) {
-        AuditOpenOk(created);
+        auditLogger_.OnOpenOk(config_.GetPath(), config_, created);
     }
     InnerOpen();
     initStatus_ = errCode;
@@ -1775,7 +1775,7 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     auto errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args);
     if (errCode == E_OK && rowid > 0) {
         constexpr int64_t SINGLE_ROW_COUNT = 1;
-        AuditInsert(table, SINGLE_ROW_COUNT);
+        auditLogger_.OnSqlAudit(config_.GetPath(), "INSERT", table, SINGLE_ROW_COUNT, config_.IsAuditEnabled());
     }
     if (errCode == E_OK) {
         DoCloudSync(table);
@@ -1817,7 +1817,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     }
     conn = nullptr;
     int64_t insertedRows = int64_t(rows.RowSize());
-    AuditInsert(table, insertedRows);
+    auditLogger_.OnSqlAudit(config_.GetPath(), "INSERT", table, insertedRows, config_.IsAuditEnabled());
     DoCloudSync(table);
     return { E_OK, insertedRows };
 }
@@ -1913,7 +1913,8 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, config, returningSql);
-    AuditUpdate(predicates.GetTableName(), result.changed);
+    auditLogger_.OnSqlAudit(config_.GetPath(), "UPDATE", predicates.GetTableName(), result.changed,
+        config_.IsAuditEnabled());
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1935,7 +1936,8 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(const AbsRdbPredicates &predica
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [code, result] = ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), config, returningSql);
-    AuditDelete(predicates.GetTableName(), result.changed);
+    auditLogger_.OnSqlAudit(config_.GetPath(), "DELETE", predicates.GetTableName(), result.changed,
+        config_.IsAuditEnabled());
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -2052,7 +2054,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     errCode = statement->Execute(args);
     // Audit: PRAGMA integrity_check / quick_check (runs even on error for recording)
-    if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
+    if (config_.IsAuditEnabled() && RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
         auditLogger_.OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE,
             RdbAuditUtils::ParsePragmaMode(sql), errCode, "");
     }
@@ -2070,7 +2072,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
         if (!auditOp.empty()) {
             std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
-            auditLogger_.OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
+            auditLogger_.OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0, config_.IsAuditEnabled());
         }
         HandleSchemaDDL(std::move(statement), sql);
     }
@@ -2113,7 +2115,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
     }
     TryDump(errCode, "EXECUTE");
     // Audit: business caller actively executing PRAGMA integrity_check / quick_check
-    if (sqlType == SqliteUtils::STATEMENT_PRAGMA && RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
+    if (config_.IsAuditEnabled() && sqlType == SqliteUtils::STATEMENT_PRAGMA &&
+        RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
         auto mode = RdbAuditUtils::ParsePragmaMode(sql);
         auditLogger_.OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE, mode, errCode, "");
     }
@@ -3095,48 +3098,6 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
         auto memo = AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
         InnerSync(param, option, memo, nullptr);
     });
-}
-
-void RdbStoreImpl::AuditOpenOk(bool created)
-{
-    if (!config_.IsAuditEnabled()) {
-        return;
-    }
-    auditLogger_.OnOpenOk(config_.GetPath(), config_, created);
-}
-
-void RdbStoreImpl::AuditOpenFail(int32_t errCode)
-{
-    if (!config_.IsAuditEnabled()) {
-        return;
-    }
-    auditLogger_.OnOpenFail(config_.GetPath(), errCode, 0);
-}
-
-void RdbStoreImpl::AuditInsert(const std::string &table, int64_t rows)
-{
-    if (!config_.IsAuditEnabled()) {
-        return;
-    }
-    auditLogger_.OnSqlAudit(config_.GetPath(), "INSERT", table, rows);
-}
-
-void RdbStoreImpl::AuditUpdate(const std::string &table, int64_t rows)
-{
-    if (!config_.IsAuditEnabled()) {
-        return;
-    }
-    auditLogger_.OnSqlAudit(config_.GetPath(), "UPDATE", table, rows);
-}
-
-void RdbStoreImpl::AuditDelete(const std::string &table, int64_t rows)
-{
-    if (!config_.IsAuditEnabled()) {
-        return;
-    }
-    if (rows > 0) {
-        auditLogger_.OnSqlAudit(config_.GetPath(), "DELETE", table, rows);
-    }
 }
 
 int32_t RdbStoreImpl::InitOwner(int version, RdbOpenCallback &openCallback)

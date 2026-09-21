@@ -166,6 +166,9 @@ void RdbAuditLogger::EnsureInit(const std::string &dbPath)
 
 void RdbAuditLogger::OnOpenOk(const std::string &dbPath, const RdbStoreConfig &config, bool created)
 {
+    if (!config.IsAuditEnabled()) {
+        return;
+    }
     EnsureInit(dbPath);
     if (!IsActive()) {
         return;
@@ -175,8 +178,11 @@ void RdbAuditLogger::OnOpenOk(const std::string &dbPath, const RdbStoreConfig &c
     RdbDbLoggerManager::GetInstance().RecordOpenAsync(dbPath, lastOpen);
 }
 
-void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno)
+void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno, bool auditEnabled)
 {
+    if (!auditEnabled) {
+        return;
+    }
     EnsureInit(dbPath);
     if (!IsActive()) {
         return;
@@ -184,8 +190,12 @@ void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno)
     RdbAuditLoggerManager::GetInstance().AppendEventAsync(BuildOpenFailJson(dbPath, rc, osErrno));
 }
 
-void RdbAuditLogger::OnIoError(const std::string &op, const std::string &file, int rc, int osErrno)
+void RdbAuditLogger::OnIoError(
+    const std::string &op, const std::string &file, int rc, int osErrno, bool auditEnabled)
 {
+    if (!auditEnabled) {
+        return;
+    }
     EnsureInit(file);
     if (!IsActive()) {
         return;
@@ -200,8 +210,12 @@ void RdbAuditLogger::OnIoError(const std::string &op, const std::string &file, i
     RdbDbLoggerManager::GetInstance().WriteFirstLossAsync(file, firstLoss);
 }
 
-void RdbAuditLogger::OnSqlAudit(const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows)
+void RdbAuditLogger::OnSqlAudit(
+    const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows, bool auditEnabled)
 {
+    if (!auditEnabled) {
+        return;
+    }
     EnsureInit(dbPath);
     if (!IsActive() || !enableSqlAudit_) {
         return;
@@ -237,8 +251,11 @@ void RdbAuditLogger::OnIntegrity(
     RdbAuditLoggerManager::GetInstance().AppendEventAsync(BuildIntegrityJson(dbPath, trigger, mode, result, err));
 }
 
-void RdbAuditLogger::OnDbDelete(const std::string &dbPath, const std::string &op)
+void RdbAuditLogger::OnDbDelete(const std::string &dbPath, const std::string &op, bool auditEnabled)
 {
+    if (!auditEnabled) {
+        return;
+    }
     EnsureInit(dbPath);
     if (!IsActive()) {
         return;

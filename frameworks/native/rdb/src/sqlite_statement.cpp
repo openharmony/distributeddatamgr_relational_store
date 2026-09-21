@@ -493,10 +493,10 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
         auto db = sqlite3_db_handle(stmt_);
         // errno: 28 No space left on device
         errCode = (errCode == E_SQLITE_IOERR && sqlite3_system_errno(db) == 28) ? E_SQLITE_IOERR_FULL : errCode;
-        if ((errCode == E_SQLITE_IOERR || errCode == E_SQLITE_IOERR_FULL) && config_ != nullptr &&
-            config_->IsAuditEnabled()) {
+        if ((errCode == E_SQLITE_IOERR || errCode == E_SQLITE_IOERR_FULL) && config_ != nullptr) {
             RdbAuditLogger logger;
-            logger.OnIoError("execute", config_->GetPath(), errCode, sqlite3_system_errno(db));
+            logger.OnIoError("execute", config_->GetPath(), errCode, sqlite3_system_errno(db),
+                config_->IsAuditEnabled());
         }
         return errCode;
     }
@@ -555,11 +555,10 @@ std::pair<int, std::vector<ValuesBucket>> SqliteStatement::ExecuteForRows(
         auto db = sqlite3_db_handle(stmt_);
         // errno: 28 No space left on device
         errCode = (errCode == E_SQLITE_IOERR && sqlite3_system_errno(db) == 28) ? E_SQLITE_IOERR_FULL : errCode;
-        if ((errCode == E_SQLITE_IOERR || errCode == E_SQLITE_IOERR_FULL) && config_ != nullptr &&
-            config_->IsAuditEnabled()) {
+        if ((errCode == E_SQLITE_IOERR || errCode == E_SQLITE_IOERR_FULL) && config_ != nullptr) {
             RdbAuditLogger logger;
-            logger.OnIoError(
-                "execute_for_rows", config_->GetPath(), errCode, sqlite3_system_errno(db));
+            logger.OnIoError("execute_for_rows", config_->GetPath(), errCode, sqlite3_system_errno(db),
+                config_->IsAuditEnabled());
         }
         return ret;
     }
