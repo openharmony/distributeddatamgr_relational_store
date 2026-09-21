@@ -89,7 +89,7 @@ bool DbFileInfo::Unmarshal(const json &obj)
 
 bool DbFileInfo::IsEmpty() const
 {
-    return db.node == 0 && wal.node == 0 && shm.node == 0 && parent.node == 0;
+    return db.node == 0 && wal.node == 0 && shm.node == 0;
 }
 
 bool CallerInfo::Marshal(json &obj) const
