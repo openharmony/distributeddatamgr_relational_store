@@ -50,7 +50,7 @@ public:
     void SetUp();
     void TearDown();
 
-    static const std::string DATABASE_NAME;
+    static const std::string databaseName;
 
     /**
      * @brief Create a table with (id, name, data BLOB) schema and pre-insert
@@ -76,7 +76,7 @@ public:
     int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override { return E_OK; }
 };
 
-const std::string RdbTimeoutInterruptTest::DATABASE_NAME = RDB_TEST_PATH + "timeout_interrupt_test.db";
+const std::string RdbTimeoutInterruptTest::databaseName = RDB_TEST_PATH + "timeout_interrupt_test.db";
 
 void RdbTimeoutInterruptTest::SetUpTestCase(void) {}
 
@@ -85,9 +85,9 @@ void RdbTimeoutInterruptTest::TearDownTestCase(void) {}
 void RdbTimeoutInterruptTest::SetUp(void)
 {
     store_ = nullptr;
-    int errCode = RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    int errCode = RdbHelper::DeleteRdbStore(databaseName);
     EXPECT_EQ(E_OK, errCode);
-    RdbStoreConfig config(RdbTimeoutInterruptTest::DATABASE_NAME);
+    RdbStoreConfig config(RdbTimeoutInterruptTest::databaseName);
     RdbTimeoutInterruptTestOpenCallback helper;
     store_ = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     EXPECT_NE(store_, nullptr);
@@ -98,7 +98,7 @@ void RdbTimeoutInterruptTest::TearDown(void)
 {
     store_ = nullptr;
     RdbHelper::ClearCache();
-    RdbHelper::DeleteRdbStore(DATABASE_NAME);
+    RdbHelper::DeleteRdbStore(databaseName);
 }
 
 ValuesBuckets RdbTimeoutInterruptTest::BuildLargeRows(int rowCount)
@@ -261,7 +261,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Insert_Timeout_001, TestSize.Level1)
     printf("Insert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_DATABASE_BUSY)
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
         << "Unexpected errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -320,7 +320,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Delete_Timeout_001, TestSize.Level1)
     printf("Delete_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_DATABASE_BUSY)
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
         << "Unexpected errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -382,7 +382,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Update_Timeout_001, TestSize.Level1)
     printf("Update_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_DATABASE_BUSY)
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
         << "Unexpected errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -442,7 +442,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Execute_Timeout_001, TestSize.Level1)
     printf("Execute_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_DATABASE_BUSY)
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
         << "Unexpected errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -465,7 +465,9 @@ HWTEST_F(RdbTimeoutInterruptTest, Execute_Timeout_002, TestSize.Level1)
     std::string sql = "INSERT INTO " + tableName + " (name, data) VALUES ";
     std::vector<ValueObject> args;
     for (int i = 0; i < EXECUTE_BATCH_ROW_COUNT; i++) {
-        if (i > 0) sql += ", ";
+        if (i > 0) {
+            sql += ", ";
+        }
         sql += "(?, ?)";
         args.push_back(ValueObject("test_" + std::to_string(i)));
         args.push_back(ValueObject(blobData));
@@ -828,7 +830,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Timeout_002, TestSize.Level
 
 /* *
  * @tc.name: Transaction_Delete_Timeout_001
- * @tc.desc: Transaction Delete with very short timeout on a large table (full table scan), interrupt should be effective.
+ * @tc.desc: Transaction Delete with very short timeout on a large table, interrupt should be effective.
  * @tc.type: FUNC
  */
 HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_001, TestSize.Level1)
