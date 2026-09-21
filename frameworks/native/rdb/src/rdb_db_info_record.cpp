@@ -214,17 +214,61 @@ bool DbInfoChange::Unmarshal(const json &obj)
     return true;
 }
 
+bool FirstLossInfo::Marshal(json &obj) const
+{
+    SetValue(obj[GET_NAME(op)], op);
+    SetValue(obj[GET_NAME(tbl)], tbl);
+    SetValue(obj[GET_NAME(rows)], rows);
+    SetValue(obj[GET_NAME(rc)], rc);
+    SetValue(obj[GET_NAME(osErrno)], osErrno);
+    SetValue(obj[GET_NAME(callerInfo)], callerInfo);
+    SetValue(obj[GET_NAME(time)], time);
+    return true;
+}
+
+bool FirstLossInfo::Unmarshal(const json &obj)
+{
+    GetValue(obj, GET_NAME(op), op);
+    GetValue(obj, GET_NAME(tbl), tbl);
+    GetValue(obj, GET_NAME(rows), rows);
+    GetValue(obj, GET_NAME(rc), rc);
+    GetValue(obj, GET_NAME(osErrno), osErrno);
+    GetValue(obj, GET_NAME(callerInfo), callerInfo);
+    GetValue(obj, GET_NAME(time), time);
+    return true;
+}
+
+bool DeleteInfo::Marshal(json &obj) const
+{
+    SetValue(obj[GET_NAME(files)], files);
+    SetValue(obj[GET_NAME(callerInfo)], callerInfo);
+    SetValue(obj[GET_NAME(time)], time);
+    return true;
+}
+
+bool DeleteInfo::Unmarshal(const json &obj)
+{
+    GetValue(obj, GET_NAME(files), files);
+    GetValue(obj, GET_NAME(callerInfo), callerInfo);
+    GetValue(obj, GET_NAME(time), time);
+    return true;
+}
+
 bool RdbDbInfoRecord::Marshal(json &obj) const
 {
-    SetValue(obj[GET_NAME(lastOpenDbInfo)], lastOpenDbInfo);
-    SetValue(obj[GET_NAME(dbInfoChange)], dbInfoChange);
+    SetValue(obj[GET_NAME(lastOpen)], lastOpen);
+    SetValue(obj[GET_NAME(firstLoss)], firstLoss);
+    SetValue(obj[GET_NAME(dbDelete)], dbDelete);
+    SetValue(obj[GET_NAME(inodeChange)], inodeChange);
     return true;
 }
 
 bool RdbDbInfoRecord::Unmarshal(const json &obj)
 {
-    GetValue(obj, GET_NAME(lastOpenDbInfo), lastOpenDbInfo);
-    GetValue(obj, GET_NAME(dbInfoChange), dbInfoChange);
+    GetValue(obj, GET_NAME(lastOpen), lastOpen);
+    GetValue(obj, GET_NAME(firstLoss), firstLoss);
+    GetValue(obj, GET_NAME(dbDelete), dbDelete);
+    GetValue(obj, GET_NAME(inodeChange), inodeChange);
     return true;
 }
 

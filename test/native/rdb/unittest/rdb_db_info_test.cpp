@@ -30,14 +30,7 @@ using namespace OHOS;
 using namespace OHOS::NativeRdb;
 namespace {
 constexpr const char *TEST_DB_PATH = "/data/test/rdbdfx_test.db";
-constexpr const char *DFX_SUFFIX = ".rdbdfx.json";
-constexpr const char *LOCK_SUFFIX = ".rdbdfx.lock";
 static constexpr int WRITE_LEN = 4;
-
-std::string DfxPath()
-{
-    return std::string(TEST_DB_PATH) + DFX_SUFFIX;
-}
 
 void CreateTestFile(const std::string &path)
 {
@@ -67,16 +60,12 @@ void RdbDbInfoTest::TearDownTestCase(void)
 
 void RdbDbInfoTest::SetUp()
 {
-    (void)remove(DfxPath().c_str());
-    (void)remove((std::string(TEST_DB_PATH) + LOCK_SUFFIX).c_str());
     (void)remove(TEST_DB_PATH);
     CreateTestFile(TEST_DB_PATH);
 }
 
 void RdbDbInfoTest::TearDown()
 {
-    (void)remove(DfxPath().c_str());
-    (void)remove((std::string(TEST_DB_PATH) + LOCK_SUFFIX).c_str());
     (void)remove(TEST_DB_PATH);
 }
 
@@ -88,37 +77,37 @@ void RdbDbInfoTest::TearDown()
 HWTEST_F(RdbDbInfoTest, RdbDbInfoRecord_MarshalUnmarshal_001, TestSize.Level1)
 {
     RdbDbInfoRecord rec;
-    rec.lastOpenDbInfo.config.name = "test.db";
-    rec.lastOpenDbInfo.config.path = "/data/test/test.db";
-    rec.lastOpenDbInfo.config.isEncrypted = true;
-    rec.lastOpenDbInfo.config.securityLevel = 3;
-    rec.lastOpenDbInfo.config.journalMode = "WAL";
-    rec.lastOpenDbInfo.config.sync = "FULL";
-    rec.lastOpenDbInfo.config.walAutoCheckpoint = 1000;
-    rec.lastOpenDbInfo.created = true;
-    rec.lastOpenDbInfo.keyPresent = false;
-    rec.lastOpenDbInfo.integrityResult = 0;
-    rec.lastOpenDbInfo.callerInfo.pid = 1234;
-    rec.lastOpenDbInfo.callerInfo.uid = 5678;
-    rec.lastOpenDbInfo.time = "2025-01-01 00:00:00.000";
+    rec.lastOpen.config.name = "test.db";
+    rec.lastOpen.config.path = "/data/test/test.db";
+    rec.lastOpen.config.isEncrypted = true;
+    rec.lastOpen.config.securityLevel = 3;
+    rec.lastOpen.config.journalMode = "WAL";
+    rec.lastOpen.config.sync = "FULL";
+    rec.lastOpen.config.walAutoCheckpoint = 1000;
+    rec.lastOpen.created = true;
+    rec.lastOpen.keyPresent = false;
+    rec.lastOpen.integrityResult = 0;
+    rec.lastOpen.callerInfo.pid = 1234;
+    rec.lastOpen.callerInfo.uid = 5678;
+    rec.lastOpen.time = "2025-01-01 00:00:00.000";
 
     std::string json = Serializable::Marshall(rec);
     EXPECT_FALSE(json.empty());
 
     RdbDbInfoRecord restored;
     EXPECT_TRUE(Serializable::Unmarshall(json, restored));
-    EXPECT_EQ(restored.lastOpenDbInfo.config.name, "test.db");
-    EXPECT_EQ(restored.lastOpenDbInfo.config.path, "/data/test/test.db");
-    EXPECT_TRUE(restored.lastOpenDbInfo.config.isEncrypted);
-    EXPECT_EQ(restored.lastOpenDbInfo.config.securityLevel, 3);
-    EXPECT_EQ(restored.lastOpenDbInfo.config.journalMode, "WAL");
-    EXPECT_EQ(restored.lastOpenDbInfo.config.sync, "FULL");
-    EXPECT_EQ(restored.lastOpenDbInfo.config.walAutoCheckpoint, 1000);
-    EXPECT_TRUE(restored.lastOpenDbInfo.created);
-    EXPECT_FALSE(restored.lastOpenDbInfo.keyPresent);
-    EXPECT_EQ(restored.lastOpenDbInfo.callerInfo.pid, 1234);
-    EXPECT_EQ(restored.lastOpenDbInfo.callerInfo.uid, 5678);
-    EXPECT_EQ(restored.lastOpenDbInfo.time, "2025-01-01 00:00:00.000");
+    EXPECT_EQ(restored.lastOpen.config.name, "test.db");
+    EXPECT_EQ(restored.lastOpen.config.path, "/data/test/test.db");
+    EXPECT_TRUE(restored.lastOpen.config.isEncrypted);
+    EXPECT_EQ(restored.lastOpen.config.securityLevel, 3);
+    EXPECT_EQ(restored.lastOpen.config.journalMode, "WAL");
+    EXPECT_EQ(restored.lastOpen.config.sync, "FULL");
+    EXPECT_EQ(restored.lastOpen.config.walAutoCheckpoint, 1000);
+    EXPECT_TRUE(restored.lastOpen.created);
+    EXPECT_FALSE(restored.lastOpen.keyPresent);
+    EXPECT_EQ(restored.lastOpen.callerInfo.pid, 1234);
+    EXPECT_EQ(restored.lastOpen.callerInfo.uid, 5678);
+    EXPECT_EQ(restored.lastOpen.time, "2025-01-01 00:00:00.000");
 }
 
 /**
