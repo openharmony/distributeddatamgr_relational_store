@@ -40,7 +40,7 @@ public:
 
     TimeoutGuard(const TimeoutGuard &) = delete;
     TimeoutGuard &operator=(const TimeoutGuard &) = delete;
-    TimeoutGuard(TimeoutGuard && other) noexcept;
+    TimeoutGuard(TimeoutGuard &&other) noexcept;
     TimeoutGuard &operator=(TimeoutGuard &&) = delete;
 
 private:

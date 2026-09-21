@@ -390,8 +390,8 @@ public:
         const AbsRdbPredicates &predicates, const ReturningConfig &config = {});
 
     /**
-     * @brief Deletes data from the database based on a specified instance object of AbsRdbPredicates with per-op config.
-     *
+     * @brief Delete data from the database based on a specified instance object of AbsRdbPredicates with per-op config.
+     * delete * from table can not be interrupted
      * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
      * @param config Indicates the {@link DeleteConfig} for SQL execution timeout and returning.
      */

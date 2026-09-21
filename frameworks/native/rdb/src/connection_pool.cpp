@@ -933,7 +933,9 @@ int32_t ConnPool::Container::SetTokenizer(Tokenizer tokenizer)
 std::pair<int, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Acquire(std::chrono::milliseconds milliS)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    auto interval = (milliS == INVALID_TIME) ? timeout_ : std::min(milliS, std::chrono::duration_cast<std::chrono::milliseconds>(timeout_));
+    auto interval = (milliS == INVALID_TIME)
+                        ? timeout_
+                        : std::min(milliS, std::chrono::duration_cast<std::chrono::milliseconds>(timeout_));
     if (max_ == 0) {
         return { E_ERROR, nullptr };
     }

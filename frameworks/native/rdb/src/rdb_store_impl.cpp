@@ -416,12 +416,7 @@ ConnWithGuard RdbStoreImpl::GetConnWithTimeout(bool isRead)
     }
     auto conn = pool->AcquireConnection(isRead, acquireMs);
     if (conn == nullptr) {
-        // Could not acquire within the (remaining) budget. When a user timeout is active this is a
-        // timeout (E_SQLITE_INTERRUPT), not "busy" — E_DATABASE_BUSY is reserved for the default
-        // no-timeout acquire path. Use IsActive() (not IsExhausted()) to avoid the ms-truncation race.
-        if (DeadlineScope::Current().IsActive()) {
-            return { nullptr, nullptr, E_SQLITE_INTERRUPT };
-        }
+        // Could not acquire a connection — pool is busy, regardless of timeout.
         return { nullptr, nullptr, E_DATABASE_BUSY };
     }
     if (DeadlineScope::Current().IsExhausted()) {
@@ -3551,14 +3546,7 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
     }
     auto conn = pool->AcquireConnection(read, acquireMs);
     if (conn == nullptr) {
-        // Could not acquire within the (remaining) budget. When a user timeout is active this is a
-        // timeout (E_SQLITE_INTERRUPT), not "busy" — E_DATABASE_BUSY is reserved for the default
-        // no-timeout acquire path. Using IsActive() (not IsExhausted()) avoids the millisecond
-        // truncation race where AcquireConnection times out on the ms-truncated acquireMs just
-        // before the exact sub-ms deadline is reached.
-        if (DeadlineScope::Current().IsActive()) {
-            return { E_SQLITE_INTERRUPT, nullptr };
-        }
+        // Could not acquire a connection — pool is busy, regardless of timeout.
         return { E_DATABASE_BUSY, nullptr };
     }
     return GetStatement(sql, conn, returningSql);
