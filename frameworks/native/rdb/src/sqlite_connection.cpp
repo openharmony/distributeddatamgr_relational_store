@@ -61,7 +61,6 @@ using namespace std::chrono;
 using RdbKeyFile = RdbSecurityManager::KeyFileType;
 using Reportor = RdbFaultHiViewReporter;
 constexpr const char *INTEGRITIES[] = { nullptr, "PRAGMA quick_check", "PRAGMA integrity_check" };
-constexpr uint32_t INTEGRITY_QUICK_CHECK_INDEX = 1;
 constexpr const char *QUERY_TABLE_COUNT_SQL = "SELECT COUNT(*) FROM sqlite_master WHERE type='table'";
 constexpr const char *QUERY_USER_TABLE_COUNT_SQL = "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
     " AND NAME NOT IN ('naturalbase_rdb_aux_metadata', 'ddms_data_search_aux_config',"
@@ -393,6 +392,7 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
 
 void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
 {
+    ValueObject checkResult{ "ok" };
     auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
     if (index >= static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
         return;
@@ -402,12 +402,10 @@ void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
         return;
     }
     LOG_INFO("%{public}s : %{public}s, ", sql, SqliteUtils::Anonymous(config.GetName()).c_str());
-    ValueObject checkResult{ "ok" };
     int errCode = E_OK;
     std::tie(errCode, checkResult) = ExecuteForValue(sql);
-    IntegrityMode auditMode = (index == INTEGRITY_QUICK_CHECK_INDEX) ? IntegrityMode::QUICK : IntegrityMode::FULL;
-    int auditResult = (errCode == E_OK && static_cast<std::string>(checkResult) == "ok")
-        ? AUDIT_RESULT_OK : AUDIT_RESULT_FAIL;
+    IntegrityMode auditMode = (index == 1) ? IntegrityMode::QUICK : IntegrityMode::FULL;
+    int auditResult = (errCode == E_OK && static_cast<std::string>(checkResult) == "ok") ? 0 : -1;
     RdbAuditLogger::GetInstance().OnIntegrity(config.GetPath(), IntegrityTrigger::AUTO, auditMode,
         auditResult, static_cast<std::string>(checkResult));
     if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
