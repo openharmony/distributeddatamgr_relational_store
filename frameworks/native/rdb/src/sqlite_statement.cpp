@@ -419,7 +419,6 @@ int SqliteStatement::InnerStep()
             SqliteUtils::SqlAnonymous(sql_).c_str());
         return E_SQLITE_INTERRUPT;
     }
-    LOG_INFO("InnerStep: deadline exhausted=%{public}d", IsDeadlineExhausted());
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_EXECUTE, seqId_);
     auto errCode = sqlite3_step(stmt_);

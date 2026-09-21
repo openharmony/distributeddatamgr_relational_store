@@ -36,21 +36,8 @@ public:
     int32_t Close() override;
     std::string GetLastErrorMsg() override;
 
-    std::pair<int32_t, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
-    std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        const ReturningConfig &config, Resolution resolution) override;
-    std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const ReturningConfig &config, Resolution resolution) override;
-    std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const ReturningConfig &config) override;
-    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        const QueryOptions &options) override;
-    std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
-        const QueryOptions &options) override;
-    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args) override;
-    std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;
     std::pair<int32_t, int64_t> Insert(
         const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,

@@ -78,21 +78,13 @@ std::unique_ptr<TimeoutGuard> TransactionImpl::MakeGuard()
     auto pool = pool_.lock();
     auto conn = GetConnection();
     const auto &token = DeadlineScope::Current();
-    LOG_WARN("MakeGuard: pool=%{public}d conn=%{public}d tokenActive=%{public}d tokenExhausted=%{public}d "
-             "remaining=%{public}lldms",
-        pool != nullptr, conn != nullptr, token.IsActive(), token.IsExhausted(),
-        static_cast<long long>(token.RemainingMs()));
     if (pool == nullptr || conn == nullptr) {
-        LOG_WARN("MakeGuard: skip, pool/conn null");
         return nullptr;
     }
     if (!token.IsActive() || token.IsExhausted()) {
-        LOG_WARN("MakeGuard: skip, token inactive/exhausted");
         return nullptr;
     }
-    auto guard = std::make_unique<TimeoutGuard>(conn, token);
-    LOG_WARN("MakeGuard: guard armed=%{public}d", guard != nullptr);
-    return guard;
+    return std::make_unique<TimeoutGuard>(conn, token);
 }
 
 std::string TransactionImpl::GetBeginSql(int32_t type)
@@ -230,11 +222,6 @@ std::string TransactionImpl::GetLastErrorMsg()
     return store->GetLastErrorMsg();
 }
 
-std::pair<int, int64_t> TransactionImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
-{
-    return Insert(table, row, resolution, InsertConfig{});
-}
-
 std::pair<int32_t, int64_t> TransactionImpl::BatchInsert(const std::string &table, const Rows &rows)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_, rows.size());
@@ -259,50 +246,10 @@ std::pair<int, int64_t> TransactionImpl::BatchInsert(const std::string &table, c
     return store->BatchInsert(table, rows);
 }
 
-std::pair<int32_t, Results> TransactionImpl::BatchInsert(const std::string &table, const RefRows &rows,
-    const ReturningConfig &config, Resolution resolution)
-{
-    return BatchInsert(table, rows, resolution, BatchInsertConfig{0, config});
-}
-
-std::pair<int32_t, Results> TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
-    const ReturningConfig &config, Resolution resolution)
-{
-    return Update(row, predicates, UpdateConfig{0, config}, resolution);
-}
-
-std::pair<int32_t, Results> TransactionImpl::Delete(
-    const AbsRdbPredicates &predicates, const ReturningConfig &config)
-{
-    return Delete(predicates, DeleteConfig{0, config});
-}
-
 void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
 {
     std::lock_guard lock(mutex_);
     resultSets_.push_back(std::move(resultSet));
-}
-
-std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
-    const std::string &sql, const Values &args, const QueryOptions &options)
-{
-    return QueryByStep(sql, args, options, QueryConfig{});
-}
-
-std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
-    const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options)
-{
-    return QueryByStep(predicates, columns, options, QueryConfig{});
-}
-
-std::pair<int32_t, ValueObject> TransactionImpl::Execute(const std::string &sql, const Values &args)
-{
-    return Execute(sql, args, ExecuteConfig{});
-}
-
-std::pair<int32_t, Results> TransactionImpl::ExecuteExt(const std::string &sql, const Values &args)
-{
-    return ExecuteExt(sql, args, ExecuteConfig{});
 }
 
 std::pair<int32_t, int64_t> TransactionImpl::Insert(

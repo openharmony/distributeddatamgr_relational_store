@@ -30,6 +30,13 @@ int32_t Transaction::RegisterCreator(Creator creator)
     return E_OK;
 }
 
+std::pair<int32_t, int64_t> Transaction::Insert(
+    const std::string &table, const Row &row, Resolution resolution)
+{
+    // old calls new: the non-config overload delegates to the per-op config canonical entry.
+    return Insert(table, row, resolution, InsertConfig{});
+}
+
 std::pair<int32_t, int64_t> Transaction::BatchInsert(
     const std::string &table, const RefRows &rows, Resolution resolution)
 {
@@ -40,7 +47,8 @@ std::pair<int32_t, int64_t> Transaction::BatchInsert(
 std::pair<int32_t, Results> Transaction::BatchInsert(const std::string &table, const RefRows &rows,
     const ReturningConfig &config, Resolution resolution)
 {
-    return { E_NOT_SUPPORT, -1 };
+    // old calls new: the ReturningConfig overload delegates to the per-op config canonical entry.
+    return BatchInsert(table, rows, resolution, BatchInsertConfig{0, config});
 }
 
 std::pair<int, int> Transaction::Update(
@@ -62,7 +70,8 @@ std::pair<int32_t, int32_t> Transaction::Update(
 std::pair<int32_t, Results> Transaction::Update(const Row &row, const AbsRdbPredicates &predicates,
     const ReturningConfig &config, Resolution resolution)
 {
-    return { E_NOT_SUPPORT, -1 };
+    // old calls new: the ReturningConfig overload delegates to the per-op config canonical entry.
+    return Update(row, predicates, UpdateConfig{0, config}, resolution);
 }
 
 std::pair<int32_t, int32_t> Transaction::Delete(
@@ -83,17 +92,20 @@ std::pair<int32_t, int32_t> Transaction::Delete(const AbsRdbPredicates &predicat
 std::pair<int32_t, Results> Transaction::Delete(
     const AbsRdbPredicates &predicates, const ReturningConfig &config)
 {
-    return { E_NOT_SUPPORT, -1 };
+    // old calls new: the ReturningConfig overload delegates to the per-op config canonical entry.
+    return Delete(predicates, DeleteConfig{0, config});
 }
 
 std::pair<int32_t, ValueObject> Transaction::Execute(const std::string &sql, const Values &args)
 {
-    return { E_NOT_SUPPORT, -1 };
+    // old calls new: the non-config overload delegates to the per-op config canonical entry.
+    return Execute(sql, args, ExecuteConfig{});
 }
 
 std::pair<int32_t, Results> Transaction::ExecuteExt(const std::string &sql, const Values &args)
 {
-    return { E_NOT_SUPPORT, -1 };
+    // old calls new: the non-config overload delegates to the per-op config canonical entry.
+    return ExecuteExt(sql, args, ExecuteConfig{});
 }
 
 std::shared_ptr<ResultSet> Transaction::QueryByStep(const std::string &sql, const Values &args, bool preCount)
@@ -112,66 +124,67 @@ std::shared_ptr<ResultSet> Transaction::QueryByStep(
 std::shared_ptr<ResultSet> Transaction::QueryByStep(
     const std::string &sql, const Values &args, const QueryOptions &options)
 {
-    return nullptr;
+    // old calls new: the non-config overload delegates to the per-op config canonical entry.
+    return QueryByStep(sql, args, options, QueryConfig{});
 }
 
 std::shared_ptr<ResultSet> Transaction::QueryByStep(
     const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options)
 {
-    return nullptr;
+    // old calls new: the non-config overload delegates to the per-op config canonical entry.
+    return QueryByStep(predicates, columns, options, QueryConfig{});
 }
 
+// Per-op config canonical entries: subclasses MUST override these to provide CRUD with timeout.
+// The base defaults terminate the delegation chain so old-overload callers receive E_NOT_SUPPORT
+// (or nullptr) when the subclass does not implement the per-op config overload, instead of
+// silently dropping the timeout by delegating back to the old overloads.
 std::pair<int32_t, int64_t> Transaction::Insert(
     const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config)
 {
-    (void)config;
-    return Insert(table, row, resolution);
+    return { E_NOT_SUPPORT, -1 };
 }
 
 std::pair<int32_t, Results> Transaction::BatchInsert(const std::string &table, const RefRows &rows,
     Resolution resolution, const BatchInsertConfig &config)
 {
-    return BatchInsert(table, rows, config.returning, resolution);
+    return { E_NOT_SUPPORT, -1 };
 }
 
 std::pair<int32_t, Results> Transaction::Update(const Row &row, const AbsRdbPredicates &predicates,
     const UpdateConfig &config, Resolution resolution)
 {
-    return Update(row, predicates, config.returning, resolution);
+    return { E_NOT_SUPPORT, -1 };
 }
 
 std::pair<int32_t, Results> Transaction::Delete(
     const AbsRdbPredicates &predicates, const DeleteConfig &config)
 {
-    return Delete(predicates, config.returning);
+    return { E_NOT_SUPPORT, -1 };
 }
 
 std::shared_ptr<ResultSet> Transaction::QueryByStep(const std::string &sql, const Values &args,
     const QueryOptions &options, const QueryConfig &config)
 {
-    (void)config;
-    return QueryByStep(sql, args, options);
+    return nullptr;
 }
 
 std::shared_ptr<ResultSet> Transaction::QueryByStep(
     const AbsRdbPredicates &predicates, const Fields &columns, const QueryOptions &options,
     const QueryConfig &config)
 {
-    (void)config;
-    return QueryByStep(predicates, columns, options);
+    return nullptr;
 }
 
 std::pair<int32_t, ValueObject> Transaction::Execute(
     const std::string &sql, const Values &args, const ExecuteConfig &config)
 {
-    (void)config;
-    return Execute(sql, args);
+    return { E_NOT_SUPPORT, ValueObject() };
 }
 
 std::pair<int32_t, Results> Transaction::ExecuteExt(
     const std::string &sql, const Values &args, const ExecuteConfig &config)
 {
-    (void)config;
-    return ExecuteExt(sql, args);
+    return { E_NOT_SUPPORT, -1 };
 }
 } // namespace OHOS::NativeRdb
