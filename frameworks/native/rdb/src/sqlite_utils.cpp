@@ -489,6 +489,13 @@ std::string SqliteUtils::RemoveSuffix(const std::string &name)
     return { name, 0, pos };
 }
 
+std::string SqliteUtils::GetDbName(const std::string &dbPath)
+{
+    size_t lastSlash = dbPath.rfind('/');
+    std::string base = (lastSlash == std::string::npos) ? dbPath : dbPath.substr(lastSlash + 1);
+    return RemoveSuffix(base);
+}
+
 size_t SqliteUtils::DeleteFolder(const std::string &folderPath, bool removeSelf)
 {
     auto [count, ec] = RdbFileSystem::RemoveAll(folderPath, removeSelf);

@@ -33,6 +33,7 @@
 #include "rdb_obs_manager.h"
 #include "rdb_open_callback.h"
 #include "rdb_service.h"
+#include "rdb_audit_logger.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "rdb_types.h"
@@ -252,7 +253,7 @@ private:
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     void DoCloudSync(const std::string &table);
-    void AuditOpenOk();
+    void AuditOpenOk(bool created);
     void AuditOpenFail(int32_t errCode);
     void AuditInsert(const std::string &table, int64_t rows);
     void AuditUpdate(const std::string &table, int64_t rows);
@@ -367,6 +368,7 @@ private:
     mutable std::shared_mutex poolMutex_;
     std::mutex mutex_;
     std::mutex initMutex_;
+    RdbAuditLogger auditLogger_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();

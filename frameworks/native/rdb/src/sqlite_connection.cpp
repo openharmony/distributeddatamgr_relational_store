@@ -405,9 +405,10 @@ void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
     int errCode = E_OK;
     std::tie(errCode, checkResult) = ExecuteForValue(sql);
     if (config.IsAuditEnabled()) {
+        RdbAuditLogger logger;
         IntegrityMode auditMode = (index == 1) ? IntegrityMode::QUICK : IntegrityMode::FULL;
         int auditResult = (errCode == E_OK && static_cast<std::string>(checkResult) == "ok") ? 0 : -1;
-        RdbAuditLogger::GetInstance().OnIntegrity(config.GetPath(), IntegrityTrigger::AUTO, auditMode,
+        logger.OnIntegrity(config.GetPath(), IntegrityTrigger::AUTO, auditMode,
             auditResult, static_cast<std::string>(checkResult));
     }
     if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {

@@ -22,7 +22,6 @@
 
 #include "logger.h"
 #include "raw_data_parser.h"
-#include "rdb_audit_logger.h"
 #include "sqlite_connection.h"
 #include "sqlite_errno.h"
 #include "sqlite_utils.h"
@@ -242,17 +241,8 @@ int32_t SqliteFunctionRegistry::IntegrityCheck(sqlite3 *dbHandle)
         nullptr, nullptr);
     if (errCode != SQLITE_OK) {
         LOG_ERROR("Integrity check failed. error: %{public}d.", errCode);
-        // Audit: integrity check from import_db_from_path
-        const char *dbPath = sqlite3_db_filename(dbHandle, "main");
-        std::string dbPathStr = dbPath ? dbPath : "";
-        RdbAuditLogger::GetInstance().OnIntegrity(
-            dbPathStr, IntegrityTrigger::AUTO, IntegrityMode::FULL, -1, "");
         return SQLITE_CORRUPT;
     }
-    // Audit: integrity check passed from import_db_from_path
-    const char *dbPath = sqlite3_db_filename(dbHandle, "main");
-    RdbAuditLogger::GetInstance().OnIntegrity(
-        dbPath ? dbPath : "", IntegrityTrigger::AUTO, IntegrityMode::FULL, 0, "ok");
     return SQLITE_OK;
 }
 

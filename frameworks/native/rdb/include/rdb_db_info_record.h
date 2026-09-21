@@ -105,6 +105,29 @@ struct ConfigInfo : public Serializable {
     bool Unmarshal(const json &obj) override;
 };
 
+// First loss point / badfd record (audit.json block 2). Overwritten on each
+// IO error / data-loss event (best-effort diagnostic).
+struct FirstLossInfo : public Serializable {
+    std::string op; // "io_error" or SQL op ("DELETE" ...)
+    std::string tbl;
+    int64_t rows = 0;
+    int32_t rc = 0;
+    int32_t osErrno = 0;
+    CallerInfo callerInfo;
+    std::string time;
+    bool Marshal(json &obj) const override;
+    bool Unmarshal(const json &obj) override;
+};
+
+// Database deletion metadata (audit.json block 3). Overwritten on each delete.
+struct DeleteInfo : public Serializable {
+    DbFileInfo files;
+    CallerInfo callerInfo;
+    std::string time;
+    bool Marshal(json &obj) const override;
+    bool Unmarshal(const json &obj) override;
+};
+
 // Written only on successful open (no errCode field).
 struct LastOpenDbInfo : public Serializable {
     DbFileInfo main;
@@ -131,11 +154,14 @@ struct DbInfoChange : public Serializable {
     bool Unmarshal(const json &obj) override;
 };
 
-// Top-level record persisted to "<dbPath>.rdbdfx.json".
-// lastOpenDbInfo / dbInfoChange keep only the latest one entry.
+// Top-level record persisted to "{auditDir}/{el}{dbName}audit.json".
+// Four overwrite blocks: lastOpen / firstLoss / dbDelete / inodeChange.
+// Each block keeps only the latest entry (overwrite, not append).
 struct RdbDbInfoRecord : public Serializable {
-    LastOpenDbInfo lastOpenDbInfo;
-    DbInfoChange dbInfoChange;
+    LastOpenDbInfo lastOpen;     // block 1: last successful open
+    FirstLossInfo firstLoss;     // block 2: first loss point / badfd
+    DeleteInfo dbDelete;         // block 3: delete metadata (file info, inode)
+    DbInfoChange inodeChange;    // block 4: inode change before/after on open
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
 };

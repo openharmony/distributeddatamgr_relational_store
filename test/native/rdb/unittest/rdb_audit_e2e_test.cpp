@@ -13,19 +13,22 @@
  * limitations under the License.
  */
 
-#include <dirent.h>
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <chrono>
 #include <cstdint>
-#include <mutex>
+#include <cstring>
+#include <chrono>
+#include <dirent.h>
+#include <string>
 #include <thread>
 
 #include "rdb_audit_event.h"
 #include "rdb_audit_logger.h"
+#include "rdb_audit_logger_manager.h"
+#include "rdb_db_logger_manager.h"
 #include "rdb_audit_utils.h"
 #include "rdb_store_config.h"
 #include "sqlite_utils.h"
@@ -128,24 +131,6 @@ bool FileExists(const std::string &path)
     return stat(path.c_str(), &st) == 0;
 }
 
-void ResetSingleton()
-{
-    auto &logger = RdbAuditLogger::GetInstance();
-    if (logger.lockFd_ >= 0) {
-        close(logger.lockFd_);
-        logger.lockFd_ = -1;
-    }
-    if (logger.writeFd_ >= 0) {
-        close(logger.writeFd_);
-        logger.writeFd_ = -1;
-    }
-    logger.initialized_ = false;
-    logger.enableSqlAudit_ = true;
-    logger.auditDir_.clear();
-    logger.writeLogSize_ = 0;
-    logger.throttleMap_.clear();
-}
-
 RdbStoreConfig MakeConfig()
 {
     RdbStoreConfig config(std::string(TEST_BASE_DIR) + "/e2e_test.db");
@@ -154,59 +139,112 @@ RdbStoreConfig MakeConfig()
     return config;
 }
 
-void InitLogger()
-{
-    MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
-    auto &logger = RdbAuditLogger::GetInstance();
-    RdbStoreConfig config = MakeConfig();
-    logger.Init();
-    // Init() probes /data/log/hiaudit/rdb and /data/storage/el2/log which are not
-    // available in the test environment. For E2E testing, manually set up the audit
-    // directory and fd.
-    if (!logger.initialized_) {
-        std::string auditDir = std::string(TEST_BASE_DIR) + "/.audit/";
-        MakeDirRecursive(auditDir, AUDIT_DIR_MODE);
-        logger.auditDir_ = auditDir;
-        std::string logPath = auditDir + "events.log";
-        logger.writeFd_ = open(logPath.c_str(), O_CREAT | O_APPEND | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        std::string lockPath = auditDir + "events.lock";
-        logger.lockFd_ = open(lockPath.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        logger.enableSqlAudit_ = true;
-        logger.initialized_ = true;
-    }
-}
-
 std::string AuditDir()
 {
     return std::string(TEST_BASE_DIR) + "/.audit/";
+}
+
+// Manually set up both singleton managers for testing: the real audit roots
+// (/data/log/hiaudit/rdb, /data/storage/el2/log) are not available in the unit
+// test environment, so we inject the audit directory + fds directly. The managers
+// dispatch writes via TaskExecutor (async); tests poll with sleep+retry to wait.
+void SetupManager()
+{
+    std::string auditDir = AuditDir();
+    MakeDirRecursive(auditDir, AUDIT_DIR_MODE);
+    auto &amgr = RdbAuditLoggerManager::GetInstance();
+    if (amgr.lockFd_ >= 0) {
+        close(amgr.lockFd_);
+        amgr.lockFd_ = -1;
+    }
+    if (amgr.writeFd_ >= 0) {
+        close(amgr.writeFd_);
+        amgr.writeFd_ = -1;
+    }
+    amgr.auditDir_ = auditDir;
+    amgr.writeFd_ =
+        open((auditDir + "events.log").c_str(), O_CREAT | O_APPEND | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    amgr.lockFd_ =
+        open((auditDir + "events.lock").c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    amgr.initialized_ = true;
+    auto &dbmgr = RdbDbLoggerManager::GetInstance();
+    dbmgr.auditDir_ = auditDir;
+    dbmgr.initialized_ = true;
+}
+
+void ResetManager()
+{
+    auto &amgr = RdbAuditLoggerManager::GetInstance();
+    if (amgr.lockFd_ >= 0) {
+        close(amgr.lockFd_);
+        amgr.lockFd_ = -1;
+    }
+    if (amgr.writeFd_ >= 0) {
+        close(amgr.writeFd_);
+        amgr.writeFd_ = -1;
+    }
+    amgr.initialized_ = false;
+    amgr.auditDir_.clear();
+    auto &dbmgr = RdbDbLoggerManager::GetInstance();
+    dbmgr.initialized_ = false;
+    dbmgr.auditDir_.clear();
+}
+
+// Poll events.log until it has at least `expected` lines, or timeout. Audit
+// writes are async (TaskExecutor), so callers retry until the write lands.
+size_t WaitEventLines(size_t expected, int timeoutMs = 2000)
+{
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
+    size_t lines = 0;
+    while (std::chrono::steady_clock::now() < deadline) {
+        lines = CountLines(ReadFileContent(AuditDir() + "events.log"));
+        if (lines >= expected) {
+            return lines;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    return CountLines(ReadFileContent(AuditDir() + "events.log"));
+}
+
+// Poll until a file exists, or timeout.
+bool WaitFileExists(const std::string &path, int timeoutMs = 2000)
+{
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (FileExists(path)) {
+            return true;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    return FileExists(path);
 }
 } // namespace
 
 class RdbAuditE2ETest : public testing::Test {
 public:
-    static void SetUpTestCase(void)
-    {
-    }
-    static void TearDownTestCase(void)
-    {
-    }
+    static void SetUpTestCase(void) {}
+    static void TearDownTestCase(void) {}
 
     void SetUp() override
     {
-        ResetSingleton();
-        RemoveDirRecursive(TEST_BASE_DIR);
-        MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
+        ResetManager();
+        logger_.enabled_ = false;
+        logger_.enableSqlAudit_ = true;
+        logger_.throttleMap_.clear();
     }
 
     void TearDown() override
     {
-        ResetSingleton();
+        ResetManager();
         RemoveDirRecursive(TEST_BASE_DIR);
     }
+
+protected:
+    RdbAuditLogger logger_;
 };
 
 // ============================================================================
-// 15.14 End-to-end scenarios
+// End-to-end scenarios
 // ============================================================================
 
 /**
@@ -216,16 +254,16 @@ public:
  */
 HWTEST_F(RdbAuditE2ETest, OpenAndDelete_112, TestSize.Level0)
 {
-    InitLogger();
-    auto &logger = RdbAuditLogger::GetInstance();
+    SetupManager();
     RdbStoreConfig config = MakeConfig();
-    logger.OnOpenOk(config.GetPath());
-    logger.OnSqlAudit(config.GetPath(), "DELETE", "users", TEST_DELETE_ROWS);
+    logger_.OnOpenOk(config.GetPath(), config, false);
+    logger_.OnSqlAudit(config.GetPath(), "DELETE", "users", TEST_DELETE_ROWS);
+    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_EQ(CountLines(content), static_cast<size_t>(2));
     EXPECT_NE(content.find("OPEN_OK"), std::string::npos);
     EXPECT_NE(content.find("SQL_AUDIT"), std::string::npos);
-    EXPECT_TRUE(FileExists(AuditDir() + "last_open.bin"));
+    // audit.json block 1 (lastOpen) should be written.
+    EXPECT_TRUE(WaitFileExists(AuditDir() + "e2e_test_audit.json"));
 }
 
 /**
@@ -235,12 +273,11 @@ HWTEST_F(RdbAuditE2ETest, OpenAndDelete_112, TestSize.Level0)
  */
 HWTEST_F(RdbAuditE2ETest, DropTable_113, TestSize.Level0)
 {
-    InitLogger();
-    auto &logger = RdbAuditLogger::GetInstance();
-    logger.OnSqlAudit(std::string(TEST_BASE_DIR) + "/e2e_test.db", "DROP", "temp_table", 0);
-    logger.OnSqlAudit(std::string(TEST_BASE_DIR) + "/e2e_test.db", "DROP", "temp_table", 0);
-    std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_EQ(CountLines(content), static_cast<size_t>(2));
+    SetupManager();
+    std::string dbPath = std::string(TEST_BASE_DIR) + "/e2e_test.db";
+    logger_.OnSqlAudit(dbPath, "DROP", "temp_table", 0);
+    logger_.OnSqlAudit(dbPath, "DROP", "temp_table", 0);
+    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
 }
 
 /**
@@ -250,17 +287,16 @@ HWTEST_F(RdbAuditE2ETest, DropTable_113, TestSize.Level0)
  */
 HWTEST_F(RdbAuditE2ETest, LargeInsert_114, TestSize.Level0)
 {
-    InitLogger();
-    auto &logger = RdbAuditLogger::GetInstance();
-    logger.OnSqlAudit(std::string(TEST_BASE_DIR) + "/e2e_test.db", "INSERT", "logs", TEST_LARGE_INSERT_ROWS);
-    // Accumulated within window, no write yet.
-    std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_EQ(CountLines(content), static_cast<size_t>(0));
+    SetupManager();
+    std::string dbPath = std::string(TEST_BASE_DIR) + "/e2e_test.db";
+    logger_.OnSqlAudit(dbPath, "INSERT", "logs", TEST_LARGE_INSERT_ROWS);
+    // Accumulated within window, no write yet (no async task dispatched).
+    EXPECT_EQ(CountLines(ReadFileContent(AuditDir() + "events.log")), static_cast<size_t>(0));
     // Expire window and flush.
-    logger.throttleMap_["SQL_AUDIT:INSERT:logs"].timestamp -= THROTTLE_EXPIRE_OFFSET_MS;
-    logger.OnSqlAudit(std::string(TEST_BASE_DIR) + "/e2e_test.db", "INSERT", "logs", 1);
-    content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_EQ(CountLines(content), static_cast<size_t>(1));
+    logger_.throttleMap_["SQL_AUDIT:INSERT:logs"].timestamp -= THROTTLE_EXPIRE_OFFSET_MS;
+    logger_.OnSqlAudit(dbPath, "INSERT", "logs", 1);
+    EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
+    std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_NE(content.find("\"rows\":5000"), std::string::npos);
 }
 
@@ -271,13 +307,13 @@ HWTEST_F(RdbAuditE2ETest, LargeInsert_114, TestSize.Level0)
  */
 HWTEST_F(RdbAuditE2ETest, PragmaIntegrity_115, TestSize.Level0)
 {
-    InitLogger();
-    auto &logger = RdbAuditLogger::GetInstance();
+    SetupManager();
     std::string sql = "PRAGMA integrity_check";
     EXPECT_TRUE(RdbAuditUtils::IsPragmaIntegrityCheck(sql));
     IntegrityMode mode = RdbAuditUtils::ParsePragmaMode(sql);
     EXPECT_EQ(mode, IntegrityMode::FULL);
-    logger.OnIntegrity(std::string(TEST_BASE_DIR) + "/e2e_test.db", IntegrityTrigger::ACTIVE, mode, 0, "ok");
+    logger_.OnIntegrity(std::string(TEST_BASE_DIR) + "/e2e_test.db", IntegrityTrigger::ACTIVE, mode, 0, "ok");
+    WaitEventLines(1);
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_NE(content.find("\"evt\":\"INTEGRITY\""), std::string::npos);
     EXPECT_NE(content.find("\"trigger\":\"active\""), std::string::npos);
@@ -291,13 +327,13 @@ HWTEST_F(RdbAuditE2ETest, PragmaIntegrity_115, TestSize.Level0)
  */
 HWTEST_F(RdbAuditE2ETest, PragmaQuickCheck_116, TestSize.Level0)
 {
-    InitLogger();
-    auto &logger = RdbAuditLogger::GetInstance();
+    SetupManager();
     std::string sql = "PRAGMA quick_check";
     EXPECT_TRUE(RdbAuditUtils::IsPragmaIntegrityCheck(sql));
     IntegrityMode mode = RdbAuditUtils::ParsePragmaMode(sql);
     EXPECT_EQ(mode, IntegrityMode::QUICK);
-    logger.OnIntegrity(std::string(TEST_BASE_DIR) + "/e2e_test.db", IntegrityTrigger::ACTIVE, mode, 0, "ok");
+    logger_.OnIntegrity(std::string(TEST_BASE_DIR) + "/e2e_test.db", IntegrityTrigger::ACTIVE, mode, 0, "ok");
+    WaitEventLines(1);
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_NE(content.find("\"mode\":\"quick\""), std::string::npos);
 }
@@ -309,54 +345,52 @@ HWTEST_F(RdbAuditE2ETest, PragmaQuickCheck_116, TestSize.Level0)
  */
 HWTEST_F(RdbAuditE2ETest, OpenFail_117, TestSize.Level0)
 {
-    InitLogger();
-    auto &logger = RdbAuditLogger::GetInstance();
+    SetupManager();
     RdbStoreConfig config = MakeConfig();
-    logger.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
+    logger_.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
+    WaitEventLines(1);
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_NE(content.find("\"evt\":\"OPEN_FAIL\""), std::string::npos);
     EXPECT_NE(content.find("\"rc\":14"), std::string::npos);
     EXPECT_NE(content.find("\"os_errno\":13"), std::string::npos);
-    // last_open.bin should NOT exist (open failed).
-    EXPECT_FALSE(FileExists(AuditDir() + "last_open.bin"));
 }
 
 /**
  * @tc.name: RdbAuditE2E_AuditDisabled_119
- * @tc.desc: E2E: Audit disabled (IsAuditEnabled=false) is not audited (no directory, no events)
+ * @tc.desc: E2E: Audit disabled (IsAuditEnabled=false) is not audited
  * @tc.type: FUNC
  */
 HWTEST_F(RdbAuditE2ETest, AuditDisabled_119, TestSize.Level0)
 {
-    // Audit directory not available: Init() should be a no-op.
-    // Do NOT call InitLogger() which manually sets up the logger for testing.
+    // Do NOT call SetupManager(); no audit root in test env. EnsureInit (lazy,
+    // inside OnOpenOk) probes, finds no directory, and leaves audit disabled.
     MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
-    auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config(std::string(TEST_BASE_DIR) + "/e2e_test.db");
     config.SetBundleName("e2e_test_app");
-    // No audit directory in test env — Init should be a no-op.
-    logger.Init();
-    EXPECT_FALSE(logger.initialized_);
-    EXPECT_TRUE(logger.auditDir_.empty());
-    // OnOpenOk should be a no-op (initialized_ = false).
-    logger.OnOpenOk(config.GetPath());
+    logger_.OnOpenOk(config.GetPath(), config, false);
+    EXPECT_FALSE(logger_.enabled_);
+    EXPECT_FALSE(RdbAuditLoggerManager::GetInstance().initialized_);
+    EXPECT_TRUE(RdbAuditLoggerManager::GetInstance().auditDir_.empty());
     EXPECT_FALSE(FileExists(std::string(TEST_BASE_DIR) + "/.audit/events.log"));
 }
 
 /**
  * @tc.name: RdbAuditE2E_IoErrorNoThrottle_122
- * @tc.desc: E2E: IO_ERR is always logged without throttle
+ * @tc.desc: E2E: IO_ERR is always logged without throttle and writes audit.json block 2
  * @tc.type: FUNC
  */
 HWTEST_F(RdbAuditE2ETest, IoErrorNoThrottle_122, TestSize.Level0)
 {
-    InitLogger();
-    auto &logger = RdbAuditLogger::GetInstance();
-    logger.OnIoError("execute", "/data/test/f.db", 10, 5);
-    logger.OnIoError("execute", "/data/test/f.db", 10, 5);
-    logger.OnIoError("execute", "/data/test/f.db", 10, 5);
-    std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_EQ(CountLines(content), static_cast<size_t>(3));
+    SetupManager();
+    logger_.OnIoError("execute", "/data/test/el2/database/f.db", 10, 5);
+    logger_.OnIoError("execute", "/data/test/el2/database/f.db", 10, 5);
+    logger_.OnIoError("execute", "/data/test/el2/database/f.db", 10, 5);
+    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
+    // audit.json block 2 (firstLoss) should be written.
+    // dbPath "/data/test/el2/database/f.db" -> el="el2", dbName="f" -> "el2f_audit.json"
+    EXPECT_TRUE(WaitFileExists(AuditDir() + "el2f_audit.json"));
+    std::string json = ReadFileContent(AuditDir() + "el2f_audit.json");
+    EXPECT_NE(json.find("firstLoss"), std::string::npos);
 }
 
 /**
@@ -366,20 +400,18 @@ HWTEST_F(RdbAuditE2ETest, IoErrorNoThrottle_122, TestSize.Level0)
  */
 HWTEST_F(RdbAuditE2ETest, OpenFailThenOk_125, TestSize.Level0)
 {
-    InitLogger();
-    auto &logger = RdbAuditLogger::GetInstance();
+    SetupManager();
     RdbStoreConfig config = MakeConfig();
-    logger.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
-    logger.OnOpenOk(config.GetPath());
+    logger_.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
+    logger_.OnOpenOk(config.GetPath(), config, false);
+    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_EQ(CountLines(content), static_cast<size_t>(2));
-    // First line should be OPEN_FAIL, second should be OPEN_OK.
     size_t firstNewline = content.find('\n');
     ASSERT_NE(firstNewline, std::string::npos);
     std::string firstLine = content.substr(0, firstNewline);
     EXPECT_NE(firstLine.find("OPEN_FAIL"), std::string::npos);
     std::string secondLine = content.substr(firstNewline + 1);
     EXPECT_NE(secondLine.find("OPEN_OK"), std::string::npos);
-    // last_open.bin should exist (from OnOpenOk).
-    EXPECT_TRUE(FileExists(AuditDir() + "last_open.bin"));
+    // audit.json block 1 (lastOpen) should exist after OnOpenOk.
+    EXPECT_TRUE(WaitFileExists(AuditDir() + "e2e_test_audit.json"));
 }

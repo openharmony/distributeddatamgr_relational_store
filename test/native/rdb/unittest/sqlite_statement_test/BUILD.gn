@@ -117,6 +117,8 @@ ohos_unittest("SqliteStatementTest") {
     "${relational_store_native_path}/rdb/src/values_bucket.cpp",
     "${relational_store_native_path}/rdb/src/values_buckets.cpp",
     "${relational_store_native_path}/rdb/src/rdb_audit_logger.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_logger_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_db_logger_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_audit_utils.cpp",
   ]
 

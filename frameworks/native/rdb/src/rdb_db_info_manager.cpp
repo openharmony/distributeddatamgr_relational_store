@@ -17,17 +17,12 @@
 #include "rdb_db_info_manager.h"
 
 #include <dirent.h>
-#include <fcntl.h>
-#include <sys/file.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <cinttypes>
-#include <cstdio>
 #include <cstring>
-#include <fstream>
-#include <functional>
 #include <sstream>
 
 #include "acl.h"
@@ -44,94 +39,6 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 using OHOS::DATABASE_UTILS::Acl;
-
-namespace {
-constexpr const char *DFX_SUFFIX = ".rdbdfx.json";
-constexpr const char *LOCK_SUFFIX = ".rdbdfx.lock";
-const uint64_t RDB_DFX_LOCK_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, 0xD001650);
-
-/*
- * RAII single-layer flock. Mirrors SecurityManager::KeyFilesAutoLock
- * (security_manager.cpp:405-413): each lock attempt opens its own fd, so the
- * open file descriptions are distinct and flock conflicts across same-process
- * threads too (no in-process mutex is needed). The fd is never cached across
- * calls - its lifetime is this critical section.
- */
-class DfxFileLock {
-public:
-    explicit DfxFileLock(const std::string &lockPath)
-    {
-        fd_ = open(lockPath.c_str(), O_RDONLY | O_CREAT, S_IRUSR | S_IWUSR);
-        if (fd_ < 0) {
-            return;
-        }
-        fdsan_exchange_owner_tag(fd_, 0, RDB_DFX_LOCK_TAG);
-        int rc = -1;
-        do {
-            rc = flock(fd_, LOCK_EX);
-        } while (rc < 0 && errno == EINTR);
-        if (rc < 0) {
-            fdsan_close_with_tag(fd_, RDB_DFX_LOCK_TAG);
-            fd_ = -1;
-        }
-    }
-    ~DfxFileLock()
-    {
-        if (fd_ >= 0) {
-            int rc = -1;
-            do {
-                rc = flock(fd_, LOCK_UN);
-            } while (rc < 0 && errno == EINTR);
-            fdsan_close_with_tag(fd_, RDB_DFX_LOCK_TAG);
-            fd_ = -1;
-        }
-    }
-    bool IsLocked() const
-    {
-        return fd_ >= 0;
-    }
-    DfxFileLock(const DfxFileLock &) = delete;
-    DfxFileLock &operator=(const DfxFileLock &) = delete;
-
-private:
-    int fd_ = -1;
-};
-
-// Best-effort whole-file read. Returns false on open/read failure.
-bool ReadAll(const std::string &path, std::string &out)
-{
-    std::ifstream ifs(path, std::ios::binary | std::ios::ate);
-    if (!ifs.is_open()) {
-        return false;
-    }
-    std::streamsize size = ifs.tellg();
-    if (size < 0) {
-        return false;
-    }
-    ifs.seekg(0, std::ios::beg);
-    out.resize(static_cast<size_t>(size));
-    if (size > 0 && !ifs.read(&out[0], size)) {
-        return false;
-    }
-    return true;
-}
-
-// Direct truncating write inside the flock critical section. Matches the
-// SecurityManager::SaveBufferToFile convention (no tmp+rename): flock already
-// serializes concurrent access, and the data is best-effort diagnostic, so a
-// crash mid-write at worst loses the current update (recovered on the next open
-// - JSON_NOEXCEPTION makes Unmarshall on partial json return false gracefully).
-bool WriteAll(const std::string &path, const std::string &content)
-{
-    std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
-    if (!ofs.is_open()) {
-        return false;
-    }
-    ofs.write(content.data(), static_cast<std::streamsize>(content.size()));
-    ofs.flush();
-    return ofs.good();
-}
-} // namespace
 
 RdbDbInfoManager &RdbDbInfoManager::GetInstance()
 {
@@ -235,26 +142,7 @@ ConfigInfo RdbDbInfoManager::BuildConfigInfo(const RdbStoreConfig &config)
     return info;
 }
 
-void RdbDbInfoManager::WithRecord(const std::string &dbPath, const std::function<void(RdbDbInfoRecord &)> &mutator)
-{
-    std::string lockPath = dbPath + LOCK_SUFFIX;
-    DfxFileLock lock(lockPath);
-    if (!lock.IsLocked()) {
-        return; // best-effort: lock unavailable, skip to never block the caller
-    }
-    std::string dfxPath = dbPath + DFX_SUFFIX;
-    RdbDbInfoRecord rec;
-    std::string content;
-    if (ReadAll(dfxPath, content) && !content.empty()) {
-        // JSON_NOEXCEPTION: Unmarshall never throws on malformed/partial json.
-        (void)Serializable::Unmarshall(content, rec);
-    }
-    mutator(rec);
-    std::string out = Serializable::Marshall(rec);
-    (void)WriteAll(dfxPath, out);
-}
-
-void RdbDbInfoManager::RecordOpen(const RdbStoreConfig &config, bool created)
+LastOpenDbInfo RdbDbInfoManager::BuildLastOpen(const RdbStoreConfig &config, bool created)
 {
     std::string dbPath = config.GetPath();
     LastOpenDbInfo info;
@@ -268,43 +156,7 @@ void RdbDbInfoManager::RecordOpen(const RdbStoreConfig &config, bool created)
     info.integrityResult = 0; // open succeeded => integrity acceptable
     info.created = created;
     info.keyPresent = RdbSecurityManager::GetInstance().IsKeyFileExists(dbPath, RdbSecurityManager::PUB_KEY_FILE);
-
-    // Compare against the prior main snapshot inside the same flock critical
-    // section; record dbInfoChange only when something actually changed.
-    WithRecord(dbPath, [&info](RdbDbInfoRecord &r) {
-        DbFileInfo prevMain = r.lastOpenDbInfo.main;
-        r.lastOpenDbInfo = info;
-        if (prevMain.IsEmpty()) {
-            return;
-        }
-        auto changed = DiffDbFileInfo("main", prevMain, info.main);
-        if (changed.empty()) {
-            return;
-        }
-        auto fmtFile = [](const std::string &tag, const FileInfo &before, const FileInfo &after) {
-            LOG_ERROR(
-                "%{public}s inode:%{public}" PRId64 "->%{public}" PRId64 ", "
-                "mode:%{public}s->%{public}s, "
-                "atime:%{public}" PRId64 "->%{public}" PRId64 ", "
-                "mtime:%{public}" PRId64 "->%{public}" PRId64 ", "
-                "ctime:%{public}" PRId64 "->%{public}" PRId64,
-                tag.c_str(),
-                before.node, after.node,
-                before.permission.mode.c_str(), after.permission.mode.c_str(),
-                before.time.atime, after.time.atime,
-                before.time.mtime, after.time.mtime,
-                before.time.ctime, after.time.ctime);
-        };
-        fmtFile("db", prevMain.db, info.main.db);
-        fmtFile("wal", prevMain.wal, info.main.wal);
-        fmtFile("shm", prevMain.shm, info.main.shm);
-        fmtFile("parent", prevMain.parent, info.main.parent);
-        r.dbInfoChange.before = prevMain;
-        r.dbInfoChange.after = info.main;
-        r.dbInfoChange.changedFields = changed;
-        r.dbInfoChange.time = info.time;
-        r.dbInfoChange.callerInfo = info.callerInfo;
-    });
+    return info;
 }
 } // namespace NativeRdb
 } // namespace OHOS
