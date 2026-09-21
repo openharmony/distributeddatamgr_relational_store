@@ -344,11 +344,11 @@ HWTEST_F(RdbAuditE2ETest, AuditDisabled_119, TestSize.Level0)
 }
 
 /**
- * @tc.name: RdbAuditE2E_Throttle_122
- * @tc.desc: E2E: Throttle prevents duplicate IO_ERR events within 60s
+ * @tc.name: RdbAuditE2E_IoErrorNoThrottle_122
+ * @tc.desc: E2E: IO_ERR is always logged without throttle
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditE2ETest, Throttle_122, TestSize.Level0)
+HWTEST_F(RdbAuditE2ETest, IoErrorNoThrottle_122, TestSize.Level0)
 {
     InitLogger();
     auto &logger = RdbAuditLogger::GetInstance();
@@ -356,7 +356,7 @@ HWTEST_F(RdbAuditE2ETest, Throttle_122, TestSize.Level0)
     logger.OnIoError("execute", "/data/test/f.db", 10, 5);
     logger.OnIoError("execute", "/data/test/f.db", 10, 5);
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_EQ(CountLines(content), static_cast<size_t>(1));
+    EXPECT_EQ(CountLines(content), static_cast<size_t>(3));
 }
 
 /**
