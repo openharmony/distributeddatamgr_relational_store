@@ -52,7 +52,7 @@ public:
     // has audit enabled (IsAuditEnabled), probes the audit directory and opens
     // the persistent events.log fd + inter-process lock file. Idempotent:
     // subsequent calls after a successful init are no-ops.
-    void Init(bool isAuditEnabled);
+    void Init();
 
     // Event recording interfaces (one per AuditEvt).
     void OnOpenOk(const std::string &dbPath);

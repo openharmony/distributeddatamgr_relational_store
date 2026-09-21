@@ -159,7 +159,7 @@ void InitLogger()
     MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config = MakeConfig();
-    logger.Init(config.IsAuditEnabled());
+    logger.Init();
     // Init() probes /data/log/hiaudit/rdb and /data/storage/el2/log which are not
     // available in the test environment. For E2E testing, manually set up the audit
     // directory and fd.
@@ -328,14 +328,14 @@ HWTEST_F(RdbAuditE2ETest, OpenFail_117, TestSize.Level0)
  */
 HWTEST_F(RdbAuditE2ETest, AuditDisabled_119, TestSize.Level0)
 {
-    // Audit not enabled: Init() should be a no-op.
+    // Audit directory not available: Init() should be a no-op.
     // Do NOT call InitLogger() which manually sets up the logger for testing.
     MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
     auto &logger = RdbAuditLogger::GetInstance();
     RdbStoreConfig config(std::string(TEST_BASE_DIR) + "/e2e_test.db");
     config.SetBundleName("e2e_test_app");
-    // Audit not enabled — Init should be a no-op.
-    logger.Init(config.IsAuditEnabled());
+    // No audit directory in test env — Init should be a no-op.
+    logger.Init();
     EXPECT_FALSE(logger.initialized_);
     EXPECT_TRUE(logger.auditDir_.empty());
     // OnOpenOk should be a no-op (initialized_ = false).
