@@ -40,7 +40,6 @@ constexpr int TEST_ERR_CODE = 14;
 constexpr int TEST_OS_ERRNO = 13;
 constexpr int64_t TEST_DELETE_ROWS = 5;
 constexpr int64_t TEST_LARGE_INSERT_ROWS = 5000;
-constexpr int64_t TEST_SINGLE_INSERT_ROW = 1;
 constexpr int64_t THROTTLE_EXPIRE_OFFSET_MS = 61 * 1000;
 
 bool MakeDirRecursive(const std::string &path, mode_t mode)
