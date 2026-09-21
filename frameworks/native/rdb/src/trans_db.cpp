@@ -277,7 +277,12 @@ std::shared_ptr<ResultSet> TransDB::QueryByStepWithGuard(const std::string &sql,
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto conn = conn_.lock();
     if (conn == nullptr) {
-        return nullptr;
+        // Only the timeout path fails explicitly; the existing (non-timeout) path preserves
+        // baseline behavior of constructing a closed result set so callers still get a non-null
+        // ResultSet whose GoToNextRow returns E_ALREADY_CLOSED (matching RdbStoreImpl behavior).
+        if (config.timeoutMs > 0) {
+            return nullptr;
+        }
     }
     auto start = std::chrono::steady_clock::now();
     auto resultSet = std::make_shared<StepResultSet>(start, conn, sql, args, options, true, std::move(guard));
