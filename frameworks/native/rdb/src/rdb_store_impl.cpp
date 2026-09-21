@@ -2053,7 +2053,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     }
     errCode = statement->Execute(args);
     // Audit: PRAGMA integrity_check / quick_check (runs even on error for recording)
-    if (RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
+    if (config_.IsAuditEnabled() && RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
         RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE,
             RdbAuditUtils::ParsePragmaMode(sql), errCode, "");
     }
@@ -2069,7 +2069,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         // Audit: DROP TABLE / TRUNCATE TABLE always logged, table whitelist checked by logger.
         // Parse table name from SQL for whitelist matching.
         std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
-        if (!auditOp.empty()) {
+        if (!auditOp.empty() && config_.IsAuditEnabled()) {
             std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
             RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
         }
@@ -2114,7 +2114,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
     }
     TryDump(errCode, "EXECUTE");
     // Audit: business caller actively executing PRAGMA integrity_check / quick_check
-    if (sqlType == SqliteUtils::STATEMENT_PRAGMA && RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
+    if (config_.IsAuditEnabled() && sqlType == SqliteUtils::STATEMENT_PRAGMA &&
+        RdbAuditUtils::IsPragmaIntegrityCheck(sql)) {
         auto mode = RdbAuditUtils::ParsePragmaMode(sql);
         RdbAuditLogger::GetInstance().OnIntegrity(config_.GetPath(), IntegrityTrigger::ACTIVE, mode, errCode, "");
     }
@@ -3100,28 +3101,43 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
 
 void RdbStoreImpl::AuditOpenOk()
 {
-    RdbAuditLogger::GetInstance().Init(config_.IsAuditEnabled());
+    if (!config_.IsAuditEnabled()) {
+        return;
+    }
+    RdbAuditLogger::GetInstance().Init();
     RdbAuditLogger::GetInstance().OnOpenOk(config_.GetPath());
 }
 
 void RdbStoreImpl::AuditOpenFail(int32_t errCode)
 {
-    RdbAuditLogger::GetInstance().Init(config_.IsAuditEnabled());
+    if (!config_.IsAuditEnabled()) {
+        return;
+    }
+    RdbAuditLogger::GetInstance().Init();
     RdbAuditLogger::GetInstance().OnOpenFail(config_.GetPath(), errCode, 0);
 }
 
 void RdbStoreImpl::AuditInsert(const std::string &table, int64_t rows)
 {
+    if (!config_.IsAuditEnabled()) {
+        return;
+    }
     RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), "INSERT", table, rows);
 }
 
 void RdbStoreImpl::AuditUpdate(const std::string &table, int64_t rows)
 {
+    if (!config_.IsAuditEnabled()) {
+        return;
+    }
     RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), "UPDATE", table, rows);
 }
 
 void RdbStoreImpl::AuditDelete(const std::string &table, int64_t rows)
 {
+    if (!config_.IsAuditEnabled()) {
+        return;
+    }
     if (rows > 0) {
         RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), "DELETE", table, rows);
     }

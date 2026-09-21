@@ -404,10 +404,12 @@ void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
     LOG_INFO("%{public}s : %{public}s, ", sql, SqliteUtils::Anonymous(config.GetName()).c_str());
     int errCode = E_OK;
     std::tie(errCode, checkResult) = ExecuteForValue(sql);
-    IntegrityMode auditMode = (index == 1) ? IntegrityMode::QUICK : IntegrityMode::FULL;
-    int auditResult = (errCode == E_OK && static_cast<std::string>(checkResult) == "ok") ? 0 : -1;
-    RdbAuditLogger::GetInstance().OnIntegrity(config.GetPath(), IntegrityTrigger::AUTO, auditMode,
-        auditResult, static_cast<std::string>(checkResult));
+    if (config.IsAuditEnabled()) {
+        IntegrityMode auditMode = (index == 1) ? IntegrityMode::QUICK : IntegrityMode::FULL;
+        int auditResult = (errCode == E_OK && static_cast<std::string>(checkResult) == "ok") ? 0 : -1;
+        RdbAuditLogger::GetInstance().OnIntegrity(config.GetPath(), IntegrityTrigger::AUTO, auditMode,
+            auditResult, static_cast<std::string>(checkResult));
+    }
     if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
         LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
             SqliteUtils::Anonymous(config.GetName()).c_str(), static_cast<std::string>(checkResult).c_str(),

@@ -164,14 +164,11 @@ RdbAuditLogger::~RdbAuditLogger()
     }
 }
 
-void RdbAuditLogger::Init(bool isAuditEnabled)
+void RdbAuditLogger::Init()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (initialized_) {
         return; // dir/fd already set up by a previous Init
-    }
-    if (!isAuditEnabled) {
-        return; // audit not requested for this store
     }
     // Probe audit directory: SA root first (per-uid sub-directory), then app
     // log root (rdb sub-directory). If neither exists, audit is disabled.

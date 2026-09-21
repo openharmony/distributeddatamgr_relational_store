@@ -134,8 +134,10 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
     if (access(dbFile.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(config, shouldClose);
     }
-    RdbAuditLogger::GetInstance().Init(config.IsAuditEnabled());
-    RdbAuditLogger::GetInstance().OnDbDelete(dbFile, "delete_store");
+    if (config.IsAuditEnabled()) {
+        RdbAuditLogger::GetInstance().Init();
+        RdbAuditLogger::GetInstance().OnDbDelete(dbFile, "delete_store");
+    }
     Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_CURD,
         E_DFX_DELETE_RDB_STORE,
         config,
