@@ -101,7 +101,7 @@ public:
      * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      */
     virtual std::pair<int32_t, int64_t> Insert(
-        const std::string &table, const Row &row, Resolution resolution = NO_ACTION) = 0;
+        const std::string &table, const Row &row, Resolution resolution = NO_ACTION);
 
     /**
      * @brief Inserts a batch of data into the target table.

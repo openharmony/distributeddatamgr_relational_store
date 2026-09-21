@@ -27,40 +27,32 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 TimeoutGuard::TimeoutGuard(std::shared_ptr<Connection> conn, const DeadlineToken &token)
 {
-    LOG_WARN("TimeoutGuard: ctor conn=%{public}d tokenActive=%{public}d remaining=%{public}lldms",
-        conn != nullptr, token.IsActive(), static_cast<long long>(token.RemainingMs()));
     // Use IsExhausted() (exact steady_clock compare), NOT RemainingMs()<=0: RemainingMs() truncates to
     // milliseconds, so a sub-millisecond remaining (e.g. 950us of a 1ms timeout) returns 0 and would
     // wrongly skip arming the timer even though the deadline is not yet reached.
     if (conn == nullptr || !token.IsActive() || token.IsExhausted()) {
-        LOG_WARN("TimeoutGuard: not armed (conn/token invalid or deadline exhausted)");
         return;
     }
     auto executor = TaskExecutor::GetInstance().GetExecutor();
     if (executor == nullptr) {
-        LOG_WARN("TimeoutGuard: executor unavailable, mid-execution interrupt disabled");
+        LOG_WARN("TimeoutGuard ctor: executor unavailable, mid-execution interrupt disabled");
         return;
     }
     std::weak_ptr<Connection> weakConn = conn;
     // Use the exact (sub-millisecond) remaining duration, not the ms-truncated RemainingMs().
     auto delay = token.deadline - std::chrono::steady_clock::now();
-    auto taskId = executor->Schedule(delay, [weakConn]() {
-        LOG_WARN("TimeoutGuard: timer fired, about to interrupt connection");
-        auto c = weakConn.lock();
-        if (c != nullptr) {
-            c->Interrupt();
-            LOG_WARN("TimeoutGuard: Interrupt() returned");
-        } else {
-            LOG_WARN("TimeoutGuard: connection already released on timer fire");
+    auto interruptTaskId = executor->Schedule(delay, [weakConn]() {
+        auto conn = weakConn.lock();
+        if (conn != nullptr) {
+            LOG_WARN("TimeoutGuard: SQL execution exceeded deadline, interrupting connId=%{public}d",
+                conn->GetId());
+            conn->Interrupt();
         }
     });
-    LOG_WARN("TimeoutGuard: armed delay=%{public}lldus taskId=%{public}llu",
-        static_cast<long long>(std::chrono::duration_cast<std::chrono::microseconds>(delay).count()),
-        static_cast<unsigned long long>(taskId));
-    // Remove(taskId, wait=true): if the task has not fired it is dropped; if it is currently
+    // Remove(interruptTaskId, wait=true): if the task has not fired it is dropped; if it is currently
     // firing (Interrupt in progress) we wait for it to complete, so the connection is never
     // returned to the pool with a stale/pending interrupt. Remove(0) is a no-op.
-    cancel_ = [executor, taskId]() { (void)executor->Remove(taskId, true); };
+    cancel_ = [executor, interruptTaskId]() { (void)executor->Remove(interruptTaskId, true); };
 }
 
 TimeoutGuard::~TimeoutGuard()

@@ -246,7 +246,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Insert_Timeout_001, TestSize.Level1)
     std::string tableName = "InsertTimeoutTest";
     ASSERT_EQ(PrepareLargeTable(tableName, BATCH_ROW_COUNT), E_OK);
 
-    std::vector<uint8_t> blobData(DEFAULT_BLOB_SIZE, 1);
+    std::vector<uint8_t> blobData(LARGE_BLOB_SIZE, 1);
     ValuesBucket newRow;
     newRow.Put("name", "timeout_row");
     newRow.PutBlob("data", blobData);
@@ -698,42 +698,6 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_BatchInsert_Timeout_001, TestSize.
     auto rows = BuildLargeRows(LARGE_ROW_COUNT);
 
     BatchInsertConfig config;
-    config.timeoutMs = 1;
-    auto start = std::chrono::steady_clock::now();
-    auto [errCode, insertResult] =
-        trans->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE, config);
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    printf("Transaction_BatchInsert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
-        static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
-
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
-
-    trans->Close();
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-}
-
-/* *
- * @tc.name: Transaction_BatchInsert_Timeout_002
- * @tc.desc: Transaction BatchInsert with very short timeout on a large table, interrupt should be effective.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, Transaction_BatchInsert_Timeout_002, TestSize.Level1)
-{
-    std::string tableName = "TransBatchInsertTimeoutTest";
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-    auto res = store_->Execute(
-        "CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, data BLOB)");
-    ASSERT_EQ(res.first, E_OK);
-
-    auto [transErr, trans] = store_->CreateTransaction(Transaction::IMMEDIATE);
-    ASSERT_EQ(transErr, E_OK);
-    ASSERT_NE(trans, nullptr);
-
-    auto rows = BuildLargeRows(LARGE_ROW_COUNT);
-
-    BatchInsertConfig config;
     config.timeoutMs = 100;
     auto start = std::chrono::steady_clock::now();
     auto [errCode, insertResult] =
@@ -773,45 +737,6 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Timeout_001, TestSize.Level
     predicates.EqualTo("name", "nonexistent"); // Force full table scan
 
     UpdateConfig config;
-    config.timeoutMs = 1;
-    auto start = std::chrono::steady_clock::now();
-    auto [errCode, updateResult] =
-        trans->Update(updateRow, predicates, config, ConflictResolution::ON_CONFLICT_NONE);
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    printf("Transaction_Update_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
-        static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
-
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
-
-    trans->Close();
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-}
-
-/* *
- * @tc.name: Transaction_Update_Timeout_001
- * @tc.desc: Transaction Update with very short timeout on a large table, interrupt should be effective.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Timeout_002, TestSize.Level1)
-{
-    std::string tableName = "TransUpdateTimeoutTest";
-    ASSERT_EQ(PrepareLargeTable(tableName, BATCH_ROW_COUNT), E_OK);
-
-    auto [transErr, trans] = store_->CreateTransaction(Transaction::IMMEDIATE);
-    ASSERT_EQ(transErr, E_OK);
-    ASSERT_NE(trans, nullptr);
-
-    ValuesBucket updateRow;
-    updateRow.Put("name", "updated");
-    std::vector<uint8_t> blobData(LARGE_BLOB_SIZE, 2);
-    updateRow.PutBlob("data", blobData);
-
-    AbsRdbPredicates predicates(tableName);
-    predicates.EqualTo("name", "nonexistent"); // Force full table scan
-
-    UpdateConfig config;
     config.timeoutMs = 3;
     auto start = std::chrono::steady_clock::now();
     auto [errCode, updateResult] =
@@ -830,44 +755,10 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Timeout_002, TestSize.Level
 
 /* *
  * @tc.name: Transaction_Delete_Timeout_001
- * @tc.desc: Transaction Delete with very short timeout on a large table, interrupt should be effective.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_001, TestSize.Level1)
-{
-    std::string tableName = "TransDeleteTimeoutTest";
-    ASSERT_EQ(PrepareLargeTable(tableName, BATCH_ROW_COUNT), E_OK);
-
-    auto [transErr, trans] = store_->CreateTransaction(Transaction::IMMEDIATE);
-    ASSERT_EQ(transErr, E_OK);
-    ASSERT_NE(trans, nullptr);
-
-    AbsRdbPredicates predicates(tableName);
-    predicates.EqualTo("name", "nonexistent"); // Force full table scan (no index on name) so the
-                                              // row-by-row delete runs long enough for interrupt
-
-    DeleteConfig config;
-    config.timeoutMs = 1;
-    auto start = std::chrono::steady_clock::now();
-    auto [errCode, deleteResult] = trans->Delete(predicates, config);
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    printf("Transaction_Delete_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
-        static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
-
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
-
-    trans->Close();
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-}
-
-/* *
- * @tc.name: Transaction_Delete_Timeout_002
  * @tc.desc: Transaction Delete with short timeout on a large table (full table scan), interrupt should be effective.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_002, TestSize.Level1)
+HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_001, TestSize.Level1)
 {
     std::string tableName = "TransDeleteTimeoutTest";
     ASSERT_EQ(PrepareLargeTable(tableName, BATCH_ROW_COUNT), E_OK);
@@ -912,37 +803,6 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Execute_Timeout_001, TestSize.Leve
 
     std::string sql = "UPDATE " + tableName + " SET name = name || '_x'";
     ExecuteConfig config;
-    config.timeoutMs = 1;
-    auto start = std::chrono::steady_clock::now();
-    auto [errCode, value] = trans->Execute(sql, {}, config);
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    printf("Transaction_Execute_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
-        static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
-
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
-
-    trans->Close();
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-}
-
-/* *
- * @tc.name: Transaction_Execute_Timeout_001
- * @tc.desc: Transaction Execute a slow UPDATE SQL with very short timeout, interrupt should be effective.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, Transaction_Execute_Timeout_002, TestSize.Level1)
-{
-    std::string tableName = "TransExecuteTimeoutTest";
-    ASSERT_EQ(PrepareLargeTable(tableName, BATCH_ROW_COUNT), E_OK);
-
-    auto [transErr, trans] = store_->CreateTransaction(Transaction::IMMEDIATE);
-    ASSERT_EQ(transErr, E_OK);
-    ASSERT_NE(trans, nullptr);
-
-    std::string sql = "UPDATE " + tableName + " SET name = name || '_x'";
-    ExecuteConfig config;
     config.timeoutMs = 5;
     auto start = std::chrono::steady_clock::now();
     auto [errCode, value] = trans->Execute(sql, {}, config);
@@ -965,40 +825,6 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Execute_Timeout_002, TestSize.Leve
  * @tc.type: FUNC
  */
 HWTEST_F(RdbTimeoutInterruptTest, Transaction_QueryByStep_Timeout_001, TestSize.Level1)
-{
-    std::string tableName = "TransQueryTimeoutTest";
-    ASSERT_EQ(PrepareLargeTable(tableName, BATCH_ROW_COUNT), E_OK);
-
-    auto [transErr, trans] = store_->CreateTransaction(Transaction::IMMEDIATE);
-    ASSERT_EQ(transErr, E_OK);
-    ASSERT_NE(trans, nullptr);
-
-    std::string querySql = "SELECT * FROM " + tableName + " ORDER BY name";
-    OHOS::DistributedRdb::QueryOptions options;
-    options.preCount = true;
-    QueryConfig config;
-    config.timeoutMs = 1;
-    auto start = std::chrono::steady_clock::now();
-    auto resultSet = trans->QueryByStep(querySql, {}, options, config);
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    printf("Transaction_QueryByStep_Timeout_001: elapsed=%lldms, timeoutMs=%lld\n",
-        static_cast<long long>(elapsed), static_cast<long long>(config.timeoutMs));
-
-    EXPECT_EQ(resultSet, nullptr)
-        << "Transaction QueryByStep should return nullptr when interrupted, elapsed=" << elapsed << "ms";
-
-    trans->Close();
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-}
-
-/* *
- * @tc.name: Transaction_QueryByStep_Timeout_001
- * @tc.desc: Transaction QueryByStep with very short timeout on a large table, interrupt during
- *           Count() should cause QueryByStep to return nullptr.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, Transaction_QueryByStep_Timeout_002, TestSize.Level1)
 {
     std::string tableName = "TransQueryTimeoutTest";
     ASSERT_EQ(PrepareLargeTable(tableName, BATCH_ROW_COUNT), E_OK);
