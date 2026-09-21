@@ -41,9 +41,12 @@ constexpr const char *TEST_BASE_DIR = "/data/test/rdb_audit_e2e";
 constexpr size_t READ_BUF_SIZE = 4096;
 constexpr int TEST_ERR_CODE = 14;
 constexpr int TEST_OS_ERRNO = 13;
+constexpr int TEST_IO_ERR_CODE = 10;
+constexpr int TEST_IO_OS_ERRNO = 5;
 constexpr int64_t TEST_DELETE_ROWS = 5;
 constexpr int64_t TEST_LARGE_INSERT_ROWS = 5000;
 constexpr int64_t THROTTLE_EXPIRE_OFFSET_MS = 61 * 1000;
+constexpr int POLL_INTERVAL_MS = 10;
 
 bool MakeDirRecursive(const std::string &path, mode_t mode)
 {
@@ -201,7 +204,7 @@ size_t WaitEventLines(size_t expected, int timeoutMs = 2000)
         if (lines >= expected) {
             return lines;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(POLL_INTERVAL_MS));
     }
     return CountLines(ReadFileContent(AuditDir() + "events.log"));
 }
@@ -214,7 +217,7 @@ bool WaitFileExists(const std::string &path, int timeoutMs = 2000)
         if (FileExists(path)) {
             return true;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(POLL_INTERVAL_MS));
     }
     return FileExists(path);
 }
@@ -257,7 +260,7 @@ HWTEST_F(RdbAuditE2ETest, OpenAndDelete_112, TestSize.Level0)
     SetupManager();
     RdbStoreConfig config = MakeConfig();
     logger_.OnOpenOk(config.GetPath(), config, false);
-    logger_.OnSqlAudit(config.GetPath(), "DELETE", "users", TEST_DELETE_ROWS);
+    logger_.OnSqlAudit(config.GetPath(), "DELETE", "users", TEST_DELETE_ROWS, true);
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_NE(content.find("OPEN_OK"), std::string::npos);
@@ -275,8 +278,8 @@ HWTEST_F(RdbAuditE2ETest, DropTable_113, TestSize.Level0)
 {
     SetupManager();
     std::string dbPath = std::string(TEST_BASE_DIR) + "/e2e_test.db";
-    logger_.OnSqlAudit(dbPath, "DROP", "temp_table", 0);
-    logger_.OnSqlAudit(dbPath, "DROP", "temp_table", 0);
+    logger_.OnSqlAudit(dbPath, "DROP", "temp_table", 0, true);
+    logger_.OnSqlAudit(dbPath, "DROP", "temp_table", 0, true);
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
 }
 
@@ -289,12 +292,12 @@ HWTEST_F(RdbAuditE2ETest, LargeInsert_114, TestSize.Level0)
 {
     SetupManager();
     std::string dbPath = std::string(TEST_BASE_DIR) + "/e2e_test.db";
-    logger_.OnSqlAudit(dbPath, "INSERT", "logs", TEST_LARGE_INSERT_ROWS);
+    logger_.OnSqlAudit(dbPath, "INSERT", "logs", TEST_LARGE_INSERT_ROWS, true);
     // Accumulated within window, no write yet (no async task dispatched).
     EXPECT_EQ(CountLines(ReadFileContent(AuditDir() + "events.log")), static_cast<size_t>(0));
     // Expire window and flush.
     logger_.throttleMap_["SQL_AUDIT:INSERT:logs"].timestamp -= THROTTLE_EXPIRE_OFFSET_MS;
-    logger_.OnSqlAudit(dbPath, "INSERT", "logs", 1);
+    logger_.OnSqlAudit(dbPath, "INSERT", "logs", 1, true);
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_NE(content.find("\"rows\":5000"), std::string::npos);
@@ -347,7 +350,7 @@ HWTEST_F(RdbAuditE2ETest, OpenFail_117, TestSize.Level0)
 {
     SetupManager();
     RdbStoreConfig config = MakeConfig();
-    logger_.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
+    logger_.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO, true);
     WaitEventLines(1);
     std::string content = ReadFileContent(AuditDir() + "events.log");
     EXPECT_NE(content.find("\"evt\":\"OPEN_FAIL\""), std::string::npos);
@@ -362,8 +365,8 @@ HWTEST_F(RdbAuditE2ETest, OpenFail_117, TestSize.Level0)
  */
 HWTEST_F(RdbAuditE2ETest, AuditDisabled_119, TestSize.Level0)
 {
-    // Do NOT call SetupManager(); no audit root in test env. EnsureInit (lazy,
-    // inside OnOpenOk) probes, finds no directory, and leaves audit disabled.
+    // Do NOT call SetupManager(); config has SetAuditEnabled=false, so OnOpenOk
+    // returns before EnsureInit — no audit directory is probed or created.
     MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
     RdbStoreConfig config(std::string(TEST_BASE_DIR) + "/e2e_test.db");
     config.SetBundleName("e2e_test_app");
@@ -382,9 +385,9 @@ HWTEST_F(RdbAuditE2ETest, AuditDisabled_119, TestSize.Level0)
 HWTEST_F(RdbAuditE2ETest, IoErrorNoThrottle_122, TestSize.Level0)
 {
     SetupManager();
-    logger_.OnIoError("execute", "/data/test/el2/database/f.db", 10, 5);
-    logger_.OnIoError("execute", "/data/test/el2/database/f.db", 10, 5);
-    logger_.OnIoError("execute", "/data/test/el2/database/f.db", 10, 5);
+    logger_.OnIoError("execute", "/data/test/el2/database/f.db", TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO, true);
+    logger_.OnIoError("execute", "/data/test/el2/database/f.db", TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO, true);
+    logger_.OnIoError("execute", "/data/test/el2/database/f.db", TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO, true);
     EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
     // audit.json block 2 (firstLoss) should be written.
     // dbPath "/data/test/el2/database/f.db" -> el="el2", dbName="f" -> "el2f_audit.json"
@@ -402,7 +405,7 @@ HWTEST_F(RdbAuditE2ETest, OpenFailThenOk_125, TestSize.Level0)
 {
     SetupManager();
     RdbStoreConfig config = MakeConfig();
-    logger_.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
+    logger_.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO, true);
     logger_.OnOpenOk(config.GetPath(), config, false);
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");

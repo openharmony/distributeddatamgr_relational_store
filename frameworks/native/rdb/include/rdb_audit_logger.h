@@ -44,24 +44,30 @@ public:
     RdbAuditLogger &operator=(const RdbAuditLogger &) = delete;
 
     // Event recording interfaces (one per AuditEvt). Each lazily ensures the
-    // shared audit directory + singleton managers are initialized (idempotent);
-    // external callers gate on RdbStoreConfig::IsAuditEnabled before calling.
+    // shared audit directory + singleton managers are initialized (idempotent).
+    // Callers pass config.IsAuditEnabled() as auditEnabled so the gating stays
+    // inside the façade; when false the method returns before any I/O.
+    // OnOpenOk takes the full config (needed to build the lastOpen record) and
+    // reads IsAuditEnabled from it directly.
     void OnOpenOk(const std::string &dbPath, const RdbStoreConfig &config, bool created);
-    void OnOpenFail(const std::string &dbPath, int rc, int osErrno);
-    void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno);
+    void OnOpenFail(const std::string &dbPath, int rc, int osErrno, bool auditEnabled);
+    void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno, bool auditEnabled);
 
     // SQL audit. Caller passes the actual affected row count.
-    // DELETE/DROP/TRUNCATE are always logged (no throttle).
+    // DELETE with rows <= 0, DROP, TRUNCATE are always logged (no throttle).
     // INSERT/UPDATE are logged when rows > 0, with 60s per-(op,tbl) accumulation:
     // rows are accumulated within the window and flushed as a single record
     // when the next event arrives after the window expires.
-    void OnSqlAudit(const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows);
+    void OnSqlAudit(
+        const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows, bool auditEnabled);
 
+    // Integrity check audit. Caller gates on config.IsAuditEnabled() before
+    // calling (external check) to keep the parameter count at the R2 limit.
     void OnIntegrity(
         const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err);
 
     // DB deletion audit. op = "delete_store" (business) or "vfs_xdelete" (VFS layer).
-    void OnDbDelete(const std::string &dbPath, const std::string &op);
+    void OnDbDelete(const std::string &dbPath, const std::string &op, bool auditEnabled);
 
 private:
     // Accumulate rows within a 60s window for INSERT/UPDATE.
