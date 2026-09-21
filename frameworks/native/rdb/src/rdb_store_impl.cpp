@@ -2071,8 +2071,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
         if (!auditOp.empty()) {
             std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
-            RdbAuditLogger::GetInstance().OnSqlAudit(
-                config_.GetPath(), auditOp, auditTbl, DROP_TRUNCATE_AFFECTED_ROWS);
+            RdbAuditLogger::GetInstance().OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
         }
         HandleSchemaDDL(std::move(statement), sql);
     }
@@ -3108,7 +3107,7 @@ void RdbStoreImpl::AuditOpenOk()
 void RdbStoreImpl::AuditOpenFail(int32_t errCode)
 {
     RdbAuditLogger::GetInstance().Init(config_.IsAuditEnabled());
-    RdbAuditLogger::GetInstance().OnOpenFail(config_.GetPath(), errCode, OS_ERRNO_UNAVAILABLE);
+    RdbAuditLogger::GetInstance().OnOpenFail(config_.GetPath(), errCode, 0);
 }
 
 void RdbStoreImpl::AuditInsert(const std::string &table, int64_t rows)
