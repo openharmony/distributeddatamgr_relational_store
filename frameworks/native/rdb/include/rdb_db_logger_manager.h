@@ -40,6 +40,8 @@ namespace NativeRdb {
 // caller.
 class RdbDbLoggerManager {
 public:
+    using Task = std::function<void()>;
+
     static RdbDbLoggerManager &GetInstance();
     ~RdbDbLoggerManager();
     RdbDbLoggerManager(const RdbDbLoggerManager &) = delete;
@@ -50,21 +52,16 @@ public:
 
     bool IsInitialized() const { return initialized_; }
 
-    // audit.json block 1 + 4: last successful open + inode change diff.
-    void RecordOpenAsync(const std::string &dbPath, const LastOpenDbInfo &lastOpen);
+    // Dispatch a task (collection + write) to the executor thread.
+    void ExecuteAsync(Task task);
 
-    // audit.json block 2: first loss point / badfd (overwrite).
-    void WriteFirstLossAsync(const std::string &dbPath, const FirstLossInfo &firstLoss);
-
-    // audit.json block 3: delete metadata (file info, inode) (overwrite).
-    void WriteDeleteAsync(const std::string &dbPath, const DeleteInfo &del);
+    // Synchronous audit.json writes. Called from inside an ExecuteAsync task.
+    void RecordOpenSync(const std::string &dbPath, const LastOpenDbInfo &lastOpen);
+    void WriteFirstLossSync(const std::string &dbPath, const FirstLossInfo &firstLoss);
+    void WriteDeleteSync(const std::string &dbPath, const DeleteInfo &del);
 
 private:
     RdbDbLoggerManager();
-
-    void DoRecordOpen(const std::string &dbPath, const LastOpenDbInfo &lastOpen);
-    void DoWriteFirstLoss(const std::string &dbPath, const FirstLossInfo &firstLoss);
-    void DoWriteDelete(const std::string &dbPath, const DeleteInfo &del);
 
     // read-mutate-write audit.json under a per-db fresh-fd flock.
     void WithAuditRecord(const std::string &dbPath, const std::function<void(RdbDbInfoRecord &)> &mutator);

@@ -17,6 +17,7 @@
 #define RDB_AUDIT_LOGGER_MANAGER_H
 
 #include <cstdint>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <sys/stat.h>
@@ -34,7 +35,9 @@ constexpr mode_t AUDIT_DIR_MODE = 0660;
 // probes once and passes in via Init (per confirmed design).
 //
 // Writes are best-effort and asynchronous (TaskExecutor), never blocking the DB
-// caller.
+// caller. Callers should use ExecuteAsync to dispatch the entire pipeline
+// (data collection + JSON building + file write) onto the executor thread;
+// AppendEventSync is the synchronous write used inside that pipeline.
 //
 // Directory layout (probed by the façade):
 //   SA:  /data/log/hiaudit/rdb/{uid}/
@@ -42,6 +45,8 @@ constexpr mode_t AUDIT_DIR_MODE = 0660;
 // Files: events.log, events.1.log, events.lock
 class RdbAuditLoggerManager {
 public:
+    using Task = std::function<void()>;
+
     static RdbAuditLoggerManager &GetInstance();
     ~RdbAuditLoggerManager();
     RdbAuditLoggerManager(const RdbAuditLoggerManager &) = delete;
@@ -53,13 +58,16 @@ public:
     bool IsInitialized() const { return initialized_; }
     std::string GetAuditDir() const { return auditDir_; }
 
-    // Append a jsonl line to events.log (async, best-effort).
-    void AppendEventAsync(const std::string &jsonLine);
+    // Dispatch a task (collection + JSON + write) to the executor thread.
+    void ExecuteAsync(Task task);
+
+    // Synchronous append of a jsonl line to events.log. Called from inside
+    // an ExecuteAsync task — not intended for direct caller use.
+    void AppendEventSync(const std::string &jsonLine);
 
 private:
     RdbAuditLoggerManager();
 
-    void DoAppendEvent(const std::string &jsonLine);
     void MaybeRotateLog();
 
     std::string auditDir_;

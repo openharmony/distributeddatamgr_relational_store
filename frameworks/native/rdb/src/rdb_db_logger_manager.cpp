@@ -130,21 +130,19 @@ void RdbDbLoggerManager::Init(const std::string &auditDir, bool auditEnabled)
     initialized_ = true;
 }
 
-void RdbDbLoggerManager::RecordOpenAsync(const std::string &dbPath, const LastOpenDbInfo &lastOpen)
+void RdbDbLoggerManager::ExecuteAsync(Task task)
 {
-    if (!initialized_ || dbPath.empty()) {
+    if (!initialized_) {
         return;
     }
     auto executor = TaskExecutor::GetInstance().GetExecutor();
     if (executor == nullptr) {
         return;
     }
-    LastOpenDbInfo info = lastOpen;
-    std::string path = dbPath;
-    executor->Execute([this, path, info]() { DoRecordOpen(path, info); });
+    executor->Execute(std::move(task));
 }
 
-void RdbDbLoggerManager::DoRecordOpen(const std::string &dbPath, const LastOpenDbInfo &lastOpen)
+void RdbDbLoggerManager::RecordOpenSync(const std::string &dbPath, const LastOpenDbInfo &lastOpen)
 {
     WithAuditRecord(dbPath, [&lastOpen](RdbDbInfoRecord &rec) {
         DbFileInfo prevMain = rec.lastOpen.main;
@@ -164,40 +162,12 @@ void RdbDbLoggerManager::DoRecordOpen(const std::string &dbPath, const LastOpenD
     });
 }
 
-void RdbDbLoggerManager::WriteFirstLossAsync(const std::string &dbPath, const FirstLossInfo &firstLoss)
-{
-    if (!initialized_ || dbPath.empty()) {
-        return;
-    }
-    auto executor = TaskExecutor::GetInstance().GetExecutor();
-    if (executor == nullptr) {
-        return;
-    }
-    FirstLossInfo data = firstLoss;
-    std::string path = dbPath;
-    executor->Execute([this, path, data]() { DoWriteFirstLoss(path, data); });
-}
-
-void RdbDbLoggerManager::DoWriteFirstLoss(const std::string &dbPath, const FirstLossInfo &firstLoss)
+void RdbDbLoggerManager::WriteFirstLossSync(const std::string &dbPath, const FirstLossInfo &firstLoss)
 {
     WithAuditRecord(dbPath, [&firstLoss](RdbDbInfoRecord &rec) { rec.firstLoss = firstLoss; });
 }
 
-void RdbDbLoggerManager::WriteDeleteAsync(const std::string &dbPath, const DeleteInfo &del)
-{
-    if (!initialized_ || dbPath.empty()) {
-        return;
-    }
-    auto executor = TaskExecutor::GetInstance().GetExecutor();
-    if (executor == nullptr) {
-        return;
-    }
-    DeleteInfo data = del;
-    std::string path = dbPath;
-    executor->Execute([this, path, data]() { DoWriteDelete(path, data); });
-}
-
-void RdbDbLoggerManager::DoWriteDelete(const std::string &dbPath, const DeleteInfo &del)
+void RdbDbLoggerManager::WriteDeleteSync(const std::string &dbPath, const DeleteInfo &del)
 {
     WithAuditRecord(dbPath, [&del](RdbDbInfoRecord &rec) { rec.dbDelete = del; });
 }

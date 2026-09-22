@@ -66,6 +66,11 @@ public:
     void OnIntegrity(
         const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err);
 
+    // Database corruption audit (integrity check failure). Writes audit.json
+    // block 2 (firstLoss) with op="corrupt" and the check result string.
+    // Caller gates on config.IsAuditEnabled() (external check, same as OnIntegrity).
+    void OnCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail);
+
     // DB deletion audit. op = "delete_store" (business) or "vfs_xdelete" (VFS layer).
     void OnDbDelete(const std::string &dbPath, const std::string &op, bool auditEnabled);
 
@@ -75,15 +80,17 @@ private:
 
     bool IsActive() const { return enabled_; }
 
-    // Build jsonl lines for events.log.
-    std::string BuildOpenOkJson(const std::string &dbPath);
-    std::string BuildOpenFailJson(const std::string &dbPath, int rc, int osErrno);
-    std::string BuildIoErrJson(const std::string &op, const std::string &file, int rc, int osErrno);
-    std::string BuildSqlAuditJson(
+    // Build jsonl lines for events.log. Static: they use only singleton
+    // collectors and free functions — no instance state — so they can be
+    // called from async tasks without capturing `this`.
+    static std::string BuildOpenOkJson(const std::string &dbPath);
+    static std::string BuildOpenFailJson(const std::string &dbPath, int rc, int osErrno);
+    static std::string BuildIoErrJson(const std::string &op, const std::string &file, int rc, int osErrno);
+    static std::string BuildSqlAuditJson(
         const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows);
-    std::string BuildIntegrityJson(
+    static std::string BuildIntegrityJson(
         const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err);
-    std::string BuildDbDeleteJson(const std::string &dbPath, const std::string &op);
+    static std::string BuildDbDeleteJson(const std::string &dbPath, const std::string &op);
 
     static const char *TriggerToStr(IntegrityTrigger trigger);
     static const char *ModeToStr(IntegrityMode mode);
