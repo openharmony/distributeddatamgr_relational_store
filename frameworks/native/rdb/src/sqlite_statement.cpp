@@ -335,7 +335,7 @@ int SqliteStatement::Prepare(const std::string &sql)
         int errCode = slave_->Prepare(sql);
         if (errCode != E_OK) {
             LOG_WARN("slave prepare Error:%{public}d", errCode);
-            SqliteUtils::SetSlaveInvalid(config_->GetPath());
+            SqliteUtils::SetSlaveInvalid(config_->GetPath(), SqliteUtils::SlaveInvalidReason::PREPARE_FAILED);
         }
     }
     return E_OK;
@@ -376,7 +376,7 @@ int SqliteStatement::Bind(const std::vector<ValueObject> &args)
         int errCode = slave_->Bind(args);
         if (errCode != E_OK) {
             LOG_ERROR("slave bind error:%{public}d", errCode);
-            SqliteUtils::SetSlaveInvalid(config_->GetPath());
+            SqliteUtils::SetSlaveInvalid(config_->GetPath(), SqliteUtils::SlaveInvalidReason::BIND_FAILED);
         }
     }
     return E_OK;
@@ -499,7 +499,7 @@ int32_t SqliteStatement::Execute(const std::vector<std::reference_wrapper<ValueO
         if (code != E_OK) {
             LOG_ERROR("slave execute errCode:%{public}d, sql is %{public}s, errno %{public}d code %{public}d", errCode,
                 SqliteUtils::SqlAnonymous(sql_).c_str(), errno, code);
-            SqliteUtils::SetSlaveInvalid(config_->GetPath());
+            SqliteUtils::SetSlaveInvalid(config_->GetPath(), SqliteUtils::SlaveInvalidReason::STEP_FAILED);
         }
     }
     return E_OK;
@@ -556,7 +556,7 @@ std::pair<int, std::vector<ValuesBucket>> SqliteStatement::ExecuteForRows(
         if (code != E_OK) {
             LOG_ERROR("slave execute errCode:%{public}d, sql is %{public}s, errno %{public}d code %{public}d", errCode,
                 SqliteUtils::SqlAnonymous(sql_).c_str(), errno, code);
-            SqliteUtils::SetSlaveInvalid(config_->GetPath());
+            SqliteUtils::SetSlaveInvalid(config_->GetPath(), SqliteUtils::SlaveInvalidReason::STEP_FAILED);
         }
     }
     return {E_OK, rows};

@@ -640,6 +640,11 @@ bool RdbStore::IsSlaveDiffFromMaster() const
     return false;
 }
 
+bool RdbStore::IsSlaveAvailable() const
+{
+    return false;
+}
+
 int32_t RdbStore::GetDbType() const
 {
     return DB_SQLITE;

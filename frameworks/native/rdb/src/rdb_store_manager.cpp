@@ -257,6 +257,7 @@ DistributedRdb::RdbSyncerParam RdbStoreManager::GetSyncParam(const RdbStoreConfi
     syncerParam.permissionNames_ = config.GetPromiseInfo().permissionNames_;
     syncerParam.subUser_ = config.GetSubUser();
     syncerParam.isLocalOnly_ = config.IsLocalOnly();
+    syncerParam.replicaPath_ = config.GetReplicaPath();
     return syncerParam;
 }
 

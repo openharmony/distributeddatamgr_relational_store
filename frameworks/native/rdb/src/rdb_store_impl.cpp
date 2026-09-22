@@ -94,7 +94,6 @@ static constexpr const char *COMMIT_TRANSACTION_SQL = "commit;";
 static constexpr const char *ROLLBACK_TRANSACTION_SQL = "rollback;";
 static constexpr const char *BACKUP_RESTORE = "backup.restore";
 static constexpr const char *ASYNC_RESTORE = "-async.restore";
-constexpr char const *SUFFIX_BINLOG = "_binlog/";
 constexpr char const *INVALID_PATH_PART = "..";
 constexpr int32_t SERVICE_GID = 3012;
 constexpr int64_t TIME_OUT = 1500;
@@ -156,6 +155,7 @@ void RdbStoreImpl::InitSyncerParam(const RdbStoreConfig &config, bool created)
     syncerParam_.permissionNames_ = config.GetPromiseInfo().permissionNames_;
     syncerParam_.subUser_ = config.GetSubUser();
     syncerParam_.isLocalOnly_ = config.IsLocalOnly();
+    syncerParam_.replicaPath_ = config.GetReplicaPath();
     syncerParam_.dfxInfo_.lastOpenTime_ = RdbTimeUtils::GetCurSysTimeWithMs();
     std::string serverPath = config.GetServerPath();
     if (!serverPath.empty() && (serverPath.find(syncerParam_.bundleName_) != std::string::npos) &&
@@ -369,7 +369,18 @@ bool RdbStoreImpl::SetFileGid(const RdbStoreConfig &config, int32_t gid)
     if (config.GetHaMode() == HAMode::SINGLE || config.IsEncrypt() || config.IsMemoryRdb()) {
         return setDir && setDbFile;
     }
-    std::string binlogDir = config.GetPath() + SUFFIX_BINLOG;
+    // With a custom replicaPath the replica files live in a different dir; the service
+    // needs traversal + access there too, same as the binlog dir below.
+    std::string replicaDir = StringUtils::ExtractFilePath(SqliteUtils::GetSlavePath(config));
+    if (replicaDir != StringUtils::ExtractFilePath(config.GetPath())) {
+        bool setReplicaDir = SqliteUtils::SetDbDirGid(replicaDir, gid, true);
+        if (!setReplicaDir) {
+            LOG_ERROR("SetReplicaDir fail, bundleName is %{public}s, store is %{public}s.",
+                config.GetBundleName().c_str(), SqliteUtils::Anonymous(config.GetName()).c_str());
+        }
+        setDir = setDir && setReplicaDir;
+    }
+    std::string binlogDir = SqliteUtils::GetBinlogFolderPath(config);
     bool setBinlog = SqliteUtils::SetDbDirGid(binlogDir, gid, true);
     if (!setBinlog) {
         LOG_ERROR("SetBinlog fail, bundleName is %{public}s, store is %{public}s.", config.GetBundleName().c_str(),
@@ -1588,7 +1599,7 @@ int32_t RdbStoreImpl::ProcessOpenCallback(int version, RdbOpenCallback &openCall
 
 bool RdbStoreImpl::TryAsyncRepair()
 {
-    std::string slavePath = SqliteUtils::GetSlavePath(path_);
+    std::string slavePath = SqliteUtils::GetSlavePath(config_);
     if (!SqliteUtils::IsUseAsyncRestore(config_, path_, slavePath)) {
         return false;
     }
@@ -1614,6 +1625,7 @@ bool RdbStoreImpl::TryAsyncRepair()
     Reportor::ReportRestore(Reportor::Create(config_, E_OK, "RestoreType:Rebuild", false), false);
     return true;
 }
+
 int32_t RdbStoreImpl::CreatePool(bool &created)
 {
     int32_t errCode = E_OK;
@@ -1665,7 +1677,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     // If it is a distributeddata request, never need ACL
     isNeedSetAcl = RdbMgr::GetInstance().IsProxy() &&
                    (isNeedSetAcl || SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
-                       SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_.GetPath()), SERVICE_GID));
+                    SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_), SERVICE_GID));
     std::lock_guard<std::mutex> lock(initMutex_);
     if (initStatus_ != -1) {
         return initStatus_;
@@ -1692,7 +1704,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         if (errCode != E_OK) {
             return errCode;
         }
-        (void)ExchangeSlaverToMaster();
+        (void)ExchangeSlaverToMaster(true);
         SwitchOver(true);
         errCode = ProcessOpenCallback(version, openCallback);
         SwitchOver(false);
@@ -2308,13 +2320,7 @@ int RdbStoreImpl::GetDataBasePath(const std::string &databasePath, std::string &
 
 std::string RdbStoreImpl::GetSlaveName(const std::string &path)
 {
-    std::string suffix(".db");
-    std::string slaveSuffix("_slave.db");
-    auto pos = path.find(suffix);
-    if (pos == std::string::npos) {
-        return path + slaveSuffix;
-    }
-    return std::string(path, 0, pos) + slaveSuffix;
+    return SqliteUtils::GetSlavePath(path);
 }
 
 /**
@@ -2463,6 +2469,9 @@ int RdbStoreImpl::BackupSlaveDb(const std::string &databasePath, bool verifyDb)
     errCode = conn->Backup(databasePath, {}, false, slaveStatus_, verifyDb);
     // force-destroy all trans conns after a successful backup; otherwise return them to the pool
     guard.releaseNow = (errCode == E_OK);
+    if (errCode == E_OK && config_.GetHaMode() == HAMode::MANUAL_TRIGGER) {
+        MigrateReplicaIfNeeded(conn, false);
+    }
     if (SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID)) {
         SetFileGid(config_, SERVICE_GID);
     }
@@ -3187,7 +3196,7 @@ int RdbStoreImpl::StartAsyncRestore(std::shared_ptr<ConnectionPool> pool, const 
             }
             if (result != E_OK) {
                 LOG_WARN("async restore failed, %{public}d", result);
-                SqliteUtils::SetSlaveInvalid(dbPath);
+                SqliteUtils::SetSlaveInvalid(dbPath, SqliteUtils::SlaveInvalidReason::ASYNC_RESTORE);
             }
             SqliteUtils::SetSlaveRestoring(dbPath, false);
             if (pool != nullptr) {
@@ -3434,7 +3443,7 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
     if (!srcPath.empty() || config_.GetHaMode() == HAMode::SINGLE || config_.GetDBType() != DB_SQLITE) {
         return false;
     }
-    destPath = GetSlaveName(config_.GetPath());
+    destPath = SqliteUtils::GetSlavePath(config_);
     if (isRestore && access(destPath.c_str(), F_OK) != 0) {
         LOG_WARN("The backup path can not access: %{public}s", SqliteUtils::Anonymous(destPath).c_str());
         return false;
@@ -3444,8 +3453,24 @@ bool RdbStoreImpl::TryGetMasterSlaveBackupPath(const std::string &srcPath, std::
 
 bool RdbStoreImpl::IsSlaveDiffFromMaster() const
 {
-    std::string slaveDbPath = SqliteUtils::GetSlavePath(config_.GetPath());
+    std::string slaveDbPath = SqliteUtils::GetSlavePath(config_);
     return SqliteUtils::IsSlaveInvalid(config_.GetPath()) || (access(slaveDbPath.c_str(), F_OK) != 0);
+}
+
+bool RdbStoreImpl::IsSlaveAvailable() const
+{
+    if (config_.GetHaMode() == HAMode::SINGLE || isMemoryRdb_) {
+        return false;
+    }
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        return false;
+    }
+    auto conn = pool->AcquireConnection(false);
+    if (conn == nullptr) {
+        return false;
+    }
+    return conn->IsSlaveAvailable();
 }
 
 bool RdbStoreImpl::IsInAsyncRestore(const std::string &dbPath)
@@ -3463,7 +3488,33 @@ bool RdbStoreImpl::IsInAsyncRestore(const std::string &dbPath)
     return errno == EWOULDBLOCK;
 }
 
-int32_t RdbStoreImpl::ExchangeSlaverToMaster()
+void RdbStoreImpl::MigrateReplicaIfNeeded(const std::shared_ptr<Connection> &conn, bool isResetBinlog)
+{
+    if (config_.GetHaMode() == HAMode::SINGLE || config_.GetReplicaPath().empty()) {
+        return;
+    }
+    std::string newSlavePath = SqliteUtils::GetSlavePath(config_);
+    std::string oldDefaultSlavePath = SqliteUtils::GetSlavePath(config_.GetPath());
+    if (newSlavePath == oldDefaultSlavePath || access(oldDefaultSlavePath.c_str(), F_OK) != 0) {
+        return;
+    }
+    if (!conn->IsSlaveAvailable()) {
+        LOG_WARN("migrate replica skip, new slave not available yet:%{public}s",
+            SqliteUtils::Anonymous(oldDefaultSlavePath).c_str());
+        return;
+    }
+    // The service may still hold the stale default replica open; close it before deleting, then restore.
+    auto [err, service] = RdbMgr::GetInstance().GetRdbService(syncerParam_);
+    if (service != nullptr) {
+        service->Disable(syncerParam_);
+    }
+    conn->MigrateReplica(oldDefaultSlavePath, isResetBinlog);
+    if (service != nullptr) {
+        service->Enable(syncerParam_);
+    }
+}
+
+int32_t RdbStoreImpl::ExchangeSlaverToMaster(bool needMigrate)
 {
     if (isReadOnly_ || isMemoryRdb_ || rebuild_ != RebuiltType::NONE) {
         return E_OK;
@@ -3471,6 +3522,9 @@ int32_t RdbStoreImpl::ExchangeSlaverToMaster()
     auto [errCode, conn] = GetConn(false);
     if (errCode != E_OK) {
         return errCode;
+    }
+    if (needMigrate) {
+        MigrateReplicaIfNeeded(conn, true);
     }
     conn->RegisterReplayCallback(config_,
         std::bind(&RdbStoreImpl::ReplayCallbackImpl, config_, std::weak_ptr<ConnectionPool>(GetPool())));
@@ -3755,7 +3809,7 @@ int RdbStoreImpl::RegisterAlgo(const std::string &clstAlgoName, ClusterAlgoFunc 
 
 void RdbStoreImpl::ReplayCallbackImpl(const RdbStoreConfig &config, std::weak_ptr<ConnectionPool> connPool)
 {
-    auto lockFile = config.GetPath() + SqliteUtils::BINLOG_LOCK_FILE_SUFFIX;
+    auto lockFile = SqliteUtils::GetBinlogFolderPath(config) + SqliteUtils::BINLOG_LOCK_FILE_SUFFIX;
     if (access(lockFile.c_str(), F_OK) != 0) {
         LOG_WARN("binlog lock path does not exist for %{public}s", SqliteUtils::Anonymous(config.GetPath()).c_str());
         return;

@@ -151,7 +151,7 @@ void RdbDoubleWriteBinlogTest::TearDownTestCase(void)
 void RdbDoubleWriteBinlogTest::SetUp(void)
 {
     RdbStoreConfig config(RdbDoubleWriteBinlogTest::databaseName);
-    if (!SqliteConnection::IsSupportBinlog(config)) {
+    if (!SqliteUtils::IsSupportBinlog(config)) {
         GTEST_SKIP() << "Current testcase is not compatible from current rdb";
     }
     testing::UnitTest *test = testing::UnitTest::GetInstance();
@@ -1939,7 +1939,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Lev
     mockApi.is_support_binlog = MockSupportBinlogOff;
     auto originalApi = sqlite3_export_relational_symbols;
     sqlite3_export_relational_symbols = &mockApi;
-    EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
+    EXPECT_EQ(SqliteUtils::IsSupportBinlog(config), false);
     LOG_INFO("----RdbStore_Binlog_Performance_005 binlog off----");
     auto T1 = GetRestoreTime(HAMode::MAIN_REPLICA);
 
@@ -1949,7 +1949,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_005, TestSize.Lev
     WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
     sqlite3_export_relational_symbols = originalApi;
-    EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), true);
+    EXPECT_EQ(SqliteUtils::IsSupportBinlog(config), true);
     LOG_INFO("----RdbStore_Binlog_Performance_005 binlog on----");
     auto T1_2 = GetRestoreTime(HAMode::MAIN_REPLICA);
     EXPECT_GT(T1 * 1.8, T1_2);
@@ -1970,7 +1970,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Lev
     mockApi.is_support_binlog = MockSupportBinlogOff;
     auto originalApi = sqlite3_export_relational_symbols;
     sqlite3_export_relational_symbols = &mockApi;
-    EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), false);
+    EXPECT_EQ(SqliteUtils::IsSupportBinlog(config), false);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog off----");
     auto T1 = GetRestoreTime(HAMode::MANUAL_TRIGGER, false);
 
@@ -1980,7 +1980,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_Performance_006, TestSize.Lev
     WaitForBinlogDelete();
     ASSERT_FALSE(CheckFolderExist(RdbDoubleWriteBinlogTest::binlogDatabaseName));
     sqlite3_export_relational_symbols = originalApi;
-    EXPECT_EQ(SqliteConnection::IsSupportBinlog(config), true);
+    EXPECT_EQ(SqliteUtils::IsSupportBinlog(config), true);
     LOG_INFO("----RdbStore_Binlog_Performance_006 binlog on----");
     auto T1_2 = GetRestoreTime(HAMode::MANUAL_TRIGGER, false);
     EXPECT_GT(T1 * 1.8, T1_2);
@@ -2202,7 +2202,7 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_040, TestSize.Level0)
 }
 
 /**
- * @tc.name: RdbStore_Binlog_040
+ * @tc.name: RdbStore_Binlog_041
  * @tc.desc: test restore when dms table exist
  * @tc.type: FUNC
  */
