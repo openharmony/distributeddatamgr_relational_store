@@ -89,7 +89,6 @@ private:
         const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows);
     static std::string BuildIntegrityJson(
         const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err);
-    static std::string BuildDbDeleteJson(const std::string &dbPath, const std::string &op);
 
     static const char *TriggerToStr(IntegrityTrigger trigger);
     static const char *ModeToStr(IntegrityMode mode);
