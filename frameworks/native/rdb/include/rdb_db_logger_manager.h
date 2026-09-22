@@ -72,8 +72,6 @@ private:
     std::string auditDir_;
     bool initialized_ = false;
     mutable std::mutex mutex_;
-
-    friend class RdbAuditE2ETest;
 };
 
 } // namespace NativeRdb

@@ -105,8 +105,6 @@ private:
     };
     std::unordered_map<std::string, ThrottleEntry> throttleMap_;
     std::mutex mutex_;
-
-    friend class RdbAuditE2ETest;
 };
 
 } // namespace NativeRdb

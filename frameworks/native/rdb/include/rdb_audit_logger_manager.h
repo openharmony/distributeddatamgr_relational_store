@@ -77,8 +77,6 @@ private:
     int lockFd_ = -1;  // persistent fd for events.lock (cross-process)
     bool initialized_ = false;
     mutable std::mutex mutex_;
-
-    friend class RdbAuditE2ETest;
 };
 
 } // namespace NativeRdb
