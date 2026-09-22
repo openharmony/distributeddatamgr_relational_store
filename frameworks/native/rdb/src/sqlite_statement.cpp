@@ -175,8 +175,10 @@ int SqliteStatement::Prepare(sqlite3 *dbHandle, const std::string &newSql)
                 (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "SqliteStatement::Prepare")));
             if (config_->IsAuditEnabled()) {
                 RdbAuditLogger logger;
-                logger.OnCorrupt(config_->GetPath(), ret, errno,
-                    (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "SqliteStatement::Prepare"));
+                std::string detail = errCode == SQLITE_CORRUPT
+                    ? SqliteGlobalConfig::GetLastCorruptionMsg()
+                    : "SqliteStatement::Prepare";
+                logger.OnCorrupt(config_->GetPath(), ret, errno, detail);
             }
             CorruptedHandleManager::GetInstance().HandleCorrupt(*config_);
         }
@@ -429,8 +431,10 @@ int SqliteStatement::InnerStep()
             (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "SqliteStatement::InnerStep")));
         if (config_->IsAuditEnabled()) {
             RdbAuditLogger logger;
-            logger.OnCorrupt(config_->GetPath(), ret, errno,
-                (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "SqliteStatement::InnerStep"));
+            std::string detail = errCode == SQLITE_CORRUPT
+                ? SqliteGlobalConfig::GetLastCorruptionMsg()
+                : "SqliteStatement::InnerStep";
+            logger.OnCorrupt(config_->GetPath(), ret, errno, detail);
         }
         CorruptedHandleManager::GetInstance().HandleCorrupt(*config_);
     }
