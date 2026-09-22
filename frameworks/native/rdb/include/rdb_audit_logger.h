@@ -78,14 +78,14 @@ private:
 
     bool IsActive() const { return enabled_; }
 
-    // Build jsonl lines for events.log. Static: they use only singleton
+    // Build log lines for events.log. Static: they use only singleton
     // collectors and free functions — no instance state — so they can be
     // called from async tasks without capturing `this`.
-    static std::string BuildOpenOkJson(const std::string &dbPath);
-    static std::string BuildOpenFailJson(const std::string &dbPath, int rc, int osErrno);
-    static std::string BuildSqlAuditJson(
+    static std::string BuildOpenOkLine(const std::string &dbPath);
+    static std::string BuildOpenFailLine(const std::string &dbPath, int rc, int osErrno);
+    static std::string BuildSqlAuditLine(
         const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows);
-    static std::string BuildIntegrityJson(
+    static std::string BuildIntegrityLine(
         const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err);
 
     static const char *TriggerToStr(IntegrityTrigger trigger);
