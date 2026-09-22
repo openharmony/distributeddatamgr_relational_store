@@ -85,7 +85,6 @@ private:
     // called from async tasks without capturing `this`.
     static std::string BuildOpenOkJson(const std::string &dbPath);
     static std::string BuildOpenFailJson(const std::string &dbPath, int rc, int osErrno);
-    static std::string BuildIoErrJson(const std::string &op, const std::string &file, int rc, int osErrno);
     static std::string BuildSqlAuditJson(
         const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows);
     static std::string BuildIntegrityJson(

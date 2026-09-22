@@ -219,7 +219,6 @@ void RdbAuditLogger::OnIoError(
     int r = rc;
     int os = osErrno;
     RdbAuditLoggerManager::GetInstance().ExecuteAsync([o, f, r, os]() {
-        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildIoErrJson(o, f, r, os));
         FirstLossInfo firstLoss;
         firstLoss.op = o;
         firstLoss.rc = r;
@@ -401,18 +400,6 @@ std::string RdbAuditLogger::BuildOpenFailJson(const std::string &dbPath, int rc,
        << ",\"proc\":\"pid:" << caller.pid << ":tid:" << caller.tid << "\""
        << ",\"rc\":" << rc << ",\"os_errno\":" << osErrno << ",\"path\":\""
        << EscapeJson(SqliteUtils::Anonymous(dbPath)) << "\"}";
-    return os.str();
-}
-
-std::string RdbAuditLogger::BuildIoErrJson(const std::string &op, const std::string &file, int rc, int osErrno)
-{
-    std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
-    std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(file));
-    std::ostringstream os;
-    os << "{\"evt\":\"IO_ERR\",\"ts\":\"" << EscapeJson(ts) << "\""
-       << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
-       << ",\"rc\":" << rc << ",\"os_errno\":" << osErrno << ",\"op\":\"" << EscapeJson(op) << "\""
-       << ",\"file\":\"" << EscapeJson(SqliteUtils::Anonymous(file)) << "\"}";
     return os.str();
 }
 
