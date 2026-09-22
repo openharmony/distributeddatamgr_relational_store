@@ -203,7 +203,7 @@ std::string RdbDbLoggerManager::BuildAuditPath(const std::string &dbPath, const 
     }
     std::string el = SqliteUtils::GetArea(dbPath);
     std::string dbName = SqliteUtils::GetDbName(dbPath);
-    if (el.empty() && dbName.empty()) {
+    if (el.empty() || dbName.empty()) {
         return "";
     }
     return auditDir_ + el + dbName + suffix;

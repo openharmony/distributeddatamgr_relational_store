@@ -32,7 +32,6 @@
 #include "rdb_security_manager.h"
 #include "rdb_store_config.h"
 #include "rdb_time_utils.h"
-#include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 
 namespace OHOS {
@@ -69,9 +68,9 @@ FileInfo RdbDbInfoManager::BuildFileInfo(const std::string &path)
     modeOs << std::oct << debug.mode_;
     fi.permission.mode = modeOs.str();
     fi.permission.acl = Acl::Dump(path, Acl::ACL_XATTR_ACCESS);
-    fi.time.ctime = debug.ctime_.sec_;
-    fi.time.atime = debug.atime_.sec_;
-    fi.time.mtime = debug.mtime_.sec_;
+    fi.time.ctime = RdbTimeUtils::TimeToStr(debug.ctime_.sec_);
+    fi.time.atime = RdbTimeUtils::TimeToStr(debug.atime_.sec_);
+    fi.time.mtime = RdbTimeUtils::TimeToStr(debug.mtime_.sec_);
     return fi;
 }
 
@@ -132,13 +131,7 @@ KeyInfo RdbDbInfoManager::CollectKey(const std::string &dbPath)
 ConfigInfo RdbDbInfoManager::BuildConfigInfo(const RdbStoreConfig &config)
 {
     ConfigInfo info;
-    info.name = config.GetName();
-    info.path = config.GetPath();
-    info.isEncrypted = config.IsEncrypt();
-    info.securityLevel = static_cast<int32_t>(config.GetSecurityLevel());
-    info.journalMode = config.GetJournalMode();
-    info.sync = config.GetSyncMode();
-    info.walAutoCheckpoint = SqliteGlobalConfig::GetWalAutoCheckpoint();
+    info.name = SqliteUtils::Anonymous(config.GetName());
     return info;
 }
 

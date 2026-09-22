@@ -54,7 +54,7 @@ public:
     void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno, bool auditEnabled);
 
     // SQL audit. Caller passes the actual affected row count.
-    // DELETE with rows <= 0, DROP, TRUNCATE are always logged (no throttle).
+    // DELETE with rows > 0, DROP, TRUNCATE are always logged (no throttle).
     // INSERT/UPDATE are logged when rows > 0, with 60s per-(op,tbl) accumulation:
     // rows are accumulated within the window and flushed as a single record
     // when the next event arrives after the window expires.
