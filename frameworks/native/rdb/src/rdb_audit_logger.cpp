@@ -173,9 +173,14 @@ void RdbAuditLogger::OnOpenOk(const std::string &dbPath, const RdbStoreConfig &c
     if (!IsActive()) {
         return;
     }
-    RdbAuditLoggerManager::GetInstance().AppendEventAsync(BuildOpenOkJson(dbPath));
-    LastOpenDbInfo lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(config, created);
-    RdbDbLoggerManager::GetInstance().RecordOpenAsync(dbPath, lastOpen);
+    const RdbStoreConfig &cfg = config;
+    std::string path = dbPath;
+    bool crt = created;
+    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, &cfg, crt]() {
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenOkJson(path));
+        LastOpenDbInfo lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(cfg, crt);
+        RdbDbLoggerManager::GetInstance().RecordOpenSync(path, lastOpen);
+    });
 }
 
 void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno, bool auditEnabled)
@@ -187,7 +192,12 @@ void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno, 
     if (!IsActive()) {
         return;
     }
-    RdbAuditLoggerManager::GetInstance().AppendEventAsync(BuildOpenFailJson(dbPath, rc, osErrno));
+    std::string path = dbPath;
+    int r = rc;
+    int os = osErrno;
+    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, r, os]() {
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenFailJson(path, r, os));
+    });
 }
 
 void RdbAuditLogger::OnIoError(
@@ -200,14 +210,20 @@ void RdbAuditLogger::OnIoError(
     if (!IsActive()) {
         return;
     }
-    RdbAuditLoggerManager::GetInstance().AppendEventAsync(BuildIoErrJson(op, file, rc, osErrno));
-    FirstLossInfo firstLoss;
-    firstLoss.op = op;
-    firstLoss.rc = rc;
-    firstLoss.osErrno = osErrno;
-    firstLoss.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
-    firstLoss.time = RdbTimeUtils::GetCurSysTimeWithMs();
-    RdbDbLoggerManager::GetInstance().WriteFirstLossAsync(file, firstLoss);
+    std::string o = op;
+    std::string f = file;
+    int r = rc;
+    int os = osErrno;
+    RdbAuditLoggerManager::GetInstance().ExecuteAsync([o, f, r, os]() {
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildIoErrJson(o, f, r, os));
+        FirstLossInfo firstLoss;
+        firstLoss.op = o;
+        firstLoss.rc = r;
+        firstLoss.osErrno = os;
+        firstLoss.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
+        firstLoss.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        RdbDbLoggerManager::GetInstance().WriteFirstLossSync(f, firstLoss);
+    });
 }
 
 void RdbAuditLogger::OnSqlAudit(
@@ -225,19 +241,31 @@ void RdbAuditLogger::OnSqlAudit(
         if (op == "DELETE" && rows <= 0) {
             return;
         }
-        RdbAuditLoggerManager::GetInstance().AppendEventAsync(BuildSqlAuditJson(dbPath, op, tbl, rows));
+        std::string path = dbPath;
+        std::string o = op;
+        std::string t = tbl;
+        int64_t r = rows;
+        RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, o, t, r]() {
+            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditJson(path, o, t, r));
+        });
         return;
     }
     if (rows <= 0) {
         return;
     }
+    // Throttle stays sync (uses per-instance throttleMap_); only the write is async.
     std::string eventKey = "SQL_AUDIT:" + op + ":" + tbl;
     int64_t flushRows = 0;
     if (AccumulateOrFlush(eventKey, rows, flushRows)) {
         return;
     }
     if (flushRows > 0) {
-        RdbAuditLoggerManager::GetInstance().AppendEventAsync(BuildSqlAuditJson(dbPath, op, tbl, flushRows));
+        std::string path = dbPath;
+        std::string o = op;
+        std::string t = tbl;
+        RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, o, t, flushRows]() {
+            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditJson(path, o, t, flushRows));
+        });
     }
 }
 
@@ -248,7 +276,37 @@ void RdbAuditLogger::OnIntegrity(
     if (!IsActive()) {
         return;
     }
-    RdbAuditLoggerManager::GetInstance().AppendEventAsync(BuildIntegrityJson(dbPath, trigger, mode, result, err));
+    std::string path = dbPath;
+    IntegrityTrigger tr = trigger;
+    IntegrityMode m = mode;
+    int r = result;
+    std::string e = err;
+    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, tr, m, r, e]() {
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildIntegrityJson(path, tr, m, r, e));
+    });
+}
+
+void RdbAuditLogger::OnCorrupt(
+    const std::string &dbPath, int rc, int osErrno, const std::string &detail)
+{
+    EnsureInit(dbPath);
+    if (!IsActive()) {
+        return;
+    }
+    std::string path = dbPath;
+    int r = rc;
+    int os = osErrno;
+    std::string d = detail;
+    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, r, os, d]() {
+        FirstLossInfo firstLoss;
+        firstLoss.op = "corrupt";
+        firstLoss.rc = r;
+        firstLoss.osErrno = os;
+        firstLoss.detail = d;
+        firstLoss.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
+        firstLoss.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        RdbDbLoggerManager::GetInstance().WriteFirstLossSync(path, firstLoss);
+    });
 }
 
 void RdbAuditLogger::OnDbDelete(const std::string &dbPath, const std::string &op, bool auditEnabled)
@@ -260,12 +318,16 @@ void RdbAuditLogger::OnDbDelete(const std::string &dbPath, const std::string &op
     if (!IsActive()) {
         return;
     }
-    RdbAuditLoggerManager::GetInstance().AppendEventAsync(BuildDbDeleteJson(dbPath, op));
-    DeleteInfo del;
-    del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbPath);
-    del.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
-    del.time = RdbTimeUtils::GetCurSysTimeWithMs();
-    RdbDbLoggerManager::GetInstance().WriteDeleteAsync(dbPath, del);
+    std::string path = dbPath;
+    std::string o = op;
+    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, o]() {
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildDbDeleteJson(path, o));
+        DeleteInfo del;
+        del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(path);
+        del.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
+        del.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        RdbDbLoggerManager::GetInstance().WriteDeleteSync(path, del);
+    });
 }
 
 bool RdbAuditLogger::AccumulateOrFlush(const std::string &eventKey, int64_t rows, int64_t &flushRows)

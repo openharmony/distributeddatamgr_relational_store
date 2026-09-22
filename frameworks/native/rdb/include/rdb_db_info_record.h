@@ -105,14 +105,15 @@ struct ConfigInfo : public Serializable {
     bool Unmarshal(const json &obj) override;
 };
 
-// First loss point / badfd record (audit.json block 2). Overwritten on each
-// IO error / data-loss event (best-effort diagnostic).
+// First loss point / corruption record (audit.json block 2). Overwritten on
+// each IO error or integrity-check failure (best-effort diagnostic).
 struct FirstLossInfo : public Serializable {
-    std::string op; // "io_error" or SQL op ("DELETE" ...)
+    std::string op; // "io_error", "corrupt", or SQL op
     std::string tbl;
     int64_t rows = 0;
     int32_t rc = 0;
     int32_t osErrno = 0;
+    std::string detail; // integrity check result string (corruption scenario)
     CallerInfo callerInfo;
     std::string time;
     bool Marshal(json &obj) const override;

@@ -86,27 +86,26 @@ void RdbAuditLoggerManager::Init(const std::string &auditDir, bool auditEnabled)
     initialized_ = true;
 }
 
-void RdbAuditLoggerManager::AppendEventAsync(const std::string &jsonLine)
+void RdbAuditLoggerManager::ExecuteAsync(Task task)
 {
-    if (!initialized_ || jsonLine.empty()) {
+    if (!initialized_) {
         return;
     }
     auto executor = TaskExecutor::GetInstance().GetExecutor();
     if (executor == nullptr) {
         return; // pool stopped (shutdown) — drop best-effort audit work
     }
-    std::string line = jsonLine;
-    executor->Execute([this, line]() { DoAppendEvent(line); });
+    executor->Execute(std::move(task));
 }
 
-void RdbAuditLoggerManager::DoAppendEvent(const std::string &jsonLine)
+void RdbAuditLoggerManager::AppendEventSync(const std::string &jsonLine)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!initialized_ || writeFd_ < 0 || jsonLine.empty()) {
         return;
     }
     if (lockFd_ >= 0 && flock(lockFd_, LOCK_EX) != 0) {
-        LOG_WARN("DoAppendEvent: flock LOCK_EX failed, errno=%{public}d", errno);
+        LOG_WARN("AppendEventSync: flock LOCK_EX failed, errno=%{public}d", errno);
     }
     MaybeRotateLog();
     std::string line = jsonLine + "\n";
@@ -117,7 +116,7 @@ void RdbAuditLoggerManager::DoAppendEvent(const std::string &jsonLine)
             if (errno == EINTR) {
                 continue;
             }
-            LOG_ERROR("DoAppendEvent: write failed, fd=%{public}d, errno=%{public}d", writeFd_, errno);
+            LOG_ERROR("AppendEventSync: write failed, fd=%{public}d, errno=%{public}d", writeFd_, errno);
             break;
         }
         total += static_cast<size_t>(n);
