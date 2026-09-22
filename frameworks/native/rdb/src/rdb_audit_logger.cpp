@@ -327,7 +327,6 @@ void RdbAuditLogger::OnDbDelete(const std::string &dbPath, const std::string &op
     std::string path = dbPath;
     std::string o = op;
     RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, o]() {
-        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildDbDeleteJson(path, o));
         DeleteInfo del;
         del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(path);
         del.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
@@ -430,27 +429,6 @@ std::string RdbAuditLogger::BuildIntegrityJson(
        << ",\"mode\":\"" << ModeToStr(mode) << "\""
        << ",\"result\":" << result << ",\"err\":\"" << EscapeJson(err) << "\""
        << ",\"path\":\"" << EscapeJson(SqliteUtils::Anonymous(dbPath)) << "\"}";
-    return os.str();
-}
-
-std::string RdbAuditLogger::BuildDbDeleteJson(const std::string &dbPath, const std::string &op)
-{
-    std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
-    auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
-    auto fileInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbPath);
-    std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
-    std::ostringstream os;
-    os << "{\"evt\":\"DB_DELETE\",\"ts\":\"" << EscapeJson(ts) << "\""
-       << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
-       << ",\"op\":\"" << EscapeJson(op) << "\""
-       << ",\"path\":\"" << EscapeJson(SqliteUtils::Anonymous(dbPath)) << "\""
-       << ",\"files\":{";
-    WriteFileInfo(os, "db", fileInfo.db);
-    os << ",";
-    WriteFileInfo(os, "wal", fileInfo.wal);
-    os << ",";
-    WriteFileInfo(os, "shm", fileInfo.shm);
-    os << "},\"caller\":\"pid:" << caller.pid << ":tid:" << caller.tid << "\"}";
     return os.str();
 }
 
