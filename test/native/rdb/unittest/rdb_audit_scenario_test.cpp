@@ -71,33 +71,6 @@ bool MakeDirRecursive(const std::string &path, mode_t mode)
     return true;
 }
 
-void RemoveDirRecursive(const std::string &path)
-{
-    if (path.empty()) {
-        return;
-    }
-    DIR *dir = opendir(path.c_str());
-    if (dir == nullptr) {
-        unlink(path.c_str());
-        return;
-    }
-    struct dirent *entry = nullptr;
-    while ((entry = readdir(dir)) != nullptr) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-        std::string full = path + "/" + entry->d_name;
-        struct stat st;
-        if (stat(full.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
-            RemoveDirRecursive(full);
-        } else {
-            unlink(full.c_str());
-        }
-    }
-    closedir(dir);
-    rmdir(path.c_str());
-}
-
 std::string ReadFileContent(const std::string &path)
 {
     int fd = open(path.c_str(), O_RDONLY);
@@ -141,54 +114,25 @@ std::string AuditDir()
 
 std::string AuditJsonPath()
 {
-    return AuditDir() + "test_audit.json";
+    // Mirrors RdbDbLoggerManager::BuildAuditPath naming: {el}{dbName}_audit.json.
+    // Reuse SqliteUtils parsers (R10) instead of hardcoding so the path tracks
+    // DbPath() changes automatically.
+    return AuditDir() + SqliteUtils::GetArea(DbPath()) + SqliteUtils::GetDbName(DbPath()) + "_audit.json";
 }
 
 std::string DbPath()
 {
-    return std::string(TEST_BASE_DIR) + "/test.db";
+    // Path must contain an "/el" segment so SqliteUtils::GetArea returns a
+    // non-empty area (e.g. "el2"); otherwise RdbDbLoggerManager::BuildAuditPath
+    // returns "" and audit.json is never written.
+    return std::string(TEST_BASE_DIR) + "/el2/database/test.db";
 }
 
-void SetupManager()
+std::string DbDir()
 {
-    std::string auditDir = AuditDir();
-    MakeDirRecursive(auditDir, AUDIT_DIR_MODE);
-    auto &amgr = RdbAuditLoggerManager::GetInstance();
-    if (amgr.lockFd_ >= 0) {
-        close(amgr.lockFd_);
-        amgr.lockFd_ = -1;
-    }
-    if (amgr.writeFd_ >= 0) {
-        close(amgr.writeFd_);
-        amgr.writeFd_ = -1;
-    }
-    amgr.auditDir_ = auditDir;
-    amgr.writeFd_ =
-        open((auditDir + "events.log").c_str(), O_CREAT | O_APPEND | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-    amgr.lockFd_ =
-        open((auditDir + "events.lock").c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-    amgr.initialized_ = true;
-    auto &dbmgr = RdbDbLoggerManager::GetInstance();
-    dbmgr.auditDir_ = auditDir;
-    dbmgr.initialized_ = true;
-}
-
-void ResetManager()
-{
-    auto &amgr = RdbAuditLoggerManager::GetInstance();
-    if (amgr.lockFd_ >= 0) {
-        close(amgr.lockFd_);
-        amgr.lockFd_ = -1;
-    }
-    if (amgr.writeFd_ >= 0) {
-        close(amgr.writeFd_);
-        amgr.writeFd_ = -1;
-    }
-    amgr.initialized_ = false;
-    amgr.auditDir_.clear();
-    auto &dbmgr = RdbDbLoggerManager::GetInstance();
-    dbmgr.initialized_ = false;
-    dbmgr.auditDir_.clear();
+    std::string path = DbPath();
+    size_t pos = path.rfind('/');
+    return (pos == std::string::npos) ? TEST_BASE_DIR : path.substr(0, pos);
 }
 
 size_t WaitEventLines(size_t expected, int timeoutMs = 3000)
@@ -251,16 +195,24 @@ public:
 
     void SetUp() override
     {
-        ResetManager();
-        RemoveDirRecursive(TEST_BASE_DIR);
+        RdbHelper::DeleteRdbStore(DbPath());
         MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
-        SetupManager();
+        MakeDirRecursive(DbDir(), AUDIT_DIR_MODE);
+        MakeDirRecursive(AuditDir(), AUDIT_DIR_MODE);
+        // Idempotent Init via the public interface: first call opens events.log fd
+        // and sets auditDir_; later calls are no-ops. The singleton stays
+        // initialized across tests, pointing at AuditDir(). No private access.
+        RdbAuditLoggerManager::GetInstance().Init(AuditDir(), true);
+        RdbDbLoggerManager::GetInstance().Init(AuditDir(), true);
+        // Clean per-test artifacts without invalidating the singleton's events.log
+        // fd: truncating the path keeps the fd valid (O_APPEND writes resume at 0).
+        truncate((AuditDir() + "events.log").c_str(), 0);
+        unlink(AuditJsonPath().c_str());
     }
 
     void TearDown() override
     {
-        ResetManager();
-        RemoveDirRecursive(TEST_BASE_DIR);
+        RdbHelper::DeleteRdbStore(DbPath());
     }
 };
 
@@ -470,7 +422,11 @@ HWTEST_F(RdbAuditScenarioTest, DeleteStore_007, TestSize.Level0)
  */
 HWTEST_F(RdbAuditScenarioTest, AuditDisabled_008, TestSize.Level0)
 {
-    ResetManager();
+    // SetUp already initialized the singleton and created events.log. With
+    // SetAuditEnabled not called (defaults false), every On* entry returns
+    // before EnsureInit, so no new events are written and audit.json is unchanged.
+    size_t linesBefore = CountLines(ReadFileContent(AuditDir() + "events.log"));
+    std::string jsonBefore = ReadFileContent(AuditJsonPath());
     RdbStoreConfig config(DbPath());
     config.SetBundleName("scenario_test_app");
     // SetAuditEnabled not called — defaults to false
@@ -484,8 +440,8 @@ HWTEST_F(RdbAuditScenarioTest, AuditDisabled_008, TestSize.Level0)
     store->Insert("users", bucket);
     store->ExecuteSql("PRAGMA integrity_check");
 
-    EXPECT_FALSE(FileExists(AuditDir() + "events.log"));
-    EXPECT_FALSE(FileExists(AuditJsonPath()));
+    EXPECT_EQ(CountLines(ReadFileContent(AuditDir() + "events.log")), linesBefore);
+    EXPECT_EQ(ReadFileContent(AuditJsonPath()), jsonBefore);
 }
 
 // ============================================================================
