@@ -263,8 +263,8 @@ HWTEST_F(RdbAuditE2ETest, OpenAndDelete_112, TestSize.Level0)
     logger_.OnSqlAudit(config.GetPath(), "DELETE", "users", TEST_DELETE_ROWS, true);
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_NE(content.find("OPEN_OK"), std::string::npos);
-    EXPECT_NE(content.find("SQL_AUDIT"), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"OPEN\""), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"SQL\""), std::string::npos);
     // audit.json block 1 (lastOpen) should be written.
     EXPECT_TRUE(WaitFileExists(AuditDir() + "e2e_test_audit.json"));
 }
@@ -318,7 +318,7 @@ HWTEST_F(RdbAuditE2ETest, PragmaIntegrity_115, TestSize.Level0)
     logger_.OnIntegrity(std::string(TEST_BASE_DIR) + "/e2e_test.db", IntegrityTrigger::ACTIVE, mode, 0, "ok");
     WaitEventLines(1);
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_NE(content.find("\"evt\":\"INTEGRITY\""), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"IGR\""), std::string::npos);
     EXPECT_NE(content.find("\"trigger\":\"active\""), std::string::npos);
     EXPECT_NE(content.find("\"mode\":\"full\""), std::string::npos);
 }
@@ -353,7 +353,7 @@ HWTEST_F(RdbAuditE2ETest, OpenFail_117, TestSize.Level0)
     logger_.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO, true);
     WaitEventLines(1);
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_NE(content.find("\"evt\":\"OPEN_FAIL\""), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"OFAIL\""), std::string::npos);
     EXPECT_NE(content.find("\"rc\":14"), std::string::npos);
     EXPECT_NE(content.find("\"os_errno\":13"), std::string::npos);
 }
@@ -412,9 +412,9 @@ HWTEST_F(RdbAuditE2ETest, OpenFailThenOk_125, TestSize.Level0)
     size_t firstNewline = content.find('\n');
     ASSERT_NE(firstNewline, std::string::npos);
     std::string firstLine = content.substr(0, firstNewline);
-    EXPECT_NE(firstLine.find("OPEN_FAIL"), std::string::npos);
+    EXPECT_NE(firstLine.find("\"evt\":\"OFAIL\""), std::string::npos);
     std::string secondLine = content.substr(firstNewline + 1);
-    EXPECT_NE(secondLine.find("OPEN_OK"), std::string::npos);
+    EXPECT_NE(secondLine.find("\"evt\":\"OPEN\""), std::string::npos);
     // audit.json block 1 (lastOpen) should exist after OnOpenOk.
     EXPECT_TRUE(WaitFileExists(AuditDir() + "e2e_test_audit.json"));
 }

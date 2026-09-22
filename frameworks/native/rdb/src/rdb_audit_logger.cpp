@@ -366,7 +366,7 @@ std::string RdbAuditLogger::BuildOpenOkJson(const std::string &dbPath)
     auto slaveInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(SqliteUtils::GetSlavePath(dbPath));
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << "{\"evt\":\"OPEN_OK\",\"ts\":\"" << EscapeJson(ts) << "\""
+    os << "{\"evt\":\"OPEN\",\"ts\":\"" << EscapeJson(ts) << "\""
        << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
        << ",\"proc\":\"pid:" << caller.pid << ":tid:" << caller.tid << "\""
        << ",\"files\":{";
@@ -392,7 +392,7 @@ std::string RdbAuditLogger::BuildOpenFailJson(const std::string &dbPath, int rc,
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << "{\"evt\":\"OPEN_FAIL\",\"ts\":\"" << EscapeJson(ts) << "\""
+    os << "{\"evt\":\"OFAIL\",\"ts\":\"" << EscapeJson(ts) << "\""
        << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
        << ",\"proc\":\"pid:" << caller.pid << ":tid:" << caller.tid << "\""
        << ",\"rc\":" << rc << ",\"os_errno\":" << osErrno << ",\"path\":\""
@@ -407,7 +407,7 @@ std::string RdbAuditLogger::BuildSqlAuditJson(
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << "{\"evt\":\"SQL_AUDIT\",\"ts\":\"" << EscapeJson(ts) << "\""
+    os << "{\"evt\":\"SQL\",\"ts\":\"" << EscapeJson(ts) << "\""
        << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
        << ",\"op\":\"" << EscapeJson(op) << "\""
        << ",\"tbl\":\"" << EscapeJson(SqliteUtils::Anonymous(tbl)) << "\""
@@ -421,7 +421,7 @@ std::string RdbAuditLogger::BuildIntegrityJson(
     std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << "{\"evt\":\"INTEGRITY\",\"ts\":\"" << EscapeJson(ts) << "\""
+    os << "{\"evt\":\"IGR\",\"ts\":\"" << EscapeJson(ts) << "\""
        << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
        << ",\"trigger\":\"" << TriggerToStr(trigger) << "\""
        << ",\"mode\":\"" << ModeToStr(mode) << "\""

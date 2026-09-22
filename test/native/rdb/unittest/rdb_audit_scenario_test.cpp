@@ -290,8 +290,8 @@ HWTEST_F(RdbAuditScenarioTest, OpenAndInsert_001, TestSize.Level0)
 
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_NE(content.find("OPEN_OK"), std::string::npos);
-    EXPECT_EQ(content.find("SQL_AUDIT"), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"OPEN\""), std::string::npos);
+    EXPECT_EQ(content.find("\"evt\":\"SQL\""), std::string::npos);
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
     std::string json = ReadFileContent(AuditJsonPath());
     EXPECT_NE(json.find("lastOpen"), std::string::npos);
@@ -322,7 +322,7 @@ HWTEST_F(RdbAuditScenarioTest, Delete_002, TestSize.Level0)
 
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_NE(content.find("OPEN_OK"), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"OPEN\""), std::string::npos);
     EXPECT_NE(content.find("\"op\":\"DELETE\""), std::string::npos);
 }
 
@@ -343,7 +343,7 @@ HWTEST_F(RdbAuditScenarioTest, DropTable_003, TestSize.Level0)
 
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_NE(content.find("OPEN_OK"), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"OPEN\""), std::string::npos);
     EXPECT_NE(content.find("\"op\":\"DROP\""), std::string::npos);
 }
 
@@ -364,8 +364,8 @@ HWTEST_F(RdbAuditScenarioTest, PragmaIntegrity_004, TestSize.Level0)
 
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_NE(content.find("OPEN_OK"), std::string::npos);
-    EXPECT_NE(content.find("\"evt\":\"INTEGRITY\""), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"OPEN\""), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"IGR\""), std::string::npos);
     EXPECT_NE(content.find("\"trigger\":\"active\""), std::string::npos);
     EXPECT_NE(content.find("\"mode\":\"full\""), std::string::npos);
 }
@@ -422,10 +422,10 @@ HWTEST_F(RdbAuditScenarioTest, FullLifecycle_006, TestSize.Level0)
     // INSERT is throttled, not in events.log
     EXPECT_EQ(WaitEventLines(4), static_cast<size_t>(4));
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_NE(content.find("OPEN_OK"), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"OPEN\""), std::string::npos);
     EXPECT_NE(content.find("\"op\":\"DELETE\""), std::string::npos);
     EXPECT_NE(content.find("\"op\":\"DROP\""), std::string::npos);
-    EXPECT_NE(content.find("INTEGRITY"), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"IGR\""), std::string::npos);
     EXPECT_EQ(content.find("\"op\":\"INSERT\""), std::string::npos);
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
 }
@@ -503,7 +503,7 @@ HWTEST_F(RdbAuditScenarioTest, OpenFail_009, TestSize.Level0)
     logger.OnOpenFail(DbPath(), TEST_ERR_CODE, TEST_OS_ERRNO, true);
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
     std::string content = ReadFileContent(AuditDir() + "events.log");
-    EXPECT_NE(content.find("\"evt\":\"OPEN_FAIL\""), std::string::npos);
+    EXPECT_NE(content.find("\"evt\":\"OFAIL\""), std::string::npos);
     EXPECT_NE(content.find("\"rc\":14"), std::string::npos);
 }
 
