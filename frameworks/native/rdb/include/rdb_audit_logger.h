@@ -26,8 +26,6 @@
 namespace OHOS {
 namespace NativeRdb {
 
-class RdbStoreConfig;
-
 // Per-store audit façade. Owned by RdbStoreImpl (or created transiently by
 // RdbHelper / SqliteConnection / SqliteStatement per the confirmed design).
 // All persistence is delegated to the RdbAuditLoggerManager singleton (the
@@ -49,7 +47,7 @@ public:
     // inside the façade; when false the method returns before any I/O.
     // OnOpenOk takes the full config (needed to build the lastOpen record) and
     // reads IsAuditEnabled from it directly.
-    void OnOpenOk(const std::string &dbPath, const RdbStoreConfig &config, bool created);
+    void OnOpenOk(const std::string &dbPath, bool created, bool auditEnabled);
     void OnOpenFail(const std::string &dbPath, int rc, int osErrno, bool auditEnabled);
     void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno, bool auditEnabled);
 

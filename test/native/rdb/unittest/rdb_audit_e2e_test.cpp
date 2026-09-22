@@ -259,7 +259,7 @@ HWTEST_F(RdbAuditE2ETest, OpenAndDelete_112, TestSize.Level0)
 {
     SetupManager();
     RdbStoreConfig config = MakeConfig();
-    logger_.OnOpenOk(config.GetPath(), config, false);
+    logger_.OnOpenOk(config.GetPath(), false, config.IsAuditEnabled());
     logger_.OnSqlAudit(config.GetPath(), "DELETE", "users", TEST_DELETE_ROWS, true);
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");
@@ -370,7 +370,7 @@ HWTEST_F(RdbAuditE2ETest, AuditDisabled_119, TestSize.Level0)
     MakeDirRecursive(TEST_BASE_DIR, AUDIT_DIR_MODE);
     RdbStoreConfig config(std::string(TEST_BASE_DIR) + "/e2e_test.db");
     config.SetBundleName("e2e_test_app");
-    logger_.OnOpenOk(config.GetPath(), config, false);
+    logger_.OnOpenOk(config.GetPath(), false, config.IsAuditEnabled());
     EXPECT_FALSE(logger_.enabled_);
     EXPECT_FALSE(RdbAuditLoggerManager::GetInstance().initialized_);
     EXPECT_TRUE(RdbAuditLoggerManager::GetInstance().auditDir_.empty());
@@ -406,7 +406,7 @@ HWTEST_F(RdbAuditE2ETest, OpenFailThenOk_125, TestSize.Level0)
     SetupManager();
     RdbStoreConfig config = MakeConfig();
     logger_.OnOpenFail(config.GetPath(), TEST_ERR_CODE, TEST_OS_ERRNO, true);
-    logger_.OnOpenOk(config.GetPath(), config, false);
+    logger_.OnOpenOk(config.GetPath(), false, config.IsAuditEnabled());
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     std::string content = ReadFileContent(AuditDir() + "events.log");
     size_t firstNewline = content.find('\n');

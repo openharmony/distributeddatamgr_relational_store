@@ -28,7 +28,6 @@
 #include "rdb_db_info_manager.h"
 #include "rdb_db_logger_manager.h"
 #include "rdb_platform.h"
-#include "rdb_store_config.h"
 #include "rdb_time_utils.h"
 #include "sqlite_utils.h"
 
@@ -168,9 +167,9 @@ void RdbAuditLogger::EnsureInit(const std::string &dbPath)
     enabled_ = true;
 }
 
-void RdbAuditLogger::OnOpenOk(const std::string &dbPath, const RdbStoreConfig &config, bool created)
+void RdbAuditLogger::OnOpenOk(const std::string &dbPath, bool created, bool auditEnabled)
 {
-    if (!config.IsAuditEnabled()) {
+    if (!auditEnabled) {
         return;
     }
     EnsureInit(dbPath);
@@ -178,11 +177,10 @@ void RdbAuditLogger::OnOpenOk(const std::string &dbPath, const RdbStoreConfig &c
         return;
     }
     std::string path = dbPath;
-    RdbStoreConfig cfg = config;
     bool crt = created;
-    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, cfg, crt]() {
+    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, crt]() {
         RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenOkJson(path));
-        LastOpenDbInfo lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(cfg, crt);
+        LastOpenDbInfo lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(path, crt);
         RdbDbLoggerManager::GetInstance().RecordOpenSync(path, lastOpen);
     });
 }

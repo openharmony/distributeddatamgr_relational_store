@@ -22,7 +22,6 @@
 
 namespace OHOS {
 namespace NativeRdb {
-class RdbStoreConfig;
 
 /*
  * Provides collection utilities for per-database diagnostic records.
@@ -39,7 +38,7 @@ public:
 
     // Build the last-successful-open record (audit.json block 1). Caller
     // serializes and hands it to RdbAuditLoggerManager for persistence.
-    LastOpenDbInfo BuildLastOpen(const RdbStoreConfig &config, bool created);
+    LastOpenDbInfo BuildLastOpen(const std::string &dbPath, bool created);
 
     // Utilities used by AuditLogger / RdbAuditLoggerManager.
     DbFileInfo CollectDbFileInfo(const std::string &dbPath);
@@ -53,7 +52,6 @@ private:
     FileInfo BuildFileInfo(const std::string &path);
     BinlogInfo CollectBinlog(const std::string &dbPath);
     KeyInfo CollectKey(const std::string &dbPath);
-    ConfigInfo BuildConfigInfo(const RdbStoreConfig &config);
 };
 } // namespace NativeRdb
 } // namespace OHOS
