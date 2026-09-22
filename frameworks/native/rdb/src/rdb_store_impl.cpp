@@ -1709,7 +1709,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         }
     }
     if (errCode == E_OK) {
-        auditLogger_.OnOpenOk(config_.GetPath(), config_, created);
+        auditLogger_.OnOpenOk(config_.GetPath(), created, config_.IsAuditEnabled());
     }
     InnerOpen();
     initStatus_ = errCode;

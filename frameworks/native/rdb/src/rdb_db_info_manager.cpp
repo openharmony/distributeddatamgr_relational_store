@@ -30,7 +30,6 @@
 #include "rdb_errno.h"
 #include "rdb_platform.h"
 #include "rdb_security_manager.h"
-#include "rdb_store_config.h"
 #include "rdb_time_utils.h"
 #include "sqlite_utils.h"
 
@@ -128,25 +127,17 @@ KeyInfo RdbDbInfoManager::CollectKey(const std::string &dbPath)
     return info;
 }
 
-ConfigInfo RdbDbInfoManager::BuildConfigInfo(const RdbStoreConfig &config)
+LastOpenDbInfo RdbDbInfoManager::BuildLastOpen(const std::string &dbPath, bool created)
 {
-    ConfigInfo info;
-    info.name = SqliteUtils::Anonymous(config.GetName());
-    return info;
-}
-
-LastOpenDbInfo RdbDbInfoManager::BuildLastOpen(const RdbStoreConfig &config, bool created)
-{
-    std::string dbPath = config.GetPath();
     LastOpenDbInfo info;
     info.main = CollectDbFileInfo(dbPath);
     info.replica = CollectDbFileInfo(SqliteUtils::GetSlavePath(dbPath));
     info.binlog = CollectBinlog(dbPath);
-    info.config = BuildConfigInfo(config);
+    info.config.name = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     info.key = CollectKey(dbPath);
     info.time = RdbTimeUtils::GetCurSysTimeWithMs();
     info.callerInfo = CollectCaller();
-    info.integrityResult = 0; // open succeeded => integrity acceptable
+    info.integrityResult = 0;
     info.created = created;
     info.keyPresent = RdbSecurityManager::GetInstance().IsKeyFileExists(dbPath, RdbSecurityManager::PUB_KEY_FILE);
     return info;
