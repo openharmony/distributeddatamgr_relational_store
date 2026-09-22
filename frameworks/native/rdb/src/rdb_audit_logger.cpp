@@ -306,6 +306,7 @@ void RdbAuditLogger::OnCorrupt(
         corrupt.rc = r;
         corrupt.osErrno = os;
         corrupt.detail = d;
+        corrupt.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(path);
         corrupt.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
         corrupt.time = RdbTimeUtils::GetCurSysTimeWithMs();
         RdbDbLoggerManager::GetInstance().WriteCorruptSync(path, corrupt);
