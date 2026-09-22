@@ -27,7 +27,7 @@ namespace OHOS {
 namespace NativeRdb {
 
 // Singleton owning the audit.json persistence for the four overwrite blocks:
-// lastOpen / firstLoss / dbDelete / inodeChange. This object operates ONLY on
+// lastOpen / ioError / dbDelete / inodeChange / corrupt. This object operates ONLY on
 // audit.json (and its per-db lock file); events.log is handled by the separate
 // RdbAuditLoggerManager. Both share the same audit root directory, which the
 // RdbAuditLogger façade probes once and passes in via Init (per confirmed design).
@@ -57,8 +57,9 @@ public:
 
     // Synchronous audit.json writes. Called from inside an ExecuteAsync task.
     void RecordOpenSync(const std::string &dbPath, const LastOpenDbInfo &lastOpen);
-    void WriteFirstLossSync(const std::string &dbPath, const FirstLossInfo &firstLoss);
+    void WriteIoErrorSync(const std::string &dbPath, const IoErrorInfo &ioError);
     void WriteDeleteSync(const std::string &dbPath, const DeleteInfo &del);
+    void WriteCorruptSync(const std::string &dbPath, const CorruptInfo &corrupt);
 
 private:
     RdbDbLoggerManager();
