@@ -823,6 +823,7 @@ void ConnPool::Container::InitMembers(Creator creator, int32_t max, int32_t time
         timeout_ = std::chrono::seconds(timeout);
     }
     cond_.notify_all();
+    acquireCond_.notify_all();
 }
 
 int ConnectionPool::Container::Interrupt()
@@ -870,6 +871,7 @@ std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Ini
         }
     }
     cond_.notify_all();
+    acquireCond_.notify_all();
     return { E_OK, connNode };
 }
 
@@ -945,9 +947,7 @@ int32_t ConnPool::Container::AcquireNode(std::unique_lock<std::mutex> &lock,
     if (!disable_ && !extending_) {
         return ExtendNode(lock);
     }
-    if (!cond_.wait_for(lock, interval, [this]() {
-        return count_ > 0 || (!disable_ && !extending_);
-    })) {
+    if (!acquireCond_.wait_for(lock, interval, [this]() { return count_ > 0 || (!disable_ && !extending_); })) {
         return E_DATABASE_BUSY;
     }
     if (count_ == 0 && !disable_) {
@@ -978,6 +978,7 @@ int32_t ConnPool::Container::ExtendNode(std::unique_lock<std::mutex> &lock)
     extending_ = false;
     errCode = AddNode(errCode, std::move(connection));
     cond_.notify_all();
+    acquireCond_.notify_all();
     return errCode;
 }
 
@@ -1027,6 +1028,7 @@ std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Contai
         nodes.clear();
         disable_ = wasDisabled;
         cond_.notify_all();
+        acquireCond_.notify_all();
         return {false, nodes};
     }
     auto func = [](const std::list<std::shared_ptr<ConnNode>> &nodes) -> bool {
@@ -1050,6 +1052,7 @@ std::pair<bool, std::list<std::shared_ptr<ConnPool::ConnNode>>> ConnPool::Contai
     }
     disable_ = wasDisabled;
     cond_.notify_all();
+    acquireCond_.notify_all();
     return {!failed, nodes};
 }
 
@@ -1088,6 +1091,7 @@ void ConnPool::Container::Disable()
         WaitForExtension(lock);
     }
     cond_.notify_all();
+    acquireCond_.notify_all();
 }
 
 void ConnPool::Container::Enable()
@@ -1097,6 +1101,7 @@ void ConnPool::Container::Enable()
         disable_ = false;
     }
     cond_.notify_all();
+    acquireCond_.notify_all();
 }
 
 int32_t ConnPool::Container::Release(std::shared_ptr<ConnNode> node)
@@ -1114,7 +1119,7 @@ int32_t ConnPool::Container::Release(std::shared_ptr<ConnNode> node)
             count_++;
         }
     }
-    // Wake all waiters after returning a node.
+    acquireCond_.notify_one();
     cond_.notify_all();
     return E_OK;
 }
@@ -1134,7 +1139,7 @@ int32_t ConnectionPool::Container::ReleaseTrans(std::shared_ptr<ConnNode> node)
             RelDetails(node);
         }
     }
-    // Wake all waiters after returning a node.
+    acquireCond_.notify_one();
     cond_.notify_all();
     return E_OK;
 }
