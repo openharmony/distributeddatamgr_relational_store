@@ -109,44 +109,21 @@ std::string ProbeAuditDir()
     return "";
 }
 
-std::string EscapeJson(const std::string &s)
+// hilog-style timestamp: "MM-DD HH:MM:SS.mmm" (strip the year prefix).
+std::string TsLog()
 {
-    std::string out;
-    out.reserve(s.size());
-    for (char c : s) {
-        switch (c) {
-            case '"':
-                out += "\\\"";
-                break;
-            case '\\':
-                out += "\\\\";
-                break;
-            case '\n':
-                out += "\\n";
-                break;
-            case '\r':
-                out += "\\r";
-                break;
-            case '\t':
-                out += "\\t";
-                break;
-            default:
-                out += c;
-                break;
-        }
-    }
-    return out;
+    std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
+    return ts.size() > 5 ? ts.substr(5) : ts;
 }
 
+// Append file info as space-separated key=value pairs (log style, not JSON).
 void WriteFileInfo(std::ostringstream &os, const char *label, const FileInfo &fi)
 {
-    os << "\"" << label << "\":{\"inode\":" << fi.node
-       << ",\"atime\":\"" << EscapeJson(fi.time.atime) << "\""
-       << ",\"mtime\":\"" << EscapeJson(fi.time.mtime) << "\""
-       << ",\"ctime\":\"" << EscapeJson(fi.time.ctime) << "\""
-       << ",\"size\":" << fi.size
-       << ",\"perm\":{\"mode\":\"" << EscapeJson(fi.permission.mode) << "\",\"acl\":\""
-       << EscapeJson(fi.permission.acl) << "\"}}";
+    os << " " << label << "_inode=" << fi.node
+       << " " << label << "_size=" << fi.size
+       << " " << label << "_mode=" << fi.permission.mode
+       << " " << label << "_acl=" << fi.permission.acl
+       << " " << label << "_mtime=" << fi.time.mtime;
 }
 } // namespace
 
@@ -179,7 +156,7 @@ void RdbAuditLogger::OnOpenOk(const std::string &dbPath, bool created, bool audi
     std::string path = dbPath;
     bool crt = created;
     RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, crt]() {
-        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenOkJson(path));
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenOkLine(path));
         LastOpenDbInfo lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(path, crt);
         RdbDbLoggerManager::GetInstance().RecordOpenSync(path, lastOpen);
     });
@@ -198,7 +175,7 @@ void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno, 
     int r = rc;
     int os = osErrno;
     RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, r, os]() {
-        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenFailJson(path, r, os));
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenFailLine(path, r, os));
     });
 }
 
@@ -247,7 +224,7 @@ void RdbAuditLogger::OnSqlAudit(
         std::string t = tbl;
         int64_t r = rows;
         RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, o, t, r]() {
-            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditJson(path, o, t, r));
+            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(path, o, t, r));
         });
         return;
     }
@@ -268,7 +245,7 @@ void RdbAuditLogger::OnSqlAudit(
         std::string o = op;
         std::string t = tbl;
         RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, o, t, flushRows]() {
-            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditJson(path, o, t, flushRows));
+            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(path, o, t, flushRows));
         });
     }
 }
@@ -286,7 +263,7 @@ void RdbAuditLogger::OnIntegrity(
     int r = result;
     std::string e = err;
     RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, tr, m, r, e]() {
-        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildIntegrityJson(path, tr, m, r, e));
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildIntegrityLine(path, tr, m, r, e));
     });
 }
 
@@ -358,75 +335,63 @@ bool RdbAuditLogger::AccumulateOrFlush(const std::string &eventKey, int64_t rows
     return false;
 }
 
-std::string RdbAuditLogger::BuildOpenOkJson(const std::string &dbPath)
+std::string RdbAuditLogger::BuildOpenOkLine(const std::string &dbPath)
 {
-    std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
+    std::string ts = TsLog();
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
     auto fileInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbPath);
     auto slaveInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(SqliteUtils::GetSlavePath(dbPath));
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << "{\"evt\":\"OPEN\",\"ts\":\"" << EscapeJson(ts) << "\""
-       << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
-       << ",\"proc\":\"pid:" << caller.pid << ":tid:" << caller.tid << "\""
-       << ",\"files\":{";
+    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/OPEN:"
+       << " db=" << dbName << " proc=pid:" << caller.pid << ":tid:" << caller.tid;
     WriteFileInfo(os, "db", fileInfo.db);
-    os << ",";
     WriteFileInfo(os, "wal", fileInfo.wal);
-    os << ",";
     WriteFileInfo(os, "shm", fileInfo.shm);
-    os << ",\"slave\":{";
-    WriteFileInfo(os, "db", slaveInfo.db);
-    os << ",";
-    WriteFileInfo(os, "wal", slaveInfo.wal);
-    os << ",";
-    WriteFileInfo(os, "shm", slaveInfo.shm);
-    os << "}},\"dir_perm\":{\"mode\":\"" << EscapeJson(fileInfo.parent.permission.mode) << "\",\"acl\":\""
-       << EscapeJson(fileInfo.parent.permission.acl) << "\"}}";
+    os << " slave_db_inode=" << slaveInfo.db.node << " slave_wal_inode=" << slaveInfo.wal.node
+       << " slave_shm_inode=" << slaveInfo.shm.node
+       << " dir_mode=" << fileInfo.parent.permission.mode
+       << " dir_acl=" << fileInfo.parent.permission.acl;
     return os.str();
 }
 
-std::string RdbAuditLogger::BuildOpenFailJson(const std::string &dbPath, int rc, int osErrno)
+std::string RdbAuditLogger::BuildOpenFailLine(const std::string &dbPath, int rc, int osErrno)
 {
-    std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
+    std::string ts = TsLog();
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << "{\"evt\":\"OFAIL\",\"ts\":\"" << EscapeJson(ts) << "\""
-       << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
-       << ",\"proc\":\"pid:" << caller.pid << ":tid:" << caller.tid << "\""
-       << ",\"rc\":" << rc << ",\"os_errno\":" << osErrno << ",\"path\":\""
-       << EscapeJson(SqliteUtils::Anonymous(dbPath)) << "\"}";
+    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/OFAIL:"
+       << " db=" << dbName << " proc=pid:" << caller.pid << ":tid:" << caller.tid
+       << " rc=" << rc << " os_errno=" << osErrno
+       << " path=" << SqliteUtils::Anonymous(dbPath);
     return os.str();
 }
 
-std::string RdbAuditLogger::BuildSqlAuditJson(
+std::string RdbAuditLogger::BuildSqlAuditLine(
     const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows)
 {
-    std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
+    std::string ts = TsLog();
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << "{\"evt\":\"SQL\",\"ts\":\"" << EscapeJson(ts) << "\""
-       << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
-       << ",\"op\":\"" << EscapeJson(op) << "\""
-       << ",\"tbl\":\"" << EscapeJson(SqliteUtils::Anonymous(tbl)) << "\""
-       << ",\"rows\":" << rows << ",\"caller\":\"pid:" << caller.pid << ":tid:" << caller.tid << "\"}";
+    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/SQL:"
+       << " db=" << dbName << " op=" << op << " tbl=" << SqliteUtils::Anonymous(tbl)
+       << " rows=" << rows << " caller=pid:" << caller.pid << ":tid:" << caller.tid;
     return os.str();
 }
 
-std::string RdbAuditLogger::BuildIntegrityJson(
+std::string RdbAuditLogger::BuildIntegrityLine(
     const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err)
 {
-    std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
+    std::string ts = TsLog();
+    auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << "{\"evt\":\"IGR\",\"ts\":\"" << EscapeJson(ts) << "\""
-       << ",\"db_name\":\"" << EscapeJson(dbName) << "\""
-       << ",\"trigger\":\"" << TriggerToStr(trigger) << "\""
-       << ",\"mode\":\"" << ModeToStr(mode) << "\""
-       << ",\"result\":" << result << ",\"err\":\"" << EscapeJson(err) << "\""
-       << ",\"path\":\"" << EscapeJson(SqliteUtils::Anonymous(dbPath)) << "\"}";
+    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/IGR:"
+       << " db=" << dbName << " trigger=" << TriggerToStr(trigger) << " mode=" << ModeToStr(mode)
+       << " result=" << result << " err=" << err
+       << " path=" << SqliteUtils::Anonymous(dbPath);
     return os.str();
 }
 

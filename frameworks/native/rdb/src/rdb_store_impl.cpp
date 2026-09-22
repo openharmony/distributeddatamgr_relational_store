@@ -3106,7 +3106,7 @@ int32_t RdbStoreImpl::InitOwner(int version, RdbOpenCallback &openCallback)
     if (errCode != E_OK) {
         return errCode;
     }
-    (void)ExchangeSlaverToMaster();
+    (void)ExchangeSlaverToMaster(true);
     SwitchOver(true);
     errCode = ProcessOpenCallback(version, openCallback);
     SwitchOver(false);
