@@ -144,6 +144,7 @@ public:
     bool IsMemoryRdb() const override;
     bool IsHoldingConnection() override;
     bool IsSlaveDiffFromMaster() const override;
+    bool IsSlaveAvailable() const override;
     int Backup(const std::string &databasePath, const std::vector<uint8_t> &encryptKey, bool verifyDb) override;
     int Restore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
     int ForceRestore(const std::string &backupPath, const std::vector<uint8_t> &newKey) override;
@@ -197,7 +198,7 @@ public:
     // not virtual functions /
     const RdbStoreConfig &GetConfig();
     std::string GetName();
-    int32_t ExchangeSlaverToMaster();
+    int32_t ExchangeSlaverToMaster(bool needMigrate = false);
     void Close();
     int RestorePoolOnTimeout(std::shared_ptr<ConnectionPool> pool,
         const std::shared_ptr<DistributedRdb::RdbService> &service, const char *reason);
@@ -234,6 +235,7 @@ private:
         std::weak_ptr<ConnectionPool> connPool = {});
     int32_t ProcessOpenCallback(int version, RdbOpenCallback &openCallback);
     int32_t CreatePool(bool &created);
+    void MigrateReplicaIfNeeded(const std::shared_ptr<Connection> &conn, bool isResetBinlog);
     static void RegisterDataChangeCallback(
         std::shared_ptr<DelayNotify> delayNotifier, std::weak_ptr<ConnectionPool> connPool, int retry);
     int InnerOpen();

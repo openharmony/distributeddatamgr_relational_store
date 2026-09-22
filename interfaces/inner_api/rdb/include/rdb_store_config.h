@@ -739,11 +739,21 @@ public:
      * @brief Sets the db path for sa.
      */
     API_EXPORT void SetServerPath(const std::string &serverPath);
-    
+
     /**
      * @brief Sets the db path for sa.
      */
     API_EXPORT std::string GetServerPath() const;
+
+    /**
+     * @brief Sets the custom replica db path. Empty means derive from master path by the legacy _slave.db rule.
+     */
+    API_EXPORT void SetReplicaPath(const std::string &replicaPath);
+
+    /**
+     * @brief Obtains the custom replica db path. Empty means the legacy _slave.db derivation is used.
+     */
+    API_EXPORT std::string GetReplicaPath() const;
 
     /**
      * @brief Overload the line number operator.
@@ -765,7 +775,7 @@ public:
             syncMode_ != config.syncMode_ || databaseFileType != config.databaseFileType ||
             journalSize_ != config.journalSize_ || pageSize_ != config.pageSize_ || dbType_ != config.dbType_ ||
             customDir_ != config.customDir_ || pluginLibs_ != config.pluginLibs_ || haMode_ != config.haMode_ ||
-            serverPath_ != config.serverPath_) {
+            serverPath_ != config.serverPath_ || replicaPath_ != config.replicaPath_) {
             return false;
         }
 
@@ -974,6 +984,7 @@ private:
     ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;
 
     std::string serverPath_ = "";
+    std::string replicaPath_ = "";
 };
 } // namespace OHOS::NativeRdb
 #endif

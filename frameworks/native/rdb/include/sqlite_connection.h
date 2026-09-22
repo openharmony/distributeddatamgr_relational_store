@@ -71,6 +71,8 @@ public:
         const std::string &sql, SConn conn, const std::string &returningSql = "") override;
     int CheckReplicaForRestore(const bool isForceRestore) override;
     bool IsWriter() const override;
+    bool IsSlaveAvailable() const override;
+    void MigrateReplica(const std::string &staleSlavePath, bool isResetBinlog) override;
     int SubscribeTableChanges(const Notifier &notifier) override;
     int GetMaxVariable() const override;
     int32_t GetDBType() const override;
@@ -90,7 +92,8 @@ public:
     void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount = false) override;
     int SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fileInfo) override;
     int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) override;
-    static bool IsSupportBinlog(const RdbStoreConfig &config);
+    static int32_t CreateSlaveSymLink(
+        const std::string &dbPath, const std::string &masterDbPath, const std::string &suffix);
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
@@ -143,6 +146,7 @@ private:
     RdbStoreConfig GetSlaveRdbStoreConfig(const RdbStoreConfig &rdbConfig);
     std::pair<int32_t, std::shared_ptr<SqliteConnection>> CreateSlaveConnection(
         const RdbStoreConfig &config, SlaveOpenPolicy slaveOpenPolicy);
+    std::pair<int32_t, std::shared_ptr<SqliteConnection>> InnerOpenSlave(const RdbStoreConfig &config);
     int ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus,
         const bool isForceRestore = false);
     int ExchangeVerify(bool isRestore, const bool isForceRestore = false);
@@ -172,11 +176,10 @@ private:
     static void BinlogCloseHandle(sqlite3 *dbHandle);
     static int CheckPathExist(const std::string &dbPath);
     static int BinlogOpenHandle(const std::string &dbPath, sqlite3 *&dbHandle, bool isMemoryRdb);
-    static void BinlogSetConfig(sqlite3 *dbHandle, Sqlite3BinlogMode binlogMode);
+    static void BinlogSetConfig(sqlite3 *dbHandle, Sqlite3BinlogMode binlogMode, const std::string &binlogDirPath);
     static void BinlogOnFullFunc(void *pCtx, unsigned short currentCount, const char *dbPath);
     static int ReplayBinlogSqlite(sqlite3 *dbFrom, sqlite3 *slaveDb, const RdbStoreConfig &config);
     static void ReplayBinlog(const std::string &dbPath, std::shared_ptr<SqliteConnection> slaveConn, bool isNeedClean);
-    static std::string GetBinlogFolderPath(const std::string &dbPath);
     static Connection::ReplayCallBack GetReplayCallback(const std::string &dbPath);
     /**
      * @brief The lifecycle of config must be shorter than that of param..
@@ -184,7 +187,6 @@ private:
     static CodecConfig ConvertCryptoParamToCodecConfig(const RdbStoreConfig::CryptoParam &param);
     static CodecConfig CreateCodecConfig();
     static Sqlite3BinlogMode GetBinlogMode(const RdbStoreConfig &config);
-    static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
     static constexpr SqliteConnection::Suffix FILE_SUFFIXES[] = { { "", "DB" }, { "-shm", "SHM" }, { "-wal", "WAL" },
         { "-dwr", "DWR" }, { "-journal", "JOURNAL" }, { "-slaveFailure", nullptr }, { "-syncInterrupt", nullptr },
         { ".corruptedflg", nullptr }, { "-compare", nullptr }, { "-walcompress", nullptr },

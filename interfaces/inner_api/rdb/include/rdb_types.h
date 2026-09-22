@@ -142,6 +142,7 @@ struct RdbSyncerParam {
     bool assetDownloadOnDemand_ = false;
     std::string dbPath_ = "";
     bool isLocalOnly_ = false;
+    std::string replicaPath_ = "";
     ~RdbSyncerParam()
     {
         password_.assign(password_.size(), 0);
@@ -554,8 +555,7 @@ struct ReturningConfig {
     static constexpr int32_t DEFAULT_ROW_INDEX = -1;
     static constexpr int32_t FIRST_ROW_INDEX = 0;
     ReturningConfig(const std::initializer_list<std::string> &value, int32_t rowIndex = FIRST_ROW_INDEX,
-        int32_t count = DEFAULT_RETURNING_COUNT)
-        : columns(value), maxReturningCount(count), defaultRowIndex(rowIndex)
+        int32_t count = DEFAULT_RETURNING_COUNT) : columns(value), maxReturningCount(count), defaultRowIndex(rowIndex)
     {
     }
     ReturningConfig(const std::vector<std::string> &value, int32_t count = DEFAULT_RETURNING_COUNT)

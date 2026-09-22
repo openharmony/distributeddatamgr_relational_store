@@ -58,8 +58,32 @@ public:
     static constexpr const char *SLAVE_FAILURE = "-slaveFailure";
     static constexpr const char *SLAVE_INTERRUPT = "-syncInterrupt";
     static constexpr const char *SLAVE_RESTORE = "-restoring";
-    static constexpr const char *BINLOG_LOCK_FILE_SUFFIX = "_binlog/binlog_default.readIndex";
+    static constexpr const char *DB_SUFFIX = ".db";
+    static constexpr const char *SLAVE_SUFFIX = "_slave.db";
+    static constexpr const char *BINLOG_FOLDER_SUFFIX = "_binlog";
+    static constexpr const char *BINLOG_LOCK_FILE_SUFFIX = "/binlog_default.readIndex";
     static constexpr ssize_t SLAVE_ASYNC_REPAIR_CHECK_LIMIT = 367001600; // 367001600 = 350 * 1024 * 1024
+
+    enum class SlaveInvalidReason : int32_t {
+        OPEN_FAILED = 0,
+        OPEN_WAL_OVER_LIMIT,
+        PREPARE_FAILED,
+        BIND_FAILED,
+        STEP_FAILED,
+        FINALIZE_FAILED,
+        BINLOG_REPLAY_FAILED,
+        VERIFY_FAILED,
+        BACKUP_VERIFY_FAILED,
+        EXCHANGE_FAILED,
+        STALE_BINLOG,
+        ASYNC_RESTORE,
+    };
+
+    static constexpr const char *SLAVE_INVALID_REASON_STR[] = {
+        "open_failed", "open_wal_over_limit", "prepare_failed", "bind_failed", "step_failed",
+        "finalize_failed", "binlog_replay_failed", "verify_failed", "backup_verify_failed",
+        "exchange_failed", "stale_binlog", "async_restore",
+    };
 
     static int GetSqlStatementType(const std::string &sql);
     static bool IsSupportSqlForExecute(int sqlType);
@@ -82,13 +106,20 @@ public:
     static bool IsSlaveDbName(const std::string &fileName);
     static bool DeleteFiles(const std::vector<std::string> &filePaths);
     static std::string GetSlavePath(const std::string &name);
+    static std::string GetSlavePath(const RdbStoreConfig &config);
+    static std::string GetBinlogFolderPath(const std::string &dbPath);
+    static std::string GetBinlogFolderPath(const RdbStoreConfig &config);
+    static bool IsValidReplicaPath(const std::string &replicaPath);
+    static bool MigrateBinlogFolder(const RdbStoreConfig &config);
     static std::string GetMasterBackupPath(const std::string &name);
+    static int SetSlaveInvalid(const std::string &dbPath, SlaveInvalidReason reason);
     static int SetSlaveInvalid(const std::string &dbPath);
     static int SetSlaveInterrupted(const std::string &dbPath);
     static int SetSlaveRestoring(const std::string &dbPath, bool isRestore = true);
     static bool IsSlaveRestoring(const std::string &dbPath);
     static ssize_t GetDecompressedSize(const std::string &dbPath);
     static bool IsSlaveLarge(const std::string &dbPath);
+    static bool IsSupportBinlog(const RdbStoreConfig &config);
     static bool IsSlaveInvalid(const std::string &dbPath);
     static bool IsSlaveInterrupted(const std::string &dbPath);
     static void SetSlaveValid(const std::string &dbPath);
