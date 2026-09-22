@@ -115,7 +115,8 @@ struct IoErrorInfo : public Serializable {
 struct CorruptInfo : public Serializable {
     int32_t rc = 0;
     int32_t osErrno = 0;
-    std::string detail; // corruption message / integrity check result
+    std::string detail;
+    DbFileInfo files;
     CallerInfo callerInfo;
     std::string time;
     bool Marshal(json &obj) const override;

@@ -227,6 +227,7 @@ bool CorruptInfo::Marshal(json &obj) const
     SetValue(obj[GET_NAME(rc)], rc);
     SetValue(obj[GET_NAME(osErrno)], osErrno);
     SetValue(obj[GET_NAME(detail)], detail);
+    SetValue(obj[GET_NAME(files)], files);
     SetValue(obj[GET_NAME(callerInfo)], callerInfo);
     SetValue(obj[GET_NAME(time)], time);
     return true;
@@ -237,6 +238,7 @@ bool CorruptInfo::Unmarshal(const json &obj)
     GetValue(obj, GET_NAME(rc), rc);
     GetValue(obj, GET_NAME(osErrno), osErrno);
     GetValue(obj, GET_NAME(detail), detail);
+    GetValue(obj, GET_NAME(files), files);
     GetValue(obj, GET_NAME(callerInfo), callerInfo);
     GetValue(obj, GET_NAME(time), time);
     return true;
