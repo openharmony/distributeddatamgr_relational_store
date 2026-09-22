@@ -25,8 +25,10 @@
 namespace OHOS {
 namespace NativeRdb {
 
-// Directory mode for audit subdirectories: owner+group rw, others no access.
-constexpr mode_t AUDIT_DIR_MODE = 0660;
+// Directory mode for audit subdirectories: owner+group rwx, others no access.
+// Directories require execute (x) permission to be traversable and to allow
+// file creation inside; 0660 (rw-rw----) lacks x and would block file creation.
+constexpr mode_t AUDIT_DIR_MODE = 0770;
 
 // Singleton owning the events.log persistence (the append-only jsonl audit
 // trail). This object operates ONLY on events.log (+ events.lock); the four

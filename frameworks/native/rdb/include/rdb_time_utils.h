@@ -26,6 +26,7 @@ class RdbTimeUtils {
 public:
     static std::string GetCurSysTimeWithMs();
     static std::string GetTimeWithMs(time_t sec, int64_t nsec);
+    static std::string TimeToStr(time_t sec);
 };
 
 } // namespace NativeRdb

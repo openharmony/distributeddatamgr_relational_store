@@ -78,12 +78,6 @@ HWTEST_F(RdbDbInfoTest, RdbDbInfoRecord_MarshalUnmarshal_001, TestSize.Level1)
 {
     RdbDbInfoRecord rec;
     rec.lastOpen.config.name = "test.db";
-    rec.lastOpen.config.path = "/data/test/test.db";
-    rec.lastOpen.config.isEncrypted = true;
-    rec.lastOpen.config.securityLevel = 3;
-    rec.lastOpen.config.journalMode = "WAL";
-    rec.lastOpen.config.sync = "FULL";
-    rec.lastOpen.config.walAutoCheckpoint = 1000;
     rec.lastOpen.created = true;
     rec.lastOpen.keyPresent = false;
     rec.lastOpen.integrityResult = 0;
@@ -97,12 +91,6 @@ HWTEST_F(RdbDbInfoTest, RdbDbInfoRecord_MarshalUnmarshal_001, TestSize.Level1)
     RdbDbInfoRecord restored;
     EXPECT_TRUE(Serializable::Unmarshall(json, restored));
     EXPECT_EQ(restored.lastOpen.config.name, "test.db");
-    EXPECT_EQ(restored.lastOpen.config.path, "/data/test/test.db");
-    EXPECT_TRUE(restored.lastOpen.config.isEncrypted);
-    EXPECT_EQ(restored.lastOpen.config.securityLevel, 3);
-    EXPECT_EQ(restored.lastOpen.config.journalMode, "WAL");
-    EXPECT_EQ(restored.lastOpen.config.sync, "FULL");
-    EXPECT_EQ(restored.lastOpen.config.walAutoCheckpoint, 1000);
     EXPECT_TRUE(restored.lastOpen.created);
     EXPECT_FALSE(restored.lastOpen.keyPresent);
     EXPECT_EQ(restored.lastOpen.callerInfo.pid, 1234);

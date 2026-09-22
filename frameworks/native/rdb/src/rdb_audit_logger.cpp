@@ -141,7 +141,11 @@ std::string EscapeJson(const std::string &s)
 
 void WriteFileInfo(std::ostringstream &os, const char *label, const FileInfo &fi)
 {
-    os << "\"" << label << "\":{\"inode\":" << fi.node << ",\"mtime\":" << fi.time.mtime << ",\"size\":" << fi.size
+    os << "\"" << label << "\":{\"inode\":" << fi.node
+       << ",\"atime\":\"" << EscapeJson(fi.time.atime) << "\""
+       << ",\"mtime\":\"" << EscapeJson(fi.time.mtime) << "\""
+       << ",\"ctime\":\"" << EscapeJson(fi.time.ctime) << "\""
+       << ",\"size\":" << fi.size
        << ",\"perm\":{\"mode\":\"" << EscapeJson(fi.permission.mode) << "\",\"acl\":\""
        << EscapeJson(fi.permission.acl) << "\"}}";
 }
@@ -173,10 +177,10 @@ void RdbAuditLogger::OnOpenOk(const std::string &dbPath, const RdbStoreConfig &c
     if (!IsActive()) {
         return;
     }
-    const RdbStoreConfig &cfg = config;
     std::string path = dbPath;
+    RdbStoreConfig cfg = config;
     bool crt = created;
-    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, &cfg, crt]() {
+    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, cfg, crt]() {
         RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenOkJson(path));
         LastOpenDbInfo lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(cfg, crt);
         RdbDbLoggerManager::GetInstance().RecordOpenSync(path, lastOpen);
@@ -256,8 +260,11 @@ void RdbAuditLogger::OnSqlAudit(
     // Throttle stays sync (uses per-instance throttleMap_); only the write is async.
     std::string eventKey = "SQL_AUDIT:" + op + ":" + tbl;
     int64_t flushRows = 0;
-    if (AccumulateOrFlush(eventKey, rows, flushRows)) {
-        return;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (AccumulateOrFlush(eventKey, rows, flushRows)) {
+            return;
+        }
     }
     if (flushRows > 0) {
         std::string path = dbPath;

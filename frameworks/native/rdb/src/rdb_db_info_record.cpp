@@ -143,24 +143,12 @@ bool KeyInfo::Unmarshal(const json &obj)
 bool ConfigInfo::Marshal(json &obj) const
 {
     SetValue(obj[GET_NAME(name)], name);
-    SetValue(obj[GET_NAME(path)], path);
-    SetValue(obj[GET_NAME(isEncrypted)], isEncrypted);
-    SetValue(obj[GET_NAME(securityLevel)], securityLevel);
-    SetValue(obj[GET_NAME(journalMode)], journalMode);
-    SetValue(obj[GET_NAME(sync)], sync);
-    SetValue(obj[GET_NAME(walAutoCheckpoint)], walAutoCheckpoint);
     return true;
 }
 
 bool ConfigInfo::Unmarshal(const json &obj)
 {
     GetValue(obj, GET_NAME(name), name);
-    GetValue(obj, GET_NAME(path), path);
-    GetValue(obj, GET_NAME(isEncrypted), isEncrypted);
-    GetValue(obj, GET_NAME(securityLevel), securityLevel);
-    GetValue(obj, GET_NAME(journalMode), journalMode);
-    GetValue(obj, GET_NAME(sync), sync);
-    GetValue(obj, GET_NAME(walAutoCheckpoint), walAutoCheckpoint);
     return true;
 }
 

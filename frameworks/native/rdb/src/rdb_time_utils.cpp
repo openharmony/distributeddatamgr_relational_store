@@ -43,4 +43,13 @@ std::string RdbTimeUtils::GetTimeWithMs(time_t sec, int64_t nsec)
     return oss.str();
 }
 
+std::string RdbTimeUtils::TimeToStr(time_t sec)
+{
+    char buffer[MAX_TIME_BUF_LEN] = { 0 };
+    std::tm local_time;
+    localtime_r(&sec, &local_time);
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local_time);
+    return std::string(buffer);
+}
+
 } // namespace OHOS::NativeRdb

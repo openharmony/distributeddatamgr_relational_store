@@ -42,9 +42,9 @@ struct PermissionInfo : public Serializable {
 };
 
 struct TimeInfo : public Serializable {
-    int64_t ctime = 0; // seconds
-    int64_t atime = 0;
-    int64_t mtime = 0;
+    std::string ctime; // "YYYY-MM-DD HH:MM:SS"
+    std::string atime;
+    std::string mtime;
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
 };
@@ -94,13 +94,7 @@ struct KeyInfo : public Serializable {
 };
 
 struct ConfigInfo : public Serializable {
-    std::string name;
-    std::string path;
-    bool isEncrypted = false;
-    int32_t securityLevel = 0;
-    std::string journalMode;
-    std::string sync;
-    int32_t walAutoCheckpoint = 0;
+    std::string name; // anonymized db name
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
 };
