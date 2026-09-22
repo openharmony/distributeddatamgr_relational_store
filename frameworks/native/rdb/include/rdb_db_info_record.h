@@ -99,15 +99,23 @@ struct ConfigInfo : public Serializable {
     bool Unmarshal(const json &obj) override;
 };
 
-// First loss point / corruption record (audit.json block 2). Overwritten on
-// each IO error or integrity-check failure (best-effort diagnostic).
-struct FirstLossInfo : public Serializable {
-    std::string op; // "io_error", "corrupt", or SQL op
-    std::string tbl;
-    int64_t rows = 0;
+// I/O error record (audit.json block 2). Overwritten on each IO error.
+struct IoErrorInfo : public Serializable {
+    std::string op; // "execute" or "execute_for_rows"
     int32_t rc = 0;
     int32_t osErrno = 0;
-    std::string detail; // integrity check result string (corruption scenario)
+    CallerInfo callerInfo;
+    std::string time;
+    bool Marshal(json &obj) const override;
+    bool Unmarshal(const json &obj) override;
+};
+
+// Database corruption record (audit.json block 5). Overwritten on each
+// corruption event (integrity check failure, SQLITE_CORRUPT, SQLITE_NOTADB).
+struct CorruptInfo : public Serializable {
+    int32_t rc = 0;
+    int32_t osErrno = 0;
+    std::string detail; // corruption message / integrity check result
     CallerInfo callerInfo;
     std::string time;
     bool Marshal(json &obj) const override;
@@ -150,13 +158,14 @@ struct DbInfoChange : public Serializable {
 };
 
 // Top-level record persisted to "{auditDir}/{el}{dbName}audit.json".
-// Four overwrite blocks: lastOpen / firstLoss / dbDelete / inodeChange.
+// Five overwrite blocks: lastOpen / ioError / dbDelete / inodeChange / corrupt.
 // Each block keeps only the latest entry (overwrite, not append).
 struct RdbDbInfoRecord : public Serializable {
     LastOpenDbInfo lastOpen;     // block 1: last successful open
-    FirstLossInfo firstLoss;     // block 2: first loss point / badfd
+    IoErrorInfo ioError;         // block 2: I/O error
     DeleteInfo dbDelete;         // block 3: delete metadata (file info, inode)
     DbInfoChange inodeChange;    // block 4: inode change before/after on open
+    CorruptInfo corrupt;         // block 5: database corruption
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
 };

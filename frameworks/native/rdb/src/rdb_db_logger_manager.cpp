@@ -162,14 +162,19 @@ void RdbDbLoggerManager::RecordOpenSync(const std::string &dbPath, const LastOpe
     });
 }
 
-void RdbDbLoggerManager::WriteFirstLossSync(const std::string &dbPath, const FirstLossInfo &firstLoss)
+void RdbDbLoggerManager::WriteIoErrorSync(const std::string &dbPath, const IoErrorInfo &ioError)
 {
-    WithAuditRecord(dbPath, [&firstLoss](RdbDbInfoRecord &rec) { rec.firstLoss = firstLoss; });
+    WithAuditRecord(dbPath, [&ioError](RdbDbInfoRecord &rec) { rec.ioError = ioError; });
 }
 
 void RdbDbLoggerManager::WriteDeleteSync(const std::string &dbPath, const DeleteInfo &del)
 {
     WithAuditRecord(dbPath, [&del](RdbDbInfoRecord &rec) { rec.dbDelete = del; });
+}
+
+void RdbDbLoggerManager::WriteCorruptSync(const std::string &dbPath, const CorruptInfo &corrupt)
+{
+    WithAuditRecord(dbPath, [&corrupt](RdbDbInfoRecord &rec) { rec.corrupt = corrupt; });
 }
 
 void RdbDbLoggerManager::WithAuditRecord(

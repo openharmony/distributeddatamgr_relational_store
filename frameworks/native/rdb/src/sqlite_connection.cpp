@@ -415,11 +415,11 @@ void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
         LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
             SqliteUtils::Anonymous(config.GetName()).c_str(), static_cast<std::string>(checkResult).c_str(),
             SqliteUtils::SqlAnonymous(sql).c_str());
+        Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
         if (config.IsAuditEnabled()) {
             RdbAuditLogger logger;
             logger.OnCorrupt(config.GetPath(), errCode, 0, static_cast<std::string>(checkResult));
         }
-        Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
     }
 }
 

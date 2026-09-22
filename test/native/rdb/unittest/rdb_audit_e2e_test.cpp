@@ -389,11 +389,11 @@ HWTEST_F(RdbAuditE2ETest, IoErrorNoThrottle_122, TestSize.Level0)
     logger_.OnIoError("execute", "/data/test/el2/database/f.db", TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO, true);
     logger_.OnIoError("execute", "/data/test/el2/database/f.db", TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO, true);
     EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
-    // audit.json block 2 (firstLoss) should be written.
+    // audit.json block 2 (ioError) should be written.
     // dbPath "/data/test/el2/database/f.db" -> el="el2", dbName="f" -> "el2f_audit.json"
     EXPECT_TRUE(WaitFileExists(AuditDir() + "el2f_audit.json"));
     std::string json = ReadFileContent(AuditDir() + "el2f_audit.json");
-    EXPECT_NE(json.find("firstLoss"), std::string::npos);
+    EXPECT_NE(json.find("ioError"), std::string::npos);
 }
 
 /**

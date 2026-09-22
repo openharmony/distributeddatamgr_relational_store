@@ -217,13 +217,13 @@ void RdbAuditLogger::OnIoError(
     int r = rc;
     int os = osErrno;
     RdbAuditLoggerManager::GetInstance().ExecuteAsync([o, f, r, os]() {
-        FirstLossInfo firstLoss;
-        firstLoss.op = o;
-        firstLoss.rc = r;
-        firstLoss.osErrno = os;
-        firstLoss.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
-        firstLoss.time = RdbTimeUtils::GetCurSysTimeWithMs();
-        RdbDbLoggerManager::GetInstance().WriteFirstLossSync(f, firstLoss);
+        IoErrorInfo ioError;
+        ioError.op = o;
+        ioError.rc = r;
+        ioError.osErrno = os;
+        ioError.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
+        ioError.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        RdbDbLoggerManager::GetInstance().WriteIoErrorSync(f, ioError);
     });
 }
 
@@ -302,14 +302,13 @@ void RdbAuditLogger::OnCorrupt(
     int os = osErrno;
     std::string d = detail;
     RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, r, os, d]() {
-        FirstLossInfo firstLoss;
-        firstLoss.op = "corrupt";
-        firstLoss.rc = r;
-        firstLoss.osErrno = os;
-        firstLoss.detail = d;
-        firstLoss.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
-        firstLoss.time = RdbTimeUtils::GetCurSysTimeWithMs();
-        RdbDbLoggerManager::GetInstance().WriteFirstLossSync(path, firstLoss);
+        CorruptInfo corrupt;
+        corrupt.rc = r;
+        corrupt.osErrno = os;
+        corrupt.detail = d;
+        corrupt.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
+        corrupt.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        RdbDbLoggerManager::GetInstance().WriteCorruptSync(path, corrupt);
     });
 }
 

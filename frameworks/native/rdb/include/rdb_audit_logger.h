@@ -64,9 +64,9 @@ public:
     void OnIntegrity(
         const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err);
 
-    // Database corruption audit (integrity check failure). Writes audit.json
-    // block 2 (firstLoss) with op="corrupt" and the check result string.
-    // Caller gates on config.IsAuditEnabled() (external check, same as OnIntegrity).
+    // Database corruption audit (integrity check failure, SQLITE_CORRUPT, etc).
+    // Writes audit.json block 5 (corrupt). Caller gates on
+    // config.IsAuditEnabled() (external check, same as OnIntegrity).
     void OnCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail);
 
     // DB deletion audit. op = "delete_store" (business) or "vfs_xdelete" (VFS layer).
