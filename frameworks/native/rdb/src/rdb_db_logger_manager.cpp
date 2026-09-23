@@ -37,11 +37,12 @@
 
 namespace OHOS {
 namespace NativeRdb {
-
+using namespace OHOS::Rdb;
 namespace {
 constexpr const char *AUDIT_JSON_SUFFIX = "_audit.json";
 constexpr const char *AUDIT_LOCK_SUFFIX = "_audit.lock";
-
+constexpr uint64_t AUDIT_FD_TAG_ID = 0xD001650;
+const uint64_t AUDIT_FD_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, AUDIT_FD_TAG_ID);
 // RAII single-layer flock: opens a fresh fd per lock attempt so open file
 // descriptions are distinct — flock conflicts across same-process threads too
 // (no in-process mutex needed). Mirrors the SecurityManager::KeyFiles pattern.
