@@ -1554,7 +1554,8 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : isMemoryRdb_(config.IsMemoryRdb()), configHolder_(std::make_shared<RdbStoreConfig>(config)),
-      config_(*configHolder_), name_(config.GetName())
+      config_(*configHolder_), name_(config.GetName()),
+      auditLogger_(RdbAuditLogger::Create(config_.IsAuditEnabled()))
 {
     SqliteGlobalConfig::GetDbPath(config_, path_);
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
@@ -1684,7 +1685,6 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     if (initStatus_ != -1) {
         return initStatus_;
     }
-    auditLogger_ = RdbAuditLogger::Create(config_.IsAuditEnabled());
     int32_t errCode = E_OK;
     bool created = access(path_.c_str(), F_OK) != 0;
     errCode = CreatePool(created);

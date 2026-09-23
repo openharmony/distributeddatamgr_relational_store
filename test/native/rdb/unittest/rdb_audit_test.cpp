@@ -34,6 +34,7 @@
 #include "rdb_open_callback.h"
 #include "rdb_predicates.h"
 #include "rdb_store_config.h"
+#include "rdb_types.h"
 #include "sqlite_utils.h"
 #include "values_bucket.h"
 
@@ -147,11 +148,27 @@ std::string AuditJsonPath()
 // access, no friend). First call opens events.log fd + sets auditDir; later
 // calls are no-ops. Truncate events.log in place so the singleton's O_APPEND fd
 // stays valid (truncate does not change the inode) while clearing prior output.
+// 等待之前用例的异步审计任务落地（events.log 行数连续两次相同），避免 truncate 后旧任务追加
+void DrainAsyncAudit()
+{
+    size_t prev = CountLines(ReadFileContent(EventsLogPath()));
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(2000);
+    while (std::chrono::steady_clock::now() < deadline) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        size_t cur = CountLines(ReadFileContent(EventsLogPath()));
+        if (cur == prev) {
+            break;
+        }
+        prev = cur;
+    }
+}
+
 void SetupAudit()
 {
     MakeDirRecursive(AuditDir(), AUDIT_DIR_MODE);
     RdbAuditLoggerManager::GetInstance().Init(AuditDir(), true);
     RdbDbLoggerManager::GetInstance().Init(AuditDir(), true);
+    DrainAsyncAudit();
     truncate(EventsLogPath().c_str(), 0);
     unlink(AuditJsonPath().c_str());
 }
@@ -387,7 +404,7 @@ HWTEST_F(RdbAuditTest, RealDbOpen_011, TestSize.Level0)
     int err = E_OK;
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
-    EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
+    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
     EXPECT_NE(ReadFileContent(AuditJsonPath()).find("lastOpen"), NPOS);
 }
@@ -410,7 +427,7 @@ HWTEST_F(RdbAuditTest, RealDbDelete_012, TestSize.Level0)
     RdbPredicates p("users");
     p.EqualTo("id", 1);
     store->Delete(p);
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DELETE"), NPOS);
 }
 
@@ -426,7 +443,7 @@ HWTEST_F(RdbAuditTest, RealDbDropTable_013, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
     store->ExecuteSql("DROP TABLE IF EXISTS users");
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }
 
@@ -442,7 +459,7 @@ HWTEST_F(RdbAuditTest, RealDbPragma_014, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
     store->ExecuteSql("PRAGMA integrity_check");
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
     auto content = ReadFileContent(EventsLogPath());
     EXPECT_NE(content.find("PRG:"), NPOS);
     EXPECT_NE(content.find("result=ok"), NPOS);
@@ -608,7 +625,7 @@ HWTEST_F(RdbAuditTest, RealDbBatchInsert_022, TestSize.Level0)
     b.Put("name", "a");
     vbs.push_back(std::move(b));
     store->BatchInsert("users", vbs);
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=BatchInsert"), NPOS);
 }
 
@@ -631,8 +648,8 @@ HWTEST_F(RdbAuditTest, RealDbUpdate_023, TestSize.Level0)
     upd.Put("name", "b");
     RdbPredicates p("users");
     p.EqualTo("id", 1);
-    store->Update(upd, p);
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    store->Update(upd, p, ReturningConfig{});
+    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=UPDATE"), NPOS);
 }
 
@@ -649,7 +666,7 @@ HWTEST_F(RdbAuditTest, RealDbExecutePragma_024, TestSize.Level0)
     ASSERT_NE(store, nullptr);
     auto [code, value] = store->Execute("PRAGMA integrity_check");
     EXPECT_EQ(code, E_OK);
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("PRG:"), NPOS);
 }
 
@@ -665,7 +682,7 @@ HWTEST_F(RdbAuditTest, RealDbExecuteDropTable_025, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
     auto [code, value] = store->Execute("DROP TABLE IF EXISTS users");
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }
 
@@ -681,6 +698,6 @@ HWTEST_F(RdbAuditTest, RealDbExecuteExtDropTable_026, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
     auto [code, result] = store->ExecuteExt("DROP TABLE IF EXISTS users");
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }
