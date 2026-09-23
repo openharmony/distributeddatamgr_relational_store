@@ -22,6 +22,7 @@
 #include "rdb_db_info_manager.h"
 #include "rdb_db_logger_manager.h"
 #include "rdb_time_utils.h"
+#include "task_executor.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_security_manager.h"
@@ -142,9 +143,12 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
         del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbFile);
         del.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
         del.time = RdbTimeUtils::GetCurSysTimeWithMs();
-        RdbAuditLoggerManager::GetInstance().ExecuteAsync([dbFile, del]() {
-            RdbDbLoggerManager::GetInstance().WriteDeleteSync(dbFile, del);
-        });
+        auto executor = TaskExecutor::GetInstance().GetExecutor();
+        if (executor != nullptr) {
+            executor->Execute([dbFile, del]() {
+                RdbDbLoggerManager::GetInstance().WriteDeleteSync(dbFile, del);
+            });
+        }
     }
     Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_CURD,
         E_DFX_DELETE_RDB_STORE,
