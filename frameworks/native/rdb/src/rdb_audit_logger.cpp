@@ -32,6 +32,7 @@
 #include "rdb_time_utils.h"
 #include "sqlite_utils.h"
 #include "string_utils.h"
+#include "task_executor.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -43,6 +44,7 @@ constexpr const char *AUDIT_DIR_APP_ROOT = "/data/storage/el2/log";
 constexpr const char *AUDIT_DIR_APP_SUB = "rdb";
 constexpr int64_t THROTTLE_INTERVAL_MS = 60 * 1000; // 60 s
 constexpr size_t THROTTLE_MAP_MAX_SIZE = 64;
+constexpr int64_t FLUSH_THRESHOLD = 1000; // flush early when accumulated rows reach this
 // Length of the "YYYY-" year prefix in "YYYY-MM-DD HH:MM:SS.mmm" (stripped by TsLog).
 constexpr size_t YEAR_PREFIX_LEN = 5;
 
@@ -200,7 +202,7 @@ void RdbAuditLoggerImpl::OnSqlAudit(
     if (!IsActive() || op.empty()) {
         return;
     }
-    bool alwaysLog = (op == "DELETE" || op == "DROP" || op == "TRUNCATE");
+    bool alwaysLog = (op == "DELETE" || op == "DROP" || op == "TRUNCATE" || op == "BatchInsert");
     if (alwaysLog) {
         if (op == "DELETE" && rows <= 0) {
             return;
@@ -278,6 +280,11 @@ bool RdbAuditLoggerImpl::AccumulateOrFlush(const std::string &eventKey, int64_t 
     auto it = throttleMap_.find(eventKey);
     if (it != throttleMap_.end() && (now - it->second.timestamp) < THROTTLE_INTERVAL_MS) {
         it->second.accumulatedRows += rows;
+        if (it->second.accumulatedRows >= FLUSH_THRESHOLD) {
+            flushRows = it->second.accumulatedRows;
+            it->second = {now, 0};
+            return false;
+        }
         return true;
     }
     if (it != throttleMap_.end()) {

@@ -222,6 +222,7 @@ RdbStoreConfig MakeAuditConfig()
     RdbStoreConfig config(DbPath());
     config.SetBundleName("audit_test_app");
     config.SetAuditEnabled(true);
+    config.SetIntegrityCheck(IntegrityCheck::FULL);
     return config;
 }
 } // namespace
@@ -655,8 +656,13 @@ HWTEST_F(RdbAuditTest, RealDbUpdate_023, TestSize.Level0)
     upd.Put("name", "b");
     RdbPredicates p("users");
     p.EqualTo("id", 1);
-    store->Update(upd, p, ReturningConfig{});
-    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
+    // Update goes through the 60s throttle; flush is triggered when
+    // accumulatedRows reaches FLUSH_THRESHOLD (1000). 1001 updates
+    // (each changed=1) → flush at the 1001st call.
+    for (int i = 0; i < 1001; ++i) {
+        store->Update(upd, p, ReturningConfig{});
+    }
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP, 10000), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=UPDATE"), NPOS);
 }
 
