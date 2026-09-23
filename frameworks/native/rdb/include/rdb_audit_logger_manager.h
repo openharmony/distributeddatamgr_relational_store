@@ -58,7 +58,6 @@ public:
     void Init(const std::string &auditDir, bool auditEnabled);
 
     bool IsInitialized() const { return initialized_; }
-    std::string GetAuditDir() const { return auditDir_; }
 
     // Dispatch a task (collection + JSON + write) to the executor thread.
     void ExecuteAsync(Task task);
