@@ -197,22 +197,32 @@ void RdbAuditLoggerImpl::OnIoError(
 }
 
 void RdbAuditLoggerImpl::OnSqlAudit(
-    const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows)
+    const std::string &dbPath, const std::string &op, const std::string &sql, int64_t rows)
 {
-    if (!IsActive() || op.empty()) {
+    if (!IsActive()) {
         return;
     }
-    bool alwaysLog = (op == "DELETE" || op == "DROP" || op == "TRUNCATE" || op == "BatchInsert");
+    std::string auditOp = op;
+    std::string tbl;
+    if (auditOp.empty()) {
+        // DDL (DROP/TRUNCATE): parse op and table name from the SQL.
+        auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
+        if (auditOp.empty()) {
+            return;
+        }
+        tbl = RdbAuditUtils::ParseDropTruncateTable(sql);
+    }
+    bool alwaysLog = (auditOp == "DELETE" || auditOp == "DROP" || auditOp == "TRUNCATE" || auditOp == "BatchInsert");
     if (alwaysLog) {
-        if (op == "DELETE" && rows <= 0) {
+        if (auditOp == "DELETE" && rows <= 0) {
             return;
         }
         auto executor = TaskExecutor::GetInstance().GetExecutor();
         if (executor == nullptr) {
             return;
         }
-        executor->Execute([dbPath, op, tbl, rows]() {
-            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(dbPath, op, tbl, rows));
+        executor->Execute([dbPath, auditOp, tbl, rows]() {
+            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(dbPath, auditOp, tbl, rows));
         });
         return;
     }
@@ -220,7 +230,7 @@ void RdbAuditLoggerImpl::OnSqlAudit(
         return;
     }
     // Throttle stays sync (uses per-instance throttleMap_); only the write is async.
-    std::string eventKey = "SQL_AUDIT:" + op + ":" + tbl;
+    std::string eventKey = "SQL_AUDIT:" + auditOp + ":" + tbl;
     int64_t flushRows = 0;
     if (AccumulateOrFlush(eventKey, rows, flushRows)) {
         return;
@@ -230,8 +240,8 @@ void RdbAuditLoggerImpl::OnSqlAudit(
         if (executor == nullptr) {
             return;
         }
-        executor->Execute([dbPath, op, tbl, flushRows]() {
-            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(dbPath, op, tbl, flushRows));
+        executor->Execute([dbPath, auditOp, tbl, flushRows]() {
+            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(dbPath, auditOp, tbl, flushRows));
         });
     }
 }

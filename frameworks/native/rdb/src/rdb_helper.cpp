@@ -139,6 +139,7 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
         RdbStoreManager::GetInstance().Delete(config, shouldClose);
     }
     if (config.IsAuditEnabled()) {
+        // Collect info before delete to capture the state before removal.
         DeleteInfo del;
         del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbFile);
         del.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
