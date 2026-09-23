@@ -40,6 +40,8 @@ constexpr size_t MAX_LOG_SIZE = 256 * 1024; // 256 KB per log file
 constexpr const char *EVENTS_LOG = "events.log";
 constexpr const char *EVENTS_LOG_1 = "events.1.log";
 constexpr const char *EVENTS_LOCK = "events.lock";
+// Length of the "YYYY-" year prefix in "YYYY-MM-DD HH:MM:SS.mmm" (stripped by TsLog).
+constexpr size_t YEAR_PREFIX_LEN = 5;
 
 constexpr uint64_t AUDIT_FD_TAG_ID = 0xD001650;
 const uint64_t AUDIT_FD_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, AUDIT_FD_TAG_ID);
@@ -48,7 +50,7 @@ const uint64_t AUDIT_FD_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, AUDI
 std::string TsLog()
 {
     std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
-    return ts.size() > 5 ? ts.substr(5) : ts;
+    return ts.size() > YEAR_PREFIX_LEN ? ts.substr(YEAR_PREFIX_LEN) : ts;
 }
 
 std::string BuildPragmaLine(

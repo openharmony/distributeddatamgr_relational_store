@@ -53,6 +53,29 @@ constexpr int64_t TEST_INSERT_ROWS = 100;
 constexpr int POLL_INTERVAL_MS = 1000;
 const std::string::size_type NPOS = std::string::npos;
 
+// Async-drain / wait timeouts (ms).
+constexpr int DRAIN_TIMEOUT_MS = 1000;
+constexpr int DRAIN_POLL_MS = 200;
+constexpr int WAIT_TIMEOUT_MS = 3000;
+
+// Return codes used in On* calls.
+constexpr int RC_OK = 0;
+constexpr int TEST_CORRUPT_RC = 11; // SQLITE_CORRUPT
+
+// InodeChange test snapshots.
+constexpr int64_t INODE_BEFORE = 100;
+constexpr int64_t INODE_AFTER = 200;
+constexpr int64_t SIZE_BEFORE = 1024;
+constexpr int64_t SIZE_AFTER = 2048;
+
+// Expected events.log line counts.
+// EVENT_LINES_OPEN: real DB open writes PRG (integrity check) + OPEN.
+// EVENT_LINES_OPEN_PLUS_OP: open (2 lines) + one SQL/PRAGMA op.
+// EVENT_LINES_TWO_OPS: two direct On* calls (e.g. DROP + TRUNCATE).
+constexpr size_t EVENT_LINES_OPEN = 2;
+constexpr size_t EVENT_LINES_OPEN_PLUS_OP = 3;
+constexpr size_t EVENT_LINES_TWO_OPS = 2;
+
 bool MakeDirRecursive(const std::string &path, mode_t mode)
 {
     if (path.empty()) {
@@ -148,19 +171,15 @@ std::string AuditJsonPath()
 // access, no friend). First call opens events.log fd + sets auditDir; later
 // calls are no-ops. Truncate events.log in place so the singleton's O_APPEND fd
 // stays valid (truncate does not change the inode) while clearing prior output.
-// 等待之前用例的异步审计任务落地（events.log 行数连续两次相同），避免 truncate 后旧任务追加
+// DrainAsyncAudit waits for prior cases' async tasks to land (events.log line
+// Wait for prior cases' async audit tasks to drain on the executor before
+// truncating events.log. A fixed sleep is used instead of a "line count
+// stable" poll because queued (not-yet-running) tasks don't change the line
+// count, which would falsely break early and let them append old content back
+// after the truncate (cross-case line accumulation).
 void DrainAsyncAudit()
 {
-    size_t prev = CountLines(ReadFileContent(EventsLogPath()));
-    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(2000);
-    while (std::chrono::steady_clock::now() < deadline) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        size_t cur = CountLines(ReadFileContent(EventsLogPath()));
-        if (cur == prev) {
-            break;
-        }
-        prev = cur;
-    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(DRAIN_TIMEOUT_MS));
 }
 
 void SetupAudit()
@@ -173,7 +192,7 @@ void SetupAudit()
     unlink(AuditJsonPath().c_str());
 }
 
-size_t WaitEventLines(size_t expected, int timeoutMs = 3000)
+size_t WaitEventLines(size_t expected, int timeoutMs = WAIT_TIMEOUT_MS)
 {
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
     while (std::chrono::steady_clock::now() < deadline) {
@@ -185,7 +204,7 @@ size_t WaitEventLines(size_t expected, int timeoutMs = 3000)
     return CountLines(ReadFileContent(EventsLogPath()));
 }
 
-bool WaitFileExists(const std::string &path, int timeoutMs = 3000)
+bool WaitFileExists(const std::string &path, int timeoutMs = WAIT_TIMEOUT_MS)
 {
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
     while (std::chrono::steady_clock::now() < deadline) {
@@ -198,7 +217,7 @@ bool WaitFileExists(const std::string &path, int timeoutMs = 3000)
 }
 
 // Poll until audit.json contains `key` (async Write*Sync lands), or timeout.
-bool WaitJsonContains(const std::string &key, int timeoutMs = 3000)
+bool WaitJsonContains(const std::string &key, int timeoutMs = WAIT_TIMEOUT_MS)
 {
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
     while (std::chrono::steady_clock::now() < deadline) {
@@ -287,7 +306,7 @@ HWTEST_F(RdbAuditTest, OnOpenOk_003, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
     logger.OnOpenOk(DbPath(), false);
-    EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
+    EXPECT_EQ(WaitEventLines(1), 1);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("OPEN:"), NPOS);
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
     EXPECT_NE(ReadFileContent(AuditJsonPath()).find("lastOpen"), NPOS);
@@ -302,7 +321,7 @@ HWTEST_F(RdbAuditTest, OnOpenFail_004, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
     logger.OnOpenFail(DbPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
-    EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
+    EXPECT_EQ(WaitEventLines(1), 1);
     auto content = ReadFileContent(EventsLogPath());
     EXPECT_NE(content.find("OFAIL:"), NPOS);
     EXPECT_NE(content.find("rc=14"), NPOS);
@@ -318,7 +337,7 @@ HWTEST_F(RdbAuditTest, OnSqlDelete_005, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
     logger.OnSqlAudit(DbPath(), "DELETE", "users", TEST_DELETE_ROWS);
-    EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
+    EXPECT_EQ(WaitEventLines(1), 1);
     auto content = ReadFileContent(EventsLogPath());
     EXPECT_NE(content.find("SQL:"), NPOS);
     EXPECT_NE(content.find("op=DELETE"), NPOS);
@@ -333,8 +352,8 @@ HWTEST_F(RdbAuditTest, OnSqlDelete_005, TestSize.Level0)
 HWTEST_F(RdbAuditTest, OnPragma_006, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
-    logger.OnPragma(DbPath(), "PRAGMA integrity_check", 0, "ok");
-    EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
+    logger.OnPragma(DbPath(), "PRAGMA integrity_check", RC_OK, "ok");
+    EXPECT_EQ(WaitEventLines(1), 1);
     auto content = ReadFileContent(EventsLogPath());
     EXPECT_NE(content.find("PRG:"), NPOS);
     EXPECT_NE(content.find("rc=0"), NPOS);
@@ -349,7 +368,7 @@ HWTEST_F(RdbAuditTest, OnPragma_006, TestSize.Level0)
 HWTEST_F(RdbAuditTest, OnCorrupt_007, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
-    logger.OnCorrupt(DbPath(), 11, 0, "row missing from index");
+    logger.OnCorrupt(DbPath(), TEST_CORRUPT_RC, RC_OK, "row missing from index");
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
     auto json = ReadFileContent(AuditJsonPath());
     EXPECT_NE(json.find("corrupt"), NPOS);
@@ -383,8 +402,8 @@ HWTEST_F(RdbAuditTest, AuditDisabled_010, TestSize.Level0)
     logger.OnOpenOk(DbPath(), false);
     logger.OnOpenFail(DbPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
     logger.OnSqlAudit(DbPath(), "DELETE", "t", 1);
-    logger.OnPragma(DbPath(), "PRAGMA integrity_check", 0, "ok");
-    logger.OnCorrupt(DbPath(), 11, 0, "detail");
+    logger.OnPragma(DbPath(), "PRAGMA integrity_check", RC_OK, "ok");
+    logger.OnCorrupt(DbPath(), TEST_CORRUPT_RC, RC_OK, "detail");
     logger.OnIoError("execute", DbPath(), TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO);
     logger.OnDbDelete(DbPath(), "delete_store");
     EXPECT_EQ(CountLines(ReadFileContent(EventsLogPath())), linesBefore);
@@ -404,7 +423,7 @@ HWTEST_F(RdbAuditTest, RealDbOpen_011, TestSize.Level0)
     int err = E_OK;
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN), EVENT_LINES_OPEN);
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
     EXPECT_NE(ReadFileContent(AuditJsonPath()).find("lastOpen"), NPOS);
 }
@@ -427,7 +446,7 @@ HWTEST_F(RdbAuditTest, RealDbDelete_012, TestSize.Level0)
     RdbPredicates p("users");
     p.EqualTo("id", 1);
     store->Delete(p);
-    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DELETE"), NPOS);
 }
 
@@ -443,7 +462,7 @@ HWTEST_F(RdbAuditTest, RealDbDropTable_013, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
     store->ExecuteSql("DROP TABLE IF EXISTS users");
-    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }
 
@@ -459,7 +478,7 @@ HWTEST_F(RdbAuditTest, RealDbPragma_014, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
     store->ExecuteSql("PRAGMA integrity_check");
-    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     auto content = ReadFileContent(EventsLogPath());
     EXPECT_NE(content.find("PRG:"), NPOS);
     EXPECT_NE(content.find("result=ok"), NPOS);
@@ -518,9 +537,9 @@ HWTEST_F(RdbAuditTest, RealDbAuditDisabled_016, TestSize.Level0)
 HWTEST_F(RdbAuditTest, OnSqlDropTruncate_017, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
-    logger.OnSqlAudit(DbPath(), "DROP", "temp", 0);
-    logger.OnSqlAudit(DbPath(), "TRUNCATE", "temp2", 0);
-    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    logger.OnSqlAudit(DbPath(), "DROP", "temp", RC_OK);
+    logger.OnSqlAudit(DbPath(), "TRUNCATE", "temp2", RC_OK);
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_TWO_OPS), EVENT_LINES_TWO_OPS);
     auto content = ReadFileContent(EventsLogPath());
     EXPECT_NE(content.find("op=DROP"), NPOS);
     EXPECT_NE(content.find("op=TRUNCATE"), NPOS);
@@ -534,15 +553,15 @@ HWTEST_F(RdbAuditTest, OnSqlDropTruncate_017, TestSize.Level0)
 HWTEST_F(RdbAuditTest, InodeChange_018, TestSize.Level0)
 {
     LastOpenDbInfo info1;
-    info1.main.db.node = 100;
-    info1.main.db.size = 1024;
+    info1.main.db.node = INODE_BEFORE;
+    info1.main.db.size = SIZE_BEFORE;
     info1.time = "2026-09-23 10:00:00.000";
     info1.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
     RdbDbLoggerManager::GetInstance().RecordOpenSync(DbPath(), info1);
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
     LastOpenDbInfo info2;
-    info2.main.db.node = 200;
-    info2.main.db.size = 2048;
+    info2.main.db.node = INODE_AFTER;
+    info2.main.db.size = SIZE_AFTER;
     info2.time = "2026-09-23 11:00:00.000";
     info2.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
     RdbDbLoggerManager::GetInstance().RecordOpenSync(DbPath(), info2);
@@ -584,7 +603,7 @@ HWTEST_F(RdbAuditTest, ManagerState_020, TestSize.Level0)
     // OnSqlInsertThrottle: INSERT accumulated within 60s window, no events.log write (still 1 line)
     RdbAuditLoggerImpl logger;
     logger.OnSqlAudit(DbPath(), "INSERT", "logs", TEST_INSERT_ROWS);
-    EXPECT_EQ(CountLines(ReadFileContent(EventsLogPath())), static_cast<size_t>(1));
+    EXPECT_EQ(CountLines(ReadFileContent(EventsLogPath())), 1);
 }
 
 // ===== Part 5: coverage supplements (Create / BatchInsert / Update / Execute / ExecuteExt) =====
@@ -598,13 +617,13 @@ HWTEST_F(RdbAuditTest, Create_021, TestSize.Level0)
 {
     auto enabled = RdbAuditLogger::Create(true);
     enabled->OnOpenOk(DbPath(), false);
-    EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
+    EXPECT_EQ(WaitEventLines(1), 1);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("OPEN:"), NPOS);
     size_t before = CountLines(ReadFileContent(EventsLogPath()));
     auto disabled = RdbAuditLogger::Create(false);
     disabled->OnOpenOk(DbPath(), false);
     disabled->OnSqlAudit(DbPath(), "DELETE", "t", 1);
-    disabled->OnPragma(DbPath(), "PRAGMA integrity_check", 0, "ok");
+    disabled->OnPragma(DbPath(), "PRAGMA integrity_check", RC_OK, "ok");
     EXPECT_EQ(CountLines(ReadFileContent(EventsLogPath())), before);
 }
 
@@ -625,7 +644,7 @@ HWTEST_F(RdbAuditTest, RealDbBatchInsert_022, TestSize.Level0)
     b.Put("name", "a");
     vbs.push_back(std::move(b));
     store->BatchInsert("users", vbs);
-    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=BatchInsert"), NPOS);
 }
 
@@ -649,7 +668,7 @@ HWTEST_F(RdbAuditTest, RealDbUpdate_023, TestSize.Level0)
     RdbPredicates p("users");
     p.EqualTo("id", 1);
     store->Update(upd, p, ReturningConfig{});
-    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=UPDATE"), NPOS);
 }
 
@@ -666,7 +685,7 @@ HWTEST_F(RdbAuditTest, RealDbExecutePragma_024, TestSize.Level0)
     ASSERT_NE(store, nullptr);
     auto [code, value] = store->Execute("PRAGMA integrity_check");
     EXPECT_EQ(code, E_OK);
-    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("PRG:"), NPOS);
 }
 
@@ -682,7 +701,7 @@ HWTEST_F(RdbAuditTest, RealDbExecuteDropTable_025, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
     auto [code, value] = store->Execute("DROP TABLE IF EXISTS users");
-    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }
 
@@ -698,6 +717,6 @@ HWTEST_F(RdbAuditTest, RealDbExecuteExtDropTable_026, TestSize.Level0)
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
     auto [code, result] = store->ExecuteExt("DROP TABLE IF EXISTS users");
-    EXPECT_EQ(WaitEventLines(3), static_cast<size_t>(3));
+    EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }
