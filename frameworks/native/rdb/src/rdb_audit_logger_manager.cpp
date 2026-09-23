@@ -58,7 +58,7 @@ std::string BuildPragmaLine(
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/PRG:"
+    os << ts << " " << caller.pid << " " << caller.tid << " PRG:"
        << " db=" << dbName << " sql=" << SqliteUtils::SqlAnonymous(sql)
        << " rc=" << rc << " result=" << result;
     return os.str();
