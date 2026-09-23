@@ -17,60 +17,63 @@
 #define RDB_AUDIT_LOGGER_H
 
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 
-#include "rdb_audit_event.h"
-
 namespace OHOS {
 namespace NativeRdb {
 
-// Per-store audit façade. Owned by RdbStoreImpl (or created transiently by
-// RdbHelper / SqliteConnection / SqliteStatement per the confirmed design).
-// All persistence is delegated to the RdbAuditLoggerManager singleton (the
-// Manager's logic is only reachable through this façade). Audit is opt-in: a
-// store must call RdbStoreConfig::SetAuditEnabled(true) before opening.
+// Audit logger interface. The base class is a no-op implementation: every On*
+// method is an empty inline body, so callers that hold a base instance pay no
+// I/O cost. RdbAuditLoggerImpl (below) overrides the methods to actually
+// collect context and persist to events.log / audit.json via the singleton
+// managers. RdbStoreImpl / RdbHelper / SqliteConnection / SqliteStatement hold
+// a pointer obtained from RdbAuditLogger::Create(config) and invoke On*
+// directly — no IsAuditEnabled gating at the call site. When audit is disabled
+// Create returns a base instance (all calls are no-ops); when enabled it
+// returns an Impl instance.
 //
 // Writes are best-effort and asynchronous: they never block the caller's
 // database operations.
 class RdbAuditLogger {
 public:
     RdbAuditLogger() = default;
-    ~RdbAuditLogger() = default;
+    virtual ~RdbAuditLogger() = default;
     RdbAuditLogger(const RdbAuditLogger &) = delete;
     RdbAuditLogger &operator=(const RdbAuditLogger &) = delete;
 
-    // Event recording interfaces (one per AuditEvt). Each lazily ensures the
-    // shared audit directory + singleton managers are initialized (idempotent).
-    // Callers pass config.IsAuditEnabled() as auditEnabled so the gating stays
-    // inside the façade; when false the method returns before any I/O.
-    // OnOpenOk takes the full config (needed to build the lastOpen record) and
-    // reads IsAuditEnabled from it directly.
-    void OnOpenOk(const std::string &dbPath, bool created, bool auditEnabled);
-    void OnOpenFail(const std::string &dbPath, int rc, int osErrno, bool auditEnabled);
-    void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno, bool auditEnabled);
+    // Factory: returns an RdbAuditLoggerImpl when auditEnabled is true,
+    // otherwise a no-op base instance.
+    static std::unique_ptr<RdbAuditLogger> Create(bool auditEnabled);
 
-    // SQL audit. Caller passes the actual affected row count.
-    // DELETE with rows > 0, DROP, TRUNCATE are always logged (no throttle).
-    // INSERT/UPDATE are logged when rows > 0, with 60s per-(op,tbl) accumulation:
-    // rows are accumulated within the window and flushed as a single record
-    // when the next event arrives after the window expires.
-    void OnSqlAudit(
-        const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows, bool auditEnabled);
+    virtual void OnOpenOk(const std::string &dbPath, bool created) {}
+    virtual void OnOpenFail(const std::string &dbPath, int rc, int osErrno) {}
+    virtual void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno) {}
+    virtual void OnSqlAudit(const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows) {}
+    virtual void OnPragma(const std::string &dbPath, const std::string &sql, int rc) {}
+    virtual void OnCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail) {}
+    virtual void OnDbDelete(const std::string &dbPath, const std::string &op) {}
+};
 
-    // Integrity check audit. Caller gates on config.IsAuditEnabled() before
-    // calling (external check) to keep the parameter count at the R2 limit.
-    void OnIntegrity(
-        const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err);
+// Real audit implementation. Delegates all persistence to the
+// RdbAuditLoggerManager / RdbDbLoggerManager singletons. Created only when
+// config.IsAuditEnabled() is true (via RdbAuditLogger::Create).
+class RdbAuditLoggerImpl : public RdbAuditLogger {
+public:
+    RdbAuditLoggerImpl() = default;
+    ~RdbAuditLoggerImpl() override = default;
+    RdbAuditLoggerImpl(const RdbAuditLoggerImpl &) = delete;
+    RdbAuditLoggerImpl &operator=(const RdbAuditLoggerImpl &) = delete;
 
-    // Database corruption audit (integrity check failure, SQLITE_CORRUPT, etc).
-    // Writes audit.json block 5 (corrupt). Caller gates on
-    // config.IsAuditEnabled() (external check, same as OnIntegrity).
-    void OnCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail);
-
-    // DB deletion audit. op = "delete_store" (business) or "vfs_xdelete" (VFS layer).
-    void OnDbDelete(const std::string &dbPath, const std::string &op, bool auditEnabled);
+    void OnOpenOk(const std::string &dbPath, bool created) override;
+    void OnOpenFail(const std::string &dbPath, int rc, int osErrno) override;
+    void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno) override;
+    void OnSqlAudit(const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows) override;
+    void OnPragma(const std::string &dbPath, const std::string &sql, int rc) override;
+    void OnCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail) override;
+    void OnDbDelete(const std::string &dbPath, const std::string &op) override;
 
 private:
     // Accumulate rows within a 60s window for INSERT/UPDATE.
@@ -85,12 +88,6 @@ private:
     static std::string BuildOpenFailLine(const std::string &dbPath, int rc, int osErrno);
     static std::string BuildSqlAuditLine(
         const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows);
-    static std::string BuildIntegrityLine(
-        const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err);
-
-    static const char *TriggerToStr(IntegrityTrigger trigger);
-    static const char *ModeToStr(IntegrityMode mode);
-
     // Lazily probe the shared audit root and initialize both singleton
     // managers (idempotent: skips if already initialized). Sets enabled_ to
     // whether the audit directory is available.

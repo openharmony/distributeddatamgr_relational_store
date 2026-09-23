@@ -127,7 +127,12 @@ void WriteFileInfo(std::ostringstream &os, const char *label, const FileInfo &fi
 }
 } // namespace
 
-void RdbAuditLogger::EnsureInit(const std::string &dbPath)
+std::unique_ptr<RdbAuditLogger> RdbAuditLogger::Create(bool auditEnabled)
+{
+    return auditEnabled ? std::make_unique<RdbAuditLoggerImpl>() : std::make_unique<RdbAuditLogger>();
+}
+
+void RdbAuditLoggerImpl::EnsureInit(const std::string &dbPath)
 {
     dbPath_ = dbPath;
     if (RdbAuditLoggerManager::GetInstance().IsInitialized()) {
@@ -144,11 +149,8 @@ void RdbAuditLogger::EnsureInit(const std::string &dbPath)
     enabled_ = true;
 }
 
-void RdbAuditLogger::OnOpenOk(const std::string &dbPath, bool created, bool auditEnabled)
+void RdbAuditLoggerImpl::OnOpenOk(const std::string &dbPath, bool created)
 {
-    if (!auditEnabled) {
-        return;
-    }
     EnsureInit(dbPath);
     if (!IsActive()) {
         return;
@@ -162,11 +164,8 @@ void RdbAuditLogger::OnOpenOk(const std::string &dbPath, bool created, bool audi
     });
 }
 
-void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno, bool auditEnabled)
+void RdbAuditLoggerImpl::OnOpenFail(const std::string &dbPath, int rc, int osErrno)
 {
-    if (!auditEnabled) {
-        return;
-    }
     EnsureInit(dbPath);
     if (!IsActive()) {
         return;
@@ -179,37 +178,19 @@ void RdbAuditLogger::OnOpenFail(const std::string &dbPath, int rc, int osErrno, 
     });
 }
 
-void RdbAuditLogger::OnIoError(
-    const std::string &op, const std::string &file, int rc, int osErrno, bool auditEnabled)
+void RdbAuditLoggerImpl::OnIoError(
+    const std::string &op, const std::string &file, int rc, int osErrno)
 {
-    if (!auditEnabled) {
-        return;
-    }
     EnsureInit(file);
     if (!IsActive()) {
         return;
     }
-    std::string o = op;
-    std::string f = file;
-    int r = rc;
-    int os = osErrno;
-    RdbAuditLoggerManager::GetInstance().ExecuteAsync([o, f, r, os]() {
-        IoErrorInfo ioError;
-        ioError.op = o;
-        ioError.rc = r;
-        ioError.osErrno = os;
-        ioError.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
-        ioError.time = RdbTimeUtils::GetCurSysTimeWithMs();
-        RdbDbLoggerManager::GetInstance().WriteIoErrorSync(f, ioError);
-    });
+    RdbDbLoggerManager::GetInstance().RecordIoError(op, file, rc, osErrno);
 }
 
-void RdbAuditLogger::OnSqlAudit(
-    const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows, bool auditEnabled)
+void RdbAuditLoggerImpl::OnSqlAudit(
+    const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows)
 {
-    if (!auditEnabled) {
-        return;
-    }
     EnsureInit(dbPath);
     if (!IsActive() || !enableSqlAudit_) {
         return;
@@ -250,51 +231,27 @@ void RdbAuditLogger::OnSqlAudit(
     }
 }
 
-void RdbAuditLogger::OnIntegrity(
-    const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err)
+void RdbAuditLoggerImpl::OnPragma(const std::string &dbPath, const std::string &sql, int rc)
 {
     EnsureInit(dbPath);
     if (!IsActive()) {
         return;
     }
-    std::string path = dbPath;
-    IntegrityTrigger tr = trigger;
-    IntegrityMode m = mode;
-    int r = result;
-    std::string e = err;
-    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, tr, m, r, e]() {
-        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildIntegrityLine(path, tr, m, r, e));
-    });
+    RdbAuditLoggerManager::GetInstance().OnPragma(dbPath, sql, rc);
 }
 
-void RdbAuditLogger::OnCorrupt(
+void RdbAuditLoggerImpl::OnCorrupt(
     const std::string &dbPath, int rc, int osErrno, const std::string &detail)
 {
     EnsureInit(dbPath);
     if (!IsActive()) {
         return;
     }
-    std::string path = dbPath;
-    int r = rc;
-    int os = osErrno;
-    std::string d = detail;
-    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, r, os, d]() {
-        CorruptInfo corrupt;
-        corrupt.rc = r;
-        corrupt.osErrno = os;
-        corrupt.detail = d;
-        corrupt.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(path);
-        corrupt.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
-        corrupt.time = RdbTimeUtils::GetCurSysTimeWithMs();
-        RdbDbLoggerManager::GetInstance().WriteCorruptSync(path, corrupt);
-    });
+    RdbDbLoggerManager::GetInstance().RecordCorrupt(dbPath, rc, osErrno, detail);
 }
 
-void RdbAuditLogger::OnDbDelete(const std::string &dbPath, const std::string &op, bool auditEnabled)
+void RdbAuditLoggerImpl::OnDbDelete(const std::string &dbPath, const std::string &op)
 {
-    if (!auditEnabled) {
-        return;
-    }
     EnsureInit(dbPath);
     if (!IsActive()) {
         return;
@@ -310,7 +267,7 @@ void RdbAuditLogger::OnDbDelete(const std::string &dbPath, const std::string &op
     });
 }
 
-bool RdbAuditLogger::AccumulateOrFlush(const std::string &eventKey, int64_t rows, int64_t &flushRows)
+bool RdbAuditLoggerImpl::AccumulateOrFlush(const std::string &eventKey, int64_t rows, int64_t &flushRows)
 {
     flushRows = 0;
     int64_t now = NowMs();
@@ -335,7 +292,7 @@ bool RdbAuditLogger::AccumulateOrFlush(const std::string &eventKey, int64_t rows
     return false;
 }
 
-std::string RdbAuditLogger::BuildOpenOkLine(const std::string &dbPath)
+std::string RdbAuditLoggerImpl::BuildOpenOkLine(const std::string &dbPath)
 {
     std::string ts = TsLog();
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
@@ -355,7 +312,7 @@ std::string RdbAuditLogger::BuildOpenOkLine(const std::string &dbPath)
     return os.str();
 }
 
-std::string RdbAuditLogger::BuildOpenFailLine(const std::string &dbPath, int rc, int osErrno)
+std::string RdbAuditLoggerImpl::BuildOpenFailLine(const std::string &dbPath, int rc, int osErrno)
 {
     std::string ts = TsLog();
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
@@ -368,7 +325,7 @@ std::string RdbAuditLogger::BuildOpenFailLine(const std::string &dbPath, int rc,
     return os.str();
 }
 
-std::string RdbAuditLogger::BuildSqlAuditLine(
+std::string RdbAuditLoggerImpl::BuildSqlAuditLine(
     const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows)
 {
     std::string ts = TsLog();
@@ -379,44 +336,6 @@ std::string RdbAuditLogger::BuildSqlAuditLine(
        << " db=" << dbName << " op=" << op << " tbl=" << SqliteUtils::Anonymous(tbl)
        << " rows=" << rows << " caller=pid:" << caller.pid << ":tid:" << caller.tid;
     return os.str();
-}
-
-std::string RdbAuditLogger::BuildIntegrityLine(
-    const std::string &dbPath, IntegrityTrigger trigger, IntegrityMode mode, int result, const std::string &err)
-{
-    std::string ts = TsLog();
-    auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
-    std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
-    std::ostringstream os;
-    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/IGR:"
-       << " db=" << dbName << " trigger=" << TriggerToStr(trigger) << " mode=" << ModeToStr(mode)
-       << " result=" << result << " err=" << err
-       << " path=" << SqliteUtils::Anonymous(dbPath);
-    return os.str();
-}
-
-const char *RdbAuditLogger::TriggerToStr(IntegrityTrigger trigger)
-{
-    switch (trigger) {
-        case IntegrityTrigger::AUTO:
-            return "auto";
-        case IntegrityTrigger::ACTIVE:
-            return "active";
-        default:
-            return "unknown";
-    }
-}
-
-const char *RdbAuditLogger::ModeToStr(IntegrityMode mode)
-{
-    switch (mode) {
-        case IntegrityMode::QUICK:
-            return "quick";
-        case IntegrityMode::FULL:
-            return "full";
-        default:
-            return "unknown";
-    }
 }
 
 } // namespace NativeRdb

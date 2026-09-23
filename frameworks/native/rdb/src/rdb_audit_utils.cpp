@@ -115,16 +115,6 @@ bool IsPragmaIntegrityCheck(const std::string &sql)
     return MatchPrefix(sql, pos, "integrity_check") || MatchPrefix(sql, pos, "quick_check");
 }
 
-IntegrityMode ParsePragmaMode(const std::string &sql)
-{
-    size_t pos = SkipSpaces(sql, 0);
-    pos = SkipSpaces(sql, pos + KEYWORD_LEN_PRAGMA); // skip "PRAGMA"
-    if (pos < sql.size() && std::tolower(static_cast<unsigned char>(sql[pos])) == 'q') {
-        return IntegrityMode::QUICK;
-    }
-    return IntegrityMode::FULL;
-}
-
 std::string ParseDropTruncateOp(const std::string &sql)
 {
     size_t pos = SkipSpaces(sql, 0);

@@ -28,6 +28,8 @@
 #include <sstream>
 
 #include "logger.h"
+#include "rdb_db_info_manager.h"
+#include "rdb_time_utils.h"
 #include "serializable.h"
 #include "sqlite_utils.h"
 #include "task_executor.h"
@@ -175,6 +177,34 @@ void RdbDbLoggerManager::WriteDeleteSync(const std::string &dbPath, const Delete
 void RdbDbLoggerManager::WriteCorruptSync(const std::string &dbPath, const CorruptInfo &corrupt)
 {
     WithAuditRecord(dbPath, [&corrupt](RdbDbInfoRecord &rec) { rec.corrupt = corrupt; });
+}
+
+void RdbDbLoggerManager::RecordCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail)
+{
+    ExecuteAsync([dbPath, rc, osErrno, detail]() {
+        CorruptInfo corrupt;
+        corrupt.rc = rc;
+        corrupt.osErrno = osErrno;
+        corrupt.detail = detail;
+        corrupt.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbPath);
+        corrupt.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
+        corrupt.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        WriteCorruptSync(dbPath, corrupt);
+    });
+}
+
+void RdbDbLoggerManager::RecordIoError(
+    const std::string &op, const std::string &file, int rc, int osErrno)
+{
+    ExecuteAsync([op, file, rc, osErrno]() {
+        IoErrorInfo ioError;
+        ioError.op = op;
+        ioError.rc = rc;
+        ioError.osErrno = osErrno;
+        ioError.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
+        ioError.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        WriteIoErrorSync(file, ioError);
+    });
 }
 
 void RdbDbLoggerManager::WithAuditRecord(
