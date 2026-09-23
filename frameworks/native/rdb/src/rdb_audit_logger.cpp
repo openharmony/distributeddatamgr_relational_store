@@ -41,6 +41,8 @@ constexpr const char *AUDIT_DIR_APP_ROOT = "/data/storage/el2/log";
 constexpr const char *AUDIT_DIR_APP_SUB = "rdb";
 constexpr int64_t THROTTLE_INTERVAL_MS = 60 * 1000; // 60 s
 constexpr size_t THROTTLE_MAP_MAX_SIZE = 64;
+// Length of the "YYYY-" year prefix in "YYYY-MM-DD HH:MM:SS.mmm" (stripped by TsLog).
+constexpr size_t YEAR_PREFIX_LEN = 5;
 
 int64_t NowMs()
 {
@@ -113,7 +115,7 @@ std::string ProbeAuditDir()
 std::string TsLog()
 {
     std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
-    return ts.size() > 5 ? ts.substr(5) : ts;
+    return ts.size() > YEAR_PREFIX_LEN ? ts.substr(YEAR_PREFIX_LEN) : ts;
 }
 
 // Append file info as space-separated key=value pairs (log style, not JSON).
