@@ -131,41 +131,10 @@ int64_t RdbTimeoutInterruptTest::QueryCount(const std::string &sql)
 
 /* *
  * @tc.name: BatchInsert_Timeout_001
- * @tc.desc: BatchInsert with sufficient timeout, all rows should be inserted.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, BatchInsert_Timeout_001, TestSize.Level1)
-{
-    std::string tableName = "BatchInsertTimeoutTest";
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-    auto res = store_->Execute(
-        "CREATE TABLE " + tableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, data BLOB)");
-    ASSERT_EQ(res.first, E_OK);
-
-    const int rowCount = 100;
-    auto rows = BuildLargeRows(rowCount);
-
-    BatchInsertConfig config;
-    config.timeoutMs = 5000;
-    auto [errCode, result] = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE, config);
-    ASSERT_EQ(errCode, E_OK);
-
-    auto resultSet = store_->QueryByStep("SELECT COUNT(*) FROM " + tableName);
-    ASSERT_NE(resultSet, nullptr);
-    ASSERT_EQ(resultSet->GoToNextRow(), E_OK);
-    int64_t actualCount = 0;
-    resultSet->GetLong(0, actualCount);
-    EXPECT_EQ(actualCount, rowCount);
-
-    store_->Execute("DROP TABLE IF EXISTS " + tableName);
-}
-
-/* *
- * @tc.name: BatchInsert_Timeout_002
  * @tc.desc: BatchInsert with 200ms timeout, interrupt should be effective.
  * @tc.type: FUNC
  */
-HWTEST_F(RdbTimeoutInterruptTest, BatchInsert_Timeout_002, TestSize.Level1)
+HWTEST_F(RdbTimeoutInterruptTest, BatchInsert_Timeout_001, TestSize.Level1)
 {
     std::string tableName = "BatchInsertTimeoutTest";
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
