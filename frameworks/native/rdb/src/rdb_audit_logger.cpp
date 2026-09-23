@@ -301,7 +301,7 @@ std::string RdbAuditLoggerImpl::BuildOpenOkLine(const std::string &dbPath)
     auto slaveInfo = RdbDbInfoManager::GetInstance().CollectDbFileInfo(SqliteUtils::GetSlavePath(dbPath));
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/OPEN:"
+    os << ts << " " << caller.pid << " " << caller.tid << " OPEN:"
        << " db=" << dbName << " proc=pid:" << caller.pid << ":tid:" << caller.tid;
     WriteFileInfo(os, "db", fileInfo.db);
     WriteFileInfo(os, "wal", fileInfo.wal);
@@ -319,7 +319,7 @@ std::string RdbAuditLoggerImpl::BuildOpenFailLine(const std::string &dbPath, int
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/OFAIL:"
+    os << ts << " " << caller.pid << " " << caller.tid << " OFAIL:"
        << " db=" << dbName << " proc=pid:" << caller.pid << ":tid:" << caller.tid
        << " rc=" << rc << " os_errno=" << osErrno
        << " path=" << SqliteUtils::Anonymous(dbPath);
@@ -333,7 +333,7 @@ std::string RdbAuditLoggerImpl::BuildSqlAuditLine(
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
     std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
     std::ostringstream os;
-    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/SQL:"
+    os << ts << " " << caller.pid << " " << caller.tid << " SQL:"
        << " db=" << dbName << " op=" << op << " tbl=" << SqliteUtils::Anonymous(tbl)
        << " rows=" << rows << " caller=pid:" << caller.pid << ":tid:" << caller.tid;
     return os.str();

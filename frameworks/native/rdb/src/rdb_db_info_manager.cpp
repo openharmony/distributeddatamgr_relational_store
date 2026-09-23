@@ -48,7 +48,7 @@ CallerInfo RdbDbInfoManager::CollectCaller()
 {
     CallerInfo info;
     info.pid = GetPid();
-    info.tid = static_cast<int32_t>(GetThreadId());
+    info.tid = gettid();
     info.uid = GetUid();
     info.gid = GetGid();
     return info;

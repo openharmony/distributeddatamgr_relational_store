@@ -50,6 +50,7 @@ constexpr int TEST_IO_OS_ERRNO = 5;
 constexpr int64_t TEST_DELETE_ROWS = 5;
 constexpr int64_t TEST_INSERT_ROWS = 100;
 constexpr int POLL_INTERVAL_MS = 1000;
+const std::string::size_type NPOS = std::string::npos;
 
 bool MakeDirRecursive(const std::string &path, mode_t mode)
 {
@@ -184,12 +185,12 @@ bool WaitJsonContains(const std::string &key, int timeoutMs = 3000)
 {
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
     while (std::chrono::steady_clock::now() < deadline) {
-        if (ReadFileContent(AuditJsonPath()).find(key) != std::string::npos) {
+        if (ReadFileContent(AuditJsonPath()).find(key) != NPOS) {
             return true;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(POLL_INTERVAL_MS));
     }
-    return ReadFileContent(AuditJsonPath()).find(key) != std::string::npos;
+    return ReadFileContent(AuditJsonPath()).find(key) != NPOS;
 }
 
 RdbStoreConfig MakeAuditConfig()
@@ -241,20 +242,24 @@ public:
 // ===== Part 1: RdbAuditUtils pure logic (no I/O, no singleton) =====
 
 /**
- * @tc.name: RdbAudit_ParseDropTruncateOp_002
- * @tc.desc: ParseDropTruncateOp classifies DROP/TRUNCATE TABLE only
+ * @tc.name: RdbAudit_ParseDropTruncate_001
+ * @tc.desc: ParseDropTruncateOp classifies DROP/TRUNCATE TABLE; ParseDropTruncateTable extracts the name
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, ParseDropTruncateOp_002, TestSize.Level0)
+HWTEST_F(RdbAuditTest, ParseDropTruncate_001, TestSize.Level0)
 {
     EXPECT_EQ(RdbAuditUtils::ParseDropTruncateOp("DROP TABLE foo"), "DROP");
     EXPECT_EQ(RdbAuditUtils::ParseDropTruncateOp("DROP TABLE IF EXISTS foo"), "DROP");
     EXPECT_EQ(RdbAuditUtils::ParseDropTruncateOp("TRUNCATE TABLE bar"), "TRUNCATE");
     EXPECT_EQ(RdbAuditUtils::ParseDropTruncateOp("DROP INDEX idx"), "");
     EXPECT_EQ(RdbAuditUtils::ParseDropTruncateOp("DROP VIEW v1"), "");
+    EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("DROP TABLE foo"), "foo");
+    EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("DROP TABLE IF EXISTS foo"), "foo");
+    EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("TRUNCATE TABLE bar"), "bar");
+    EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("DROP TABLE"), "");
 }
 
-// ===== Part 2: direct AuditLogger API -> events.log / audit.json =====
+// ===== Part 2: AuditLogger On* direct API -> events.log / audit.json =====
 
 /**
  * @tc.name: RdbAudit_OnOpenOk_003
@@ -266,9 +271,9 @@ HWTEST_F(RdbAuditTest, OnOpenOk_003, TestSize.Level0)
     RdbAuditLoggerImpl logger;
     logger.OnOpenOk(DbPath(), false);
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
-    EXPECT_NE(ReadFileContent(EventsLogPath()).find("RdbAudit/OPEN"), std::string::npos);
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("OPEN:"), NPOS);
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
-    EXPECT_NE(ReadFileContent(AuditJsonPath()).find("lastOpen"), std::string::npos);
+    EXPECT_NE(ReadFileContent(AuditJsonPath()).find("lastOpen"), NPOS);
 }
 
 /**
@@ -282,8 +287,9 @@ HWTEST_F(RdbAuditTest, OnOpenFail_004, TestSize.Level0)
     logger.OnOpenFail(DbPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
     auto content = ReadFileContent(EventsLogPath());
-    EXPECT_NE(content.find("RdbAudit/OFAIL"), std::string::npos);
-    EXPECT_NE(content.find("rc=14"), std::string::npos);
+    EXPECT_NE(content.find("OFAIL:"), NPOS);
+    EXPECT_NE(content.find("rc=14"), NPOS);
+    EXPECT_NE(content.find("os_errno=13"), NPOS);
 }
 
 /**
@@ -297,8 +303,9 @@ HWTEST_F(RdbAuditTest, OnSqlDelete_005, TestSize.Level0)
     logger.OnSqlAudit(DbPath(), "DELETE", "users", TEST_DELETE_ROWS);
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
     auto content = ReadFileContent(EventsLogPath());
-    EXPECT_NE(content.find("RdbAudit/SQL"), std::string::npos);
-    EXPECT_NE(content.find("op=DELETE"), std::string::npos);
+    EXPECT_NE(content.find("SQL:"), NPOS);
+    EXPECT_NE(content.find("op=DELETE"), NPOS);
+    EXPECT_NE(content.find("rows=5"), NPOS);
 }
 
 /**
@@ -312,8 +319,9 @@ HWTEST_F(RdbAuditTest, OnPragma_006, TestSize.Level0)
     logger.OnPragma(DbPath(), "PRAGMA integrity_check", 0, "ok");
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
     auto content = ReadFileContent(EventsLogPath());
-    EXPECT_NE(content.find("RdbAudit/PRG"), std::string::npos);
-    EXPECT_NE(content.find("result=ok"), std::string::npos);
+    EXPECT_NE(content.find("PRG:"), NPOS);
+    EXPECT_NE(content.find("rc=0"), NPOS);
+    EXPECT_NE(content.find("result=ok"), NPOS);
 }
 
 /**
@@ -327,22 +335,40 @@ HWTEST_F(RdbAuditTest, OnCorrupt_007, TestSize.Level0)
     logger.OnCorrupt(DbPath(), 11, 0, "row missing from index");
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
     auto json = ReadFileContent(AuditJsonPath());
-    EXPECT_NE(json.find("corrupt"), std::string::npos);
-    EXPECT_NE(json.find("row missing from index"), std::string::npos);
+    EXPECT_NE(json.find("corrupt"), NPOS);
+    EXPECT_NE(json.find("row missing from index"), NPOS);
 }
 
 /**
- * @tc.name: RdbAudit_AuditDisabled_008
- * @tc.desc: auditEnabled=false: On* returns early, no events/json written
+ * @tc.name: RdbAudit_OnIoErrorAndDbDelete_008
+ * @tc.desc: OnIoError writes ioError block and OnDbDelete writes dbDelete block to audit.json (async)
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, AuditDisabled_008, TestSize.Level0)
+HWTEST_F(RdbAuditTest, OnIoErrorAndDbDelete_008, TestSize.Level0)
+{
+    RdbAuditLoggerImpl logger;
+    logger.OnIoError("execute", DbPath(), TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO);
+    EXPECT_TRUE(WaitJsonContains("ioError"));
+    logger.OnDbDelete(DbPath(), "delete_store");
+    EXPECT_TRUE(WaitJsonContains("dbDelete"));
+}
+
+/**
+ * @tc.name: RdbAudit_AuditDisabled_010
+ * @tc.desc: auditEnabled=false: base RdbAuditLogger On* are no-ops, nothing written
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAuditTest, AuditDisabled_010, TestSize.Level0)
 {
     size_t linesBefore = CountLines(ReadFileContent(EventsLogPath()));
     std::string jsonBefore = ReadFileContent(AuditJsonPath());
-    RdbAuditLogger logger;
+    RdbAuditLogger logger; // no-op base instance (audit disabled)
     logger.OnOpenOk(DbPath(), false);
+    logger.OnOpenFail(DbPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
     logger.OnSqlAudit(DbPath(), "DELETE", "t", 1);
+    logger.OnPragma(DbPath(), "PRAGMA integrity_check", 0, "ok");
+    logger.OnCorrupt(DbPath(), 11, 0, "detail");
+    logger.OnIoError("execute", DbPath(), TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO);
     logger.OnDbDelete(DbPath(), "delete_store");
     EXPECT_EQ(CountLines(ReadFileContent(EventsLogPath())), linesBefore);
     EXPECT_EQ(ReadFileContent(AuditJsonPath()), jsonBefore);
@@ -351,11 +377,11 @@ HWTEST_F(RdbAuditTest, AuditDisabled_008, TestSize.Level0)
 // ===== Part 3: real DB integration (RdbHelper::GetRdbStore triggers audit) =====
 
 /**
- * @tc.name: RdbAudit_RealDbOpen_009
+ * @tc.name: RdbAudit_RealDbOpen_011
  * @tc.desc: Real DB open writes OPEN event + lastOpen block
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, RealDbOpen_009, TestSize.Level0)
+HWTEST_F(RdbAuditTest, RealDbOpen_011, TestSize.Level0)
 {
     AuditOpenCallback cb;
     int err = E_OK;
@@ -363,15 +389,15 @@ HWTEST_F(RdbAuditTest, RealDbOpen_009, TestSize.Level0)
     ASSERT_NE(store, nullptr);
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
-    EXPECT_NE(ReadFileContent(AuditJsonPath()).find("lastOpen"), std::string::npos);
+    EXPECT_NE(ReadFileContent(AuditJsonPath()).find("lastOpen"), NPOS);
 }
 
 /**
- * @tc.name: RdbAudit_RealDbDelete_010
- * @tc.desc: Real DB DELETE writes SQL event
+ * @tc.name: RdbAudit_RealDbDelete_012
+ * @tc.desc: Real DB INSERT+DELETE writes SQL event
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, RealDbDelete_010, TestSize.Level0)
+HWTEST_F(RdbAuditTest, RealDbDelete_012, TestSize.Level0)
 {
     AuditOpenCallback cb;
     int err = E_OK;
@@ -385,15 +411,15 @@ HWTEST_F(RdbAuditTest, RealDbDelete_010, TestSize.Level0)
     p.EqualTo("id", 1);
     store->Delete(p);
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
-    EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DELETE"), std::string::npos);
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DELETE"), NPOS);
 }
 
 /**
- * @tc.name: RdbAudit_RealDbDropTable_011
+ * @tc.name: RdbAudit_RealDbDropTable_013
  * @tc.desc: Real DB DROP TABLE writes SQL event with op=DROP
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, RealDbDropTable_011, TestSize.Level0)
+HWTEST_F(RdbAuditTest, RealDbDropTable_013, TestSize.Level0)
 {
     AuditOpenCallback cb;
     int err = E_OK;
@@ -401,15 +427,15 @@ HWTEST_F(RdbAuditTest, RealDbDropTable_011, TestSize.Level0)
     ASSERT_NE(store, nullptr);
     store->ExecuteSql("DROP TABLE IF EXISTS users");
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
-    EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), std::string::npos);
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }
 
 /**
- * @tc.name: RdbAudit_RealDbPragmaIntegrity_012
- * @tc.desc: Real DB PRAGMA writes PRG event (statement + rc)
+ * @tc.name: RdbAudit_RealDbPragma_014
+ * @tc.desc: Real DB PRAGMA integrity_check writes PRG event (open-time result=ok)
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, RealDbPragmaIntegrity_012, TestSize.Level0)
+HWTEST_F(RdbAuditTest, RealDbPragma_014, TestSize.Level0)
 {
     AuditOpenCallback cb;
     int err = E_OK;
@@ -417,17 +443,17 @@ HWTEST_F(RdbAuditTest, RealDbPragmaIntegrity_012, TestSize.Level0)
     ASSERT_NE(store, nullptr);
     store->ExecuteSql("PRAGMA integrity_check");
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
-    auto prgContent = ReadFileContent(EventsLogPath());
-    EXPECT_NE(prgContent.find("RdbAudit/PRG"), std::string::npos);
-    EXPECT_NE(prgContent.find("result=ok"), std::string::npos);
+    auto content = ReadFileContent(EventsLogPath());
+    EXPECT_NE(content.find("PRG:"), NPOS);
+    EXPECT_NE(content.find("result=ok"), NPOS);
 }
 
 /**
- * @tc.name: RdbAudit_RealDbDeleteStore_013
+ * @tc.name: RdbAudit_RealDbDeleteStore_015
  * @tc.desc: DeleteRdbStore writes dbDelete block to audit.json
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, RealDbDeleteStore_013, TestSize.Level0)
+HWTEST_F(RdbAuditTest, RealDbDeleteStore_015, TestSize.Level0)
 {
     {
         AuditOpenCallback cb;
@@ -438,15 +464,15 @@ HWTEST_F(RdbAuditTest, RealDbDeleteStore_013, TestSize.Level0)
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
     RdbHelper::DeleteRdbStore(MakeAuditConfig());
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
-    EXPECT_NE(ReadFileContent(AuditJsonPath()).find("dbDelete"), std::string::npos);
+    EXPECT_NE(ReadFileContent(AuditJsonPath()).find("dbDelete"), NPOS);
 }
 
 /**
- * @tc.name: RdbAudit_RealDbAuditDisabled_014
+ * @tc.name: RdbAudit_RealDbAuditDisabled_016
  * @tc.desc: audit disabled: real DB open/insert/pragma produce no audit output
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, RealDbAuditDisabled_014, TestSize.Level0)
+HWTEST_F(RdbAuditTest, RealDbAuditDisabled_016, TestSize.Level0)
 {
     RdbStoreConfig config(DbPath());
     config.SetBundleName("audit_test_app");
@@ -465,57 +491,57 @@ HWTEST_F(RdbAuditTest, RealDbAuditDisabled_014, TestSize.Level0)
     EXPECT_EQ(ReadFileContent(AuditJsonPath()), jsonBefore);
 }
 
-// ===== Part 4: singleton getters, DbInfoManager collectors, inodeChange block =====
+// ===== Part 4: singletons, DbInfoManager collectors, inodeChange block =====
 
 /**
- * @tc.name: RdbAudit_OnSqlDropTruncate_015
+ * @tc.name: RdbAudit_OnSqlDropTruncate_017
  * @tc.desc: DROP/TRUNCATE are always logged regardless of rows
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, OnSqlDropTruncate_015, TestSize.Level0)
+HWTEST_F(RdbAuditTest, OnSqlDropTruncate_017, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
     logger.OnSqlAudit(DbPath(), "DROP", "temp", 0);
     logger.OnSqlAudit(DbPath(), "TRUNCATE", "temp2", 0);
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
     auto content = ReadFileContent(EventsLogPath());
-    EXPECT_NE(content.find("op=DROP"), std::string::npos);
-    EXPECT_NE(content.find("op=TRUNCATE"), std::string::npos);
+    EXPECT_NE(content.find("op=DROP"), NPOS);
+    EXPECT_NE(content.find("op=TRUNCATE"), NPOS);
 }
 
 /**
- * @tc.name: RdbAudit_InodeChange_016
+ * @tc.name: RdbAudit_InodeChange_018
  * @tc.desc: RecordOpenSync writes inodeChange block when main file changes
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, InodeChange_016, TestSize.Level0)
+HWTEST_F(RdbAuditTest, InodeChange_018, TestSize.Level0)
 {
     LastOpenDbInfo info1;
     info1.main.db.node = 100;
     info1.main.db.size = 1024;
-    info1.time = "2026-09-22 10:00:00.000";
+    info1.time = "2026-09-23 10:00:00.000";
     info1.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
     RdbDbLoggerManager::GetInstance().RecordOpenSync(DbPath(), info1);
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
     LastOpenDbInfo info2;
     info2.main.db.node = 200;
     info2.main.db.size = 2048;
-    info2.time = "2026-09-22 11:00:00.000";
+    info2.time = "2026-09-23 11:00:00.000";
     info2.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
     RdbDbLoggerManager::GetInstance().RecordOpenSync(DbPath(), info2);
     auto json = ReadFileContent(AuditJsonPath());
-    EXPECT_NE(json.find("inodeChange"), std::string::npos);
-    EXPECT_NE(json.find("before"), std::string::npos);
-    EXPECT_NE(json.find("after"), std::string::npos);
-    EXPECT_NE(json.find("changedFields"), std::string::npos);
+    EXPECT_NE(json.find("inodeChange"), NPOS);
+    EXPECT_NE(json.find("before"), NPOS);
+    EXPECT_NE(json.find("after"), NPOS);
+    EXPECT_NE(json.find("changedFields"), NPOS);
 }
 
 /**
- * @tc.name: RdbAudit_DbInfoManager_017
+ * @tc.name: RdbAudit_DbInfoManager_019
  * @tc.desc: BuildLastOpen/CollectDbFileInfo/CollectCaller collect for a path
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, DbInfoManager_017, TestSize.Level0)
+HWTEST_F(RdbAuditTest, DbInfoManager_019, TestSize.Level0)
 {
     // DbPath does not exist yet -> collected file info is empty but valid.
     auto lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(DbPath(), true);
@@ -527,32 +553,134 @@ HWTEST_F(RdbAuditTest, DbInfoManager_017, TestSize.Level0)
 }
 
 /**
- * @tc.name: RdbAudit_MiscSmall_018
- * @tc.desc: Merged small cases: ParseDropTruncateTable,
- *           ManagerState, AppendEventSync, OnSqlInsertThrottle, OnIoError, OnDbDelete
+ * @tc.name: RdbAudit_ManagerState_020
+ * @tc.desc: Manager IsInitialized + AppendEventSync sync write + INSERT throttle
  * @tc.type: FUNC
  */
-HWTEST_F(RdbAuditTest, MiscSmall_018, TestSize.Level0)
+HWTEST_F(RdbAuditTest, ManagerState_020, TestSize.Level0)
 {
-    // ParseDropTruncateTable
-    EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("DROP TABLE foo"), "foo");
-    EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("DROP TABLE IF EXISTS foo"), "foo");
-    EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("TRUNCATE TABLE bar"), "bar");
-    EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("DROP TABLE"), "");
-    // ManagerState: IsInitialized
     EXPECT_TRUE(RdbAuditLoggerManager::GetInstance().IsInitialized());
     EXPECT_TRUE(RdbDbLoggerManager::GetInstance().IsInitialized());
-    // AppendEventSync (sync write to events.log)
+    // AppendEventSync: synchronous write to events.log
     RdbAuditLoggerManager::GetInstance().AppendEventSync("{\"evt\":\"TEST\",\"v\":1}");
-    EXPECT_NE(ReadFileContent(EventsLogPath()).find("\"evt\":\"TEST\""), std::string::npos);
-    // OnSqlInsertThrottle: INSERT accumulated, no events.log write (still 1 line)
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("\"evt\":\"TEST\""), NPOS);
+    // OnSqlInsertThrottle: INSERT accumulated within 60s window, no events.log write (still 1 line)
     RdbAuditLoggerImpl logger;
     logger.OnSqlAudit(DbPath(), "INSERT", "logs", TEST_INSERT_ROWS);
     EXPECT_EQ(CountLines(ReadFileContent(EventsLogPath())), static_cast<size_t>(1));
-    // OnIoError -> audit.json ioError (async)
-    logger.OnIoError("execute", DbPath(), TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO);
-    EXPECT_TRUE(WaitJsonContains("ioError"));
-    // OnDbDelete -> audit.json dbDelete (async)
-    logger.OnDbDelete(DbPath(), "delete_store");
-    EXPECT_TRUE(WaitJsonContains("dbDelete"));
+}
+
+// ===== Part 5: coverage supplements (Create / BatchInsert / Update / Execute / ExecuteExt) =====
+
+/**
+ * @tc.name: RdbAudit_Create_021
+ * @tc.desc: Create(true) returns Impl (writes events); Create(false) returns no-op base
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAuditTest, Create_021, TestSize.Level0)
+{
+    auto enabled = RdbAuditLogger::Create(true);
+    enabled->OnOpenOk(DbPath(), false);
+    EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("OPEN:"), NPOS);
+    size_t before = CountLines(ReadFileContent(EventsLogPath()));
+    auto disabled = RdbAuditLogger::Create(false);
+    disabled->OnOpenOk(DbPath(), false);
+    disabled->OnSqlAudit(DbPath(), "DELETE", "t", 1);
+    disabled->OnPragma(DbPath(), "PRAGMA integrity_check", 0, "ok");
+    EXPECT_EQ(CountLines(ReadFileContent(EventsLogPath())), before);
+}
+
+/**
+ * @tc.name: RdbAudit_RealDbBatchInsert_022
+ * @tc.desc: Real DB BatchInsert writes SQL event with op=BatchInsert
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAuditTest, RealDbBatchInsert_022, TestSize.Level0)
+{
+    AuditOpenCallback cb;
+    int err = E_OK;
+    auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
+    ASSERT_NE(store, nullptr);
+    std::vector<ValuesBucket> vbs;
+    ValuesBucket b;
+    b.Put("id", 1);
+    b.Put("name", "a");
+    vbs.push_back(std::move(b));
+    store->BatchInsert("users", vbs);
+    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=BatchInsert"), NPOS);
+}
+
+/**
+ * @tc.name: RdbAudit_RealDbUpdate_023
+ * @tc.desc: Real DB Update writes SQL event with op=UPDATE
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAuditTest, RealDbUpdate_023, TestSize.Level0)
+{
+    AuditOpenCallback cb;
+    int err = E_OK;
+    auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
+    ASSERT_NE(store, nullptr);
+    ValuesBucket b;
+    b.Put("id", 1);
+    b.Put("name", "a");
+    store->Insert("users", b);
+    ValuesBucket upd;
+    upd.Put("name", "b");
+    RdbPredicates p("users");
+    p.EqualTo("id", 1);
+    store->Update(upd, p);
+    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=UPDATE"), NPOS);
+}
+
+/**
+ * @tc.name: RdbAudit_RealDbExecutePragma_024
+ * @tc.desc: Real DB Execute(PRAGMA) writes PRG event (via Execute path)
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAuditTest, RealDbExecutePragma_024, TestSize.Level0)
+{
+    AuditOpenCallback cb;
+    int err = E_OK;
+    auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
+    ASSERT_NE(store, nullptr);
+    auto [code, value] = store->Execute("PRAGMA integrity_check");
+    EXPECT_EQ(code, E_OK);
+    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("PRG:"), NPOS);
+}
+
+/**
+ * @tc.name: RdbAudit_RealDbExecuteDropTable_025
+ * @tc.desc: Real DB Execute(DROP TABLE) writes SQL event with op=DROP (HandleDifferentSqlTypes)
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAuditTest, RealDbExecuteDropTable_025, TestSize.Level0)
+{
+    AuditOpenCallback cb;
+    int err = E_OK;
+    auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
+    ASSERT_NE(store, nullptr);
+    auto [code, value] = store->Execute("DROP TABLE IF EXISTS users");
+    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
+}
+
+/**
+ * @tc.name: RdbAudit_RealDbExecuteExtDropTable_026
+ * @tc.desc: Real DB ExecuteExt(DROP TABLE) writes SQL event with op=DROP (ExecuteExt path)
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbAuditTest, RealDbExecuteExtDropTable_026, TestSize.Level0)
+{
+    AuditOpenCallback cb;
+    int err = E_OK;
+    auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
+    ASSERT_NE(store, nullptr);
+    auto [code, result] = store->ExecuteExt("DROP TABLE IF EXISTS users");
+    EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
+    EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }
