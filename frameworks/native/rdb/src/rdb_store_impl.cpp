@@ -2107,9 +2107,6 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
         SetLastErrorMsg(statement->GetLastErrorMsg());
     }
     TryDump(errCode, "EXECUTE");
-    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        auditLogger_->OnPragma(config_.GetPath(), sql, errCode, "");
-    }
     if (config_.IsVector()) {
         return { errCode, object };
     }
@@ -2128,6 +2125,10 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
         int64_t outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
         return { code, ValueObject(outValue) };
+    }
+
+    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
+        auditLogger_->OnPragma(config_.GetPath(), sql, errCode, "");
     }
 
     if (sqlType == SqliteUtils::STATEMENT_UPDATE) {
