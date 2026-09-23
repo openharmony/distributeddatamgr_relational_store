@@ -99,14 +99,14 @@ void RdbAuditLoggerManager::Init(const std::string &auditDir)
     }
     auditDir_ = auditDir;
     std::string logPath = auditDir_ + EVENTS_LOG;
-    writeFd_ = open(logPath.c_str(), O_CREAT | O_APPEND | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    writeFd_ = open(logPath.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     if (writeFd_ < 0) {
         LOG_ERROR("Init: failed to open audit log, path=%{public}s, errno=%{public}d", logPath.c_str(), errno);
         auditDir_.clear();
         return;
     }
     fdsan_exchange_owner_tag(writeFd_, 0, AUDIT_FD_TAG);
-    lockFd_ = open((auditDir_ + EVENTS_LOCK).c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    lockFd_ = open((auditDir_ + EVENTS_LOCK).c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     if (lockFd_ >= 0) {
         fdsan_exchange_owner_tag(lockFd_, 0, AUDIT_FD_TAG);
     }

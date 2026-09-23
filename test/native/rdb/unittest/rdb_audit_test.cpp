@@ -325,7 +325,7 @@ HWTEST_F(RdbAuditTest, OnOpenFail_004, TestSize.Level0)
 HWTEST_F(RdbAuditTest, OnSqlDelete_005, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
-    logger.OnSqlAudit(DbPath(), "DELETE", "users", TEST_DELETE_ROWS);
+    logger.OnSqlAudit(DbPath(), "DELETE", "", TEST_DELETE_ROWS);
     EXPECT_EQ(WaitEventLines(1), 1);
     auto content = ReadFileContent(EventsLogPath());
     EXPECT_NE(content.find("SQL:"), NPOS);
@@ -390,7 +390,7 @@ HWTEST_F(RdbAuditTest, AuditDisabled_010, TestSize.Level0)
     RdbAuditLogger logger; // no-op base instance (audit disabled)
     logger.OnOpenOk(DbPath(), false);
     logger.OnOpenFail(DbPath(), TEST_ERR_CODE, TEST_OS_ERRNO);
-    logger.OnSqlAudit(DbPath(), "DELETE", "t", 1);
+    logger.OnSqlAudit(DbPath(), "DELETE", "", 1);
     logger.OnPragma(DbPath(), "PRAGMA integrity_check", RC_OK, "ok");
     logger.OnCorrupt(DbPath(), TEST_CORRUPT_RC, RC_OK, "detail");
     logger.OnIoError("execute", DbPath(), TEST_IO_ERR_CODE, TEST_IO_OS_ERRNO);
@@ -526,8 +526,8 @@ HWTEST_F(RdbAuditTest, RealDbAuditDisabled_016, TestSize.Level0)
 HWTEST_F(RdbAuditTest, OnSqlDropTruncate_017, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
-    logger.OnSqlAudit(DbPath(), "DROP", "temp", RC_OK);
-    logger.OnSqlAudit(DbPath(), "TRUNCATE", "temp2", RC_OK);
+    logger.OnSqlAudit(DbPath(), "", "DROP TABLE temp", RC_OK);
+    logger.OnSqlAudit(DbPath(), "", "TRUNCATE TABLE temp2", RC_OK);
     EXPECT_EQ(WaitEventLines(EVENT_LINES_TWO_OPS), EVENT_LINES_TWO_OPS);
     auto content = ReadFileContent(EventsLogPath());
     EXPECT_NE(content.find("op=DROP"), NPOS);
@@ -591,7 +591,7 @@ HWTEST_F(RdbAuditTest, ManagerState_020, TestSize.Level0)
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("\"evt\":\"TEST\""), NPOS);
     // OnSqlInsertThrottle: INSERT accumulated within 60s window, no events.log write (still 1 line)
     RdbAuditLoggerImpl logger;
-    logger.OnSqlAudit(DbPath(), "INSERT", "logs", TEST_INSERT_ROWS);
+    logger.OnSqlAudit(DbPath(), "INSERT", "", TEST_INSERT_ROWS);
     EXPECT_EQ(CountLines(ReadFileContent(EventsLogPath())), 1);
 }
 
@@ -611,7 +611,7 @@ HWTEST_F(RdbAuditTest, Create_021, TestSize.Level0)
     size_t before = CountLines(ReadFileContent(EventsLogPath()));
     auto disabled = RdbAuditLogger::Create(false);
     disabled->OnOpenOk(DbPath(), false);
-    disabled->OnSqlAudit(DbPath(), "DELETE", "t", 1);
+    disabled->OnSqlAudit(DbPath(), "DELETE", "", 1);
     disabled->OnPragma(DbPath(), "PRAGMA integrity_check", RC_OK, "ok");
     EXPECT_EQ(CountLines(ReadFileContent(EventsLogPath())), before);
 }

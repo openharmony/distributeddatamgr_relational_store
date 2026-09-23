@@ -218,6 +218,14 @@ void RdbDbLoggerManager::WithAuditRecord(
     if (!lock.IsLocked()) {
         return; // best-effort: lock unavailable, skip to never block the caller
     }
+    struct stat st;
+    if (stat(jsonPath.c_str(), &st) != 0) {
+        int fd = open(jsonPath.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        if (fd >= 0) {
+            fdsan_exchange_owner_tag(fd, 0, AUDIT_FD_TAG);
+            fdsan_close_with_tag(fd, AUDIT_FD_TAG);
+        }
+    }
     RdbDbInfoRecord rec;
     std::string content;
     if (ReadAll(jsonPath, content) && !content.empty()) {

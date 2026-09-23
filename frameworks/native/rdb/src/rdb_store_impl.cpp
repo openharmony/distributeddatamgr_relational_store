@@ -1775,7 +1775,7 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     int64_t rowid = -1;
     auto errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args);
     if (errCode == E_OK && rowid > 0) {
-        auditLogger_->OnSqlAudit(config_.GetPath(), "INSERT", table, 1);
+        auditLogger_->OnSqlAudit(config_.GetPath(), "INSERT", "", 1);
     }
     if (errCode == E_OK) {
         DoCloudSync(table);
@@ -1817,7 +1817,7 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     }
     conn = nullptr;
     int64_t insertedRows = int64_t(rows.RowSize());
-    auditLogger_->OnSqlAudit(config_.GetPath(), "BatchInsert", table, insertedRows);
+    auditLogger_->OnSqlAudit(config_.GetPath(), "BatchInsert", "", insertedRows);
     DoCloudSync(table);
     return { E_OK, insertedRows };
 }
@@ -1863,6 +1863,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(
     auto [errCode, result] = ExecuteBatchInsertReturning(sqlArgs, conn, config, resolution);
     if (result.changed > 0) {
         DoCloudSync(table);
+        auditLogger_->OnSqlAudit(config_.GetPath(), "BatchInsert", "", result.changed);
     }
     return { errCode, result };
 }
@@ -1913,7 +1914,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, config, returningSql);
-    auditLogger_->OnSqlAudit(config_.GetPath(), "UPDATE", predicates.GetTableName(), result.changed);
+    auditLogger_->OnSqlAudit(config_.GetPath(), "UPDATE", "", result.changed);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1935,7 +1936,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(const AbsRdbPredicates &predica
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [code, result] = ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), config, returningSql);
-    auditLogger_->OnSqlAudit(config_.GetPath(), "DELETE", predicates.GetTableName(), result.changed);
+    auditLogger_->OnSqlAudit(config_.GetPath(), "DELETE", "", result.changed);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -2065,9 +2066,7 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
         // Audit: DROP TABLE / TRUNCATE TABLE always logged, table whitelist checked by logger.
         // Parse table name from SQL for whitelist matching.
-        std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
-        std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
-        auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
+        auditLogger_->OnSqlAudit(config_.GetPath(), "", sql, 0);
         HandleSchemaDDL(std::move(statement), sql);
     }
     statement = nullptr;
@@ -2148,9 +2147,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
-        std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
-        auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
+        auditLogger_->OnSqlAudit(config_.GetPath(), "", sql, 0);
         HandleSchemaDDL(std::move(statement), sql);
     }
     return { code, ValueObject() };
@@ -2186,9 +2183,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteExt(const std::string &sql, con
         return { errCode, result };
     }
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
-        std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
-        std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
-        auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
+        auditLogger_->OnSqlAudit(config_.GetPath(), "", sql, 0);
         HandleSchemaDDL(std::move(statement), sql);
     }
     return { errCode, result };
