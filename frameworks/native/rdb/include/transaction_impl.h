@@ -24,7 +24,6 @@
 #include "transaction.h"
 
 namespace OHOS::NativeRdb {
-class ConnectionPool;
 class RdbStore;
 class TransactionImpl : public Transaction {
 public:
@@ -56,7 +55,6 @@ public:
         const std::string &sql, const Values &args, const ExecuteConfig &config) override;
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(
         int32_t type, std::shared_ptr<Connection> connection, const std::string &path);
-    void SetPool(std::weak_ptr<ConnectionPool> pool);
 
 private:
     static std::string GetBeginSql(int32_t type);
@@ -65,14 +63,13 @@ private:
     std::shared_ptr<RdbStore> GetStore();
     std::shared_ptr<Connection> GetConnection();
     void AddResultSet(std::weak_ptr<ResultSet> resultSet);
-    std::unique_ptr<TimeoutGuard> MakeGuard();
+    std::unique_ptr<TimeoutGuard> MakeGuard(int64_t timeoutMs);
 
     std::string path_;
     uint32_t seqId_ = 0;
     std::recursive_mutex mutex_;
     std::shared_ptr<RdbStore> store_;
     std::shared_ptr<Connection> connection_;
-    std::weak_ptr<ConnectionPool> pool_;
     std::vector<std::weak_ptr<ResultSet>> resultSets_;
 
     static const int32_t regCreator_;

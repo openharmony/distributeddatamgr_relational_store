@@ -17,8 +17,6 @@
 
 #include "transaction_impl.h"
 
-#include "connection_pool.h"
-#include "deadline_scope.h"
 #include "logger.h"
 #include "rdb_errno.h"
 #include "rdb_store.h"
@@ -67,24 +65,18 @@ std::pair<int32_t, std::shared_ptr<Transaction>> TransactionImpl::Create(
     return { E_OK, trans };
 }
 
-void TransactionImpl::SetPool(std::weak_ptr<ConnectionPool> pool)
+std::unique_ptr<TimeoutGuard> TransactionImpl::MakeGuard(int64_t timeoutMs)
 {
-    std::lock_guard lock(mutex_);
-    pool_ = std::move(pool);
-}
-
-std::unique_ptr<TimeoutGuard> TransactionImpl::MakeGuard()
-{
-    auto pool = pool_.lock();
+    if (timeoutMs <= 0) {
+        return nullptr;
+    }
     auto conn = GetConnection();
-    const auto &token = DeadlineScope::Current();
-    if (pool == nullptr || conn == nullptr) {
+    if (conn == nullptr) {
         return nullptr;
     }
-    if (!token.IsActive() || token.IsExhausted()) {
-        return nullptr;
-    }
-    return std::make_unique<TimeoutGuard>(conn, token);
+    auto guard = std::make_unique<TimeoutGuard>(timeoutMs);
+    guard->SetConnection(conn);
+    return guard;
 }
 
 std::string TransactionImpl::GetBeginSql(int32_t type)
@@ -261,8 +253,7 @@ std::pair<int32_t, int64_t> TransactionImpl::Insert(
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    DeadlineScope scope(config.timeoutMs);
-    auto guard = MakeGuard();
+    auto guard = MakeGuard(config.timeoutMs);
     auto [errCode, rowId] = store->Insert(table, row, resolution, config);
     if (errCode == E_SQLITE_INTERRUPT) {
         CloseInner(false);
@@ -279,8 +270,7 @@ std::pair<int32_t, Results> TransactionImpl::BatchInsert(const std::string &tabl
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    DeadlineScope scope(config.timeoutMs);
-    auto guard = MakeGuard();
+    auto guard = MakeGuard(config.timeoutMs);
     auto result = store->BatchInsert(table, rows, resolution, config);
     if (result.first == E_SQLITE_INTERRUPT) {
         CloseInner(false);
@@ -297,8 +287,7 @@ std::pair<int32_t, Results> TransactionImpl::Update(const Row &row, const AbsRdb
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    DeadlineScope scope(config.timeoutMs);
-    auto guard = MakeGuard();
+    auto guard = MakeGuard(config.timeoutMs);
     auto result = store->Update(row, predicates, config, resolution);
     if (result.first == E_SQLITE_INTERRUPT) {
         CloseInner(false);
@@ -315,8 +304,7 @@ std::pair<int32_t, Results> TransactionImpl::Delete(
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    DeadlineScope scope(config.timeoutMs);
-    auto guard = MakeGuard();
+    auto guard = MakeGuard(config.timeoutMs);
     auto result = store->Delete(predicates, config);
     if (result.first == E_SQLITE_INTERRUPT) {
         CloseInner(false);
@@ -333,14 +321,10 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
         LOG_ERROR("transaction already close");
         return nullptr;
     }
-    DeadlineScope scope(config.timeoutMs);
-    auto guard = MakeGuard();
-    auto transStore = std::static_pointer_cast<TransDB>(store);
-    auto resultSet = transStore->QueryByStepWithGuard(sql, args, options, config, std::move(guard));
+    auto guard = MakeGuard(config.timeoutMs);
+    auto resultSet = store->QueryByStep(sql, args, options, config);
     if (resultSet != nullptr) {
         AddResultSet(resultSet);
-    } else if (config.timeoutMs > 0 && DeadlineScope::Current().IsExhausted()) {
-        CloseInner(false);
     }
     return resultSet;
 }
@@ -355,13 +339,10 @@ std::shared_ptr<ResultSet> TransactionImpl::QueryByStep(
         LOG_ERROR("transaction already close");
         return nullptr;
     }
-    DeadlineScope scope(config.timeoutMs);
-    auto guard = MakeGuard();
+    auto guard = MakeGuard(config.timeoutMs);
     auto resultSet = store->QueryByStep(predicates, columns, options);
     if (resultSet != nullptr) {
         AddResultSet(resultSet);
-    } else if (config.timeoutMs > 0 && DeadlineScope::Current().IsExhausted()) {
-        CloseInner(false);
     }
     return resultSet;
 }
@@ -375,10 +356,8 @@ std::pair<int32_t, ValueObject> TransactionImpl::Execute(
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, ValueObject() };
     }
-    DeadlineScope scope(config.timeoutMs);
-    auto guard = MakeGuard();
-    auto transStore = std::static_pointer_cast<TransDB>(store);
-    auto result = transStore->ExecuteWithGuard(sql, args, 0, std::move(guard));
+    auto guard = MakeGuard(config.timeoutMs);
+    auto result = store->Execute(sql, args, 0, config);
     if (result.first == E_SQLITE_INTERRUPT) {
         CloseInner(false);
     }
@@ -393,8 +372,7 @@ std::pair<int32_t, Results> TransactionImpl::ExecuteExt(
         LOG_ERROR("transaction already close");
         return { E_ALREADY_CLOSED, -1 };
     }
-    DeadlineScope scope(config.timeoutMs);
-    auto guard = MakeGuard();
+    auto guard = MakeGuard(config.timeoutMs);
     auto result = store->ExecuteExt(sql, args);
     if (result.first == E_SQLITE_INTERRUPT) {
         CloseInner(false);

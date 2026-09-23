@@ -371,7 +371,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_store_impl_test.cpp",
     "unittest/rdb_store_rekey_test.cpp",
     "unittest/rdb_store_rekey_vector_test.cpp",
-    "unittest/rdb_timeout_interrupt_test.cpp",
+    "unittest/rdb_timeout_nomock_test.cpp",
     "unittest/rdb_trans_db_test.cpp",
     "unittest/rdb_utils_test.cpp",
     "unittest/sqlite_utils_test.cpp",
@@ -601,6 +601,7 @@ group("unittest") {
     ":NativeRdbSecurityManagerTest",
     ":NativeRdbTest",
     ":SilentProxyTest",
+    "unittest/mock_timeout_test:MockNativeRdbTest",
   ]
 }
 

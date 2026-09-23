@@ -101,16 +101,6 @@ private:
     void MarkHeldConnsNonRecyclable() const;
 };
 
-struct ConnWithGuard {
-    std::shared_ptr<Connection> conn;
-    std::unique_ptr<TimeoutGuard> guard;
-    int32_t errCode = E_OK;
-    explicit operator bool() const
-    {
-        return conn != nullptr;
-    }
-};
-
 class RdbStoreImpl : public RdbStore {
 public:
     RdbStoreImpl(const RdbStoreConfig &config);
@@ -294,6 +284,9 @@ private:
     std::pair<int32_t, Stmt> GetStatement(
         const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql = "") const;
     std::pair<int32_t, Stmt> GetStatement(
+        const std::string &sql, bool read, TimeoutGuard &guard, int64_t timeoutMs,
+        const std::string &returningSql = "") const;
+    std::pair<int32_t, Stmt> GetStatement(
         const std::string &sql, bool read = false, const std::string &returningSql = "") const;
     int AttachInner(const RdbStoreConfig &config, const std::string &attachName, const std::string &dbPath,
         const std::vector<uint8_t> &key, int32_t waitTime);
@@ -310,7 +303,6 @@ private:
         const std::vector<std::string> &tables, const DistributedRdb::DistributedConfig &distributedConfig);
     std::pair<int32_t, std::shared_ptr<Connection>> GetConn(bool isRead);
     void InterruptHolders(const std::shared_ptr<ConnectionPool> &pool);
-    ConnWithGuard GetConnWithTimeout(bool isRead);
     void SetLastErrorMsg(const std::string &msg) const;
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args,
         const ReturningConfig &config = {}, const std::string &returningSql = "");

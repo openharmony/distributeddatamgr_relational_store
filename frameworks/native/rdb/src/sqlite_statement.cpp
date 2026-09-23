@@ -49,7 +49,6 @@ using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
 
-thread_local DeadlineToken Statement::deadline_;
 using PerfStat = DistributedRdb::PerfStat;
 using Reportor = RdbFaultHiViewReporter;
 // Setting Data Precision
@@ -414,11 +413,6 @@ int SqliteStatement::Step()
 
 int SqliteStatement::InnerStep()
 {
-    if (IsDeadlineExhausted()) {
-        LOG_WARN("InnerStep: deadline exhausted before sqlite3_step, sql[%{public}s]",
-            SqliteUtils::SqlAnonymous(sql_).c_str());
-        return E_SQLITE_INTERRUPT;
-    }
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_EXECUTE, seqId_);
     PerfStat perfStat((config_ != nullptr) ? config_->GetPath() : "", "", PerfStat::Step::STEP_EXECUTE, seqId_);
     auto errCode = sqlite3_step(stmt_);
@@ -793,11 +787,6 @@ int32_t SqliteStatement::FillBlockInfo(SharedBlockInfo *info, int retryTime) con
     if (info == nullptr) {
         return E_INVALID_ARGS;
     }
-    if (IsDeadlineExhausted()) {
-        LOG_WARN("FillBlockInfo: deadline exhausted before sqlite3_step, sql[%{public}s]",
-            SqliteUtils::SqlAnonymous(sql_).c_str());
-        return E_SQLITE_INTERRUPT;
-    }
     int32_t errCode = E_OK;
     if (SupportBlockInfo()) {
         errCode = FillSharedBlockOpt(info, stmt_, retryTime);
@@ -949,11 +938,6 @@ std::string SqliteStatement::GetLastErrorMsg() const
     auto dbHandle = sqlite3_db_handle(stmt_);
     std::string errMsg(sqlite3_errmsg(dbHandle));
     return errMsg;
-}
-
-std::shared_ptr<Connection> SqliteStatement::GetConnection() const
-{
-    return conn_;
 }
 
 int SqliteStatement::InnerFinalize()

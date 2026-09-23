@@ -19,7 +19,6 @@
 
 #include "connection.h"
 #include "rdb_store.h"
-#include "sql_timeout_guard.h"
 #include "statement.h"
 namespace OHOS::NativeRdb {
 class TransDB : public RdbStore {
@@ -48,13 +47,6 @@ public:
     int SetVersion(int version) override;
     int Sync(const SyncOption &option, const std::vector<std::string> &tables, const AsyncDetail &async) override;
     std::string GetLastErrorMsg() const override;
-
-    // Internal methods for TransactionImpl to pass a TimeoutGuard (Tier 2 interrupt).
-    // TransDB does not own or depend on ConnectionPool; it only uses TimeoutGuard as an opaque RAII handle.
-    std::pair<int32_t, ValueObject> ExecuteWithGuard(
-        const std::string &sql, const Values &args, int64_t trxId, std::unique_ptr<TimeoutGuard> guard);
-    std::shared_ptr<ResultSet> QueryByStepWithGuard(const std::string &sql, const Values &args,
-        const QueryOptions &options, const QueryConfig &config, std::unique_ptr<TimeoutGuard> guard);
 
 private:
     std::pair<int32_t, std::shared_ptr<Statement>> GetStatement(

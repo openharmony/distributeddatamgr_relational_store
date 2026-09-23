@@ -29,9 +29,6 @@ TimeoutGuard::TimeoutGuard(int64_t timeoutMs)
     if (timeoutMs <= 0) {
         return;
     }
-    if (timeoutMs < MIN_TIMEOUT_MS) {
-        timeoutMs = MIN_TIMEOUT_MS;
-    }
     enabled_ = true;
     deadline_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
 }
