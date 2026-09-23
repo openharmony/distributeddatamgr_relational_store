@@ -2152,6 +2152,11 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
+        if (!auditOp.empty()) {
+            std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
+            auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
+        }
         HandleSchemaDDL(std::move(statement), sql);
     }
     return { code, ValueObject() };
@@ -2187,6 +2192,11 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteExt(const std::string &sql, con
         return { errCode, result };
     }
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
+        if (!auditOp.empty()) {
+            std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
+            auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
+        }
         HandleSchemaDDL(std::move(statement), sql);
     }
     return { errCode, result };
