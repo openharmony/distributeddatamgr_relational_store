@@ -29,11 +29,12 @@ namespace NativeRdb {
 // method is an empty inline body, so callers that hold a base instance pay no
 // I/O cost. RdbAuditLoggerImpl (below) overrides the methods to actually
 // collect context and persist to events.log / audit.json via the singleton
-// managers. RdbStoreImpl / RdbHelper / SqliteConnection / SqliteStatement hold
-// a pointer obtained from RdbAuditLogger::Create(config) and invoke On*
-// directly — no IsAuditEnabled gating at the call site. When audit is disabled
-// Create returns a base instance (all calls are no-ops); when enabled it
-// returns an Impl instance.
+// managers. RdbStoreImpl holds a pointer obtained from
+// RdbAuditLogger::Create(config) and invokes On* directly — no
+// IsAuditEnabled gating at the call site. When audit is disabled Create
+// returns a base instance (all calls are no-ops); when enabled it returns an
+// Impl instance whose constructor has already probed the audit root and
+// initialized the singleton managers.
 //
 // Writes are best-effort and asynchronous: they never block the caller's
 // database operations.
@@ -57,12 +58,14 @@ public:
     virtual void OnDbDelete(const std::string &dbPath, const std::string &op) {}
 };
 
-// Real audit implementation. Delegates all persistence to the
-// RdbAuditLoggerManager / RdbDbLoggerManager singletons. Created only when
-// config.IsAuditEnabled() is true (via RdbAuditLogger::Create).
+// Real audit implementation. The constructor probes the shared audit root
+// and initializes the singleton managers (so On* needs no lazy init).
+// Delegates all persistence to the RdbAuditLoggerManager / RdbDbLoggerManager
+// singletons. Created only when config.IsAuditEnabled() is true (via
+// RdbAuditLogger::Create).
 class RdbAuditLoggerImpl : public RdbAuditLogger {
 public:
-    RdbAuditLoggerImpl() = default;
+    RdbAuditLoggerImpl();
     ~RdbAuditLoggerImpl() override = default;
     RdbAuditLoggerImpl(const RdbAuditLoggerImpl &) = delete;
     RdbAuditLoggerImpl &operator=(const RdbAuditLoggerImpl &) = delete;
@@ -78,24 +81,14 @@ public:
 private:
     // Accumulate rows within a 60s window for INSERT/UPDATE.
     bool AccumulateOrFlush(const std::string &eventKey, int64_t rows, int64_t &flushRows);
-
     bool IsActive() const { return enabled_; }
 
-    // Build log lines for events.log. Static: they use only singleton
-    // collectors and free functions — no instance state — so they can be
-    // called from async tasks without capturing `this`.
     static std::string BuildOpenOkLine(const std::string &dbPath);
     static std::string BuildOpenFailLine(const std::string &dbPath, int rc, int osErrno);
     static std::string BuildSqlAuditLine(
         const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows);
-    // Lazily probe the shared audit root and initialize both singleton
-    // managers (idempotent: skips if already initialized). Sets enabled_ to
-    // whether the audit directory is available.
-    void EnsureInit(const std::string &dbPath);
 
-    std::string dbPath_;
     bool enabled_ = false;
-    bool enableSqlAudit_ = true;
     struct ThrottleEntry {
         int64_t timestamp = 0;
         int64_t accumulatedRows = 0;

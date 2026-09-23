@@ -138,11 +138,11 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
         RdbStoreManager::GetInstance().Delete(config, shouldClose);
     }
     if (config.IsAuditEnabled()) {
-        RdbAuditLoggerManager::GetInstance().ExecuteAsync([dbFile]() {
-            DeleteInfo del;
-            del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbFile);
-            del.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
-            del.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        DeleteInfo del;
+        del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbFile);
+        del.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
+        del.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        RdbAuditLoggerManager::GetInstance().ExecuteAsync([dbFile, del]() {
             RdbDbLoggerManager::GetInstance().WriteDeleteSync(dbFile, del);
         });
     }

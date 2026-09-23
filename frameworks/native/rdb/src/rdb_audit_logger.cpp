@@ -89,8 +89,8 @@ bool MkDirP(const std::string &path)
 }
 
 // Probe the shared audit root directory (SA root first, then app log root).
-// Returns "" when neither root exists (audit disabled). Called once per façade
-// Init; the result is passed to both singleton managers.
+// Returns "" when neither root exists (audit disabled). Called once from the
+// RdbAuditLoggerImpl constructor; the result is passed to both singleton managers.
 std::string ProbeAuditDir()
 {
     struct stat st;
@@ -132,16 +132,14 @@ std::unique_ptr<RdbAuditLogger> RdbAuditLogger::Create(bool auditEnabled)
     return auditEnabled ? std::make_unique<RdbAuditLoggerImpl>() : std::make_unique<RdbAuditLogger>();
 }
 
-void RdbAuditLoggerImpl::EnsureInit(const std::string &dbPath)
+RdbAuditLoggerImpl::RdbAuditLoggerImpl()
 {
-    dbPath_ = dbPath;
     if (RdbAuditLoggerManager::GetInstance().IsInitialized()) {
         enabled_ = true;
         return;
     }
     std::string auditDir = ProbeAuditDir();
     if (auditDir.empty()) {
-        enabled_ = false;
         return;
     }
     RdbAuditLoggerManager::GetInstance().Init(auditDir, true);
@@ -151,7 +149,6 @@ void RdbAuditLoggerImpl::EnsureInit(const std::string &dbPath)
 
 void RdbAuditLoggerImpl::OnOpenOk(const std::string &dbPath, bool created)
 {
-    EnsureInit(dbPath);
     if (!IsActive()) {
         return;
     }
@@ -166,7 +163,6 @@ void RdbAuditLoggerImpl::OnOpenOk(const std::string &dbPath, bool created)
 
 void RdbAuditLoggerImpl::OnOpenFail(const std::string &dbPath, int rc, int osErrno)
 {
-    EnsureInit(dbPath);
     if (!IsActive()) {
         return;
     }
@@ -181,7 +177,6 @@ void RdbAuditLoggerImpl::OnOpenFail(const std::string &dbPath, int rc, int osErr
 void RdbAuditLoggerImpl::OnIoError(
     const std::string &op, const std::string &file, int rc, int osErrno)
 {
-    EnsureInit(file);
     if (!IsActive()) {
         return;
     }
@@ -191,8 +186,7 @@ void RdbAuditLoggerImpl::OnIoError(
 void RdbAuditLoggerImpl::OnSqlAudit(
     const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows)
 {
-    EnsureInit(dbPath);
-    if (!IsActive() || !enableSqlAudit_) {
+    if (!IsActive()) {
         return;
     }
     bool alwaysLog = (op == "DELETE" || op == "DROP" || op == "TRUNCATE");
@@ -215,11 +209,8 @@ void RdbAuditLoggerImpl::OnSqlAudit(
     // Throttle stays sync (uses per-instance throttleMap_); only the write is async.
     std::string eventKey = "SQL_AUDIT:" + op + ":" + tbl;
     int64_t flushRows = 0;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (AccumulateOrFlush(eventKey, rows, flushRows)) {
-            return;
-        }
+    if (AccumulateOrFlush(eventKey, rows, flushRows)) {
+        return;
     }
     if (flushRows > 0) {
         std::string path = dbPath;
@@ -234,7 +225,6 @@ void RdbAuditLoggerImpl::OnSqlAudit(
 void RdbAuditLoggerImpl::OnPragma(
     const std::string &dbPath, const std::string &sql, int rc, const std::string &result)
 {
-    EnsureInit(dbPath);
     if (!IsActive()) {
         return;
     }
@@ -244,7 +234,6 @@ void RdbAuditLoggerImpl::OnPragma(
 void RdbAuditLoggerImpl::OnCorrupt(
     const std::string &dbPath, int rc, int osErrno, const std::string &detail)
 {
-    EnsureInit(dbPath);
     if (!IsActive()) {
         return;
     }
@@ -253,7 +242,6 @@ void RdbAuditLoggerImpl::OnCorrupt(
 
 void RdbAuditLoggerImpl::OnDbDelete(const std::string &dbPath, const std::string &op)
 {
-    EnsureInit(dbPath);
     if (!IsActive()) {
         return;
     }
@@ -270,6 +258,7 @@ void RdbAuditLoggerImpl::OnDbDelete(const std::string &dbPath, const std::string
 
 bool RdbAuditLoggerImpl::AccumulateOrFlush(const std::string &eventKey, int64_t rows, int64_t &flushRows)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     flushRows = 0;
     int64_t now = NowMs();
     auto it = throttleMap_.find(eventKey);
