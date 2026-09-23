@@ -181,7 +181,7 @@ void RdbDbLoggerManager::WriteCorruptSync(const std::string &dbPath, const Corru
 
 void RdbDbLoggerManager::RecordCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail)
 {
-    ExecuteAsync([dbPath, rc, osErrno, detail]() {
+    ExecuteAsync([dbPath, rc, osErrno, detail, this]() {
         CorruptInfo corrupt;
         corrupt.rc = rc;
         corrupt.osErrno = osErrno;
@@ -196,7 +196,7 @@ void RdbDbLoggerManager::RecordCorrupt(const std::string &dbPath, int rc, int os
 void RdbDbLoggerManager::RecordIoError(
     const std::string &op, const std::string &file, int rc, int osErrno)
 {
-    ExecuteAsync([op, file, rc, osErrno]() {
+    ExecuteAsync([op, file, rc, osErrno, this]() {
         IoErrorInfo ioError;
         ioError.op = op;
         ioError.rc = rc;

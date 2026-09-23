@@ -406,7 +406,8 @@ void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
     int errCode = E_OK;
     std::tie(errCode, checkResult) = ExecuteForValue(sql);
     if (config.IsAuditEnabled()) {
-        RdbAuditLoggerManager::GetInstance().OnPragma(config.GetPath(), sql, errCode);
+        RdbAuditLoggerManager::GetInstance().OnPragma(
+            config.GetPath(), sql, errCode, static_cast<std::string>(checkResult));
     }
     if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
         LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",

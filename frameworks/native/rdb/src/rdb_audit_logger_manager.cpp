@@ -51,7 +51,8 @@ std::string TsLog()
     return ts.size() > 5 ? ts.substr(5) : ts;
 }
 
-std::string BuildPragmaLine(const std::string &dbPath, const std::string &sql, int rc)
+std::string BuildPragmaLine(
+    const std::string &dbPath, const std::string &sql, int rc, const std::string &result)
 {
     std::string ts = TsLog();
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
@@ -59,7 +60,7 @@ std::string BuildPragmaLine(const std::string &dbPath, const std::string &sql, i
     std::ostringstream os;
     os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/PRG:"
        << " db=" << dbName << " sql=" << SqliteUtils::SqlAnonymous(sql)
-       << " rc=" << rc;
+       << " rc=" << rc << " result=" << result;
     return os.str();
 }
 } // namespace
@@ -149,10 +150,11 @@ void RdbAuditLoggerManager::AppendEventSync(const std::string &jsonLine)
     }
 }
 
-void RdbAuditLoggerManager::OnPragma(const std::string &dbPath, const std::string &sql, int rc)
+void RdbAuditLoggerManager::OnPragma(
+    const std::string &dbPath, const std::string &sql, int rc, const std::string &result)
 {
-    ExecuteAsync([dbPath, sql, rc]() {
-        AppendEventSync(BuildPragmaLine(dbPath, sql, rc));
+    ExecuteAsync([dbPath, sql, rc, result, this]() {
+        AppendEventSync(BuildPragmaLine(dbPath, sql, rc, result));
     });
 }
 

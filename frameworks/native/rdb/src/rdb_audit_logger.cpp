@@ -231,13 +231,14 @@ void RdbAuditLoggerImpl::OnSqlAudit(
     }
 }
 
-void RdbAuditLoggerImpl::OnPragma(const std::string &dbPath, const std::string &sql, int rc)
+void RdbAuditLoggerImpl::OnPragma(
+    const std::string &dbPath, const std::string &sql, int rc, const std::string &result)
 {
     EnsureInit(dbPath);
     if (!IsActive()) {
         return;
     }
-    RdbAuditLoggerManager::GetInstance().OnPragma(dbPath, sql, rc);
+    RdbAuditLoggerManager::GetInstance().OnPragma(dbPath, sql, rc, result);
 }
 
 void RdbAuditLoggerImpl::OnCorrupt(

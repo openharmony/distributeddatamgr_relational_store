@@ -68,7 +68,7 @@ public:
 
     // Convenience: build an IGR log line and append it asynchronously.
     // Convenience: build a PRG log line (PRAGMA statement + rc) and append asynchronously.
-    void OnPragma(const std::string &dbPath, const std::string &sql, int rc);
+    void OnPragma(const std::string &dbPath, const std::string &sql, int rc, const std::string &result);
 
 private:
     RdbAuditLoggerManager();
