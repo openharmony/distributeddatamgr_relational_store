@@ -52,7 +52,7 @@ public:
     virtual void OnOpenFail(const std::string &dbPath, int rc, int osErrno) {}
     virtual void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno) {}
     virtual void OnSqlAudit(const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows) {}
-    virtual void OnPragma(const std::string &dbPath, const std::string &sql, int rc) {}
+    virtual void OnPragma(const std::string &dbPath, const std::string &sql, int rc, const std::string &result) {}
     virtual void OnCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail) {}
     virtual void OnDbDelete(const std::string &dbPath, const std::string &op) {}
 };
@@ -71,7 +71,7 @@ public:
     void OnOpenFail(const std::string &dbPath, int rc, int osErrno) override;
     void OnIoError(const std::string &op, const std::string &file, int rc, int osErrno) override;
     void OnSqlAudit(const std::string &dbPath, const std::string &op, const std::string &tbl, int64_t rows) override;
-    void OnPragma(const std::string &dbPath, const std::string &sql, int rc) override;
+    void OnPragma(const std::string &dbPath, const std::string &sql, int rc, const std::string &result) override;
     void OnCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail) override;
     void OnDbDelete(const std::string &dbPath, const std::string &op) override;
 

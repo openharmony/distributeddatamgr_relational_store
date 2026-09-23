@@ -2059,9 +2059,8 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         return errCode;
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
-    // Audit: business caller actively executing any PRAGMA (statement + rc).
     if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        auditLogger_->OnPragma(config_.GetPath(), sql, errCode);
+        auditLogger_->OnPragma(config_.GetPath(), sql, errCode, "");
     }
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
         // Audit: DROP TABLE / TRUNCATE TABLE always logged, table whitelist checked by logger.
@@ -2111,9 +2110,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
         SetLastErrorMsg(statement->GetLastErrorMsg());
     }
     TryDump(errCode, "EXECUTE");
-    // Audit: business caller actively executing any PRAGMA (statement + rc).
     if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        auditLogger_->OnPragma(config_.GetPath(), sql, errCode);
+        auditLogger_->OnPragma(config_.GetPath(), sql, errCode, "");
     }
     if (config_.IsVector()) {
         return { errCode, object };

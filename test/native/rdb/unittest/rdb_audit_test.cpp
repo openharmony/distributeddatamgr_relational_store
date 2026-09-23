@@ -303,15 +303,17 @@ HWTEST_F(RdbAuditTest, OnSqlDelete_005, TestSize.Level0)
 
 /**
  * @tc.name: RdbAudit_OnPragma_006
- * @tc.desc: OnPragma writes PRG event with sql + rc
+ * @tc.desc: OnPragma writes PRG event with sql + rc + result
  * @tc.type: FUNC
  */
 HWTEST_F(RdbAuditTest, OnPragma_006, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
-    logger.OnPragma(DbPath(), "PRAGMA integrity_check", 0);
+    logger.OnPragma(DbPath(), "PRAGMA integrity_check", 0, "ok");
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
-    EXPECT_NE(ReadFileContent(EventsLogPath()).find("RdbAudit/PRG"), std::string::npos);
+    auto content = ReadFileContent(EventsLogPath());
+    EXPECT_NE(content.find("RdbAudit/PRG"), std::string::npos);
+    EXPECT_NE(content.find("result=ok"), std::string::npos);
 }
 
 /**
@@ -415,7 +417,9 @@ HWTEST_F(RdbAuditTest, RealDbPragmaIntegrity_012, TestSize.Level0)
     ASSERT_NE(store, nullptr);
     store->ExecuteSql("PRAGMA integrity_check");
     EXPECT_EQ(WaitEventLines(2), static_cast<size_t>(2));
-    EXPECT_NE(ReadFileContent(EventsLogPath()).find("RdbAudit/PRG"), std::string::npos);
+    auto prgContent = ReadFileContent(EventsLogPath());
+    EXPECT_NE(prgContent.find("RdbAudit/PRG"), std::string::npos);
+    EXPECT_NE(prgContent.find("result=ok"), std::string::npos);
 }
 
 /**
