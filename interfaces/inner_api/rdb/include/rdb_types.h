@@ -602,38 +602,6 @@ struct QueryConfig {
     int64_t timeoutMs = 0;
 };
 
-struct DeadlineToken {
-    std::chrono::steady_clock::time_point deadline{};
-    int64_t timeoutMs = 0;
-
-    bool IsActive() const
-    {
-        return timeoutMs > 0;
-    }
-    bool IsExhausted() const
-    {
-        return IsActive() && std::chrono::steady_clock::now() >= deadline;
-    }
-    int64_t RemainingMs() const
-    {
-        if (!IsActive()) {
-            return 0;
-        }
-        auto rem = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now())
-                       .count();
-        return rem > 0 ? rem : 0;
-    }
-    static DeadlineToken FromMs(int64_t ms)
-    {
-        DeadlineToken t;
-        if (ms > 0) {
-            t.timeoutMs = ms;
-            t.deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
-        }
-        return t;
-    }
-};
-
 class RdbStoreConfig;
 class CorruptHandler {
 public:

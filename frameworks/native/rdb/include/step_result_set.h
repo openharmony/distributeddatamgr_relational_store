@@ -25,7 +25,6 @@
 #include "connection.h"
 #include "connection_pool.h"
 #include "rdb_types.h"
-#include "sql_timeout_guard.h"
 #include "statement.h"
 
 namespace OHOS {
@@ -37,7 +36,7 @@ public:
     using Time = std::chrono::steady_clock::time_point;
     using QueryOptions = DistributedRdb::QueryOptions;
     StepResultSet(Time start, Conn conn, const std::string &sql, const Values &args, QueryOptions options,
-        bool safe = false, std::unique_ptr<TimeoutGuard> guard = nullptr);
+        bool safe = false);
     ~StepResultSet() override;
     int GetColumnType(int columnIndex, ColumnType &columnType) override;
     int GoToRow(int position) override;
@@ -73,7 +72,6 @@ private:
 
     std::string sql_;
     std::vector<ValueObject> args_;
-    std::unique_ptr<TimeoutGuard> timeoutGuard_;
 };
 } // namespace NativeRdb
 } // namespace OHOS

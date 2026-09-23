@@ -16,27 +16,23 @@
 #ifndef OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_SQL_TIMEOUT_GUARD_H
 #define OHOS_DISTRIBUTED_DATA_RELATIONAL_STORE_FRAMEWORKS_NATIVE_RDB_INCLUDE_SQL_TIMEOUT_GUARD_H
 
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <utility>
-
-#include "rdb_types.h"
 
 namespace OHOS {
 namespace NativeRdb {
-class ConnectionPool;
 class Connection;
 
-// Tier2 mid-execution interrupt. Arms a one-shot task on the shared ExecutorPool that calls
-// Connection::Interrupt() (sqlite3_interrupt) when the deadline expires. The connection is
-// held by weak_ptr only, so a stale timer on a pooled/reused connection is avoided: on
-// destruction Remove(taskId, wait=true) either cancels the pending task or waits for an
-// in-flight interrupt to finish before the connection is returned to the pool.
+constexpr int64_t MIN_TIMEOUT_MS = 1000;
+
 class TimeoutGuard {
 public:
-    TimeoutGuard(std::shared_ptr<Connection> conn, const DeadlineToken &token);
+    explicit TimeoutGuard(int64_t timeoutMs = 0);
     ~TimeoutGuard();
+
+    void SetConnection(std::weak_ptr<Connection> conn);
 
     TimeoutGuard(const TimeoutGuard &) = delete;
     TimeoutGuard &operator=(const TimeoutGuard &) = delete;
@@ -44,6 +40,8 @@ public:
     TimeoutGuard &operator=(TimeoutGuard &&) = delete;
 
 private:
+    std::chrono::steady_clock::time_point deadline_{};
+    bool enabled_ = false;
     std::function<void()> cancel_;
 };
 } // namespace NativeRdb
