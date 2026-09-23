@@ -2117,6 +2117,9 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
 std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     std::shared_ptr<Statement> &&statement, const std::string &sql, int32_t code, int sqlType)
 {
+    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
+        auditLogger_->OnPragma(config_.GetPath(), sql, code, "");
+    }
     if (code != E_OK) {
         LOG_ERROR("failed, error:0x%{public}x app self can check the SQL:%{public}s", code,
             SqliteUtils::SqlAnonymous(sql).c_str());
@@ -2125,10 +2128,6 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     if (sqlType == SqliteUtils::STATEMENT_INSERT) {
         int64_t outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
         return { code, ValueObject(outValue) };
-    }
-
-    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
-        auditLogger_->OnPragma(config_.GetPath(), sql, errCode, "");
     }
 
     if (sqlType == SqliteUtils::STATEMENT_UPDATE) {
