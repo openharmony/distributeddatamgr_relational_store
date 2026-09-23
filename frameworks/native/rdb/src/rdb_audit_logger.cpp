@@ -26,6 +26,7 @@
 
 #include "logger.h"
 #include "rdb_audit_logger_manager.h"
+#include "rdb_audit_utils.h"
 #include "rdb_db_info_manager.h"
 #include "rdb_db_logger_manager.h"
 #include "rdb_platform.h"
