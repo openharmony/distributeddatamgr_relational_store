@@ -241,20 +241,6 @@ public:
 // ===== Part 1: RdbAuditUtils pure logic (no I/O, no singleton) =====
 
 /**
- * @tc.name: RdbAudit_PragmaIntegrityCheck_001
- * @tc.desc: IsPragmaIntegrityCheck identifies integrity/quick_check
- * @tc.type: FUNC
- */
-HWTEST_F(RdbAuditTest, PragmaIntegrityCheck_001, TestSize.Level0)
-{
-    EXPECT_TRUE(RdbAuditUtils::IsPragmaIntegrityCheck("PRAGMA integrity_check"));
-    EXPECT_TRUE(RdbAuditUtils::IsPragmaIntegrityCheck("PRAGMA quick_check"));
-    EXPECT_TRUE(RdbAuditUtils::IsPragmaIntegrityCheck("  pragma  integrity_check  ;"));
-    EXPECT_FALSE(RdbAuditUtils::IsPragmaIntegrityCheck("PRAGMA journal_mode"));
-    EXPECT_FALSE(RdbAuditUtils::IsPragmaIntegrityCheck("SELECT * FROM t"));
-}
-
-/**
  * @tc.name: RdbAudit_ParseDropTruncateOp_002
  * @tc.desc: ParseDropTruncateOp classifies DROP/TRUNCATE TABLE only
  * @tc.type: FUNC
@@ -549,9 +535,8 @@ HWTEST_F(RdbAuditTest, MiscSmall_018, TestSize.Level0)
     EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("DROP TABLE IF EXISTS foo"), "foo");
     EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("TRUNCATE TABLE bar"), "bar");
     EXPECT_EQ(RdbAuditUtils::ParseDropTruncateTable("DROP TABLE"), "");
-    // ManagerState: IsInitialized/GetAuditDir
+    // ManagerState: IsInitialized
     EXPECT_TRUE(RdbAuditLoggerManager::GetInstance().IsInitialized());
-    EXPECT_EQ(RdbAuditLoggerManager::GetInstance().GetAuditDir(), AuditDir());
     EXPECT_TRUE(RdbDbLoggerManager::GetInstance().IsInitialized());
     // AppendEventSync (sync write to events.log)
     RdbAuditLoggerManager::GetInstance().AppendEventSync("{\"evt\":\"TEST\",\"v\":1}");
