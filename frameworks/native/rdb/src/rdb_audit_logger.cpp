@@ -16,6 +16,7 @@
 #define LOG_TAG "RdbAuditLogger"
 #include "rdb_audit_logger.h"
 
+#include <algorithm>
 #include <sys/stat.h>
 
 #include <cerrno>
@@ -119,12 +120,16 @@ std::string TsLog()
 }
 
 // Append file info as space-separated key=value pairs (log style, not JSON).
+// ACL text from getfacl contains newlines; collapse to ';' so each event
+// stays on a single events.log line.
 void WriteFileInfo(std::ostringstream &os, const char *label, const FileInfo &fi)
 {
+    std::string acl = fi.permission.acl;
+    std::replace(acl.begin(), acl.end(), '\n', ';');
     os << " " << label << "_inode=" << fi.node
        << " " << label << "_size=" << fi.size
        << " " << label << "_mode=" << fi.permission.mode
-       << " " << label << "_acl=" << fi.permission.acl
+       << " " << label << "_acl=" << acl
        << " " << label << "_mtime=" << fi.time.mtime;
 }
 } // namespace
@@ -154,12 +159,14 @@ void RdbAuditLoggerImpl::OnOpenOk(const std::string &dbPath, bool created)
     if (!IsActive()) {
         return;
     }
-    std::string path = dbPath;
-    bool crt = created;
-    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, crt]() {
-        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenOkLine(path));
-        LastOpenDbInfo lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(path, crt);
-        RdbDbLoggerManager::GetInstance().RecordOpenSync(path, lastOpen);
+    auto executor = TaskExecutor::GetInstance().GetExecutor();
+    if (executor == nullptr) {
+        return;
+    }
+    executor->Execute([dbPath, created]() {
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenOkLine(dbPath));
+        LastOpenDbInfo lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(dbPath, created);
+        RdbDbLoggerManager::GetInstance().RecordOpenSync(dbPath, lastOpen);
     });
 }
 
@@ -168,11 +175,12 @@ void RdbAuditLoggerImpl::OnOpenFail(const std::string &dbPath, int rc, int osErr
     if (!IsActive()) {
         return;
     }
-    std::string path = dbPath;
-    int r = rc;
-    int os = osErrno;
-    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, r, os]() {
-        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenFailLine(path, r, os));
+    auto executor = TaskExecutor::GetInstance().GetExecutor();
+    if (executor == nullptr) {
+        return;
+    }
+    executor->Execute([dbPath, rc, osErrno]() {
+        RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildOpenFailLine(dbPath, rc, osErrno));
     });
 }
 
@@ -196,12 +204,12 @@ void RdbAuditLoggerImpl::OnSqlAudit(
         if (op == "DELETE" && rows <= 0) {
             return;
         }
-        std::string path = dbPath;
-        std::string o = op;
-        std::string t = tbl;
-        int64_t r = rows;
-        RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, o, t, r]() {
-            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(path, o, t, r));
+        auto executor = TaskExecutor::GetInstance().GetExecutor();
+        if (executor == nullptr) {
+            return;
+        }
+        executor->Execute([dbPath, op, tbl, rows]() {
+            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(dbPath, op, tbl, rows));
         });
         return;
     }
@@ -215,11 +223,12 @@ void RdbAuditLoggerImpl::OnSqlAudit(
         return;
     }
     if (flushRows > 0) {
-        std::string path = dbPath;
-        std::string o = op;
-        std::string t = tbl;
-        RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, o, t, flushRows]() {
-            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(path, o, t, flushRows));
+        auto executor = TaskExecutor::GetInstance().GetExecutor();
+        if (executor == nullptr) {
+            return;
+        }
+        executor->Execute([dbPath, op, tbl, flushRows]() {
+            RdbAuditLoggerManager::GetInstance().AppendEventSync(BuildSqlAuditLine(dbPath, op, tbl, flushRows));
         });
     }
 }
@@ -247,14 +256,16 @@ void RdbAuditLoggerImpl::OnDbDelete(const std::string &dbPath, const std::string
     if (!IsActive()) {
         return;
     }
-    std::string path = dbPath;
-    std::string o = op;
-    RdbAuditLoggerManager::GetInstance().ExecuteAsync([path, o]() {
+    auto executor = TaskExecutor::GetInstance().GetExecutor();
+    if (executor == nullptr) {
+        return;
+    }
+    executor->Execute([dbPath, op]() {
         DeleteInfo del;
-        del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(path);
+        del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbPath);
         del.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
         del.time = RdbTimeUtils::GetCurSysTimeWithMs();
-        RdbDbLoggerManager::GetInstance().WriteDeleteSync(path, del);
+        RdbDbLoggerManager::GetInstance().WriteDeleteSync(dbPath, del);
     });
 }
 
@@ -297,10 +308,12 @@ std::string RdbAuditLoggerImpl::BuildOpenOkLine(const std::string &dbPath)
     WriteFileInfo(os, "db", fileInfo.db);
     WriteFileInfo(os, "wal", fileInfo.wal);
     WriteFileInfo(os, "shm", fileInfo.shm);
+    std::string dirAcl = fileInfo.parent.permission.acl;
+    std::replace(dirAcl.begin(), dirAcl.end(), '\n', ';');
     os << " slave_db_inode=" << slaveInfo.db.node << " slave_wal_inode=" << slaveInfo.wal.node
        << " slave_shm_inode=" << slaveInfo.shm.node
        << " dir_mode=" << fileInfo.parent.permission.mode
-       << " dir_acl=" << fileInfo.parent.permission.acl;
+       << " dir_acl=" << dirAcl;
     return os.str();
 }
 

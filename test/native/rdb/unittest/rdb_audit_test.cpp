@@ -53,9 +53,7 @@ constexpr int64_t TEST_INSERT_ROWS = 100;
 constexpr int POLL_INTERVAL_MS = 1000;
 const std::string::size_type NPOS = std::string::npos;
 
-// Async-drain / wait timeouts (ms).
-constexpr int DRAIN_TIMEOUT_MS = 1000;
-constexpr int DRAIN_POLL_MS = 200;
+// Wait timeout (ms) for async audit output to land.
 constexpr int WAIT_TIMEOUT_MS = 3000;
 
 // Return codes used in On* calls.
@@ -171,23 +169,11 @@ std::string AuditJsonPath()
 // access, no friend). First call opens events.log fd + sets auditDir; later
 // calls are no-ops. Truncate events.log in place so the singleton's O_APPEND fd
 // stays valid (truncate does not change the inode) while clearing prior output.
-// DrainAsyncAudit waits for prior cases' async tasks to land (events.log line
-// Wait for prior cases' async audit tasks to drain on the executor before
-// truncating events.log. A fixed sleep is used instead of a "line count
-// stable" poll because queued (not-yet-running) tasks don't change the line
-// count, which would falsely break early and let them append old content back
-// after the truncate (cross-case line accumulation).
-void DrainAsyncAudit()
-{
-    std::this_thread::sleep_for(std::chrono::milliseconds(DRAIN_TIMEOUT_MS));
-}
-
 void SetupAudit()
 {
     MakeDirRecursive(AuditDir(), AUDIT_DIR_MODE);
     RdbAuditLoggerManager::GetInstance().Init(AuditDir(), true);
     RdbDbLoggerManager::GetInstance().Init(AuditDir(), true);
-    DrainAsyncAudit();
     truncate(EventsLogPath().c_str(), 0);
     unlink(AuditJsonPath().c_str());
 }
@@ -683,8 +669,8 @@ HWTEST_F(RdbAuditTest, RealDbExecutePragma_024, TestSize.Level0)
     int err = E_OK;
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
-    auto [code, value] = store->Execute("PRAGMA integrity_check");
-    EXPECT_EQ(code, E_OK);
+    auto ret = store->Execute("PRAGMA integrity_check");
+    EXPECT_EQ(ret.first, E_OK);
     EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("PRG:"), NPOS);
 }
@@ -700,7 +686,7 @@ HWTEST_F(RdbAuditTest, RealDbExecuteDropTable_025, TestSize.Level0)
     int err = E_OK;
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
-    auto [code, value] = store->Execute("DROP TABLE IF EXISTS users");
+    store->Execute("DROP TABLE IF EXISTS users");
     EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }
@@ -716,7 +702,7 @@ HWTEST_F(RdbAuditTest, RealDbExecuteExtDropTable_026, TestSize.Level0)
     int err = E_OK;
     auto store = RdbHelper::GetRdbStore(MakeAuditConfig(), 1, cb, err);
     ASSERT_NE(store, nullptr);
-    auto [code, result] = store->ExecuteExt("DROP TABLE IF EXISTS users");
+    store->ExecuteExt("DROP TABLE IF EXISTS users");
     EXPECT_EQ(WaitEventLines(EVENT_LINES_OPEN_PLUS_OP), EVENT_LINES_OPEN_PLUS_OP);
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("op=DROP"), NPOS);
 }

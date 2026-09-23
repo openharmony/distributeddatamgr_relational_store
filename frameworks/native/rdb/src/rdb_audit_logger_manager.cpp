@@ -112,18 +112,6 @@ void RdbAuditLoggerManager::Init(const std::string &auditDir, bool auditEnabled)
     initialized_ = true;
 }
 
-void RdbAuditLoggerManager::ExecuteAsync(Task task)
-{
-    if (!initialized_) {
-        return;
-    }
-    auto executor = TaskExecutor::GetInstance().GetExecutor();
-    if (executor == nullptr) {
-        return; // pool stopped (shutdown) — drop best-effort audit work
-    }
-    executor->Execute(std::move(task));
-}
-
 void RdbAuditLoggerManager::AppendEventSync(const std::string &jsonLine)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -155,7 +143,11 @@ void RdbAuditLoggerManager::AppendEventSync(const std::string &jsonLine)
 void RdbAuditLoggerManager::OnPragma(
     const std::string &dbPath, const std::string &sql, int rc, const std::string &result)
 {
-    ExecuteAsync([dbPath, sql, rc, result, this]() {
+    auto executor = TaskExecutor::GetInstance().GetExecutor();
+    if (executor == nullptr) {
+        return;
+    }
+    executor->Execute([dbPath, sql, rc, result, this]() {
         AppendEventSync(BuildPragmaLine(dbPath, sql, rc, result));
     });
 }
