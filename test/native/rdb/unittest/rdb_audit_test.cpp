@@ -149,8 +149,8 @@ std::string AuditJsonPath()
 void SetupAudit()
 {
     MakeDirRecursive(AuditDir(), AUDIT_DIR_MODE);
-    RdbAuditLoggerManager::GetInstance().Init(AuditDir());
-    RdbDbLoggerManager::GetInstance().Init(AuditDir());
+    RdbAuditLoggerManager::GetInstance().Init(AuditDir(), true);
+    RdbDbLoggerManager::GetInstance().Init(AuditDir(), true);
     truncate(EventsLogPath().c_str(), 0);
     unlink(AuditJsonPath().c_str());
 }
@@ -264,7 +264,7 @@ HWTEST_F(RdbAuditTest, ParseDropTruncateOp_002, TestSize.Level0)
 HWTEST_F(RdbAuditTest, OnOpenOk_003, TestSize.Level0)
 {
     RdbAuditLoggerImpl logger;
-    logger.OnOpenOk(DbPath());
+    logger.OnOpenOk(DbPath(), false);
     EXPECT_EQ(WaitEventLines(1), static_cast<size_t>(1));
     EXPECT_NE(ReadFileContent(EventsLogPath()).find("RdbAudit/OPEN"), std::string::npos);
     EXPECT_TRUE(WaitFileExists(AuditJsonPath()));
@@ -518,7 +518,7 @@ HWTEST_F(RdbAuditTest, InodeChange_016, TestSize.Level0)
 HWTEST_F(RdbAuditTest, DbInfoManager_017, TestSize.Level0)
 {
     // DbPath does not exist yet -> collected file info is empty but valid.
-    auto lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(DbPath());
+    auto lastOpen = RdbDbInfoManager::GetInstance().BuildLastOpen(DbPath(), true);
     EXPECT_TRUE(lastOpen.main.IsEmpty());
     auto files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(DbPath());
     EXPECT_TRUE(files.IsEmpty());
