@@ -32,6 +32,7 @@
 #include "rdb_time_utils.h"
 #include "serializable.h"
 #include "sqlite_utils.h"
+#include "string_utils.h"
 #include "task_executor.h"
 
 namespace OHOS {
@@ -119,29 +120,17 @@ RdbDbLoggerManager::RdbDbLoggerManager() {}
 
 RdbDbLoggerManager::~RdbDbLoggerManager() {}
 
-void RdbDbLoggerManager::Init(const std::string &auditDir, bool auditEnabled)
+void RdbDbLoggerManager::Init(const std::string &auditDir)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (initialized_) {
         return;
     }
-    if (!auditEnabled || auditDir.empty()) {
+    if (auditDir.empty()) {
         return;
     }
     auditDir_ = auditDir;
     initialized_ = true;
-}
-
-void RdbDbLoggerManager::ExecuteAsync(Task task)
-{
-    if (!initialized_) {
-        return;
-    }
-    auto executor = TaskExecutor::GetInstance().GetExecutor();
-    if (executor == nullptr) {
-        return;
-    }
-    executor->Execute(std::move(task));
 }
 
 void RdbDbLoggerManager::RecordOpenSync(const std::string &dbPath, const LastOpenDbInfo &lastOpen)
@@ -181,7 +170,11 @@ void RdbDbLoggerManager::WriteCorruptSync(const std::string &dbPath, const Corru
 
 void RdbDbLoggerManager::RecordCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail)
 {
-    ExecuteAsync([dbPath, rc, osErrno, detail, this]() {
+    auto executor = TaskExecutor::GetInstance().GetExecutor();
+    if (executor == nullptr) {
+        return;
+    }
+    executor->Execute([dbPath, rc, osErrno, detail, this]() {
         CorruptInfo corrupt;
         corrupt.rc = rc;
         corrupt.osErrno = osErrno;
@@ -196,7 +189,11 @@ void RdbDbLoggerManager::RecordCorrupt(const std::string &dbPath, int rc, int os
 void RdbDbLoggerManager::RecordIoError(
     const std::string &op, const std::string &file, int rc, int osErrno)
 {
-    ExecuteAsync([op, file, rc, osErrno, this]() {
+    auto executor = TaskExecutor::GetInstance().GetExecutor();
+    if (executor == nullptr) {
+        return;
+    }
+    executor->Execute([op, file, rc, osErrno, this]() {
         IoErrorInfo ioError;
         ioError.op = op;
         ioError.rc = rc;
@@ -237,7 +234,7 @@ std::string RdbDbLoggerManager::BuildAuditPath(const std::string &dbPath, const 
         return "";
     }
     std::string el = SqliteUtils::GetArea(dbPath);
-    std::string dbName = SqliteUtils::GetDbName(dbPath);
+    std::string dbName = SqliteUtils::RemoveSuffix(StringUtils::ExtractFileName(dbPath));
     if (el.empty() || dbName.empty()) {
         return "";
     }

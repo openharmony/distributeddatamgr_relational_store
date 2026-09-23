@@ -32,6 +32,7 @@
 #include "rdb_security_manager.h"
 #include "rdb_time_utils.h"
 #include "sqlite_utils.h"
+#include "string_utils.h"
 
 namespace OHOS {
 namespace NativeRdb {
@@ -133,7 +134,7 @@ LastOpenDbInfo RdbDbInfoManager::BuildLastOpen(const std::string &dbPath, bool c
     info.main = CollectDbFileInfo(dbPath);
     info.replica = CollectDbFileInfo(SqliteUtils::GetSlavePath(dbPath));
     info.binlog = CollectBinlog(dbPath);
-    info.config.name = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
+    info.config.name = SqliteUtils::Anonymous(StringUtils::ExtractFileName(dbPath));
     info.key = CollectKey(dbPath);
     info.time = RdbTimeUtils::GetCurSysTimeWithMs();
     info.callerInfo = CollectCaller();

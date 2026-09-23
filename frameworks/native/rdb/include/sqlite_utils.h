@@ -100,9 +100,6 @@ public:
     static size_t GetFileCount(const std::string &folderPath);
     API_EXPORT static std::string Anonymous(const std::string &srcFile);
     static std::string RemoveSuffix(const std::string &name);
-    // Basename (after last '/') with ".db" suffix stripped, e.g.
-    // "/data/storage/el2/database/foo.db" -> "foo".
-    static std::string GetDbName(const std::string &dbPath);
     static std::string SqlAnonymous(const std::string &sql);
     static std::string GetArea(const std::string &srcFile);
     static ssize_t GetFileSize(const std::string &fileName);

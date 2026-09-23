@@ -36,6 +36,7 @@
 #include "rdb_store_config.h"
 #include "rdb_types.h"
 #include "sqlite_utils.h"
+#include "string_utils.h"
 #include "values_bucket.h"
 
 using namespace testing::ext;
@@ -162,7 +163,8 @@ std::string EventsLogPath()
 // Reuse SqliteUtils parsers (R10) so the path tracks DbPath() changes.
 std::string AuditJsonPath()
 {
-    return AuditDir() + SqliteUtils::GetArea(DbPath()) + SqliteUtils::GetDbName(DbPath()) + "_audit.json";
+    return AuditDir() + SqliteUtils::GetArea(DbPath()) +
+        SqliteUtils::RemoveSuffix(StringUtils::ExtractFileName(DbPath())) + "_audit.json";
 }
 
 // Initialize both singleton managers via the public idempotent Init() (no private
@@ -172,8 +174,8 @@ std::string AuditJsonPath()
 void SetupAudit()
 {
     MakeDirRecursive(AuditDir(), AUDIT_DIR_MODE);
-    RdbAuditLoggerManager::GetInstance().Init(AuditDir(), true);
-    RdbDbLoggerManager::GetInstance().Init(AuditDir(), true);
+    RdbAuditLoggerManager::GetInstance().Init(AuditDir());
+    RdbDbLoggerManager::GetInstance().Init(AuditDir());
     truncate(EventsLogPath().c_str(), 0);
     unlink(AuditJsonPath().c_str());
 }
