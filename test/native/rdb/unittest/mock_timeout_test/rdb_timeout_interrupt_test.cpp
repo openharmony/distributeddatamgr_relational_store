@@ -479,7 +479,82 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Insert_Timeout_001, TestSize.Level
         << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
-    store_->Execute("DROP TABLE IF EXISTS " + largeTable);
+}
+
+/* *
+ * @tc.name: DualWrite_Interrupt_001
+ * @tc.desc: In dual-write mode (MAIN_REPLICA), opening master auto-creates slave.
+ *           BatchInsert is interrupted. Verify master data is rolled back, then open
+ *           the auto-created slave and verify slave is also unchanged.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbTimeoutInterruptTest, DualWrite_Interrupt_001, TestSize.Level1)
+{
+    std::string masterPath = RDB_TEST_PATH + "dual_write_interrupt.db";
+    std::string slavePath = RDB_TEST_PATH + "dual_write_interrupt_slave.db";
+
+    RdbHelper::DeleteRdbStore(masterPath);
+    RdbHelper::DeleteRdbStore(slavePath);
+
+    // 1. Open master with MAIN_REPLICA (auto-creates slave)
+    RdbStoreConfig masterConfig(masterPath);
+    masterConfig.SetHaMode(HAMode::MAIN_REPLICA);
+    RdbTimeoutInterruptTestOpenCallback masterHelper;
+    int errCode = E_OK;
+    auto masterStore = RdbHelper::GetRdbStore(masterConfig, 1, masterHelper, errCode);
+    ASSERT_NE(masterStore, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+
+    // 2. Create table (dual-write to slave)
+    auto res = masterStore->Execute(
+        "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, data BLOB)");
+    ASSERT_EQ(res.first, E_OK);
+
+    // 3. BatchInsert with timeout → should be interrupted
+    auto rows = BuildLargeRows(LARGE_ROW_COUNT);
+    BatchInsertConfig config;
+    config.timeoutMs = 100;
+    config.returning.columns = { "id" };
+    auto start = std::chrono::steady_clock::now();
+    auto [opErr, insertResult] =
+        masterStore->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_NONE, config);
+    auto end = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    printf("DualWrite_Interrupt_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
+        static_cast<long long>(elapsed), opErr, static_cast<long long>(config.timeoutMs));
+
+    EXPECT_TRUE(opErr == E_SQLITE_INTERRUPT)
+        << "Unexpected errCode=" << opErr;
+
+    // 4. Verify master: no rows inserted (interrupted, rolled back)
+    auto masterRs = masterStore->QueryByStep("SELECT COUNT(*) FROM test");
+    ASSERT_NE(masterRs, nullptr);
+    ASSERT_EQ(masterRs->GoToNextRow(), E_OK);
+    int64_t masterCount = 0;
+    masterRs->GetLong(0, masterCount);
+    EXPECT_EQ(masterCount, 0)
+        << "Master should be interrupted, no rows inserted, masterCount=" << masterCount;
+
+    // 5. Open slave (auto-created by master) and verify
+    RdbStoreConfig slaveConfig(slavePath);
+    RdbTimeoutInterruptTestOpenCallback slaveHelper;
+    auto slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
+    ASSERT_NE(slaveStore, nullptr);
+
+    auto slaveRs = slaveStore->QueryByStep("SELECT COUNT(*) FROM test");
+    ASSERT_NE(slaveRs, nullptr);
+    ASSERT_EQ(slaveRs->GoToNextRow(), E_OK);
+    int64_t slaveCount = 0;
+    slaveRs->GetLong(0, slaveCount);
+    EXPECT_EQ(slaveCount, 0)
+        << "Slave should be interrupted, no rows inserted, slaveCount=" << slaveCount;
+
+    // Cleanup
+    masterStore = nullptr;
+    slaveStore = nullptr;
+    RdbHelper::ClearCache();
+    RdbHelper::DeleteRdbStore(masterPath);
+    RdbHelper::DeleteRdbStore(slavePath);
 }
 
 /* *
