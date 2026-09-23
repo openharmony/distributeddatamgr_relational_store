@@ -23,8 +23,12 @@
 
 #include <cerrno>
 #include <cstring>
+#include <sstream>
 
 #include "logger.h"
+#include "rdb_db_info_manager.h"
+#include "rdb_time_utils.h"
+#include "sqlite_utils.h"
 #include "task_executor.h"
 
 namespace OHOS {
@@ -39,6 +43,25 @@ constexpr const char *EVENTS_LOCK = "events.lock";
 
 constexpr uint64_t AUDIT_FD_TAG_ID = 0xD001650;
 const uint64_t AUDIT_FD_TAG = fdsan_create_owner_tag(FDSAN_OWNER_TYPE_FILE, AUDIT_FD_TAG_ID);
+
+// hilog-style timestamp: "MM-DD HH:MM:SS.mmm" (strip the year prefix).
+std::string TsLog()
+{
+    std::string ts = RdbTimeUtils::GetCurSysTimeWithMs();
+    return ts.size() > 5 ? ts.substr(5) : ts;
+}
+
+std::string BuildPragmaLine(const std::string &dbPath, const std::string &sql, int rc)
+{
+    std::string ts = TsLog();
+    auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
+    std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
+    std::ostringstream os;
+    os << ts << " " << caller.pid << " " << caller.tid << " I RdbAudit/PRG:"
+       << " db=" << dbName << " sql=" << SqliteUtils::SqlAnonymous(sql)
+       << " rc=" << rc;
+    return os.str();
+}
 } // namespace
 
 RdbAuditLoggerManager &RdbAuditLoggerManager::GetInstance()
@@ -124,6 +147,13 @@ void RdbAuditLoggerManager::AppendEventSync(const std::string &jsonLine)
     if (lockFd_ >= 0) {
         flock(lockFd_, LOCK_UN);
     }
+}
+
+void RdbAuditLoggerManager::OnPragma(const std::string &dbPath, const std::string &sql, int rc)
+{
+    ExecuteAsync([dbPath, sql, rc]() {
+        AppendEventSync(BuildPragmaLine(dbPath, sql, rc));
+    });
 }
 
 void RdbAuditLoggerManager::MaybeRotateLog()

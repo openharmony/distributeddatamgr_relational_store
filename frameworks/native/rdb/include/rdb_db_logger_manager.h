@@ -61,6 +61,10 @@ public:
     void WriteDeleteSync(const std::string &dbPath, const DeleteInfo &del);
     void WriteCorruptSync(const std::string &dbPath, const CorruptInfo &corrupt);
 
+    // Convenience: collect caller/files + build the record, then write asynchronously.
+    void RecordCorrupt(const std::string &dbPath, int rc, int osErrno, const std::string &detail);
+    void RecordIoError(const std::string &op, const std::string &file, int rc, int osErrno);
+
 private:
     RdbDbLoggerManager();
 

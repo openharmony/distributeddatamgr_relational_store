@@ -67,6 +67,10 @@ public:
     // an ExecuteAsync task — not intended for direct caller use.
     void AppendEventSync(const std::string &jsonLine);
 
+    // Convenience: build an IGR log line and append it asynchronously.
+    // Convenience: build a PRG log line (PRAGMA statement + rc) and append asynchronously.
+    void OnPragma(const std::string &dbPath, const std::string &sql, int rc);
+
 private:
     RdbAuditLoggerManager();
 

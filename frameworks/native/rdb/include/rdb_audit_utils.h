@@ -18,8 +18,6 @@
 
 #include <string>
 
-#include "rdb_audit_event.h"
-
 namespace OHOS {
 namespace NativeRdb {
 namespace RdbAuditUtils {
@@ -27,12 +25,6 @@ namespace RdbAuditUtils {
 // Check whether a SQL string is a PRAGMA integrity_check or quick_check statement.
 // Case-insensitive; tolerates trailing whitespace and semicolons.
 bool IsPragmaIntegrityCheck(const std::string &sql);
-
-// Extract the integrity check mode from a PRAGMA SQL statement.
-// Returns IntegrityMode::QUICK for "PRAGMA quick_check",
-// IntegrityMode::FULL for "PRAGMA integrity_check".
-// Precondition: IsPragmaIntegrityCheck(sql) is true.
-IntegrityMode ParsePragmaMode(const std::string &sql);
 
 // Classify a DDL statement as DROP TABLE or TRUNCATE TABLE.
 // Returns "DROP", "TRUNCATE", or "" (empty = not a drop/truncate-table statement).

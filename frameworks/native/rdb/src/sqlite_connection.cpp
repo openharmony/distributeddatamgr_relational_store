@@ -30,7 +30,8 @@
 
 #include "global_resource.h"
 #include "logger.h"
-#include "rdb_audit_logger.h"
+#include "rdb_audit_logger_manager.h"
+#include "rdb_db_logger_manager.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_icu_manager.h"
@@ -405,11 +406,7 @@ void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
     int errCode = E_OK;
     std::tie(errCode, checkResult) = ExecuteForValue(sql);
     if (config.IsAuditEnabled()) {
-        RdbAuditLogger logger;
-        IntegrityMode auditMode = (index == 1) ? IntegrityMode::QUICK : IntegrityMode::FULL;
-        int auditResult = (errCode == E_OK && static_cast<std::string>(checkResult) == "ok") ? 0 : -1;
-        logger.OnIntegrity(config.GetPath(), IntegrityTrigger::AUTO, auditMode,
-            auditResult, static_cast<std::string>(checkResult));
+        RdbAuditLoggerManager::GetInstance().OnPragma(config.GetPath(), sql, errCode);
     }
     if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
         LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
@@ -417,8 +414,8 @@ void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
             SqliteUtils::SqlAnonymous(sql).c_str());
         Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
         if (config.IsAuditEnabled()) {
-            RdbAuditLogger logger;
-            logger.OnCorrupt(config.GetPath(), errCode, 0, static_cast<std::string>(checkResult));
+            RdbDbLoggerManager::GetInstance().RecordCorrupt(
+                config.GetPath(), errCode, 0, static_cast<std::string>(checkResult));
         }
     }
 }
