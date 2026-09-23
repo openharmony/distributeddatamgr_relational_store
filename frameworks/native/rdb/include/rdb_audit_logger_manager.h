@@ -52,7 +52,7 @@ public:
     RdbAuditLoggerManager &operator=(const RdbAuditLoggerManager &) = delete;
 
     // Receive the probed audit root directory from the façade. Idempotent.
-    void Init(const std::string &auditDir, bool auditEnabled);
+    void Init(const std::string &auditDir);
 
     bool IsInitialized() const { return initialized_; }
 

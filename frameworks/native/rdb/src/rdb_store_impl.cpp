@@ -2066,10 +2066,8 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         // Audit: DROP TABLE / TRUNCATE TABLE always logged, table whitelist checked by logger.
         // Parse table name from SQL for whitelist matching.
         std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
-        if (!auditOp.empty()) {
-            std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
-            auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
-        }
+        std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
+        auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
         HandleSchemaDDL(std::move(statement), sql);
     }
     statement = nullptr;
@@ -2151,10 +2149,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
         std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
-        if (!auditOp.empty()) {
-            std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
-            auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
-        }
+        std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
+        auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
         HandleSchemaDDL(std::move(statement), sql);
     }
     return { code, ValueObject() };
@@ -2191,10 +2187,8 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteExt(const std::string &sql, con
     }
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
         std::string auditOp = RdbAuditUtils::ParseDropTruncateOp(sql);
-        if (!auditOp.empty()) {
-            std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
-            auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
-        }
+        std::string auditTbl = RdbAuditUtils::ParseDropTruncateTable(sql);
+        auditLogger_->OnSqlAudit(config_.GetPath(), auditOp, auditTbl, 0);
         HandleSchemaDDL(std::move(statement), sql);
     }
     return { errCode, result };

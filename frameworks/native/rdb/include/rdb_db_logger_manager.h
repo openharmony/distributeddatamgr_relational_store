@@ -40,22 +40,17 @@ namespace NativeRdb {
 // caller.
 class RdbDbLoggerManager {
 public:
-    using Task = std::function<void()>;
-
     static RdbDbLoggerManager &GetInstance();
     ~RdbDbLoggerManager();
     RdbDbLoggerManager(const RdbDbLoggerManager &) = delete;
     RdbDbLoggerManager &operator=(const RdbDbLoggerManager &) = delete;
 
     // Receive the probed audit root directory from the façade. Idempotent.
-    void Init(const std::string &auditDir, bool auditEnabled);
+    void Init(const std::string &auditDir);
 
     bool IsInitialized() const { return initialized_; }
 
-    // Dispatch a task (collection + write) to the executor thread.
-    void ExecuteAsync(Task task);
-
-    // Synchronous audit.json writes. Called from inside an ExecuteAsync task.
+    // Synchronous audit.json writes. Called from inside an executor task.
     void RecordOpenSync(const std::string &dbPath, const LastOpenDbInfo &lastOpen);
     void WriteIoErrorSync(const std::string &dbPath, const IoErrorInfo &ioError);
     void WriteDeleteSync(const std::string &dbPath, const DeleteInfo &del);

@@ -29,6 +29,7 @@
 #include "rdb_db_info_manager.h"
 #include "rdb_time_utils.h"
 #include "sqlite_utils.h"
+#include "string_utils.h"
 #include "task_executor.h"
 
 namespace OHOS {
@@ -58,7 +59,7 @@ std::string BuildPragmaLine(
 {
     std::string ts = TsLog();
     auto caller = RdbDbInfoManager::GetInstance().CollectCaller();
-    std::string dbName = SqliteUtils::Anonymous(SqliteUtils::GetDbName(dbPath));
+    std::string dbName = SqliteUtils::Anonymous(StringUtils::ExtractFileName(dbPath));
     std::ostringstream os;
     os << ts << " " << caller.pid << " " << caller.tid << " PRG:"
        << " db=" << dbName << " sql=" << SqliteUtils::SqlAnonymous(sql)
@@ -87,13 +88,13 @@ RdbAuditLoggerManager::~RdbAuditLoggerManager()
     }
 }
 
-void RdbAuditLoggerManager::Init(const std::string &auditDir, bool auditEnabled)
+void RdbAuditLoggerManager::Init(const std::string &auditDir)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (initialized_) {
         return;
     }
-    if (!auditEnabled || auditDir.empty()) {
+    if (auditDir.empty()) {
         return;
     }
     auditDir_ = auditDir;
