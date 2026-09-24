@@ -27,6 +27,7 @@
 #include <vector>
 #include <optional>
 
+#include "rdb_common.h"
 #include "values_buckets.h"
 
 namespace OHOS {
@@ -574,23 +575,24 @@ struct ReturningConfig {
 struct ExecuteConfig {
     int64_t timeoutMs = 0;
     ReturningConfig returning{};
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
 };
 
-// Per-operation configs: each CRUD kind owns an independent config struct with its own fields,
-// so it can evolve (add operation-specific fields) without perturbing other operations. New
-// overloads accept these; existing signatures are unchanged.
 struct InsertConfig {
     int64_t timeoutMs = 0;
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
 };
 
 struct BatchInsertConfig {
     int64_t timeoutMs = 0;
     ReturningConfig returning{};
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
 };
 
 struct UpdateConfig {
     int64_t timeoutMs = 0;
     ReturningConfig returning{};
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
 };
 
 struct DeleteConfig {

@@ -25,21 +25,18 @@ class TransDB : public RdbStore {
 public:
     TransDB(std::shared_ptr<Connection> conn, const std::string &path);
     std::pair<int, int64_t> Insert(
-        const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config) override;
+        const std::string &table, const Row &row, const InsertConfig &config = {}) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        Resolution resolution, const BatchInsertConfig &config) override;
+        const BatchInsertConfig &config = {}) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const UpdateConfig &config, Resolution resolution) override;
+        const UpdateConfig &config = {}) override;
     std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const DeleteConfig &config) override;
-    std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
+        const AbsRdbPredicates &predicates, const DeleteConfig &config = {}) override;
     std::shared_ptr<AbsSharedResultSet> QuerySql(
-        const std::string &sql, const Values &args, const QueryConfig &config) override;
+        const std::string &sql, const Values &args, const QueryConfig &config = {}) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        const QueryOptions &options) override;
-    std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        const QueryOptions &options, const QueryConfig &config) override;
+        const QueryOptions &options, const QueryConfig &config = {}) override;
     std::pair<int32_t, ValueObject> Execute(
         const std::string &sql, const Values &args, int64_t trxId, const ExecuteConfig &config) override;
     std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;

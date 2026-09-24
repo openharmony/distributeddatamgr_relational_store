@@ -38,21 +38,23 @@ public:
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
     std::pair<int32_t, int64_t> Insert(
-        const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config) override;
+        const std::string &table, const Row &row, Resolution resolution) override;
+    std::pair<int32_t, int64_t> Insert(
+        const std::string &table, const Row &row, const InsertConfig &config = {}) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        Resolution resolution, const BatchInsertConfig &config) override;
+        const BatchInsertConfig &config = {}) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const UpdateConfig &config, Resolution resolution) override;
+        const UpdateConfig &config = {}) override;
     std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const DeleteConfig &config) override;
+        const AbsRdbPredicates &predicates, const DeleteConfig &config = {}) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        const QueryOptions &options, const QueryConfig &config) override;
+        const QueryOptions &options, const QueryConfig &config = {}) override;
     std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
-        const QueryOptions &options, const QueryConfig &config) override;
+        const QueryOptions &options, const QueryConfig &config = {}) override;
     std::pair<int32_t, ValueObject> Execute(
-        const std::string &sql, const Values &args, const ExecuteConfig &config) override;
+        const std::string &sql, const Values &args, const ExecuteConfig &config = {}) override;
     std::pair<int32_t, Results> ExecuteExt(
-        const std::string &sql, const Values &args, const ExecuteConfig &config) override;
+        const std::string &sql, const Values &args, const ExecuteConfig &config = {}) override;
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(
         int32_t type, std::shared_ptr<Connection> connection, const std::string &path);
 

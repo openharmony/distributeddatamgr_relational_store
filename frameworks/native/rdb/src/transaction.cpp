@@ -33,22 +33,27 @@ int32_t Transaction::RegisterCreator(Creator creator)
 std::pair<int32_t, int64_t> Transaction::Insert(
     const std::string &table, const Row &row, Resolution resolution)
 {
-    // old calls new: the non-config overload delegates to the per-op config canonical entry.
-    return Insert(table, row, resolution, InsertConfig{});
+    InsertConfig config;
+    config.resolution = resolution;
+    return Insert(table, row, config);
 }
 
 std::pair<int32_t, int64_t> Transaction::BatchInsert(
     const std::string &table, const RefRows &rows, Resolution resolution)
 {
-    auto [code, result] = BatchInsert(table, rows, ReturningConfig{}, resolution);
+    BatchInsertConfig config;
+    config.resolution = resolution;
+    auto [code, result] = BatchInsert(table, rows, config);
     return { code, result.changed };
 }
 
 std::pair<int32_t, Results> Transaction::BatchInsert(const std::string &table, const RefRows &rows,
     const ReturningConfig &config, Resolution resolution)
 {
-    // old calls new: the ReturningConfig overload delegates to the per-op config canonical entry.
-    return BatchInsert(table, rows, resolution, BatchInsertConfig{0, config});
+    BatchInsertConfig cfg;
+    cfg.returning = config;
+    cfg.resolution = resolution;
+    return BatchInsert(table, rows, cfg);
 }
 
 std::pair<int, int> Transaction::Update(
@@ -63,15 +68,19 @@ std::pair<int, int> Transaction::Update(
 std::pair<int32_t, int32_t> Transaction::Update(
     const Row &row, const AbsRdbPredicates &predicates, Resolution resolution)
 {
-    auto [code, result] = Update(row, predicates, ReturningConfig{}, resolution);
+    UpdateConfig cfg;
+    cfg.resolution = resolution;
+    auto [code, result] = Update(row, predicates, cfg);
     return { code, result.changed };
 }
 
 std::pair<int32_t, Results> Transaction::Update(const Row &row, const AbsRdbPredicates &predicates,
     const ReturningConfig &config, Resolution resolution)
 {
-    // old calls new: the ReturningConfig overload delegates to the per-op config canonical entry.
-    return Update(row, predicates, UpdateConfig{0, config}, resolution);
+    UpdateConfig cfg;
+    cfg.returning = config;
+    cfg.resolution = resolution;
+    return Update(row, predicates, cfg);
 }
 
 std::pair<int32_t, int32_t> Transaction::Delete(
@@ -140,19 +149,19 @@ std::shared_ptr<ResultSet> Transaction::QueryByStep(
 // (or nullptr) when the subclass does not implement the per-op config overload, instead of
 // silently dropping the timeout by delegating back to the old overloads.
 std::pair<int32_t, int64_t> Transaction::Insert(
-    const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config)
+    const std::string &table, const Row &row, const InsertConfig &config)
 {
     return { E_NOT_SUPPORT, -1 };
 }
 
 std::pair<int32_t, Results> Transaction::BatchInsert(const std::string &table, const RefRows &rows,
-    Resolution resolution, const BatchInsertConfig &config)
+    const BatchInsertConfig &config)
 {
     return { E_NOT_SUPPORT, -1 };
 }
 
 std::pair<int32_t, Results> Transaction::Update(const Row &row, const AbsRdbPredicates &predicates,
-    const UpdateConfig &config, Resolution resolution)
+    const UpdateConfig &config)
 {
     return { E_NOT_SUPPORT, -1 };
 }
