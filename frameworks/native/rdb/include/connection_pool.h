@@ -130,8 +130,7 @@ private:
         std::list<std::shared_ptr<ConnNode>> nodes_;
         std::list<std::weak_ptr<ConnNode>> details_;
         std::mutex mutex_;
-        std::condition_variable cond_;        // Extension and AcquireAll waiters.
-        std::condition_variable acquireCond_; // AcquireNode waiters.
+        std::condition_variable cond_;
         Creator creator_ = nullptr;
         std::pair<int32_t, std::shared_ptr<ConnNode>> Initialize(
             Creator creator, int32_t max, int32_t timeout, bool disable, bool acquire = false);

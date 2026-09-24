@@ -103,6 +103,7 @@ void CheckReleaseWithMixedWaiters(bool transaction)
     auto extensionWaiter = std::async(std::launch::async, [container, waiting]() {
         std::unique_lock<std::mutex> lock(container->mutex_);
         waiting->set_value();
+        // Start the extension waiter before the second Acquire.
         container->WaitForExtension(lock);
     });
     waiting->get_future().wait();
@@ -110,10 +111,12 @@ void CheckReleaseWithMixedWaiters(bool transaction)
     EXPECT_EQ(std::future_status::timeout, acquiring.wait_for(WAITER_START_TIMEOUT));
 
     EXPECT_EQ(E_OK, transaction ? container->ReleaseTrans(node) : container->Release(node));
+    // Acquire should wake as soon as the node is returned.
     EXPECT_EQ(std::future_status::ready, acquiring.wait_for(RELEASE_WAKE_TIMEOUT));
     EXPECT_EQ(std::future_status::timeout, extensionWaiter.wait_for(std::chrono::seconds(0)));
     EXPECT_EQ(std::future_status::timeout, growing.wait_for(std::chrono::seconds(0)));
 
+    // Unblock the creator before joining the waiters.
     FinishCreator(gate);
     extensionWaiter.get();
     auto acquiredNode = GetAcquireNode(acquiring);
@@ -130,7 +133,7 @@ class ConnectionPoolTest : public testing::Test {};
 
 /**
  * @tc.name: ReleaseWakesAcquireWithExtensionWaiterTest
- * @tc.desc: Release wakes a node waiter without completing extension.
+ * @tc.desc: Release wakes node waiters even when an earlier waiter is waiting for extension completion.
  * @tc.type: FUNC
  */
 HWTEST_F(ConnectionPoolTest, ReleaseWakesAcquireWithExtensionWaiterTest, TestSize.Level1)
@@ -140,7 +143,7 @@ HWTEST_F(ConnectionPoolTest, ReleaseWakesAcquireWithExtensionWaiterTest, TestSiz
 
 /**
  * @tc.name: ReleaseTransWakesAcquireWithExtensionWaiterTest
- * @tc.desc: ReleaseTrans wakes a node waiter during extension.
+ * @tc.desc: Recycling a transaction node wakes Acquire while a slow extension and its waiter remain blocked.
  * @tc.type: FUNC
  */
 HWTEST_F(ConnectionPoolTest, ReleaseTransWakesAcquireWithExtensionWaiterTest, TestSize.Level1)
