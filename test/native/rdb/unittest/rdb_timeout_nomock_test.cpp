@@ -111,7 +111,7 @@ HWTEST_F(RdbTimeoutNoMockTest, BatchInsert_NoMock_001, TestSize.Level1)
     BatchInsertConfig config;
     config.timeoutMs = 500; // < 1000, bumped to 1000 internally by TimeoutGuard
     auto start = std::chrono::steady_clock::now();
-    auto [errCode, result] = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE, config);
+    auto [errCode, result] = store_->BatchInsert(tableName, rows, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("BatchInsert_NoMock_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -141,7 +141,7 @@ HWTEST_F(RdbTimeoutNoMockTest, BatchInsert_NoMock_002, TestSize.Level1)
 
     BatchInsertConfig config;
     config.timeoutMs = -1; // < 0, no guard
-    auto [errCode, result] = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE, config);
+    auto [errCode, result] = store_->BatchInsert(tableName, rows, config);
     printf("BatchInsert_NoMock_002: errCode=%d, timeoutMs=%lld\n", errCode,
         static_cast<long long>(config.timeoutMs));
 
@@ -168,7 +168,7 @@ HWTEST_F(RdbTimeoutNoMockTest, BatchInsert_NoMock_003, TestSize.Level1)
 
     BatchInsertConfig config;
     config.timeoutMs = 0; // no timeout
-    auto [errCode, result] = store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE, config);
+    auto [errCode, result] = store_->BatchInsert(tableName, rows, config);
     printf("BatchInsert_NoMock_003: errCode=%d, timeoutMs=%lld\n", errCode,
         static_cast<long long>(config.timeoutMs));
 

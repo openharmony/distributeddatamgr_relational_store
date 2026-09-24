@@ -245,7 +245,15 @@ void TransactionImpl::AddResultSet(std::weak_ptr<ResultSet> resultSet)
 }
 
 std::pair<int32_t, int64_t> TransactionImpl::Insert(
-    const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config)
+    const std::string &table, const Row &row, Resolution resolution)
+{
+    InsertConfig config;
+    config.resolution = resolution;
+    return Insert(table, row, config);
+}
+
+std::pair<int32_t, int64_t> TransactionImpl::Insert(
+    const std::string &table, const Row &row, const InsertConfig &config)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -254,15 +262,15 @@ std::pair<int32_t, int64_t> TransactionImpl::Insert(
         return { E_ALREADY_CLOSED, -1 };
     }
     auto guard = MakeGuard(config.timeoutMs);
-    auto [errCode, rowId] = store->Insert(table, row, resolution, config);
+    auto [errCode, rowId] = store->Insert(table, row, config);
     if (errCode == E_SQLITE_INTERRUPT) {
-        CloseInner(false);
+        CloseInner(true);
     }
     return { errCode, rowId };
 }
 
 std::pair<int32_t, Results> TransactionImpl::BatchInsert(const std::string &table, const RefRows &rows,
-    Resolution resolution, const BatchInsertConfig &config)
+    const BatchInsertConfig &config)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_, rows.RowSize());
     auto store = GetStore();
@@ -271,15 +279,15 @@ std::pair<int32_t, Results> TransactionImpl::BatchInsert(const std::string &tabl
         return { E_ALREADY_CLOSED, -1 };
     }
     auto guard = MakeGuard(config.timeoutMs);
-    auto result = store->BatchInsert(table, rows, resolution, config);
+    auto result = store->BatchInsert(table, rows, config);
     if (result.first == E_SQLITE_INTERRUPT) {
-        CloseInner(false);
+        CloseInner(true);
     }
     return result;
 }
 
 std::pair<int32_t, Results> TransactionImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
-    const UpdateConfig &config, Resolution resolution)
+    const UpdateConfig &config)
 {
     PerfStat perfStat(path_, "", PerfStat::Step::STEP_TRANS, seqId_);
     auto store = GetStore();
@@ -288,9 +296,9 @@ std::pair<int32_t, Results> TransactionImpl::Update(const Row &row, const AbsRdb
         return { E_ALREADY_CLOSED, -1 };
     }
     auto guard = MakeGuard(config.timeoutMs);
-    auto result = store->Update(row, predicates, config, resolution);
+    auto result = store->Update(row, predicates, config);
     if (result.first == E_SQLITE_INTERRUPT) {
-        CloseInner(false);
+        CloseInner(true);
     }
     return result;
 }
@@ -307,7 +315,7 @@ std::pair<int32_t, Results> TransactionImpl::Delete(
     auto guard = MakeGuard(config.timeoutMs);
     auto result = store->Delete(predicates, config);
     if (result.first == E_SQLITE_INTERRUPT) {
-        CloseInner(false);
+        CloseInner(true);
     }
     return result;
 }
@@ -359,7 +367,7 @@ std::pair<int32_t, ValueObject> TransactionImpl::Execute(
     auto guard = MakeGuard(config.timeoutMs);
     auto result = store->Execute(sql, args, 0, config);
     if (result.first == E_SQLITE_INTERRUPT) {
-        CloseInner(false);
+        CloseInner(true);
     }
     return result;
 }
@@ -375,7 +383,7 @@ std::pair<int32_t, Results> TransactionImpl::ExecuteExt(
     auto guard = MakeGuard(config.timeoutMs);
     auto result = store->ExecuteExt(sql, args);
     if (result.first == E_SQLITE_INTERRUPT) {
-        CloseInner(false);
+        CloseInner(true);
     }
     return result;
 }

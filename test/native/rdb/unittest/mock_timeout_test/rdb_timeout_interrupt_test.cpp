@@ -148,7 +148,7 @@ HWTEST_F(RdbTimeoutInterruptTest, BatchInsert_Timeout_001, TestSize.Level1)
     config.timeoutMs = 500;
     auto start = std::chrono::steady_clock::now();
     auto [errCode, insertResult] =
-        store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE, config);
+        store_->BatchInsert(tableName, rows, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("BatchInsert_Timeout_003: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -198,7 +198,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Insert_Timeout_001, TestSize.Level1)
     config.timeoutMs = 50;
     auto start = std::chrono::steady_clock::now();
     auto [errCode, rowId] =
-        store_->Insert(tableName, newRow, ConflictResolution::ON_CONFLICT_NONE, config);
+        store_->Insert(tableName, newRow, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("Insert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -272,7 +272,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Update_Timeout_001, TestSize.Level1)
     config.timeoutMs = TEST_TIMEOUT_MS;
     auto start = std::chrono::steady_clock::now();
     auto [errCode, updateResult] =
-        store_->Update(updateRow, predicates, config, ConflictResolution::ON_CONFLICT_NONE);
+        store_->Update(updateRow, predicates, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("Update_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -424,7 +424,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Insert_Timeout_001, TestSize.Level
     InsertConfig config;
     config.timeoutMs = 50;
     auto start = std::chrono::steady_clock::now();
-    auto [errCode, rowId] = trans->Insert(tableName, newRow, ConflictResolution::ON_CONFLICT_NONE, config);
+    auto [errCode, rowId] = trans->Insert(tableName, newRow, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("Transaction_Insert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -482,11 +482,11 @@ HWTEST_F(RdbTimeoutInterruptTest, DualWrite_Interrupt_001, TestSize.Level1)
     // 3. BatchInsert with timeout → should be interrupted
     auto rows = BuildLargeRows(LARGE_ROW_COUNT);
     BatchInsertConfig config;
-    config.timeoutMs = 100;
+    config.timeoutMs = 500;
     config.returning.columns = { "id" };
     auto start = std::chrono::steady_clock::now();
     auto [opErr, insertResult] =
-        masterStore->BatchInsert("test", rows, ConflictResolution::ON_CONFLICT_NONE, config);
+        masterStore->BatchInsert("test", rows, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("DualWrite_Interrupt_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -549,7 +549,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_BatchInsert_Timeout_001, TestSize.
     config.timeoutMs = 500;
     auto start = std::chrono::steady_clock::now();
     auto [errCode, insertResult] =
-        trans->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE, config);
+        trans->BatchInsert(tableName, rows, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("Transaction_BatchInsert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -595,10 +595,10 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Timeout_001, TestSize.Level
     predicates.EqualTo("name", "nonexistent"); // Force full table scan
 
     UpdateConfig config;
-    config.timeoutMs = 50;
+    config.timeoutMs = 20;
     auto start = std::chrono::steady_clock::now();
     auto [errCode, updateResult] =
-        trans->Update(updateRow, predicates, config, ConflictResolution::ON_CONFLICT_NONE);
+        trans->Update(updateRow, predicates, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("Transaction_Update_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -760,11 +760,11 @@ HWTEST_F(RdbTimeoutInterruptTest, BatchInsert_Returning_Timeout_001, TestSize.Le
     auto rows = BuildLargeRows(LARGE_ROW_COUNT);
 
     BatchInsertConfig config;
-    config.timeoutMs = 100;
+    config.timeoutMs = 500;
     config.returning.columns = { "id", "name" };
     auto start = std::chrono::steady_clock::now();
     auto [errCode, insertResult] =
-        store_->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE, config);
+        store_->BatchInsert(tableName, rows, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("BatchInsert_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -805,7 +805,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Update_Returning_Timeout_001, TestSize.Level1)
     config.returning.columns = { "id" };
     auto start = std::chrono::steady_clock::now();
     auto [errCode, updateResult] =
-        store_->Update(updateRow, predicates, config, ConflictResolution::ON_CONFLICT_NONE);
+        store_->Update(updateRow, predicates, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("Update_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -877,11 +877,11 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_BatchInsert_Returning_Timeout_001,
     auto rows = BuildLargeRows(LARGE_ROW_COUNT);
 
     BatchInsertConfig config;
-    config.timeoutMs = 100;
+    config.timeoutMs = 500;
     config.returning.columns = { "id", "name" };
     auto start = std::chrono::steady_clock::now();
     auto [errCode, insertResult] =
-        trans->BatchInsert(tableName, rows, ConflictResolution::ON_CONFLICT_NONE, config);
+        trans->BatchInsert(tableName, rows, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("Transaction_BatchInsert_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
@@ -931,7 +931,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Returning_Timeout_001, Test
     config.returning.columns = { "id" };
     auto start = std::chrono::steady_clock::now();
     auto [errCode, updateResult] =
-        trans->Update(updateRow, predicates, config, ConflictResolution::ON_CONFLICT_NONE);
+        trans->Update(updateRow, predicates, config);
     auto end = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("Transaction_Update_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",

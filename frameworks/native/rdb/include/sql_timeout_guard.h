@@ -18,7 +18,6 @@
 
 #include <chrono>
 #include <cstdint>
-#include <functional>
 #include <memory>
 
 namespace OHOS {
@@ -36,13 +35,13 @@ public:
 
     TimeoutGuard(const TimeoutGuard &) = delete;
     TimeoutGuard &operator=(const TimeoutGuard &) = delete;
-    TimeoutGuard(TimeoutGuard &&other) noexcept;
+    TimeoutGuard(TimeoutGuard &&) = delete;
     TimeoutGuard &operator=(TimeoutGuard &&) = delete;
 
 private:
     std::chrono::steady_clock::time_point deadline_{};
     bool enabled_ = false;
-    std::function<void()> cancel_;
+    uint64_t taskId_ = 0;
 };
 } // namespace NativeRdb
 } // namespace OHOS

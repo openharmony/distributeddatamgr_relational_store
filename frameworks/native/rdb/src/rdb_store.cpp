@@ -106,16 +106,16 @@ static bool ColHasSpecificField(const std::vector<std::string> &columns)
 
 std::pair<int, int64_t> RdbStore::Insert(const std::string &table, const Row &row, Resolution resolution)
 {
-    // old calls new: non-config overload delegates to the per-op config canonical entry.
-    return Insert(table, row, resolution, InsertConfig{});
+    InsertConfig config;
+    config.resolution = resolution;
+    return Insert(table, row, config);
 }
 
 std::pair<int, int64_t> RdbStore::Insert(
-    const std::string &table, const Row &row, Resolution resolution, const InsertConfig &config)
+    const std::string &table, const Row &row, const InsertConfig &config)
 {
     (void)table;
     (void)row;
-    (void)resolution;
     (void)config;
     return { E_NOT_SUPPORT, -1 };
 }
@@ -176,16 +176,17 @@ std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const Re
 std::pair<int, Results> RdbStore::BatchInsert(const std::string &table, const RefRows &rows,
     const ReturningConfig &config, Resolution resolution)
 {
-    // old calls new: ReturningConfig overload delegates to the per-op config canonical entry.
-    return BatchInsert(table, rows, resolution, BatchInsertConfig{0, config});
+    BatchInsertConfig cfg;
+    cfg.returning = config;
+    cfg.resolution = resolution;
+    return BatchInsert(table, rows, cfg);
 }
 
 std::pair<int32_t, Results> RdbStore::BatchInsert(const std::string &table, const RefRows &rows,
-    Resolution resolution, const BatchInsertConfig &config)
+    const BatchInsertConfig &config)
 {
     (void)table;
     (void)rows;
-    (void)resolution;
     (void)config;
     return { E_NOT_SUPPORT, -1 };
 }
@@ -224,17 +225,18 @@ int RdbStore::Update(
 std::pair<int32_t, Results> RdbStore::Update(const Row &row, const AbsRdbPredicates &predicates,
     const ReturningConfig &config, Resolution resolution)
 {
-    // old calls new: ReturningConfig overload delegates to the per-op config canonical entry.
-    return Update(row, predicates, UpdateConfig{0, config}, resolution);
+    UpdateConfig cfg;
+    cfg.returning = config;
+    cfg.resolution = resolution;
+    return Update(row, predicates, cfg);
 }
 
 std::pair<int32_t, Results> RdbStore::Update(const Row &row, const AbsRdbPredicates &predicates,
-    const UpdateConfig &config, Resolution resolution)
+    const UpdateConfig &config)
 {
     (void)row;
     (void)predicates;
     (void)config;
-    (void)resolution;
     return { E_NOT_SUPPORT, -1 };
 }
 
@@ -325,6 +327,11 @@ std::shared_ptr<AbsSharedResultSet> RdbStore::QuerySql(const std::string &sql, c
     return QuerySql(sql, ToValues(args));
 }
 
+std::shared_ptr<AbsSharedResultSet> RdbStore::QuerySql(const std::string &sql, const Values &args)
+{
+    return QuerySql(sql, args, QueryConfig{});
+}
+
 std::shared_ptr<AbsSharedResultSet> RdbStore::QuerySql(
     const std::string &sql, const Values &args, const QueryConfig &config)
 {
@@ -355,7 +362,7 @@ std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const V
 std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const Values &args,
     const QueryOptions &options)
 {
-    return nullptr;
+    return QueryByStep(sql, args, options, QueryConfig{});
 }
 
 std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const Values &args,
@@ -409,7 +416,6 @@ int RdbStore::ExecuteSql(const std::string &sql, const Values &args)
 
 std::pair<int32_t, ValueObject> RdbStore::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
-    // old calls new: non-config overload delegates to the per-op config canonical entry.
     return Execute(sql, args, trxId, ExecuteConfig{});
 }
 

@@ -47,7 +47,10 @@ void TimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
         return;
     }
     auto delay = deadline_ - std::chrono::steady_clock::now();
-    auto taskId = executor->Schedule(
+    if (delay < std::chrono::milliseconds(0)) {
+        delay = std::chrono::milliseconds(0);
+    }
+    taskId_ = executor->Schedule(
         [conn]() {
             auto connection = conn.lock();
             if (connection != nullptr) {
@@ -59,20 +62,17 @@ void TimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
         delay,
         std::chrono::milliseconds(50),
         3);
-    cancel_ = [executor, taskId]() { (void)executor->Remove(taskId, true); };
 }
 
 TimeoutGuard::~TimeoutGuard()
 {
-    if (cancel_) {
-        cancel_();
+    if (!enabled_ || taskId_ == 0) {
+        return;
     }
-}
-
-TimeoutGuard::TimeoutGuard(TimeoutGuard &&other) noexcept
-    : deadline_(other.deadline_), enabled_(other.enabled_), cancel_(std::move(other.cancel_))
-{
-    other.enabled_ = false;
+    auto executor = TaskExecutor::GetInstance().GetExecutor();
+    if (executor != nullptr) {
+        (void)executor->Remove(taskId_, true);
+    }
 }
 } // namespace NativeRdb
 } // namespace OHOS
