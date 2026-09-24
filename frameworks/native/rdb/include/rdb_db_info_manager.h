@@ -16,41 +16,31 @@
 #ifndef RDB_DB_INFO_MANAGER_H
 #define RDB_DB_INFO_MANAGER_H
 
-#include <functional>
 #include <string>
 
 #include "rdb_db_info_record.h"
 
 namespace OHOS {
 namespace NativeRdb {
-class RdbStoreConfig;
 
 /*
- * Manages per-database diagnostic records persisted to "<dbPath>.rdbdfx.json"
- * (db-adjacent). Single-layer flock on "<dbPath>.rdbdfx.lock" serializes both
- * same-process threads and cross-process (fork) access; no in-process mutex is
- * needed because each lock attempt opens its own fd (distinct open file
- * descriptions) - see SecurityManager::KeyFiles for the proven pattern.
+ * Provides collection utilities for per-database diagnostic records.
+ * Persistence (formerly "<dbPath>.rdbdfx.json") has been migrated to the
+ * unified "{auditDir}/{el}{dbName}audit.json" written by RdbAuditLoggerManager;
+ * this class now only exposes best-effort collectors used by AuditLogger.
  *
- * Two hard invariants (violating either breaks mutual exclusion):
- *  1. Use BSD flock(), never fcntl(F_SETLK) POSIX record locks (per-process,
- *     do NOT exclude same-process threads).
- *  2. Always open() a fresh fd per lock attempt; never cache a long-lived fd
- *     across calls/threads (same OFD => second flock is a no-op, no blocking).
- *
- * All collection / write failures are best-effort: empty/partial fields are
- * recorded, never throwing and never blocking the caller's open/delete/restore/
- * backup/rebuild (JSON_NOEXCEPTION keeps nlohmann from throwing).
+ * All collection failures are best-effort: empty/partial fields are returned,
+ * never throwing and never blocking the caller's open/delete/restore/backup.
  */
 class RdbDbInfoManager {
 public:
     static RdbDbInfoManager &GetInstance();
 
-    // One-shot on successful open: collects lastOpenDbInfo and, if the main
-    // file changed since the prior record, writes dbInfoChange.
-    void RecordOpen(const RdbStoreConfig &config, bool created);
+    // Build the last-successful-open record (audit.json block 1). Caller
+    // serializes and hands it to RdbAuditLoggerManager for persistence.
+    LastOpenDbInfo BuildLastOpen(const std::string &dbPath, bool created);
 
-    // Utilities used by RdbDfxTrace.
+    // Utilities used by AuditLogger / RdbAuditLoggerManager.
     DbFileInfo CollectDbFileInfo(const std::string &dbPath);
     CallerInfo CollectCaller();
 
@@ -59,13 +49,9 @@ private:
     RdbDbInfoManager(const RdbDbInfoManager &) = delete;
     RdbDbInfoManager &operator=(const RdbDbInfoManager &) = delete;
 
-    // flock(LOCK_EX) on the sidecar lock; read dfx json -> mutate -> tmp+rename.
-    void WithRecord(const std::string &dbPath, const std::function<void(RdbDbInfoRecord &)> &mutator);
-
     FileInfo BuildFileInfo(const std::string &path);
     BinlogInfo CollectBinlog(const std::string &dbPath);
     KeyInfo CollectKey(const std::string &dbPath);
-    ConfigInfo BuildConfigInfo(const RdbStoreConfig &config);
 };
 } // namespace NativeRdb
 } // namespace OHOS

@@ -33,9 +33,11 @@
 #include "rdb_obs_manager.h"
 #include "rdb_open_callback.h"
 #include "rdb_service.h"
+#include "rdb_audit_logger.h"
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 #include "rdb_types.h"
+#include "sqlite_sql_builder.h"
 #include "sqlite_statement.h"
 #include "value_object.h"
 
@@ -251,6 +253,13 @@ private:
     std::pair<int32_t, Stmt> BeginExecuteSql(const std::string &sql);
     int GetDataBasePath(const std::string &databasePath, std::string &backupFilePath);
     void DoCloudSync(const std::string &table);
+    int32_t InitOwner(int version, RdbOpenCallback &openCallback);
+    std::pair<int32_t, int64_t> ExecuteBatchInsert(const std::shared_ptr<ConnectionPool> &pool,
+        const std::shared_ptr<Connection> &conn, const SqliteSqlBuilder::BatchRefSqls &executeSqlArgs,
+        const std::string &table);
+    std::pair<int32_t, int64_t> ExecuteBatchArgs(const std::shared_ptr<ConnectionPool> &pool,
+        const Stmt &statement, const std::vector<std::vector<SqliteSqlBuilder::RefValue>> &bindArgs,
+        const std::string &table);
     static int InnerSync(
         const RdbParam &param, const Options &option, const Memo &predicates, const AsyncDetail &async);
     int InnerBackup(const std::string &databasePath,
@@ -354,6 +363,7 @@ private:
     mutable std::shared_mutex poolMutex_;
     std::mutex mutex_;
     std::mutex initMutex_;
+    std::unique_ptr<RdbAuditLogger> auditLogger_;
     std::shared_ptr<ConnectionPool> connectionPool_ = nullptr;
     std::shared_ptr<DelayNotify> delayNotifier_ = nullptr;
     std::shared_ptr<CloudTables> cloudInfo_ = std::make_shared<CloudTables>();

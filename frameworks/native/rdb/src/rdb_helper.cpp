@@ -18,6 +18,11 @@
 #include "global_resource.h"
 #include "corrupted_handle_manager.h"
 #include "logger.h"
+#include "rdb_audit_logger_manager.h"
+#include "rdb_db_info_manager.h"
+#include "rdb_db_logger_manager.h"
+#include "rdb_time_utils.h"
+#include "task_executor.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_security_manager.h"
@@ -132,6 +137,19 @@ int RdbHelper::DeleteRdbStore(const RdbStoreConfig &config, bool shouldClose)
     }
     if (access(dbFile.c_str(), F_OK) == 0) {
         RdbStoreManager::GetInstance().Delete(config, shouldClose);
+    }
+    if (config.IsAuditEnabled()) {
+        // Collect info before delete to capture the state before removal.
+        DeleteInfo del;
+        del.files = RdbDbInfoManager::GetInstance().CollectDbFileInfo(dbFile);
+        del.callerInfo = RdbDbInfoManager::GetInstance().CollectCaller();
+        del.time = RdbTimeUtils::GetCurSysTimeWithMs();
+        auto executor = TaskExecutor::GetInstance().GetExecutor();
+        if (executor != nullptr) {
+            executor->Execute([dbFile, del]() {
+                RdbDbLoggerManager::GetInstance().WriteDeleteSync(dbFile, del);
+            });
+        }
     }
     Reportor::ReportFault(RdbFaultDbFileEvent(RdbFaultType::FT_CURD,
         E_DFX_DELETE_RDB_STORE,

@@ -262,6 +262,10 @@ ohos_unittest("SilentProxyTest") {
     "${relational_store_native_path}/rdb/src/marshal_utils.cpp",
     "${relational_store_native_path}/rdb/src/values_bucket.cpp",
     "${relational_store_native_path}/rdb/src/values_buckets.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_logger.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_logger_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_db_logger_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_utils.cpp",
   ]
 
   include_dirs = [
@@ -404,6 +408,10 @@ ohos_unittest("NativeRdbTest") {
     "${relational_store_native_path}/rd/src/rd_connection.cpp",
     "${relational_store_native_path}/rd/src/rd_statement.cpp",
     "${relational_store_native_path}/rd/src/rd_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_logger.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_logger_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_db_logger_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_utils.cpp",
     "${relational_store_native_path}/rdb/src/rdb_db_info_manager.cpp",
     "${relational_store_native_path}/rdb/src/rdb_db_info_record.cpp",
     "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
@@ -489,6 +497,147 @@ ohos_unittest("NativeRdbTest") {
   deps += deps_distributeddb
   deps += deps_distributeddb_client
   deps += deps_samgr
+}
+
+ohos_unittest("RdbAuditTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    "unittest/rdb_audit_test.cpp",
+    "${relational_store_native_path}/dfx/src/rdb_radar_reporter.cpp",
+    "${relational_store_native_path}/dfx/src/rdb_stat_reporter.cpp",
+    "${relational_store_native_path}/dfx/src/rdb_fault_hiview_reporter.cpp",
+    "${relational_store_native_path}/rdb/src/abs_predicates.cpp",
+    "${relational_store_native_path}/rdb/src/abs_rdb_predicates.cpp",
+    "${relational_store_native_path}/rdb/src/abs_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/abs_shared_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/base_transaction.cpp",
+    "${relational_store_native_path}/rdb/src/big_integer.cpp",
+    "${relational_store_native_path}/rdb/src/cache_block.cpp",
+    "${relational_store_native_path}/rdb/src/cache_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/connection.cpp",
+    "${relational_store_native_path}/rdb/src/connection_pool.cpp",
+    "${relational_store_native_path}/rdb/src/corrupted_handle_manager.cpp",
+    "${relational_store_native_path}/rdb/src/delay_notify.cpp",
+    "${relational_store_native_path}/rdb/src/restricted_db_manager.cpp",
+    "${relational_store_native_path}/rdb/src/global_resource.cpp",
+    "${relational_store_native_path}/rd/src/grd_api_manager.cpp",
+    "${relational_store_native_path}/rdb/src/knowledge_schema_helper.cpp",
+    "${relational_store_native_path}/rdb/src/raw_data_parser.cpp",
+    "${relational_store_native_path}/rd/src/rd_connection.cpp",
+    "${relational_store_native_path}/rd/src/rd_statement.cpp",
+    "${relational_store_native_path}/rd/src/rd_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_db_info_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_db_info_record.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_file_system.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_helper.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_icu_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_local_db_observer.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_obs_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_perfStat.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_predicates.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_security_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_sql_log.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_sql_statistic.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_sql_utils.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_config.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_impl.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_store_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_time_utils.cpp",
+    "${relational_store_native_path}/rdb/src/silent_proxy.cpp",
+    "${relational_store_native_path}/rdb/src/security_policy.cpp",
+    "${relational_store_native_path}/rdb/src/share_block.cpp",
+    "${relational_store_native_path}/rdb/src/shared_block_serializer_info.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_connection.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_default_function.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_global_config.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_shared_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_sql_builder.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_statement.cpp",
+    "${relational_store_native_path}/rdb/src/sqlite_utils.cpp",
+    "${relational_store_native_path}/rdb/src/step_result_set.cpp",
+    "${relational_store_native_path}/rdb/src/string_utils.cpp",
+    "${relational_store_native_path}/rdb/src/suspender.cpp",
+    "${relational_store_native_path}/rdb/src/task_executor.cpp",
+    "${relational_store_native_path}/rdb/src/trans_db.cpp",
+    "${relational_store_native_path}/rdb/src/transaction.cpp",
+    "${relational_store_native_path}/rdb/src/transaction_impl.cpp",
+    "${relational_store_native_path}/rdb/src/value_object.cpp",
+    "${relational_store_native_path}/rdb/src/marshal_utils.cpp",
+    "${relational_store_native_path}/rdb/src/values_bucket.cpp",
+    "${relational_store_native_path}/rdb/src/values_buckets.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_logger.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_logger_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_db_logger_manager.cpp",
+    "${relational_store_native_path}/rdb/src/rdb_audit_utils.cpp",
+  ]
+
+  include_dirs = [
+    "${relational_store_common_path}/include",
+    "${relational_store_native_path}/rdb/include",
+    "${relational_store_native_path}/rd/include",
+    "${relational_store_innerapi_path}/rdb/include",
+    "${relational_store_native_path}/dfx/include",
+    "${relational_store_native_path}/obs_mgr_adapter",
+    "${relational_store_native_path}/rdb/src",
+    "${relational_store_native_path}/rd/src",
+    "${relational_store_innerapi_path}/appdatafwk/include",
+    "${relational_store_native_path}/rdb_crypt",
+    "${relational_store_native_path}/rdb_device_manager_adapter/include",
+    "${relational_store_base_path}/test/native/rdb/unittest",
+  ]
+
+  defines = [ "RELATIONAL_STORE" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "json:nlohmann_json_static",
+    "openssl:libcrypto_shared",
+    "sqlite:sqlite",
+    "sqlite:sqliteicu",
+  ]
+  external_deps += external_deps_file_api
+  external_deps += external_deps_hilog
+  external_deps += external_deps_ability_base_zuri
+  external_deps += external_deps_ability_runtime_dataobs_manager
+  external_deps += external_deps_hisysevent
+  external_deps += external_deps_hitrace
+  external_deps += external_deps_huks
+  external_deps += external_deps_database_utils
+  external_deps += external_deps_distributeddata_inner
+  external_deps += external_deps_distributeddb
+  external_deps += external_deps_distributeddb_client
+  external_deps += external_deps_samgr
+  external_deps += external_deps_bounds_checking_function
+
+  deps = [
+    "${relational_store_innerapi_path}/appdatafwk:native_appdatafwk",
+    "${relational_store_innerapi_path}/appdatafwk:relational_common_base",
+    "${relational_store_native_path}/rdb_crypt:relational_store_crypt",
+  ]
+  if (relational_store_datamgr_service_enabled) {
+    deps += [ "${relational_store_native_path}/rdb_service_adapter:rdb_service_adapter" ]
+  }
+
+  deps += deps_file_api
+  deps += deps_hilog
+  deps += deps_hisysevent
+  deps += deps_hitrace
+  deps += deps_huks
+  deps += deps_database_utils
+  deps += deps_distributeddata_inner
+  deps += deps_distributeddb
+  deps += deps_distributeddb_client
+  deps += deps_samgr
+  external_deps += external_deps_access_token_libaccesstoken_sdk
+  external_deps += external_deps_access_token_libtoken_setproc
+  external_deps += external_deps_access_token_libtokenid_sdk
+  deps += deps_access_token_libaccesstoken_sdk
+  deps += deps_access_token_libtoken_setproc
+  deps += deps_access_token_libtokenid_sdk
 }
 
 ohos_unittest("NativeRdbSecurityManagerTest") {
@@ -600,6 +749,7 @@ group("unittest") {
     ":NativeRdbMultiThreadTest",
     ":NativeRdbSecurityManagerTest",
     ":NativeRdbTest",
+    ":RdbAuditTest",
     ":SilentProxyTest",
   ]
 }

@@ -922,6 +922,10 @@ public:
 
     void SetLocalOnly(bool isLocalOnly);
 
+    bool IsAuditEnabled() const;
+
+    void SetAuditEnabled(bool isAuditEnabled);
+
 private:
     void ClearEncryptKey();
     int32_t GenerateEncryptedKey() const;
@@ -979,6 +983,7 @@ private:
     static constexpr int MIN_TIMEOUT = 1;   // seconds
     bool allowRebuilt_ = false;
     bool isLocalOnly_ = false;
+    bool isAuditEnabled_ = false;
     int32_t subUser_ = 0;
     mutable RegisterInfo registerInfo_;
     ConfigVersion version_ = ConfigVersion::DEFAULT_VERSION;

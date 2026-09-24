@@ -36,6 +36,8 @@
 #include "knowledge_schema_helper.h"
 #include "logger.h"
 #include "raw_data_parser.h"
+#include "rdb_audit_logger.h"
+#include "rdb_audit_utils.h"
 #include "rdb_common.h"
 #include "rdb_db_info_manager.h"
 #include "rdb_errno.h"
@@ -1552,7 +1554,8 @@ int32_t RdbStoreImpl::UnlockCloudContainer()
 
 RdbStoreImpl::RdbStoreImpl(const RdbStoreConfig &config)
     : isMemoryRdb_(config.IsMemoryRdb()), configHolder_(std::make_shared<RdbStoreConfig>(config)),
-      config_(*configHolder_), name_(config.GetName())
+      config_(*configHolder_), name_(config.GetName()),
+      auditLogger_(RdbAuditLogger::Create(config_.IsAuditEnabled()))
 {
     SqliteGlobalConfig::GetDbPath(config_, path_);
     isReadOnly_ = config.IsReadOnly() || config.GetRoleType() == VISITOR;
@@ -1689,6 +1692,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         connectionPool_ = nullptr;
         LOG_ERROR("Create connPool failed, err is %{public}d, path:%{public}s", errCode,
             SqliteUtils::Anonymous(path_).c_str());
+        auditLogger_->OnOpenFail(config_.GetPath(), errCode, 0);
         return errCode;
     }
     if (isNeedSetAcl) {
@@ -1700,23 +1704,13 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
     isOpen_ = true;
 
     if (config_.GetRoleType() == OWNER && !config_.IsReadOnly()) {
-        errCode = SetSecurityLabel(config_);
+        errCode = InitOwner(version, openCallback);
         if (errCode != E_OK) {
-            return errCode;
-        }
-        (void)ExchangeSlaverToMaster(true);
-        SwitchOver(true);
-        errCode = ProcessOpenCallback(version, openCallback);
-        SwitchOver(false);
-        if (errCode != E_OK) {
-            LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path_).c_str(), errCode);
             return errCode;
         }
     }
-    // Record open diagnostics only on success; failure paths return early above
-    // and never reach here, so the dfx file is never written for a failed open.
     if (errCode == E_OK) {
-        RdbDbInfoManager::GetInstance().RecordOpen(config_, created);
+        auditLogger_->OnOpenOk(config_.GetPath(), created);
     }
     InnerOpen();
     initStatus_ = errCode;
@@ -1780,6 +1774,9 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
 
     int64_t rowid = -1;
     auto errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args);
+    if (errCode == E_OK && rowid > 0) {
+        auditLogger_->OnSqlAudit(config_.GetPath(), "INSERT", "", 1);
+    }
     if (errCode == E_OK) {
         DoCloudSync(table);
     }
@@ -1793,7 +1790,6 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     if (isReadOnly_) {
         return { E_NOT_SUPPORT, -1 };
     }
-
     if (rows.RowSize() == 0) {
         return { E_OK, 0 };
     }
@@ -1809,37 +1805,21 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, -1 };
     }
-
     auto executeSqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable());
     BatchInsertArgsDfx(static_cast<int>(executeSqlArgs.size()));
     if (executeSqlArgs.empty()) {
         return { E_INVALID_ARGS, -1 };
     }
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
-    for (const auto &[sql, bindArgs] : executeSqlArgs) {
-        auto [errCode, statement] = GetStatement(sql, conn);
-        if (statement == nullptr) {
-            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
-                      "app self can check the SQL",
-                errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
-            return { E_OK, -1 };
-        }
-        for (const auto &args : bindArgs) {
-            auto errCode = statement->Execute(args);
-            if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
-                pool->Dump(true, "BATCH");
-                return { errCode, -1 };
-            }
-            if (errCode != E_OK) {
-                LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
-                    errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
-                return { E_OK, -1 };
-            }
-        }
+    auto [errCode, result] = ExecuteBatchInsert(pool, conn, executeSqlArgs, table);
+    if (result == -1) {
+        return { errCode, -1 };
     }
     conn = nullptr;
+    int64_t insertedRows = int64_t(rows.RowSize());
+    auditLogger_->OnSqlAudit(config_.GetPath(), "BatchInsert", "", insertedRows);
     DoCloudSync(table);
-    return { E_OK, int64_t(rows.RowSize()) };
+    return { E_OK, insertedRows };
 }
 
 void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
@@ -1883,6 +1863,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(
     auto [errCode, result] = ExecuteBatchInsertReturning(sqlArgs, conn, config, resolution);
     if (result.changed > 0) {
         DoCloudSync(table);
+        auditLogger_->OnSqlAudit(config_.GetPath(), "BatchInsert", "", result.changed);
     }
     return { errCode, result };
 }
@@ -1933,6 +1914,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, config, returningSql);
+    auditLogger_->OnSqlAudit(config_.GetPath(), "UPDATE", "", result.changed);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1954,6 +1936,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(const AbsRdbPredicates &predica
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [code, result] = ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), config, returningSql);
+    auditLogger_->OnSqlAudit(config_.GetPath(), "DELETE", "", result.changed);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -2077,7 +2060,13 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
         return errCode;
     }
     int sqlType = SqliteUtils::GetSqlStatementType(sql);
+    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
+        auditLogger_->OnPragma(config_.GetPath(), sql, errCode, "");
+    }
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        // Audit: DROP TABLE / TRUNCATE TABLE always logged, table whitelist checked by logger.
+        // Parse table name from SQL for whitelist matching.
+        auditLogger_->OnSqlAudit(config_.GetPath(), "", sql, 0);
         HandleSchemaDDL(std::move(statement), sql);
     }
     statement = nullptr;
@@ -2128,6 +2117,9 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
 std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     std::shared_ptr<Statement> &&statement, const std::string &sql, int32_t code, int sqlType)
 {
+    if (sqlType == SqliteUtils::STATEMENT_PRAGMA) {
+        auditLogger_->OnPragma(config_.GetPath(), sql, code, "");
+    }
     if (code != E_OK) {
         LOG_ERROR("failed, error:0x%{public}x app self can check the SQL:%{public}s", code,
             SqliteUtils::SqlAnonymous(sql).c_str());
@@ -2155,6 +2147,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::HandleDifferentSqlTypes(
     }
 
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        auditLogger_->OnSqlAudit(config_.GetPath(), "", sql, 0);
         HandleSchemaDDL(std::move(statement), sql);
     }
     return { code, ValueObject() };
@@ -2190,6 +2183,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteExt(const std::string &sql, con
         return { errCode, result };
     }
     if (sqlType == SqliteUtils::STATEMENT_DDL) {
+        auditLogger_->OnSqlAudit(config_.GetPath(), "", sql, 0);
         HandleSchemaDDL(std::move(statement), sql);
     }
     return { errCode, result };
@@ -3096,6 +3090,61 @@ void RdbStoreImpl::DoCloudSync(const std::string &table)
         auto memo = AbsRdbPredicates(std::vector<std::string>(tables.begin(), tables.end())).GetDistributedPredicates();
         InnerSync(param, option, memo, nullptr);
     });
+}
+
+int32_t RdbStoreImpl::InitOwner(int version, RdbOpenCallback &openCallback)
+{
+    int32_t errCode = SetSecurityLabel(config_);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    (void)ExchangeSlaverToMaster(true);
+    SwitchOver(true);
+    errCode = ProcessOpenCallback(version, openCallback);
+    SwitchOver(false);
+    if (errCode != E_OK) {
+        LOG_ERROR("Callback fail, path:%{public}s code:%{public}d", SqliteUtils::Anonymous(path_).c_str(), errCode);
+    }
+    return errCode;
+}
+
+std::pair<int32_t, int64_t> RdbStoreImpl::ExecuteBatchInsert(const std::shared_ptr<ConnectionPool> &pool,
+    const std::shared_ptr<Connection> &conn, const SqliteSqlBuilder::BatchRefSqls &executeSqlArgs,
+    const std::string &table)
+{
+    for (const auto &[sql, bindArgs] : executeSqlArgs) {
+        auto [errCode, statement] = GetStatement(sql, conn);
+        if (statement == nullptr) {
+            LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, table:%{public}s, "
+                      "app self can check the SQL",
+                errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
+            return { E_OK, -1 };
+        }
+        auto [execErr, execRows] = ExecuteBatchArgs(pool, statement, bindArgs, table);
+        if (execRows < 0) {
+            return { execErr, -1 };
+        }
+    }
+    return { E_OK, 0 };
+}
+
+std::pair<int32_t, int64_t> RdbStoreImpl::ExecuteBatchArgs(const std::shared_ptr<ConnectionPool> &pool,
+    const Stmt &statement, const std::vector<std::vector<SqliteSqlBuilder::RefValue>> &bindArgs,
+    const std::string &table)
+{
+    for (const auto &args : bindArgs) {
+        auto errCode = statement->Execute(args);
+        if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
+            pool->Dump(true, "BATCH");
+            return { errCode, -1 };
+        }
+        if (errCode != E_OK) {
+            LOG_ERROR("failed, errCode:%{public}d,args:%{public}zu,table:%{public}s,app self can check the SQL",
+                errCode, bindArgs.size(), SqliteUtils::Anonymous(table).c_str());
+            return { E_OK, -1 };
+        }
+    }
+    return { E_OK, 0 };
 }
 
 /**
