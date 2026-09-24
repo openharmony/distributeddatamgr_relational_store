@@ -169,6 +169,7 @@ void RdbDoubleWriteBinlogTest::TearDown(void)
     TaskExecutor::GetInstance().Stop();
     WaitForBinlogReplayFinish();
     RdbHelper::DeleteRdbStore(RdbDoubleWriteBinlogTest::databaseName);
+    RdbHelper::DeleteRdbStore(SqliteUtils::GetMasterBackupPath(RdbDoubleWriteBinlogTest::databaseName));
     std::string lockCompressName = RdbDoubleWriteBinlogTest::slaveDatabaseName + "-lockcompress";
     bool isLockCompressFileExist = OHOS::FileExists(lockCompressName);
     ASSERT_FALSE(isLockCompressFileExist);
@@ -2222,4 +2223,26 @@ HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_041, TestSize.Level0)
     int count = 10;
     Insert(id, count);
     CheckNumber(store, count);
+}
+
+/**
+ * @tc.name: RdbStore_Binlog_043
+ * @tc.desc: second force restore skips corrupted backup and keeps the first corrupted scene
+ * @tc.type: FUNC
+ */
+HWTEST_F(RdbDoubleWriteBinlogTest, RdbStore_Binlog_043, TestSize.Level1)
+{
+    int errCode = E_OK;
+    SetupManualTriggerDb(errCode);
+    Insert(1, 100);
+    EXPECT_EQ(store->Backup(std::string(""), {}), E_OK);
+
+    CorruptMainDbFile();
+    SqliteUtils::SetSlaveInvalid(RdbDoubleWriteBinlogTest::databaseName);
+    EXPECT_EQ(store->ExecuteSql("PRAGMA integrity_check"), E_SQLITE_CORRUPT);
+    WriteAfterCorruption(1, 99, 5000, 100);
+    ASSERT_NE(store, nullptr);
+    EXPECT_EQ(store->ForceRestore(std::string(""), {}), E_OK);
+    EXPECT_EQ(store->ForceRestore(std::string(""), {}), E_OK);
+    EXPECT_EQ(store->ExecuteSql("PRAGMA integrity_check"), E_OK);
 }
