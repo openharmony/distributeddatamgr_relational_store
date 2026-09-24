@@ -281,7 +281,7 @@ private:
     std::pair<int32_t, Stmt> GetStatement(
         const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql = "") const;
     std::pair<int32_t, Stmt> GetStatement(
-        const std::string &sql, bool read, TimeoutGuard &guard, int64_t timeoutMs,
+        const std::string &sql, bool read, SqlTimeoutGuard &guard, int64_t timeoutMs,
         const std::string &returningSql = "") const;
     std::pair<int32_t, Stmt> GetStatement(
         const std::string &sql, bool read = false, const std::string &returningSql = "") const;
@@ -302,7 +302,9 @@ private:
     void InterruptHolders(const std::shared_ptr<ConnectionPool> &pool);
     void SetLastErrorMsg(const std::string &msg) const;
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args,
-        const ReturningConfig &config = {}, const std::string &returningSql = "");
+        const ReturningConfig &config = {}, const std::string &returningSql = "", int64_t timeoutMs = 0);
+    int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args,
+        int64_t timeoutMs);
     std::pair<int32_t, Results> GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
         std::vector<ValuesBucket> &&returningValues, bool isDML, int32_t rowIndex = ReturningConfig::FIRST_ROW_INDEX);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> &&statement, const std::string &sql);

@@ -51,7 +51,7 @@ ohos_unittest("MockNativeRdbTest") {
   sources -= [ "${relational_store_native_path}/rdb/src/sql_timeout_guard.cpp" ]
   sources += [
     "rdb_timeout_interrupt_test.cpp",
-    "mock_sql_timeout_guard.cpp",
+    "sql_timeout_guard.cpp",
     "${relational_store_native_path}/appdatafwk/src/general_endian.cpp",
     "${relational_store_native_path}/appdatafwk/src/serializable.cpp",
     "${relational_store_native_path}/appdatafwk/src/shared_block.cpp",

@@ -94,7 +94,7 @@ static ValuesBuckets BuildRows(int rowCount)
 
 /* *
  * @tc.name: BatchInsert_NoMock_001
- * @tc.desc: BatchInsert with timeoutMs=500(<1000), real TimeoutGuard bumps to 1000ms.
+ * @tc.desc: BatchInsert with timeoutMs=500(<1000), real SqlTimeoutGuard bumps to 1000ms.
  *           Small batch completes within 1000ms, expect E_OK.
  * @tc.type: FUNC
  */
@@ -109,7 +109,7 @@ HWTEST_F(RdbTimeoutNoMockTest, BatchInsert_NoMock_001, TestSize.Level1)
     auto rows = BuildRows(100);
 
     BatchInsertConfig config;
-    config.timeoutMs = 500; // < 1000, bumped to 1000 internally by TimeoutGuard
+    config.timeoutMs = 500; // < 1000, bumped to 1000 internally by SqlTimeoutGuard
     auto start = std::chrono::steady_clock::now();
     auto [errCode, result] = store_->BatchInsert(tableName, rows, config);
     auto end = std::chrono::steady_clock::now();
@@ -125,7 +125,7 @@ HWTEST_F(RdbTimeoutNoMockTest, BatchInsert_NoMock_001, TestSize.Level1)
 
 /* *
  * @tc.name: BatchInsert_NoMock_002
- * @tc.desc: BatchInsert with timeoutMs=-1(<0), real TimeoutGuard treats as no timeout.
+ * @tc.desc: BatchInsert with timeoutMs=-1(<0), real SqlTimeoutGuard treats as no timeout.
  *           Expect E_OK.
  * @tc.type: FUNC
  */
