@@ -16,6 +16,7 @@
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_H
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
+#include <chrono>
 #include <cinttypes>
 #include <cstdint>
 #include <functional>
@@ -26,6 +27,7 @@
 #include <vector>
 #include <optional>
 
+#include "rdb_common.h"
 #include "values_buckets.h"
 
 namespace OHOS {
@@ -568,6 +570,38 @@ struct ReturningConfig {
     std::vector<std::string> columns;
     int32_t maxReturningCount = DEFAULT_RETURNING_COUNT;
     int32_t defaultRowIndex = FIRST_ROW_INDEX;
+};
+
+struct ExecuteConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
+};
+
+struct InsertConfig {
+    int64_t timeoutMs = 0;
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
+};
+
+struct BatchInsertConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
+};
+
+struct UpdateConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
+};
+
+struct DeleteConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+};
+
+struct QueryConfig {
+    int64_t timeoutMs = 0;
 };
 
 class RdbStoreConfig;
