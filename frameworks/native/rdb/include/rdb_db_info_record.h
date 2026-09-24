@@ -42,9 +42,9 @@ struct PermissionInfo : public Serializable {
 };
 
 struct TimeInfo : public Serializable {
-    int64_t ctime = 0; // seconds
-    int64_t atime = 0;
-    int64_t mtime = 0;
+    std::string ctime; // "YYYY-MM-DD HH:MM:SS"
+    std::string atime;
+    std::string mtime;
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
 };
@@ -58,11 +58,12 @@ struct FileInfo : public Serializable {
     bool Unmarshal(const json &obj) override;
 };
 
-// Group of file info for db / wal / shm. (Renamed from MainGroup.)
+// Group of file info for db / wal / shm / parent directory.
 struct DbFileInfo : public Serializable {
     FileInfo db;
     FileInfo wal;
     FileInfo shm;
+    FileInfo parent; // parent directory of the db file (UGO + ACL permissions)
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
     bool IsEmpty() const;
@@ -93,13 +94,40 @@ struct KeyInfo : public Serializable {
 };
 
 struct ConfigInfo : public Serializable {
-    std::string name;
-    std::string path;
-    bool isEncrypted = false;
-    int32_t securityLevel = 0;
-    std::string journalMode;
-    std::string sync;
-    int32_t walAutoCheckpoint = 0;
+    std::string name; // anonymized db name
+    bool Marshal(json &obj) const override;
+    bool Unmarshal(const json &obj) override;
+};
+
+// I/O error record (audit.json block 2). Overwritten on each IO error.
+struct IoErrorInfo : public Serializable {
+    std::string op; // "execute" or "execute_for_rows"
+    int32_t rc = 0;
+    int32_t osErrno = 0;
+    CallerInfo callerInfo;
+    std::string time;
+    bool Marshal(json &obj) const override;
+    bool Unmarshal(const json &obj) override;
+};
+
+// Database corruption record (audit.json block 5). Overwritten on each
+// corruption event (integrity check failure, SQLITE_CORRUPT, SQLITE_NOTADB).
+struct CorruptInfo : public Serializable {
+    int32_t rc = 0;
+    int32_t osErrno = 0;
+    std::string detail;
+    DbFileInfo files;
+    CallerInfo callerInfo;
+    std::string time;
+    bool Marshal(json &obj) const override;
+    bool Unmarshal(const json &obj) override;
+};
+
+// Database deletion metadata (audit.json block 3). Overwritten on each delete.
+struct DeleteInfo : public Serializable {
+    DbFileInfo files;
+    CallerInfo callerInfo;
+    std::string time;
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
 };
@@ -130,11 +158,15 @@ struct DbInfoChange : public Serializable {
     bool Unmarshal(const json &obj) override;
 };
 
-// Top-level record persisted to "<dbPath>.rdbdfx.json".
-// lastOpenDbInfo / dbInfoChange keep only the latest one entry.
+// Top-level record persisted to "{auditDir}/{el}{dbName}audit.json".
+// Five overwrite blocks: lastOpen / ioError / dbDelete / inodeChange / corrupt.
+// Each block keeps only the latest entry (overwrite, not append).
 struct RdbDbInfoRecord : public Serializable {
-    LastOpenDbInfo lastOpenDbInfo;
-    DbInfoChange dbInfoChange;
+    LastOpenDbInfo lastOpen;     // block 1: last successful open
+    IoErrorInfo ioError;         // block 2: I/O error
+    DeleteInfo dbDelete;         // block 3: delete metadata (file info, inode)
+    DbInfoChange inodeChange;    // block 4: inode change before/after on open
+    CorruptInfo corrupt;         // block 5: database corruption
     bool Marshal(json &obj) const override;
     bool Unmarshal(const json &obj) override;
 };

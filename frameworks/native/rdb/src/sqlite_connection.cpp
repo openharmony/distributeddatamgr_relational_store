@@ -30,6 +30,8 @@
 
 #include "global_resource.h"
 #include "logger.h"
+#include "rdb_audit_logger_manager.h"
+#include "rdb_db_logger_manager.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_icu_manager.h"
@@ -384,23 +386,39 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 
     if (isWriter_) {
-        ValueObject checkResult{ "ok" };
-        auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
-        if (index < static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
-            auto sql = INTEGRITIES[index];
-            if (sql != nullptr) {
-                LOG_INFO("%{public}s : %{public}s, ", sql, SqliteUtils::Anonymous(config.GetName()).c_str());
-                std::tie(errCode, checkResult) = ExecuteForValue(sql);
-            }
-            if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
-                LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
-                    SqliteUtils::Anonymous(config.GetName()).c_str(), static_cast<std::string>(checkResult).c_str(),
-                    SqliteUtils::SqlAnonymous(sql).c_str());
-                Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
-            }
-        }
+        CheckIntegrityOnOpen(config);
     }
     return E_OK;
+}
+
+void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
+{
+    ValueObject checkResult{ "ok" };
+    auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
+    if (index >= static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
+        return;
+    }
+    auto sql = INTEGRITIES[index];
+    if (sql == nullptr) {
+        return;
+    }
+    LOG_INFO("%{public}s : %{public}s, ", sql, SqliteUtils::Anonymous(config.GetName()).c_str());
+    int errCode = E_OK;
+    std::tie(errCode, checkResult) = ExecuteForValue(sql);
+    if (config.IsAuditEnabled()) {
+        RdbAuditLoggerManager::GetInstance().OnPragma(
+            config.GetPath(), sql, errCode, static_cast<std::string>(checkResult));
+    }
+    if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
+        LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
+            SqliteUtils::Anonymous(config.GetName()).c_str(), static_cast<std::string>(checkResult).c_str(),
+            SqliteUtils::SqlAnonymous(sql).c_str());
+        Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
+        if (config.IsAuditEnabled()) {
+            RdbDbLoggerManager::GetInstance().RecordCorrupt(
+                config.GetPath(), errCode, 0, static_cast<std::string>(checkResult));
+        }
+    }
 }
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)

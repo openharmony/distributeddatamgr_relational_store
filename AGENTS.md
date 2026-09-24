@@ -135,7 +135,7 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 
 ## 已知陷阱
 
-- 共享资源 **MUST** 考虑多进程并发访问场景，跨进程访问通过 IPC（DataShare 用 `rdb_data_share_adapter` 做 IPC 隔离）；**NEVER** 忽略共享资源的多进程并发访问场景。
+- 共享资源 **MUST** 考虑多进程并发访问场景，跨进程访问通过 IPC（DataShare 用 `rdb_data_share_adapter` 做 IPC 隔离）；共享资源包括内存数据结构与磁盘 DB 文件（含 slave DB、binlog 文件夹、WAL/shm 辅助文件）——应用进程与 service 进程（`RdbService`）可能同时打开同一 DB 文件，删除/迁移/重命名 DB 文件前 **MUST** 确认其他进程不持有该文件的连接（如迁移前 `service->Disable()` 释放连接、操作后 `service->Enable()` 恢复）；**NEVER** 忽略共享资源的多进程并发访问场景。
 - **MUST** 考虑 SA 进程未启动或不存在场景，做降级/容错处理（检查 SA 可用性后再调用，不可用时返回本地缓存或默认值）；**NEVER** 硬依赖 SA 进程。
 - **读写链接选用**：`RdbStore::BeginTransaction()` 的写事务只作用于写连接，读连接为独立快照、不在事务内。因此 **NEVER** 将存量代码的连接从写改读或从读改写（读操作看似应走读连接，但会破坏事务内 read-your-writes、并发与锁行为），否则属改变接口行为语义的破坏性变更。
 - **临时链接管理**：临时连接 **MUST** 通过 `ConnectionPool::CreateConn` 创建并纳入 `temps_` 统一管理；**NEVER** 直接调用 `Connection::Create` 创建游离临时连接。

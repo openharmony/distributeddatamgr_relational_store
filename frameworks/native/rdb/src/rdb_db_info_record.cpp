@@ -74,6 +74,7 @@ bool DbFileInfo::Marshal(json &obj) const
     SetValue(obj[GET_NAME(db)], db);
     SetValue(obj[GET_NAME(wal)], wal);
     SetValue(obj[GET_NAME(shm)], shm);
+    SetValue(obj[GET_NAME(parent)], parent);
     return true;
 }
 
@@ -82,6 +83,7 @@ bool DbFileInfo::Unmarshal(const json &obj)
     GetValue(obj, GET_NAME(db), db);
     GetValue(obj, GET_NAME(wal), wal);
     GetValue(obj, GET_NAME(shm), shm);
+    GetValue(obj, GET_NAME(parent), parent);
     return true;
 }
 
@@ -141,24 +143,12 @@ bool KeyInfo::Unmarshal(const json &obj)
 bool ConfigInfo::Marshal(json &obj) const
 {
     SetValue(obj[GET_NAME(name)], name);
-    SetValue(obj[GET_NAME(path)], path);
-    SetValue(obj[GET_NAME(isEncrypted)], isEncrypted);
-    SetValue(obj[GET_NAME(securityLevel)], securityLevel);
-    SetValue(obj[GET_NAME(journalMode)], journalMode);
-    SetValue(obj[GET_NAME(sync)], sync);
-    SetValue(obj[GET_NAME(walAutoCheckpoint)], walAutoCheckpoint);
     return true;
 }
 
 bool ConfigInfo::Unmarshal(const json &obj)
 {
     GetValue(obj, GET_NAME(name), name);
-    GetValue(obj, GET_NAME(path), path);
-    GetValue(obj, GET_NAME(isEncrypted), isEncrypted);
-    GetValue(obj, GET_NAME(securityLevel), securityLevel);
-    GetValue(obj, GET_NAME(journalMode), journalMode);
-    GetValue(obj, GET_NAME(sync), sync);
-    GetValue(obj, GET_NAME(walAutoCheckpoint), walAutoCheckpoint);
     return true;
 }
 
@@ -212,17 +202,81 @@ bool DbInfoChange::Unmarshal(const json &obj)
     return true;
 }
 
+bool IoErrorInfo::Marshal(json &obj) const
+{
+    SetValue(obj[GET_NAME(op)], op);
+    SetValue(obj[GET_NAME(rc)], rc);
+    SetValue(obj[GET_NAME(osErrno)], osErrno);
+    SetValue(obj[GET_NAME(callerInfo)], callerInfo);
+    SetValue(obj[GET_NAME(time)], time);
+    return true;
+}
+
+bool IoErrorInfo::Unmarshal(const json &obj)
+{
+    GetValue(obj, GET_NAME(op), op);
+    GetValue(obj, GET_NAME(rc), rc);
+    GetValue(obj, GET_NAME(osErrno), osErrno);
+    GetValue(obj, GET_NAME(callerInfo), callerInfo);
+    GetValue(obj, GET_NAME(time), time);
+    return true;
+}
+
+bool CorruptInfo::Marshal(json &obj) const
+{
+    SetValue(obj[GET_NAME(rc)], rc);
+    SetValue(obj[GET_NAME(osErrno)], osErrno);
+    SetValue(obj[GET_NAME(detail)], detail);
+    SetValue(obj[GET_NAME(files)], files);
+    SetValue(obj[GET_NAME(callerInfo)], callerInfo);
+    SetValue(obj[GET_NAME(time)], time);
+    return true;
+}
+
+bool CorruptInfo::Unmarshal(const json &obj)
+{
+    GetValue(obj, GET_NAME(rc), rc);
+    GetValue(obj, GET_NAME(osErrno), osErrno);
+    GetValue(obj, GET_NAME(detail), detail);
+    GetValue(obj, GET_NAME(files), files);
+    GetValue(obj, GET_NAME(callerInfo), callerInfo);
+    GetValue(obj, GET_NAME(time), time);
+    return true;
+}
+
+bool DeleteInfo::Marshal(json &obj) const
+{
+    SetValue(obj[GET_NAME(files)], files);
+    SetValue(obj[GET_NAME(callerInfo)], callerInfo);
+    SetValue(obj[GET_NAME(time)], time);
+    return true;
+}
+
+bool DeleteInfo::Unmarshal(const json &obj)
+{
+    GetValue(obj, GET_NAME(files), files);
+    GetValue(obj, GET_NAME(callerInfo), callerInfo);
+    GetValue(obj, GET_NAME(time), time);
+    return true;
+}
+
 bool RdbDbInfoRecord::Marshal(json &obj) const
 {
-    SetValue(obj[GET_NAME(lastOpenDbInfo)], lastOpenDbInfo);
-    SetValue(obj[GET_NAME(dbInfoChange)], dbInfoChange);
+    SetValue(obj[GET_NAME(lastOpen)], lastOpen);
+    SetValue(obj[GET_NAME(ioError)], ioError);
+    SetValue(obj[GET_NAME(dbDelete)], dbDelete);
+    SetValue(obj[GET_NAME(inodeChange)], inodeChange);
+    SetValue(obj[GET_NAME(corrupt)], corrupt);
     return true;
 }
 
 bool RdbDbInfoRecord::Unmarshal(const json &obj)
 {
-    GetValue(obj, GET_NAME(lastOpenDbInfo), lastOpenDbInfo);
-    GetValue(obj, GET_NAME(dbInfoChange), dbInfoChange);
+    GetValue(obj, GET_NAME(lastOpen), lastOpen);
+    GetValue(obj, GET_NAME(ioError), ioError);
+    GetValue(obj, GET_NAME(dbDelete), dbDelete);
+    GetValue(obj, GET_NAME(inodeChange), inodeChange);
+    GetValue(obj, GET_NAME(corrupt), corrupt);
     return true;
 }
 
@@ -242,6 +296,7 @@ std::vector<std::string> DiffDbFileInfo(const std::string &prefix, const DbFileI
     DiffFileInfo(prefix + ".db", before.db, after.db, out);
     DiffFileInfo(prefix + ".wal", before.wal, after.wal, out);
     DiffFileInfo(prefix + ".shm", before.shm, after.shm, out);
+    DiffFileInfo(prefix + ".parent", before.parent, after.parent, out);
     return out;
 }
 } // namespace NativeRdb
