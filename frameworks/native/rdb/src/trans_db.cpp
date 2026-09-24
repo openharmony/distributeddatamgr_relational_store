@@ -188,7 +188,8 @@ std::pair<int32_t, Results> TransDB::Update(const Row &row, const AbsRdbPredicat
     std::tie(errCode, values) = statement->ExecuteForRows(totalArgs, config.maxReturningCount);
     if (errCode != E_OK) {
         LOG_ERROR("failed,errCode:%{public}d,table:%{public}s,returningFields:%{public}zu,resolution:%{public}d.",
-            errCode, SqliteUtils::Anonymous(table).c_str(), config.columns.size(), static_cast<int32_t>(cfg.resolution));
+            errCode, SqliteUtils::Anonymous(table).c_str(), config.columns.size(),
+            static_cast<int32_t>(cfg.resolution));
     }
     return GenerateResult(errCode, statement, std::move(values), true, config.defaultRowIndex);
 }

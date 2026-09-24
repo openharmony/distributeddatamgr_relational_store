@@ -54,8 +54,8 @@ void SqlTimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
             }
         },
         delay,
-        std::chrono::milliseconds(50),
-        3);
+        std::chrono::milliseconds(INTERRUPT_RETRY_INTERVAL_MS),
+        INTERRUPT_RETRY_COUNT);
 }
 
 SqlTimeoutGuard::~SqlTimeoutGuard()

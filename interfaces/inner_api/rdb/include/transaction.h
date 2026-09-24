@@ -293,7 +293,7 @@ public:
      *
      * @param table Indicates the target table.
      * @param rows Indicates the rows of data {@link RefRows} to be inserted into the table.
-     * @param config Indicates the {@link BatchInsertConfig} for SQL execution timeout, returning and conflict resolution.
+     * @param config Indicates the {@link BatchInsertConfig} for SQL execute timeout, returning and conflict resolution.
      * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
      * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
      *       If interrupted, the transaction is automatically rolled back and closed.
