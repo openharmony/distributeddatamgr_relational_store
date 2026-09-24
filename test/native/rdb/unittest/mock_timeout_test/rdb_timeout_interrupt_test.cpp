@@ -344,7 +344,7 @@ HWTEST_F(RdbTimeoutInterruptTest, QuerySql_Timeout_001, TestSize.Level1)
         static_cast<long long>(elapsed), static_cast<long long>(config.timeoutMs));
 
     if (resultSet != nullptr) {
-        EXPECT_EQ(resultSet->GoToNextRow(), E_SQLITE_INTERRUPT) << "QuerySql should be interrupted, elapsed=" << elapsed << "ms";
+        EXPECT_EQ(resultSet->GoToNextRow(), E_SQLITE_INTERRUPT) << "QuerySql interrupted, elapsed=" << elapsed << "ms";
     }
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -374,7 +374,8 @@ HWTEST_F(RdbTimeoutInterruptTest, QueryByStep_Timeout_001, TestSize.Level1)
         static_cast<long long>(elapsed), static_cast<long long>(config.timeoutMs));
 
     if (resultSet != nullptr) {
-        EXPECT_EQ(resultSet->GoToNextRow(), E_SQLITE_INTERRUPT) << "QueryByStep should be interrupted, elapsed=" << elapsed << "ms";
+        EXPECT_EQ(resultSet->GoToNextRow(), E_SQLITE_INTERRUPT) << "QueryByStep interrupted, " <<
+            "elapsed=" << elapsed << "ms";
     }
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -431,7 +432,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Insert_Timeout_001, TestSize.Level
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Rollback ok, write lock released, errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -535,7 +536,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_BatchInsert_Timeout_001, TestSize.
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Rollback ok, write lock released, errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -581,7 +582,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Timeout_001, TestSize.Level
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Rollback ok, write lock released, errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -621,7 +622,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_001, TestSize.Level
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Rollback ok, write lock released, errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -659,7 +660,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Execute_Timeout_001, TestSize.Leve
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Rollback ok, write lock released, errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -693,7 +694,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_QueryByStep_Timeout_001, TestSize.
         static_cast<long long>(elapsed), static_cast<long long>(config.timeoutMs));
 
     if (resultSet != nullptr) {
-        EXPECT_NE(resultSet->GoToNextRow(), E_OK) << "Transaction QueryByStep should be interrupted, elapsed=" << elapsed << "ms";
+        EXPECT_NE(resultSet->GoToNextRow(), E_OK) << "Trans QueryByStep interrupted, elapsed=" << elapsed << "ms";
     }
 
     trans->Close();
@@ -803,7 +804,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Delete_Returning_Timeout_001, TestSize.Level1)
     EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto remainingCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(remainingCount, BATCH_ROW_COUNT) << "Delete with RETURNING should be rolled back, remainingCount=" << remainingCount;
+    EXPECT_EQ(remainingCount, BATCH_ROW_COUNT) << "Delete RETURNING rolled back, remainingCount=" << remainingCount;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -848,7 +849,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_BatchInsert_Returning_Timeout_001,
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Rollback ok, write lock released, errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -895,7 +896,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Returning_Timeout_001, Test
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Rollback ok, write lock released, errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -931,12 +932,13 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Returning_Timeout_001, Test
 
     trans->Close();
     auto remainingCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(remainingCount, BATCH_ROW_COUNT) << "Trans Delete with RETURNING should be rolled back, remainingCount=" << remainingCount;
+    EXPECT_EQ(remainingCount, BATCH_ROW_COUNT) << "Trans Delete RETURNING rolled back, " <<
+        "remainingCount=" << remainingCount;
 
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Rollback ok, write lock released, errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
