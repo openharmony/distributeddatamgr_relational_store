@@ -65,7 +65,7 @@ std::pair<int32_t, std::shared_ptr<Transaction>> TransactionImpl::Create(
     return { E_OK, trans };
 }
 
-std::unique_ptr<TimeoutGuard> TransactionImpl::MakeGuard(int64_t timeoutMs)
+std::unique_ptr<SqlTimeoutGuard> TransactionImpl::MakeGuard(int64_t timeoutMs)
 {
     if (timeoutMs <= 0) {
         return nullptr;
@@ -74,7 +74,7 @@ std::unique_ptr<TimeoutGuard> TransactionImpl::MakeGuard(int64_t timeoutMs)
     if (conn == nullptr) {
         return nullptr;
     }
-    auto guard = std::make_unique<TimeoutGuard>(timeoutMs);
+    auto guard = std::make_unique<SqlTimeoutGuard>(timeoutMs);
     guard->SetConnection(conn);
     return guard;
 }

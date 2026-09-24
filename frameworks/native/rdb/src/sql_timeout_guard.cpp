@@ -24,7 +24,7 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-TimeoutGuard::TimeoutGuard(int64_t timeoutMs)
+SqlTimeoutGuard::SqlTimeoutGuard(int64_t timeoutMs)
 {
     if (timeoutMs <= 0) {
         return;
@@ -36,14 +36,14 @@ TimeoutGuard::TimeoutGuard(int64_t timeoutMs)
     deadline_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
 }
 
-void TimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
+void SqlTimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
 {
     if (!enabled_) {
         return;
     }
     auto executor = TaskExecutor::GetInstance().GetExecutor();
     if (executor == nullptr) {
-        LOG_WARN("TimeoutGuard: executor unavailable, mid-execution interrupt disabled");
+        LOG_WARN("SqlTimeoutGuard: executor unavailable, mid-execution interrupt disabled");
         return;
     }
     auto delay = deadline_ - std::chrono::steady_clock::now();
@@ -54,7 +54,7 @@ void TimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
         [conn]() {
             auto connection = conn.lock();
             if (connection != nullptr) {
-                LOG_WARN("TimeoutGuard: SQL execution exceeded deadline, interrupting connId=%{public}d",
+                LOG_WARN("SqlTimeoutGuard: SQL execution exceeded deadline, interrupting connId=%{public}d",
                     connection->GetId());
                 connection->Interrupt();
             }
@@ -64,7 +64,7 @@ void TimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
         3);
 }
 
-TimeoutGuard::~TimeoutGuard()
+SqlTimeoutGuard::~SqlTimeoutGuard()
 {
     if (!enabled_ || taskId_ == 0) {
         return;

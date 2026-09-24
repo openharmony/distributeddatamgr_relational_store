@@ -24,7 +24,7 @@ namespace OHOS {
 namespace NativeRdb {
 using namespace OHOS::Rdb;
 
-TimeoutGuard::TimeoutGuard(int64_t timeoutMs)
+SqlTimeoutGuard::SqlTimeoutGuard(int64_t timeoutMs)
 {
     if (timeoutMs <= 0) {
         return;
@@ -33,7 +33,7 @@ TimeoutGuard::TimeoutGuard(int64_t timeoutMs)
     deadline_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
 }
 
-void TimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
+void SqlTimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
 {
     if (!enabled_) {
         return;
@@ -58,7 +58,7 @@ void TimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
         3);
 }
 
-TimeoutGuard::~TimeoutGuard()
+SqlTimeoutGuard::~SqlTimeoutGuard()
 {
     if (!enabled_ || taskId_ == 0) {
         return;

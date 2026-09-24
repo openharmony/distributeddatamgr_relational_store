@@ -1747,19 +1747,8 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(
     if (status != E_OK) {
         return { status, -1 };
     }
-
-    TimeoutGuard guard(config.timeoutMs);
-    auto [errCode, statement] = GetStatement(sqlInfo.sql, false, guard, config.timeoutMs);
-    if (statement == nullptr) {
-        return { errCode, -1 };
-    }
-    errCode = statement->Execute(sqlInfo.args);
-    if (errCode != E_OK) {
-        SetLastErrorMsg(statement->GetLastErrorMsg());
-        TryDump(errCode, "INSERT");
-        return { errCode, -1 };
-    }
-    int64_t rowid = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
+    int64_t rowid = -1;
+    int errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args, config.timeoutMs);
     if (errCode == E_OK) {
         DoCloudSync(table);
     }
@@ -1851,15 +1840,13 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(
     }
     auto acquireMs = cfg.timeoutMs > 0 ? std::chrono::milliseconds(std::max(cfg.timeoutMs, MIN_TIMEOUT_MS))
                                         : ConnectionPool::INVALID_TIME;
-    TimeoutGuard guard(cfg.timeoutMs);
+    SqlTimeoutGuard guard(cfg.timeoutMs);
     auto conn = pool->AcquireConnection(false, acquireMs);
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, -1 };
     }
     guard.SetConnection(conn);
-
     auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable(), cfg.resolution);
-
     // To ensure atomicity, execute SQL only once
     const ReturningConfig &config = cfg.returning;
     if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1 ||
@@ -1923,15 +1910,7 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPre
         return { status, -1 };
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(cfg.returning.columns);
-    TimeoutGuard guard(cfg.timeoutMs);
-    auto [errCode, statement] = GetStatement(sqlInfo.sql, false, guard, cfg.timeoutMs, returningSql);
-    if (statement == nullptr) {
-        return { errCode, -1 };
-    }
-    std::vector<ValuesBucket> values;
-    std::tie(errCode, values) = statement->ExecuteForRows(sqlInfo.args, cfg.returning.maxReturningCount);
-    TryDump(errCode, "UPG DEL");
-    auto [code, result] = GenerateResult(errCode, statement, std::move(values), true, cfg.returning.defaultRowIndex);
+    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, cfg.returning, returningSql, cfg.timeoutMs);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1953,15 +1932,8 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(
         return { status, -1 };
     }
     auto returningSql = SqliteSqlBuilder::GetReturningSql(cfg.returning.columns);
-    TimeoutGuard guard(cfg.timeoutMs);
-    auto [errCode, statement] = GetStatement(sqlInfo.sql, false, guard, cfg.timeoutMs, returningSql);
-    if (statement == nullptr) {
-        return { errCode, -1 };
-    }
-    std::vector<ValuesBucket> values;
-    std::tie(errCode, values) = statement->ExecuteForRows(predicates.GetBindArgs(), cfg.returning.maxReturningCount);
-    TryDump(errCode, "UPG DEL");
-    auto [code, result] = GenerateResult(errCode, statement, std::move(values), true, cfg.returning.defaultRowIndex);
+    auto [code, result] =
+        ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), cfg.returning, returningSql, cfg.timeoutMs);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
     }
@@ -1987,7 +1959,7 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(
     auto acquireMs = config.timeoutMs > 0
                           ? std::chrono::milliseconds(std::max(config.timeoutMs, MIN_TIMEOUT_MS))
                           : ConnectionPool::INVALID_TIME;
-    TimeoutGuard guard(config.timeoutMs);
+    SqlTimeoutGuard guard(config.timeoutMs);
     auto conn = pool->AcquireRef(true, acquireMs);
     if (conn == nullptr) {
         if (config.timeoutMs > 0) {
@@ -2023,7 +1995,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     auto acquireMs = config.timeoutMs > 0
                           ? std::chrono::milliseconds(std::max(config.timeoutMs, MIN_TIMEOUT_MS))
                           : ConnectionPool::INVALID_TIME;
-    TimeoutGuard guard(config.timeoutMs);
+    SqlTimeoutGuard guard(config.timeoutMs);
     auto conn = pool->AcquireRef(true, acquireMs);
     if (conn == nullptr) {
         if (config.timeoutMs > 0) {
@@ -2033,9 +2005,7 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
     if (conn != nullptr) {
         guard.SetConnection(conn);
     }
-    auto resultSet = std::make_shared<StepResultSet>(
-        start, conn, sql, args, options, false);
-    return resultSet;
+    return std::make_shared<StepResultSet>(start, conn, sql, args, options, false);
 }
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
@@ -2150,7 +2120,7 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(
         return { ExecuteByTrxId(sql, trxId, false, args), ValueObject() };
     }
 
-    TimeoutGuard guard(config.timeoutMs);
+    SqlTimeoutGuard guard(config.timeoutMs);
     auto [errCode, statement] = GetStatement(sql, false, guard, config.timeoutMs);
     if (errCode != E_OK || statement == nullptr) {
         return { errCode != E_OK ? errCode : E_ERROR, object };
@@ -2309,8 +2279,30 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     return E_OK;
 }
 
+int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args,
+    int64_t timeoutMs)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
+        return E_NOT_SUPPORT;
+    }
+    SqlTimeoutGuard guard(timeoutMs);
+    auto [errCode, statement] = GetStatement(sql, false, guard, timeoutMs);
+    if (statement == nullptr) {
+        return errCode;
+    }
+    errCode = statement->Execute(args);
+    if (errCode != E_OK) {
+        SetLastErrorMsg(statement->GetLastErrorMsg());
+        TryDump(errCode, "INSERT");
+        return errCode;
+    }
+    outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
+    return E_OK;
+}
+
 std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
-    const std::string &sql, const Values &args, const ReturningConfig &config, const std::string &returningSql)
+    const std::string &sql, const Values &args, const ReturningConfig &config,
+    const std::string &returningSql, int64_t timeoutMs)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -2318,7 +2310,8 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
     if (!RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount)) {
         return { E_INVALID_ARGS, -1 };
     }
-    auto [errCode, statement] = GetStatement(sql, false, returningSql);
+    SqlTimeoutGuard guard(timeoutMs);
+    auto [errCode, statement] = GetStatement(sql, false, guard, timeoutMs, returningSql);
     if (statement == nullptr) {
         return { errCode, -1 };
     }
@@ -3436,12 +3429,12 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
     const std::string &sql, bool read, const std::string &returningSql) const
 {
-    TimeoutGuard guard(0);
+    SqlTimeoutGuard guard(0);
     return GetStatement(sql, read, guard, 0, returningSql);
 }
 
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
-    const std::string &sql, bool read, TimeoutGuard &guard, int64_t timeoutMs,
+    const std::string &sql, bool read, SqlTimeoutGuard &guard, int64_t timeoutMs,
     const std::string &returningSql) const
 {
     auto pool = GetPool();

@@ -35,12 +35,12 @@ public:
     int32_t Close() override;
     std::string GetLastErrorMsg() override;
 
-    std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
-    std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
     std::pair<int32_t, int64_t> Insert(
         const std::string &table, const Row &row, Resolution resolution) override;
     std::pair<int32_t, int64_t> Insert(
         const std::string &table, const Row &row, const InsertConfig &config = {}) override;
+    std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
+    std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
         const BatchInsertConfig &config = {}) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
@@ -65,7 +65,7 @@ private:
     std::shared_ptr<RdbStore> GetStore();
     std::shared_ptr<Connection> GetConnection();
     void AddResultSet(std::weak_ptr<ResultSet> resultSet);
-    std::unique_ptr<TimeoutGuard> MakeGuard(int64_t timeoutMs);
+    std::unique_ptr<SqlTimeoutGuard> MakeGuard(int64_t timeoutMs);
 
     std::string path_;
     uint32_t seqId_ = 0;

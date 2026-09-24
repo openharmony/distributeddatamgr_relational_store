@@ -26,17 +26,17 @@ class Connection;
 
 constexpr int64_t MIN_TIMEOUT_MS = 1000;
 
-class TimeoutGuard {
+class SqlTimeoutGuard {
 public:
-    explicit TimeoutGuard(int64_t timeoutMs = 0);
-    ~TimeoutGuard();
+    explicit SqlTimeoutGuard(int64_t timeoutMs = 0);
+    ~SqlTimeoutGuard();
 
     void SetConnection(std::weak_ptr<Connection> conn);
 
-    TimeoutGuard(const TimeoutGuard &) = delete;
-    TimeoutGuard &operator=(const TimeoutGuard &) = delete;
-    TimeoutGuard(TimeoutGuard &&) = delete;
-    TimeoutGuard &operator=(TimeoutGuard &&) = delete;
+    SqlTimeoutGuard(const SqlTimeoutGuard &) = delete;
+    SqlTimeoutGuard &operator=(const SqlTimeoutGuard &) = delete;
+    SqlTimeoutGuard(SqlTimeoutGuard &&) = delete;
+    SqlTimeoutGuard &operator=(SqlTimeoutGuard &&) = delete;
 
 private:
     std::chrono::steady_clock::time_point deadline_{};
