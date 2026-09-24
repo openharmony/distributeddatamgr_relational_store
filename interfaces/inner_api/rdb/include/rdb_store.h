@@ -250,7 +250,7 @@ public:
     /**
      * @brief Inserts a batch of data into the target table with per-op config.
      *
-     * @param config Indicates the {@link BatchInsertConfig} for SQL execution timeout, returning and conflict resolution.
+     * @param config Indicates the {@link BatchInsertConfig} for SQL execute timeout, returning and conflict resolution.
      * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
      * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
      */

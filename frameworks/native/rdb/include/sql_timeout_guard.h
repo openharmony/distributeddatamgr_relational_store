@@ -25,6 +25,8 @@ namespace NativeRdb {
 class Connection;
 
 constexpr int64_t MIN_TIMEOUT_MS = 1000;
+constexpr int64_t INTERRUPT_RETRY_INTERVAL_MS = 50;
+constexpr uint64_t INTERRUPT_RETRY_COUNT = 3;
 
 class SqlTimeoutGuard {
 public:

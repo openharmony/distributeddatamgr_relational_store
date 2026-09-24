@@ -117,8 +117,7 @@ HWTEST_F(RdbTimeoutNoMockTest, BatchInsert_NoMock_001, TestSize.Level1)
     printf("BatchInsert_NoMock_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_EQ(errCode, E_OK)
-        << "Small batch should succeed within bumped 1000ms timeout, errCode=" << errCode;
+    EXPECT_EQ(errCode, E_OK) << "Small batch should succeed within bumped 1000ms timeout, errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -145,8 +144,7 @@ HWTEST_F(RdbTimeoutNoMockTest, BatchInsert_NoMock_002, TestSize.Level1)
     printf("BatchInsert_NoMock_002: errCode=%d, timeoutMs=%lld\n", errCode,
         static_cast<long long>(config.timeoutMs));
 
-    EXPECT_EQ(errCode, E_OK)
-        << "Negative timeout should be treated as no timeout, errCode=" << errCode;
+    EXPECT_EQ(errCode, E_OK) << "Negative timeout should be treated as no timeout, errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -172,8 +170,7 @@ HWTEST_F(RdbTimeoutNoMockTest, BatchInsert_NoMock_003, TestSize.Level1)
     printf("BatchInsert_NoMock_003: errCode=%d, timeoutMs=%lld\n", errCode,
         static_cast<long long>(config.timeoutMs));
 
-    EXPECT_EQ(errCode, E_OK)
-        << "No timeout should always succeed, errCode=" << errCode;
+    EXPECT_EQ(errCode, E_OK) << "No timeout should always succeed, errCode=" << errCode;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }

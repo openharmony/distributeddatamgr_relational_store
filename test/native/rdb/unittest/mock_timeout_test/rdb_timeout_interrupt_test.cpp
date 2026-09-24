@@ -162,8 +162,7 @@ HWTEST_F(RdbTimeoutInterruptTest, BatchInsert_Timeout_001, TestSize.Level1)
     resultSet->GoToNextRow();
     int64_t actualCount = 0;
     resultSet->GetLong(0, actualCount);
-    EXPECT_EQ(actualCount, 0)
-        << "BatchInsert should be rolled back, actualCount=" << actualCount;
+    EXPECT_EQ(actualCount, 0) << "BatchInsert should be rolled back, actualCount=" << actualCount;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -204,14 +203,12 @@ HWTEST_F(RdbTimeoutInterruptTest, Insert_Timeout_001, TestSize.Level1)
     printf("Insert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto insertCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
     EXPECT_EQ(insertCount, 0) << "Insert should be rolled back, actualCount=" << insertCount;
     auto updatedCount = QueryCount("SELECT COUNT(*) FROM " + largeTable + " WHERE name LIKE '%_x'");
-    EXPECT_EQ(updatedCount, 0)
-        << "Trigger UPDATE should be rolled back, updated=" << updatedCount;
+    EXPECT_EQ(updatedCount, 0) << "Trigger UPDATE should be rolled back, updated=" << updatedCount;
 
     store_->Execute("DROP TRIGGER IF EXISTS insert_trigger");
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -240,12 +237,10 @@ HWTEST_F(RdbTimeoutInterruptTest, Delete_Timeout_001, TestSize.Level1)
     printf("Delete_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto actualCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(actualCount, BATCH_ROW_COUNT)
-        << "Delete should not affect any rows, actualCount=" << actualCount;
+    EXPECT_EQ(actualCount, BATCH_ROW_COUNT) << "Delete should not affect any rows, actualCount=" << actualCount;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -278,12 +273,10 @@ HWTEST_F(RdbTimeoutInterruptTest, Update_Timeout_001, TestSize.Level1)
     printf("Update_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto updatedCount = QueryCount("SELECT COUNT(*) FROM " + tableName + " WHERE name = 'updated'");
-    EXPECT_EQ(updatedCount, 0)
-        << "Update should not modify any rows, updatedCount=" << updatedCount;
+    EXPECT_EQ(updatedCount, 0) << "Update should not modify any rows, updatedCount=" << updatedCount;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -322,12 +315,10 @@ HWTEST_F(RdbTimeoutInterruptTest, Execute_Timeout_001, TestSize.Level1)
     printf("Execute_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto actualCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(actualCount, 0)
-        << "Execute should be rolled back, actualCount=" << actualCount;
+    EXPECT_EQ(actualCount, 0) << "Execute should be rolled back, actualCount=" << actualCount;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -353,8 +344,7 @@ HWTEST_F(RdbTimeoutInterruptTest, QuerySql_Timeout_001, TestSize.Level1)
         static_cast<long long>(elapsed), static_cast<long long>(config.timeoutMs));
 
     if (resultSet != nullptr) {
-        EXPECT_EQ(resultSet->GoToNextRow(), E_SQLITE_INTERRUPT)
-            << "QuerySql should be interrupted, elapsed=" << elapsed << "ms";
+        EXPECT_EQ(resultSet->GoToNextRow(), E_SQLITE_INTERRUPT) << "QuerySql should be interrupted, elapsed=" << elapsed << "ms";
     }
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -384,8 +374,7 @@ HWTEST_F(RdbTimeoutInterruptTest, QueryByStep_Timeout_001, TestSize.Level1)
         static_cast<long long>(elapsed), static_cast<long long>(config.timeoutMs));
 
     if (resultSet != nullptr) {
-        EXPECT_EQ(resultSet->GoToNextRow(), E_SQLITE_INTERRUPT)
-            << "QueryByStep should be interrupted, elapsed=" << elapsed << "ms";
+        EXPECT_EQ(resultSet->GoToNextRow(), E_SQLITE_INTERRUPT) << "QueryByStep should be interrupted, elapsed=" << elapsed << "ms";
     }
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
@@ -430,22 +419,19 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Insert_Timeout_001, TestSize.Level
     printf("Transaction_Insert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto insertCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
     EXPECT_EQ(insertCount, 0) << "Trans Insert should be rolled back, actualCount=" << insertCount;
     auto updatedCount = QueryCount("SELECT COUNT(*) FROM " + largeTable + " WHERE name LIKE '%_x'");
-    EXPECT_EQ(updatedCount, 0)
-        << "Trigger UPDATE should be rolled back, updated=" << updatedCount;
+    EXPECT_EQ(updatedCount, 0) << "Trigger UPDATE should be rolled back, updated=" << updatedCount;
 
     trans->Close();
     store_->Execute("DROP TRIGGER IF EXISTS trans_insert_trigger");
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK)
-        << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -540,19 +526,16 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_BatchInsert_Timeout_001, TestSize.
     printf("Transaction_BatchInsert_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto actualCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(actualCount, 0)
-        << "Trans BatchInsert should be rolled back, actualCount=" << actualCount;
+    EXPECT_EQ(actualCount, 0) << "Trans BatchInsert should be rolled back, actualCount=" << actualCount;
 
     trans->Close();
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK)
-        << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -589,19 +572,16 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Timeout_001, TestSize.Level
     printf("Transaction_Update_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto updatedCount = QueryCount("SELECT COUNT(*) FROM " + tableName + " WHERE name = 'updated'");
-    EXPECT_EQ(updatedCount, 0)
-        << "Trans Update should not modify any rows, updatedCount=" << updatedCount;
+    EXPECT_EQ(updatedCount, 0) << "Trans Update should not modify any rows, updatedCount=" << updatedCount;
 
     trans->Close();
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK)
-        << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -632,19 +612,16 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Timeout_001, TestSize.Level
     printf("Transaction_Delete_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto actualCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(actualCount, BATCH_ROW_COUNT)
-        << "Trans Delete should not affect any rows, actualCount=" << actualCount;
+    EXPECT_EQ(actualCount, BATCH_ROW_COUNT) << "Trans Delete should not affect any rows, actualCount=" << actualCount;
 
     trans->Close();
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK)
-        << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -673,19 +650,16 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Execute_Timeout_001, TestSize.Leve
     printf("Transaction_Execute_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto updatedCount = QueryCount("SELECT COUNT(*) FROM " + tableName + " WHERE name LIKE '%_x'");
-    EXPECT_EQ(updatedCount, 0)
-        << "Trans Execute should be rolled back, updated=" << updatedCount;
+    EXPECT_EQ(updatedCount, 0) << "Trans Execute should be rolled back, updated=" << updatedCount;
 
     trans->Close();
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK)
-        << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -719,8 +693,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_QueryByStep_Timeout_001, TestSize.
         static_cast<long long>(elapsed), static_cast<long long>(config.timeoutMs));
 
     if (resultSet != nullptr) {
-        EXPECT_NE(resultSet->GoToNextRow(), E_OK)
-            << "Transaction QueryByStep should be interrupted, elapsed=" << elapsed << "ms";
+        EXPECT_NE(resultSet->GoToNextRow(), E_OK) << "Transaction QueryByStep should be interrupted, elapsed=" << elapsed << "ms";
     }
 
     trans->Close();
@@ -755,12 +728,10 @@ HWTEST_F(RdbTimeoutInterruptTest, BatchInsert_Returning_Timeout_001, TestSize.Le
     printf("BatchInsert_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto actualCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(actualCount, 0)
-        << "BatchInsert with RETURNING should be rolled back, actualCount=" << actualCount;
+    EXPECT_EQ(actualCount, 0) << "BatchInsert with RETURNING should be rolled back, actualCount=" << actualCount;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -796,12 +767,10 @@ HWTEST_F(RdbTimeoutInterruptTest, Update_Returning_Timeout_001, TestSize.Level1)
     printf("Update_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto updatedCount = QueryCount("SELECT COUNT(*) FROM " + tableName + " WHERE name = 'updated'");
-    EXPECT_EQ(updatedCount, 0)
-        << "Update with RETURNING should be rolled back, updatedCount=" << updatedCount;
+    EXPECT_EQ(updatedCount, 0) << "Update with RETURNING should be rolled back, updatedCount=" << updatedCount;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -831,12 +800,10 @@ HWTEST_F(RdbTimeoutInterruptTest, Delete_Returning_Timeout_001, TestSize.Level1)
     printf("Delete_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     auto remainingCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(remainingCount, BATCH_ROW_COUNT)
-        << "Delete with RETURNING should be rolled back, remainingCount=" << remainingCount;
+    EXPECT_EQ(remainingCount, BATCH_ROW_COUNT) << "Delete with RETURNING should be rolled back, remainingCount=" << remainingCount;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -872,19 +839,16 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_BatchInsert_Returning_Timeout_001,
     printf("Transaction_BatchInsert_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     trans->Close();
     auto actualCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(actualCount, 0)
-        << "Trans BatchInsert with RETURNING should be rolled back, actualCount=" << actualCount;
+    EXPECT_EQ(actualCount, 0) << "Trans BatchInsert with RETURNING should be rolled back, actualCount=" << actualCount;
 
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK)
-        << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -922,19 +886,16 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Returning_Timeout_001, Test
     printf("Transaction_Update_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     trans->Close();
     auto updatedCount = QueryCount("SELECT COUNT(*) FROM " + tableName + " WHERE name = 'updated'");
-    EXPECT_EQ(updatedCount, 0)
-        << "Trans Update with RETURNING should be rolled back, updatedCount=" << updatedCount;
+    EXPECT_EQ(updatedCount, 0) << "Trans Update with RETURNING should be rolled back, updatedCount=" << updatedCount;
 
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK)
-        << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
@@ -966,19 +927,16 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Delete_Returning_Timeout_001, Test
     printf("Transaction_Delete_Returning_Timeout_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
         static_cast<long long>(elapsed), errCode, static_cast<long long>(config.timeoutMs));
 
-    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT)
-        << "Unexpected errCode=" << errCode;
+    EXPECT_TRUE(errCode == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << errCode;
 
     trans->Close();
     auto remainingCount = QueryCount("SELECT COUNT(*) FROM " + tableName);
-    EXPECT_EQ(remainingCount, BATCH_ROW_COUNT)
-        << "Trans Delete with RETURNING should be rolled back, remainingCount=" << remainingCount;
+    EXPECT_EQ(remainingCount, BATCH_ROW_COUNT) << "Trans Delete with RETURNING should be rolled back, remainingCount=" << remainingCount;
 
     // Verify rollback: subsequent write via RdbStore should succeed, not E_SQLITE_BUSY
     auto writeRes = store_->Execute(
         "INSERT INTO " + tableName + " (name, data) VALUES ('rb_verify', NULL)");
-    EXPECT_EQ(writeRes.first, E_OK)
-        << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
+    EXPECT_EQ(writeRes.first, E_OK) << "Transaction should be rolled back, write lock released, but got errCode=" << writeRes.first;
 
     store_->Execute("DROP TABLE IF EXISTS " + tableName);
 }
