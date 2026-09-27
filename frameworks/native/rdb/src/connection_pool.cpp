@@ -870,6 +870,7 @@ std::pair<int32_t, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Ini
         max_ = max;
         creator_ = creator;
         timeout_ = std::chrono::seconds(timeout);
+        // Keep initialization atomic under the pool lock.
         for (int i = 0; i < max_; ++i) {
             auto errCode = ExtendNode();
             if (errCode != E_OK) {
@@ -1130,7 +1131,8 @@ int32_t ConnPool::Container::Release(std::shared_ptr<ConnNode> node)
             count_++;
         }
     }
-    cond_.notify_one();
+    // Wake all waiters after returning a node.
+    cond_.notify_all();
     return E_OK;
 }
 
@@ -1149,7 +1151,8 @@ int32_t ConnectionPool::Container::ReleaseTrans(std::shared_ptr<ConnNode> node)
             RelDetails(node);
         }
     }
-    cond_.notify_one();
+    // Wake all waiters after returning a node.
+    cond_.notify_all();
     return E_OK;
 }
 
