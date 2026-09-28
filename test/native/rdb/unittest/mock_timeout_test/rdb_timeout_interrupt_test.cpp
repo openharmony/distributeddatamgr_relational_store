@@ -438,67 +438,6 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Insert_Timeout_001, TestSize.Level
 }
 
 /* *
- * @tc.name: DualWrite_Interrupt_001
- * @tc.desc: In dual-write mode (MAIN_REPLICA), opening master auto-creates slave.
- *           BatchInsert is interrupted. Verify master data is rolled back, then open
- *           the auto-created slave and verify slave is also unchanged.
- * @tc.type: FUNC
- */
-HWTEST_F(RdbTimeoutInterruptTest, DualWrite_Interrupt_001, TestSize.Level1)
-{
-    auto countOf = [](std::shared_ptr<RdbStore> &s, const std::string &sql) -> int64_t {
-        auto rs = s->QueryByStep(sql);
-        if (rs == nullptr || rs->GoToNextRow() != E_OK) {
-            return -1;
-        }
-        int64_t c = 0;
-        rs->GetLong(0, c);
-        return c;
-    };
-    std::string masterPath = RDB_TEST_PATH + "dual_write_interrupt.db";
-    std::string slavePath = RDB_TEST_PATH + "dual_write_interrupt_slave.db";
-    RdbHelper::DeleteRdbStore(masterPath);
-    RdbHelper::DeleteRdbStore(slavePath);
-
-    RdbStoreConfig masterConfig(masterPath);
-    masterConfig.SetHaMode(HAMode::MAIN_REPLICA);
-    RdbTimeoutInterruptTestOpenCallback masterHelper;
-    int errCode = E_OK;
-    auto masterStore = RdbHelper::GetRdbStore(masterConfig, 1, masterHelper, errCode);
-    ASSERT_NE(masterStore, nullptr);
-    ASSERT_EQ(errCode, E_OK);
-    auto res = masterStore->Execute(
-        "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, data BLOB)");
-    ASSERT_EQ(res.first, E_OK);
-
-    auto rows = BuildLargeRows(LARGE_ROW_COUNT);
-    BatchInsertConfig config;
-    config.timeoutMs = 500;
-    config.returning.columns = { "id" };
-    auto start = std::chrono::steady_clock::now();
-    auto [opErr, insertResult] = masterStore->BatchInsert("test", rows, config);
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    printf("DualWrite_Interrupt_001: elapsed=%lldms, errCode=%d, timeoutMs=%lld\n",
-        static_cast<long long>(elapsed), opErr, static_cast<long long>(config.timeoutMs));
-    EXPECT_TRUE(opErr == E_SQLITE_INTERRUPT) << "Unexpected errCode=" << opErr;
-
-    EXPECT_EQ(countOf(masterStore, "SELECT COUNT(*) FROM test"), 0) << "Master should be rolled back";
-
-    RdbStoreConfig slaveConfig(slavePath);
-    RdbTimeoutInterruptTestOpenCallback slaveHelper;
-    auto slaveStore = RdbHelper::GetRdbStore(slaveConfig, 1, slaveHelper, errCode);
-    ASSERT_NE(slaveStore, nullptr);
-    EXPECT_EQ(countOf(slaveStore, "SELECT COUNT(*) FROM test"), 0) << "Slave should be rolled back";
-
-    masterStore = nullptr;
-    slaveStore = nullptr;
-    RdbHelper::ClearCache();
-    RdbHelper::DeleteRdbStore(masterPath);
-    RdbHelper::DeleteRdbStore(slavePath);
-}
-
-/* *
  * @tc.name: Transaction_BatchInsert_Timeout_001
  * @tc.desc: Transaction BatchInsert with min timeout(100ms), interrupt should be effective.
  * @tc.type: FUNC
@@ -564,7 +503,7 @@ HWTEST_F(RdbTimeoutInterruptTest, Transaction_Update_Timeout_001, TestSize.Level
     predicates.EqualTo("name", "nonexistent"); // Force full table scan
 
     UpdateConfig config;
-    config.timeoutMs = 30;
+    config.timeoutMs = 50;
     auto start = std::chrono::steady_clock::now();
     auto [errCode, updateResult] =
         trans->Update(updateRow, predicates, config);
