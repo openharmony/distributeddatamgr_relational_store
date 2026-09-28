@@ -590,6 +590,15 @@ struct BatchInsertConfig {
 };
 
 struct UpdateConfig {
+    UpdateConfig() = default;
+    UpdateConfig(const ReturningConfig &value, ConflictResolution res = ConflictResolution::ON_CONFLICT_NONE)
+        : returning(value), resolution(res) {}
+    UpdateConfig(const std::initializer_list<std::string> &value,
+        int32_t rowIndex = ReturningConfig::FIRST_ROW_INDEX,
+        int32_t count = ReturningConfig::DEFAULT_RETURNING_COUNT)
+        : returning(value, rowIndex, count) {}
+    UpdateConfig(const std::vector<std::string> &value, int32_t count = ReturningConfig::DEFAULT_RETURNING_COUNT)
+        : returning(value, count) {}
     int64_t timeoutMs = 0;
     ReturningConfig returning{};
     ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;

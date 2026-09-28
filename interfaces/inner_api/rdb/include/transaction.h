@@ -181,7 +181,7 @@ public:
      * only the first 1024 returningFields will be returned
      */
     virtual std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const ReturningConfig &config, Resolution resolution = NO_ACTION);
+        const ReturningConfig &config, Resolution resolution);
 
     /**
      * @brief Deletes data from the database based on specified conditions.
