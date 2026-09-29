@@ -229,7 +229,11 @@ if (relational_store_hisysevent_enabled) {
 }
 
 if (relational_store_napi_enabled) {
-  external_deps_napi = [ "napi:ace_napi", "node:node_header_notice" ]
+  external_deps_napi = [
+    "libuv:uv",
+    "napi:ace_napi",
+    "node:node_header_notice",
+  ]
   deps_napi = []
   external_deps_cj_bind_ffi = [ "napi:cj_bind_ffi" ]
   deps_cj_bind_ffi = []
