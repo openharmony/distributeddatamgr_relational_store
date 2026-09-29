@@ -66,6 +66,7 @@
 #include "step_result_set.h"
 #include "string_utils.h"
 #include "suspender.h"
+#include "sql_timeout_guard.h"
 #include "task_executor.h"
 #include "traits.h"
 #include "transaction.h"
@@ -345,7 +346,6 @@ std::pair<int32_t, std::shared_ptr<Connection>> RdbStoreImpl::GetConn(bool isRea
     if (pool == nullptr) {
         return { E_ALREADY_CLOSED, nullptr };
     }
-
     auto connection = pool->AcquireConnection(isRead);
     if (connection == nullptr) {
         return { E_DATABASE_BUSY, nullptr };
@@ -1758,7 +1758,8 @@ const RdbStoreConfig &RdbStoreImpl::GetConfig()
     return config_;
 }
 
-std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row &row, Resolution resolution)
+std::pair<int, int64_t> RdbStoreImpl::Insert(
+    const std::string &table, const Row &row, const InsertConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
@@ -1767,20 +1768,18 @@ std::pair<int, int64_t> RdbStoreImpl::Insert(const std::string &table, const Row
     RdbStatReporter reportStat(RDB_PERF, INSERT, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    auto [status, sqlInfo] = RdbSqlUtils::GetInsertSqlInfo(table, row, resolution);
+    auto [status, sqlInfo] = RdbSqlUtils::GetInsertSqlInfo(table, row, config.resolution);
     if (status != E_OK) {
         return { status, -1 };
     }
-
     int64_t rowid = -1;
-    auto errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args);
+    int errCode = ExecuteForLastInsertedRowId(rowid, sqlInfo.sql, sqlInfo.args, config.timeoutMs);
     if (errCode == E_OK && rowid > 0) {
         auditLogger_->OnSqlAudit(config_.GetPath(), "INSERT", "", 1);
     }
     if (errCode == E_OK) {
         DoCloudSync(table);
     }
-
     return { errCode, rowid };
 }
 
@@ -1831,7 +1830,7 @@ void RdbStoreImpl::BatchInsertArgsDfx(int argsSize)
 }
 
 std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(
-    const std::string &table, const RefRows &rows, const ReturningConfig &config, Resolution resolution)
+    const std::string &table, const RefRows &rows, const BatchInsertConfig &cfg)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
@@ -1846,13 +1845,21 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL, 0, rows.RowSize());
 
-    auto [code, conn] = GetConn(false);
-    if (code != E_OK || conn == nullptr) {
-        return { code, -1 };
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        return { E_ALREADY_CLOSED, -1 };
     }
-
-    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable(), resolution);
+    auto acquireMs = cfg.timeoutMs > 0 ? std::chrono::milliseconds(std::max(cfg.timeoutMs, MIN_TIMEOUT_MS))
+                                        : ConnectionPool::INVALID_TIME;
+    SqlTimeoutGuard guard(cfg.timeoutMs);
+    auto conn = pool->AcquireConnection(false, acquireMs);
+    if (conn == nullptr) {
+        return { E_DATABASE_BUSY, -1 };
+    }
+    guard.SetConnection(conn);
+    auto sqlArgs = SqliteSqlBuilder::GenerateSqls(table, rows, conn->GetMaxVariable(), cfg.resolution);
     // To ensure atomicity, execute SQL only once
+    const ReturningConfig &config = cfg.returning;
     if (sqlArgs.size() != 1 || sqlArgs.front().second.size() != 1 ||
         !RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount)) {
         auto [fields, values] = rows.GetFieldsAndValues();
@@ -1860,7 +1867,7 @@ std::pair<int32_t, Results> RdbStoreImpl::BatchInsert(
             SqliteUtils::Anonymous(table).c_str(), fields != nullptr ? fields->size() : 0, conn->GetMaxVariable());
         return { E_INVALID_ARGS, -1 };
     }
-    auto [errCode, result] = ExecuteBatchInsertReturning(sqlArgs, conn, config, resolution);
+    auto [errCode, result] = ExecuteBatchInsertReturning(sqlArgs, conn, config, cfg.resolution);
     if (result.changed > 0) {
         DoCloudSync(table);
         auditLogger_->OnSqlAudit(config_.GetPath(), "BatchInsert", "", result.changed);
@@ -1874,6 +1881,7 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteBatchInsertReturning(const RdbS
     auto &[sql, bindArgs] = sqlArgs.front();
     auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
     auto [errCode, statement] = GetStatement(sql, conn, returningSql);
+
     if (statement == nullptr) {
         LOG_ERROR("statement is nullptr, errCode:0x%{public}x, args:%{public}zu, "
                   "app self can check the SQL",
@@ -1883,7 +1891,8 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteBatchInsertReturning(const RdbS
     }
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
     std::vector<ValuesBucket> values;
-    std::tie(errCode, values) = statement->ExecuteForRows(std::ref(bindArgs.front()), config.maxReturningCount);
+    std::tie(errCode, values) =
+        statement->ExecuteForRows(std::ref(bindArgs.front()), config.maxReturningCount);
     if (errCode == E_SQLITE_LOCKED || errCode == E_SQLITE_BUSY) {
         TryDump(errCode, "BATCH");
         return { errCode, -1 };
@@ -1898,8 +1907,8 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteBatchInsertReturning(const RdbS
     return { errCode, result };
 }
 
-std::pair<int32_t, Results> RdbStoreImpl::Update(
-    const Row &row, const AbsRdbPredicates &predicates, const ReturningConfig &config, Resolution resolution)
+std::pair<int32_t, Results> RdbStoreImpl::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const UpdateConfig &cfg)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
@@ -1908,12 +1917,12 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(
     RdbStatReporter reportStat(RDB_PERF, UPDATE, config_, reportFunc_);
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_TOTAL);
-    auto [status, sqlInfo] = RdbSqlUtils::GetUpdateSqlInfo(predicates, row, resolution);
+    auto [status, sqlInfo] = RdbSqlUtils::GetUpdateSqlInfo(predicates, row, cfg.resolution);
     if (status != E_OK) {
         return { status, -1 };
     }
-    auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
-    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, config, returningSql);
+    auto returningSql = SqliteSqlBuilder::GetReturningSql(cfg.returning.columns);
+    auto [code, result] = ExecuteForRow(sqlInfo.sql, sqlInfo.args, cfg.returning, returningSql, cfg.timeoutMs);
     auditLogger_->OnSqlAudit(config_.GetPath(), "UPDATE", "", result.changed);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
@@ -1921,7 +1930,8 @@ std::pair<int32_t, Results> RdbStoreImpl::Update(
     return { code, result };
 }
 
-std::pair<int32_t, Results> RdbStoreImpl::Delete(const AbsRdbPredicates &predicates, const ReturningConfig &config)
+std::pair<int32_t, Results> RdbStoreImpl::Delete(
+    const AbsRdbPredicates &predicates, const DeleteConfig &cfg)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
@@ -1934,8 +1944,9 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(const AbsRdbPredicates &predica
     if (status != E_OK) {
         return { status, -1 };
     }
-    auto returningSql = SqliteSqlBuilder::GetReturningSql(config.columns);
-    auto [code, result] = ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), config, returningSql);
+    auto returningSql = SqliteSqlBuilder::GetReturningSql(cfg.returning.columns);
+    auto [code, result] =
+        ExecuteForRow(sqlInfo.sql, predicates.GetBindArgs(), cfg.returning, returningSql, cfg.timeoutMs);
     auditLogger_->OnSqlAudit(config_.GetPath(), "DELETE", "", result.changed);
     if (result.changed > 0) {
         DoCloudSync(predicates.GetTableName());
@@ -1943,7 +1954,8 @@ std::pair<int32_t, Results> RdbStoreImpl::Delete(const AbsRdbPredicates &predica
     return { code, result };
 }
 
-std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sql, const Values &bindArgs)
+std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(
+    const std::string &sql, const Values &bindArgs, const QueryConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     if (config_.GetDBType() == DB_VECTOR) {
@@ -1958,16 +1970,27 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(const std::string &sq
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
-    return std::make_shared<SqliteSharedResultSet>(start, pool->AcquireRef(true), sql, bindArgs, path_);
+    auto acquireMs = config.timeoutMs > 0
+                          ? std::chrono::milliseconds(std::max(config.timeoutMs, MIN_TIMEOUT_MS))
+                          : ConnectionPool::INVALID_TIME;
+    SqlTimeoutGuard guard(config.timeoutMs);
+    auto conn = pool->AcquireRef(true, acquireMs);
+    if (conn != nullptr) {
+        guard.SetConnection(conn);
+    }
+    auto resultSet = std::make_shared<SqliteSharedResultSet>(
+        start, conn, sql, bindArgs, path_);
+    return resultSet;
 #else
     (void)sql;
     (void)bindArgs;
+    (void)config;
     return nullptr;
 #endif
 }
 
 std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
-    const std::string &sql, const Values &args, const QueryOptions &options)
+    const std::string &sql, const Values &args, const QueryOptions &options, const QueryConfig &config)
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_TOTAL);
@@ -1978,7 +2001,15 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
         LOG_ERROR("Database already closed.");
         return nullptr;
     }
-    return std::make_shared<StepResultSet>(start, pool->AcquireRef(true), sql, args, options);
+    auto acquireMs = config.timeoutMs > 0
+                          ? std::chrono::milliseconds(std::max(config.timeoutMs, MIN_TIMEOUT_MS))
+                          : ConnectionPool::INVALID_TIME;
+    SqlTimeoutGuard guard(config.timeoutMs);
+    auto conn = pool->AcquireRef(true, acquireMs);
+    if (conn != nullptr) {
+        guard.SetConnection(conn);
+    }
+    return std::make_shared<StepResultSet>(start, conn, sql, args, options, false);
 }
 
 int RdbStoreImpl::Count(int64_t &outValue, const AbsRdbPredicates &predicates)
@@ -2076,7 +2107,8 @@ int RdbStoreImpl::ExecuteSql(const std::string &sql, const Values &args)
     return errCode;
 }
 
-std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, const Values &args, int64_t trxId)
+std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(
+    const std::string &sql, const Values &args, int64_t trxId, const ExecuteConfig &config)
 {
     ValueObject object;
     if (isReadOnly_) {
@@ -2097,7 +2129,8 @@ std::pair<int32_t, ValueObject> RdbStoreImpl::Execute(const std::string &sql, co
         return { ExecuteByTrxId(sql, trxId, false, args), ValueObject() };
     }
 
-    auto [errCode, statement] = GetStatement(sql, false);
+    SqlTimeoutGuard guard(config.timeoutMs);
+    auto [errCode, statement] = GetStatement(sql, false, guard, config.timeoutMs);
     if (errCode != E_OK || statement == nullptr) {
         return { errCode != E_OK ? errCode : E_ERROR, object };
     }
@@ -2259,8 +2292,30 @@ int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::stri
     return E_OK;
 }
 
+int RdbStoreImpl::ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args,
+    int64_t timeoutMs)
+{
+    if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
+        return E_NOT_SUPPORT;
+    }
+    SqlTimeoutGuard guard(timeoutMs);
+    auto [errCode, statement] = GetStatement(sql, false, guard, timeoutMs);
+    if (statement == nullptr) {
+        return errCode;
+    }
+    errCode = statement->Execute(args);
+    if (errCode != E_OK) {
+        SetLastErrorMsg(statement->GetLastErrorMsg());
+        TryDump(errCode, "INSERT");
+        return errCode;
+    }
+    outValue = statement->Changes() > 0 ? statement->LastInsertRowId() : -1;
+    return E_OK;
+}
+
 std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
-    const std::string &sql, const Values &args, const ReturningConfig &config, const std::string &returningSql)
+    const std::string &sql, const Values &args, const ReturningConfig &config,
+    const std::string &returningSql, int64_t timeoutMs)
 {
     if (isReadOnly_ || (config_.GetDBType() == DB_VECTOR)) {
         return { E_NOT_SUPPORT, -1 };
@@ -2268,7 +2323,8 @@ std::pair<int32_t, Results> RdbStoreImpl::ExecuteForRow(
     if (!RdbSqlUtils::IsValidReturningMaxCount(config.maxReturningCount)) {
         return { E_INVALID_ARGS, -1 };
     }
-    auto [errCode, statement] = GetStatement(sql, false, returningSql);
+    SqlTimeoutGuard guard(timeoutMs);
+    auto [errCode, statement] = GetStatement(sql, false, guard, timeoutMs, returningSql);
     if (statement == nullptr) {
         return { errCode, -1 };
     }
@@ -3438,14 +3494,26 @@ std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
 std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
     const std::string &sql, bool read, const std::string &returningSql) const
 {
+    SqlTimeoutGuard guard(0);
+    return GetStatement(sql, read, guard, 0, returningSql);
+}
+
+std::pair<int32_t, std::shared_ptr<Statement>> RdbStoreImpl::GetStatement(
+    const std::string &sql, bool read, SqlTimeoutGuard &guard, int64_t timeoutMs,
+    const std::string &returningSql) const
+{
     auto pool = GetPool();
     if (pool == nullptr) {
         return { E_ALREADY_CLOSED, nullptr };
     }
-    auto conn = pool->AcquireConnection(read);
+    auto acquireMs = timeoutMs > 0
+                          ? std::chrono::milliseconds(std::max(timeoutMs, MIN_TIMEOUT_MS))
+                          : ConnectionPool::INVALID_TIME;
+    auto conn = pool->AcquireConnection(read, acquireMs);
     if (conn == nullptr) {
         return { E_DATABASE_BUSY, nullptr };
     }
+    guard.SetConnection(conn);
     return GetStatement(sql, conn, returningSql);
 }
 

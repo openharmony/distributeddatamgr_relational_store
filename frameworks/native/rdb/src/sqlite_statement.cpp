@@ -49,6 +49,7 @@ namespace NativeRdb {
 using namespace OHOS::Rdb;
 using namespace std::chrono;
 using SqlStatistic = DistributedRdb::SqlStatistic;
+
 using PerfStat = DistributedRdb::PerfStat;
 using Reportor = RdbFaultHiViewReporter;
 // Setting Data Precision
@@ -425,6 +426,10 @@ int SqliteStatement::InnerStep()
     auto db = sqlite3_db_handle(stmt_);
     TryNotifyErrorLog(errCode, db, sql_);
     int ret = SQLiteError::ErrNo(errCode);
+    if (errCode == SQLITE_INTERRUPT) {
+        LOG_WARN("InnerStep: sqlite3_step interrupted by timer during execution, sql[%{public}s]",
+            SqliteUtils::SqlAnonymous(sql_).c_str());
+    }
     if (config_ != nullptr && (errCode == SQLITE_CORRUPT || (errCode == SQLITE_NOTADB && config_->GetIter() != 0))) {
         Reportor::ReportCorruptedOnce(Reportor::Create(*config_, ret,
             (errCode == SQLITE_CORRUPT ? SqliteGlobalConfig::GetLastCorruptionMsg() : "SqliteStatement::InnerStep")));
