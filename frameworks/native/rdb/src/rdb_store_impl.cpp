@@ -1975,11 +1975,6 @@ std::shared_ptr<AbsSharedResultSet> RdbStoreImpl::QuerySql(
                           : ConnectionPool::INVALID_TIME;
     SqlTimeoutGuard guard(config.timeoutMs);
     auto conn = pool->AcquireRef(true, acquireMs);
-    if (conn == nullptr) {
-        if (config.timeoutMs > 0) {
-            return nullptr;
-        }
-    }
     if (conn != nullptr) {
         guard.SetConnection(conn);
     }
@@ -2011,11 +2006,6 @@ std::shared_ptr<ResultSet> RdbStoreImpl::QueryByStep(
                           : ConnectionPool::INVALID_TIME;
     SqlTimeoutGuard guard(config.timeoutMs);
     auto conn = pool->AcquireRef(true, acquireMs);
-    if (conn == nullptr) {
-        if (config.timeoutMs > 0) {
-            return nullptr;
-        }
-    }
     if (conn != nullptr) {
         guard.SetConnection(conn);
     }

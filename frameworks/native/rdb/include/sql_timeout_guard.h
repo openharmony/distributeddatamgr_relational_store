@@ -21,6 +21,7 @@
 #include <memory>
 
 namespace OHOS {
+class ExecutorPool;
 namespace NativeRdb {
 class Connection;
 
@@ -44,6 +45,7 @@ private:
     std::chrono::steady_clock::time_point deadline_{};
     bool enabled_ = false;
     uint64_t taskId_ = 0;
+    std::shared_ptr<ExecutorPool> executor_;
 };
 } // namespace NativeRdb
 } // namespace OHOS
