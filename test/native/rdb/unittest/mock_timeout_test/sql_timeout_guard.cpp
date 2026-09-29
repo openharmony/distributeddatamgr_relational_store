@@ -29,24 +29,24 @@ SqlTimeoutGuard::SqlTimeoutGuard(int64_t timeoutMs)
     if (timeoutMs <= 0) {
         return;
     }
+    executor_ = TaskExecutor::GetInstance().GetExecutor();
+    if (executor_ == nullptr) {
+        return;
+    }
     enabled_ = true;
     deadline_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
 }
 
 void SqlTimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
 {
-    if (!enabled_) {
-        return;
-    }
-    auto executor = TaskExecutor::GetInstance().GetExecutor();
-    if (executor == nullptr) {
+    if (!enabled_ || executor_ == nullptr) {
         return;
     }
     auto delay = deadline_ - std::chrono::steady_clock::now();
     if (delay < std::chrono::milliseconds(0)) {
         delay = std::chrono::milliseconds(0);
     }
-    taskId_ = executor->Schedule(
+    taskId_ = executor_->Schedule(
         [conn]() {
             auto connection = conn.lock();
             if (connection != nullptr) {
@@ -60,13 +60,10 @@ void SqlTimeoutGuard::SetConnection(std::weak_ptr<Connection> conn)
 
 SqlTimeoutGuard::~SqlTimeoutGuard()
 {
-    if (!enabled_ || taskId_ == 0) {
+    if (!enabled_ || taskId_ == 0 || executor_ == nullptr) {
         return;
     }
-    auto executor = TaskExecutor::GetInstance().GetExecutor();
-    if (executor != nullptr) {
-        (void)executor->Remove(taskId_, true);
-    }
+    (void)executor_->Remove(taskId_, true);
 }
 } // namespace NativeRdb
 } // namespace OHOS

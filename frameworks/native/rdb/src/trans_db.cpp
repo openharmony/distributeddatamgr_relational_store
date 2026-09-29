@@ -243,11 +243,6 @@ std::shared_ptr<ResultSet> TransDB::QueryByStep(
 {
     DISTRIBUTED_DATA_HITRACE(std::string(__FUNCTION__));
     auto conn = conn_.lock();
-    if (conn == nullptr) {
-        if (config.timeoutMs > 0) {
-            return nullptr;
-        }
-    }
     auto start = std::chrono::steady_clock::now();
     auto resultSet = std::make_shared<StepResultSet>(start, conn, sql, args, options, true);
     return resultSet;
