@@ -1707,11 +1707,7 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std:
         return err;
     }
     if (isRestore && verifyDb && isForceRestore) {
-        err = SqliteNativeCorruptedBackup(curStatus);
-        if (err != E_OK) {
-            ReleaseTempSlaveConnection();
-            return err;
-        }
+        (void)SqliteNativeCorruptedBackup(curStatus);
     }
     err = SqliteNativeBackup(isRestore, curStatus, isNeedSetAcl);
     if (err != E_OK) {
@@ -1822,9 +1818,14 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveSt
 
 int SqliteConnection::SqliteNativeCorruptedBackup(std::shared_ptr<SlaveStatus> curStatus)
 {
-    LOG_INFO("native backup start");
+    LOG_INFO("[CorruptedBackup]native backup start");
+    std::string backupPath = SqliteUtils::GetMasterBackupPath(config_.GetPath());
+    if (access(backupPath.c_str(), F_OK) == 0) {
+        LOG_INFO("[CorruptedBackup]backup exists, skip, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
+        return E_OK;
+    }
     RdbStoreConfig slaveCfg = GetSlaveRdbStoreConfig(config_);
-    slaveCfg.SetPath(SqliteUtils::GetMasterBackupPath(config_.GetPath()));
+    slaveCfg.SetPath(backupPath);
     slaveCfg.SetName(SqliteUtils::GetMasterBackupPath(config_.GetName()));
 
     auto [err, slaveConn] = CreateSlaveConnection(slaveCfg, SlaveOpenPolicy::FORCE_OPEN);
@@ -1836,7 +1837,7 @@ int SqliteConnection::SqliteNativeCorruptedBackup(std::shared_ptr<SlaveStatus> c
     sqlite3 *dbTo =  slaveConn->dbHandle_;
     sqlite3_backup *pBackup = sqlite3_backup_init(dbTo, "main", dbFrom, "main");
     if (pBackup == nullptr) {
-        LOG_WARN("slave backup init failed");
+        LOG_WARN("[CorruptedBackup]slave backup init failed");
         *curStatus = SlaveStatus::UNDEFINED;
         return E_OK;
     }
@@ -1844,13 +1845,13 @@ int SqliteConnection::SqliteNativeCorruptedBackup(std::shared_ptr<SlaveStatus> c
     int rc = SQLITE_OK;
     do {
         rc = sqlite3_backup_step(pBackup, BACKUP_ALL_STEP);
-        LOG_INFO("backup slave process cur/total:%{public}d/%{public}d, rs:%{public}d,%{public}d",
+        LOG_INFO("[CorruptedBackup]backup slave process cur/total:%{public}d/%{public}d, rs:%{public}d,%{public}d",
             sqlite3_backup_pagecount(pBackup) - sqlite3_backup_remaining(pBackup), sqlite3_backup_pagecount(pBackup),
             rc, 0);
     } while (sqlite3_backup_pagecount(pBackup) != 0 && (rc == SQLITE_OK || rc == SQLITE_BUSY || rc == SQLITE_LOCKED));
     (void)sqlite3_backup_finish(pBackup);
     if (rc != SQLITE_DONE) {
-        LOG_ERROR("backup slave err:%{public}d", rc);
+        LOG_ERROR("[CorruptedBackup]backup slave err:%{public}d", rc);
         return SQLiteError::ErrNo(rc);
     }
     return E_OK;
