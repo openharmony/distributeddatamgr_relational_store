@@ -101,7 +101,7 @@ public:
      * @param resolution Indicates the {@link ConflictResolution} to insert data into the table.
      */
     virtual std::pair<int32_t, int64_t> Insert(
-        const std::string &table, const Row &row, Resolution resolution = NO_ACTION) = 0;
+        const std::string &table, const Row &row, Resolution resolution = NO_ACTION);
 
     /**
      * @brief Inserts a batch of data into the target table.
@@ -181,7 +181,7 @@ public:
      * only the first 1024 returningFields will be returned
      */
     virtual std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const ReturningConfig &config, Resolution resolution = NO_ACTION);
+        const ReturningConfig &config, Resolution resolution);
 
     /**
      * @brief Deletes data from the database based on specified conditions.
@@ -270,6 +270,121 @@ public:
      * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
      */
     virtual std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args = {});
+
+    /**
+     * @brief Inserts a row of data into the target table with timeout.
+     *
+     * @param table Indicates the target table.
+     * @param row Indicates the row of data {@link ValuesBucket} to be inserted into the table.
+     * @param config Indicates the {@link InsertConfig} for SQL execution timeout and conflict resolution.
+     * @return Returns {errCode, rowId}. If interrupted, errCode is E_SQLITE_INTERRUPT.
+     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
+     *       If interrupted, the transaction is automatically rolled back and closed.
+     *       In concurrent read/write scenarios, a false interrupt may occur on the next operation.
+     * @note Single-row INSERT executes as a single atomic OP_Insert opcode in the SQLite VDBE.
+     *       sqlite3_interrupt only takes effect at safe points between opcodes, so the interrupt
+     *       flag is not checked during OP_Insert.
+     */
+    virtual std::pair<int32_t, int64_t> Insert(
+        const std::string &table, const Row &row, const InsertConfig &config);
+
+    /**
+     * @brief Inserts a batch of data into the target table with timeout.
+     *
+     * @param table Indicates the target table.
+     * @param rows Indicates the rows of data {@link RefRows} to be inserted into the table.
+     * @param config Indicates the {@link BatchInsertConfig} for SQL execute timeout, returning and conflict resolution.
+     * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
+     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
+     *       If interrupted, the transaction is automatically rolled back and closed.
+     *       In concurrent read/write scenarios, a false interrupt may occur on the next operation.
+     */
+    virtual std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
+        const BatchInsertConfig &config);
+
+    /**
+     * @brief Updates data in the database based on specified conditions with timeout.
+     *
+     * @param row Indicates the row of data to be updated in the database.
+     * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
+     * @param config Indicates the {@link UpdateConfig} for SQL execution timeout, returning and conflict resolution.
+     * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
+     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
+     *       If interrupted, the transaction is automatically rolled back and closed.
+     *       In concurrent read/write scenarios, a false interrupt may occur on the next operation.
+     */
+    virtual std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
+        const UpdateConfig &config);
+
+    /**
+     * @brief Deletes data from the database based on specified conditions with timeout.
+     *
+     * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
+     * @param config Indicates the {@link DeleteConfig} for SQL execution timeout and returning.
+     * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
+     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
+     *       If interrupted, the transaction is automatically rolled back and closed.
+     *       In concurrent read/write scenarios, a false interrupt may occur on the next operation.
+     */
+    virtual std::pair<int32_t, Results> Delete(
+        const AbsRdbPredicates &predicates, const DeleteConfig &config);
+
+    /**
+     * @brief Queries data in the database based on SQL statement with timeout.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param args Indicates the selection arguments.
+     * @param QueryOptions Options for specifying conditions when query.
+     * @param config Indicates the {@link QueryConfig} for SQL execution timeout.
+     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
+     *       If interrupted, the transaction is automatically rolled back and closed.
+     *       In concurrent read/write scenarios, a false interrupt may occur on the next operation.
+     */
+    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
+        const QueryOptions &options, const QueryConfig &config);
+
+    /**
+     * @brief Queries data in the database based on specified conditions with timeout.
+     *
+     * @param predicates Indicates the specified query condition by the instance object of {@link AbsRdbPredicates}.
+     * @param columns Indicates the columns to query. If the value is empty array, the query applies to all columns.
+     * @param QueryOptions Options for specifying conditions when query.
+     * @param config Indicates the {@link QueryConfig} for SQL execution timeout.
+     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
+     *       If interrupted, the transaction is automatically rolled back and closed.
+     *       In concurrent read/write scenarios, a false interrupt may occur on the next operation.
+     */
+    virtual std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
+        const QueryOptions &options, const QueryConfig &config);
+
+    /**
+     * @brief Executes an SQL statement with specified parameters and timeout.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
+     * @param config Indicates the {@link ExecuteConfig} for SQL execution timeout and returning.
+     * @return Returns {errCode, value}. If interrupted, errCode is E_SQLITE_INTERRUPT.
+     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
+     *       If interrupted, the transaction is automatically rolled back and closed.
+     *       In concurrent read/write scenarios, a false interrupt may occur on the next operation.
+     */
+    virtual std::pair<int32_t, ValueObject> Execute(
+        const std::string &sql, const Values &args, const ExecuteConfig &config);
+
+    /**
+     * @brief Executes an SQL statement with specified parameters and gets results with timeout.
+     *
+     * @param sql Indicates the SQL statement to execute.
+     * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
+     * @param config Indicates the {@link ExecuteConfig} for SQL execution timeout and returning.
+     * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
+     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
+     *       If interrupted, the transaction is automatically rolled back and closed.
+     *       In concurrent read/write scenarios, a false interrupt may occur on the next operation.
+     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
+     */
+    virtual std::pair<int32_t, Results> ExecuteExt(
+        const std::string &sql, const Values &args, const ExecuteConfig &config);
 
 private:
     static inline Creator creator_;

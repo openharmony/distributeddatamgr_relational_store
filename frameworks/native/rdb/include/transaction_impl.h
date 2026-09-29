@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "connection.h"
+#include "sql_timeout_guard.h"
 #include "transaction.h"
 
 namespace OHOS::NativeRdb {
@@ -34,21 +35,26 @@ public:
     int32_t Close() override;
     std::string GetLastErrorMsg() override;
 
-    std::pair<int32_t, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
+    std::pair<int32_t, int64_t> Insert(
+        const std::string &table, const Row &row, Resolution resolution) override;
+    std::pair<int32_t, int64_t> Insert(
+        const std::string &table, const Row &row, const InsertConfig &config = {}) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const Rows &rows) override;
     std::pair<int32_t, int64_t> BatchInsert(const std::string &table, const RefRows &rows) override;
     std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        const ReturningConfig &config, Resolution resolution) override;
+        const BatchInsertConfig &config = {}) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const ReturningConfig &config, Resolution resolution) override;
+        const UpdateConfig &config = {}) override;
     std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const ReturningConfig &config) override;
+        const AbsRdbPredicates &predicates, const DeleteConfig &config = {}) override;
     std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        const QueryOptions &options) override;
+        const QueryOptions &options, const QueryConfig &config = {}) override;
     std::shared_ptr<ResultSet> QueryByStep(const AbsRdbPredicates &predicates, const Fields &columns,
-        const QueryOptions &options) override;
-    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args) override;
-    std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;
+        const QueryOptions &options, const QueryConfig &config = {}) override;
+    std::pair<int32_t, ValueObject> Execute(
+        const std::string &sql, const Values &args, const ExecuteConfig &config = {}) override;
+    std::pair<int32_t, Results> ExecuteExt(
+        const std::string &sql, const Values &args, const ExecuteConfig &config = {}) override;
     static std::pair<int32_t, std::shared_ptr<Transaction>> Create(
         int32_t type, std::shared_ptr<Connection> connection, const std::string &path);
 
@@ -57,7 +63,9 @@ private:
     int32_t Begin(int32_t type);
     int32_t CloseInner(bool connRecycle = true);
     std::shared_ptr<RdbStore> GetStore();
+    std::shared_ptr<Connection> GetConnection();
     void AddResultSet(std::weak_ptr<ResultSet> resultSet);
+    std::unique_ptr<SqlTimeoutGuard> MakeGuard(int64_t timeoutMs);
 
     std::string path_;
     uint32_t seqId_ = 0;

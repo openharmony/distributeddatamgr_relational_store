@@ -106,9 +106,17 @@ static bool ColHasSpecificField(const std::vector<std::string> &columns)
 
 std::pair<int, int64_t> RdbStore::Insert(const std::string &table, const Row &row, Resolution resolution)
 {
+    InsertConfig config;
+    config.resolution = resolution;
+    return Insert(table, row, config);
+}
+
+std::pair<int, int64_t> RdbStore::Insert(
+    const std::string &table, const Row &row, const InsertConfig &config)
+{
     (void)table;
     (void)row;
-    (void)resolution;
+    (void)config;
     return { E_NOT_SUPPORT, -1 };
 }
 
@@ -161,13 +169,25 @@ int RdbStore::BatchInsert(int64_t &outInsertNum, const std::string &table, const
 
 std::pair<int, int64_t> RdbStore::BatchInsert(const std::string &table, const RefRows &rows, Resolution resolution)
 {
-    auto [code, result] = BatchInsert(table, rows, {}, resolution);
+    auto [code, result] = BatchInsert(table, rows, ReturningConfig{}, resolution);
     return { code, result.changed };
 }
 
 std::pair<int, Results> RdbStore::BatchInsert(const std::string &table, const RefRows &rows,
     const ReturningConfig &config, Resolution resolution)
 {
+    BatchInsertConfig cfg;
+    cfg.returning = config;
+    cfg.resolution = resolution;
+    return BatchInsert(table, rows, cfg);
+}
+
+std::pair<int32_t, Results> RdbStore::BatchInsert(const std::string &table, const RefRows &rows,
+    const BatchInsertConfig &config)
+{
+    (void)table;
+    (void)rows;
+    (void)config;
     return { E_NOT_SUPPORT, -1 };
 }
 
@@ -177,7 +197,7 @@ std::pair<int, int> RdbStore::Update(
     AbsRdbPredicates predicates(table);
     predicates.SetWhereClause(where);
     predicates.SetBindArgs(args);
-    auto [code, result] = Update(row, predicates, {}, resolution);
+    auto [code, result] = Update(row, predicates, ReturningConfig{}, resolution);
     return { code, result.changed };
 }
 
@@ -205,6 +225,18 @@ int RdbStore::Update(
 std::pair<int32_t, Results> RdbStore::Update(const Row &row, const AbsRdbPredicates &predicates,
     const ReturningConfig &config, Resolution resolution)
 {
+    UpdateConfig cfg;
+    cfg.returning = config;
+    cfg.resolution = resolution;
+    return Update(row, predicates, cfg);
+}
+
+std::pair<int32_t, Results> RdbStore::Update(const Row &row, const AbsRdbPredicates &predicates,
+    const UpdateConfig &config)
+{
+    (void)row;
+    (void)predicates;
+    (void)config;
     return { E_NOT_SUPPORT, -1 };
 }
 
@@ -252,6 +284,15 @@ int RdbStore::Delete(
 std::pair<int32_t, Results> RdbStore::Delete(
     const AbsRdbPredicates &predicates, const ReturningConfig &config)
 {
+    // old calls new: ReturningConfig overload delegates to the per-op config canonical entry.
+    return Delete(predicates, DeleteConfig{0, config});
+}
+
+std::pair<int32_t, Results> RdbStore::Delete(
+    const AbsRdbPredicates &predicates, const DeleteConfig &config)
+{
+    (void)predicates;
+    (void)config;
     return { E_NOT_SUPPORT, -1 };
 }
 
@@ -286,6 +327,20 @@ std::shared_ptr<AbsSharedResultSet> RdbStore::QuerySql(const std::string &sql, c
     return QuerySql(sql, ToValues(args));
 }
 
+std::shared_ptr<AbsSharedResultSet> RdbStore::QuerySql(const std::string &sql, const Values &args)
+{
+    return QuerySql(sql, args, QueryConfig{});
+}
+
+std::shared_ptr<AbsSharedResultSet> RdbStore::QuerySql(
+    const std::string &sql, const Values &args, const QueryConfig &config)
+{
+    (void)sql;
+    (void)args;
+    (void)config;
+    return nullptr;
+}
+
 std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const Olds &args)
 {
     return QueryByStep(sql, ToValues(args));
@@ -307,6 +362,16 @@ std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const V
 std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const Values &args,
     const QueryOptions &options)
 {
+    return QueryByStep(sql, args, options, QueryConfig{});
+}
+
+std::shared_ptr<ResultSet> RdbStore::QueryByStep(const std::string &sql, const Values &args,
+    const QueryOptions &options, const QueryConfig &config)
+{
+    (void)sql;
+    (void)args;
+    (void)options;
+    (void)config;
     return nullptr;
 }
 
@@ -351,6 +416,16 @@ int RdbStore::ExecuteSql(const std::string &sql, const Values &args)
 
 std::pair<int32_t, ValueObject> RdbStore::Execute(const std::string &sql, const Values &args, int64_t trxId)
 {
+    return Execute(sql, args, trxId, ExecuteConfig{});
+}
+
+std::pair<int32_t, ValueObject> RdbStore::Execute(
+    const std::string &sql, const Values &args, int64_t trxId, const ExecuteConfig &config)
+{
+    (void)sql;
+    (void)args;
+    (void)trxId;
+    (void)config;
     return { E_NOT_SUPPORT, ValueObject() };
 }
 

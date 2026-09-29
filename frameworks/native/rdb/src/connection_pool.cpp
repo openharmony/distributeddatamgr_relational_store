@@ -18,6 +18,7 @@
 
 #include <base_transaction.h>
 
+#include <cinttypes>
 #include <condition_variable>
 #include <iterator>
 #include <mutex>
@@ -345,11 +346,11 @@ std::pair<int32_t, std::shared_ptr<Connection>> ConnPool::CreateTransConn(bool l
     return { errCode, Convert2AutoConn(node, true) };
 }
 
-std::shared_ptr<Conn> ConnPool::AcquireConnection(bool isReadOnly)
+std::shared_ptr<Conn> ConnPool::AcquireConnection(bool isReadOnly, std::chrono::milliseconds ms)
 {
     SqlStatistic sqlStatistic("", SqlStatistic::Step::STEP_WAIT);
     PerfStat perfStat(config_.GetPath(), "", PerfStat::Step::STEP_WAIT);
-    return Acquire(isReadOnly);
+    return Acquire(isReadOnly, ms);
 }
 
 std::pair<SharedConn, SharedConns> ConnPool::AcquireAll(std::chrono::milliseconds ms)
@@ -933,7 +934,9 @@ int32_t ConnPool::Container::SetTokenizer(Tokenizer tokenizer)
 std::pair<int, std::shared_ptr<ConnPool::ConnNode>> ConnPool::Container::Acquire(std::chrono::milliseconds milliS)
 {
     std::unique_lock<decltype(mutex_)> lock(mutex_);
-    auto interval = (milliS == INVALID_TIME) ? timeout_ : milliS;
+    auto interval = (milliS == INVALID_TIME)
+                        ? timeout_
+                        : std::min(milliS, std::chrono::duration_cast<std::chrono::milliseconds>(timeout_));
     if (max_ == 0) {
         return { E_ERROR, nullptr };
     }

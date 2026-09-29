@@ -39,6 +39,7 @@
 #include "rdb_types.h"
 #include "sqlite_sql_builder.h"
 #include "sqlite_statement.h"
+#include "sql_timeout_guard.h"
 #include "value_object.h"
 
 namespace OHOS {
@@ -108,22 +109,27 @@ public:
     ~RdbStoreImpl() override;
     int32_t Init(int version, RdbOpenCallback &openCallback, bool isNeedSetAcl = false,
         bool isSilentAccessible = false);
-    std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution) override;
+    std::pair<int, int64_t> Insert(
+        const std::string &table, const Row &row, const InsertConfig &config = {}) override;
     std::pair<int, int64_t> BatchInsert(const std::string &table, const ValuesBuckets &rows) override;
-    std::pair<int32_t, Results> BatchInsert(
-        const std::string &table, const RefRows &rows, const ReturningConfig &config, Resolution resolution) override;
+    std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
+        const BatchInsertConfig &config = {}) override;
     std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const ReturningConfig &config, Resolution resolution) override;
-    std::pair<int32_t, Results> Delete(const AbsRdbPredicates &predicates, const ReturningConfig &config) override;
-    std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args) override;
+        const UpdateConfig &config = {}) override;
+    std::pair<int32_t, Results> Delete(
+        const AbsRdbPredicates &predicates, const DeleteConfig &config = {}) override;
+    std::shared_ptr<AbsSharedResultSet> QuerySql(
+        const std::string &sql, const Values &args, const QueryConfig &config = {}) override;
     std::shared_ptr<ResultSet> QueryByStep(
-        const std::string &sql, const Values &args, const QueryOptions &options) override;
+        const std::string &sql, const Values &args, const QueryOptions &options,
+        const QueryConfig &config = {}) override;
     std::shared_ptr<ResultSet> RemoteQuery(
         const std::string &device, const AbsRdbPredicates &predicates, const Fields &columns, int &errCode) override;
     std::pair<int32_t, std::shared_ptr<ResultSet>> QuerySharingResource(
         const AbsRdbPredicates &predicates, const Fields &columns) override;
     int ExecuteSql(const std::string &sql, const Values &args) override;
-    std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args, int64_t trxId) override;
+    std::pair<int32_t, ValueObject> Execute(
+        const std::string &sql, const Values &args, int64_t trxId, const ExecuteConfig &config) override;
     std::pair<int32_t, Results> ExecuteExt(const std::string &sql, const Values &args) override;
     int ExecuteAndGetLong(int64_t &outValue, const std::string &sql, const Values &args) override;
     int ExecuteAndGetString(std::string &outValue, const std::string &sql, const Values &args) override;
@@ -287,6 +293,9 @@ private:
     std::pair<int32_t, Stmt> GetStatement(
         const std::string &sql, std::shared_ptr<Connection> conn, const std::string &returningSql = "") const;
     std::pair<int32_t, Stmt> GetStatement(
+        const std::string &sql, bool read, SqlTimeoutGuard &guard, int64_t timeoutMs,
+        const std::string &returningSql = "") const;
+    std::pair<int32_t, Stmt> GetStatement(
         const std::string &sql, bool read = false, const std::string &returningSql = "") const;
     int AttachInner(const RdbStoreConfig &config, const std::string &attachName, const std::string &dbPath,
         const std::vector<uint8_t> &key, int32_t waitTime);
@@ -305,7 +314,9 @@ private:
     void InterruptHolders(const std::shared_ptr<ConnectionPool> &pool);
     void SetLastErrorMsg(const std::string &msg) const;
     std::pair<int32_t, Results> ExecuteForRow(const std::string &sql, const Values &args,
-        const ReturningConfig &config = {}, const std::string &returningSql = "");
+        const ReturningConfig &config = {}, const std::string &returningSql = "", int64_t timeoutMs = 0);
+    int ExecuteForLastInsertedRowId(int64_t &outValue, const std::string &sql, const Values &args,
+        int64_t timeoutMs);
     std::pair<int32_t, Results> GenerateResult(int32_t code, std::shared_ptr<Statement> statement,
         std::vector<ValuesBucket> &&returningValues, bool isDML, int32_t rowIndex = ReturningConfig::FIRST_ROW_INDEX);
     int32_t HandleSchemaDDL(std::shared_ptr<Statement> &&statement, const std::string &sql);

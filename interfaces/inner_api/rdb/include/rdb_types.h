@@ -16,6 +16,7 @@
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_H
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
+#include <chrono>
 #include <cinttypes>
 #include <cstdint>
 #include <functional>
@@ -26,6 +27,7 @@
 #include <vector>
 #include <optional>
 
+#include "rdb_common.h"
 #include "values_buckets.h"
 
 namespace OHOS {
@@ -568,6 +570,47 @@ struct ReturningConfig {
     std::vector<std::string> columns;
     int32_t maxReturningCount = DEFAULT_RETURNING_COUNT;
     int32_t defaultRowIndex = FIRST_ROW_INDEX;
+};
+
+struct ExecuteConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
+};
+
+struct InsertConfig {
+    int64_t timeoutMs = 0;
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
+};
+
+struct BatchInsertConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
+};
+
+struct UpdateConfig {
+    UpdateConfig() = default;
+    UpdateConfig(const ReturningConfig &value, ConflictResolution res = ConflictResolution::ON_CONFLICT_NONE)
+        : returning(value), resolution(res) {}
+    UpdateConfig(const std::initializer_list<std::string> &value,
+        int32_t rowIndex = ReturningConfig::FIRST_ROW_INDEX,
+        int32_t count = ReturningConfig::DEFAULT_RETURNING_COUNT)
+        : returning(value, rowIndex, count) {}
+    UpdateConfig(const std::vector<std::string> &value, int32_t count = ReturningConfig::DEFAULT_RETURNING_COUNT)
+        : returning(value, count) {}
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
+};
+
+struct DeleteConfig {
+    int64_t timeoutMs = 0;
+    ReturningConfig returning{};
+};
+
+struct QueryConfig {
+    int64_t timeoutMs = 0;
 };
 
 class RdbStoreConfig;

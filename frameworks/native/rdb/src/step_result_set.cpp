@@ -32,7 +32,8 @@ using namespace OHOS::Rdb;
 
 constexpr int64_t TIME_OUT = 1500;
 StepResultSet::StepResultSet(
-    Time start, Conn conn, const std::string &sql, const Values &args, QueryOptions options, bool safe)
+    Time start, Conn conn, const std::string &sql, const Values &args, QueryOptions options,
+    bool safe)
     : AbsResultSet(safe), conn_(std::move(conn)), sql_(sql), args_(args)
 {
     if (conn_ == nullptr) {
