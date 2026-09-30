@@ -574,8 +574,6 @@ struct ReturningConfig {
 
 struct ExecuteConfig {
     int64_t timeoutMs = 0;
-    ReturningConfig returning{};
-    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
 };
 
 struct InsertConfig {
