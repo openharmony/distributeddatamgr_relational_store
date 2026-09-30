@@ -562,7 +562,7 @@ public:
      * @param sql Indicates the SQL statement to execute.
      * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      * @param trxId Indicates the transaction id.
-     * @param config Indicates the {@link ExecuteConfig} for SQL execution timeout and returning.
+     * @param config Indicates the {@link ExecuteConfig} for SQL execution timeout.
      * @return Returns {errCode, value}. If interrupted, errCode is E_SQLITE_INTERRUPT.
      * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
      */

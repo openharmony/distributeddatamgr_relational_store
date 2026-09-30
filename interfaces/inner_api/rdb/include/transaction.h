@@ -362,7 +362,7 @@ public:
      *
      * @param sql Indicates the SQL statement to execute.
      * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
-     * @param config Indicates the {@link ExecuteConfig} for SQL execution timeout and returning.
+     * @param config Indicates the {@link ExecuteConfig} for SQL execution timeout.
      * @return Returns {errCode, value}. If interrupted, errCode is E_SQLITE_INTERRUPT.
      * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
      *       If interrupted, the transaction is automatically rolled back and closed.
@@ -376,12 +376,12 @@ public:
      *
      * @param sql Indicates the SQL statement to execute.
      * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
-     * @param config Indicates the {@link ExecuteConfig} for SQL execution timeout and returning.
+     * @param config Indicates the {@link ExecuteConfig} for SQL execution timeout.
      * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
      * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
      *       If interrupted, the transaction is automatically rolled back and closed.
      *       In concurrent read/write scenarios, a false interrupt may occur on the next operation.
-     * @warning When the number of affected rows exceeds 1024, only the first 1024 returningFields will be returned.
+     * @warning When the number of affected rows exceeds 1024, only the first 1024 rows will be returned.
      */
     virtual std::pair<int32_t, Results> ExecuteExt(
         const std::string &sql, const Values &args, const ExecuteConfig &config);
