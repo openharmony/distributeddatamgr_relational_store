@@ -114,6 +114,11 @@ taihe_shared_library("relationalstore_ani") {
   deps += deps_ipc_single
 
   external_deps += external_deps_ipc_single
+  external_deps += [
+    "libuv:uv",
+    "napi:ace_napi",
+    "node:node_header_notice",
+  ]
   external_deps += [ "data_share:datashare_common_lite" ]
 }
 

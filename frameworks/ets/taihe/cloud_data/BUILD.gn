@@ -114,6 +114,11 @@ taihe_shared_library("cloud_data_taihe") {
   external_deps += external_deps_hilog
   external_deps += external_deps_ani_helpers
   external_deps += external_deps_ipc_single
+  external_deps += [
+    "libuv:uv",
+    "napi:ace_napi",
+    "node:node_header_notice",
+  ]
 
   if (relational_store_data_share_enabled) {
     deps += [ "${relational_store_innerapi_path}/rdb_data_share_adapter:rdb_data_share_adapter" ]
