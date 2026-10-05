@@ -15,10 +15,12 @@
 #define LOG_TAG "RdStatement"
 #include "rd_statement.h"
 
+#include <charconv>
 #include <chrono>
 #include <cinttypes>
 #include <iomanip>
 #include <sstream>
+#include <system_error>
 
 #include "corrupted_handle_manager.h"
 #include "logger.h"
@@ -62,30 +64,25 @@ static bool TryEatSymbol(const std::string &str, char symbol, size_t &curIdx)
     return false;
 }
 
-static int TryEatNumber(const std::string &str, int &outNumber, size_t &curIdx)
+static bool TryEatNumber(const std::string &str, int &outNumber, size_t &curIdx)
 {
     size_t idx = curIdx;
-    uint32_t numSpace = 0;
-    bool hasMeetDigit = false;
-    while (idx < str.length()) {
-        if (str[idx] == ' ' && !hasMeetDigit) {
-            idx++;
-            numSpace++;
-            continue;
-        }
-        if (isdigit(str[idx]) != 0) {
-            idx++;
-            hasMeetDigit = true;
-            continue;
-        }
-        // Indicates that meet first not-digit-char
-        break;
+    while (idx < str.length() && str[idx] == ' ') {
+        idx++;
     }
-    if (!hasMeetDigit) {
+    if (idx >= str.length() || isdigit(static_cast<unsigned char>(str[idx])) == 0) {
         return false;
     }
-    outNumber = atoi(str.substr(curIdx).c_str());
-    curIdx = idx;
+    int value = 0;
+    const char *first = str.data() + idx;
+    const char *last = str.data() + str.size();
+    auto [ptr, ec] = std::from_chars(first, last, value);
+    if (ec != std::errc() || ptr == first) {
+        LOG_ERROR("Invalid integer in pragma version SQL: %{public}s", str.c_str());
+        return false;
+    }
+    outNumber = value;
+    curIdx = static_cast<size_t>(ptr - str.data());
     return true;
 }
 
