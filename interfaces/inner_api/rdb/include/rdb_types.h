@@ -16,7 +16,6 @@
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_H
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
-#include <chrono>
 #include <cinttypes>
 #include <cstdint>
 #include <functional>
@@ -27,7 +26,7 @@
 #include <vector>
 #include <optional>
 
-#include "rdb_common.h"
+#include "rdb_errno.h"
 #include "values_buckets.h"
 
 namespace OHOS {
@@ -572,45 +571,6 @@ struct ReturningConfig {
     int32_t defaultRowIndex = FIRST_ROW_INDEX;
 };
 
-struct ExecuteConfig {
-    int64_t timeoutMs = 0;
-};
-
-struct InsertConfig {
-    int64_t timeoutMs = 0;
-    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
-};
-
-struct BatchInsertConfig {
-    int64_t timeoutMs = 0;
-    ReturningConfig returning{};
-    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
-};
-
-struct UpdateConfig {
-    UpdateConfig() = default;
-    UpdateConfig(const ReturningConfig &value, ConflictResolution res = ConflictResolution::ON_CONFLICT_NONE)
-        : returning(value), resolution(res) {}
-    UpdateConfig(const std::initializer_list<std::string> &value,
-        int32_t rowIndex = ReturningConfig::FIRST_ROW_INDEX,
-        int32_t count = ReturningConfig::DEFAULT_RETURNING_COUNT)
-        : returning(value, rowIndex, count) {}
-    UpdateConfig(const std::vector<std::string> &value, int32_t count = ReturningConfig::DEFAULT_RETURNING_COUNT)
-        : returning(value, count) {}
-    int64_t timeoutMs = 0;
-    ReturningConfig returning{};
-    ConflictResolution resolution = ConflictResolution::ON_CONFLICT_NONE;
-};
-
-struct DeleteConfig {
-    int64_t timeoutMs = 0;
-    ReturningConfig returning{};
-};
-
-struct QueryConfig {
-    int64_t timeoutMs = 0;
-};
-
 class RdbStoreConfig;
 class CorruptHandler {
 public:
@@ -623,6 +583,53 @@ enum Tokenizer : int32_t {
     ICU_TOKENIZER,
     CUSTOM_TOKENIZER,
     TOKENIZER_END
+};
+
+struct ColumnInfo {
+    std::string name;
+    int32_t type = 0;
+};
+
+struct TableInfo {
+    int64_t count = 0;
+    std::vector<ColumnInfo> columns;
+    int errCode = E_OK; // Result of SELECT COUNT(*) on the table; E_OK on success, query error code on failure
+};
+
+struct RdbFileInfo {
+    int64_t size = 0;
+    int64_t ctime = 0;
+    int64_t atime = 0;
+    int64_t mtime = 0;
+    int errCode = E_OK; // Initial stat() result: E_OK on success, E_ERROR on stat failure, E_NOT_SUPPORT=skipped (no connection for WAL path)
+    int sizeErr = E_OK; // Post-checkpoint size refresh result: E_OK=size refreshed or initial size valid, E_ERROR=refresh failed (size is stale initial value)
+};
+
+struct DbInfo {
+    RdbFileInfo dbInfo;
+    RdbFileInfo walInfo;
+    int64_t userVersion = 0;
+    std::map<std::string, TableInfo> tables;
+    int checkpointErr = E_OK; // sqlite3_wal_checkpoint_v2 result mapped via SQLiteError::ErrNo: E_OK=succeeded, E_SQLITE_* on failure, E_NOT_SUPPORT=skipped
+};
+
+struct RdbBinlogInfo {
+    bool exist = false;
+    uint32_t fileCount = 0;
+    int64_t totalSize = 0;
+    int64_t lastModifyTime = 0;
+    int errCode = E_OK; // Result of binlog directory scan; E_OK on success (even if no binlog files exist), E_ERROR on opendir/readdir/stat failure or partial scan
+};
+
+struct PrimaryAndReplicaInfo {
+    DbInfo primaryInfo;
+    DbInfo replicaInfo;
+    RdbBinlogInfo binlogInfo;
+    int replayErr = E_OK; // Replay status: E_OK=executed successfully or no binlog files to replay, E_NOT_SUPPORT=skipped (not supported or no replica handle), replay error code on failure
+    int64_t primaryLastModifyTime = 0;
+    int primaryTimeErr = E_OK; // Validity of primaryLastModifyTime: E_OK=at least one valid source used, E_ERROR=all sources failed
+    int64_t replicaLastModifyTime = 0;
+    int replicaTimeErr = E_OK; // Validity of replicaLastModifyTime: E_OK=at least one valid source used, E_ERROR=all sources failed
 };
 } // namespace NativeRdb
 } // namespace OHOS

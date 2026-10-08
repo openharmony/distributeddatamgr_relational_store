@@ -13,7 +13,8 @@
 1. **代码开发/修改任务**：**MUST** 加载 [`docs/code_standards.md`](docs/code_standards.md)（强制规范 R1～R10、反馈闭环）。
 2. 如果影响范围不清楚，读取 `docs/rdb_native.md` 了解核心类关系和目录结构。
 3. 读取一个与任务领域匹配的专题页（`docs/error_code_layers.md` 或 `docs/dynamic_loading.md`）。
-4. 规划验证时，见本文件"编译和测试方法"章节。
+4. **新增或修改测试用例**：**MUST** 加载 [`docs/test_case_spec.md`](docs/test_case_spec.md)（用例目录划分、文件命名、隔离规范、禁止 sleep、TearDown 清理、AAA 结构、FIRST 原则）。
+5. 规划验证时，见本文件"编译和测试方法"章节。
 
 > 编辑代码前 **MUST** 自述：① 任务类别；② 已加载的文档；③ 命中的约束（如“接口层 NEVER 破坏兼容”）。无匹配约束时显式说明“无”。**自述在首次回复开头给出，后续每次编辑前若有变化则更新**。
 
@@ -106,6 +107,7 @@ relational_store/
 | `加密` / `crypt` / `HUKS` / `rdb_crypt`                      | `docs/error_code_layers.md` + `docs/rdb_native.md` | 加密相关改动 MUST 通过 rdb_crypt 适配层      |
 | `云同步` / `cloud` / `cloud_data`                            | `docs/rdb_native.md`                               | 云同步 MUST 通过 IPC 与 native_rdb 交互      |
 | 任何代码修改/新增任务 / `函数行数` / `入参` / `拆分` / 写代码前 | `docs/code_standards.md`                           | 开工前 MUST 完整阅读 R1～R10 规则            |
+| `测试用例` / `_test.cpp` / `HWTEST` / 新增用例 / 修改用例 | `docs/test_case_spec.md`                          | MUST 确保用例隔离、无 sleep、TearDown 清理、AAA 结构  |
 
 # 专家经验
 
@@ -117,6 +119,7 @@ relational_store/
 4. Claim "done" MUST 有测试验证 — 所改模块对应 UT 跑通且断言全过才算 done；无现成 UT 则 MUST 先补。
 5. 接口层 API NEVER 破坏向后兼容 — 破坏兼容指存量接口的功能行为或错误码发生变化（删减接口/参数、修改返回值含义、同场景返回不同错误码、改变行为语义）；仅修改 C++ 侧功能时也 MUST 评估对上层接口的影响；仅内部重构不影响接口签名时 MUST 在 commit 说明"不影响上层接口"。
 6. 兼容性优先于逻辑正确性 — 修复存量代码若可能导致不兼容变更，则 NEVER 修改，保持原样；如确需修复，走新增接口/新增路径等兼容方式。例如：`RdbStoreProxy` 析构漏取消 PerfSta 注册属逻辑瑕疵，但行为已 release，故 NEVER 改，保持原样。
+7. RDB Native 类关系 NEVER 破坏 — `docs/rdb_native.md` 中记录的 RDB Native Implementation 类关系（`RdbStoreImpl`→`ConnectionPool`→`Connection`→`Statement` 分层调用链、`RdbStoreImpl`/`StepResultSet`/`SqliteSharedResultSet` 与 SQLite 的分层边界、各类职责归属等）为架构不变量。修改 `frameworks/native/rdb/` 时 NEVER 破坏这些类关系（新增/删除类、改变继承关系、改变调用方向、下沉/上移职责）。如确需破坏，MUST 报告影响范围并经用户确认后方可修改。
 
 ## 编码规范
 
@@ -135,10 +138,11 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 
 ## 已知陷阱
 
-- 共享资源 **MUST** 考虑多进程并发访问场景，跨进程访问通过 IPC（DataShare 用 `rdb_data_share_adapter` 做 IPC 隔离）；共享资源包括内存数据结构与磁盘 DB 文件（含 slave DB、binlog 文件夹、WAL/shm 辅助文件）——应用进程与 service 进程（`RdbService`）可能同时打开同一 DB 文件，删除/迁移/重命名 DB 文件前 **MUST** 确认其他进程不持有该文件的连接（如迁移前 `service->Disable()` 释放连接、操作后 `service->Enable()` 恢复）；**NEVER** 忽略共享资源的多进程并发访问场景。
+- 共享资源 **MUST** 考虑多进程并发访问场景，跨进程访问通过 IPC（DataShare 用 `rdb_data_share_adapter` 做 IPC 隔离）；**NEVER** 忽略共享资源的多进程并发访问场景。
 - **MUST** 考虑 SA 进程未启动或不存在场景，做降级/容错处理（检查 SA 可用性后再调用，不可用时返回本地缓存或默认值）；**NEVER** 硬依赖 SA 进程。
 - **读写链接选用**：`RdbStore::BeginTransaction()` 的写事务只作用于写连接，读连接为独立快照、不在事务内。因此 **NEVER** 将存量代码的连接从写改读或从读改写（读操作看似应走读连接，但会破坏事务内 read-your-writes、并发与锁行为），否则属改变接口行为语义的破坏性变更。
 - **临时链接管理**：临时连接 **MUST** 通过 `ConnectionPool::CreateConn` 创建并纳入 `temps_` 统一管理；**NEVER** 直接调用 `Connection::Create` 创建游离临时连接。
+- **文件描述符管理**：禁止使用裸 `open()`/`close()` 操作 fd。优先使用 C++ 文件流（`std::ifstream`/`std::ofstream`/`std::fstream`）或 `fopen()`/`fclose()` 等带缓冲的高级接口。如确需直接操作 fd（如 `SQLite` 底层文件操作、IPC 数据传递），**MUST** 使用 `fdsan` 接口（`fdsan_exchange_tag`/`fdsan_close`）管理 fd 生命周期，防止 fd 泄漏和 use-after-close。
 
 | Agent 会说的借口       | 现实                                                |
 | ---------------------- | --------------------------------------------------- |
@@ -163,6 +167,8 @@ Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修�
 # 编译和测试方法
 
 > 修改类任务完成后 MUST 执行以下验证步骤（格式化按用户意愿，修改完代码后询问用户是否执行；编译构建和单元测试 NEVER 跳过）。
+>
+> **新增或修改测试用例前 MUST 先阅读 [`docs/test_case_spec.md`](docs/test_case_spec.md)**：用例目录划分、文件命名、HWTEST 宏用法、AAA 结构、用例隔离（独立数据库文件 + TearDown 清理）、禁止 sleep、禁止临时文件残留、错误码验证、FIRST 原则。
 
 ## 修改类任务验证步骤模板
 

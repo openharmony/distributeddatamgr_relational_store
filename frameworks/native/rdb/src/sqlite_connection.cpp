@@ -19,18 +19,19 @@
 #include <dlfcn.h>
 #include <securec.h>
 #include <sqlite3sym.h>
+#include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 
 #include "global_resource.h"
 #include "logger.h"
-#include "rdb_audit_logger_manager.h"
-#include "rdb_db_logger_manager.h"
+#include "primary_replica_info.h"
 #include "rdb_errno.h"
 #include "rdb_fault_hiview_reporter.h"
 #include "rdb_icu_manager.h"
@@ -40,6 +41,7 @@
 #include "rdb_service.h"
 #include "rdb_sql_log.h"
 #include "rdb_sql_statistic.h"
+#include "rdb_sql_utils.h"
 #include "rdb_store_config.h"
 #include "rdb_time_utils.h"
 #include "relational/relational_store_sqlite_ext.h"
@@ -385,39 +387,23 @@ int SqliteConnection::InnerOpen(const RdbStoreConfig &config)
     }
 
     if (isWriter_) {
-        CheckIntegrityOnOpen(config);
-    }
-    return E_OK;
-}
-
-void SqliteConnection::CheckIntegrityOnOpen(const RdbStoreConfig &config)
-{
-    ValueObject checkResult{ "ok" };
-    auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
-    if (index >= static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
-        return;
-    }
-    auto sql = INTEGRITIES[index];
-    if (sql == nullptr) {
-        return;
-    }
-    LOG_INFO("%{public}s : %{public}s, ", sql, SqliteUtils::Anonymous(config.GetName()).c_str());
-    int errCode = E_OK;
-    std::tie(errCode, checkResult) = ExecuteForValue(sql);
-    if (config.IsAuditEnabled()) {
-        RdbAuditLoggerManager::GetInstance().OnPragma(
-            config.GetPath(), sql, errCode, static_cast<std::string>(checkResult));
-    }
-    if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
-        LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
-            SqliteUtils::Anonymous(config.GetName()).c_str(), static_cast<std::string>(checkResult).c_str(),
-            SqliteUtils::SqlAnonymous(sql).c_str());
-        Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
-        if (config.IsAuditEnabled()) {
-            RdbDbLoggerManager::GetInstance().RecordCorrupt(
-                config.GetPath(), errCode, 0, static_cast<std::string>(checkResult));
+        ValueObject checkResult{ "ok" };
+        auto index = static_cast<uint32_t>(config.GetIntegrityCheck());
+        if (index < static_cast<uint32_t>(sizeof(INTEGRITIES) / sizeof(INTEGRITIES[0]))) {
+            auto sql = INTEGRITIES[index];
+            if (sql != nullptr) {
+                LOG_INFO("%{public}s : %{public}s, ", sql, SqliteUtils::Anonymous(config.GetName()).c_str());
+                std::tie(errCode, checkResult) = ExecuteForValue(sql);
+            }
+            if (errCode == E_OK && static_cast<std::string>(checkResult) != "ok") {
+                LOG_ERROR("%{public}s integrity check result is %{public}s, sql:%{public}s",
+                    SqliteUtils::Anonymous(config.GetName()).c_str(), static_cast<std::string>(checkResult).c_str(),
+                    SqliteUtils::SqlAnonymous(sql).c_str());
+                Reportor::ReportCorruptedOnce(Reportor::Create(config, errCode, static_cast<std::string>(checkResult)));
+            }
         }
     }
+    return E_OK;
 }
 
 int32_t SqliteConnection::OpenDatabase(const std::string &dbPath, int openFileFlags)
@@ -1463,17 +1449,10 @@ int SqliteConnection::TryCheckPoint(bool timeout)
             }
         }
     });
-    const char *dbFile = sqlite3_db_filename(dbHandle_, "main");
-    if (dbFile == nullptr) {
-        LOG_ERROR("Failed to get database filename");
-        return E_ERROR;
+    auto [walErr, walName] = GetWalName();
+    if (walErr != E_OK) {
+        return walErr;
     }
-    const char *walFile = sqlite3_filename_wal(dbFile);
-    if (walFile == nullptr) {
-        LOG_ERROR("No WAL file for database");
-        return E_ERROR;
-    }
-    std::string walName = walFile;
     ssize_t size = SqliteUtils::GetFileSize(walName);
     if (size < 0) {
         LOG_ERROR("Invalid size for WAL:%{public}s size:%{public}zd", SqliteUtils::Anonymous(walName).c_str(), size);
@@ -1507,7 +1486,10 @@ int SqliteConnection::LimitWalSize()
         return E_OK;
     }
 
-    std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle_, "main"));
+    auto [walErr, walName] = GetWalName();
+    if (walErr != E_OK) {
+        return walErr;
+    }
     ssize_t fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize < 0 || fileSize > config_.GetWalLimitSize()) {
         std::stringstream ss;
@@ -1684,6 +1666,18 @@ int SqliteConnection::SetServiceKey(const RdbStoreConfig &config, int32_t errCod
 int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std::shared_ptr<SlaveStatus> curStatus,
     const bool isForceRestore)
 {
+    std::optional<RdbSecurityManager::KeyFiles> replayLock;
+    if (SqliteUtils::IsSupportBinlog(config_) && !isRestore) {
+        std::string lockFile = SqliteUtils::GetBinlogFolderPath(config_) + SqliteUtils::BINLOG_LOCK_FILE_SUFFIX;
+        if (access(lockFile.c_str(), F_OK) == 0) {
+            replayLock.emplace(lockFile);
+            if (replayLock->Lock() != E_OK) {
+                LOG_WARN("ExchangeSlaverToMaster binlog replay lock failed, %{public}s",
+                    SqliteUtils::Anonymous(config_.GetPath()).c_str());
+                return E_DATABASE_BUSY;
+            }
+        }
+    }
     bool isNeedSetAcl = SqliteUtils::HasAccessAcl(config_.GetPath(), SERVICE_GID) ||
                         SqliteUtils::HasAccessAcl(SqliteUtils::GetSlavePath(config_), SERVICE_GID);
     *curStatus = SlaveStatus::BACKING_UP;
@@ -1694,7 +1688,11 @@ int SqliteConnection::ExchangeSlaverToMaster(bool isRestore, bool verifyDb, std:
         return err;
     }
     if (isRestore && verifyDb && isForceRestore) {
-        (void)SqliteNativeCorruptedBackup(curStatus);
+        err = SqliteNativeCorruptedBackup(curStatus);
+        if (err != E_OK) {
+            ReleaseTempSlaveConnection();
+            return err;
+        }
     }
     err = SqliteNativeBackup(isRestore, curStatus, isNeedSetAcl);
     if (err != E_OK) {
@@ -1805,14 +1803,9 @@ int SqliteConnection::SqliteNativeBackup(bool isRestore, std::shared_ptr<SlaveSt
 
 int SqliteConnection::SqliteNativeCorruptedBackup(std::shared_ptr<SlaveStatus> curStatus)
 {
-    LOG_INFO("[CorruptedBackup]native backup start");
-    std::string backupPath = SqliteUtils::GetMasterBackupPath(config_.GetPath());
-    if (access(backupPath.c_str(), F_OK) == 0) {
-        LOG_INFO("[CorruptedBackup]backup exists, skip, %{public}s", SqliteUtils::Anonymous(backupPath).c_str());
-        return E_OK;
-    }
+    LOG_INFO("native backup start");
     RdbStoreConfig slaveCfg = GetSlaveRdbStoreConfig(config_);
-    slaveCfg.SetPath(backupPath);
+    slaveCfg.SetPath(SqliteUtils::GetMasterBackupPath(config_.GetPath()));
     slaveCfg.SetName(SqliteUtils::GetMasterBackupPath(config_.GetName()));
 
     auto [err, slaveConn] = CreateSlaveConnection(slaveCfg, SlaveOpenPolicy::FORCE_OPEN);
@@ -1824,7 +1817,7 @@ int SqliteConnection::SqliteNativeCorruptedBackup(std::shared_ptr<SlaveStatus> c
     sqlite3 *dbTo =  slaveConn->dbHandle_;
     sqlite3_backup *pBackup = sqlite3_backup_init(dbTo, "main", dbFrom, "main");
     if (pBackup == nullptr) {
-        LOG_WARN("[CorruptedBackup]slave backup init failed");
+        LOG_WARN("slave backup init failed");
         *curStatus = SlaveStatus::UNDEFINED;
         return E_OK;
     }
@@ -1832,13 +1825,13 @@ int SqliteConnection::SqliteNativeCorruptedBackup(std::shared_ptr<SlaveStatus> c
     int rc = SQLITE_OK;
     do {
         rc = sqlite3_backup_step(pBackup, BACKUP_ALL_STEP);
-        LOG_INFO("[CorruptedBackup]backup slave process cur/total:%{public}d/%{public}d, rs:%{public}d,%{public}d",
+        LOG_INFO("backup slave process cur/total:%{public}d/%{public}d, rs:%{public}d,%{public}d",
             sqlite3_backup_pagecount(pBackup) - sqlite3_backup_remaining(pBackup), sqlite3_backup_pagecount(pBackup),
             rc, 0);
     } while (sqlite3_backup_pagecount(pBackup) != 0 && (rc == SQLITE_OK || rc == SQLITE_BUSY || rc == SQLITE_LOCKED));
     (void)sqlite3_backup_finish(pBackup);
     if (rc != SQLITE_DONE) {
-        LOG_ERROR("[CorruptedBackup]backup slave err:%{public}d", rc);
+        LOG_ERROR("backup slave err:%{public}d", rc);
         return SQLiteError::ErrNo(rc);
     }
     return E_OK;
@@ -2638,6 +2631,249 @@ ExchangeStrategy SqliteConnection::ExchangeCompareWithMainEmpty(bool isReplayed,
 bool SqliteConnection::IsRowForSearch()
 {
     return GetBinlogMode(config_) == Sqlite3BinlogMode::ROW_FOR_SEARCH;
+}
+
+std::pair<int, std::string> SqliteConnection::GetWalName()
+{
+    if (dbHandle_ == nullptr) {
+        LOG_ERROR("Failed to get database filename: dbHandle_ is null");
+        return { E_ERROR, "" };
+    }
+    const char *dbFile = sqlite3_db_filename(dbHandle_, "main");
+    if (dbFile == nullptr) {
+        LOG_ERROR("Failed to get database filename");
+        return { E_ERROR, "" };
+    }
+    const char *walFile = sqlite3_filename_wal(dbFile);
+    if (walFile == nullptr) {
+        LOG_ERROR("No WAL file for database");
+        return { E_ERROR, "" };
+    }
+    return { E_OK, walFile };
+}
+
+RdbFileInfo SqliteConnection::StatToFileInfo(const std::string &path)
+{
+    RdbFileInfo fi{};
+    auto [err, info] = SqliteUtils::Stat(path);
+    if (err != E_OK) {
+        fi.errCode = err;
+        return fi;
+    }
+    fi.size = static_cast<int64_t>(info.size_);
+    fi.ctime = info.ctime_.sec_ * 1000 + info.ctime_.nsec_ / 1000000;
+    fi.atime = info.atime_.sec_ * 1000 + info.atime_.nsec_ / 1000000;
+    fi.mtime = info.mtime_.sec_ * 1000 + info.mtime_.nsec_ / 1000000;
+    fi.errCode = E_OK;
+    return fi;
+}
+
+std::pair<int, TableInfo> SqliteConnection::CountTable(const std::string &table)
+{
+    TableInfo ti{};
+    size_t dot = table.find('.');
+    std::string schemaPart = (dot != std::string::npos) ? "\"" + table.substr(0, dot) + "\"." : "";
+    std::string namePart = (dot != std::string::npos) ? table.substr(dot + 1) : table;
+
+    // Reject views, indexes, and system objects — only type='table' is countable.
+    // Use COUNT(*) which always returns a row; ExecuteForValue returns E_OK for no-row queries.
+    // Name is bound as a parameter to avoid SQL injection via the table identifier.
+    std::string typeSql = "SELECT COUNT(*) FROM " + schemaPart +
+        "sqlite_master WHERE type='table' AND name=?";
+    auto [typeErr, typeObj] = ExecuteForValue(typeSql, { ValueObject(namePart) });
+    if (typeErr != E_OK) {
+        LOG_ERROR("table type check failed: %{public}s, err: %{public}d",
+            SqliteUtils::Anonymous(table).c_str(), typeErr);
+        ti.errCode = typeErr;
+        return { typeErr, ti };
+    }
+    auto typeVal = std::get_if<int64_t>(&typeObj.value);
+    if (typeVal == nullptr || *typeVal == 0) {
+        LOG_ERROR("object is not a regular table: %{public}s", SqliteUtils::Anonymous(table).c_str());
+        ti.errCode = E_ERROR;
+        return { E_ERROR, ti };
+    }
+
+    // Escape embedded double quotes in the identifier ("" is the SQLite escape inside quoted names).
+    std::string escapedName = namePart;
+    for (size_t i = 0; (i = escapedName.find('"', i)) != std::string::npos;) {
+        escapedName.insert(i + 1, "\"");
+        i += 2;
+    }
+    std::string countSql = "SELECT COUNT(*) FROM " + schemaPart + "\"" + escapedName + "\"";
+    auto [err, obj] = ExecuteForValue(countSql);
+    if (err != E_OK) {
+        LOG_ERROR("count failed: %{public}s, err: %{public}d",
+            SqliteUtils::Anonymous(table).c_str(), err);
+        ti.errCode = err;
+        return { err, ti };
+    }
+    auto val = std::get_if<int64_t>(&obj.value);
+    if (val != nullptr) {
+        ti.count = *val;
+    }
+    ti.errCode = E_OK;
+    return { E_OK, ti };
+}
+
+int64_t SqliteConnection::QueryUserVersion()
+{
+    auto [err, obj] = ExecuteForValue("PRAGMA user_version");
+    if (err != E_OK) {
+        return 0;
+    }
+    auto val = std::get_if<int64_t>(&obj.value);
+    return (val != nullptr) ? *val : 0;
+}
+
+PrimaryAndReplicaInfo SqliteConnection::CollectInitialFileInfo()
+{
+    PrimaryAndReplicaInfo info{};
+    std::string primaryDbPath = config_.GetPath();
+    auto [primaryWalErr, primaryWalPath] = GetWalName();
+    std::string replicaDbPath = SqliteUtils::GetSlavePath(config_);
+
+    info.primaryInfo.dbInfo = StatToFileInfo(primaryDbPath);
+    info.primaryInfo.walInfo = StatToFileInfo(primaryWalPath);
+    if (primaryWalErr != E_OK) {
+        info.primaryInfo.walInfo.errCode = primaryWalErr;
+    }
+    // Replica DB is stat'd from config path; WAL path requires a connection handle.
+    info.replicaInfo.dbInfo = StatToFileInfo(replicaDbPath);
+    if (slaveConnection_ != nullptr) {
+        auto [replicaWalErr, replicaWalPath] = slaveConnection_->GetWalName();
+        info.replicaInfo.walInfo = StatToFileInfo(replicaWalPath);
+        if (replicaWalErr != E_OK) {
+            info.replicaInfo.walInfo.errCode = replicaWalErr;
+        }
+    } else {
+        info.replicaInfo.walInfo.errCode = E_NOT_SUPPORT;
+    }
+    info.binlogInfo = SqliteUtils::CaptureBinlogInfo(config_);
+    return info;
+}
+
+void SqliteConnection::TryReplayBinlog(PrimaryAndReplicaInfo &info)
+{
+    sqlite3 *replicaHandle = (slaveConnection_ != nullptr) ? slaveConnection_->dbHandle_ : nullptr;
+    // Skip (not supported or no handle) → E_NOT_SUPPORT; no binlog files → E_OK.
+    if (!SqliteUtils::IsSupportBinlog(config_) || replicaHandle == nullptr || dbHandle_ == nullptr) {
+        info.replayErr = E_NOT_SUPPORT;
+        return;
+    }
+    // No binlog files is a normal state, not a skip — keep E_OK
+    if (!info.binlogInfo.exist || info.binlogInfo.fileCount == 0) {
+        return;
+    }
+    int replayErr = ReplayBinlogSqlite(dbHandle_, replicaHandle, config_);
+    if (replayErr != E_OK) {
+        LOG_ERROR("replay failed: %{public}s, err: %{public}d",
+            SqliteUtils::Anonymous(config_.GetPath()).c_str(), replayErr);
+        info.replayErr = replayErr;
+    }
+}
+
+void SqliteConnection::CheckpointDatabases(PrimaryAndReplicaInfo &info)
+{
+    if (dbHandle_ != nullptr && isWriter_) {
+        int ckptErr = sqlite3_wal_checkpoint_v2(dbHandle_, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
+        info.primaryInfo.checkpointErr = SQLiteError::ErrNo(ckptErr); // Mapped rdb_errno: E_OK on success, E_SQLITE_* on failure
+        if (ckptErr != SQLITE_OK) {
+            LOG_WARN("primary checkpoint failed err: %{public}d", ckptErr);
+        }
+    } else {
+        info.primaryInfo.checkpointErr = E_NOT_SUPPORT; // Skipped: not a writer or no handle
+    }
+    if (slaveConnection_ != nullptr && slaveConnection_->dbHandle_ != nullptr) {
+        int ckptErr = sqlite3_wal_checkpoint_v2(slaveConnection_->dbHandle_, nullptr,
+            SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
+        info.replicaInfo.checkpointErr = SQLiteError::ErrNo(ckptErr);
+        if (ckptErr != SQLITE_OK) {
+            LOG_WARN("replica checkpoint failed err: %{public}d", ckptErr);
+        }
+    } else {
+        info.replicaInfo.checkpointErr = E_NOT_SUPPORT; // Skipped: no replica connection
+    }
+}
+
+void SqliteConnection::RefreshSizesAfterCheckpoint(PrimaryAndReplicaInfo &info)
+{
+    std::string primaryDbPath = config_.GetPath();
+    std::string primaryWalPath = GetWalName().second;
+    RdbFileInfo primaryDbAfter = StatToFileInfo(primaryDbPath);
+    RdbFileInfo primaryWalAfter = StatToFileInfo(primaryWalPath);
+    // Preserve prior size on refresh failure.
+    if (primaryDbAfter.errCode == E_OK) {
+        info.primaryInfo.dbInfo.size = primaryDbAfter.size;
+        info.primaryInfo.dbInfo.sizeErr = E_OK;
+    } else {
+        info.primaryInfo.dbInfo.sizeErr = E_ERROR;
+    }
+    if (primaryWalAfter.errCode == E_OK) {
+        info.primaryInfo.walInfo.size = primaryWalAfter.size;
+        info.primaryInfo.walInfo.sizeErr = E_OK;
+    } else {
+        info.primaryInfo.walInfo.sizeErr = E_ERROR;
+    }
+
+    if (slaveConnection_ != nullptr) {
+        std::string replicaDbPath = SqliteUtils::GetSlavePath(config_);
+        std::string replicaWalPath = slaveConnection_->GetWalName().second;
+        RdbFileInfo replicaDbAfter = StatToFileInfo(replicaDbPath);
+        RdbFileInfo replicaWalAfter = StatToFileInfo(replicaWalPath);
+        if (replicaDbAfter.errCode == E_OK) {
+            info.replicaInfo.dbInfo.size = replicaDbAfter.size;
+            info.replicaInfo.dbInfo.sizeErr = E_OK;
+        } else {
+            info.replicaInfo.dbInfo.sizeErr = E_ERROR;
+        }
+        if (replicaWalAfter.errCode == E_OK) {
+            info.replicaInfo.walInfo.size = replicaWalAfter.size;
+            info.replicaInfo.walInfo.sizeErr = E_OK;
+        } else {
+            info.replicaInfo.walInfo.sizeErr = E_ERROR;
+        }
+    }
+}
+
+int SqliteConnection::CollectVersionsAndTables(PrimaryAndReplicaInfo &info, SqliteConnection *replicaConn,
+    const std::string &tableName)
+{
+    info.primaryInfo.userVersion = QueryUserVersion();
+    if (replicaConn != nullptr) {
+        info.replicaInfo.userVersion = replicaConn->QueryUserVersion();
+    }
+
+    if (tableName.empty()) {
+        return E_OK;
+    }
+    if (!RdbSqlUtils::IsValidTableName(tableName)) {
+        return E_INVALID_ARGS;
+    }
+    auto [pErr, pTable] = CountTable(tableName);
+    info.primaryInfo.tables[tableName] = std::move(pTable);
+    if (replicaConn != nullptr) {
+        auto [rErr, rTable] = replicaConn->CountTable(tableName);
+        info.replicaInfo.tables[tableName] = std::move(rTable);
+    }
+    return E_OK;
+}
+
+std::pair<int, PrimaryAndReplicaInfo> SqliteConnection::GetPrimaryAndReplicaInfo(const std::string &tableName)
+{
+    PrimaryAndReplicaInfo info = CollectInitialFileInfo();
+
+    if (slaveConnection_ == nullptr) {
+        LOG_WARN("GetPrimaryAndReplicaInfo: no replica connection, skip replay and replica checkpoint");
+    }
+
+    TryReplayBinlog(info);
+
+    CheckpointDatabases(info);
+    RefreshSizesAfterCheckpoint(info);
+    int tableErr = CollectVersionsAndTables(info, slaveConnection_.get(), tableName);
+
+    return { tableErr != E_OK ? tableErr : E_OK, std::move(info) };
 }
 } // namespace NativeRdb
 } // namespace OHOS
