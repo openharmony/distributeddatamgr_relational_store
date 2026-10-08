@@ -15,6 +15,7 @@
 #define LOG_TAG "SqliteUtils"
 #include "sqlite_utils.h"
 
+#include <dirent.h>
 #include <fcntl.h>
 #include <sqlite3sym.h>
 #include <sys/file.h>
@@ -1016,6 +1017,51 @@ std::pair<int32_t, DistributedRdb::RdbDebugInfo> SqliteUtils::Stat(const std::st
     info.uid_ = fileStat.st_uid;
     info.gid_ = fileStat.st_gid;
     return std::pair{ E_OK, info };
+}
+
+RdbBinlogInfo SqliteUtils::CaptureBinlogInfo(const RdbStoreConfig &config)
+{
+    RdbBinlogInfo info{};
+    std::string dir = GetBinlogFolderPath(config);
+    DIR *d = opendir(dir.c_str());
+    if (d == nullptr) {
+        info.errCode = E_ERROR;
+        return info;
+    }
+    const std::string prefix = "binlog_default.";
+    struct dirent *entry;
+    while ((entry = readdir(d)) != nullptr) {
+        std::string name = entry->d_name;
+        if (name.compare(0, prefix.size(), prefix) != 0) {
+            continue;
+        }
+        std::string suffix = name.substr(prefix.size());
+        bool isDigits = !suffix.empty();
+        for (char c : suffix) {
+            if (c < '0' || c > '9') {
+                isDigits = false;
+                break;
+            }
+        }
+        if (!isDigits) {
+            continue;
+        }
+        std::string fullPath = dir + "/" + name;
+        auto [statErr, st] = Stat(fullPath);
+        if (statErr != E_OK) {
+            continue;
+        }
+        info.exist = true;
+        info.fileCount++;
+        info.totalSize += static_cast<int64_t>(st.size_);
+        int64_t mtimeMs = st.mtime_.sec_ * 1000 + st.mtime_.nsec_ / 1000000;
+        if (mtimeMs > info.lastModifyTime) {
+            info.lastModifyTime = mtimeMs;
+        }
+    }
+    closedir(d);
+    info.errCode = E_OK;
+    return info;
 }
 
 std::string SqliteUtils::ReadFileHeader(const std::string &filePath)

@@ -272,4 +272,9 @@ bool Connection::IsRecyclable() const
 {
     return isRecyclable_;
 }
+
+std::pair<int, PrimaryAndReplicaInfo> Connection::GetPrimaryAndReplicaInfo(const std::string &tableName)
+{
+    return { E_NOT_SUPPORT, {} };
+}
 } // namespace OHOS::NativeRdb

@@ -128,6 +128,7 @@ public:
     static const char *EncryptAlgoDescription(int32_t encryptAlgo);
     static bool DeleteDirtyFiles(const std::string &backupFilePath);
     static std::pair<int32_t, DistributedRdb::RdbDebugInfo> Stat(const std::string &path);
+    static RdbBinlogInfo CaptureBinlogInfo(const RdbStoreConfig &config);
     static bool IsFileEmpty(const std::string &filePath);
     static bool IsFilesEmpty(const std::vector<std::string> &filePaths);
     static void WriteSqlToFile(const std::string &comparePath, const std::string &sql);

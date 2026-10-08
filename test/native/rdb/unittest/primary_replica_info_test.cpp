@@ -14,7 +14,7 @@
  */
 
 #define LOG_TAG "PrimaryReplicaInfoTest"
-#include "primary_replica_info.h"
+#include "rdb_types.h"
 #include "rdb_store_impl.h"
 #include "sqlite_connection.h"
 
