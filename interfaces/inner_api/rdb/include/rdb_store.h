@@ -167,19 +167,6 @@ public:
     virtual std::pair<int, int64_t> Insert(const std::string &table, const Row &row, Resolution resolution = NO_ACTION);
 
     /**
-     * @brief Inserts a row of data into the target table with per-op config.
-     *
-     * @param config Indicates the {@link InsertConfig} for SQL execution timeout and conflict resolution.
-     * @return Returns {errCode, rowId}. If interrupted, errCode is E_SQLITE_INTERRUPT.
-     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
-     * @note Single-row INSERT executes as a single atomic OP_Insert opcode in the SQLite VDBE.
-     *       sqlite3_interrupt only takes effect at safe points between opcodes, so the interrupt
-     *       flag is not checked during OP_Insert.
-     */
-    virtual std::pair<int, int64_t> Insert(
-        const std::string &table, const Row &row, const InsertConfig &config);
-
-    /**
      * @brief Inserts a row of data into the target table.
      *
      * @param table Indicates the target table.
@@ -248,16 +235,6 @@ public:
         const ReturningConfig &config, Resolution resolution = NO_ACTION);
 
     /**
-     * @brief Inserts a batch of data into the target table with per-op config.
-     *
-     * @param config Indicates the {@link BatchInsertConfig} for SQL execute timeout, returning and conflict resolution.
-     * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
-     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
-     */
-    virtual std::pair<int32_t, Results> BatchInsert(const std::string &table, const RefRows &rows,
-        const BatchInsertConfig &config);
-
-    /**
      * @brief Updates data in the database based on specified conditions.
      *
      * @param table Indicates the target table.
@@ -305,17 +282,7 @@ public:
      * only the first 1024 returningFields will be returned
      */
     virtual std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const ReturningConfig &config, Resolution resolution);
-
-    /**
-     * @brief Updates data in the database based on a specified instance object of AbsRdbPredicates with per-op config.
-     *
-     * @param config Indicates the {@link UpdateConfig} for SQL execution timeout, returning and conflict resolution.
-     * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
-     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
-     */
-    virtual std::pair<int32_t, Results> Update(const Row &row, const AbsRdbPredicates &predicates,
-        const UpdateConfig &config);
+        const ReturningConfig &config, Resolution resolution = NO_ACTION);
 
     /**
      * @brief Updates data in the database based on specified conditions.
@@ -396,17 +363,6 @@ public:
      */
     virtual std::pair<int32_t, Results> Delete(
         const AbsRdbPredicates &predicates, const ReturningConfig &config = {});
-
-    /**
-     * @brief Delete data from the database based on a specified instance object of AbsRdbPredicates with per-op config.
-     * delete * from table can not be interrupted
-     * @param predicates Indicates the specified update condition by the instance object of {@link AbsRdbPredicates}.
-     * @param config Indicates the {@link DeleteConfig} for SQL execution timeout and returning.
-     * @return Returns {errCode, result}. If interrupted, errCode is E_SQLITE_INTERRUPT.
-     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
-     */
-    virtual std::pair<int32_t, Results> Delete(
-        const AbsRdbPredicates &predicates, const DeleteConfig &config);
     /**
      * @brief Queries data in the database based on specified conditions.
      *
@@ -449,16 +405,7 @@ public:
      * @param sql Indicates the SQL statement to execute.
      * @param args Indicates the selection arguments.
      */
-    virtual std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args = {});
-
-    /**
-     * @brief Queries data in the database based on SQL statement with per-op config.
-     *
-     * @param config Indicates the {@link QueryConfig} for SQL execution timeout.
-     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
-     */
-    virtual std::shared_ptr<AbsSharedResultSet> QuerySql(
-        const std::string &sql, const Values &args, const QueryConfig &config);
+    virtual std::shared_ptr<AbsSharedResultSet> QuerySql(const std::string &sql, const Values &args = {}) = 0;
 
     /**
      * @brief Queries data in the database based on SQL statement.
@@ -510,15 +457,6 @@ public:
         const QueryOptions &options);
 
     /**
-     * @brief Queries data in the database based on SQL statement with per-op config.
-     *
-     * @param config Indicates the {@link QueryConfig} for SQL execution timeout.
-     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
-     */
-    virtual std::shared_ptr<ResultSet> QueryByStep(const std::string &sql, const Values &args,
-        const QueryOptions &options, const QueryConfig &config);
-
-    /**
      * @brief Queries remote data in the database based on specified conditions before Synchronizing Data.
      *
      * @param device Indicates specified remote device.
@@ -554,20 +492,6 @@ public:
      * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
      */
     virtual std::pair<int32_t, ValueObject> Execute(const std::string &sql, const Values &args = {}, int64_t trxId = 0);
-
-    /**
-     * @brief Executes an SQL statement that contains specified parameters and
-     *        get two values of type int and ValueObject with timeout.
-     *
-     * @param sql Indicates the SQL statement to execute.
-     * @param args Indicates the {@link ValueObject} values of the parameters in the SQL statement.
-     * @param trxId Indicates the transaction id.
-     * @param config Indicates the {@link ExecuteConfig} for SQL execution timeout.
-     * @return Returns {errCode, value}. If interrupted, errCode is E_SQLITE_INTERRUPT.
-     * @note If config.timeoutMs is set and less than 1000(ms), it is treated as 1000(ms).
-     */
-    virtual std::pair<int32_t, ValueObject> Execute(
-        const std::string &sql, const Values &args, int64_t trxId, const ExecuteConfig &config);
 
     /**
      * @brief Executes an SQL statement that contains specified parameters and
@@ -1015,6 +939,19 @@ public:
      * @brief Wait for the in-flight async AfterOpen so its service-side meta cannot race with a later operation.
      */
     virtual int WaitAfterOpen() { return E_OK; }
+
+    /**
+     * @brief Query primary-replica diagnostic info including file metadata, user version,
+     * binlog info, and optional table row counts for primary and replica databases.
+     *
+     * @param tableName Indicates the table name for row count query; empty skips count.
+     * @return Returns {E_OK, info} on success; {E_NOT_SUPPORT, {}} for SINGLE mode, read-only,
+     *         memory, or vector DB; {E_ALREADY_CLOSED, {}} when store is closed.
+     */
+    virtual std::pair<int, PrimaryAndReplicaInfo> GetPrimaryReplicaInfo(const std::string &tableName)
+    {
+        return { E_NOT_SUPPORT, {} };
+    }
 };
 } // namespace OHOS::NativeRdb
 #endif
