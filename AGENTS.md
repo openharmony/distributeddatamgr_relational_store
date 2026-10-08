@@ -1,194 +1,100 @@
 # AGENTS.md
 
-本文件是 AI Agent 处理本仓库任务时的轻量入口。先读本文件，再按任务类型只加载匹配的详细文档页。
+本文件为此代码仓库的 AGENTS 指南，为 AI 辅助开发工具（OpenCode / ZCode / Claude Code 等）在此仓库中工作时提供项目约定和指导。
 
-> 本文件**只保留路由与原则**，不内联任何专题详情。具体规范 / 体系 / 约定 **MUST** 按"知识路由"表按需加载对应 `docs/*.md`。
-
-# 阅读策略
-
-不要一开始就读取 `docs/` 下的所有文件。
-
-默认只读本文件。涉及需求设计或代码开发时，最多按需加载：
-
-1. **代码开发/修改任务**：**MUST** 加载 [`docs/code_standards.md`](docs/code_standards.md)（强制规范 R1～R10、反馈闭环）。
-2. 如果影响范围不清楚，读取 `docs/rdb_native.md` 了解核心类关系和目录结构。
-3. 读取一个与任务领域匹配的专题页（`docs/error_code_layers.md` 或 `docs/dynamic_loading.md`）。
-4. 规划验证时，见本文件"编译和测试方法"章节。
-
-> 编辑代码前 **MUST** 自述：① 任务类别；② 已加载的文档；③ 命中的约束（如“接口层 NEVER 破坏兼容”）。无匹配约束时显式说明“无”。**自述在首次回复开头给出，后续每次编辑前若有变化则更新**。
-
-# 仓库定位
-
-`relational_store` 是 OpenHarmony 关系型数据库组件。在 OpenHarmony 源码树中的位置是：
-
-```text
-//foundation/distributeddatamgr/relational_store
-```
-
-组件元信息：
-
-- 子系统：`distributeddatamgr`
-- 部件：`relational_store`
-- 主要能力面：关系型数据库 CRUD、事务、连接池、加密、云同步、观察者通知、DataShare/DataAbility 适配、ICU 国际化排序。
-
-基于 SQLite 的 OpenHarmony 系统级数据库服务，为内部服务和第三方应用提供数据存储。主要实现语言是 C++，通过 NAPI 暴露到 ArkTS/JavaScript，同时包含 ETS/Taihe 实现、Cangjie FFI、NDK C API、native inner kit 和测试代码。
-
-# 代码地图
-
-## 代码分层
-
-```
-relational_store/
-├── frameworks/              # 实现代码
-│   ├── native/             # C++ 原生实现
-│   │   ├── rdb/            # RDB 核心实现（SQLite 封装、连接池、事务等）
-│   │   ├── rd/             # RD（GRD 内核相关）
-│   │   ├── rdb_crypt/      # 数据库加密（HUKS）
-│   │   ├── obs_mgr_adapter/# 观察者管理器
-│   │   ├── icu/            # ICU 国际化支持
-│   │   ├── cloud_data/     # 云同步服务
-│   │   ├── dfx/            # DFX（故障/雷达/统计报告）
-│   │   ├── rdb_data_ability_adapter/ # DataAbility 适配器
-│   │   ├── rdb_data_share_adapter/  # DataShare 适配器
-│   │   ├── appdatafwk/              # AppData Framework 适配器
-│   ├── js/napi/            # JS/TS NAPI 绑定
-│   ├── ets/taihe/          # ETS（Taihe）实现
-│   ├── cj/                 # Cangjie FFI 实现
-│   └── common/             # 公共工具
-│
-└── interfaces/              # 接口定义
-    ├── inner_api/          # 内部 API（供其他 OpenHarmony 模块使用）
-    │   ├── rdb/            # RDB 内部接口
-    │   ├── rdb_data_ability_adapter/ # DataAbility 适配器内部接口
-    │   ├── rdb_data_share_adapter/  # DataShare 适配器内部接口
-    │   └── appdatafwk/              # AppData Framework 内部接口
-    └── ndk/                # NDK 接口（暴露给应用开发者）
-        └── include/        # NDK 头文件（oh_rdb_*.h）
-```
-
-**破坏兼容 = 存量接口的功能行为发生变化或错误码发生变化**（包括：删减接口/参数、修改返回值含义、同场景返回不同错误码、改变接口行为语义）。
-
-**分层原则**：
-
-- `interfaces/inner_api/`：模块间接口，内部使用，**NEVER** 破坏兼容。
-- `interfaces/ndk/include/`：应用层接口，公开 API，**NEVER** 破坏兼容。
-- `frameworks/native/`：C++ 实现，不影响原有功能，可重构。
-- 修改 `frameworks` 层代码 **MUST** 评估对 `interfaces` 层的影响 — 逐层检查 JS/NAPI、ETS、NDK 的接口声明和测试断言是否受影响；仅内部重构不影响接口签名时 MUST 在 commit 说明"不影响上层接口"。
+基于**渐进式披露原则**，本文件仅包含任务路由和核心约束。具体操作指南见 `docs/` 下的独立文档。
 
 ## 任务路由表
 
-| 任务类型         | 主要改动路径                                  | MUST 检查的上层路径                                          | 对应测试路径                                     |
-| ---------------- | --------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------ |
-| RDB 核心逻辑     | `frameworks/native/rdb/src/`                  | `frameworks/js/napi/`、`frameworks/ets/taihe/`、`interfaces/ndk/include/` | `test/native/rdb/unittest/`、`test/js/rdb/`      |
-| 加密功能         | `frameworks/native/rdb_crypt/`                | `frameworks/native/rdb/`（rdb_crypt 被依赖）                 | `test/native/rdb/unittest/`                      |
-| JS/NAPI 接口     | `frameworks/js/napi/`                         | `interfaces/ndk/include/`（同一接口的不同绑定）              | `test/js/rdb/`                                   |
-| ETS 接口         | `frameworks/ets/taihe/`                       | 无上层                                                       | `test/ets/relational_store/`                     |
-| NDK 接口         | `interfaces/ndk/include/`                     | 无上层（公开 API）                                           | `test/ndk/unittest/`                             |
-| 云同步           | `frameworks/native/cloud_data/`               | `frameworks/js/napi/`、`frameworks/ets/taihe/`               | `test/native/clouddata/`、`test/ets/cloud_data/` |
-| DataShare 适配   | `frameworks/native/rdb_data_share_adapter/`   | `interfaces/inner_api/rdb_data_share_adapter/`               | `test/native/rdb_data_share_adapter/`            |
-| DataAbility 适配 | `frameworks/native/rdb_data_ability_adapter/` | `interfaces/inner_api/rdb_data_ability_adapter/`             | `test/native/rdb_data_ability_adapter/`          |
-| DFX              | `frameworks/native/dfx/`                      | `frameworks/native/rdb/`（dfx 被依赖）                       | `test/native/rdb/unittest/`                      |
-| ICU              | `frameworks/native/icu/`                      | `frameworks/native/rdb/`（icu 被依赖）                       | `test/native/rdb/unittest/`                      |
+| 要做什么 | 去哪份文档 | 关键命令 |
+|---|---|---|
+| 从上游同步最新代码 | [docs/agents-upstream-sync.md](./docs/agents-upstream-sync.md) | `.\bin\update\sync.ps1` |
+| 本地编译 / 编译修复 | [docs/agents-build-and-fix.md](./docs/agents-build-and-fix.md) | `./ninja.exe -C cmake-build-debug -j16` |
+| 同步后全量构建收集失败 | [docs/agents-build-and-fix.md](./docs/agents-build-and-fix.md#全量构建与失败收集) | `./ninja.exe -C cmake-build-debug -k0 -j16` |
+| GN 到 CMake 转换 | [docs/agents-build-and-fix.md](./docs/agents-build-and-fix.md#gn-到-cmake-转换原则) | 参考 `.skills/gn-to-cmake-test-converter/SKILL.md` |
+| 对比 GN/CMake 产物 | [docs/gn-vs-cmake-targets.md](./docs/gn-vs-cmake-targets.md) | 同步后重生成：`bash bin/update/gen-target-comparison.sh` |
+| 运行测试 / 测试修复 | [docs/agents-test-guide.md](./docs/agents-test-guide.md) | `ctest --output-on-failure -j1` |
+| 构建并运行单个测试 | [docs/agents-test-guide.md](./docs/agents-test-guide.md#构建并运行单个测试) | `./ninja.exe -C cmake-build-debug -j16 NativeRdbTest && ./cmake-build-debug/bin/NativeRdbTest.exe` |
+| 提交本地变更到 mock 仓库 | [docs/agents-git-workflow.md](./docs/agents-git-workflow.md) | `git commit -m "feat: ..."` |
+| 了解模块架构 | [docs/agents-architecture.md](./docs/agents-architecture.md) | 查看对应模块的 `AGENTS.md` |
 
-禁止循环依赖。如有 **MUST** 单列并给出整改 Issue。
+## 路径路由
 
-> 嵌套指引：本仓库无嵌套 `AGENTS.md`/`CLAUDE.md`；更深的专题文档见 `docs/*.md`（按下方“知识路由”按需加载）。
+当修改以下目录下的文件时，先阅读对应文档：
 
-# 知识路由
+| 修改哪个目录 | 必读文档 | 关键约束 |
+|---|---|---|
+| `mock/` | [.skills/openharmony-sync/SKILL.md](./.skills/openharmony-sync/SKILL.md) § Principle 5 | mock/ 是唯一适配层，系统 API mock 只能加在此处，用 `include BEFORE` 覆盖上游头文件 |
+| `test/<module>/` | [docs/agents-build-and-fix.md](./docs/agents-build-and-fix.md#gn-到-cmake-转换原则) | 测试 CMake 配置必须放在 `test/` 下，不在模块内联 |
+| `CMakeLists.txt`（任意目录） | [.skills/gn-to-cmake-test-converter/SKILL.md](./.skills/gn-to-cmake-test-converter/SKILL.md) | 必须对照同目录 `BUILD.gn` 编写，保留 GN 文件 |
+| 上游仓库目录（见约束 1） | — | **禁止修改**，编译问题通过 `mock/` 适配 |
 
-## 触发式文档加载
+## 术语路由
 
-| 触发词/路径模式                                              | 加载文档                                           | 加载后 MUST 检查                             |
-| ------------------------------------------------------------ | -------------------------------------------------- | -------------------------------------------- |
-| `错误码` / `errno` / `E_OK` / `rdb_errno.h` / 修改接口返回值 | `docs/error_code_layers.md`                        | 存量接口返回码不变；新增错误码仅用于新增接口 |
-| `动态加载` / `dlopen` / `新增依赖` / `dlsym`                 | `docs/dynamic_loading.md`                          | 新依赖 MUST 使用动态加载方式；禁止静态链接   |
-| `跨模块` / `新服务接入` / `rdb_native` / `connection_pool`   | `docs/rdb_native.md`                               | 跨模块改动 MUST 不破坏 inner_api 兼容        |
-| `加密` / `crypt` / `HUKS` / `rdb_crypt`                      | `docs/error_code_layers.md` + `docs/rdb_native.md` | 加密相关改动 MUST 通过 rdb_crypt 适配层      |
-| `云同步` / `cloud` / `cloud_data`                            | `docs/rdb_native.md`                               | 云同步 MUST 通过 IPC 与 native_rdb 交互      |
-| 任何代码修改/新增任务 / `函数行数` / `入参` / `拆分` / 写代码前 | `docs/code_standards.md`                           | 开工前 MUST 完整阅读 R1～R10 规则            |
+遇到以下术语时，参阅对应文档：
 
-# 专家经验
+| 术语 | 含义 | 去哪了解 |
+|---|---|---|
+| `BUILD.gn` | 上游 GN 构建文件，CMakeLists.txt 的参考来源 | [docs/agents-build-and-fix.md](./docs/agents-build-and-fix.md#gn-到-cmake-转换原则) |
+| `sync.ps1` | 上游代码同步脚本 v3.1（10 参数） | [bin/update/README.md](./bin/update/README.md) |
+| `dlopen` mock | 动态库加载 mock，用于模拟系统服务 | [docs/agents-test-guide.md](./docs/agents-test-guide.md#动态库加载dlopenmock) |
+| `include BEFORE` | CMake 头文件覆盖技巧，mock 头文件优先于上游 | [.skills/openharmony-sync/SKILL.md](./.skills/openharmony-sync/SKILL.md) § Principle 2 |
+| `appdatamgr.gni` | GN 包含文件（受保护，不覆盖） | [docs/agents-upstream-sync.md](./docs/agents-upstream-sync.md#受保护内容) |
+| `sync_output/` | 同步产物输出目录（按日期组织） | [docs/upstream_sync_workflow.md](./docs/upstream_sync_workflow.md) |
+| `--allow-multiple-definition` | 链接器标志，允许重复符号（OBJECT 库与共享库/mock 共存时） | [docs/build_and_fix_workflow.md](./docs/build_and_fix_workflow.md) § 符号重定义 |
 
-## 核心原则
+> **编辑前声明**：修改任何文件前，先声明 (1) 本任务类别（见任务路由表），(2) 已阅读的路由文档，(3) 发现的适用约束。未声明前不得修改文件。
 
-1. 修改存量接口 MUST 评估性能影响 — 运行性能基线测试（test/js/relationalstore/performance），对照 BASE_LINE 阈值，改动后所有性能 case MUST 全 pass；涉及无现成基线的接口 MUST 先补基准测试再改代码。
-2. 新增外部依赖 MUST 优先动态加载方式 — native_rdb 支持动态卸载（详见 `docs/dynamic_loading.md`）。
-3. 用户说"调研一下" MUST NOT 直接实现 — 先调研再决定。
-4. Claim "done" MUST 有测试验证 — 所改模块对应 UT 跑通且断言全过才算 done；无现成 UT 则 MUST 先补。
-5. 接口层 API NEVER 破坏向后兼容 — 破坏兼容指存量接口的功能行为或错误码发生变化（删减接口/参数、修改返回值含义、同场景返回不同错误码、改变行为语义）；仅修改 C++ 侧功能时也 MUST 评估对上层接口的影响；仅内部重构不影响接口签名时 MUST 在 commit 说明"不影响上层接口"。
-6. 兼容性优先于逻辑正确性 — 修复存量代码若可能导致不兼容变更，则 NEVER 修改，保持原样；如确需修复，走新增接口/新增路径等兼容方式。例如：`RdbStoreProxy` 析构漏取消 PerfSta 注册属逻辑瑕疵，但行为已 release，故 NEVER 改，保持原样。
+## 项目概述
 
-## 编码规范
+这是 OpenHarmony 分布式数据管理子系统 (`appdatamgr`) 的 mock 仓库。本地环境使用 Cygwin 在 Windows 上模拟 Unix 环境，使用 CMake 作为构建系统。该仓库实现了完整的数据管理组件，包括关系型数据库、首选项、数据共享、KV 存储、分布式数据对象和 UDMF（用户数据管理框架）。
 
-| 维度       | 约定                                                         |
-| ---------- | ------------------------------------------------------------ |
-| 不可变性   | 接口层 API（NDK/JS/ETS）**NEVER** 破坏向后兼容（破坏兼容 = 功能行为或错误码发生变化）；Inner APIs 不建议修改 |
-| 文件规模   | 单文件建议 ≤2000 行；超过 **MUST** 拆分                      |
-| 错误处理   | **MUST** 使用 `rdb_errno.h` 标准错误码；**NEVER** 让接口层存量接口返回新错误码或变更同场景错误码；分层详见 `docs/error_code_layers.md` |
-| 日志       | 错误日志 **MUST** 提供充足上下文信息（函数名 + 文件路径 + 操作类型 + 错误码）；高频分支 **NEVER** info 级别日志 |
-| 文件命名   | 测试文件 `*_test.cpp`；Mock 文件 `mock_*.cpp/.h`；构建配置 `BUILD.gn` |
-| 导出约定   | inner_api 仅导出 `include/` 下头文件；新增导出 **MUST** 同步更新 `bundle.json` |
-| 工具类复用 | **MUST** 优先使用 `kv_store:datamgr_common` 提供的工具类（ConcurrentMap、ITypesUtil、Traits、JSProxy、BlockData、LRUBucket 等），**NEVER** 自行实现已有同等能力 |
-| 定义复用   | 新增映射表、函数、接口前 **MUST** 先检查同文件/同模块内是否存在可复用的同类定义，优先扩展而非新增，合并而非并行 |
+## 核心约束（必须遵守）
 
-Commit 信息 **MUST** 包含 `Co-Authored-By: Agent`，**NEVER** 把 Agent 修改为其他单词。
+1. **不修改上游代码**：不能修改 `datamgr_service/`、`data_share/`、`relational_store/`、`kv_store/`、`data_object/`、`preferences/`、`udmf/`、`interface_sdk/`、`utils_native/` 中的上游源码（非受保护文件）。编译问题**只能通过修改 `mock/`、`test/`、`CMakeLists.txt`** 来适配。
+2. **保留 GN 文件**：`BUILD.gn` 文件必须保留——它们是编写和维护 `CMakeLists.txt` 的参考来源。
+3. **构建目录**：始终使用 `cmake-build-debug` 作为构建目录名，使用项目根目录的 `ninja.exe`。
+4. **测试配置统一**：所有测试 CMake 配置放在 `test/<module_name>/` 下，不在模块 `CMakeLists.txt` 中内联定义。
+5. **`master` 分支只做同步**：不在 `master` 上直接修改代码，所有本地修改在 `feature/*` 分支上进行。
+6. **删除前确认**：删除 `mock/` 或 `test/` 下的文件前需用户确认；执行 `sync.ps1 -RemoveExtra` 前需用户确认。
 
-## 已知陷阱
+### 常见 Agent 失败模式
 
-- 共享资源 **MUST** 考虑多进程并发访问场景，跨进程访问通过 IPC（DataShare 用 `rdb_data_share_adapter` 做 IPC 隔离）；共享资源包括内存数据结构与磁盘 DB 文件（含 slave DB、binlog 文件夹、WAL/shm 辅助文件）——应用进程与 service 进程（`RdbService`）可能同时打开同一 DB 文件，删除/迁移/重命名 DB 文件前 **MUST** 确认其他进程不持有该文件的连接（如迁移前 `service->Disable()` 释放连接、操作后 `service->Enable()` 恢复）；**NEVER** 忽略共享资源的多进程并发访问场景。
-- **MUST** 考虑 SA 进程未启动或不存在场景，做降级/容错处理（检查 SA 可用性后再调用，不可用时返回本地缓存或默认值）；**NEVER** 硬依赖 SA 进程。
-- **读写链接选用**：`RdbStore::BeginTransaction()` 的写事务只作用于写连接，读连接为独立快照、不在事务内。因此 **NEVER** 将存量代码的连接从写改读或从读改写（读操作看似应走读连接，但会破坏事务内 read-your-writes、并发与锁行为），否则属改变接口行为语义的破坏性变更。
-- **临时链接管理**：临时连接 **MUST** 通过 `ConnectionPool::CreateConn` 创建并纳入 `temps_` 统一管理；**NEVER** 直接调用 `Connection::Create` 创建游离临时连接。
+| 错误行为 | 正确做法 |
+|---|---|
+| 直接修改上游源码修复编译错误 | 通过 `mock/` 添加 mock 实现或头文件覆盖 |
+| 编写 CMakeLists.txt 时未对照同目录 BUILD.gn | 先读 BUILD.gn，按 `.skills/gn-to-cmake-test-converter/SKILL.md` 转换 |
+| 在模块 CMakeLists.txt 中内联测试配置 | 测试配置放 `test/<module_name>/` 下 |
+| 在 `master` 分支直接提交代码 | 切 `feature/*` 分支后再修改 |
+| 删除 mock 文件未确认 | 先报告待删文件列表，经用户确认后删除 |
+| Mock 覆盖文件与 OBJECT 库符号冲突时盲目加 `--allow-multiple-definition` | 先用 `list(REMOVE_ITEM)` 排除被覆盖的真实源文件；确需共存时按 [docs/build_and_fix_workflow.md](./docs/build_and_fix_workflow.md) 加 `--allow-multiple-definition` 并注释原因 |
 
-| Agent 会说的借口       | 现实                                                |
-| ---------------------- | --------------------------------------------------- |
-| "太简单不需要测试"     | 简单代码也会坏。写测试只要 30 秒。                  |
-| "我先写完再补测试"     | 事后补的测试什么也证明不了。                        |
-| "手动测过了"           | 没有记录、不可重复的测试不算测试。                  |
-| "这个依赖直接加上就行" | native_rdb 支持动态卸载，直接加依赖会破坏卸载能力。 |
-| "析构漏取消注册，补上" | 行为已 release 即事实契约，修复反而破坏兼容；要改走新增路径，不动存量。 |
+## 任务完成标准
 
-## Do-not / Ask-before 清单
+| 任务 | Done 定义 | 必须报告 |
+|---|---|---|
+| 本地编译 | `ninja -j16` 零错误退出 | 构建结果（成功/失败数） |
+| 全量构建收集 | `ninja -k0 -j16` 执行完毕，收集所有失败 | 失败文件列表、失败模式分类 |
+| 运行测试 | `ctest --output-on-failure -j1` 全部通过 | 通过/失败/跳过数 |
+| 上游同步 | sync.ps1 完成且无未解决冲突 | 同步的仓库、冲突文件数、备份目录 |
+| 编译修复 | 修复后 `ninja -k0` 零错误 | 修改的文件列表、修复模式 |
+| 上游同步+编译修复 | sync.ps1 完成 + ninja 零错误 + 重生成 [对比文档](./docs/gn-vs-cmake-targets.md#重新生成步骤) | 同步仓库数、修复文件列表、对比文档路径 |
 
-> 仅列尚未在「核心原则/已知陷阱」中出现的边界，每条只做指路，详情见对应专题文档（遵循本文件"不内联专题详情"原则，`AGENTS.md:5`）。
+> **验证不可用时**：若 `ninja`/`ctest` 无法执行（Cygwin 未配置、环境异常），Agent 须 (1) 报告环境状态，(2) 尝试 `cmake --version` 和 `ninja --version` 诊断，(3) 不得声称任务完成。
 
-| 类别 | 边界 | 详情去哪读 |
-| --- | --- | --- |
-| Do-not | SQLite 分层：上层类（`RdbStoreImpl`/`StepResultSet`/`SqliteSharedResultSet` 等）不可直接调用 `sqlite3*` 系函数 | `docs/rdb_native.md` "SQLite 分层约束" |
-| Do-not | Taihe 生成产物（`*.ani.cpp`/`*.abi.c`，由 `ohos_taihe` 从 `.taihe` IDL 生成到构建输出目录）NEVER 手改；改接口 MUST 改 `frameworks/ets/taihe/*/idl/*.taihe` 后重新生成；`*.impl.cpp` 为手写实现，可编辑 | `frameworks/ets/taihe/*/BUILD.gn`（`ohos_taihe`/`copy_taihe_idl`）、`bundle.json:78`（`taihe_ffi_gen`） |
-| Ask-before | `Connection`/`Statement` 抽象层加接口须评估职责归属，NEVER 把 `RdbStoreImpl` 编排逻辑下沉 | `docs/rdb_native.md` "Connection 职责" |
-| Ask-before | 新增错误码须同步 NDK `relational_store_error_code.h` 与 JS `napi_rdb_error.cpp` 映射表，NEVER 给存量接口加新返回码 | `docs/error_code_layers.md` "新增错误码指导原则" |
-| Ask-before | 新增导出头文件须同步 `bundle.json` 的 `inner_kits[].header.header_files` | `bundle.json` + 编码规范"导出约定" |
+## 运维文档索引
 
-# 编译和测试方法
-
-> 修改类任务完成后 MUST 执行以下验证步骤（格式化按用户意愿，修改完代码后询问用户是否执行；编译构建和单元测试 NEVER 跳过）。
-
-## 修改类任务验证步骤模板
-
-1. **格式化**（按用户需要）：修改完代码后 MUST 先询问用户是否需要格式化，按用户意愿执行。用户同意时运行：
-   ```bash
-   ${OHOS_ROOT}/prebuilts/clang/ohos/linux-x86_64/llvm/bin/clang-format --style=file -i <修改的文件>
-   ```
-   可选静态分析（同一工具链；用编译产物目录的 compile_commands.json，未生成则跳过）：
-   ```bash
-   ${OHOS_ROOT}/prebuilts/clang/ohos/linux-x86_64/llvm/bin/clang-tidy -p=<build-out-dir> <修改的文件>
-   ```
-
-2. **编译构建**（MUST，确认修改不引入编译错误）：
-   ```bash
-   ./build.sh --product-name rk3568 --build-target relational_store
-   ```
-
-3. **单元测试**（MUST，确认修改不破坏现有功能）：
-   ```bash
-   ./build.sh --product-name rk3568 --build-target relational_store_test
-   ```
-
-> Claim "done" MUST 有编译构建和单元测试 2 步验证结果；格式化按用户意愿，不强制。
-
-## 完成回复与验证回退
-
-- 最终回复 **MUST** 给出：编译结果、单测结果（或明确“未验证”原因）；**NEVER** 仅凭静态推断 claim done。
-- 验证无法运行（无环境/依赖缺失）时 **MUST** 说明原因，请用户在真机/CI 验证，**NEVER** 跳过直接交付。
-- 涉及接口改动时 **MUST** 对照 `interfaces/ndk/include/` 与 `interfaces/inner_api/` 声明确认签名未变（API 兼容性检查）。
+| 何时查阅 | 文档 | 说明 |
+|---|---|---|
+| 执行同步前 | [docs/agents-upstream-sync.md](./docs/agents-upstream-sync.md) | sync.ps1 命令、冲突检测、受保护内容 |
+| 编译失败时 | [docs/agents-build-and-fix.md](./docs/agents-build-and-fix.md) | 构建命令、失败收集、GN→CMake 转换 |
+| 运行测试前 | [docs/agents-test-guide.md](./docs/agents-test-guide.md) | 测试环境、运行命令、Mock 系统 |
+| 了解架构时 | [docs/agents-architecture.md](./docs/agents-architecture.md) | 组件结构、架构模式、关键约束、目录约定 |
+| 提交变更前 | [docs/agents-git-workflow.md](./docs/agents-git-workflow.md) | 提交规范、分支策略 |
+| 需要同步细节时 | [docs/upstream_sync_workflow.md](./docs/upstream_sync_workflow.md) | 上游同步流程详解 |
+| 需要编译修复细节时 | [docs/build_and_fix_workflow.md](./docs/build_and_fix_workflow.md) | 编译修复流程详解 |
+| 查找历史编译失败 | [docs/build_failures.md](./docs/build_failures.md) | 编译失败历史记录 |
+| 需要了解编译单元 | [docs/build_structure.md](./docs/build_structure.md) | 编译单元结构总览 |
+| 同步后对比 GN/CMake | [docs/gn-vs-cmake-targets.md](./docs/gn-vs-cmake-targets.md) | 编译产物映射、差异模式、重新生成步骤 |
+| 查询 sync.ps1 参数 | [bin/update/README.md](./bin/update/README.md) | sync.ps1 完整文档 |
+| 快速查找同步命令 | [bin/update/QUICKSTART.md](./bin/update/QUICKSTART.md) | 同步工具常用命令速查 |
