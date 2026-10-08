@@ -2680,42 +2680,26 @@ std::pair<int, TableInfo> SqliteConnection::CountTable(const std::string &table)
 {
     TableInfo ti{};
     size_t dot = table.find('.');
-    std::string schemaPart = (dot != std::string::npos) ? "\"" + table.substr(0, dot) + "\"." : "";
-    std::string namePart = (dot != std::string::npos) ? table.substr(dot + 1) : table;
+    std::string schema = (dot != std::string::npos) ? "\"" + table.substr(0, dot) + "\"." : "";
+    std::string name = (dot != std::string::npos) ? table.substr(dot + 1) : table;
 
-    std::string typeSql = "SELECT COUNT(*) FROM " + schemaPart +
-        "sqlite_master WHERE type='table' AND name=?";
-    auto [typeErr, typeObj] = ExecuteForValue(typeSql, { ValueObject(namePart) });
-    if (typeErr != E_OK) {
-        LOG_ERROR("table type check failed: %{public}s, err: %{public}d",
-            SqliteUtils::Anonymous(table).c_str(), typeErr);
-        ti.errCode = typeErr;
-        return { typeErr, ti };
-    }
-    auto typeVal = std::get_if<int64_t>(&typeObj.value);
-    if (typeVal == nullptr || *typeVal == 0) {
-        LOG_ERROR("object is not a regular table: %{public}s", SqliteUtils::Anonymous(table).c_str());
-        ti.errCode = E_ERROR;
-        return { E_ERROR, ti };
-    }
-
-    std::string escapedName = namePart;
-    for (size_t i = 0; (i = escapedName.find('"', i)) != std::string::npos;) {
-        escapedName.insert(i + 1, "\"");
-        i += 2;
-    }
-    std::string countSql = "SELECT COUNT(*) FROM " + schemaPart + "\"" + escapedName + "\"";
-    auto [err, obj] = ExecuteForValue(countSql);
+    // One statement: type check (EXISTS type='table') + row count via CASE.
+    // Caller's IsValidTableName guarantees only [a-zA-Z0-9_] so no escaping needed.
+    // -1 sentinel = not a regular table (view/index/missing).
+    std::string sql = "SELECT CASE WHEN "
+        "EXISTS(SELECT 1 FROM " + schema + "sqlite_master WHERE type='table' AND name=?) "
+        "THEN (SELECT COUNT(*) FROM " + schema + "\"" + name + "\") ELSE -1 END";
+    auto [err, obj] = ExecuteForValue(sql, { ValueObject(name) });
     if (err != E_OK) {
-        LOG_ERROR("count failed: %{public}s, err: %{public}d",
-            SqliteUtils::Anonymous(table).c_str(), err);
         ti.errCode = err;
         return { err, ti };
     }
     auto val = std::get_if<int64_t>(&obj.value);
-    if (val != nullptr) {
-        ti.count = *val;
+    if (val == nullptr || *val < 0) {
+        ti.errCode = E_ERROR;
+        return { E_ERROR, ti };
     }
+    ti.count = *val;
     ti.errCode = E_OK;
     return { E_OK, ti };
 }
