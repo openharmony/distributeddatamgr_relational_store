@@ -1026,12 +1026,10 @@ RdbBinlogInfo SqliteUtils::CaptureBinlogInfo(const RdbStoreConfig &config)
     std::string indexPath = dir + "/binlog_default.writeIndex";
     auto [statErr, st] = Stat(indexPath);
     if (statErr != E_OK) {
-        info.errCode = E_OK;
         return info;
     }
     info.exist = true;
     info.lastModifyTime = st.mtime_.sec_ * 1000 + st.mtime_.nsec_ / 1000000;
-    info.errCode = E_OK;
     return info;
 }
 

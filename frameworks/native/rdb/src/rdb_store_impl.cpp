@@ -3993,8 +3993,13 @@ std::pair<int, PrimaryAndReplicaInfo> RdbStoreImpl::GetPrimaryReplicaInfo(const 
     }
 
     auto [diagErr, info] = conn->GetPrimaryAndReplicaInfo(tableNames);
-    auto [primaryTimeErr, primaryLastModifyTime] = info.GetPrimaryLastModifyTime();
-    auto [replicaTimeErr, replicaLastModifyTime] = info.GetReplicaLastModifyTime();
+    if (diagErr != E_OK) {
+        LOG_ERROR("GetPrimaryReplicaInfo failed, err: %{public}d", diagErr);
+        return { diagErr, std::move(info) };
+    }
+
+    int64_t primaryLastModifyTime = info.GetPrimaryLastModifyTime();
+    int64_t replicaLastModifyTime = info.GetReplicaLastModifyTime();
 
     LOG_INFO("GetPrimaryReplicaInfo: primaryDb.mtime=%{public}" PRId64 ", primaryWal.mtime=%{public}" PRId64 ", "
         "replicaDb.mtime=%{public}" PRId64 ", replicaWal.mtime=%{public}" PRId64 ", binlog.exist=%{public}d, "
@@ -4007,18 +4012,6 @@ std::pair<int, PrimaryAndReplicaInfo> RdbStoreImpl::GetPrimaryReplicaInfo(const 
         info.binlogInfo.lastModifyTime,
         primaryLastModifyTime,
         replicaLastModifyTime);
-
-    if (info.replayErr != E_OK && info.replayErr != E_NOT_SUPPORT) {
-        LOG_WARN("GetPrimaryReplicaInfo: binlog replay failed, err: %{public}d", info.replayErr);
-    }
-    if (info.primaryInfo.checkpointErr != E_OK && info.primaryInfo.checkpointErr != E_NOT_SUPPORT) {
-        LOG_WARN("GetPrimaryReplicaInfo: primary checkpoint failed, err: %{public}d",
-            info.primaryInfo.checkpointErr);
-    }
-    if (info.replicaInfo.checkpointErr != E_OK && info.replicaInfo.checkpointErr != E_NOT_SUPPORT) {
-        LOG_WARN("GetPrimaryReplicaInfo: replica checkpoint failed, err: %{public}d",
-            info.replicaInfo.checkpointErr);
-    }
 
     return { diagErr, std::move(info) };
 }

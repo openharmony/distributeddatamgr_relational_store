@@ -166,13 +166,13 @@ private:
     int RegisterHookIfNecessary();
     bool IsRowForSearch();
     std::pair<int, std::string> GetWalName();
-    RdbFileInfo StatToFileInfo(const std::string &path);
+    std::pair<int, RdbFileInfo> StatToFileInfo(const std::string &path);
     std::pair<int, TableInfo> CountTable(const std::string &table);
     int64_t QueryUserVersion();
-    PrimaryAndReplicaInfo CollectInitialFileInfo();
-    void TryReplayBinlog(PrimaryAndReplicaInfo &info);
-    void CheckpointDatabases(PrimaryAndReplicaInfo &info);
-    void RefreshSizesAfterCheckpoint(PrimaryAndReplicaInfo &info);
+    int CollectInitialFileInfo(PrimaryAndReplicaInfo &info);
+    int TryReplayBinlog(PrimaryAndReplicaInfo &info);
+    int CheckpointDatabases(PrimaryAndReplicaInfo &info);
+    int RefreshSizesAfterCheckpoint(PrimaryAndReplicaInfo &info);
     int CollectVersionsAndTables(PrimaryAndReplicaInfo &info, const std::vector<std::string> &tableNames);
     std::pair<int32_t, Stmt> CreateStatementInner(
         const std::string &sql, SConn conn, sqlite3 *db, bool isFromReplica, const std::string &returningSql = "");

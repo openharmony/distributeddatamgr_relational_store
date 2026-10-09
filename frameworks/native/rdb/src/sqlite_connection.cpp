@@ -2656,20 +2656,18 @@ std::pair<int, std::string> SqliteConnection::GetWalName()
     return { E_OK, walFile };
 }
 
-RdbFileInfo SqliteConnection::StatToFileInfo(const std::string &path)
+std::pair<int, RdbFileInfo> SqliteConnection::StatToFileInfo(const std::string &path)
 {
     RdbFileInfo fi{};
     auto [err, info] = SqliteUtils::Stat(path);
     if (err != E_OK) {
-        fi.errCode = err;
-        return fi;
+        return { err, fi };
     }
     fi.size = static_cast<int64_t>(info.size_);
     fi.ctime = info.ctime_.sec_ * 1000 + info.ctime_.nsec_ / 1000000;
     fi.atime = info.atime_.sec_ * 1000 + info.atime_.nsec_ / 1000000;
     fi.mtime = info.mtime_.sec_ * 1000 + info.mtime_.nsec_ / 1000000;
-    fi.errCode = E_OK;
-    return fi;
+    return { E_OK, fi };
 }
 
 std::pair<int, TableInfo> SqliteConnection::CountTable(const std::string &table)
@@ -2710,94 +2708,108 @@ int64_t SqliteConnection::QueryUserVersion()
     return (val != nullptr) ? *val : 0;
 }
 
-PrimaryAndReplicaInfo SqliteConnection::CollectInitialFileInfo()
+int SqliteConnection::CollectInitialFileInfo(PrimaryAndReplicaInfo &info)
 {
-    PrimaryAndReplicaInfo info{};
     std::string primaryDbPath = config_.GetPath();
     auto [primaryWalErr, primaryWalPath] = GetWalName();
     std::string replicaDbPath = SqliteUtils::GetSlavePath(config_);
 
-    info.primaryInfo.dbInfo = StatToFileInfo(primaryDbPath);
-    info.primaryInfo.walInfo = StatToFileInfo(primaryWalPath);
-    if (primaryWalErr != E_OK) {
-        info.primaryInfo.walInfo.errCode = primaryWalErr;
+    auto [dbErr, dbInfo] = StatToFileInfo(primaryDbPath);
+    if (dbErr != E_OK) {
+        LOG_ERROR("CollectInitialFileInfo: primary db stat failed, err: %{public}d", dbErr);
+        return dbErr;
     }
-    info.replicaInfo.dbInfo = StatToFileInfo(replicaDbPath);
+    info.primaryInfo.dbInfo = dbInfo;
+
+    auto [walErr, walInfo] = StatToFileInfo(primaryWalPath);
+    if (walErr == E_OK) {
+        info.primaryInfo.walInfo = walInfo;
+    }
+
+    auto [rDbErr, rDbInfo] = StatToFileInfo(replicaDbPath);
+    if (rDbErr == E_OK) {
+        info.replicaInfo.dbInfo = rDbInfo;
+    }
+
     if (slaveConnection_ != nullptr) {
         auto [replicaWalErr, replicaWalPath] = slaveConnection_->GetWalName();
-        info.replicaInfo.walInfo = StatToFileInfo(replicaWalPath);
-        if (replicaWalErr != E_OK) {
-            info.replicaInfo.walInfo.errCode = replicaWalErr;
+        auto [rWalErr, rWalInfo] = StatToFileInfo(replicaWalPath);
+        if (rWalErr == E_OK) {
+            info.replicaInfo.walInfo = rWalInfo;
         }
-    } else {
-        info.replicaInfo.walInfo.errCode = E_NOT_SUPPORT;
     }
+
     info.binlogInfo = SqliteUtils::CaptureBinlogInfo(config_);
-    return info;
+    return E_OK;
 }
 
-void SqliteConnection::TryReplayBinlog(PrimaryAndReplicaInfo &info)
+int SqliteConnection::TryReplayBinlog(PrimaryAndReplicaInfo &info)
 {
     sqlite3 *replicaHandle = (slaveConnection_ != nullptr) ? slaveConnection_->dbHandle_ : nullptr;
     if (!SqliteUtils::IsSupportBinlog(config_) || replicaHandle == nullptr || dbHandle_ == nullptr) {
-        info.replayErr = E_NOT_SUPPORT;
-        return;
+        return E_OK;
     }
     if (!info.binlogInfo.exist) {
-        return;
+        return E_OK;
     }
     int replayErr = ReplayBinlogSqlite(dbHandle_, replicaHandle, config_);
     if (replayErr != E_OK) {
         LOG_ERROR("replay failed: %{public}s, err: %{public}d",
             SqliteUtils::Anonymous(config_.GetPath()).c_str(), replayErr);
-        info.replayErr = replayErr;
+        return replayErr;
     }
+    return E_OK;
 }
 
-void SqliteConnection::CheckpointDatabases(PrimaryAndReplicaInfo &info)
+int SqliteConnection::CheckpointDatabases(PrimaryAndReplicaInfo &info)
 {
     if (dbHandle_ != nullptr && isWriter_) {
         int ckptErr = sqlite3_wal_checkpoint_v2(dbHandle_, nullptr, SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
-        info.primaryInfo.checkpointErr = SQLiteError::ErrNo(ckptErr);
         if (ckptErr != SQLITE_OK) {
-            LOG_WARN("primary checkpoint failed err: %{public}d", ckptErr);
+            LOG_ERROR("primary checkpoint failed err: %{public}d", ckptErr);
+            return SQLiteError::ErrNo(ckptErr);
         }
-    } else {
-        info.primaryInfo.checkpointErr = E_NOT_SUPPORT;
     }
     if (slaveConnection_ != nullptr && slaveConnection_->dbHandle_ != nullptr) {
         int ckptErr = sqlite3_wal_checkpoint_v2(slaveConnection_->dbHandle_, nullptr,
             SQLITE_CHECKPOINT_TRUNCATE, nullptr, nullptr);
-        info.replicaInfo.checkpointErr = SQLiteError::ErrNo(ckptErr);
         if (ckptErr != SQLITE_OK) {
-            LOG_WARN("replica checkpoint failed err: %{public}d", ckptErr);
+            LOG_ERROR("replica checkpoint failed err: %{public}d", ckptErr);
+            return SQLiteError::ErrNo(ckptErr);
         }
-    } else {
-        info.replicaInfo.checkpointErr = E_NOT_SUPPORT;
     }
+    return E_OK;
 }
 
-void SqliteConnection::RefreshSizesAfterCheckpoint(PrimaryAndReplicaInfo &info)
+int SqliteConnection::RefreshSizesAfterCheckpoint(PrimaryAndReplicaInfo &info)
 {
     std::string primaryDbPath = config_.GetPath();
+    auto [dbErr, dbInfo] = StatToFileInfo(primaryDbPath);
+    if (dbErr != E_OK) {
+        LOG_ERROR("RefreshSizesAfterCheckpoint: primary db stat failed, err: %{public}d", dbErr);
+        return dbErr;
+    }
+    info.primaryInfo.dbInfo.size = dbInfo.size;
+
     std::string primaryWalPath = GetWalName().second;
-    RdbFileInfo primaryDbAfter = StatToFileInfo(primaryDbPath);
-    RdbFileInfo primaryWalAfter = StatToFileInfo(primaryWalPath);
-    info.primaryInfo.dbInfo.size = primaryDbAfter.size;
-    info.primaryInfo.dbInfo.sizeErr = primaryDbAfter.errCode;
-    info.primaryInfo.walInfo.size = primaryWalAfter.size;
-    info.primaryInfo.walInfo.sizeErr = primaryWalAfter.errCode;
+    auto [walErr, walInfo] = StatToFileInfo(primaryWalPath);
+    if (walErr == E_OK) {
+        info.primaryInfo.walInfo.size = walInfo.size;
+    }
 
     if (slaveConnection_ != nullptr) {
         std::string replicaDbPath = SqliteUtils::GetSlavePath(config_);
+        auto [rDbErr, rDbInfo] = StatToFileInfo(replicaDbPath);
+        if (rDbErr == E_OK) {
+            info.replicaInfo.dbInfo.size = rDbInfo.size;
+        }
         std::string replicaWalPath = slaveConnection_->GetWalName().second;
-        RdbFileInfo replicaDbAfter = StatToFileInfo(replicaDbPath);
-        RdbFileInfo replicaWalAfter = StatToFileInfo(replicaWalPath);
-        info.replicaInfo.dbInfo.size = replicaDbAfter.size;
-        info.replicaInfo.dbInfo.sizeErr = replicaDbAfter.errCode;
-        info.replicaInfo.walInfo.size = replicaWalAfter.size;
-        info.replicaInfo.walInfo.sizeErr = replicaWalAfter.errCode;
+        auto [rWalErr, rWalInfo] = StatToFileInfo(replicaWalPath);
+        if (rWalErr == E_OK) {
+            info.replicaInfo.walInfo.size = rWalInfo.size;
+        }
     }
+    return E_OK;
 }
 
 int SqliteConnection::CollectVersionsAndTables(PrimaryAndReplicaInfo &info, const std::vector<std::string> &tableNames)
@@ -2826,19 +2838,33 @@ int SqliteConnection::CollectVersionsAndTables(PrimaryAndReplicaInfo &info, cons
 
 std::pair<int, PrimaryAndReplicaInfo> SqliteConnection::GetPrimaryAndReplicaInfo(const std::vector<std::string> &tableNames)
 {
-    PrimaryAndReplicaInfo info = CollectInitialFileInfo();
+    PrimaryAndReplicaInfo info{};
 
-    if (slaveConnection_ == nullptr) {
-        LOG_WARN("GetPrimaryAndReplicaInfo: no replica connection, skip replay and replica checkpoint");
+    int err = CollectInitialFileInfo(info);
+    if (err != E_OK) {
+        return { err, std::move(info) };
     }
 
-    TryReplayBinlog(info);
+    err = TryReplayBinlog(info);
+    if (err != E_OK) {
+        LOG_ERROR("GetPrimaryAndReplicaInfo: binlog replay failed, err: %{public}d", err);
+        return { err, std::move(info) };
+    }
 
-    CheckpointDatabases(info);
-    RefreshSizesAfterCheckpoint(info);
-    int tableErr = CollectVersionsAndTables(info, tableNames);
+    err = CheckpointDatabases(info);
+    if (err != E_OK) {
+        LOG_ERROR("GetPrimaryAndReplicaInfo: checkpoint failed, err: %{public}d", err);
+        return { err, std::move(info) };
+    }
 
-    return { tableErr != E_OK ? tableErr : E_OK, std::move(info) };
+    err = RefreshSizesAfterCheckpoint(info);
+    if (err != E_OK) {
+        LOG_ERROR("GetPrimaryAndReplicaInfo: refresh sizes failed, err: %{public}d", err);
+        return { err, std::move(info) };
+    }
+
+    err = CollectVersionsAndTables(info, tableNames);
+    return { err, std::move(info) };
 }
 } // namespace NativeRdb
 } // namespace OHOS

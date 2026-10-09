@@ -637,8 +637,6 @@ struct RdbFileInfo {
     int64_t ctime = 0;
     int64_t atime = 0;
     int64_t mtime = 0;
-    int errCode = E_OK;
-    int sizeErr = E_OK;
 };
 
 struct DbInfo {
@@ -646,44 +644,29 @@ struct DbInfo {
     RdbFileInfo walInfo;
     int64_t userVersion = 0;
     std::map<std::string, TableInfo> tables;
-    int checkpointErr = E_OK;
 };
 
 struct RdbBinlogInfo {
     bool exist = false;
     int64_t lastModifyTime = 0;
-    int errCode = E_OK;
 };
 
 struct PrimaryAndReplicaInfo {
     DbInfo primaryInfo;
     DbInfo replicaInfo;
     RdbBinlogInfo binlogInfo;
-    int replayErr = E_OK;
 
-    std::pair<int, int64_t> GetPrimaryLastModifyTime() const
+    int64_t GetPrimaryLastModifyTime() const
     {
-        int64_t dbMtime = (primaryInfo.dbInfo.errCode == E_OK) ? primaryInfo.dbInfo.mtime : 0;
-        int64_t walMtime = (primaryInfo.walInfo.errCode == E_OK) ? primaryInfo.walInfo.mtime : 0;
-        int64_t time = std::max(dbMtime, walMtime);
-        if (primaryInfo.dbInfo.errCode != E_OK && primaryInfo.walInfo.errCode != E_OK) {
-            return { E_ERROR, time };
-        }
-        return { E_OK, time };
+        return std::max(primaryInfo.dbInfo.mtime, primaryInfo.walInfo.mtime);
     }
 
-    std::pair<int, int64_t> GetReplicaLastModifyTime() const
+    int64_t GetReplicaLastModifyTime() const
     {
-        if (binlogInfo.errCode == E_OK && binlogInfo.exist) {
-            return { E_OK, binlogInfo.lastModifyTime };
+        if (binlogInfo.exist) {
+            return binlogInfo.lastModifyTime;
         }
-        int64_t dbMtime = (replicaInfo.dbInfo.errCode == E_OK) ? replicaInfo.dbInfo.mtime : 0;
-        int64_t walMtime = (replicaInfo.walInfo.errCode == E_OK) ? replicaInfo.walInfo.mtime : 0;
-        int64_t time = std::max(dbMtime, walMtime);
-        if (replicaInfo.dbInfo.errCode != E_OK && replicaInfo.walInfo.errCode != E_OK) {
-            return { E_ERROR, time };
-        }
-        return { E_OK, time };
+        return std::max(replicaInfo.dbInfo.mtime, replicaInfo.walInfo.mtime);
     }
 };
 } // namespace NativeRdb
