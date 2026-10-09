@@ -16,6 +16,7 @@
 #ifndef DISTRIBUTED_RDB_RDB_TYPES_H
 #define DISTRIBUTED_RDB_RDB_TYPES_H
 
+#include <algorithm>
 #include <chrono>
 #include <cinttypes>
 #include <cstdint>
@@ -671,6 +672,27 @@ struct PrimaryAndReplicaInfo {
     int primaryTimeErr = E_OK; // Validity of primaryLastModifyTime: E_OK=at least one valid source used, E_ERROR=all sources failed
     int64_t replicaLastModifyTime = 0;
     int replicaTimeErr = E_OK; // Validity of replicaLastModifyTime: E_OK=at least one valid source used, E_ERROR=all sources failed
+
+    void Summarize()
+    {
+        int64_t primaryDbMtime = (primaryInfo.dbInfo.errCode == E_OK) ? primaryInfo.dbInfo.mtime : 0;
+        int64_t primaryWalMtime = (primaryInfo.walInfo.errCode == E_OK) ? primaryInfo.walInfo.mtime : 0;
+        primaryLastModifyTime = std::max(primaryDbMtime, primaryWalMtime);
+        if (primaryInfo.dbInfo.errCode != E_OK && primaryInfo.walInfo.errCode != E_OK) {
+            primaryTimeErr = E_ERROR;
+        }
+        if (binlogInfo.errCode == E_OK && binlogInfo.exist) {
+            replicaLastModifyTime = binlogInfo.lastModifyTime;
+            replicaTimeErr = E_OK;
+        } else {
+            int64_t replicaDbMtime = (replicaInfo.dbInfo.errCode == E_OK) ? replicaInfo.dbInfo.mtime : 0;
+            int64_t replicaWalMtime = (replicaInfo.walInfo.errCode == E_OK) ? replicaInfo.walInfo.mtime : 0;
+            replicaLastModifyTime = std::max(replicaDbMtime, replicaWalMtime);
+            if (replicaInfo.dbInfo.errCode != E_OK && replicaInfo.walInfo.errCode != E_OK) {
+                replicaTimeErr = E_ERROR;
+            }
+        }
+    }
 };
 } // namespace NativeRdb
 } // namespace OHOS

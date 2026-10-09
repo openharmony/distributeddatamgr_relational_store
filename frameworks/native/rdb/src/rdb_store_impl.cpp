@@ -3993,27 +3993,7 @@ std::pair<int, PrimaryAndReplicaInfo> RdbStoreImpl::GetPrimaryReplicaInfo(const 
     }
 
     auto [diagErr, info] = conn->GetPrimaryAndReplicaInfo(tableName);
-
-    // Only valid (errCode == E_OK) times participate in max; invalid stats contribute 0.
-    int64_t primaryDbMtime = (info.primaryInfo.dbInfo.errCode == E_OK) ? info.primaryInfo.dbInfo.mtime : 0;
-    int64_t primaryWalMtime = (info.primaryInfo.walInfo.errCode == E_OK) ? info.primaryInfo.walInfo.mtime : 0;
-    info.primaryLastModifyTime = std::max(primaryDbMtime, primaryWalMtime);
-    // E_ERROR only when all sources failed.
-    if (info.primaryInfo.dbInfo.errCode != E_OK && info.primaryInfo.walInfo.errCode != E_OK) {
-        info.primaryTimeErr = E_ERROR;
-    }
-    // Partial binlog scan (errCode != E_OK) falls back to file times
-    if (info.binlogInfo.errCode == E_OK && info.binlogInfo.exist) {
-        info.replicaLastModifyTime = info.binlogInfo.lastModifyTime;
-        info.replicaTimeErr = E_OK;
-    } else {
-        int64_t replicaDbMtime = (info.replicaInfo.dbInfo.errCode == E_OK) ? info.replicaInfo.dbInfo.mtime : 0;
-        int64_t replicaWalMtime = (info.replicaInfo.walInfo.errCode == E_OK) ? info.replicaInfo.walInfo.mtime : 0;
-        info.replicaLastModifyTime = std::max(replicaDbMtime, replicaWalMtime);
-        if (info.replicaInfo.dbInfo.errCode != E_OK && info.replicaInfo.walInfo.errCode != E_OK) {
-            info.replicaTimeErr = E_ERROR;
-        }
-    }
+    info.Summarize();
 
     LOG_INFO("GetPrimaryReplicaInfo: primaryDb.mtime=%{public}" PRId64 ", primaryWal.mtime=%{public}" PRId64 ", "
         "replicaDb.mtime=%{public}" PRId64 ", replicaWal.mtime=%{public}" PRId64 ", binlog.exist=%{public}d, "
