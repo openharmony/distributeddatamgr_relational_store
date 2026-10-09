@@ -3975,7 +3975,7 @@ bool RdbStoreImpl::IsInvalidDistributedConfig(const DistributedRdb::DistributedC
     return distributedConfig.assetTempPath.empty() || distributedConfig.assetTempPath.find("../") != std::string::npos;
 }
 
-std::pair<int, PrimaryAndReplicaInfo> RdbStoreImpl::GetPrimaryReplicaInfo(const std::string &tableName)
+std::pair<int, PrimaryAndReplicaInfo> RdbStoreImpl::GetPrimaryReplicaInfo(const std::vector<std::string> &tableNames)
 {
     if (isReadOnly_ || isMemoryRdb_ || config_.GetDBType() == DB_VECTOR) {
         return { E_NOT_SUPPORT, {} };
@@ -3992,8 +3992,9 @@ std::pair<int, PrimaryAndReplicaInfo> RdbStoreImpl::GetPrimaryReplicaInfo(const 
         return { connErr, {} };
     }
 
-    auto [diagErr, info] = conn->GetPrimaryAndReplicaInfo(tableName);
-    info.Summarize();
+    auto [diagErr, info] = conn->GetPrimaryAndReplicaInfo(tableNames);
+    auto [primaryTimeErr, primaryLastModifyTime] = info.GetPrimaryLastModifyTime();
+    auto [replicaTimeErr, replicaLastModifyTime] = info.GetReplicaLastModifyTime();
 
     LOG_INFO("GetPrimaryReplicaInfo: primaryDb.mtime=%{public}" PRId64 ", primaryWal.mtime=%{public}" PRId64 ", "
         "replicaDb.mtime=%{public}" PRId64 ", replicaWal.mtime=%{public}" PRId64 ", binlog.exist=%{public}d, "
@@ -4004,8 +4005,8 @@ std::pair<int, PrimaryAndReplicaInfo> RdbStoreImpl::GetPrimaryReplicaInfo(const 
         info.replicaInfo.walInfo.mtime,
         info.binlogInfo.exist,
         info.binlogInfo.lastModifyTime,
-        info.primaryLastModifyTime,
-        info.replicaLastModifyTime);
+        primaryLastModifyTime,
+        replicaLastModifyTime);
 
     if (info.replayErr != E_OK && info.replayErr != E_NOT_SUPPORT) {
         LOG_WARN("GetPrimaryReplicaInfo: binlog replay failed, err: %{public}d", info.replayErr);

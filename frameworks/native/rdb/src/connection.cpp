@@ -273,7 +273,7 @@ bool Connection::IsRecyclable() const
     return isRecyclable_;
 }
 
-std::pair<int, PrimaryAndReplicaInfo> Connection::GetPrimaryAndReplicaInfo(const std::string &tableName)
+std::pair<int, PrimaryAndReplicaInfo> Connection::GetPrimaryAndReplicaInfo(const std::vector<std::string> &tableNames)
 {
     return { E_NOT_SUPPORT, {} };
 }

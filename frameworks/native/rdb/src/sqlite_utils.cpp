@@ -1023,43 +1023,14 @@ RdbBinlogInfo SqliteUtils::CaptureBinlogInfo(const RdbStoreConfig &config)
 {
     RdbBinlogInfo info{};
     std::string dir = GetBinlogFolderPath(config);
-    DIR *d = opendir(dir.c_str());
-    if (d == nullptr) {
-        info.errCode = E_ERROR;
+    std::string indexPath = dir + "/binlog_default.writeIndex";
+    auto [statErr, st] = Stat(indexPath);
+    if (statErr != E_OK) {
+        info.errCode = E_OK;
         return info;
     }
-    const std::string prefix = "binlog_default.";
-    struct dirent *entry;
-    while ((entry = readdir(d)) != nullptr) {
-        std::string name = entry->d_name;
-        if (name.compare(0, prefix.size(), prefix) != 0) {
-            continue;
-        }
-        std::string suffix = name.substr(prefix.size());
-        bool isDigits = !suffix.empty();
-        for (char c : suffix) {
-            if (c < '0' || c > '9') {
-                isDigits = false;
-                break;
-            }
-        }
-        if (!isDigits) {
-            continue;
-        }
-        std::string fullPath = dir + "/" + name;
-        auto [statErr, st] = Stat(fullPath);
-        if (statErr != E_OK) {
-            continue;
-        }
-        info.exist = true;
-        info.fileCount++;
-        info.totalSize += static_cast<int64_t>(st.size_);
-        int64_t mtimeMs = st.mtime_.sec_ * 1000 + st.mtime_.nsec_ / 1000000;
-        if (mtimeMs > info.lastModifyTime) {
-            info.lastModifyTime = mtimeMs;
-        }
-    }
-    closedir(d);
+    info.exist = true;
+    info.lastModifyTime = st.mtime_.sec_ * 1000 + st.mtime_.nsec_ / 1000000;
     info.errCode = E_OK;
     return info;
 }

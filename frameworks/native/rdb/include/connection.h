@@ -118,7 +118,7 @@ public:
 
     // Diagnostic: returns raw primary/replica file metadata without time summarization.
     // Default returns E_NOT_SUPPORT (defined in connection.cpp); SqliteConnection overrides.
-    virtual std::pair<int, PrimaryAndReplicaInfo> GetPrimaryAndReplicaInfo(const std::string &tableName);
+    virtual std::pair<int, PrimaryAndReplicaInfo> GetPrimaryAndReplicaInfo(const std::vector<std::string> &tableNames);
 
     virtual std::string GetLastErrorMsg() const { return ""; }
 

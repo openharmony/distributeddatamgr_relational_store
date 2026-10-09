@@ -94,7 +94,7 @@ public:
     int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) override;
     static int32_t CreateSlaveSymLink(
         const std::string &dbPath, const std::string &masterDbPath, const std::string &suffix);
-    std::pair<int, PrimaryAndReplicaInfo> GetPrimaryAndReplicaInfo(const std::string &tableName) override;
+    std::pair<int, PrimaryAndReplicaInfo> GetPrimaryAndReplicaInfo(const std::vector<std::string> &tableNames) override;
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
@@ -173,7 +173,7 @@ private:
     void TryReplayBinlog(PrimaryAndReplicaInfo &info);
     void CheckpointDatabases(PrimaryAndReplicaInfo &info);
     void RefreshSizesAfterCheckpoint(PrimaryAndReplicaInfo &info);
-    int CollectVersionsAndTables(PrimaryAndReplicaInfo &info, const std::string &tableName);
+    int CollectVersionsAndTables(PrimaryAndReplicaInfo &info, const std::vector<std::string> &tableNames);
     std::pair<int32_t, Stmt> CreateStatementInner(
         const std::string &sql, SConn conn, sqlite3 *db, bool isFromReplica, const std::string &returningSql = "");
     ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount,

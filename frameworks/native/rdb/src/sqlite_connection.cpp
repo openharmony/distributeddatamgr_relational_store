@@ -1464,17 +1464,10 @@ int SqliteConnection::TryCheckPoint(bool timeout)
             }
         }
     });
-    const char *dbFile = sqlite3_db_filename(dbHandle_, "main");
-    if (dbFile == nullptr) {
-        LOG_ERROR("Failed to get database filename");
+    auto [walErr, walName] = GetWalName();
+    if (walErr != E_OK) {
         return E_ERROR;
     }
-    const char *walFile = sqlite3_filename_wal(dbFile);
-    if (walFile == nullptr) {
-        LOG_ERROR("No WAL file for database");
-        return E_ERROR;
-    }
-    std::string walName = walFile;
     ssize_t size = SqliteUtils::GetFileSize(walName);
     if (size < 0) {
         LOG_ERROR("Invalid size for WAL:%{public}s size:%{public}zd", SqliteUtils::Anonymous(walName).c_str(), size);
@@ -1508,7 +1501,10 @@ int SqliteConnection::LimitWalSize()
         return E_OK;
     }
 
-    std::string walName = sqlite3_filename_wal(sqlite3_db_filename(dbHandle_, "main"));
+    auto [walErr, walName] = GetWalName();
+    if (walErr != E_OK) {
+        return walErr;
+    }
     ssize_t fileSize = SqliteUtils::GetFileSize(walName);
     if (fileSize < 0 || fileSize > config_.GetWalLimitSize()) {
         std::stringstream ss;
@@ -2747,7 +2743,7 @@ void SqliteConnection::TryReplayBinlog(PrimaryAndReplicaInfo &info)
         info.replayErr = E_NOT_SUPPORT;
         return;
     }
-    if (!info.binlogInfo.exist || info.binlogInfo.fileCount == 0) {
+    if (!info.binlogInfo.exist) {
         return;
     }
     int replayErr = ReplayBinlogSqlite(dbHandle_, replicaHandle, config_);
@@ -2787,62 +2783,48 @@ void SqliteConnection::RefreshSizesAfterCheckpoint(PrimaryAndReplicaInfo &info)
     std::string primaryWalPath = GetWalName().second;
     RdbFileInfo primaryDbAfter = StatToFileInfo(primaryDbPath);
     RdbFileInfo primaryWalAfter = StatToFileInfo(primaryWalPath);
-    if (primaryDbAfter.errCode == E_OK) {
-        info.primaryInfo.dbInfo.size = primaryDbAfter.size;
-        info.primaryInfo.dbInfo.sizeErr = E_OK;
-    } else {
-        info.primaryInfo.dbInfo.sizeErr = E_ERROR;
-    }
-    if (primaryWalAfter.errCode == E_OK) {
-        info.primaryInfo.walInfo.size = primaryWalAfter.size;
-        info.primaryInfo.walInfo.sizeErr = E_OK;
-    } else {
-        info.primaryInfo.walInfo.sizeErr = E_ERROR;
-    }
+    info.primaryInfo.dbInfo.size = primaryDbAfter.size;
+    info.primaryInfo.dbInfo.sizeErr = primaryDbAfter.errCode;
+    info.primaryInfo.walInfo.size = primaryWalAfter.size;
+    info.primaryInfo.walInfo.sizeErr = primaryWalAfter.errCode;
 
     if (slaveConnection_ != nullptr) {
         std::string replicaDbPath = SqliteUtils::GetSlavePath(config_);
         std::string replicaWalPath = slaveConnection_->GetWalName().second;
         RdbFileInfo replicaDbAfter = StatToFileInfo(replicaDbPath);
         RdbFileInfo replicaWalAfter = StatToFileInfo(replicaWalPath);
-        if (replicaDbAfter.errCode == E_OK) {
-            info.replicaInfo.dbInfo.size = replicaDbAfter.size;
-            info.replicaInfo.dbInfo.sizeErr = E_OK;
-        } else {
-            info.replicaInfo.dbInfo.sizeErr = E_ERROR;
-        }
-        if (replicaWalAfter.errCode == E_OK) {
-            info.replicaInfo.walInfo.size = replicaWalAfter.size;
-            info.replicaInfo.walInfo.sizeErr = E_OK;
-        } else {
-            info.replicaInfo.walInfo.sizeErr = E_ERROR;
-        }
+        info.replicaInfo.dbInfo.size = replicaDbAfter.size;
+        info.replicaInfo.dbInfo.sizeErr = replicaDbAfter.errCode;
+        info.replicaInfo.walInfo.size = replicaWalAfter.size;
+        info.replicaInfo.walInfo.sizeErr = replicaWalAfter.errCode;
     }
 }
 
-int SqliteConnection::CollectVersionsAndTables(PrimaryAndReplicaInfo &info, const std::string &tableName)
+int SqliteConnection::CollectVersionsAndTables(PrimaryAndReplicaInfo &info, const std::vector<std::string> &tableNames)
 {
     info.primaryInfo.userVersion = QueryUserVersion();
     if (slaveConnection_ != nullptr) {
         info.replicaInfo.userVersion = slaveConnection_->QueryUserVersion();
     }
 
-    if (tableName.empty()) {
-        return E_OK;
-    }
-    if (!RdbSqlUtils::IsValidTableName(tableName)) {
-        return E_INVALID_ARGS;
-    }
-    auto [pErr, pTable] = CountTable(tableName);
-    info.primaryInfo.tables[tableName] = std::move(pTable);
-    if (slaveConnection_ != nullptr) {
-        auto [rErr, rTable] = slaveConnection_->CountTable(tableName);
-        info.replicaInfo.tables[tableName] = std::move(rTable);
+    for (const auto &tableName : tableNames) {
+        if (tableName.empty()) {
+            continue;
+        }
+        if (!RdbSqlUtils::IsValidTableName(tableName)) {
+            return E_INVALID_ARGS;
+        }
+        auto [pErr, pTable] = CountTable(tableName);
+        info.primaryInfo.tables[tableName] = std::move(pTable);
+        if (slaveConnection_ != nullptr) {
+            auto [rErr, rTable] = slaveConnection_->CountTable(tableName);
+            info.replicaInfo.tables[tableName] = std::move(rTable);
+        }
     }
     return E_OK;
 }
 
-std::pair<int, PrimaryAndReplicaInfo> SqliteConnection::GetPrimaryAndReplicaInfo(const std::string &tableName)
+std::pair<int, PrimaryAndReplicaInfo> SqliteConnection::GetPrimaryAndReplicaInfo(const std::vector<std::string> &tableNames)
 {
     PrimaryAndReplicaInfo info = CollectInitialFileInfo();
 
@@ -2854,7 +2836,7 @@ std::pair<int, PrimaryAndReplicaInfo> SqliteConnection::GetPrimaryAndReplicaInfo
 
     CheckpointDatabases(info);
     RefreshSizesAfterCheckpoint(info);
-    int tableErr = CollectVersionsAndTables(info, tableName);
+    int tableErr = CollectVersionsAndTables(info, tableNames);
 
     return { tableErr != E_OK ? tableErr : E_OK, std::move(info) };
 }

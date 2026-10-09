@@ -627,15 +627,9 @@ enum Tokenizer : int32_t {
     TOKENIZER_END
 };
 
-struct ColumnInfo {
-    std::string name;
-    int32_t type = 0;
-};
-
 struct TableInfo {
     int64_t count = 0;
-    std::vector<ColumnInfo> columns;
-    int errCode = E_OK; // Result of SELECT COUNT(*) on the table; E_OK on success, query error code on failure
+    int errCode = E_OK;
 };
 
 struct RdbFileInfo {
@@ -643,8 +637,8 @@ struct RdbFileInfo {
     int64_t ctime = 0;
     int64_t atime = 0;
     int64_t mtime = 0;
-    int errCode = E_OK; // Initial stat() result: E_OK on success, E_ERROR on stat failure, E_NOT_SUPPORT=skipped (no connection for WAL path)
-    int sizeErr = E_OK; // Post-checkpoint size refresh result: E_OK=size refreshed or initial size valid, E_ERROR=refresh failed (size is stale initial value)
+    int errCode = E_OK;
+    int sizeErr = E_OK;
 };
 
 struct DbInfo {
@@ -652,46 +646,44 @@ struct DbInfo {
     RdbFileInfo walInfo;
     int64_t userVersion = 0;
     std::map<std::string, TableInfo> tables;
-    int checkpointErr = E_OK; // sqlite3_wal_checkpoint_v2 result mapped via SQLiteError::ErrNo: E_OK=succeeded, E_SQLITE_* on failure, E_NOT_SUPPORT=skipped
+    int checkpointErr = E_OK;
 };
 
 struct RdbBinlogInfo {
     bool exist = false;
-    uint32_t fileCount = 0;
-    int64_t totalSize = 0;
     int64_t lastModifyTime = 0;
-    int errCode = E_OK; // Result of binlog directory scan; E_OK on success (even if no binlog files exist), E_ERROR on opendir/readdir/stat failure or partial scan
+    int errCode = E_OK;
 };
 
 struct PrimaryAndReplicaInfo {
     DbInfo primaryInfo;
     DbInfo replicaInfo;
     RdbBinlogInfo binlogInfo;
-    int replayErr = E_OK; // Replay status: E_OK=executed successfully or no binlog files to replay, E_NOT_SUPPORT=skipped (not supported or no replica handle), replay error code on failure
-    int64_t primaryLastModifyTime = 0;
-    int primaryTimeErr = E_OK; // Validity of primaryLastModifyTime: E_OK=at least one valid source used, E_ERROR=all sources failed
-    int64_t replicaLastModifyTime = 0;
-    int replicaTimeErr = E_OK; // Validity of replicaLastModifyTime: E_OK=at least one valid source used, E_ERROR=all sources failed
+    int replayErr = E_OK;
 
-    void Summarize()
+    std::pair<int, int64_t> GetPrimaryLastModifyTime() const
     {
-        int64_t primaryDbMtime = (primaryInfo.dbInfo.errCode == E_OK) ? primaryInfo.dbInfo.mtime : 0;
-        int64_t primaryWalMtime = (primaryInfo.walInfo.errCode == E_OK) ? primaryInfo.walInfo.mtime : 0;
-        primaryLastModifyTime = std::max(primaryDbMtime, primaryWalMtime);
+        int64_t dbMtime = (primaryInfo.dbInfo.errCode == E_OK) ? primaryInfo.dbInfo.mtime : 0;
+        int64_t walMtime = (primaryInfo.walInfo.errCode == E_OK) ? primaryInfo.walInfo.mtime : 0;
+        int64_t time = std::max(dbMtime, walMtime);
         if (primaryInfo.dbInfo.errCode != E_OK && primaryInfo.walInfo.errCode != E_OK) {
-            primaryTimeErr = E_ERROR;
+            return { E_ERROR, time };
         }
+        return { E_OK, time };
+    }
+
+    std::pair<int, int64_t> GetReplicaLastModifyTime() const
+    {
         if (binlogInfo.errCode == E_OK && binlogInfo.exist) {
-            replicaLastModifyTime = binlogInfo.lastModifyTime;
-            replicaTimeErr = E_OK;
-        } else {
-            int64_t replicaDbMtime = (replicaInfo.dbInfo.errCode == E_OK) ? replicaInfo.dbInfo.mtime : 0;
-            int64_t replicaWalMtime = (replicaInfo.walInfo.errCode == E_OK) ? replicaInfo.walInfo.mtime : 0;
-            replicaLastModifyTime = std::max(replicaDbMtime, replicaWalMtime);
-            if (replicaInfo.dbInfo.errCode != E_OK && replicaInfo.walInfo.errCode != E_OK) {
-                replicaTimeErr = E_ERROR;
-            }
+            return { E_OK, binlogInfo.lastModifyTime };
         }
+        int64_t dbMtime = (replicaInfo.dbInfo.errCode == E_OK) ? replicaInfo.dbInfo.mtime : 0;
+        int64_t walMtime = (replicaInfo.walInfo.errCode == E_OK) ? replicaInfo.walInfo.mtime : 0;
+        int64_t time = std::max(dbMtime, walMtime);
+        if (replicaInfo.dbInfo.errCode != E_OK && replicaInfo.walInfo.errCode != E_OK) {
+            return { E_ERROR, time };
+        }
+        return { E_OK, time };
     }
 };
 } // namespace NativeRdb

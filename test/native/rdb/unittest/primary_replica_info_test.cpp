@@ -135,8 +135,6 @@ HWTEST_F(PrimaryReplicaInfoTest, TypeExistence_001, TestSize.Level1)
     EXPECT_EQ(info.primaryInfo.userVersion, 0);
     EXPECT_TRUE(info.primaryInfo.tables.empty());
     EXPECT_EQ(info.binlogInfo.exist, false);
-    EXPECT_EQ(info.binlogInfo.fileCount, 0u);
-    EXPECT_EQ(info.binlogInfo.totalSize, 0);
     EXPECT_EQ(info.binlogInfo.lastModifyTime, 0);
     // Per-item status fields default to E_OK (R-02)
     EXPECT_EQ(info.primaryInfo.dbInfo.errCode, E_OK);
@@ -147,10 +145,12 @@ HWTEST_F(PrimaryReplicaInfoTest, TypeExistence_001, TestSize.Level1)
     EXPECT_EQ(info.replicaInfo.checkpointErr, E_OK);
     EXPECT_EQ(info.binlogInfo.errCode, E_OK);
     EXPECT_EQ(info.replayErr, E_OK);
-    EXPECT_EQ(info.primaryLastModifyTime, 0);
-    EXPECT_EQ(info.primaryTimeErr, E_OK);
-    EXPECT_EQ(info.replicaLastModifyTime, 0);
-    EXPECT_EQ(info.replicaTimeErr, E_OK);
+    auto [ptErr, ptTime] = info.GetPrimaryLastModifyTime();
+    EXPECT_EQ(ptTime, 0);
+    EXPECT_EQ(ptErr, E_OK);
+    auto [rtErr, rtTime] = info.GetReplicaLastModifyTime();
+    EXPECT_EQ(rtTime, 0);
+    EXPECT_EQ(rtErr, E_OK);
 
     RdbFileInfo fi{};
     fi.size = 1024;
@@ -166,11 +166,8 @@ HWTEST_F(PrimaryReplicaInfoTest, TypeExistence_001, TestSize.Level1)
 
     RdbBinlogInfo bi{};
     bi.exist = true;
-    bi.fileCount = 3;
-    bi.totalSize = 4096;
     bi.lastModifyTime = 99999;
     EXPECT_EQ(bi.exist, true);
-    EXPECT_EQ(bi.fileCount, 3u);
     EXPECT_EQ(bi.errCode, E_OK);
 }
 
@@ -195,7 +192,7 @@ HWTEST_F(PrimaryReplicaInfoTest, SingleMode_001, TestSize.Level1)
     ASSERT_NE(singleStore, nullptr);
     ASSERT_EQ(errCode, E_OK);
 
-    auto [ret, info] = singleStore->GetPrimaryReplicaInfo("");
+    auto [ret, info] = singleStore->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_NOT_SUPPORT);
 }
 
@@ -222,7 +219,7 @@ HWTEST_F(PrimaryReplicaInfoTest, StoreClosed_001, TestSize.Level1)
     auto impl = std::static_pointer_cast<RdbStoreImpl>(closedStore);
     impl->Close();
 
-    auto [ret, info] = closedStore->GetPrimaryReplicaInfo("");
+    auto [ret, info] = closedStore->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_ALREADY_CLOSED);
 }
 
@@ -234,7 +231,7 @@ HWTEST_F(PrimaryReplicaInfoTest, StoreClosed_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, EmptyTableName_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 2);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     EXPECT_TRUE(info.primaryInfo.tables.empty());
     EXPECT_TRUE(info.replicaInfo.tables.empty());
@@ -248,7 +245,7 @@ HWTEST_F(PrimaryReplicaInfoTest, EmptyTableName_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, FileSizes_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 5);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     EXPECT_GT(info.primaryInfo.dbInfo.size, 0);
     EXPECT_EQ(info.primaryInfo.dbInfo.errCode, E_OK);
@@ -268,7 +265,7 @@ HWTEST_F(PrimaryReplicaInfoTest, FileSizes_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, TableCount_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 3);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("test");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret, E_OK);
     auto it = info.primaryInfo.tables.find("test");
     ASSERT_NE(it, info.primaryInfo.tables.end());
@@ -283,14 +280,14 @@ HWTEST_F(PrimaryReplicaInfoTest, TableCount_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, TimeFields_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 1);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     EXPECT_GT(info.primaryInfo.dbInfo.mtime, 0);
     EXPECT_GE(info.primaryInfo.dbInfo.ctime, 0);
     EXPECT_GE(info.primaryInfo.dbInfo.atime, 0);
     // Verify summarized time is set and follows max(DB, WAL) rule (T-04 fix).
-    EXPECT_GT(info.primaryLastModifyTime, 0);
-    EXPECT_EQ(info.primaryLastModifyTime,
+    EXPECT_GT(info.GetPrimaryLastModifyTime().second, 0);
+    EXPECT_EQ(info.GetPrimaryLastModifyTime().second,
         std::max(info.primaryInfo.dbInfo.mtime, info.primaryInfo.walInfo.mtime));
 }
 
@@ -301,12 +298,10 @@ HWTEST_F(PrimaryReplicaInfoTest, TimeFields_001, TestSize.Level1)
  */
 HWTEST_F(PrimaryReplicaInfoTest, BinlogInfo_NoBinlog_001, TestSize.Level1)
 {
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // No binlog writes performed; exist must be false (T-07 fix).
     EXPECT_EQ(info.binlogInfo.exist, false);
-    EXPECT_EQ(info.binlogInfo.fileCount, 0u);
-    EXPECT_EQ(info.binlogInfo.totalSize, 0);
     EXPECT_EQ(info.binlogInfo.lastModifyTime, 0);
 }
 
@@ -318,7 +313,7 @@ HWTEST_F(PrimaryReplicaInfoTest, BinlogInfo_NoBinlog_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, UserVersion_001, TestSize.Level1)
 {
     EXPECT_EQ(store_->ExecuteSql("PRAGMA user_version = 42"), E_OK);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // Verify exact user_version value, not just >= 0 (T-07 fix).
     EXPECT_EQ(info.primaryInfo.userVersion, 42);
@@ -332,7 +327,7 @@ HWTEST_F(PrimaryReplicaInfoTest, UserVersion_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, PartialResults_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 2);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("test");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret, E_OK);
     // Primary should have valid data.
     EXPECT_GT(info.primaryInfo.dbInfo.size, 0);
@@ -347,7 +342,7 @@ HWTEST_F(PrimaryReplicaInfoTest, PartialResults_001, TestSize.Level1)
     EXPECT_EQ(info.primaryInfo.dbInfo.errCode, E_OK);
     EXPECT_EQ(it->second.errCode, E_OK);
     // Summarized time must be populated (R-03).
-    EXPECT_EQ(info.primaryLastModifyTime,
+    EXPECT_EQ(info.GetPrimaryLastModifyTime().second,
         std::max(info.primaryInfo.dbInfo.mtime, info.primaryInfo.walInfo.mtime));
 }
 
@@ -360,12 +355,12 @@ HWTEST_F(PrimaryReplicaInfoTest, InvalidTableName_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 1);
     // Table name with injection attempt must be rejected by IsValidTableName (T-01 fix).
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("test; DROP TABLE test");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"test; DROP TABLE test"});
     EXPECT_EQ(ret, E_INVALID_ARGS);
     // Partial results should still be present.
     EXPECT_GT(info.primaryInfo.dbInfo.size, 0);
     // Original table must still exist with its data (no SQL injection).
-    auto [ret2, info2] = store_->GetPrimaryReplicaInfo("test");
+    auto [ret2, info2] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret2, E_OK);
     auto it = info2.primaryInfo.tables.find("test");
     ASSERT_NE(it, info2.primaryInfo.tables.end());
@@ -404,7 +399,7 @@ HWTEST_F(PrimaryReplicaInfoTest, ReadOnlyDb_001, TestSize.Level1)
     int errCode = E_OK;
     auto roStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(roStore, nullptr);
-    auto [ret, info] = roStore->GetPrimaryReplicaInfo("");
+    auto [ret, info] = roStore->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_NOT_SUPPORT);
 }
 
@@ -428,7 +423,7 @@ HWTEST_F(PrimaryReplicaInfoTest, MemoryDb_001, TestSize.Level1)
     auto memStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(memStore, nullptr);
     ASSERT_EQ(errCode, E_OK);
-    auto [ret, info] = memStore->GetPrimaryReplicaInfo("");
+    auto [ret, info] = memStore->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_NOT_SUPPORT);
 }
 
@@ -457,7 +452,7 @@ HWTEST_F(PrimaryReplicaInfoTest, VectorDb_001, TestSize.Level1)
     auto vecStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(vecStore, nullptr);
     ASSERT_EQ(errCode, E_OK);
-    auto [ret, info] = vecStore->GetPrimaryReplicaInfo("");
+    auto [ret, info] = vecStore->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_NOT_SUPPORT);
 }
 
@@ -468,7 +463,7 @@ HWTEST_F(PrimaryReplicaInfoTest, VectorDb_001, TestSize.Level1)
  */
 HWTEST_F(PrimaryReplicaInfoTest, EmptyTableCount_001, TestSize.Level1)
 {
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("test");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret, E_OK);
     auto it = info.primaryInfo.tables.find("test");
     ASSERT_NE(it, info.primaryInfo.tables.end());
@@ -483,7 +478,7 @@ HWTEST_F(PrimaryReplicaInfoTest, EmptyTableCount_001, TestSize.Level1)
  */
 HWTEST_F(PrimaryReplicaInfoTest, TableNotExist_001, TestSize.Level1)
 {
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("nonexistent_table");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"nonexistent_table"});
     EXPECT_EQ(ret, E_OK);
     auto it = info.primaryInfo.tables.find("nonexistent_table");
     ASSERT_NE(it, info.primaryInfo.tables.end());
@@ -499,11 +494,11 @@ HWTEST_F(PrimaryReplicaInfoTest, TableNotExist_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, PrimaryTimeRule_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 3);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
-    EXPECT_EQ(info.primaryLastModifyTime,
+    EXPECT_EQ(info.GetPrimaryLastModifyTime().second,
         std::max(info.primaryInfo.dbInfo.mtime, info.primaryInfo.walInfo.mtime));
-    EXPECT_GT(info.primaryLastModifyTime, 0);
+    EXPECT_GT(info.GetPrimaryLastModifyTime().second, 0);
 }
 
 /**
@@ -513,12 +508,12 @@ HWTEST_F(PrimaryReplicaInfoTest, PrimaryTimeRule_001, TestSize.Level1)
  */
 HWTEST_F(PrimaryReplicaInfoTest, ReplicaTimeRule_001, TestSize.Level1)
 {
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     int64_t expected = info.binlogInfo.exist
         ? info.binlogInfo.lastModifyTime
         : std::max(info.replicaInfo.dbInfo.mtime, info.replicaInfo.walInfo.mtime);
-    EXPECT_EQ(info.replicaLastModifyTime, expected);
+    EXPECT_EQ(info.GetReplicaLastModifyTime().second, expected);
 }
 
 /**
@@ -529,7 +524,7 @@ HWTEST_F(PrimaryReplicaInfoTest, ReplicaTimeRule_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, StatusFieldsDefault_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 2);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("test");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret, E_OK);
     RdbStoreConfig checkConfig(dbName);
     checkConfig.SetHaMode(HAMode::MAIN_REPLICA);
@@ -553,9 +548,9 @@ HWTEST_F(PrimaryReplicaInfoTest, StatusFieldsDefault_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, RepeatedQuery_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 3);
-    auto [ret1, info1] = store_->GetPrimaryReplicaInfo("test");
+    auto [ret1, info1] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret1, E_OK);
-    auto [ret2, info2] = store_->GetPrimaryReplicaInfo("test");
+    auto [ret2, info2] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret2, E_OK);
     auto it1 = info1.primaryInfo.tables.find("test");
     auto it2 = info2.primaryInfo.tables.find("test");
@@ -574,7 +569,7 @@ HWTEST_F(PrimaryReplicaInfoTest, RepeatedQuery_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, WalFileStat_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 5);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // After checkpoint, WAL may be truncated to 0 bytes, but errCode must be E_OK.
     EXPECT_EQ(info.primaryInfo.walInfo.errCode, E_OK);
@@ -590,7 +585,7 @@ HWTEST_F(PrimaryReplicaInfoTest, WalFileStat_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, CheckpointStatus_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 3);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(info.primaryInfo.checkpointErr, E_OK);
     // Replica checkpoint: slaveConnection_ exists in MAIN_REPLICA → executed successfully → E_OK
@@ -604,7 +599,7 @@ HWTEST_F(PrimaryReplicaInfoTest, CheckpointStatus_001, TestSize.Level1)
  */
 HWTEST_F(PrimaryReplicaInfoTest, BinlogErrCode_001, TestSize.Level1)
 {
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // No binlog directory: ENOENT is not an error.
     EXPECT_EQ(info.binlogInfo.errCode, E_OK);
@@ -619,7 +614,7 @@ HWTEST_F(PrimaryReplicaInfoTest, BinlogErrCode_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, ReplicaWalErrCode_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 2);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // With a slave connection, replica WAL should be stat'd successfully
     EXPECT_EQ(info.replicaInfo.walInfo.errCode, E_OK);
@@ -634,14 +629,14 @@ HWTEST_F(PrimaryReplicaInfoTest, ReplicaWalErrCode_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, TimeValidity_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 5);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // Both DB and WAL stats should succeed, so primaryLastModifyTime = max(db.mtime, wal.mtime)
     EXPECT_EQ(info.primaryInfo.dbInfo.errCode, E_OK);
     EXPECT_EQ(info.primaryInfo.walInfo.errCode, E_OK);
-    EXPECT_EQ(info.primaryLastModifyTime,
+    EXPECT_EQ(info.GetPrimaryLastModifyTime().second,
         std::max(info.primaryInfo.dbInfo.mtime, info.primaryInfo.walInfo.mtime));
-    EXPECT_GT(info.primaryLastModifyTime, 0);
+    EXPECT_GT(info.GetPrimaryLastModifyTime().second, 0);
 }
 
 /**
@@ -651,7 +646,7 @@ HWTEST_F(PrimaryReplicaInfoTest, TimeValidity_001, TestSize.Level1)
  */
 HWTEST_F(PrimaryReplicaInfoTest, ReplicaTimeFallback_001, TestSize.Level1)
 {
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // No binlog and scan succeeded: replicaLastModifyTime = max(valid db.mtime, valid wal.mtime)
     if (info.binlogInfo.errCode == E_OK && !info.binlogInfo.exist) {
@@ -659,7 +654,7 @@ HWTEST_F(PrimaryReplicaInfoTest, ReplicaTimeFallback_001, TestSize.Level1)
             (info.replicaInfo.dbInfo.errCode == E_OK) ? info.replicaInfo.dbInfo.mtime : 0;
         int64_t replicaWalMtime =
             (info.replicaInfo.walInfo.errCode == E_OK) ? info.replicaInfo.walInfo.mtime : 0;
-        EXPECT_EQ(info.replicaLastModifyTime, std::max(replicaDbMtime, replicaWalMtime));
+        EXPECT_EQ(info.GetReplicaLastModifyTime().second, std::max(replicaDbMtime, replicaWalMtime));
     }
 }
 
@@ -674,7 +669,7 @@ HWTEST_F(PrimaryReplicaInfoTest, DiagnosticHealthyReplica_001, TestSize.Level1)
     // Verify replica DB file exists before diagnostic call
     struct stat stBefore;
     ASSERT_EQ(stat(slaveDbName.c_str(), &stBefore), 0);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // Verify replica DB file still exists after diagnostic call + connection release
     struct stat stAfter;
@@ -693,7 +688,7 @@ HWTEST_F(PrimaryReplicaInfoTest, SchemaTableQuoting_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 3);
     // "main.test" splits and quotes as "main"."test" — same table in main schema.
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("main.test");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"main.test"});
     EXPECT_EQ(ret, E_OK);
     auto it = info.primaryInfo.tables.find("main.test");
     ASSERT_NE(it, info.primaryInfo.tables.end());
@@ -709,7 +704,7 @@ HWTEST_F(PrimaryReplicaInfoTest, SchemaTableQuoting_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, ReplicaDbStatFromConfig_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 2);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // In MAIN_REPLICA mode, the slave DB file exists on disk
     EXPECT_EQ(info.replicaInfo.dbInfo.errCode, E_OK);
@@ -736,7 +731,7 @@ HWTEST_F(PrimaryReplicaInfoTest, NoSlaveConnection_001, TestSize.Level1)
     ASSERT_EQ(createErr, E_OK) << "Failed to create standalone read connection";
     ASSERT_NE(conn, nullptr);
 
-    auto [ret, info] = conn->GetPrimaryAndReplicaInfo("");
+    auto [ret, info] = conn->GetPrimaryAndReplicaInfo({});
 
     // Overall E_OK: partial results preserved, no fatal failure.
     EXPECT_EQ(ret, E_OK);
@@ -769,7 +764,7 @@ HWTEST_F(PrimaryReplicaInfoTest, TimeNotOverwrittenByCheckpoint_001, TestSize.Le
     struct stat stBefore;
     ASSERT_EQ(stat(walPath.c_str(), &stBefore), 0) << "WAL file should exist after inserts";
 
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // AC-2.5: The returned WAL mtime must be from the initial collection (before checkpoint),
     // not overwritten by RefreshSizesAfterCheckpoint which only updates size.
@@ -832,7 +827,7 @@ HWTEST_F(PrimaryReplicaInfoTest, ConcurrentWrite_001, TestSize.Level1)
     }
 
     // Main thread: call diagnostic while writer is still active.
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("test");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret, E_OK);
 
     EXPECT_GT(writeCount.load(), 0) << "Writer thread should have successfully written rows";
@@ -884,7 +879,7 @@ HWTEST_F(PrimaryReplicaInfoTest, CustomReplicaPath_001, TestSize.Level1)
     ASSERT_EQ(errCode, E_OK);
 
     InsertRows(customStore, 1, 3);
-    auto [ret, info] = customStore->GetPrimaryReplicaInfo("");
+    auto [ret, info] = customStore->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // Replica DB should be stat'd from the custom directory path, not the default adjacent path
     EXPECT_EQ(info.replicaInfo.dbInfo.errCode, E_OK);
@@ -907,14 +902,14 @@ HWTEST_F(PrimaryReplicaInfoTest, ViewRejection_001, TestSize.Level1)
     EXPECT_EQ(store_->ExecuteSql("CREATE VIEW IF NOT EXISTS test_view AS SELECT id FROM test"), E_OK);
 
     // "test_view" passes IsValidTableName but fails type check in CountTable.
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("test_view");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"test_view"});
     EXPECT_EQ(ret, E_OK); // Overall call succeeds; error stored in table entry
     auto it = info.primaryInfo.tables.find("test_view");
     ASSERT_NE(it, info.primaryInfo.tables.end());
     EXPECT_NE(it->second.errCode, E_OK) << "View should be rejected by type check";
 
     // Verify regular table still counts correctly
-    auto [ret2, info2] = store_->GetPrimaryReplicaInfo("test");
+    auto [ret2, info2] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret2, E_OK);
     auto it2 = info2.primaryInfo.tables.find("test");
     ASSERT_NE(it2, info2.primaryInfo.tables.end());
@@ -932,7 +927,7 @@ HWTEST_F(PrimaryReplicaInfoTest, ViewRejection_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, ReplayStatus_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 2);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     RdbStoreConfig checkConfig(dbName);
     checkConfig.SetHaMode(HAMode::MAIN_REPLICA);
@@ -949,15 +944,15 @@ HWTEST_F(PrimaryReplicaInfoTest, ReplayStatus_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, TimeErrValidity_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 5);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     // Both DB and WAL stats succeed → primaryTimeErr = E_OK
     EXPECT_EQ(info.primaryInfo.dbInfo.errCode, E_OK);
     EXPECT_EQ(info.primaryInfo.walInfo.errCode, E_OK);
-    EXPECT_EQ(info.primaryTimeErr, E_OK);
-    EXPECT_GT(info.primaryLastModifyTime, 0);
+    EXPECT_EQ(info.GetPrimaryLastModifyTime().first, E_OK);
+    EXPECT_GT(info.GetPrimaryLastModifyTime().second, 0);
     // Replica has at least one valid time source → replicaTimeErr = E_OK
-    EXPECT_EQ(info.replicaTimeErr, E_OK);
+    EXPECT_EQ(info.GetReplicaLastModifyTime().first, E_OK);
 }
 
 /**
@@ -968,7 +963,7 @@ HWTEST_F(PrimaryReplicaInfoTest, TimeErrValidity_001, TestSize.Level1)
 HWTEST_F(PrimaryReplicaInfoTest, SizeErrValidity_001, TestSize.Level1)
 {
     InsertRows(store_, 1, 3);
-    auto [ret, info] = store_->GetPrimaryReplicaInfo("");
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(info.primaryInfo.dbInfo.sizeErr, E_OK);
     EXPECT_EQ(info.primaryInfo.walInfo.sizeErr, E_OK);

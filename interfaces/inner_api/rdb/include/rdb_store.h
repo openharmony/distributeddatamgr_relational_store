@@ -1020,11 +1020,11 @@ public:
      * @brief Query primary-replica diagnostic info including file metadata, user version,
      * binlog info, and optional table row counts for primary and replica databases.
      *
-     * @param tableName Indicates the table name for row count query; empty skips count.
+     * @param tableNames Table names for row count query; empty skips count.
      * @return Returns {E_OK, info} on success; {E_NOT_SUPPORT, {}} for SINGLE mode, read-only,
      *         memory, or vector DB; {E_ALREADY_CLOSED, {}} when store is closed.
      */
-    virtual std::pair<int, PrimaryAndReplicaInfo> GetPrimaryReplicaInfo(const std::string &tableName)
+    virtual std::pair<int, PrimaryAndReplicaInfo> GetPrimaryReplicaInfo(const std::vector<std::string> &tableNames)
     {
         return { E_NOT_SUPPORT, {} };
     }
