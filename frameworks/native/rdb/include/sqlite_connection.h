@@ -173,8 +173,7 @@ private:
     void TryReplayBinlog(PrimaryAndReplicaInfo &info);
     void CheckpointDatabases(PrimaryAndReplicaInfo &info);
     void RefreshSizesAfterCheckpoint(PrimaryAndReplicaInfo &info);
-    int CollectVersionsAndTables(PrimaryAndReplicaInfo &info, SqliteConnection *replicaConn,
-        const std::string &tableName);
+    int CollectVersionsAndTables(PrimaryAndReplicaInfo &info, const std::string &tableName);
     std::pair<int32_t, Stmt> CreateStatementInner(
         const std::string &sql, SConn conn, sqlite3 *db, bool isFromReplica, const std::string &returningSql = "");
     ExchangeStrategy CompareWithSlave(int64_t mCount, int64_t mIdxCount,

@@ -1708,7 +1708,7 @@ int32_t RdbStoreImpl::Init(int version, RdbOpenCallback &openCallback, bool isNe
         if (errCode != E_OK) {
             return errCode;
         }
-        }
+    }
     if (errCode == E_OK) {
         auditLogger_->OnOpenOk(config_.GetPath(), created);
     }
@@ -1812,8 +1812,8 @@ std::pair<int, int64_t> RdbStoreImpl::BatchInsert(const std::string &table, cons
     PauseDelayNotify pauseDelayNotify(delayNotifier_);
     auto [errCode, result] = ExecuteBatchInsert(pool, conn, executeSqlArgs, table);
     if (result == -1) {
-                return { errCode, -1 };
-            }
+        return { errCode, -1 };
+    }
     conn = nullptr;
     int64_t insertedRows = int64_t(rows.RowSize());
     auditLogger_->OnSqlAudit(config_.GetPath(), "BatchInsert", "", insertedRows);

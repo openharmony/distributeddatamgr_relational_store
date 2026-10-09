@@ -2820,12 +2820,11 @@ void SqliteConnection::RefreshSizesAfterCheckpoint(PrimaryAndReplicaInfo &info)
     }
 }
 
-int SqliteConnection::CollectVersionsAndTables(PrimaryAndReplicaInfo &info, SqliteConnection *replicaConn,
-    const std::string &tableName)
+int SqliteConnection::CollectVersionsAndTables(PrimaryAndReplicaInfo &info, const std::string &tableName)
 {
     info.primaryInfo.userVersion = QueryUserVersion();
-    if (replicaConn != nullptr) {
-        info.replicaInfo.userVersion = replicaConn->QueryUserVersion();
+    if (slaveConnection_ != nullptr) {
+        info.replicaInfo.userVersion = slaveConnection_->QueryUserVersion();
     }
 
     if (tableName.empty()) {
@@ -2836,8 +2835,8 @@ int SqliteConnection::CollectVersionsAndTables(PrimaryAndReplicaInfo &info, Sqli
     }
     auto [pErr, pTable] = CountTable(tableName);
     info.primaryInfo.tables[tableName] = std::move(pTable);
-    if (replicaConn != nullptr) {
-        auto [rErr, rTable] = replicaConn->CountTable(tableName);
+    if (slaveConnection_ != nullptr) {
+        auto [rErr, rTable] = slaveConnection_->CountTable(tableName);
         info.replicaInfo.tables[tableName] = std::move(rTable);
     }
     return E_OK;
@@ -2855,7 +2854,7 @@ std::pair<int, PrimaryAndReplicaInfo> SqliteConnection::GetPrimaryAndReplicaInfo
 
     CheckpointDatabases(info);
     RefreshSizesAfterCheckpoint(info);
-    int tableErr = CollectVersionsAndTables(info, slaveConnection_.get(), tableName);
+    int tableErr = CollectVersionsAndTables(info, tableName);
 
     return { tableErr != E_OK ? tableErr : E_OK, std::move(info) };
 }
