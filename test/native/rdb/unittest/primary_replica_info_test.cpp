@@ -34,6 +34,7 @@
 #include "rdb_errno.h"
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
+#include "rdb_security_manager.h"
 #include "sqlite_global_config.h"
 #include "sqlite_utils.h"
 #include "values_bucket.h"
@@ -75,9 +76,16 @@ public:
     }
 };
 
+class EmptyCallback : public RdbOpenCallback {
+public:
+    int OnCreate(RdbStore &store) override { return E_OK; }
+    int OnUpgrade(RdbStore &store, int oldVersion, int newVersion) override { return E_OK; }
+};
+
 void PrimaryReplicaInfoTest::SetUpTestCase(void)
 {
     SqliteGlobalConfig::InitSqliteGlobalConfig();
+    RdbSecurityManager::GetInstance().Init("rdb.primary.replica.test");
 }
 
 void PrimaryReplicaInfoTest::TearDownTestCase(void) {}
@@ -293,16 +301,50 @@ HWTEST_F(PrimaryReplicaInfoTest, TimeFields_001, TestSize.Level1)
 
 /**
  * @tc.name: PrimaryReplicaInfo_BinlogInfo_NoBinlog_001
- * @tc.desc: AC-2.4: When no binlog data files exist, binlogInfo.exist is false.
+ * @tc.desc: AC-2.4: binlogInfo.exist depends on whether binlog is supported.
  * @tc.type: FUNC
  */
 HWTEST_F(PrimaryReplicaInfoTest, BinlogInfo_NoBinlog_001, TestSize.Level1)
 {
     auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
-    // No binlog writes performed; exist must be false (T-07 fix).
+    RdbStoreConfig checkConfig(dbName);
+    checkConfig.SetHaMode(HAMode::MAIN_REPLICA);
+    bool supportBinlog = SqliteUtils::IsSupportBinlog(checkConfig);
+    EXPECT_EQ(info.binlogInfo.exist, supportBinlog);
+    if (supportBinlog) {
+        EXPECT_GT(info.binlogInfo.lastModifyTime, 0);
+    } else {
+        EXPECT_EQ(info.binlogInfo.lastModifyTime, 0);
+    }
+}
+
+/**
+ * @tc.name: PrimaryReplicaInfo_BinlogInfo_NoBinlogDb_001
+ * @tc.desc: AC-2.4: An encrypted DB does not support binlog; binlogInfo.exist is false.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrimaryReplicaInfoTest, BinlogInfo_NoBinlogDb_001, TestSize.Level1)
+{
+    std::string encDb = RDB_TEST_PATH + "pri_replica_no_binlog_enc.db";
+    RdbHelper::DeleteRdbStore(encDb);
+    ScopeGuard cleanup([&]() {
+        RdbHelper::ClearCache();
+        RdbHelper::DeleteRdbStore(encDb);
+    });
+    RdbStoreConfig config(encDb);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    config.SetEncryptStatus(true);
+    config.SetBundleName("rdb.primary.replica.test");
+    PrimaryReplicaInfoCallback helper;
+    int errCode = E_OK;
+    auto encStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
+    ASSERT_NE(encStore, nullptr);
+    ASSERT_EQ(errCode, E_OK);
+    // Encrypted DBs do not support binlog → exist must be false.
+    auto [ret, info] = encStore->GetPrimaryReplicaInfo({});
+    EXPECT_EQ(ret, E_OK);
     EXPECT_EQ(info.binlogInfo.exist, false);
-    EXPECT_EQ(info.binlogInfo.lastModifyTime, 0);
 }
 
 /**
@@ -447,7 +489,7 @@ HWTEST_F(PrimaryReplicaInfoTest, VectorDb_001, TestSize.Level1)
     }
     RdbStoreConfig config(vecDb);
     config.SetIsVector(true);
-    PrimaryReplicaInfoCallback helper;
+    EmptyCallback helper;
     int errCode = E_OK;
     auto vecStore = RdbHelper::GetRdbStore(config, 1, helper, errCode);
     ASSERT_NE(vecStore, nullptr);
@@ -601,9 +643,10 @@ HWTEST_F(PrimaryReplicaInfoTest, BinlogErrCode_001, TestSize.Level1)
 {
     auto [ret, info] = store_->GetPrimaryReplicaInfo({});
     EXPECT_EQ(ret, E_OK);
-    // No binlog directory: ENOENT is not an error.
     EXPECT_EQ(info.binlogInfo.errCode, E_OK);
-    EXPECT_EQ(info.binlogInfo.exist, false);
+    RdbStoreConfig checkConfig(dbName);
+    checkConfig.SetHaMode(HAMode::MAIN_REPLICA);
+    EXPECT_EQ(info.binlogInfo.exist, SqliteUtils::IsSupportBinlog(checkConfig));
 }
 
 /**
