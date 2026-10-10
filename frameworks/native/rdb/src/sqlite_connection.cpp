@@ -2685,6 +2685,10 @@ std::pair<int, TableInfo> SqliteConnection::CountTable(const std::string &table)
         "THEN (SELECT COUNT(*) FROM " + schema + "\"" + name + "\") ELSE -1 END";
     auto [err, obj] = ExecuteForValue(sql, { ValueObject(name) });
     if (err != E_OK) {
+        // SQLite compiles all CASE subqueries at prepare time; a non-existent
+        // table causes ExecuteForValue to fail. Set -1 sentinel so callers
+        // see the same result as the ELSE branch would produce.
+        ti.count = -1; // sentinel: not a regular table (view/index/missing)
         return { err, ti };
     }
     auto val = std::get_if<int64_t>(&obj.value);
