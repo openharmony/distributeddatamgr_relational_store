@@ -53,6 +53,8 @@ public:
     static constexpr int DISABLE_LOAD_EXTENSION = 0;
     static constexpr int ENABLE_LOAD_EXTENSION = 1;
     static constexpr int MAX_LOAD_EXTENSION_COUNT = 16;
+    static constexpr int64_t MSEC_PER_SEC = 1000;
+    static constexpr int64_t NSEC_PER_MSEC = 1000000;
     static constexpr int PATH_DEPTH = 3;
     static constexpr const char *REP = "#_";
     static constexpr const char *SLAVE_FAILURE = "-slaveFailure";
@@ -128,6 +130,7 @@ public:
     static const char *EncryptAlgoDescription(int32_t encryptAlgo);
     static bool DeleteDirtyFiles(const std::string &backupFilePath);
     static std::pair<int32_t, DistributedRdb::RdbDebugInfo> Stat(const std::string &path);
+    static RdbBinlogInfo CaptureBinlogInfo(const RdbStoreConfig &config);
     static bool IsFileEmpty(const std::string &filePath);
     static bool IsFilesEmpty(const std::vector<std::string> &filePaths);
     static void WriteSqlToFile(const std::string &comparePath, const std::string &sql);

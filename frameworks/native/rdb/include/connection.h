@@ -35,6 +35,7 @@ class StoreObserver;
 namespace OHOS::NativeRdb {
 class RdbStoreConfig;
 class Statement;
+struct PrimaryAndReplicaInfo;
 class Connection {
 public:
     using Info = DistributedRdb::RdbDebugInfo;
@@ -114,6 +115,10 @@ public:
     virtual void ReplayBinlog(const RdbStoreConfig &config, bool chkBinlogCount) = 0;
     virtual int SetMatrixFileInfo(const DistributedRdb::MatrixFileInfo &fileInfo) = 0;
     virtual int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) = 0;
+
+    // Diagnostic: returns raw primary/replica file metadata without time summarization.
+    // Default returns E_NOT_SUPPORT (defined in connection.cpp); SqliteConnection overrides.
+    virtual std::pair<int, PrimaryAndReplicaInfo> GetPrimaryAndReplicaInfo(const std::vector<std::string> &tableNames);
 
     virtual std::string GetLastErrorMsg() const { return ""; }
 

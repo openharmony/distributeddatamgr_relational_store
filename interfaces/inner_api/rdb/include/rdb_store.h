@@ -1015,6 +1015,19 @@ public:
      * @brief Wait for the in-flight async AfterOpen so its service-side meta cannot race with a later operation.
      */
     virtual int WaitAfterOpen() { return E_OK; }
+
+    /**
+     * @brief Query primary-replica diagnostic info including file metadata, user version,
+     * binlog info, and optional table row counts for primary and replica databases.
+     *
+     * @param tableNames Table names for row count query; empty skips count.
+     * @return Returns {E_OK, info} on success; {E_NOT_SUPPORT, {}} for SINGLE mode, read-only,
+     *         memory, or vector DB; {E_ALREADY_CLOSED, {}} when store is closed.
+     */
+    virtual std::pair<int, PrimaryAndReplicaInfo> GetPrimaryReplicaInfo(const std::vector<std::string> &tableNames)
+    {
+        return { E_NOT_SUPPORT, {} };
+    }
 };
 } // namespace OHOS::NativeRdb
 #endif

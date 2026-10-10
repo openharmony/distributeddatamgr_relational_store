@@ -15,6 +15,7 @@
 #define LOG_TAG "SqliteUtils"
 #include "sqlite_utils.h"
 
+#include <dirent.h>
 #include <fcntl.h>
 #include <sqlite3sym.h>
 #include <sys/file.h>
@@ -1016,6 +1017,20 @@ std::pair<int32_t, DistributedRdb::RdbDebugInfo> SqliteUtils::Stat(const std::st
     info.uid_ = fileStat.st_uid;
     info.gid_ = fileStat.st_gid;
     return std::pair{ E_OK, info };
+}
+
+RdbBinlogInfo SqliteUtils::CaptureBinlogInfo(const RdbStoreConfig &config)
+{
+    RdbBinlogInfo info{};
+    std::string dir = GetBinlogFolderPath(config);
+    std::string indexPath = dir + "/binlog_default.writeIndex";
+    auto [statErr, st] = Stat(indexPath);
+    if (statErr != E_OK) {
+        return info;
+    }
+    info.exist = true;
+    info.lastModifyTime = st.mtime_.sec_ * MSEC_PER_SEC + st.mtime_.nsec_ / NSEC_PER_MSEC;
+    return info;
 }
 
 std::string SqliteUtils::ReadFileHeader(const std::string &filePath)

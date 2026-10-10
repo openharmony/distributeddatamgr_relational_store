@@ -217,6 +217,7 @@ protected:
 public:
     // Wait for the in-flight async AfterOpen so its service-side meta cannot race with a later close/release/delete.
     int WaitAfterOpen() override;
+    std::pair<int, PrimaryAndReplicaInfo> GetPrimaryReplicaInfo(const std::vector<std::string> &tableNames) override;
 
 private:
     using Stmt = std::shared_ptr<Statement>;

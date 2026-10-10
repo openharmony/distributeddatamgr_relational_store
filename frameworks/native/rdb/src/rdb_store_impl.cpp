@@ -3974,4 +3974,46 @@ bool RdbStoreImpl::IsInvalidDistributedConfig(const DistributedRdb::DistributedC
     }
     return distributedConfig.assetTempPath.empty() || distributedConfig.assetTempPath.find("../") != std::string::npos;
 }
+
+std::pair<int, PrimaryAndReplicaInfo> RdbStoreImpl::GetPrimaryReplicaInfo(const std::vector<std::string> &tableNames)
+{
+    if (isReadOnly_ || isMemoryRdb_ || config_.GetDBType() == DB_VECTOR) {
+        return { E_NOT_SUPPORT, {} };
+    }
+    if (config_.GetHaMode() == HAMode::SINGLE) {
+        return { E_NOT_SUPPORT, {} };
+    }
+    auto pool = GetPool();
+    if (pool == nullptr) {
+        return { E_ALREADY_CLOSED, {} };
+    }
+    auto [connErr, conn] = GetConn(false);
+    if (conn == nullptr) {
+        return { connErr, {} };
+    }
+
+    auto [diagErr, info] = conn->GetPrimaryAndReplicaInfo(tableNames);
+    if (diagErr != E_OK) {
+        LOG_ERROR("GetPrimaryReplicaInfo failed, err: %{public}d", diagErr);
+        return { diagErr, std::move(info) };
+    }
+
+    int64_t primaryLastModifyTime = info.GetPrimaryLastModifyTime();
+    int64_t replicaLastModifyTime = info.GetReplicaLastModifyTime();
+
+    LOG_INFO("GetPrimaryReplicaInfo: primaryDb.mtime=%{public}" PRId64 ", primaryWal.mtime=%{public}" PRId64 ", "
+        "replicaDb.mtime=%{public}" PRId64 ", replicaWal.mtime=%{public}" PRId64 ", binlog.exist=%{public}d, "
+        "binlog.lastModifyTime=%{public}" PRId64 ", "
+        "primaryLastModifyTime=%{public}" PRId64 ", replicaLastModifyTime=%{public}" PRId64,
+        info.primaryInfo.dbInfo.mtime,
+        info.primaryInfo.walInfo.mtime,
+        info.replicaInfo.dbInfo.mtime,
+        info.replicaInfo.walInfo.mtime,
+        info.binlogInfo.exist,
+        info.binlogInfo.lastModifyTime,
+        primaryLastModifyTime,
+        replicaLastModifyTime);
+
+    return { diagErr, std::move(info) };
+}
 } // namespace OHOS::NativeRdb

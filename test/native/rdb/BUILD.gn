@@ -373,6 +373,7 @@ ohos_unittest("NativeRdbTest") {
     "unittest/rdb_step_result_set_test.cpp",
     "unittest/rdb_store_backup_restore_test.cpp",
     "unittest/rdb_store_impl_test.cpp",
+    "unittest/primary_replica_info_test.cpp",
     "unittest/rdb_store_rekey_test.cpp",
     "unittest/rdb_store_rekey_vector_test.cpp",
     "unittest/rdb_timeout_nomock_test.cpp",
