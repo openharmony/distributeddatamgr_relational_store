@@ -765,8 +765,8 @@ HWTEST_F(PrimaryReplicaInfoTest, TimeNotOverwrittenByCheckpoint_001, TestSize.Le
     // not overwritten by RefreshSizesAfterCheckpoint which only updates size.
     EXPECT_GT(info.primaryInfo.walInfo.mtime, 0);
 
-    int64_t mtimeBeforeMs = static_cast<int64_t>(stBefore.st_mtim.tv_sec) * 1000 +
-        stBefore.st_mtim.tv_nsec / 1000000;
+    int64_t mtimeBeforeMs = static_cast<int64_t>(stBefore.st_mtim.tv_sec) * SqliteUtils::MSEC_PER_SEC +
+        stBefore.st_mtim.tv_nsec / SqliteUtils::NSEC_PER_MSEC;
     EXPECT_EQ(info.primaryInfo.walInfo.mtime, mtimeBeforeMs);
 }
 
@@ -1029,8 +1029,8 @@ HWTEST_F(PrimaryReplicaInfoTest, ReplicaWalStatVerified_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
 
     // Replica WAL was stat'd in CollectInitialFileInfo — mtime should match pre-call value.
-    int64_t expectedMtime = static_cast<int64_t>(stBefore.st_mtim.tv_sec) * 1000 +
-        stBefore.st_mtim.tv_nsec / 1000000;
+    int64_t expectedMtime = static_cast<int64_t>(stBefore.st_mtim.tv_sec) * SqliteUtils::MSEC_PER_SEC +
+        stBefore.st_mtim.tv_nsec / SqliteUtils::NSEC_PER_MSEC;
     EXPECT_EQ(info.replicaInfo.walInfo.mtime, expectedMtime)
         << "Replica WAL mtime should match pre-call stat (from CollectInitialFileInfo)";
 
@@ -1065,7 +1065,7 @@ HWTEST_F(PrimaryReplicaInfoTest, PrimaryDbStatFailure_001, TestSize.Level1)
     if (rename(dbName.c_str(), renamedPath.c_str()) != 0) {
         GTEST_SKIP() << "Cannot rename open DB file on this platform";
     }
-    ScopeGuard restore([&]() {
+    ScopeGuard restore([&renamedPath, this]() {
         rename(renamedPath.c_str(), dbName.c_str());
     });
 
