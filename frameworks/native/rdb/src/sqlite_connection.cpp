@@ -2685,16 +2685,14 @@ std::pair<int, TableInfo> SqliteConnection::CountTable(const std::string &table)
         "THEN (SELECT COUNT(*) FROM " + schema + "\"" + name + "\") ELSE -1 END";
     auto [err, obj] = ExecuteForValue(sql, { ValueObject(name) });
     if (err != E_OK) {
-        ti.errCode = err;
         return { err, ti };
     }
     auto val = std::get_if<int64_t>(&obj.value);
     if (val == nullptr || *val < 0) {
-        ti.errCode = E_ERROR;
+        ti.count = -1; // sentinel: not a regular table (view/index/missing)
         return { E_ERROR, ti };
     }
     ti.count = *val;
-    ti.errCode = E_OK;
     return { E_OK, ti };
 }
 

@@ -627,40 +627,49 @@ enum Tokenizer : int32_t {
     TOKENIZER_END
 };
 
+// Row count for a single table; -1 = not a regular table (view/index/missing).
 struct TableInfo {
     int64_t count = 0;
-    int errCode = E_OK;
 };
 
+// File stat info for a database or WAL file. All times are in milliseconds.
 struct RdbFileInfo {
-    int64_t size = 0;
-    int64_t ctime = 0;
-    int64_t atime = 0;
-    int64_t mtime = 0;
+    int64_t size = 0;  // File size in bytes
+    int64_t ctime = 0; // Creation time (ms)
+    int64_t atime = 0; // Access time (ms)
+    int64_t mtime = 0; // Modification time (ms)
 };
 
+// Diagnostic info for one side (primary or replica) of a database.
 struct DbInfo {
-    RdbFileInfo dbInfo;
-    RdbFileInfo walInfo;
-    int64_t userVersion = 0;
-    std::map<std::string, TableInfo> tables;
+    RdbFileInfo dbInfo;  // Main database file stat
+    RdbFileInfo walInfo; // WAL file stat
+    int64_t userVersion = 0; // PRAGMA user_version
+    std::map<std::string, TableInfo> tables; // Row counts per requested table
 };
 
+// Binlog info used for replica synchronization.
 struct RdbBinlogInfo {
-    bool exist = false;
-    int64_t lastModifyTime = 0;
+    bool exist = false; // Whether the binlog writeIndex file exists
+    int64_t lastModifyTime = 0; // Binlog last modification time (ms)
 };
 
+// Diagnostic comparison info between primary and replica databases.
+// Any step failure (stat, replay, checkpoint) causes GetPrimaryAndReplicaInfo
+// to return an error; on success all fields are valid.
 struct PrimaryAndReplicaInfo {
-    DbInfo primaryInfo;
-    DbInfo replicaInfo;
-    RdbBinlogInfo binlogInfo;
+    DbInfo primaryInfo;  // Primary database info
+    DbInfo replicaInfo;  // Replica database info
+    RdbBinlogInfo binlogInfo; // Binlog synchronization info
 
+    // Returns max(primary dbInfo.mtime, walInfo.mtime) in milliseconds.
     int64_t GetPrimaryLastModifyTime() const
     {
         return std::max(primaryInfo.dbInfo.mtime, primaryInfo.walInfo.mtime);
     }
 
+    // Returns binlog lastModifyTime if binlog exists, otherwise
+    // max(replica dbInfo.mtime, walInfo.mtime) in milliseconds.
     int64_t GetReplicaLastModifyTime() const
     {
         if (binlogInfo.exist) {

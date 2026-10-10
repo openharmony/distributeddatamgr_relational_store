@@ -156,7 +156,6 @@ HWTEST_F(PrimaryReplicaInfoTest, TypeExistence_001, TestSize.Level1)
     TableInfo ti{};
     ti.count = 42;
     EXPECT_EQ(ti.count, 42);
-    EXPECT_EQ(ti.errCode, E_OK);
 
     RdbBinlogInfo bi{};
     bi.exist = true;
@@ -358,7 +357,6 @@ HWTEST_F(PrimaryReplicaInfoTest, PartialResults_001, TestSize.Level1)
     auto it = info.primaryInfo.tables.find("test");
     ASSERT_NE(it, info.primaryInfo.tables.end());
     EXPECT_EQ(it->second.count, 2);
-    EXPECT_EQ(it->second.errCode, E_OK);
     // Summarized time must be populated (R-03).
     EXPECT_EQ(info.GetPrimaryLastModifyTime(),
         std::max(info.primaryInfo.dbInfo.mtime, info.primaryInfo.walInfo.mtime));
@@ -476,7 +474,7 @@ HWTEST_F(PrimaryReplicaInfoTest, VectorDb_001, TestSize.Level1)
 
 /**
  * @tc.name: PrimaryReplicaInfo_EmptyTableCount_001
- * @tc.desc: AC-3.1: Table with 0 rows returns count=0 and errCode=E_OK (TC-13).
+ * @tc.desc: AC-3.1: Table with 0 rows returns count=0 (TC-13).
  * @tc.type: FUNC
  */
 HWTEST_F(PrimaryReplicaInfoTest, EmptyTableCount_001, TestSize.Level1)
@@ -486,12 +484,11 @@ HWTEST_F(PrimaryReplicaInfoTest, EmptyTableCount_001, TestSize.Level1)
     auto it = info.primaryInfo.tables.find("test");
     ASSERT_NE(it, info.primaryInfo.tables.end());
     EXPECT_EQ(it->second.count, 0);
-    EXPECT_EQ(it->second.errCode, E_OK);
 }
 
 /**
  * @tc.name: PrimaryReplicaInfo_TableNotExist_001
- * @tc.desc: AC-3.3: Non-existent table yields errCode != E_OK, count stays 0 (TC-15).
+ * @tc.desc: AC-3.3: Non-existent table yields count=-1 sentinel (TC-15).
  * @tc.type: FUNC
  */
 HWTEST_F(PrimaryReplicaInfoTest, TableNotExist_001, TestSize.Level1)
@@ -500,8 +497,7 @@ HWTEST_F(PrimaryReplicaInfoTest, TableNotExist_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     auto it = info.primaryInfo.tables.find("nonexistent_table");
     ASSERT_NE(it, info.primaryInfo.tables.end());
-    EXPECT_NE(it->second.errCode, E_OK);
-    EXPECT_EQ(it->second.count, 0);
+    EXPECT_EQ(it->second.count, -1);
 }
 
 /**
@@ -536,7 +532,7 @@ HWTEST_F(PrimaryReplicaInfoTest, ReplicaTimeRule_001, TestSize.Level1)
 
 /**
  * @tc.name: PrimaryReplicaInfo_StatusFieldsDefault_001
- * @tc.desc: AC-5.1: All per-item status fields are E_OK on a successful query.
+ * @tc.desc: AC-5.1: Successful query returns E_OK with valid table count.
  * @tc.type: FUNC
  */
 HWTEST_F(PrimaryReplicaInfoTest, StatusFieldsDefault_001, TestSize.Level1)
@@ -546,7 +542,7 @@ HWTEST_F(PrimaryReplicaInfoTest, StatusFieldsDefault_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     auto it = info.primaryInfo.tables.find("test");
     ASSERT_NE(it, info.primaryInfo.tables.end());
-    EXPECT_EQ(it->second.errCode, E_OK);
+    EXPECT_EQ(it->second.count, 2);
 }
 
 /**
@@ -572,7 +568,7 @@ HWTEST_F(PrimaryReplicaInfoTest, RepeatedQuery_001, TestSize.Level1)
 
 /**
  * @tc.name: PrimaryReplicaInfo_WalFileStat_001
- * @tc.desc: AC-1.1: Primary WAL file is stat'd successfully with errCode=E_OK (TC-03).
+ * @tc.desc: AC-1.1: Primary WAL file is stat'd successfully after writes (TC-03).
  * @tc.type: FUNC
  */
 HWTEST_F(PrimaryReplicaInfoTest, WalFileStat_001, TestSize.Level1)
@@ -692,7 +688,6 @@ HWTEST_F(PrimaryReplicaInfoTest, SchemaTableQuoting_001, TestSize.Level1)
     auto it = info.primaryInfo.tables.find("main.test");
     ASSERT_NE(it, info.primaryInfo.tables.end());
     EXPECT_EQ(it->second.count, 3);
-    EXPECT_EQ(it->second.errCode, E_OK);
 }
 
 /**
@@ -875,7 +870,7 @@ HWTEST_F(PrimaryReplicaInfoTest, CustomReplicaPath_001, TestSize.Level1)
 
 /**
  * @tc.name: PrimaryReplicaInfo_ViewRejection_001
- * @tc.desc: AC-3.3: CountTable rejects views via type check — view errCode != E_OK.
+ * @tc.desc: AC-3.3: CountTable rejects views via type check — view count = -1.
  * @tc.type: FUNC
  */
 HWTEST_F(PrimaryReplicaInfoTest, ViewRejection_001, TestSize.Level1)
@@ -886,17 +881,17 @@ HWTEST_F(PrimaryReplicaInfoTest, ViewRejection_001, TestSize.Level1)
 
     // "test_view" passes IsValidTableName but fails type check in CountTable.
     auto [ret, info] = store_->GetPrimaryReplicaInfo({"test_view"});
-    EXPECT_EQ(ret, E_OK); // Overall call succeeds; error stored in table entry
+    EXPECT_EQ(ret, E_OK); // Overall call succeeds; count=-1 for view
     auto it = info.primaryInfo.tables.find("test_view");
     ASSERT_NE(it, info.primaryInfo.tables.end());
-    EXPECT_NE(it->second.errCode, E_OK) << "View should be rejected by type check";
+    EXPECT_EQ(it->second.count, -1) << "View should be rejected by type check";
 
     // Verify regular table still counts correctly
     auto [ret2, info2] = store_->GetPrimaryReplicaInfo({"test"});
     EXPECT_EQ(ret2, E_OK);
     auto it2 = info2.primaryInfo.tables.find("test");
     ASSERT_NE(it2, info2.primaryInfo.tables.end());
-    EXPECT_EQ(it2->second.errCode, E_OK);
+    EXPECT_EQ(it2->second.count, 3);
     EXPECT_EQ(it2->second.count, 3);
 
     store_->ExecuteSql("DROP VIEW IF EXISTS test_view");
