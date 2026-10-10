@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cstdio>
 
 #include <atomic>
 #include <chrono>
@@ -946,4 +947,163 @@ HWTEST_F(PrimaryReplicaInfoTest, SizeErrValidity_001, TestSize.Level1)
     EXPECT_EQ(ret, E_OK);
     EXPECT_GE(info.primaryInfo.dbInfo.size, 0);
     EXPECT_GE(info.primaryInfo.walInfo.size, 0);
+}
+
+/**
+ * @tc.name: PrimaryReplicaInfo_EmptyStringInTableNames_001
+ * @tc.desc: AC-3.2: Empty string in tableNames vector is skipped via continue;
+ *           subsequent valid table names are still processed.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrimaryReplicaInfoTest, EmptyStringInTableNames_001, TestSize.Level1)
+{
+    InsertRows(store_, 1, 3);
+    // Mixed vector: valid table name followed by empty string.
+    // Exercises the `if (tableName.empty()) { continue; }` branch (B7E).
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({"test", ""});
+    EXPECT_EQ(ret, E_OK);
+    // "test" should be counted; empty string should be skipped via continue.
+    auto it = info.primaryInfo.tables.find("test");
+    ASSERT_NE(it, info.primaryInfo.tables.end());
+    EXPECT_EQ(it->second.count, 3);
+    // Empty string must not appear in the tables map.
+    EXPECT_EQ(info.primaryInfo.tables.count(""), 0);
+    // Replica side should also have "test" but not "".
+    EXPECT_EQ(info.replicaInfo.tables.count("test"), 1);
+    EXPECT_EQ(info.replicaInfo.tables.count(""), 0);
+}
+
+/**
+ * @tc.name: PrimaryReplicaInfo_NoSlaveConnectionWithTable_001
+ * @tc.desc: AC-4.2: Standalone connection (no slave) with non-empty tableNames —
+ *           primary tables populated, replica tables empty (slaveConnection_ null).
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrimaryReplicaInfoTest, NoSlaveConnectionWithTable_001, TestSize.Level1)
+{
+    InsertRows(store_, 1, 2);
+    store_ = nullptr;
+    RdbHelper::ClearCache();
+
+    RdbStoreConfig config(dbName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    auto [createErr, conn] = SqliteConnection::Create(config, false);
+    ASSERT_EQ(createErr, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // Non-empty tableNames exercises the counting loop with slaveConnection_ == nullptr (B7J).
+    // The `if (slaveConnection_ != nullptr)` false branch skips replica CountTable.
+    auto [ret, info] = conn->GetPrimaryAndReplicaInfo({"test"});
+    EXPECT_EQ(ret, E_OK);
+
+    // Primary table count is populated.
+    auto it = info.primaryInfo.tables.find("test");
+    ASSERT_NE(it, info.primaryInfo.tables.end());
+    EXPECT_EQ(it->second.count, 2);
+
+    // Replica tables map is empty — slaveConnection_ is null, so CountTable is never called for replica.
+    EXPECT_TRUE(info.replicaInfo.tables.empty());
+    // Replica userVersion stays at default (slaveConnection_ null → QueryUserVersion skipped).
+    EXPECT_EQ(info.replicaInfo.userVersion, 0);
+}
+
+/**
+ * @tc.name: PrimaryReplicaInfo_ReplicaWalStatVerified_001
+ * @tc.desc: AC-1.1: Replica WAL file is independently stat'd; mtime matches pre-call value,
+ *           size matches post-checkpoint value.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrimaryReplicaInfoTest, ReplicaWalStatVerified_001, TestSize.Level1)
+{
+    InsertRows(store_, 1, 5);
+    InsertRows(store_, 100, 3);
+
+    // Stat replica WAL before the diagnostic call to capture initial mtime (B4I/B4J).
+    std::string replicaWalPath = slaveDbName + "-wal";
+    struct stat stBefore;
+    if (stat(replicaWalPath.c_str(), &stBefore) != 0) {
+        GTEST_SKIP() << "Replica WAL file does not exist before diagnostic call";
+    }
+
+    auto [ret, info] = store_->GetPrimaryReplicaInfo({});
+    EXPECT_EQ(ret, E_OK);
+
+    // Replica WAL was stat'd in CollectInitialFileInfo — mtime should match pre-call value.
+    int64_t expectedMtime = static_cast<int64_t>(stBefore.st_mtim.tv_sec) * 1000 +
+        stBefore.st_mtim.tv_nsec / 1000000;
+    EXPECT_EQ(info.replicaInfo.walInfo.mtime, expectedMtime)
+        << "Replica WAL mtime should match pre-call stat (from CollectInitialFileInfo)";
+
+    // After checkpoint, WAL may be truncated. Verify size matches post-checkpoint stat (B8I/B8J).
+    struct stat stAfter;
+    if (stat(replicaWalPath.c_str(), &stAfter) == 0) {
+        EXPECT_EQ(info.replicaInfo.walInfo.size, static_cast<int64_t>(stAfter.st_size))
+            << "Replica WAL size should match post-checkpoint stat (from RefreshSizesAfterCheckpoint)";
+    }
+}
+
+/**
+ * @tc.name: PrimaryReplicaInfo_PrimaryDbStatFailure_001
+ * @tc.desc: AC-5.1: When primary DB file is removed before diagnostic, stat failure
+ *           propagates as error from CollectInitialFileInfo.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrimaryReplicaInfoTest, PrimaryDbStatFailure_001, TestSize.Level1)
+{
+    InsertRows(store_, 1, 2);
+    store_ = nullptr;
+    RdbHelper::ClearCache();
+
+    RdbStoreConfig config(dbName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    auto [createErr, conn] = SqliteConnection::Create(config, false);
+    ASSERT_EQ(createErr, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // Rename the primary DB file so stat(originalPath) returns ENOENT (B4A/B8A).
+    std::string renamedPath = dbName + ".renamed";
+    if (rename(dbName.c_str(), renamedPath.c_str()) != 0) {
+        GTEST_SKIP() << "Cannot rename open DB file on this platform";
+    }
+    ScopeGuard restore([&]() {
+        rename(renamedPath.c_str(), dbName.c_str());
+    });
+
+    // CollectInitialFileInfo: primary DB stat fails → error propagated immediately.
+    auto [ret, info] = conn->GetPrimaryAndReplicaInfo({});
+    EXPECT_NE(ret, E_OK);
+    // Primary DB info is not populated (stat failed before assignment).
+    EXPECT_EQ(info.primaryInfo.dbInfo.size, 0);
+}
+
+/**
+ * @tc.name: PrimaryReplicaInfo_ReplicaDbStatFailure_001
+ * @tc.desc: AC-4.4: When replica DB file does not exist, stat fails silently —
+ *           replicaInfo.dbInfo stays zeroed, overall ret is E_OK.
+ * @tc.type: FUNC
+ */
+HWTEST_F(PrimaryReplicaInfoTest, ReplicaDbStatFailure_001, TestSize.Level1)
+{
+    InsertRows(store_, 1, 2);
+    store_ = nullptr;
+    RdbHelper::ClearCache();
+
+    // Delete the slave DB file so replica DB stat fails (B4F/B8H).
+    RdbHelper::DeleteRdbStore(slaveDbName);
+    ASSERT_NE(access(slaveDbName.c_str(), F_OK), 0) << "Slave DB should be deleted";
+
+    RdbStoreConfig config(dbName);
+    config.SetHaMode(HAMode::MAIN_REPLICA);
+    auto [createErr, conn] = SqliteConnection::Create(config, false);
+    ASSERT_EQ(createErr, E_OK);
+    ASSERT_NE(conn, nullptr);
+
+    // Replica DB stat fails silently (file missing) — not fatal, ret stays E_OK.
+    auto [ret, info] = conn->GetPrimaryAndReplicaInfo({});
+    EXPECT_EQ(ret, E_OK);
+    // Replica DB info stays at default zero values.
+    EXPECT_EQ(info.replicaInfo.dbInfo.size, 0);
+    EXPECT_EQ(info.replicaInfo.dbInfo.mtime, 0);
+    // Primary DB info should still be valid.
+    EXPECT_GT(info.primaryInfo.dbInfo.size, 0);
 }
