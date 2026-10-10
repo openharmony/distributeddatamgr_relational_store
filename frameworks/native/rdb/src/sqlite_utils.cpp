@@ -1029,7 +1029,7 @@ RdbBinlogInfo SqliteUtils::CaptureBinlogInfo(const RdbStoreConfig &config)
         return info;
     }
     info.exist = true;
-    info.lastModifyTime = st.mtime_.sec_ * 1000 + st.mtime_.nsec_ / 1000000;
+    info.lastModifyTime = st.mtime_.sec_ * MSEC_PER_SEC + st.mtime_.nsec_ / NSEC_PER_MSEC;
     return info;
 }
 

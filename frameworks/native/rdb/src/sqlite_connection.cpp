@@ -2664,9 +2664,9 @@ std::pair<int, RdbFileInfo> SqliteConnection::StatToFileInfo(const std::string &
         return { err, fi };
     }
     fi.size = static_cast<int64_t>(info.size_);
-    fi.ctime = info.ctime_.sec_ * 1000 + info.ctime_.nsec_ / 1000000;
-    fi.atime = info.atime_.sec_ * 1000 + info.atime_.nsec_ / 1000000;
-    fi.mtime = info.mtime_.sec_ * 1000 + info.mtime_.nsec_ / 1000000;
+    fi.ctime = info.ctime_.sec_ * SqliteUtils::MSEC_PER_SEC + info.ctime_.nsec_ / SqliteUtils::NSEC_PER_MSEC;
+    fi.atime = info.atime_.sec_ * SqliteUtils::MSEC_PER_SEC + info.atime_.nsec_ / SqliteUtils::NSEC_PER_MSEC;
+    fi.mtime = info.mtime_.sec_ * SqliteUtils::MSEC_PER_SEC + info.mtime_.nsec_ / SqliteUtils::NSEC_PER_MSEC;
     return { E_OK, fi };
 }
 
@@ -2834,7 +2834,8 @@ int SqliteConnection::CollectVersionsAndTables(PrimaryAndReplicaInfo &info, cons
     return E_OK;
 }
 
-std::pair<int, PrimaryAndReplicaInfo> SqliteConnection::GetPrimaryAndReplicaInfo(const std::vector<std::string> &tableNames)
+std::pair<int, PrimaryAndReplicaInfo> SqliteConnection::GetPrimaryAndReplicaInfo(
+    const std::vector<std::string> &tableNames)
 {
     PrimaryAndReplicaInfo info{};
 

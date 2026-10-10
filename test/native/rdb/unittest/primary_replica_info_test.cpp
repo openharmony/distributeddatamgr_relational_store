@@ -42,11 +42,20 @@
 using namespace testing::ext;
 using namespace OHOS::NativeRdb;
 
+static constexpr int BASE_AGE = 20;
+
 // RAII scope guard for extra test resources
 struct ScopeGuard {
     std::function<void()> func;
-    explicit ScopeGuard(std::function<void()> f) : func(std::move(f)) {}
-    ~ScopeGuard() { if (func) func(); }
+    explicit ScopeGuard(std::function<void()> f) : func(std::move(f))
+    {
+    }
+    ~ScopeGuard()
+    {
+        if (func) {
+            func();
+        }
+    }
     ScopeGuard(const ScopeGuard &) = delete;
     ScopeGuard &operator=(const ScopeGuard &) = delete;
 };
@@ -121,7 +130,7 @@ static void InsertRows(std::shared_ptr<RdbStore> &store, int start, int count)
         ValuesBucket values;
         values.PutInt("id", start + i);
         values.PutString("name", "row" + std::to_string(start + i));
-        values.PutInt("age", 20 + i);
+        values.PutInt("age", BASE_AGE + i);
         int64_t rowId = 0;
         int ret = store->Insert(rowId, "test", values);
         EXPECT_EQ(ret, E_OK);
@@ -172,7 +181,7 @@ HWTEST_F(PrimaryReplicaInfoTest, SingleMode_001, TestSize.Level1)
 {
     std::string singleDb = RDB_TEST_PATH + "pri_replica_single_test.db";
     RdbHelper::DeleteRdbStore(singleDb);
-    ScopeGuard cleanup([&]() {
+    ScopeGuard cleanup([&singleDb]() {
         RdbHelper::ClearCache();
         RdbHelper::DeleteRdbStore(singleDb);
     });
@@ -197,7 +206,7 @@ HWTEST_F(PrimaryReplicaInfoTest, StoreClosed_001, TestSize.Level1)
 {
     std::string closedDb = RDB_TEST_PATH + "pri_replica_closed_test.db";
     RdbHelper::DeleteRdbStore(closedDb);
-    ScopeGuard cleanup([&]() {
+    ScopeGuard cleanup([&closedDb]() {
         RdbHelper::ClearCache();
         RdbHelper::DeleteRdbStore(closedDb);
     });
@@ -309,7 +318,7 @@ HWTEST_F(PrimaryReplicaInfoTest, BinlogInfo_NoBinlogDb_001, TestSize.Level1)
 {
     std::string encDb = RDB_TEST_PATH + "pri_replica_no_binlog_enc.db";
     RdbHelper::DeleteRdbStore(encDb);
-    ScopeGuard cleanup([&]() {
+    ScopeGuard cleanup([&encDb]() {
         RdbHelper::ClearCache();
         RdbHelper::DeleteRdbStore(encDb);
     });
@@ -392,7 +401,7 @@ HWTEST_F(PrimaryReplicaInfoTest, ReadOnlyDb_001, TestSize.Level1)
 {
     std::string roDb = RDB_TEST_PATH + "pri_replica_readonly_test.db";
     RdbHelper::DeleteRdbStore(roDb);
-    ScopeGuard cleanup([&]() {
+    ScopeGuard cleanup([&roDb]() {
         RdbHelper::ClearCache();
         RdbHelper::DeleteRdbStore(roDb);
     });
@@ -429,7 +438,7 @@ HWTEST_F(PrimaryReplicaInfoTest, MemoryDb_001, TestSize.Level1)
 {
     std::string memDb = RDB_TEST_PATH + "pri_replica_memory_test.db";
     RdbHelper::DeleteRdbStore(memDb);
-    ScopeGuard cleanup([&]() {
+    ScopeGuard cleanup([&memDb]() {
         RdbHelper::ClearCache();
         RdbHelper::DeleteRdbStore(memDb);
     });
@@ -454,7 +463,7 @@ HWTEST_F(PrimaryReplicaInfoTest, VectorDb_001, TestSize.Level1)
 {
     std::string vecDb = RDB_TEST_PATH + "pri_replica_vector_test.db";
     RdbHelper::DeleteRdbStore(vecDb);
-    ScopeGuard cleanup([&]() {
+    ScopeGuard cleanup([&vecDb]() {
         RdbHelper::ClearCache();
         RdbHelper::DeleteRdbStore(vecDb);
     });
@@ -777,27 +786,29 @@ HWTEST_F(PrimaryReplicaInfoTest, ConcurrentWrite_001, TestSize.Level1)
 
     // Writer thread: insert rows; notify after the first successful write so the main
     // thread can start sampling while writes are still in progress (no fixed sleep).
-    std::thread writer([&]() {
+    std::thread writer([&stop, &writeCount, &mtx, &cv, &wroteOnce, this]() {
         for (int i = 100; i < 200 && !stop.load(); i++) {
             ValuesBucket values;
             values.PutInt("id", i);
             values.PutString("name", "concurrent" + std::to_string(i));
-            values.PutInt("age", 20 + i);
+            values.PutInt("age", BASE_AGE + i);
             int64_t rowId = 0;
-            if (store_->Insert(rowId, "test", values) == E_OK) {
-                if (writeCount.fetch_add(1) == 0) {
-                    {
-                        std::lock_guard<std::mutex> lk(mtx);
-                        wroteOnce = true;
-                    }
-                    cv.notify_one();
-                }
+            if (store_->Insert(rowId, "test", values) != E_OK) {
+                continue;
             }
+            if (writeCount.fetch_add(1) != 0) {
+                continue;
+            }
+            {
+                std::lock_guard<std::mutex> lk(mtx);
+                wroteOnce = true;
+            }
+            cv.notify_one();
         }
     });
 
     // RAII: stop and join the writer regardless of assertion outcomes.
-    ScopeGuard joinGuard([&]() {
+    ScopeGuard joinGuard([&stop, &writer]() {
         stop.store(true);
         writer.join();
     });
@@ -805,7 +816,7 @@ HWTEST_F(PrimaryReplicaInfoTest, ConcurrentWrite_001, TestSize.Level1)
     // Wait (bounded) until the writer has completed at least one successful write.
     {
         std::unique_lock<std::mutex> lk(mtx);
-        cv.wait_for(lk, std::chrono::seconds(3), [&] { return wroteOnce; });
+        cv.wait_for(lk, std::chrono::seconds(3), [&wroteOnce] { return wroteOnce; });
     }
 
     // Main thread: call diagnostic while writer is still active.
@@ -841,7 +852,7 @@ HWTEST_F(PrimaryReplicaInfoTest, CustomReplicaPath_001, TestSize.Level1)
     RdbHelper::DeleteRdbStore(dbName);
     RdbHelper::DeleteRdbStore(expectedSlavePath);
 
-    ScopeGuard cleanup([&]() {
+    ScopeGuard cleanup([&expectedSlavePath, &customDir, this]() {
         RdbHelper::ClearCache();
         RdbHelper::DeleteRdbStore(expectedSlavePath);
         RdbHelper::DeleteRdbStore(dbName);

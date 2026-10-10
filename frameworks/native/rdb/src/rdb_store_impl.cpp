@@ -4003,7 +4003,8 @@ std::pair<int, PrimaryAndReplicaInfo> RdbStoreImpl::GetPrimaryReplicaInfo(const 
 
     LOG_INFO("GetPrimaryReplicaInfo: primaryDb.mtime=%{public}" PRId64 ", primaryWal.mtime=%{public}" PRId64 ", "
         "replicaDb.mtime=%{public}" PRId64 ", replicaWal.mtime=%{public}" PRId64 ", binlog.exist=%{public}d, "
-        "binlog.lastModifyTime=%{public}" PRId64 ", primaryLastModifyTime=%{public}" PRId64 ", replicaLastModifyTime=%{public}" PRId64,
+        "binlog.lastModifyTime=%{public}" PRId64 ", "
+        "primaryLastModifyTime=%{public}" PRId64 ", replicaLastModifyTime=%{public}" PRId64,
         info.primaryInfo.dbInfo.mtime,
         info.primaryInfo.walInfo.mtime,
         info.replicaInfo.dbInfo.mtime,

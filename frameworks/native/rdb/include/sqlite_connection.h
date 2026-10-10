@@ -94,7 +94,8 @@ public:
     int UpdateTrackerMatrix(const DistributedRdb::RdbChangedData &rdbChangedData, bool isFull) override;
     static int32_t CreateSlaveSymLink(
         const std::string &dbPath, const std::string &masterDbPath, const std::string &suffix);
-    std::pair<int, PrimaryAndReplicaInfo> GetPrimaryAndReplicaInfo(const std::vector<std::string> &tableNames) override;
+    std::pair<int, PrimaryAndReplicaInfo> GetPrimaryAndReplicaInfo(
+        const std::vector<std::string> &tableNames) override;
 
 protected:
     std::pair<int32_t, ValueObject> ExecuteForValue(
